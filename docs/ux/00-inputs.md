@@ -119,6 +119,6 @@
 
 ### 7.3 다음 작업
 
-1. §7.1의 결정을 30-metadata-design·20-priority에 반영한다.
-2. 공개 DESIGN.md 모음에서 Vercel 파일을 찾아 `docs/ux/01-design-guide.md`를 작성한다(Pretendard + Geist Mono, 라이트/다크 토큰, 촘촘한 밀도).
+1. ~~§7.1의 결정을 30-metadata-design·20-priority에 반영~~ ✅ (30 v1.1, 20 §2.0·§3.2)
+2. ~~디자인 가이드~~ ✅ [01-design-guide.md](01-design-guide.md)
 3. `docs/ux/02-flows.md` 화면 흐름도 → `docs/ux/mockups/` 클릭 목업.
