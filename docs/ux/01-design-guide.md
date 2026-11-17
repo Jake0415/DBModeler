@@ -85,7 +85,7 @@
 | 항목 | 값 |
 |---|---|
 | 본문·UI 글꼴 | **Pretendard** (가변 400/500/600). 대체: `-apple-system, "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif` |
-| 고정폭 글꼴 | **Geist Mono** (400/500). 대체: `ui-monospace, SFMono-Regular, Consolas, monospace` |
+| 고정폭 글꼴 | **Geist Mono** (400/500). 대체: `ui-monospace, SFMono-Regular, Consolas`, 이어서 **한글 대체 Pretendard → Apple SD Gothic Neo → Malgun Gothic**, 마지막 `monospace`. Geist Mono에는 한글이 없어서 `코드C2`나 DDL 주석의 한글은 대체 글꼴로 그려짐(v2 검토 A1) |
 | 굵기 | 400 / 500 / 600만. **700 미사용**(참조 원칙) |
 | 대문자 | 한글 UI라 해당 없음. 영문 약어는 원래 대소문자 유지 |
 
@@ -267,7 +267,7 @@
   --r-sm:4px; --r-md:6px; --r-lg:8px; --r-xl:12px; --r-full:9999px;
   --row:32px; --control:32px; --topbar:48px; --nav:224px; --panel:420px;
   --font-sans:"Pretendard Variable",Pretendard,-apple-system,"Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
-  --font-mono:"Geist Mono",ui-monospace,SFMono-Regular,Consolas,monospace;
+  --font-mono:"Geist Mono",ui-monospace,SFMono-Regular,Consolas,"Pretendard Variable",Pretendard,"Apple SD Gothic Neo","Malgun Gothic",monospace;
 }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { /* §2 다크 값 */ } }
 :root[data-theme="dark"] {

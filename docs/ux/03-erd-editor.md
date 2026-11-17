@@ -1,6 +1,6 @@
 # ERD 편집기 화면 설계 v1
 
-> 상태: **v1 초안** (2026-11-17). 목업: [mockups/erd.html](mockups/erd.html)
+> 상태: **v1 초안** (2026-11-17). 목업: [mockups/model.html](mockups/model.html) (v2부터 모델 화면 SC-31에 통합 · 공동 편집 §13 · 내보내기 포함, `erd.html`은 이 화면으로 이동)
 > 입력: 사용자 결정(아래 §0) · [02-logical.md](../spec/da-feature-spec/02-logical.md)(DA# 논리 모델 분석) · [01-model-diagram.md](../spec/da-feature-spec/01-model-diagram.md) · [워크스루](../research/da-modeler-usability-walkthrough-v1.md) U-11~U-15 · [02-flows.md](02-flows.md) SC-31 · [01-design-guide.md](01-design-guide.md)
 > 범위: SC-31 모델 화면의 **캔버스 영역**과 그 주변 도구. 사전 패널(PN-32)·속성 패널(PN-33)·준수율 바·게이트 A·확정 신청은 02-flows 설계를 그대로 쓴다.
 

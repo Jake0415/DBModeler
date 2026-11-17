@@ -9,18 +9,85 @@
 <link rel="stylesheet" href="assets/app.css">
 <script src="assets/app.js"></script>
 <style>
-  .attr td { height:30px; }
-  .attr input.input { height:26px; font-size:13px; }
-  .attr th:nth-child(4), .attr td:nth-child(4) { display:none; }
-  .attr td:nth-child(3) { max-width:150px; overflow:hidden; text-overflow:ellipsis; }
-  .side .dict-item { padding:8px 12px; border-bottom:1px solid var(--border); font-size:13px; cursor:pointer; }
+  :root { --p-hong:#de1d8d; --p-park:#0a72ef; }
+  /* dictionary side panel */
+  .side .dict-item { padding:8px 12px; border-bottom:1px solid var(--border); font-size:13px; cursor:grab; }
   .side .dict-item:hover { background:var(--surface-2); }
   .side .dict-item .l1 { display:flex; gap:6px; align-items:center; }
   .side .dict-item .l2 { font-family:var(--font-mono); font-size:12px; color:var(--fg-2); }
-  .s-ok { background:var(--success); } .s-comb { background:var(--info); } .s-unreg { background:var(--warning); } .s-ex { background:var(--violet); } .s-none { background:var(--border-strong); }
+  .s-ok { background:var(--success); } .s-comb { background:var(--info); } .s-unreg { background:var(--warning); } .s-ex { background:var(--violet); } .s-na { background:var(--border-strong); }
   #confirm-btn.disabled { pointer-events:auto; }
-  .lockbar { display:none; }
-  .locked .lockbar { display:flex; }
+  /* presence */
+  .avs { display:flex; align-items:center; padding-left:6px; }
+  .avs .av { width:24px; height:24px; border-radius:50%; color:#fff; font:600 11px var(--font-sans); display:grid; place-items:center; border:2px solid var(--surface); margin-left:-6px; position:relative; }
+  .avs .av.view { background:var(--surface-2) !important; color:var(--fg-2); box-shadow:inset 0 0 0 1px var(--border-strong); }
+  .avs .cap { margin-left:6px; font-size:12px; color:var(--fg-2); white-space:nowrap; }
+  .offline .avs .av { filter:grayscale(1); opacity:.5; }
+  /* canvas */
+  #cv { flex:1; position:relative; overflow:hidden; background-color:var(--bg); background-image:radial-gradient(var(--border) 1px, transparent 1px); background-size:16px 16px; }
+  #cv.tool-entity, #cv.tool-rel { cursor:crosshair; }
+  #cv.panning { cursor:grabbing; }
+  #cv.dropping { box-shadow:inset 0 0 0 2px var(--info); }
+  #world { position:absolute; left:0; top:0; transform-origin:0 0; }
+  #edges { position:absolute; left:0; top:0; overflow:visible; pointer-events:none; }
+  #edges path.hit { stroke:transparent; stroke-width:16; fill:none; pointer-events:stroke; cursor:pointer; }
+  .node { position:absolute; min-width:180px; max-width:320px; background:var(--surface); border:1px solid var(--border-strong); border-radius:8px; font-size:12px; box-shadow:var(--shadow-4); user-select:none; }
+  .node.sel { border-color:var(--ink); box-shadow:0 0 0 1px var(--ink), var(--shadow-4); }
+  .node.relsrc { border-color:var(--info); box-shadow:0 0 0 2px var(--info); }
+  .node.drop { box-shadow:0 0 0 2px var(--info), var(--shadow-4); }
+  .node.remote { box-shadow:0 0 0 2px var(--p-hong), var(--shadow-4); }
+  .node .rtag { position:absolute; top:-20px; left:-2px; background:var(--p-hong); color:#fff; font-size:11px; padding:1px 6px; border-radius:4px 4px 4px 0; white-space:nowrap; }
+  .node .nh { display:flex; align-items:center; gap:6px; padding:6px 10px; border-bottom:1px solid var(--border); font-weight:600; font-size:13px; cursor:move; }
+  .node .nh .cls { font:600 10px var(--font-mono); border:1px solid var(--border-strong); border-radius:4px; padding:0 4px; color:var(--fg-2); }
+  .node .nh .sub { font:400 11px var(--font-mono); color:var(--fg-3); margin-left:auto; }
+  .node .nh input { font:600 13px var(--font-sans); border:1px solid var(--ink); border-radius:4px; padding:0 4px; width:150px; background:var(--surface); color:var(--fg); }
+  .node .pk { border-bottom:1px solid var(--border); }
+  .node .ar { display:flex; align-items:center; gap:6px; padding:2px 10px; min-height:20px; white-space:nowrap; }
+  .node .ar .p { margin-left:auto; padding-left:12px; font:400 11px var(--font-mono); color:var(--fg-3); }
+  .node .ar.fk .n { font-style:italic; color:var(--info-deep); }
+  .node .ar.new { background:color-mix(in srgb, var(--p-hong) 10%, transparent); }
+  .node .ar input { border:1px solid var(--ink); border-radius:4px; font:inherit; padding:1px 4px; width:150px; background:var(--surface); color:var(--fg); }
+  .node .more { padding:2px 10px 4px; color:var(--fg-3); display:none; }
+  #world.lod-mid .node .ar:not(.pkr) { display:none; } #world.lod-mid .node .more { display:block; }
+  #world.lod-mid .relname, #world.lod-low .relname { display:none; }
+  #world.lod-low .node .ar, #world.lod-low .node .more, #world.lod-low .node .nh .sub { display:none; }
+  #world.lod-low .node .nh { border-bottom:0; font-size:15px; padding:10px 12px; }
+  .relname { font:400 11px var(--font-sans); fill:var(--fg-2); paint-order:stroke; stroke:var(--bg); stroke-width:4px; }
+  .rcur { position:absolute; pointer-events:none; transition:left .9s ease, top .9s ease; z-index:5; }
+  .locked #cur-hong span::after { content:' · 조회'; }
+  .rcur span { position:absolute; left:12px; top:14px; color:#fff; font-size:11px; padding:1px 6px; border-radius:4px; white-space:nowrap; }
+  .cv-toolbar { position:absolute; top:12px; left:50%; transform:translateX(-50%); display:flex; gap:2px; align-items:center; background:var(--surface); border-radius:8px; box-shadow:var(--shadow-4); padding:4px; z-index:10; }
+  .cv-toolbar .tb { height:30px; min-width:30px; padding:0 8px; border:0; border-radius:6px; background:none; color:var(--fg); font:500 13px var(--font-sans); cursor:pointer; display:flex; align-items:center; gap:4px; white-space:nowrap; flex:0 0 auto; }
+  .cv-toolbar .tb:hover { background:var(--surface-2); }
+  .cv-toolbar .tb.on { background:var(--ink); color:var(--on-ink); }
+  .cv-toolbar .sep { width:1px; height:20px; background:var(--border); margin:0 4px; }
+  .cv-toolbar kbd { font-size:10px; padding:0 3px; }
+  .locked .cv-toolbar .tb[data-edit] { opacity:.35; pointer-events:none; }
+  .menu { position:absolute; background:var(--surface); border-radius:8px; box-shadow:var(--shadow-5); padding:4px; display:none; z-index:30; }
+  .menu.open { display:block; }
+  .menu .mi { padding:6px 8px; border-radius:4px; cursor:pointer; font-size:13px; display:flex; justify-content:space-between; gap:12px; }
+  .menu .mi:hover, .menu .mi.on { background:var(--surface-2); }
+  #relmenu { top:44px; left:0; width:200px; }
+  #expmenu { top:40px; right:0; width:320px; padding:12px; font-size:13px; }
+  #expmenu .row { display:flex; align-items:center; gap:8px; margin-bottom:10px; }
+  #expmenu .row > b { width:44px; font-weight:500; color:var(--fg-2); }
+  .cv-zoom { position:absolute; left:12px; bottom:12px; display:flex; gap:4px; align-items:center; background:var(--surface); border-radius:8px; box-shadow:var(--shadow-4); padding:4px; z-index:10; font-size:12px; }
+  .cv-zoom button { height:26px; min-width:26px; border:0; background:none; border-radius:6px; cursor:pointer; color:var(--fg); font:500 13px var(--font-sans); }
+  .cv-zoom button:hover { background:var(--surface-2); }
+  .cv-mini { position:absolute; right:12px; bottom:12px; width:180px; height:120px; background:var(--surface); border-radius:8px; box-shadow:var(--shadow-4); z-index:10; overflow:hidden; }
+  .cv-hint { position:absolute; left:50%; top:56px; transform:translateX(-50%); background:var(--ink); color:var(--on-ink); font-size:12px; padding:6px 10px; border-radius:6px; z-index:10; display:none; }
+  .cv-banner { position:absolute; left:12px; top:60px; z-index:10; display:flex; flex-direction:column; gap:6px; max-width:440px; }
+  .cv-banner > .banner { display:none; }
+  .pop { position:absolute; z-index:12; background:var(--surface); border-radius:8px; box-shadow:var(--shadow-5); padding:10px; font-size:13px; width:260px; }
+  .acl { position:absolute; z-index:13; background:var(--surface); border-radius:6px; box-shadow:var(--shadow-5); padding:4px; width:280px; font-size:12px; }
+  .acl .o { display:grid; grid-template-columns:1fr auto; padding:4px 6px; border-radius:4px; cursor:pointer; gap:6px; }
+  .acl .o.on, .acl .o:hover { background:var(--surface-2); }
+  .acl .o .m { font-family:var(--font-mono); color:var(--fg-3); }
+  .grp { position:absolute; border:1px dashed var(--border-strong); border-radius:12px; background:var(--surface); padding:14px; cursor:pointer; }
+  .grp h4 { margin:0 0 4px; font-size:16px; }
+  #sysview { display:none; position:absolute; inset:0; }
+  #cv[data-sys="1"] .cv-banner, #cv[data-sys="1"] > .cv-zoom, #cv[data-sys="1"] .cv-mini { display:none !important; }
+  .legend { position:absolute; left:12px; bottom:52px; z-index:9; font-size:11px; color:var(--fg-3); display:flex; gap:8px; align-items:center; }
 </style>
 </head>
 <body data-page="model">
@@ -28,23 +95,35 @@
 <div id="content" class="page">
   <div class="page-header">
     <span class="crumb"><a href="system.html">요구사항관리</a> › <b>요구사항 · 프로젝트</b></span>
-    <span class="badge mono">v5 작업 중</span><span class="caption faint">v4 확정본 기준 · <a href="#">확정본과 비교</a></span>
+    <span class="badge mono" id="ver">v5 작업 중</span><span class="caption faint">v4 확정본 기준 · <a href="#" data-toast="v4 확정본 대비: 엔터티 +2, 속성 +6, 변경 5" data-toast-type="info">확정본과 비교</a></span>
+    <div class="avs" id="avs" title="이 업무 영역에 접속한 사람">
+      <span class="av" style="background:var(--ink);color:var(--on-ink)" title="김모델 (나)">김</span>
+      <span class="av" style="background:var(--p-hong)" title="홍설계 · 편집 중">홍</span>
+      <span class="av view" title="박설계 · 조회">박</span>
+      <span class="cap" id="avcap">3명 접속 · 2명 편집</span>
+    </div>
     <div class="actions">
-      <span class="seg"><button class="on" id="seg-logical">논리</button><button id="seg-physical" data-open="pn-gate" data-close-others="pn-attr,pn-confirm">물리</button></span>
+      <span class="seg" id="lp"><button class="on" data-v="L">논리</button><button data-v="P">물리</button></span>
       <a class="btn" href="import.html">가져오기 ▾</a>
       <a class="btn" href="ddl.html">DDL</a>
+      <span style="position:relative"><button class="btn" id="b-export">내보내기 ▾</button>
+        <div class="menu" id="expmenu">
+          <div class="row"><b>범위</b><span class="seg" id="ex-scope"><button class="on">보이는 영역</button><button>전체</button></span></div>
+          <div class="row"><b>형식</b><span class="seg" id="ex-fmt"><button class="on">PNG</button><button>SVG</button><button>PDF</button></span></div>
+          <label class="row" style="align-items:flex-start;cursor:pointer"><input type="checkbox" id="ex-official" style="margin-top:3px"><span><b style="width:auto;color:var(--fg)">공식 산출물</b><br><span class="caption muted">확정본(v4) 배치 기준 · 표제란에 버전·확정일·승인자</span></span></label>
+          <div class="card" id="ex-title" style="display:none;font-size:12px;margin-bottom:10px;padding:8px"><div class="caption muted">표제란 미리보기</div><div class="mono">요구사항관리 › 요구사항·프로젝트 · 논리 ERD</div><div class="mono">v4 · 확정 2026-11-03 · 승인 이DA, 최관리</div></div>
+          <div class="flex"><span class="grow"></span><button class="btn sm" id="ex-cancel">취소</button><button class="btn sm primary" id="ex-go">내보내기</button></div>
+        </div></span>
       <button class="btn has-tip disabled" id="confirm-btn" data-tip="미준수 6건이 남아 있습니다 — [표준 맞추기]에서 해결하거나 사유를 남겨 예외로 처리하세요">확정 신청</button>
     </div>
   </div>
-  <div class="compbar" id="compbar">
+  <div class="compbar">
     <span class="caption muted">준수율</span><span class="rate" id="rate">92%</span>
-    <a class="stat" href="standardize.html?f=bad"><span class="dot-i s-unreg"></span>미준수 <b id="c-bad">6</b></a>
+    <a class="stat" href="#" id="jump-bad"><span class="dot-i s-unreg"></span>미준수 <b id="c-bad">6</b></a>
     <a class="stat" href="standardize.html?f=ex"><span class="dot-i s-ex"></span>예외 <b id="c-ex">2</b></a>
-    <a class="stat" href="standardize.html?f=na"><span class="dot-i s-none"></span>미산정 <b id="c-na">1</b></a>
-    <a class="stat" href="candidates.html"><span class="dot-i" style="background:var(--violet);opacity:.5"></span>후보 대기 <b id="c-cand">3</b></a>
-    <span class="grow"></span>
-    <span class="caption faint">업무 영역 기준 · 평가 68 / 69</span>
-    <a class="btn sm" href="erd.html">ERD 캔버스</a>
+    <a class="stat" href="standardize.html?f=na"><span class="dot-i s-na"></span>미산정 <b id="c-na">1</b></a>
+    <a class="stat" href="candidates.html"><span class="dot-i" style="background:var(--violet);opacity:.5"></span>후보 대기 <b>3</b></a>
+    <span class="grow"></span><span class="caption faint" id="sel-info">선택 없음</span>
     <a class="btn sm primary" href="standardize.html">표준 맞추기</a>
   </div>
   <div class="page-body">
@@ -55,73 +134,64 @@
         <input class="input" value="제출" style="height:28px">
         <div class="flex" style="margin-top:8px;gap:4px"><span class="chip on" data-group="sk" style="height:24px;font-size:12px">용어</span><span class="chip" data-group="sk" style="height:24px;font-size:12px">단어</span><span class="chip" data-group="sk" style="height:24px;font-size:12px">도메인</span></div>
       </div>
-      <div class="scroll">
-        <div class="dict-item"><div class="l1"><b>제출일자</b><span class="badge b-common">공통</span></div><div class="l2">SBMT_YMD · 연월일C8</div></div>
-        <div class="dict-item"><div class="l1"><b>산출물제출일자</b><span class="badge b-info">신청 중</span></div><div class="l2">DLVRBL_SBMT_DATE · 연월일C8</div></div>
-        <div class="dict-item"><div class="l1"><b>제출여부</b><span class="badge b-common">공통</span></div><div class="l2">SBMT_YN · 여부C1</div></div>
-        <div class="dict-item"><div class="l1"><b>제출자명</b><span class="badge b-org">기관</span></div><div class="l2">SBMTR_NM · 명V100</div></div>
-        <div class="dict-item"><div class="l1"><b>제출</b><span class="badge">단어</span><span class="badge b-common">공통</span></div><div class="l2">SBMT · submit</div></div>
-      </div>
+      <div class="scroll" id="dict"></div>
       <div style="padding:10px 12px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:6px">
-        <div class="caption muted">선택한 속성에 끌어 놓거나 [적용]</div>
-        <div class="flex"><button class="btn sm grow" data-toast="‘제출일자’를 선택한 속성에 적용했습니다">적용</button><button class="btn sm grow" data-toast="후보 큐에 등록했습니다 — 모델 작업은 계속할 수 있습니다" data-toast-type="violet">후보 등록</button></div>
-        <a class="caption" href="excel-import.html">엑셀로 사전 가져오기</a>
+        <div class="caption muted">용어를 엔터티에 끌어 놓으면 속성으로 추가됩니다</div>
+        <div class="flex"><button class="btn sm grow" data-toast="후보 큐에 등록했습니다 — 모델 작업은 계속할 수 있습니다" data-toast-type="violet">후보 등록</button><a class="btn sm grow" href="excel-import.html">엑셀 가져오기</a></div>
       </div>
     </div>
 
-    <!-- canvas placeholder -->
-    <div class="canvas" id="canvas">
-      <span class="canvas-tag">ERD 캔버스 — 편집기 상세는 다음 설계 (자리만)</span>
-      <button class="btn sm" data-toggle="side" style="position:absolute;left:16px;top:44px">사전 패널</button>
-      <div class="ent" style="left:80px;top:110px"><div class="eh"><span class="badge" style="height:16px;padding:0 5px">M</span>프로젝트기본</div>
-        <div class="er"><span class="dot-i s-ok"></span># 프로젝트ID<span class="mono">PRJ_ID</span></div><div class="er"><span class="dot-i s-ok"></span>프로젝트명<span class="mono">PRJ_NM</span></div><div class="er"><span class="dot-i s-ex"></span>프로젝트종료일<span class="mono">PRJ_ENDDD</span></div><div class="er"><span class="dot-i s-ok"></span>수주금액<span class="mono">WINCON_AMT</span></div></div>
-      <div class="ent" style="left:80px;top:330px"><div class="eh"><span class="badge" style="height:16px;padding:0 5px">A</span>요구사항내역</div>
-        <div class="er"><span class="dot-i s-ok"></span># 요구사항ID<span class="mono">DEMND_MATER_ID</span></div><div class="er"><span class="dot-i s-ok"></span>요구사항명<span class="mono">DEMND_MATER_NM</span></div><div class="er"><span class="dot-i s-ex"></span>요청고객명<span class="mono">REQ_CUST_NM</span></div><div class="er"><span class="dot-i s-ok"></span>프로젝트ID (FK)<span class="mono">PRJ_ID</span></div></div>
-      <div class="ent sel" style="left:420px;top:220px" data-open="pn-attr" data-close-others="pn-gate,pn-confirm"><div class="eh"><span class="badge" style="height:16px;padding:0 5px">M</span>산출물기본<span class="dot-i s-comb" style="margin-left:auto" title="엔터티 용어 신청 중"></span></div>
-        <div class="er"><span class="dot-i s-ok"></span># 산출물ID<span class="mono">DLVRBL_ID</span></div><div class="er"><span class="dot-i s-ok"></span>산출물명<span class="mono">DLVRBL_NM</span></div><div class="er"><span class="dot-i s-comb"></span>산출물제출일<span class="mono">—</span></div><div class="er"><span class="dot-i s-unreg"></span>산출물수령자명<span class="mono">—</span></div><div class="er"><span class="dot-i s-ok"></span>요구사항ID (FK)<span class="mono">DEMND_MATER_ID</span></div></div>
-      <div class="ent" style="left:420px;top:470px"><div class="eh">산출물이력</div><div class="er"><span class="dot-i s-ok"></span># 산출물ID<span class="mono">DLVRBL_ID</span></div><div class="er"><span class="dot-i s-unreg"></span># 이력순번<span class="mono">—</span></div><div class="er"><span class="dot-i s-unreg"></span>수령자ID<span class="mono">—</span></div></div>
-      <div class="ent" style="left:740px;top:110px"><div class="eh"><span class="badge" style="height:16px;padding:0 5px">K</span>사원기본</div><div class="er"><span class="dot-i s-ok"></span># 사원번호<span class="mono">EMP_NO</span></div><div class="er"><span class="dot-i s-ok"></span>사원명<span class="mono">EMP_NM</span></div></div>
-      <svg style="position:absolute;inset:0;pointer-events:none" width="100%" height="100%"><g stroke="var(--fg-3)" stroke-width="1.2" fill="none"><path d="M185 210 V330"/><path d="M290 380 H420"/><path d="M525 395 V470"/><path d="M630 260 H740" stroke-dasharray="4 3"/></g></svg>
-      <div class="caption faint" style="position:absolute;left:16px;bottom:12px">상태 점: <span class="dot-i s-ok"></span> 표준 <span class="dot-i s-comb"></span> 조합 가능 <span class="dot-i s-unreg"></span> 미등록 단어 <span class="dot-i s-ex"></span> 예외</div>
+    <!-- canvas -->
+    <div id="cv" tabindex="0">
+      <div class="cv-toolbar">
+        <button class="tb on" data-tool="select" title="선택 (V)">↖ <kbd>V</kbd></button>
+        <button class="tb" data-tool="entity" data-edit title="엔터티 (E)">▭ 엔터티 <kbd>E</kbd></button>
+        <span style="position:relative"><button class="tb" data-tool="rel" data-edit id="relbtn" title="관계 (R)">⟜ <span id="reltype">1:N 비식별</span> ▾ <kbd>R</kbd></button>
+          <div class="menu" id="relmenu">
+            <div class="mi on" data-rt="nonid">1:N 비식별 <span class="faint">점선</span></div>
+            <div class="mi" data-rt="id">1:N 식별 <span class="faint">실선</span></div>
+            <div class="mi" data-rt="one">1:1</div>
+            <div class="mi" data-rt="mn">M:N <span class="faint">해소 필요</span></div>
+          </div></span>
+        <span class="sep"></span>
+        <button class="tb" id="b-layout" data-edit>자동 배치</button>
+        <button class="tb" id="b-sys">시스템 전체</button>
+        <span class="sep"></span>
+        <button class="tb" id="b-undo" data-edit title="내 편집 되돌리기 (Ctrl+Z)">↶</button>
+      </div>
+      <div class="cv-hint" id="hint"></div>
+      <div class="cv-banner">
+        <div class="banner info" id="ban-lock"><span>●</span><div class="grow"><b>검토 중 · REQ-2026-0015</b> — 확정 신청으로 이 업무 영역은 모든 접속자에게 조회 전용입니다. 이후 편집은 다음 작업 버전(v6)에 들어갑니다.</div><a class="btn sm" href="approvals.html">결재 보기</a></div>
+        <div class="banner danger" id="ban-off"><span>!</span><div class="grow"><b>연결 끊김</b> — 편집 내용은 이 브라우저에 보관하고, 다시 연결되면 병합합니다.</div><button class="btn sm" id="b-reconnect">다시 연결</button></div>
+        <div class="banner warning" id="ban-gate"><span>!</span><div class="grow"><b>게이트 A · 경고 4</b> — 미매핑 3 · 타입 미정 2. 진행은 막지 않습니다.</div><button class="btn sm" id="b-gate">점검 보기</button></div>
+        <div class="banner info" id="ban-sync"><span>●</span><div class="grow"><b>논리 변경 2건 대기</b> — 물리에 자동 반영하지 않습니다.</div><button class="btn sm" data-toast="논리 변경 2건을 물리에 반영했습니다 · 컬럼 +2" data-toast-type="info">미리보기 · 반영</button></div>
+      </div>
+      <div id="world"><svg id="edges" width="2400" height="1600">
+        <defs>
+          <marker id="m-many" viewBox="0 0 12 12" refX="12" refY="6" markerWidth="12" markerHeight="12" orient="auto-start-reverse" markerUnits="userSpaceOnUse"><path d="M12,0 L1,6 L12,12 M1,6 L12,6 M0,2 V10" fill="none" stroke="var(--fg-2)" stroke-width="1.2"/></marker>
+          <marker id="m-one" viewBox="0 0 12 12" refX="12" refY="6" markerWidth="12" markerHeight="12" orient="auto-start-reverse" markerUnits="userSpaceOnUse"><path d="M6,1 V11 M10,1 V11" fill="none" stroke="var(--fg-2)" stroke-width="1.2"/></marker>
+        </defs>
+        <g id="eg"></g><path id="preview" d="" fill="none" stroke="var(--info)" stroke-width="1.5" stroke-dasharray="4 3"/>
+      </svg><div id="nodes"></div>
+        <div class="rcur" id="cur-hong"><svg width="14" height="18"><path d="M1 1 L1 15 L5 11 L8 17 L10 16 L7 10 L13 10 Z" fill="var(--p-hong)" stroke="#fff"/></svg><span style="background:var(--p-hong)">홍설계</span></div>
+        <div class="rcur" id="cur-park"><svg width="14" height="18"><path d="M1 1 L1 15 L5 11 L8 17 L10 16 L7 10 L13 10 Z" fill="var(--p-park)" stroke="#fff"/></svg><span style="background:var(--p-park)">박설계 · 조회</span></div>
+      </div>
+      <div id="sysview"></div>
+      <div class="legend">상태 <span class="dot-i s-ok"></span>표준 <span class="dot-i s-comb"></span>조합 가능 <span class="dot-i s-unreg"></span>미등록 단어 <span class="dot-i s-ex"></span>예외</div>
+      <div class="cv-zoom"><button id="zo">−</button><span id="zl" class="mono" style="width:40px;text-align:center">100%</span><button id="zi">+</button><button id="zfit" title="전체 맞춤 (Shift+1)">맞춤</button>
+        <select class="input" id="lodsel" style="height:26px;width:120px;font-size:12px"><option value="auto">표시: 자동</option><option value="full">전체 속성</option><option value="mid">키만</option><option value="low">이름만</option></select></div>
+      <div class="cv-mini"><svg id="mini" width="180" height="120"></svg></div>
     </div>
 
-    <!-- PN-33 attribute panel -->
-    <aside class="rpanel open" id="pn-attr" data-tabscope>
-      <div class="rp-head">
-        <div class="t"><span class="badge">엔터티</span><span class="badge b-info">엔터티 용어 신청 중</span><button class="iconbtn close" data-close="pn-attr" style="width:28px;height:28px">×</button></div>
-        <h2 style="margin-top:8px">산출물기본</h2><div class="rp-sub">DLVRBL_M · 분류어 ‘기본’ → _M</div>
-      </div>
-      <div class="rp-body">
-        <div class="tabs"><button class="on" data-tab="attrs">속성 <span class="n">5</span></button><button data-tab="ent">엔터티</button><button data-tab="rel">관계</button></div>
-        <div class="pane on" data-pane="attrs">
-          <table class="tbl attr"><thead><tr><th></th><th>속성명</th><th>물리명</th><th>도메인</th></tr></thead><tbody>
-            <tr><td><span class="badge b-success">✓</span></td><td># 산출물ID</td><td class="mono">DLVRBL_ID</td><td class="mono">ID V10</td></tr>
-            <tr><td><span class="badge b-success">✓</span></td><td>산출물명</td><td class="mono">DLVRBL_NM</td><td class="mono">명V100</td></tr>
-            <tr class="sel"><td><span class="badge b-info">＋</span></td><td style="position:relative;overflow:visible">
-                <input class="input" value="산출물제출일">
-                <div class="ac" style="width:min(300px, calc(var(--panel) - 72px))">
-                  <div class="opt on"><span>산출물제출일자 <span class="badge b-info" style="height:16px">신청 중</span></span><span class="mono faint">연월일C8</span><span class="mono faint" style="grid-column:1/3;font-size:11px">DLVRBL_SBMT_DATE</span></div>
-                  <div class="opt"><span>제출일자 <span class="badge b-common" style="height:16px">공통</span></span><span class="mono faint">연월일C8</span><span class="mono faint" style="grid-column:1/3;font-size:11px">SBMT_YMD</span></div>
-                  <div class="opt" style="border-top:1px solid var(--border);margin-top:4px"><span>＋ ‘산출물제출일’ 분석 결과: 조합 가능</span><span class="caption">용어 신청</span></div>
-                </div></td><td class="mono faint">—</td><td class="mono faint">—</td></tr>
-            <tr><td><span class="badge b-warning">!</span></td><td>산출물수령자명 <span class="badge b-violet" style="height:16px">후보 대기</span></td><td class="mono faint">—</td><td class="mono faint">—</td></tr>
-            <tr><td><span class="badge b-success">✓</span></td><td>요구사항ID (FK)</td><td class="mono">DEMND_MATER_ID</td><td class="mono">ID V10</td></tr>
-          </tbody></table>
-          <div class="flex" style="margin-top:8px"><button class="btn sm">+ 속성</button><span class="grow"></span><span class="caption muted">입력하면 표준 용어를 바로 제안합니다</span></div>
-          <div class="section-t" style="margin-top:16px">선택한 속성</div>
-          <dl class="kv"><dt>논리명</dt><dd>산출물제출일 <span class="badge b-info">＋ 조합 가능</span></dd><dt>분석</dt><dd>산출물 + 제출 + 일 → 용어 미등록</dd><dt>도메인</dt><dd class="faint">용어를 고르면 채워집니다</dd><dt>필수</dt><dd>아니오</dd></dl>
-          <div class="banner warning" style="margin-top:16px"><span>!</span><div class="grow"><b>산출물수령자명</b> — 미등록 단어 ‘수령자’. 후보 큐에 등록됐습니다(DA 처리 대기). 작업은 계속할 수 있습니다.</div></div>
-        </div>
-        <div class="pane" data-pane="ent">
-          <dl class="kv"><dt>엔터티명</dt><dd>산출물기본</dd><dt>테이블명</dt><dd class="mono">DLVRBL_M <span class="badge b-info">신청 중</span></dd><dt>분류</dt><dd>Main</dd><dt>유형</dt><dd>Normal</dd><dt>표준화</dt><dd>대상</dd></dl>
-        </div>
-        <div class="pane" data-pane="rel"><div class="caption">요구사항내역 1 : N 산출물기본 · 산출물기본 1 : N 산출물이력(식별)</div></div>
-      </div>
+    <!-- dynamic panel: area summary / entity / relation -->
+    <aside class="rpanel open" id="rp" data-tabscope>
+      <div class="rp-head"><div class="t"><h2 id="rp-title">업무 영역 요약</h2></div><div class="rp-sub" id="rp-sub"></div></div>
+      <div class="rp-body" id="rp-body"></div>
     </aside>
 
     <!-- PN-35 gate A -->
     <aside class="rpanel" id="pn-gate">
-      <div class="rp-head"><div class="t"><h2>물리 반영 전 점검</h2><span class="badge b-warning">게이트 A</span><button class="iconbtn close" data-close="pn-gate" style="width:28px;height:28px">×</button></div>
+      <div class="rp-head"><div class="t"><h2>물리 반영 전 점검</h2><span class="badge b-warning">게이트 A</span><button class="iconbtn close" id="gate-x" style="width:28px;height:28px">×</button></div>
         <div class="caption muted" style="margin-top:4px">논리 → 물리(Oracle) 반영 직전에 확인합니다. 진행을 막지는 않습니다.</div></div>
       <div class="rp-body">
         <div class="grid2" style="margin-bottom:12px"><div class="card"><div class="caption muted">미매핑</div><div class="mono" style="font-size:20px">3</div></div><div class="card"><div class="caption muted">타입 미정</div><div class="mono" style="font-size:20px">2</div></div></div>
@@ -133,7 +203,7 @@
         </tbody></table>
         <div class="caption muted" style="margin-top:8px">예외 사유는 모델 확정 결재의 ‘표준 예외 목록’에 모입니다.</div>
       </div>
-      <div class="rp-foot"><a class="btn" href="standardize.html">표준 맞추기로 이동</a><span class="grow"></span><button class="btn primary" data-close="pn-gate" data-toast="경고 4건을 남긴 채 물리 모델을 열었습니다 · 변경: 테이블 +2, 컬럼 +6" data-toast-type="info">경고 확인 후 계속</button></div>
+      <div class="rp-foot"><a class="btn" href="standardize.html">표준 맞추기로 이동</a><span class="grow"></span><button class="btn primary" id="gate-go">경고 확인 후 계속</button></div>
     </aside>
 
     <!-- PN-38 confirm -->
@@ -158,9 +228,9 @@
           <div class="al-step"><span class="pt"></span><div><b>최종 승인 (기관 담당자)</b> <span class="caption faint">시스템 설정 사용 중</span></div></div>
         </div>
         <div class="flex" style="margin-top:8px"><span class="caption muted">참조</span><button class="btn ghost sm">+ 참조자</button></div>
-        <div class="banner" style="margin-top:12px"><span>ℹ</span><div>신청하면 이 업무 영역은 <b>검토 중</b>으로 잠겨 편집할 수 없습니다. 회수하면 다시 편집할 수 있습니다.</div></div>
+        <div class="banner" style="margin-top:12px"><span>ℹ</span><div>신청하면 이 업무 영역은 <b>검토 중</b>이 되어 <b>접속 중인 모든 사람</b>에게 조회 전용으로 바뀝니다(지금 홍설계 편집 중). 회수하면 다시 편집할 수 있습니다.</div></div>
       </div>
-      <div class="rp-foot"><span class="grow"></span><button class="btn" data-close="pn-confirm">취소</button><a class="btn primary" href="approvals.html">확정 신청</a></div>
+      <div class="rp-foot"><span class="grow"></span><button class="btn" data-close="pn-confirm">취소</button><a class="btn primary" href="model.html?state=review">확정 신청</a></div>
     </aside>
   </div>
 
@@ -172,25 +242,421 @@
 <script>
 window.pageInit = function () {
   const q = new URLSearchParams(location.search);
+  const $ = id => document.getElementById(id);
+  const TERMS = [
+    { n: '제출일자', p: 'SBMT_YMD', d: '연월일C8', t: 'CHAR(8)', s: 'ok', tag: '공통' },
+    { n: '산출물제출일자', p: 'DLVRBL_SBMT_DATE', d: '연월일C8', t: 'CHAR(8)', s: 'comb', tag: '신청 중' },
+    { n: '제출여부', p: 'SBMT_YN', d: '여부C1', t: 'CHAR(1)', s: 'ok', tag: '공통' },
+    { n: '제출자명', p: 'SBMTR_NM', d: '명V100', t: 'VARCHAR2(100)', s: 'ok', tag: '기관' },
+    { n: '등록일시', p: 'REG_DT', d: '일시T', t: 'DATE', s: 'ok', tag: '공통' },
+    { n: '비고내용', p: 'RMRK_CN', d: '내용V1000', t: 'VARCHAR2(1000)', s: 'ok', tag: '공통' }
+  ];
+  const tagCls = t => t === '공통' ? 'b-common' : t === '신청 중' ? 'b-info' : 'b-org';
+  $('dict').innerHTML = TERMS.map((t, i) => `<div class="dict-item" draggable="true" data-ti="${i}"><div class="l1"><b>${t.n}</b><span class="badge ${tagCls(t.tag)}">${t.tag}</span></div><div class="l2">${t.p} · ${t.d}</div></div>`).join('');
+
+  const E = [
+    { id: 'prj', n: '프로젝트기본', p: 'PRJ_M', c: 'M', x: 60, y: 60, px: 60, py: 60, a: [
+      { n: '프로젝트ID', p: 'PRJ_ID', t: 'VARCHAR2(10)', pk: 1, s: 'ok' }, { n: '프로젝트명', p: 'PRJ_NM', t: 'VARCHAR2(100)', s: 'ok' }, { n: '발주처명', p: 'ORDR_OFC_NM', t: 'VARCHAR2(100)', s: 'ok' }, { n: '프로젝트종료일', p: 'PRJ_ENDDD', t: 'CHAR(8)', s: 'ex' }, { n: '수주금액', p: 'WINCON_AMT', t: 'NUMBER(15)', s: 'ok' }] },
+    { id: 'emp', n: '사원기본', p: 'EMP_M', c: 'K', x: 420, y: 40, px: 460, py: 40, a: [
+      { n: '사원번호', p: 'EMP_NO', t: 'NUMBER(6)', pk: 1, s: 'ok' }, { n: '사원명', p: 'EMP_NM', t: 'VARCHAR2(100)', s: 'ok' }] },
+    { id: 'mbr', n: '프로젝트팀원구성내역', p: 'PRJ_MBR_D', c: 'A', x: 400, y: 200, px: 440, py: 220, a: [
+      { n: '프로젝트ID', p: 'PRJ_ID', t: 'VARCHAR2(10)', pk: 1, fk: 1, s: 'ok' }, { n: '팀원사원번호', p: 'TMBR_EMP_NO', t: 'NUMBER(6)', pk: 1, fk: 1, s: 'ok' }, { n: '투입시작일자', p: 'INPT_BEGIN_YMD', t: 'CHAR(8)', s: 'ok' }, { n: '역할구분코드', p: 'ROLE_SE_CD', t: 'CHAR(1)', s: 'ok' }] },
+    { id: 'rqrm', n: '요구사항내역', p: 'RQRM_D', c: 'A', x: 60, y: 330, px: 60, py: 360, a: [
+      { n: '요구사항ID', p: 'DEMND_MATER_ID', t: 'VARCHAR2(10)', pk: 1, s: 'ok' }, { n: '요구사항명', p: 'DEMND_MATER_NM', t: 'VARCHAR2(100)', s: 'ok' }, { n: '요구사항내용', p: 'DEMND_MATER_CN', t: 'VARCHAR2(1000)', s: 'ok' }, { n: '요청고객명', p: 'REQ_CUST_NM', t: 'VARCHAR2(100)', s: 'ex' }, { n: '프로젝트ID', p: 'PRJ_ID', t: 'VARCHAR2(10)', fk: 1, s: 'ok' }] },
+    { id: 'dlv', n: '산출물기본', p: 'DLVRBL_M', c: 'M', x: 420, y: 430, px: 460, py: 470, st: 1, a: [
+      { n: '산출물ID', p: 'DLVRBL_ID', t: 'VARCHAR2(10)', pk: 1, s: 'ok' }, { n: '산출물명', p: 'DLVRBL_NM', t: 'VARCHAR2(100)', s: 'ok' }, { n: '산출물제출일', p: '—', t: '—', s: 'comb' }, { n: '산출물수령자명', p: '—', t: '—', s: 'unreg', cand: 1 }, { n: '요구사항ID', p: 'DEMND_MATER_ID', t: 'VARCHAR2(10)', fk: 1, s: 'ok' }] },
+    { id: 'hist', n: '산출물이력', p: '—', c: 'H', x: 780, y: 440, px: 840, py: 480, a: [
+      { n: '산출물ID', p: 'DLVRBL_ID', t: 'VARCHAR2(10)', pk: 1, fk: 1, s: 'ok' }, { n: '이력순번', p: '—', t: '—', pk: 1, s: 'unreg' }, { n: '수령자ID', p: '—', t: '—', s: 'unreg' }] },
+    { id: 'risk', n: '리스크기본', p: 'RISK_M', c: 'M', x: 60, y: 610, px: 60, py: 660, a: [
+      { n: '리스크ID', p: 'RISK_ID', t: 'VARCHAR2(10)', pk: 1, s: 'ok' }, { n: '리스크명', p: 'RISK_NM', t: 'VARCHAR2(100)', s: 'ok' }, { n: '리스크등급코드', p: 'RISK_GRD_CD', t: 'CHAR(1)', s: 'ok' }] }
+  ];
+  const R = [
+    { f: 'prj', t: 'rqrm', k: 'nonid', name: '수행한다' },
+    { f: 'prj', t: 'mbr', k: 'id', name: '구성된다' },
+    { f: 'emp', t: 'mbr', k: 'id', name: '참여한다' },
+    { f: 'rqrm', t: 'dlv', k: 'nonid', name: '산출한다' },
+    { f: 'dlv', t: 'hist', k: 'id', name: '기록된다' },
+    { f: 'rqrm', t: 'risk', k: 'mn', name: '관련된다' }
+  ];
+  const cv = $('cv'), world = $('world'), nodes = $('nodes'), eg = $('eg'), preview = $('preview');
+  let mode = 'L', tool = 'select', relType = 'nonid', zoom = 1, panX = 40, panY = 50, sel = null, relSrc = null, lodForce = 'auto';
+  let gateSeen = false, offline = false, remoteSel = 'rqrm', renaming = null;
+  const locked = q.get('state') === 'review';
+  const pos = e => mode === 'L' ? { x: e.x, y: e.y } : { x: e.px, y: e.py };
+  const setPos = (e, x, y) => { if (mode === 'L') { e.x = x; e.y = y; } else { e.px = x; e.py = y; } };
+  const ent = id => E.find(x => x.id === id);
+  const bad = e => e.a.filter(a => a.s === 'comb' || a.s === 'unreg').length;
+  const guard = () => { if (locked) { toast('검토 중이라 편집할 수 없습니다 — 다음 작업 버전(v6)에서 편집하세요', 'info'); return true; } return false; };
+
+  // ---- my undo stack (per user)
+  const hist = [];
+  const snap = () => { hist.push(JSON.stringify({ E, R })); if (hist.length > 50) hist.shift(); };
+  function undo() {
+    if (guard()) return;
+    if (!hist.length) { toast('되돌릴 내 편집이 없습니다', 'info'); return; }
+    const s = JSON.parse(hist.pop()); E.splice(0, E.length, ...s.E); R.splice(0, R.length, ...s.R);
+    sel = null; render(); toast('내 편집 1건을 되돌렸습니다 · 다른 사람의 편집은 그대로입니다', 'info');
+  }
+  function remoteApply(fn) { fn(E); for (let i = 0; i < hist.length; i++) { const s = JSON.parse(hist[i]); fn(s.E); hist[i] = JSON.stringify(s); } }
+
+  function nodeHTML(e) {
+    const pk = e.a.filter(a => a.pk), rest = e.a.filter(a => !a.pk);
+    const row = a => {
+      const idx = e.a.indexOf(a);
+      const name = mode === 'L' ? a.n : a.p, right = mode === 'L' ? a.p : a.t;
+      if (a.edit) return `<div class="ar"><span class="dot-i s-na"></span><input data-e="${e.id}" data-i="${idx}" class="attr-in" placeholder="속성명 입력 · Enter" value="${a.n}"></div>`;
+      return `<div class="ar ${a.pk ? 'pkr' : ''} ${a.fk ? 'fk' : ''} ${a.remote ? 'new' : ''}" data-e="${e.id}" data-i="${idx}"><span class="dot-i s-${a.s}" title="${({ ok: '표준', comb: '조합 가능', unreg: '미등록 단어', ex: '예외', na: '비대상' })[a.s]}"></span><span class="n">${a.pk ? '# ' : ''}${name}${a.fk ? ' (FK)' : ''}</span><span class="p">${right}</span></div>`;
+    };
+    const b = bad(e);
+    const title = renaming === e.id ? `<input class="ren-in" data-e="${e.id}" value="${e.n}">` : `<span class="title" data-e="${e.id}">${mode === 'L' ? e.n : e.p}</span>`;
+    return `${remoteSel === e.id && !offline ? '<span class="rtag">홍설계 편집 중</span>' : ''}<div class="nh" data-drag="${e.id}"><span class="cls">${e.c}</span>${title}${b ? `<span class="badge b-warning" style="height:16px;padding:0 5px">${b}</span>` : ''}${e.st ? '<span class="dot-i s-comb" title="엔터티 용어 신청 중"></span>' : ''}<span class="sub">${mode === 'L' ? e.p : e.n}</span></div>
+      <div class="pk">${pk.map(row).join('')}</div>${rest.map(row).join('')}<div class="more">+ ${rest.length}개 속성</div>`;
+  }
+  function render() {
+    nodes.innerHTML = '';
+    E.forEach(e => {
+      const d = document.createElement('div');
+      d.className = 'node' + (sel === e.id ? ' sel' : '') + (relSrc === e.id ? ' relsrc' : '') + (remoteSel === e.id && !offline ? ' remote' : '');
+      d.id = 'n-' + e.id; const p = pos(e);
+      d.style.left = p.x + 'px'; d.style.top = p.y + 'px';
+      d.innerHTML = nodeHTML(e);
+      nodes.appendChild(d);
+    });
+    drawEdges(); mini(); panel();
+    const inp = nodes.querySelector('.attr-in'); if (inp) { inp.focus(); inp.select(); showAC(inp); }
+    const ren = nodes.querySelector('.ren-in'); if (ren) { ren.focus(); ren.select(); }
+  }
+  function box(id) { const d = $('n-' + id); return { x: d.offsetLeft, y: d.offsetTop, w: d.offsetWidth, h: d.offsetHeight }; }
+  function edgePath(a, b) {
+    const ac = { x: a.x + a.w / 2, y: a.y + a.h / 2 }, bc = { x: b.x + b.w / 2, y: b.y + b.h / 2 };
+    if (b.y > a.y + a.h + 20 || a.y > b.y + b.h + 20) {
+      const down = b.y > a.y; const y1 = down ? a.y + a.h : a.y, y2 = down ? b.y : b.y + b.h; const my = (y1 + y2) / 2;
+      return { d: `M${ac.x},${y1} V${my} H${bc.x} V${y2}`, lx: (ac.x + bc.x) / 2, ly: my - 4 };
+    }
+    const right = b.x > a.x; const x1 = right ? a.x + a.w : a.x, x2 = right ? b.x : b.x + b.w; const mx = (x1 + x2) / 2;
+    return { d: `M${x1},${ac.y} H${mx} V${bc.y} H${x2}`, lx: mx + 4, ly: (ac.y + bc.y) / 2 - 4 };
+  }
+  function drawEdges() {
+    let s = '';
+    R.forEach((r, i) => {
+      if (!$('n-' + r.f) || !$('n-' + r.t)) return;
+      let p;
+      if (r.f === r.t) { const a = box(r.f); p = { d: `M${a.x + a.w},${a.y + 30} H${a.x + a.w + 30} V${a.y - 20} H${a.x + a.w - 30} V${a.y}`, lx: a.x + a.w + 34, ly: a.y - 8 }; }
+      else p = edgePath(box(r.f), box(r.t));
+      const dash = r.k === 'id' || r.k === 'one' ? '' : 'stroke-dasharray="5 4"';
+      const endM = r.k === 'one' ? 'url(#m-one)' : 'url(#m-many)';
+      const startM = r.k === 'mn' ? 'url(#m-many)' : 'url(#m-one)';
+      s += `<path class="hit" d="${p.d}" data-r="${i}"/><path d="${p.d}" fill="none" stroke="var(--fg-2)" stroke-width="1.2" ${dash} marker-start="${startM}" marker-end="${endM}"/>`;
+      s += `<text class="relname" x="${p.lx}" y="${p.ly}">${r.name || ''}</text>`;
+      if (r.k === 'mn') s += `<text class="relname" x="${p.lx}" y="${p.ly + 14}" style="fill:var(--warning-deep)">M:N 해소 필요</text>`;
+    });
+    eg.innerHTML = s;
+  }
+  function applyView() {
+    world.style.transform = `translate(${panX}px,${panY}px) scale(${zoom})`;
+    $('zl').textContent = Math.round(zoom * 100) + '%';
+    const lod = lodForce !== 'auto' ? lodForce : zoom >= 0.75 ? 'full' : zoom >= 0.4 ? 'mid' : 'low';
+    world.className = 'lod-' + lod; mini();
+  }
+  function mini() {
+    const m = $('mini'); if (!nodes.children.length) return;
+    let minx = 1e9, miny = 1e9, maxx = -1e9, maxy = -1e9;
+    E.forEach(e => { const b = box(e.id); minx = Math.min(minx, b.x); miny = Math.min(miny, b.y); maxx = Math.max(maxx, b.x + b.w); maxy = Math.max(maxy, b.y + b.h); });
+    const W = maxx - minx + 200, H = maxy - miny + 200, k = Math.min(180 / W, 120 / H), ox = minx - 100, oy = miny - 100;
+    let s = E.map(e => { const b = box(e.id); const col = remoteSel === e.id && !offline ? 'var(--p-hong)' : bad(e) ? 'var(--warning)' : 'var(--border-strong)'; return `<rect x="${(b.x - ox) * k}" y="${(b.y - oy) * k}" width="${b.w * k}" height="${b.h * k}" fill="${col}" opacity=".6" rx="1"/>`; }).join('');
+    s += `<rect x="${(-panX / zoom - ox) * k}" y="${(-panY / zoom - oy) * k}" width="${cv.clientWidth / zoom * k}" height="${cv.clientHeight / zoom * k}" fill="none" stroke="var(--ink)" stroke-width="1"/>`;
+    m.innerHTML = s;
+  }
+  function showRP() { $('rp').classList.add('open'); $('pn-gate').classList.remove('open'); $('pn-confirm').classList.remove('open'); }
+  const stBadge = s => ({ ok: '<span class="badge b-success">✓</span>', comb: '<span class="badge b-info">＋</span>', unreg: '<span class="badge b-warning">!</span>', ex: '<span class="badge b-violet">◆</span>', na: '<span class="badge">–</span>' })[s];
+  function panel() {
+    const t = $('rp-title'), sub = $('rp-sub'), body = $('rp-body');
+    $('sel-info').textContent = sel ? `선택: ${ent(sel).n}` : '선택 없음';
+    if (!sel) {
+      t.textContent = '업무 영역 요약'; sub.textContent = mode === 'L' ? '요구사항 · 프로젝트 · 논리' : '요구사항 · 프로젝트 · 물리(Oracle)';
+      body.innerHTML = `<div class="grid2" style="margin-bottom:12px"><div class="card"><div class="caption muted">엔터티</div><div class="mono" style="font-size:20px">${E.length}</div></div><div class="card"><div class="caption muted">관계</div><div class="mono" style="font-size:20px">${R.length}</div></div></div>
+        <div class="section-t">미준수 엔터티</div>
+        ${E.filter(bad).map(e => `<div class="cand" data-goto="${e.id}"><span class="grow">${e.n}</span><span class="badge b-warning">${bad(e)}</span></div>`).join('')}
+        <div class="section-t">접속자</div>
+        <div class="caption" style="line-height:22px"><span class="dot-i" style="background:var(--ink)"></span> 김모델 (나) · ${locked ? '조회' : '편집'}<br><span class="dot-i" style="background:var(--p-hong)"></span> 홍설계 · ${locked ? '조회' : '편집 — ' + (remoteSel ? ent(remoteSel).n : '—')}<br><span class="dot-i" style="background:var(--p-park)"></span> 박설계 · 조회</div>
+        <div class="flex" style="margin-top:8px;gap:6px;${locked ? 'display:none' : ''}"><button class="btn sm" id="demo-conflict">동시 수정 충돌 보기</button><button class="btn sm" id="demo-off">연결 끊김 보기</button></div>
+        <div class="section-t">이 화면에서 해 보기</div>
+        <div class="caption" style="line-height:20px">· 엔터티 제목을 끌어 이동 → 관계선이 따라옵니다<br>· <b>R</b> → 부모 클릭 → 자식 클릭 (같은 엔터티면 재귀 확인)<br>· 엔터티 선택 후 <b>Enter</b> → 속성 추가 + 용어 자동완성<br>· 왼쪽 사전의 용어를 엔터티에 <b>끌어 놓기</b><br>· 제목 <b>더블클릭</b> → 이름 수정 · <b>Ctrl+Z</b> → 내 편집만 되돌리기<br>· <b>Ctrl+휠</b>·[−][+] → 줌에 따라 상세도 자동 축소<br>· 헤더 <b>[물리]</b> → 게이트 A 후 별도 배치 · <b>[내보내기]</b><br>· 툴바 <b>[시스템 전체]</b> → 조회 전용 전체 보기</div>`;
+      $('demo-conflict').onclick = demoConflict; $('demo-off').onclick = () => setOffline(true);
+      body.querySelectorAll('[data-goto]').forEach(c => c.onclick = () => focusEnt(c.dataset.goto));
+      return;
+    }
+    const e = ent(sel);
+    t.textContent = mode === 'L' ? e.n : e.p; sub.textContent = (mode === 'L' ? e.p : e.n) + ' · 분류 ' + e.c;
+    const rels = R.filter(r => r.f === e.id || r.t === e.id).map(r => `${ent(r.f).n} → ${ent(r.t).n} <span class="faint">(${({ nonid: '1:N 비식별', id: '1:N 식별', one: '1:1', mn: 'M:N' })[r.k]})</span>`);
+    body.innerHTML = `${remoteSel === e.id && !offline ? '<div class="banner" style="margin-bottom:12px;border-left:3px solid var(--p-hong)"><span>●</span><div><b>홍설계가 이 엔터티를 편집 중</b>입니다. 같이 고칠 수 있고, 같은 칸을 동시에 고치면 마지막 입력이 남습니다.</div></div>' : ''}
+      ${e.st ? '<div class="flex" style="margin-bottom:8px;gap:6px"><span class="badge b-info">엔터티 용어 신청 중</span><span class="caption muted">분류어 ‘기본’ → _M</span></div>' : ''}
+      <div class="tabs"><button class="on" data-tab="attrs">속성 <span class="n">${e.a.length}</span></button><button data-tab="ent">엔터티</button><button data-tab="rel">관계 <span class="n">${rels.length}</span></button></div>
+      <div class="pane on" data-pane="attrs"><table class="tbl"><thead><tr><th></th><th>${mode === 'L' ? '속성명' : '컬럼명'}</th><th>${mode === 'L' ? '물리명' : '타입'}</th></tr></thead><tbody>
+      ${e.a.map(a => `<tr><td>${stBadge(a.s)}</td><td>${a.pk ? '# ' : ''}${mode === 'L' ? a.n : a.p}${a.fk ? ' <span class="faint">(FK)</span>' : ''}${a.cand ? ' <span class="badge b-violet" style="height:16px">후보 대기</span>' : ''}</td><td class="mono">${mode === 'L' ? a.p : a.t}</td></tr>`).join('')}</tbody></table>
+      <div class="flex" style="margin-top:8px"><button class="btn sm" id="rp-add">+ 속성 (Enter)</button><span class="grow"></span><span class="caption muted">입력하면 표준 용어를 바로 제안합니다</span></div>
+      ${e.id === 'dlv' ? `<div class="section-t" style="margin-top:16px">선택한 속성</div><dl class="kv"><dt>논리명</dt><dd>산출물제출일 <span class="badge b-info">＋ 조합 가능</span></dd><dt>분석</dt><dd>산출물 + 제출 + 일 → 용어 미등록</dd><dt>도메인</dt><dd class="faint">용어를 고르면 채워집니다</dd></dl>
+      <div class="banner warning" style="margin-top:12px"><span>!</span><div class="grow"><b>산출물수령자명</b> — 미등록 단어 ‘수령자’. 후보 큐에 등록됐습니다(DA 처리 대기). <a href="#" data-open="mo-ex">예외로 유지</a></div></div>` : ''}</div>
+      <div class="pane" data-pane="ent"><dl class="kv"><dt>엔터티명</dt><dd>${e.n}</dd><dt>테이블명</dt><dd class="mono">${e.p}</dd><dt>분류</dt><dd>${e.c}</dd><dt>표준화</dt><dd>대상</dd></dl></div>
+      <div class="pane" data-pane="rel"><div class="caption" style="line-height:22px">${rels.join('<br>') || '관계 없음'}</div></div>`;
+    $('rp-add').onclick = () => addAttr();
+  }
+  function hint(msg) { const h = $('hint'); h.style.display = msg ? 'block' : 'none'; h.textContent = msg || ''; }
+  function setTool(t) {
+    if (t !== 'select' && guard()) t = 'select';
+    tool = t; relSrc = null; preview.setAttribute('d', ''); hint('');
+    document.querySelectorAll('.cv-toolbar .tb[data-tool]').forEach(b => b.classList.toggle('on', b.dataset.tool === t));
+    cv.classList.toggle('tool-entity', t === 'entity'); cv.classList.toggle('tool-rel', t === 'rel');
+    if (t === 'rel') hint('부모 엔터티를 클릭하세요 · Esc 취소');
+    if (t === 'entity') hint('엔터티를 놓을 곳을 클릭하세요');
+    render();
+  }
+  function toWorld(ev) { const r = cv.getBoundingClientRect(); return { x: (ev.clientX - r.left - panX) / zoom, y: (ev.clientY - r.top - panY) / zoom }; }
+  function focusEnt(id) { sel = id; showRP(); render(); const b = box(id); panX = cv.clientWidth / 2 - (b.x + b.w / 2) * zoom; panY = cv.clientHeight / 2 - (b.y + b.h / 2) * zoom; applyView(); }
+  function addAttr() {
+    if (!sel || guard()) return; const e = ent(sel);
+    e.a.forEach(a => delete a.edit); snap(); e.a.push({ n: '', p: '—', t: '—', s: 'na', edit: 1 }); render();
+  }
+  let acEl = null, acIdx = 0;
+  function showAC(inp) {
+    if (acEl) acEl.remove();
+    const v = inp.value.trim(); const list = TERMS.filter(t => !v || t.n.includes(v));
+    acEl = document.createElement('div'); acEl.className = 'acl';
+    const r = inp.getBoundingClientRect(), c = cv.getBoundingClientRect();
+    acEl.style.left = (r.left - c.left) + 'px'; acEl.style.top = (r.bottom - c.top + 4) + 'px';
+    acEl.innerHTML = list.map((t, i) => `<div class="o ${i === acIdx ? 'on' : ''}" data-ti="${TERMS.indexOf(t)}"><span>${t.n} <span class="badge ${tagCls(t.tag)}" style="height:16px">${t.tag}</span></span><span class="m">${t.d}</span><span class="m" style="grid-column:1/3">${t.p}</span></div>`).join('') +
+      (v ? `<div class="o" data-new="1" style="border-top:1px solid var(--border)"><span>＋ ‘${v}’ 그대로 입력 (미매핑)</span></div>` : '');
+    cv.appendChild(acEl);
+  }
+  function commitAttr(inp, term) {
+    const e = ent(inp.dataset.e), a = e.a[+inp.dataset.i];
+    if (term) { Object.assign(a, { n: term.n, p: term.p, t: term.t, s: term.s }); toast(`‘${term.n}’ 용어를 적용했습니다 · ${term.p}`); }
+    else if (inp.value.trim()) { Object.assign(a, { n: inp.value.trim(), s: 'unreg' }); toast('용어 없이 입력했습니다 — 미준수로 집계됩니다', 'info'); }
+    else e.a.splice(+inp.dataset.i, 1);
+    delete a.edit; if (acEl) { acEl.remove(); acEl = null; } render();
+  }
+  function commitRename(inp, ok) {
+    const e = ent(inp.dataset.e); renaming = null;
+    if (ok && inp.value.trim() && inp.value.trim() !== e.n) { snap(); e.n = inp.value.trim(); toast('이름을 바꿨습니다 · 엔터티 용어를 다시 확인합니다', 'info'); }
+    render();
+  }
+
+  // ---- collaboration demo
+  function setOffline(v) {
+    offline = v; document.body.classList.toggle('offline', v); $('ban-off').style.display = v ? 'flex' : 'none';
+    $('avcap').textContent = v ? '연결 끊김 · 로컬 보관 중' : '3명 접속 · 2명 편집';
+    $('cur-hong').style.display = $('cur-park').style.display = v ? 'none' : 'block';
+    render(); if (!v) toast('다시 연결했습니다 — 끊긴 동안의 내 편집 0건, 다른 사람 편집 1건을 병합했습니다', 'info');
+  }
+  function demoConflict() {
+    remoteApply(es => { const d = es.find(x => x.id === 'dlv'); if (d) d.n = '산출물관리기본'; });
+    remoteSel = 'dlv'; render();
+    toast('홍설계가 같은 칸(‘산출물기본’ 이름)을 동시에 고쳐 ‘산출물관리기본’이 남았습니다 · 내 값: 산출물기본', 'violet');
+  }
+  function moveCursors() {
+    if (offline) return;
+    const rb = $('n-' + remoteSel) ? box(remoteSel) : { x: 100, y: 300, w: 200, h: 120 };
+    const ch = $('cur-hong'); ch.style.left = (rb.x + 20 + Math.random() * (rb.w - 40)) + 'px'; ch.style.top = (rb.y + 10 + Math.random() * (rb.h - 20)) + 'px';
+    const pb = box('emp'); const cp = $('cur-park'); cp.style.left = (pb.x + 40 + Math.random() * 160) + 'px'; cp.style.top = (pb.y + pb.h + 10 + Math.random() * 40) + 'px';
+  }
+  setInterval(moveCursors, 1400);
+  if (!locked) setTimeout(() => {
+    if (offline) return;
+    remoteApply(es => { const r = es.find(x => x.id === 'rqrm'); if (r && !r.a.some(a => a.n === '요구사항상태코드')) r.a.push({ n: '요구사항상태코드', p: 'DEMND_MATER_STTS_CD', t: 'CHAR(2)', s: 'ok', remote: 1 }); });
+    render(); toast('홍설계가 ‘요구사항내역’에 ‘요구사항상태코드’를 추가했습니다', 'info');
+  }, 7000);
+
+  // ---- events
+  let drag = null, pan = null;
+  cv.addEventListener('mousedown', ev => {
+    if (ev.target.closest('.cv-toolbar,.cv-zoom,.cv-mini,.cv-banner,.pop,.acl,#sysview,.hit,input')) return;
+    const nh = ev.target.closest('[data-drag]'), node = ev.target.closest('.node');
+    if (tool === 'select' && node) {
+      const e = ent(node.id.slice(2)); sel = e.id; showRP();
+      if (nh && !locked) { const p = pos(e), w = toWorld(ev); drag = { e, dx: w.x - p.x, dy: w.y - p.y, moved: false }; }
+      render(); return;
+    }
+    if (!node && tool === 'select') { if (sel) { sel = null; render(); } pan = { x: ev.clientX - panX, y: ev.clientY - panY }; cv.classList.add('panning'); }
+  });
+  window.addEventListener('mousemove', ev => {
+    if (drag) { if (!drag.moved) { snap(); drag.moved = true; } const w = toWorld(ev); setPos(drag.e, Math.round((w.x - drag.dx) / 8) * 8, Math.round((w.y - drag.dy) / 8) * 8); const d = $('n-' + drag.e.id); const p = pos(drag.e); d.style.left = p.x + 'px'; d.style.top = p.y + 'px'; drawEdges(); mini(); }
+    if (pan) { panX = ev.clientX - pan.x; panY = ev.clientY - pan.y; applyView(); }
+    if (tool === 'rel' && relSrc) { const a = box(relSrc), w = toWorld(ev); preview.setAttribute('d', `M${a.x + a.w / 2},${a.y + a.h / 2} L${w.x},${w.y}`); }
+  });
+  window.addEventListener('mouseup', () => { drag = null; pan = null; cv.classList.remove('panning'); });
+  cv.addEventListener('click', ev => {
+    if (ev.target.closest('.cv-toolbar,.cv-zoom,.cv-mini,.cv-banner,.acl,#sysview,.pop')) return;
+    const node = ev.target.closest('.node');
+    if (tool === 'entity' && !node) {
+      const w = toWorld(ev), id = 'e' + Date.now(); snap();
+      E.push({ id, n: '새엔터티', p: '—', c: 'M', x: w.x, y: w.y, px: w.x, py: w.y, a: [{ n: '', p: '—', t: '—', s: 'na', pk: 1, edit: 1 }] });
+      sel = id; setTool('select'); toast('엔터티를 추가했습니다 — 식별자부터 입력하세요', 'info'); return;
+    }
+    if (tool === 'rel' && node) {
+      const id = node.id.slice(2);
+      if (!relSrc) { relSrc = id; hint('자식 엔터티를 클릭하세요 · 같은 엔터티를 누르면 재귀 확인 · Esc 취소'); render(); return; }
+      if (id === relSrc) {
+        const b = node.getBoundingClientRect(), c = cv.getBoundingClientRect();
+        const p = document.createElement('div'); p.className = 'pop'; p.style.left = (b.right - c.left + 8) + 'px'; p.style.top = (b.top - c.top) + 'px';
+        p.innerHTML = `<b>재귀 관계를 만들까요?</b><div class="caption muted" style="margin:4px 0 8px">같은 엔터티를 다시 눌렀습니다. 예: 상위리스크ID → 리스크ID</div><div class="flex"><button class="btn sm" id="pop-no">취소</button><span class="grow"></span><button class="btn sm primary" id="pop-yes">재귀 관계 만들기</button></div>`;
+        cv.appendChild(p);
+        $('pop-no').onclick = () => { p.remove(); setTool('rel'); };
+        $('pop-yes').onclick = () => { p.remove(); snap(); R.push({ f: id, t: id, k: 'nonid', name: '상위' }); const e = ent(id); e.a.push({ n: '상위' + e.a[0].n, p: 'UPR_' + e.a[0].p, t: e.a[0].t, fk: 1, s: 'comb' }); setTool('select'); toast(`재귀 관계와 ‘상위${e.a[0].n} (FK)’를 추가했습니다`); };
+        return;
+      }
+      const parent = ent(relSrc), child = ent(id); snap();
+      R.push({ f: relSrc, t: id, k: relType, name: '' });
+      if (relType !== 'mn') parent.a.filter(a => a.pk).forEach(k => {
+        const clash = child.a.some(a => a.n === k.n);
+        child.a.push({ n: clash ? '원' + k.n : k.n, p: clash ? 'ORG_' + k.p : k.p, t: k.t, fk: 1, pk: relType === 'id' ? 1 : 0, s: clash ? 'comb' : 'ok' });
+        toast(clash ? `이름이 겹쳐 ‘원${k.n} (FK)’로 추가했습니다 — 역할명을 확인하세요` : `‘${k.n} (FK)’가 ${child.n}에 추가됐습니다 · 되돌리기 Ctrl+Z`, clash ? 'violet' : 'success');
+      });
+      else toast('M:N 관계를 만들었습니다 — 관계를 선택해 [M:N 해소]로 교차 엔터티를 만드세요', 'info');
+      setTool('select');
+    }
+  });
+  cv.addEventListener('dblclick', ev => {
+    if (ev.target.closest('input')) return;
+    const title = ev.target.closest('.title');
+    if (title) { if (guard()) return; renaming = title.dataset.e; render(); return; }
+    const row = ev.target.closest('.ar[data-i]');
+    if (row) { if (guard()) return; const e = ent(row.dataset.e); snap(); e.a[+row.dataset.i].edit = 1; sel = e.id; render(); return; }
+    if (!ev.target.closest('.node,.cv-toolbar,.cv-zoom,.cv-mini,.cv-banner,#sysview') && tool === 'select' && !locked) { setTool('entity'); cv.dispatchEvent(new MouseEvent('click', { clientX: ev.clientX, clientY: ev.clientY, bubbles: true })); }
+  });
+  cv.addEventListener('input', ev => { if (ev.target.classList.contains('attr-in')) { acIdx = 0; showAC(ev.target); } });
+  cv.addEventListener('keydown', ev => {
+    const ren = ev.target.closest('.ren-in');
+    if (ren) { if (ev.key === 'Enter') commitRename(ren, true); else if (ev.key === 'Escape') commitRename(ren, false); return; }
+    const inp = ev.target.closest('.attr-in'); if (!inp) return;
+    const opts = acEl ? acEl.querySelectorAll('.o[data-ti]') : [];
+    if (ev.key === 'ArrowDown') { acIdx = Math.min(acIdx + 1, opts.length - 1); showAC(inp); ev.preventDefault(); }
+    else if (ev.key === 'ArrowUp') { acIdx = Math.max(acIdx - 1, 0); showAC(inp); ev.preventDefault(); }
+    else if (ev.key === 'Enter') { const o = opts[acIdx]; commitAttr(inp, o ? TERMS[+o.dataset.ti] : null); if (!ev.shiftKey && sel) setTimeout(addAttr, 0); ev.preventDefault(); }
+    else if (ev.key === 'Escape') { const e = ent(inp.dataset.e); e.a.splice(+inp.dataset.i, 1); hist.pop(); if (acEl) { acEl.remove(); acEl = null; } render(); }
+  });
+  cv.addEventListener('focusout', ev => { if (ev.target.classList && ev.target.classList.contains('ren-in') && renaming) commitRename(ev.target, true); });
+  document.addEventListener('mousedown', ev => { const o = ev.target.closest('.acl .o'); if (!o) return; ev.preventDefault(); const inp = nodes.querySelector('.attr-in'); if (inp) commitAttr(inp, o.dataset.ti ? TERMS[+o.dataset.ti] : null); });
+  document.addEventListener('keydown', ev => {
+    if (ev.target.closest && ev.target.closest('input,textarea,select')) return;
+    const k = ev.key.toLowerCase();
+    if (ev.ctrlKey && k === 'z') { undo(); ev.preventDefault(); return; }
+    if (ev.ctrlKey || ev.metaKey) return;
+    if (k === 'v') setTool('select'); else if (k === 'e') setTool('entity'); else if (k === 'r') setTool('rel');
+    else if (ev.key === 'Escape') { document.querySelectorAll('.pop').forEach(p => p.remove()); $('expmenu').classList.remove('open'); setTool('select'); }
+    else if (ev.key === 'Enter' && sel) { addAttr(); ev.preventDefault(); }
+    else if (ev.key === 'Delete' && sel) {
+      if (guard()) return;
+      const e = ent(sel);
+      if (remoteSel === sel && !offline && !confirm(`홍설계가 ‘${e.n}’을(를) 편집 중입니다. 그래도 삭제할까요?`)) return;
+      snap(); E.splice(E.indexOf(e), 1); for (let i = R.length - 1; i >= 0; i--) if (R[i].f === sel || R[i].t === sel) R.splice(i, 1);
+      if (remoteSel === sel) remoteSel = null; sel = null; render(); toast(`‘${e.n}’을(를) 삭제했습니다 · 되돌리기 Ctrl+Z`, 'info');
+    }
+    else if (ev.key === '!' || (ev.shiftKey && ev.code === 'Digit1')) fit();
+  });
+  // drag a dictionary term onto an entity
+  $('dict').addEventListener('dragstart', ev => { const it = ev.target.closest('.dict-item'); if (!it) return; ev.dataTransfer.setData('text/plain', it.dataset.ti); ev.dataTransfer.effectAllowed = 'copy'; cv.classList.add('dropping'); });
+  $('dict').addEventListener('dragend', () => { cv.classList.remove('dropping'); nodes.querySelectorAll('.drop').forEach(n => n.classList.remove('drop')); });
+  cv.addEventListener('dragover', ev => { ev.preventDefault(); nodes.querySelectorAll('.drop').forEach(n => n.classList.remove('drop')); const n = ev.target.closest('.node'); if (n) n.classList.add('drop'); });
+  cv.addEventListener('drop', ev => {
+    ev.preventDefault(); cv.classList.remove('dropping');
+    const n = ev.target.closest('.node'), ti = ev.dataTransfer.getData('text/plain');
+    if (!n) { toast('엔터티 위에 놓으세요', 'info'); return; }
+    if (guard()) return;
+    const e = ent(n.id.slice(2)), t = TERMS[+ti]; snap();
+    e.a.push({ n: t.n, p: t.p, t: t.t, s: t.s }); sel = e.id; showRP(); render();
+    toast(`‘${t.n}’을(를) ${e.n}에 속성으로 추가했습니다 · ${t.p}`);
+  });
+  cv.addEventListener('wheel', ev => {
+    ev.preventDefault();
+    if (ev.ctrlKey) { const r = cv.getBoundingClientRect(); const mx = ev.clientX - r.left, my = ev.clientY - r.top; const nz = Math.min(2, Math.max(0.15, zoom * (ev.deltaY < 0 ? 1.1 : 0.9))); panX = mx - (mx - panX) * nz / zoom; panY = my - (my - panY) * nz / zoom; zoom = nz; }
+    else { panX -= ev.deltaX; panY -= ev.deltaY; }
+    applyView();
+  }, { passive: false });
+  $('zi').onclick = () => { zoom = Math.min(2, zoom * 1.2); applyView(); };
+  $('zo').onclick = () => { zoom = Math.max(0.15, zoom / 1.2); applyView(); };
+  function fit() { let maxx = 0, maxy = 0; E.forEach(e => { const b = box(e.id); maxx = Math.max(maxx, b.x + b.w); maxy = Math.max(maxy, b.y + b.h); }); zoom = Math.min(1.2, (cv.clientWidth - 80) / maxx, (cv.clientHeight - 140) / maxy); panX = 40; panY = 80; applyView(); }
+  $('zfit').onclick = fit;
+  $('lodsel').onchange = ev => { lodForce = ev.target.value; applyView(); };
+  $('b-undo').onclick = undo;
+  document.querySelectorAll('.cv-toolbar .tb[data-tool]').forEach(b => b.addEventListener('click', () => {
+    if (b.dataset.tool === 'rel' && tool === 'rel') { $('relmenu').classList.toggle('open'); return; }
+    setTool(b.dataset.tool); if (b.dataset.tool === 'rel' && tool === 'rel') $('relmenu').classList.add('open');
+  }));
+  $('relmenu').addEventListener('click', ev => { ev.stopPropagation(); const d = ev.target.closest('[data-rt]'); if (!d) return; relType = d.dataset.rt; $('reltype').textContent = ({ nonid: '1:N 비식별', id: '1:N 식별', one: '1:1', mn: 'M:N' })[relType]; document.querySelectorAll('#relmenu .mi').forEach(x => x.classList.toggle('on', x === d)); $('relmenu').classList.remove('open'); });
+  eg.addEventListener('click', ev => {
+    const h = ev.target.closest('.hit'); if (!h) return; const r = R[+h.dataset.r];
+    sel = null; render(); showRP();
+    $('rp-title').textContent = '관계'; $('rp-sub').textContent = `${ent(r.f).n} → ${ent(r.t).n}`;
+    $('rp-body').innerHTML = `<dl class="kv"><dt>관계명</dt><dd>${r.name || '—'}</dd><dt>유형</dt><dd>${({ nonid: '1:N 비식별', id: '1:N 식별', one: '1:1', mn: 'M:N' })[r.k]}</dd><dt>부모 선택성</dt><dd>필수</dd><dt>자식 선택성</dt><dd>선택</dd></dl>` +
+      (r.k === 'mn' ? `<div class="banner warning"><span>!</span><div class="grow"><b>M:N 해소 필요</b><div class="caption">교차 엔터티 제안: <b>요구사항리스크관계</b> <span class="mono">RQRM_RISK_R</span> · 식별 관계(PK = 두 FK)</div></div></div><div class="flex" style="margin-top:8px"><span class="grow"></span><button class="btn primary sm" id="mn-go">미리보기 후 해소</button></div>` : '');
+    const go = $('mn-go'); if (go) go.onclick = () => {
+      if (guard()) return; snap();
+      R.splice(R.indexOf(r), 1); const a = box(r.f), b = box(r.t);
+      E.push({ id: 'rr', n: '요구사항리스크관계', p: 'RQRM_RISK_R', c: 'A', x: (a.x + b.x) / 2 + 300, y: (a.y + b.y) / 2, px: (a.x + b.x) / 2 + 320, py: (a.y + b.y) / 2, a: [{ n: '요구사항ID', p: 'DEMND_MATER_ID', t: 'VARCHAR2(10)', pk: 1, fk: 1, s: 'ok' }, { n: '리스크ID', p: 'RISK_ID', t: 'VARCHAR2(10)', pk: 1, fk: 1, s: 'ok' }] });
+      R.push({ f: r.f, t: 'rr', k: 'id', name: '' }, { f: r.t, t: 'rr', k: 'id', name: '' });
+      sel = 'rr'; render(); toast('M:N을 해소했습니다 — 교차 엔터티 ‘요구사항리스크관계’(식별 관계)');
+    };
+  });
+  $('b-layout').onclick = () => {
+    if (guard() || !confirm('계층 자동 배치를 적용합니다.\n접속 중인 2명(홍설계·박설계)의 화면도 같이 바뀝니다. 계속할까요?')) return;
+    snap(); const cols = { prj: [0, 0], emp: [1, 0], mbr: [1, 1], rqrm: [0, 1], dlv: [1, 2], hist: [2, 2], risk: [0, 2], rr: [0.5, 3] };
+    E.forEach((e, i) => { const c = cols[e.id] || [2, i]; setPos(e, 60 + c[0] * 380, 60 + c[1] * 230); }); render(); toast('계층 자동 배치를 적용했습니다 · 모든 접속자에게 반영 · Ctrl+Z로 되돌리기', 'info');
+  };
+  $('jump-bad').onclick = ev => { ev.preventDefault(); focusEnt('dlv'); toast('미준수 속성이 있는 ‘산출물기본’으로 이동했습니다', 'info'); };
+  function setMode(v) {
+    mode = v; document.querySelectorAll('#lp button').forEach(b => b.classList.toggle('on', b.dataset.v === v));
+    $('ban-gate').style.display = $('ban-sync').style.display = v === 'P' ? 'flex' : 'none';
+    sel = null; showRP(); render(); toast(v === 'P' ? '물리 캔버스 — 배치는 논리와 따로 저장됩니다' : '논리 캔버스', 'info');
+  }
+  $('lp').addEventListener('click', ev => {
+    const v = ev.target.dataset.v; if (!v || v === mode) return;
+    if (v === 'P' && !gateSeen) { $('rp').classList.remove('open'); $('pn-confirm').classList.remove('open'); $('pn-gate').classList.add('open'); return; }
+    setMode(v);
+  });
+  $('gate-go').onclick = () => { gateSeen = true; setMode('P'); toast('경고 4건을 남긴 채 물리 모델을 열었습니다 · 변경: 테이블 +2, 컬럼 +6', 'info'); };
+  $('gate-x').onclick = showRP;
+  $('b-gate').onclick = () => { $('rp').classList.remove('open'); $('pn-gate').classList.add('open'); };
+  $('b-reconnect').onclick = () => setOffline(false);
+  // export menu
+  $('b-export').onclick = ev => { ev.stopPropagation(); $('expmenu').classList.toggle('open'); };
+  $('expmenu').addEventListener('click', ev => { ev.stopPropagation(); const b = ev.target.closest('.seg button'); if (b) b.parentElement.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); });
+  $('ex-official').onchange = ev => { $('ex-title').style.display = ev.target.checked ? 'block' : 'none'; if (ev.target.checked) { $('ex-scope').children[1].click(); } };
+  $('ex-cancel').onclick = () => $('expmenu').classList.remove('open');
+  $('ex-go').onclick = () => {
+    const sc = $('ex-scope').querySelector('.on').textContent, f = $('ex-fmt').querySelector('.on').textContent, off = $('ex-official').checked;
+    $('expmenu').classList.remove('open');
+    toast(`${off ? '공식 산출물(v4 확정본 배치·표제란) ' : ''}${sc} · ${f}로 내보냈습니다 — 요구사항_프로젝트_${mode === 'L' ? '논리' : '물리'}_ERD.${f.toLowerCase()}`);
+  };
+  document.addEventListener('click', () => { $('expmenu').classList.remove('open'); });
+  $('b-sys').onclick = () => {
+    const sv = $('sysview'); const on = sv.style.display !== 'block';
+    sv.style.display = on ? 'block' : 'none'; world.style.display = on ? 'none' : 'block';
+    $('b-sys').classList.toggle('on', on); cv.dataset.sys = on ? '1' : '';
+    if (on) sv.innerHTML = `<div class="banner info" style="position:absolute;left:12px;top:60px;z-index:5;max-width:520px"><span>ℹ</span><div class="grow"><b>시스템 전체 ERD · 조회 전용</b> — 요구사항관리의 모든 업무 영역. 영역을 더블클릭하면 편집 캔버스로 이동합니다.</div></div>
+      <div class="grp" style="left:80px;top:140px;width:300px;height:180px" ondblclick="document.getElementById('b-sys').click()"><h4>요구사항 · 프로젝트</h4><div class="caption muted">엔터티 ${E.length} · 미준수 6 · <span style="color:var(--p-hong)">2명 편집 중</span></div><div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:10px">${'<span style="width:40px;height:22px;border-radius:4px;background:var(--surface-2);border:1px solid var(--border)"></span>'.repeat(E.length)}</div></div>
+      <div class="grp" style="left:520px;top:180px;width:220px;height:130px"><h4>리스크</h4><div class="caption muted">엔터티 2 · 검토 중</div></div>
+      <div class="grp" style="left:300px;top:400px;width:260px;height:140px"><h4>공통 (참조)</h4><div class="caption muted">사원기본 · 부서기본 · 공통코드</div></div>
+      <svg style="position:absolute;inset:0;pointer-events:none" width="100%" height="100%"><g stroke="var(--fg-3)" fill="none"><path d="M380 240 H520" stroke-width="3"/><path d="M230 320 V470 H300" stroke-width="2"/><path d="M630 310 V440 H560" stroke-width="1"/></g><text x="430" y="232" font-size="11" fill="var(--fg-2)">관계 3</text></svg>
+      <div class="cv-zoom" style="left:12px;bottom:12px"><span class="caption muted" style="padding:0 8px">15% · 영역 묶음 보기 · 확대하면 엔터티가 펼쳐집니다</span></div>`;
+  };
+
+  // ---- states
   if (q.get('state') === 'resolved') {
-    document.getElementById('rate').textContent = '100%';
-    document.getElementById('c-bad').textContent = '0';
-    document.getElementById('c-ex').textContent = '3';
-    document.getElementById('c-na').textContent = '0';
-    const b = document.getElementById('confirm-btn');
-    b.classList.remove('disabled', 'has-tip'); b.classList.add('primary');
-    b.dataset.open = 'pn-confirm'; b.dataset.closeOthers = 'pn-attr,pn-gate';
+    $('rate').textContent = '100%'; $('c-bad').textContent = '0'; $('c-ex').textContent = '3'; $('c-na').textContent = '0';
+    E.forEach(e => e.a.forEach(a => { if (a.s === 'comb' || a.s === 'unreg') a.s = 'ex'; }));
+    const b = $('confirm-btn'); b.classList.remove('disabled', 'has-tip'); b.classList.add('primary');
+    b.dataset.open = 'pn-confirm'; b.dataset.closeOthers = 'rp,pn-gate';
     toast('표준 맞추기 적용 — 미준수 0건, 확정 신청을 할 수 있습니다');
   }
-  if (q.get('w') === '1600' || document.documentElement.classList.contains('frame-1600')) {
-    // 1600 frame: side panel 240, right panel 380 (CSS vars)
+  if (locked) {
+    document.body.classList.add('locked'); cv.classList.add('locked'); $('ban-lock').style.display = 'flex';
+    $('ver').textContent = 'v5 검토 중'; $('rate').textContent = '100%'; $('c-bad').textContent = '0';
+    E.forEach(e => e.a.forEach(a => { if (a.s === 'comb' || a.s === 'unreg') a.s = 'ex'; }));
+    const b = $('confirm-btn'); b.textContent = '회수'; b.classList.remove('disabled', 'has-tip'); b.dataset.toast = '확정 신청을 회수했습니다 — 다시 편집할 수 있습니다'; b.dataset.toastType = 'info';
+    remoteSel = null; $('avcap').textContent = '3명 접속 · 모두 조회 전용';
+    document.querySelector('.cv-toolbar').classList.add('locked');
   }
-  document.getElementById('seg-physical').addEventListener('click', e => {
-    document.getElementById('seg-physical').classList.add('on'); document.getElementById('seg-logical').classList.remove('on');
-  });
-  document.getElementById('seg-logical').addEventListener('click', e => {
-    document.getElementById('seg-logical').classList.add('on'); document.getElementById('seg-physical').classList.remove('on');
-  });
+  setTool('select'); applyView(); render(); setTimeout(() => { fit(); moveCursors(); }, 60);
 };
 </script>
 </body>

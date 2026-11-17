@@ -143,5 +143,7 @@
     });
   }
 
-  document.addEventListener('DOMContentLoaded', () => { buildShell(); wire(); if (window.pageInit) window.pageInit(); });
+  document.addEventListener('DOMContentLoaded', () => { buildShell(); wire();
+    if (location.hash) { const b = document.querySelector(`.tabs button[data-tab="${location.hash.slice(1)}"]`); if (b) b.click(); }
+    if (window.pageInit) window.pageInit(); });
 })();
