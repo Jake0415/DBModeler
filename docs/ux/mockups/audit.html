@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>감사 로그 · DBModeler 목업</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="assets/app.css">
+<script src="assets/app.js"></script>
+</head>
+<body data-page="audit">
+<div id="app">
+<div id="content" class="page">
+  <div class="page-header">
+    <h1>감사 로그</h1><span class="badge">수정·삭제 불가 · 5년 보관</span>
+    <div class="actions"><button class="btn" data-toast="감사 로그를 엑셀로 내려받았습니다(현재 필터)" data-toast-type="info">엑셀</button></div>
+  </div>
+  <div class="toolbar">
+    <span class="chip on" data-group="ak" data-filter="">전체</span>
+    <span class="chip" data-group="ak" data-filter="appr">결재</span>
+    <span class="chip" data-group="ak" data-filter="self">자기 승인</span>
+    <span class="chip" data-group="ak" data-filter="role">역할·권한</span>
+    <span class="chip" data-group="ak" data-filter="set">설정</span>
+    <span class="chip" data-group="ak" data-filter="dict">사전 반영</span>
+    <span class="chip" data-group="ak" data-filter="model">모델 확정</span>
+    <span class="grow"></span>
+    <select class="input" style="width:140px;height:28px" aria-label="기간"><option>최근 30일</option><option>최근 1년</option><option>전체</option></select>
+    <input class="input" style="width:200px;height:28px" placeholder="사용자·문서 번호" aria-label="사용자·문서 번호 검색">
+  </div>
+  <div class="scroll" data-filter-target="ak">
+    <table class="tbl"><thead><tr><th>일시</th><th>사용자</th><th>종류</th><th>대상</th><th>내용 (전 → 후)</th><th>사유</th><th>IP</th></tr></thead><tbody>
+      <tr data-f="appr self"><td class="mono">11/17 15:06</td><td>김모델 <span class="badge">DA</span></td><td><span class="badge b-violet">자기 승인</span></td><td class="mono">REQ-2026-0014</td><td>DA 승인 → 최종 승인 대기</td><td class="caption">DA 1인 운영 기간 · 최종 승인에서 재검토</td><td class="mono">10.12.3.41</td></tr>
+      <tr data-f="set"><td class="mono">11/17 11:20</td><td>이데이터 <span class="badge">Admin</span></td><td><span class="badge">설정</span></td><td>사전 신청 최종 승인</td><td>끔 → <b>켬</b> (진행 중 3건은 기존 결재선 유지)</td><td class="caption">기관 담당자 지정 완료</td><td class="mono">10.12.3.12</td></tr>
+      <tr data-f="role"><td class="mono">11/17 10:02</td><td>이데이터 <span class="badge">Admin</span></td><td><span class="badge b-warning">역할 변경</span></td><td>김모델</td><td>모델러 → 모델러 · <b>DA</b></td><td class="caption">DA 1인 운영 보완</td><td class="mono">10.12.3.12</td></tr>
+      <tr data-f="role"><td class="mono">11/17 09:58</td><td>김모델</td><td><span class="badge b-danger">거부</span></td><td>김모델</td><td>자기 역할 변경 시도 → 거부됨</td><td class="caption">정책: 자기 역할 변경 불가</td><td class="mono">10.12.3.41</td></tr>
+      <tr data-f="dict"><td class="mono">11/16 18:10</td><td>시스템</td><td><span class="badge b-success">사전 반영</span></td><td class="mono">REQ-2026-0008</td><td>단어 12건 반영 · 제정 12차</td><td></td><td class="mono">—</td></tr>
+      <tr data-f="model appr"><td class="mono">11/03 10:20</td><td>최관리 <span class="badge">기관 담당자</span></td><td><span class="badge b-violet">모델 확정</span></td><td class="mono">REQ-2026-0003</td><td>요구사항·프로젝트 v4 확정본</td><td class="caption">예외 2건 확인</td><td class="mono">10.12.5.3</td></tr>
+    </tbody></table>
+  </div>
+</div>
+</div>
+<script>
+window.pageInit = function () { if (!ME.has('da') && !ME.has('admin')) location.replace('error.html?code=403&need=DA 또는 Admin&what=감사 로그'); };
+</script>
+</body>
+</html>

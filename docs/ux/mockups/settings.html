@@ -107,26 +107,10 @@
   <div class="pane" data-pane="users">
     <div class="page-body" style="border:1px solid var(--border);border-radius:8px;overflow:hidden;height:560px">
       <div class="main"><div class="scroll">
-        <table class="tbl"><thead><tr><th>이름</th><th>메일</th><th>역할</th><th>담당 시스템</th><th>상태</th></tr></thead><tbody>
-          <tr class="click sel" data-panel="pn-user"><td>김모델</td><td class="mono">kim@kda.go.kr</td><td><span class="badge">모델러</span> <span class="badge">DA</span></td><td>요구사항관리, 인사시스템</td><td><span class="badge b-success">사용</span></td></tr>
-          <tr class="click" data-panel="pn-user"><td>박설계</td><td class="mono">park@kda.go.kr</td><td><span class="badge">모델러</span></td><td>요구사항관리</td><td><span class="badge b-success">사용</span></td></tr>
-          <tr class="click" data-panel="pn-user"><td>이데이터</td><td class="mono">lee@kda.go.kr</td><td><span class="badge">DA</span> <span class="badge">Admin</span></td><td>전체</td><td><span class="badge b-success">사용</span></td></tr>
-          <tr class="click" data-panel="pn-user"><td>이현업</td><td class="mono">hyun@kda.go.kr</td><td><span class="badge">기관 담당자</span></td><td>전체</td><td><span class="badge b-success">사용</span></td></tr>
-          <tr class="click" data-panel="pn-user"><td>최담당</td><td class="mono">choi@kda.go.kr</td><td><span class="badge">기관 담당자</span> <span class="badge">모델러</span></td><td>회계시스템</td><td><span class="badge b-success">사용</span></td></tr>
+        <div class="flex" style="padding:10px 12px;border-bottom:1px solid var(--border)"><span class="caption muted">인증: 사내 SSO · 사용자는 디렉터리에서 초대합니다</span><span class="grow"></span><button class="btn sm" data-toast="사내 디렉터리에서 사용자를 검색해 초대합니다(목업)" data-toast-type="info">+ 사용자 초대</button></div>
+        <table class="tbl"><thead><tr><th>이름</th><th>메일</th><th>역할</th><th>담당 시스템</th><th>마지막 접속</th><th>상태</th></tr></thead><tbody id="u-rows">
         </tbody></table></div></div>
-      <aside class="rpanel open" id="pn-user">
-        <div class="rp-head"><h2>김모델</h2><div class="rp-sub">kim@kda.go.kr</div></div>
-        <div class="rp-body">
-          <div class="section-t">역할 <span class="caption muted">여러 개 선택 가능</span></div>
-          <label class="flex" style="margin-bottom:6px"><input type="checkbox" checked> 모델러 <span class="caption faint">모델 편집·사전 신청</span></label>
-          <label class="flex" style="margin-bottom:6px"><input type="checkbox" checked> DA <span class="caption faint">1단계 승인·후보 큐</span></label>
-          <label class="flex" style="margin-bottom:6px"><input type="checkbox"> 기관 담당자 <span class="caption faint">최종 승인</span></label>
-          <label class="flex" style="margin-bottom:6px"><input type="checkbox"> Admin <span class="caption faint">설정·사용자</span></label>
-          <div class="section-t">담당 시스템</div>
-          <div><span class="badge">요구사항관리 ×</span> <span class="badge">인사시스템 ×</span> <button class="btn ghost sm">+ 추가</button></div>
-        </div>
-        <div class="rp-foot"><span class="grow"></span><button class="btn primary sm" data-toast="역할을 저장했습니다">저장</button></div>
-      </aside>
+      <aside class="rpanel open" id="pn-user"></aside>
     </div>
   </div>
 
@@ -159,8 +143,30 @@
 </div>
 <script>
 window.pageInit = function () {
+  if (!ME.has('admin')) { location.replace('error.html?code=403&need=Admin&what=설정'); return; }
   if (location.hash === '#system') document.querySelector('.tabs button[data-tab="sys"]').click();
-  // C-legacy hash support; #sys / #rules handled in app.js
+  const $ = id => document.getElementById(id);
+  const list = Object.values(USERS).concat([{ id: 'choi', name: '최담당', mail: 'choi@kda.go.kr', roles: ['owner', 'modeler'], systems: ['회계시스템'] }]);
+  const last = { kim: '방금', park: '11/17 18:20', lee: '11/18 08:40', hyun: '11/17 09:10', choi: '11/12 14:02' };
+  let selU = list.find(u => u.id !== ME.id).id;
+  const RD = { modeler: '모델 편집·사전 신청', da: '1단계 승인·후보 큐', owner: '최종 승인', admin: '설정·사용자' };
+  function draw() {
+    $('u-rows').innerHTML = list.map(u => `<tr class="click ${u.id === selU ? 'sel' : ''}" data-u="${u.id}" tabindex="0"><td>${u.name}${u.id === ME.id ? ' <span class="badge">나</span>' : ''}</td><td class="mono">${u.mail}</td><td>${u.roles.map(r => `<span class="badge">${ROLE_NAME[r]}</span>`).join(' ')}</td><td>${u.systems.join(', ')}</td><td class="mono caption">${last[u.id]}</td><td><span class="badge b-success">사용</span></td></tr>`).join('');
+    const u = list.find(x => x.id === selU), self = u.id === ME.id;
+    $('pn-user').innerHTML = `<div class="rp-head"><h2>${u.name}${self ? ' <span class="badge">나</span>' : ''}</h2><div class="rp-sub">${u.mail}</div></div>
+      <div class="rp-body">
+        ${self ? '<div class="banner warning" style="margin-bottom:12px"><span>!</span><div><b>자기 역할은 스스로 바꿀 수 없습니다.</b> 다른 Admin에게 요청하세요. 시도하면 감사 로그에 남습니다.</div></div>' : ''}
+        <div class="section-t">역할 <span class="caption muted">여러 개 선택 가능</span></div>
+        ${Object.keys(ROLE_NAME).map(r => `<label class="flex" style="margin-bottom:6px"><input type="checkbox" ${u.roles.includes(r) ? 'checked' : ''} ${self ? 'disabled' : ''}> ${ROLE_NAME[r]} <span class="caption faint">${RD[r]}</span></label>`).join('')}
+        <div class="section-t">담당 시스템</div>
+        <div>${u.systems.map(s => `<span class="badge">${s}${self ? '' : ' ×'}</span>`).join(' ')} ${self ? '' : '<button class="btn ghost sm">+ 추가</button>'}</div>
+        <div class="section-t">계정</div>
+        <div class="flex">${self ? '<span class="caption muted">본인 계정은 중지할 수 없습니다</span>' : '<button class="btn sm" data-toast="계정을 중지했습니다 — 진행 중 결재는 다른 담당자에게 넘어갑니다" data-toast-type="info">사용 중지</button>'}</div>
+      </div>
+      <div class="rp-foot"><span class="grow"></span>${self ? '<button class="btn primary sm" disabled>저장</button>' : '<button class="btn primary sm" data-toast="역할을 저장했습니다 — 감사 로그에 기록됩니다">저장</button>'}</div>`;
+  }
+  $('u-rows').addEventListener('click', e => { const r = e.target.closest('[data-u]'); if (r) { selU = r.dataset.u; draw(); } });
+  draw();
 };
 </script>
 </body>

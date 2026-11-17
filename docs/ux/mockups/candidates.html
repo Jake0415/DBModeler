@@ -54,15 +54,38 @@
         </tbody></table>
         <div class="section-t">처리 결과는 요청자에게 앱 알림으로 갑니다</div>
       </div>
-      <div class="rp-foot">
-        <button class="btn danger sm" data-toast="반려했습니다. 요청자 2명에게 알림을 보냈습니다" data-toast-type="danger">반려</button>
-        <button class="btn sm" data-toast="‘수신자’를 쓰도록 안내하고 반려했습니다" data-toast-type="info">기존 표준어 사용 안내</button>
+      <div class="rp-foot" id="cd-foot">
+        <button class="btn danger sm" data-open="mo-crej">반려</button>
+        <button class="btn sm" data-open="mo-cstd">기존 표준어 사용 안내</button>
         <span class="grow"></span>
         <a class="btn primary sm" href="dictionary.html">단어 신청으로 전환</a>
       </div>
     </aside>
   </div>
+  <div class="overlay" id="mo-crej" role="dialog" aria-modal="true" aria-labelledby="crej-t"><div class="modal"><div class="m-head"><h3 id="crej-t">후보 반려 · 수령자</h3></div>
+    <div class="m-body"><div class="caption muted" style="margin-bottom:8px">발생 위치 4곳의 요청자 <b>김모델 · 박설계</b>에게 앱 알림이 갑니다. 해당 속성은 미준수로 남습니다.</div>
+      <div class="field"><label for="crej-why">반려 사유 *</label><textarea class="input" id="crej-why" rows="3"></textarea></div></div>
+    <div class="m-foot"><button class="btn" data-close="mo-crej">취소</button><button class="btn danger" id="crej-go" data-needs="crej-why">반려</button></div></div></div>
+  <div class="overlay" id="mo-cstd" role="dialog" aria-modal="true" aria-labelledby="cstd-t"><div class="modal"><div class="m-head"><h3 id="cstd-t">기존 표준어 사용 안내</h3></div>
+    <div class="m-body"><div class="field"><label for="cstd-to">안내할 표준</label><select class="input" id="cstd-to"><option>수신자 RCVR (공통 단어)</option><option>수취인 RCPT (기관 단어)</option></select></div>
+      <div class="field"><label for="cstd-msg">요청자에게 보낼 안내 *</label><textarea class="input" id="cstd-msg" rows="3">‘수령자’ 대신 같은 뜻의 공통 표준 ‘수신자(RCVR)’를 쓰세요. 표준 맞추기에서 바로 바꿀 수 있습니다.</textarea></div>
+      <div class="caption muted">요청자 2명 · 발생 위치 4곳에 ‘수신자로 바꾸기’ 제안이 붙습니다.</div></div>
+    <div class="m-foot"><button class="btn" data-close="mo-cstd">취소</button><button class="btn primary" id="cstd-go" data-needs="cstd-msg">안내하고 후보 닫기</button></div></div></div>
 </div>
 </div>
+<script>
+window.pageInit = function () {
+  const $ = id => document.getElementById(id);
+  if (!ME.has('da')) { $('cd-foot').innerHTML = '<span class="caption muted">후보 처리는 DA만 할 수 있습니다 — 내가 등록한 후보의 처리 결과는 알림으로 받습니다.</span>'; return; }
+  const closeCand = (msg, type) => {
+    const row = document.querySelector('tbody tr.sel') || document.querySelector('tbody tr');
+    if (row) { const last = row.lastElementChild; last.innerHTML = '<span class="badge">처리됨</span>'; row.style.opacity = '.55'; }
+    $('cd-foot').innerHTML = '<span class="badge b-success">✓ 처리 완료</span><span class="grow"></span><a class="btn sm" href="candidates.html">다음 후보</a>';
+    toast(msg, type);
+  };
+  $('crej-go').onclick = () => { $('mo-crej').classList.remove('open'); closeCand(`반려했습니다 — 요청자 2명에게 사유와 함께 알림을 보냈습니다`, 'danger'); };
+  $('cstd-go').onclick = () => { $('mo-cstd').classList.remove('open'); closeCand(`‘${$('cstd-to').value.split(' ')[0]}’ 사용을 안내하고 후보를 닫았습니다 — 요청자 2명에게 알림`, 'info'); };
+};
+</script>
 </body>
 </html>

@@ -14,7 +14,7 @@
   .side .dict-item:hover { background:var(--surface-2); }
   .side .dict-item .l1 { display:flex; gap:6px; align-items:center; }
   .side .dict-item .l2 { font-family:var(--font-mono); font-size:12px; color:var(--fg-2); }
-  .s-ok { background:var(--success); } .s-comb { background:var(--info); } .s-unreg { background:var(--warning); } .s-ex { background:var(--violet); } .s-na { background:var(--border-strong); }
+  .s-ok { background:var(--success); } .s-comb { background:var(--info); } .s-unreg { background:var(--warning); } .s-ex { background:var(--violet); } .s-na { background:var(--border-strong); } .s-req { background:var(--info); box-shadow:inset 0 0 0 2px var(--surface); outline:1px solid var(--info); }
   #confirm-btn.disabled { pointer-events:auto; }
   .avs { display:flex; align-items:center; padding-left:6px; }
   .avs .av { width:24px; height:24px; border-radius:50%; color:#fff; font:600 11px var(--font-sans); display:grid; place-items:center; border:2px solid var(--surface); margin-left:-6px; }
@@ -75,7 +75,8 @@
   .cv-toolbar .tb.on { background:var(--ink); color:var(--on-ink); }
   .cv-toolbar .sep { width:1px; height:20px; background:var(--border); margin:0 4px; }
   .cv-toolbar kbd { font-size:10px; padding:0 3px; }
-  .locked .cv-toolbar .tb[data-edit] { opacity:.35; pointer-events:none; }
+  .locked .cv-toolbar .tb[data-edit], .viewonly .cv-toolbar .tb[data-edit] { opacity:.35; pointer-events:none; }
+  .viewonly #grid .edit-only { display:none !important; }
   .menu { position:absolute; background:var(--surface); border-radius:8px; box-shadow:var(--shadow-5); padding:4px; display:none; z-index:30; }
   .menu.open { display:block; }
   .menu .mi { padding:6px 8px; border-radius:4px; cursor:pointer; font-size:13px; display:flex; justify-content:space-between; gap:12px; }
@@ -191,8 +192,12 @@
         <button class="tb" id="b-redo" data-edit title="다시 실행 (Ctrl+Y)">↷</button>
       </div>
       <div class="cv-hint" id="hint"></div>
+      <button class="side-tab" data-toggle="side" title="사전 패널 열기">사전 ▸</button>
+      <button class="rp-tab" id="rp-tab" title="우측 패널 열기">패널 ◂</button>
       <div class="cv-banner">
-        <div class="banner info" id="ban-lock"><span>●</span><div class="grow"><b>검토 중 · REQ-2026-0015</b> — 확정 신청으로 이 업무 영역은 모든 접속자에게 조회 전용입니다. 이후 편집은 다음 작업 버전(v6)에 들어갑니다.</div><a class="btn sm" href="approvals.html">결재 보기</a></div>
+        <div class="banner info" id="ban-lock"><span>●</span><div class="grow" id="ban-lock-t"><b>검토 중 · REQ-2026-0015</b> — 확정 신청으로 이 업무 영역은 모든 접속자에게 조회 전용입니다. 이후 편집은 다음 작업 버전(v6)에 들어갑니다.</div><a class="btn sm" id="ban-lock-a" href="approvals.html?doc=REQ-2026-0015">결재 보기</a></div>
+        <div class="banner warning" id="ban-left"><span>!</span><div class="grow"><b>남은 미준수 2</b> — ‘수령자’ 단어가 후보(REQ-2026-0012)로 승인 대기 중입니다. 사유를 남기고 예외로 유지하면 확정 신청할 수 있습니다.</div><button class="btn sm" data-open="mo-ex2">2건 예외로 유지</button></div>
+        <div class="banner" id="ban-view"><span>ℹ</span><div class="grow"><b>조회 전용</b> — 모델 편집은 <b>모델러</b> 역할만 할 수 있습니다. 지금 역할: <span id="ban-view-r"></span></div></div>
         <div class="banner danger" id="ban-off"><span>!</span><div class="grow"><b>연결 끊김</b> — 편집 내용은 이 브라우저에 보관하고, 다시 연결되면 병합합니다.</div><button class="btn sm" id="b-reconnect">다시 연결</button></div>
         <div class="banner warning" id="ban-gate"><span>!</span><div class="grow"><b>게이트 A · 경고 4</b> — 미매핑 3 · 타입 미정 2. 진행은 막지 않습니다.</div><button class="btn sm" id="b-gate">점검 보기</button></div>
         <div class="banner info" id="ban-sync"><span>●</span><div class="grow"><b>논리 변경 2건 대기</b> — 물리에 자동 반영하지 않습니다.</div><button class="btn sm" data-toast="논리 변경 2건을 물리에 반영했습니다 · 컬럼 +2" data-toast-type="info">미리보기 · 반영</button></div>
@@ -216,7 +221,7 @@
     </div>
 
     <aside class="rpanel open" id="rp" data-tabscope>
-      <div class="rp-head"><div class="t"><h2 id="rp-title">업무 영역 요약</h2></div><div class="rp-sub" id="rp-sub"></div></div>
+      <div class="rp-head"><div class="t"><h2 id="rp-title">업무 영역 요약</h2><span class="grow"></span><button class="iconbtn" id="rp-wide" aria-label="패널 넓히기/좁히기" title="패널 폭 380 ↔ 560" style="width:28px;height:28px">↔</button><button class="iconbtn" id="rp-close" aria-label="패널 닫기" style="width:28px;height:28px">×</button></div><div class="rp-sub" id="rp-sub"></div></div>
       <div class="rp-body" id="rp-body"></div>
     </aside>
 
@@ -254,13 +259,9 @@
           <div class="card"><div class="caption muted">예외</div><div class="mono" style="font-size:20px;color:var(--violet)">3</div></div>
           <div class="card"><div class="caption muted">v4 대비</div><div class="mono" style="font-size:20px">+2 ~5</div></div>
         </div>
-        <div class="section-t">표준 예외 <span class="badge b-violet">◆ 3</span></div>
-        <table class="tbl"><thead><tr><th>항목</th><th>사유</th></tr></thead><tbody>
-          <tr><td class="mono">REQ_CUST_NM</td><td class="wrap">대외 연계 컬럼명 유지</td></tr>
-          <tr><td class="mono">PRJ_ENDDD</td><td class="wrap">운영 배치 영향</td></tr>
-          <tr><td>산출물수령자명</td><td class="wrap">‘수령자’ 후보 승인 전 임시 유지</td></tr>
-        </tbody></table>
-        <div class="field" style="margin-top:12px"><label>신청 사유 *</label><textarea class="input" rows="2">산출물 관리 테이블 추가에 따른 v5 확정</textarea></div>
+        <div class="section-t">표준 예외 <span class="badge b-violet" id="cf-exn">◆ 0</span> <span class="caption muted">신청 중 용어는 결재에서 함께 확인</span></div>
+        <table class="tbl"><thead><tr><th>항목</th><th>사유</th></tr></thead><tbody id="cf-ex"></tbody></table>
+        <div class="field" style="margin-top:12px"><label for="cf-why">신청 사유 *</label><textarea class="input" id="cf-why" rows="2">산출물 관리 테이블 추가에 따른 v5 확정</textarea></div>
         <div class="section-t">결재선</div>
         <div class="approval-line">
           <div class="al-step"><span class="pt"></span><div><b>DA 승인</b> <span class="caption faint">필수</span></div></div>
@@ -269,13 +270,19 @@
         <div class="flex" style="margin-top:8px"><span class="caption muted">참조</span><button class="btn ghost sm">+ 참조자</button></div>
         <div class="banner" style="margin-top:12px"><span>ℹ</span><div>신청하면 이 업무 영역은 <b>검토 중</b>이 되어 <b>접속 중인 모든 사람</b>에게 조회 전용으로 바뀝니다(지금 홍설계 편집 중). 회수하면 다시 편집할 수 있습니다.</div></div>
       </div>
-      <div class="rp-foot"><span class="grow"></span><button class="btn" data-close="pn-confirm">취소</button><a class="btn primary" href="model.html?state=review">확정 신청</a></div>
+      <div class="rp-foot"><span class="grow"></span><button class="btn" data-close="pn-confirm">취소</button><button class="btn primary" id="cf-go" data-needs="cf-why">확정 신청</button></div>
     </aside>
   </div>
 
-  <div class="overlay" id="mo-ex"><div class="modal"><div class="m-head"><h3>표준 예외로 유지</h3></div>
-    <div class="m-body"><div class="caption muted" style="margin-bottom:8px">산출물기본.산출물수령자명</div><div class="field"><label>사유 *</label><textarea class="input" rows="3">‘수령자’ 단어 후보 승인 전까지 임시 유지</textarea></div></div>
-    <div class="m-foot"><button class="btn" data-close="mo-ex">취소</button><button class="btn primary" data-close="mo-ex" data-toast="예외로 기록했습니다 — 확정 결재에서 DA가 검토합니다" data-toast-type="violet">예외 기록</button></div></div></div>
+  <div class="overlay" id="mo-ex" role="dialog" aria-modal="true" aria-labelledby="ex-t"><div class="modal"><div class="m-head"><h3 id="ex-t">표준 예외로 유지</h3></div>
+    <div class="m-body"><div class="caption muted" style="margin-bottom:8px">산출물기본.산출물수령자명</div><div class="field"><label for="ex-why">사유 *</label><textarea class="input" id="ex-why" rows="3"></textarea></div></div>
+    <div class="m-foot"><button class="btn" data-close="mo-ex">취소</button><button class="btn primary" id="ex-go" data-needs="ex-why">예외 기록</button></div></div></div>
+  <div class="overlay" id="mo-ex2" role="dialog" aria-modal="true" aria-labelledby="ex2-t"><div class="modal"><div class="m-head"><h3 id="ex2-t">예외로 유지 (2건)</h3></div>
+    <div class="m-body"><div class="caption muted" style="margin-bottom:8px">산출물기본.산출물수령자명 · 산출물이력.수령자ID — 미등록 단어 ‘수령자’</div><div class="field"><label for="ex2-why">사유 * <span class="faint">확정 결재에서 DA가 검토합니다</span></label><textarea class="input" id="ex2-why" rows="3"></textarea></div></div>
+    <div class="m-foot"><button class="btn" data-close="mo-ex2">취소</button><button class="btn primary" id="ex2-go" data-needs="ex2-why">2건 예외 기록</button></div></div></div>
+  <div class="overlay" id="mo-wd" role="dialog" aria-modal="true" aria-labelledby="wd-t"><div class="modal"><div class="m-head"><h3 id="wd-t">확정 신청 회수</h3></div>
+    <div class="m-body"><div class="caption muted" style="margin-bottom:8px">REQ-2026-0015 결재가 취소되고, 이 업무 영역의 잠금이 풀려 모든 접속자가 다시 편집할 수 있습니다.</div><div class="field"><label for="wd-why">회수 사유 *</label><textarea class="input" id="wd-why" rows="2"></textarea></div></div>
+    <div class="m-foot"><button class="btn" data-close="mo-wd">취소</button><button class="btn primary" id="wd-go" data-needs="wd-why">회수</button></div></div></div>
 </div>
 </div>
 <script>
@@ -297,13 +304,13 @@ window.pageInit = function () {
 
   const E = [
     { id: 'prj', n: '프로젝트기본', p: 'PRJ_M', c: 'M', x: 60, y: 60, px: 60, py: 60, a: [
-      { n: '프로젝트ID', p: 'PRJ_ID', t: 'VARCHAR2(10)', pk: 1, nn: 1, s: 'ok' }, { n: '프로젝트명', p: 'PRJ_NM', t: 'VARCHAR2(100)', nn: 1, s: 'ok' }, { n: '발주처명', p: 'ORDR_OFC_NM', t: 'VARCHAR2(100)', s: 'ok' }, { n: '프로젝트종료일', p: 'PRJ_ENDDD', t: 'CHAR(8)', s: 'ex' }, { n: '수주금액', p: 'WINCON_AMT', t: 'NUMBER(15)', s: 'ok' }] },
+      { n: '프로젝트ID', p: 'PRJ_ID', t: 'VARCHAR2(10)', pk: 1, nn: 1, s: 'ok' }, { n: '프로젝트명', p: 'PRJ_NM', t: 'VARCHAR2(100)', nn: 1, s: 'ok' }, { n: '발주처명', p: 'ORDR_OFC_NM', t: 'VARCHAR2(100)', s: 'ok' }, { n: '프로젝트종료일', p: 'PRJ_ENDDD', t: 'CHAR(8)', s: 'ex', exReason: '운영 DB 컬럼 · 배치 영향' }, { n: '수주금액', p: 'WINCON_AMT', t: 'NUMBER(15)', s: 'ok' }] },
     { id: 'emp', n: '사원기본', p: 'EMP_M', c: 'K', x: 420, y: 40, px: 460, py: 40, a: [
       { n: '사원번호', p: 'EMP_NO', t: 'NUMBER(6)', pk: 1, nn: 1, s: 'ok' }, { n: '사원명', p: 'EMP_NM', t: 'VARCHAR2(100)', nn: 1, s: 'ok', sec: '개인정보', enc: '없음' }, { n: '휴대전화번호', p: 'MBTL_NO', t: 'VARCHAR2(20)', s: 'ok', sec: '개인정보', enc: '양방향(ARIA)' }] },
     { id: 'mbr', n: '프로젝트팀원구성내역', p: 'PRJ_MBR_D', c: 'A', x: 400, y: 220, px: 440, py: 240, a: [
       { n: '프로젝트ID', p: 'PRJ_ID', t: 'VARCHAR2(10)', pk: 1, fk: 1, nn: 1, s: 'ok' }, { n: '팀원사원번호', p: 'TMBR_EMP_NO', t: 'NUMBER(6)', pk: 1, fk: 1, nn: 1, s: 'ok' }, { n: '투입시작일자', p: 'INPT_BEGIN_YMD', t: 'CHAR(8)', s: 'ok' }, { n: '역할구분코드', p: 'ROLE_SE_CD', t: 'CHAR(1)', s: 'ok' }] },
     { id: 'rqrm', n: '요구사항내역', p: 'RQRM_D', c: 'A', x: 60, y: 340, px: 60, py: 380, a: [
-      { n: '요구사항ID', p: 'DEMND_MATER_ID', t: 'VARCHAR2(10)', pk: 1, nn: 1, s: 'ok' }, { n: '요구사항명', p: 'DEMND_MATER_NM', t: 'VARCHAR2(100)', nn: 1, s: 'ok' }, { n: '요구사항내용', p: 'DEMND_MATER_CN', t: 'VARCHAR2(1000)', s: 'ok' }, { n: '요청고객명', p: 'REQ_CUST_NM', t: 'VARCHAR2(100)', s: 'ex', sec: '개인정보', enc: '없음' }, { n: '프로젝트ID', p: 'PRJ_ID', t: 'VARCHAR2(10)', fk: 1, s: 'ok' }] },
+      { n: '요구사항ID', p: 'DEMND_MATER_ID', t: 'VARCHAR2(10)', pk: 1, nn: 1, s: 'ok' }, { n: '요구사항명', p: 'DEMND_MATER_NM', t: 'VARCHAR2(100)', nn: 1, s: 'ok' }, { n: '요구사항내용', p: 'DEMND_MATER_CN', t: 'VARCHAR2(1000)', s: 'ok' }, { n: '요청고객명', p: 'REQ_CUST_NM', t: 'VARCHAR2(100)', s: 'ex', exReason: '대외 연계 컬럼명 유지', sec: '개인정보', enc: '없음', secSrc: '직접 지정 · 사유 있음' }, { n: '프로젝트ID', p: 'PRJ_ID', t: 'VARCHAR2(10)', fk: 1, s: 'ok' }] },
     { id: 'dlv', n: '산출물기본', p: 'DLVRBL_M', c: 'M', x: 420, y: 450, px: 460, py: 500, st: 1, uk: ['DLVRBL_NM'], sub: { disc: '산출물유형코드', kind: '배타', kids: ['문서산출물', '모델산출물'] }, a: [
       { n: '산출물ID', p: 'DLVRBL_ID', t: 'VARCHAR2(10)', pk: 1, nn: 1, s: 'ok' }, { n: '산출물명', p: 'DLVRBL_NM', t: 'VARCHAR2(100)', nn: 1, s: 'ok' }, { n: '산출물제출일', p: '—', t: '—', s: 'comb' }, { n: '산출물수령자명', p: '—', t: '—', s: 'unreg', cand: 1 }, { n: '요구사항ID', p: 'DEMND_MATER_ID', t: 'VARCHAR2(10)', fk: 1, s: 'ok' }] },
     { id: 'hist', n: '산출물이력', p: '—', c: 'H', x: 800, y: 470, px: 860, py: 520, a: [
@@ -323,12 +330,55 @@ window.pageInit = function () {
   const cv = $('cv'), world = $('world'), nodes = $('nodes'), eg = $('eg'), preview = $('preview');
   let mode = 'L', tool = 'select', relType = 'nonid', zoom = 1, panX = 40, panY = 50, sel = null, relSrc = null, lodForce = 'auto';
   let gateSeen = false, offline = false, remoteSel = 'rqrm', renaming = null, xorPick = [];
-  const locked = q.get('state') === 'review';
+  const STATE = q.get('state') || '';
+  const confirmed = STATE === 'confirmed', review = STATE === 'review';
+  const locked = review || confirmed;
+  const viewOnly = !ME.has('modeler');
+  const singleKeys = () => dbmStore.get('dbm-single-keys', '1') === '1';
   const pos = e => mode === 'L' ? { x: e.x, y: e.y } : { x: e.px, y: e.py };
   const setPos = (e, x, y) => { if (mode === 'L') { e.x = x; e.y = y; } else { e.px = x; e.py = y; } };
   const ent = id => E.find(x => x.id === id);
   const bad = e => e.a.filter(a => a.s === 'comb' || a.s === 'unreg').length;
-  const guard = () => { if (locked) { toast('검토 중이라 편집할 수 없습니다 — 다음 작업 버전(v6)에서 편집하세요', 'info'); return true; } return false; };
+  const guard = () => {
+    if (confirmed) { toast('확정본은 고칠 수 없습니다 — [v6 작업 시작]으로 다음 작업 버전을 여세요', 'info'); return true; }
+    if (review) { toast('검토 중이라 편집할 수 없습니다 — 회수하거나 결재가 끝난 뒤 다음 작업 버전에서 편집하세요', 'info'); return true; }
+    if (viewOnly) { toast('모델 편집은 모델러 역할만 할 수 있습니다', 'info'); return true; }
+    if (cv.dataset.sys === '1') { toast('시스템 전체 ERD는 조회 전용입니다 — 업무 영역으로 돌아가 편집하세요', 'info'); return true; }
+    return false;
+  };
+  // standard-matching results applied item by item (not a blanket conversion)
+  function applyStd() {
+    const d = ent('dlv'), h = ent('hist');
+    Object.assign(d.a[2], { n: '산출물제출일자', p: 'DLVRBL_SBMT_DATE', t: 'CHAR(8)', s: 'req' });
+    h.p = 'DLVRBL_HIST_D';
+    Object.assign(h.a[1], { p: 'HIST_SN', t: 'NUMBER(10)', s: 'req' });
+  }
+  function keepRecipientAsEx(why) {
+    [ent('dlv').a[3], ent('hist').a[2]].forEach(a => { a.s = 'ex'; a.exReason = why; delete a.cand; });
+  }
+  // compliance recalculated from data on every render (CX-21)
+  function updateComp() {
+    let tot = 0, okc = 0, bad = 0, exc = 0, nac = 0, reqc = 0;
+    E.forEach(e => { if (e.ref) return; tot++; if (e.p === '—') bad++; else okc++;
+      e.a.forEach(a => { if (a.edit) return; if (a.s === 'na') { nac++; return; } tot++;
+        if (a.s === 'ok') okc++; else if (a.s === 'ex') { okc++; exc++; } else if (a.s === 'req') { okc++; reqc++; } else bad++; }); });
+    const rate = Math.floor(okc / tot * 100);
+    $('rate').textContent = rate + '%'; $('c-bad').textContent = bad; $('c-ex').textContent = exc; $('c-na').textContent = nac;
+    const b = $('confirm-btn');
+    if (locked) return;
+    const can = bad === 0 && !viewOnly;
+    b.classList.toggle('disabled', !can); b.classList.toggle('has-tip', !can); b.classList.toggle('primary', can);
+    b.setAttribute('aria-disabled', can ? 'false' : 'true');
+    b.dataset.tip = viewOnly ? '확정 신청은 모델러 역할만 할 수 있습니다' : `미준수 ${bad}건이 남아 있습니다 — [표준 맞추기]에서 해결하거나 사유를 남겨 예외로 처리하세요`;
+    b.setAttribute('aria-label', can ? '확정 신청' : '확정 신청 (불가: ' + b.dataset.tip + ')');
+    b.onclick = () => { if (!can) { toast(b.dataset.tip, 'info'); return; } fillConfirm(); openPanel('pn-confirm'); };
+    $('ban-left').style.display = STATE === 'applied' && bad > 0 ? 'flex' : 'none';
+  }
+  function fillConfirm() {
+    const ex = []; E.forEach(e => e.a.forEach(a => { if (a.s === 'ex') ex.push([e, a]); }));
+    $('cf-exn').textContent = '◆ ' + ex.length;
+    $('cf-ex').innerHTML = ex.map(([e, a]) => `<tr><td>${e.n}.${a.n} <span class="mono faint">${a.p}</span></td><td class="wrap">${a.exReason || '—'}</td></tr>`).join('');
+  }
   const refGuard = e => { if (e && e.ref) { toast(`‘${e.n}’은(는) 공통 영역의 참조 엔터티입니다 — 원본(공통)에서만 수정할 수 있습니다`, 'info'); return true; } return false; };
   const LOCK = '<span class="lk" title="개인정보"><svg width="10" height="11" viewBox="0 0 10 11"><rect x="1" y="5" width="8" height="6" rx="1" fill="currentColor"/><path d="M3 5V3.5a2 2 0 0 1 4 0V5" fill="none" stroke="currentColor" stroke-width="1.3"/></svg></span>';
 
@@ -358,7 +408,7 @@ window.pageInit = function () {
       const idx = e.a.indexOf(a);
       const name = mode === 'L' ? a.n : a.p, right = mode === 'L' ? a.p : a.t;
       if (a.edit) return `<div class="ar"><span class="dot-i s-na"></span><input data-e="${e.id}" data-i="${idx}" class="attr-in" placeholder="속성명 입력 · Enter" value="${a.n}"></div>`;
-      return `<div class="ar ${a.pk ? 'pkr' : ''} ${a.fk ? 'fk' : ''} ${a.remote ? 'new' : ''} ${a.s === 'na' ? 'excl' : ''}" data-e="${e.id}" data-i="${idx}"><span class="dot-i s-${a.s}" title="${({ ok: '표준', comb: '조합 가능', unreg: '미등록 단어', ex: '예외', na: '비대상' })[a.s]}"></span><span class="n">${a.pk ? '# ' : ''}${name}${a.fk ? ' (FK)' : ''}</span>${a.sec ? LOCK : ''}<span class="p">${right}</span></div>`;
+      return `<div class="ar ${a.pk ? 'pkr' : ''} ${a.fk ? 'fk' : ''} ${a.remote ? 'new' : ''} ${a.s === 'na' ? 'excl' : ''}" data-e="${e.id}" data-i="${idx}"><span class="dot-i s-${a.s}" title="${({ ok: '표준', comb: '조합 가능', unreg: '미등록 단어', ex: '예외', na: '비대상', req: '용어 신청 중' })[a.s]}"></span><span class="n">${a.pk ? '# ' : ''}${name}${a.fk ? ' (FK)' : ''}</span>${a.sec ? LOCK : ''}<span class="p">${right}</span></div>`;
     };
     const b = bad(e);
     const title = renaming === e.id ? `<input class="ren-in" data-e="${e.id}" value="${e.n}">` : `<span class="title" data-e="${e.id}">${mode === 'L' ? e.n : e.p}</span>`;
@@ -383,8 +433,7 @@ window.pageInit = function () {
       d.innerHTML = nodeHTML(e);
       nodes.appendChild(d);
     });
-    renderMemos(); drawEdges(); mini(); panel();
-    $('c-na').textContent = E.reduce((n, e) => n + e.a.filter(a => a.s === 'na').length, 0) || 1;
+    renderMemos(); drawEdges(); mini(); panel(); updateComp();
     const inp = nodes.querySelector('.attr-in'); if (inp) { inp.focus(); inp.select(); showAC(inp); }
     const ren = nodes.querySelector('.ren-in'); if (ren) { ren.focus(); ren.select(); }
     if ($('grid').classList.contains('open')) renderGrid();
@@ -443,9 +492,14 @@ window.pageInit = function () {
     m.innerHTML = s;
   }
   const PANELS = ['rp', 'pn-gate', 'pn-confirm', 'pn-review'];
-  function openPanel(id) { PANELS.forEach(p => $(p).classList.toggle('open', p === id)); }
+  function syncTab() { $('rp-tab').style.display = PANELS.some(p => $(p).classList.contains('open')) ? 'none' : 'flex'; }
+  function openPanel(id) { PANELS.forEach(p => $(p).classList.toggle('open', p === id)); syncTab(); }
+  $('rp-close').onclick = () => { $('rp').classList.remove('open'); syncTab(); };
+  $('rp-tab').onclick = () => openPanel('rp');
+  $('rp-wide').onclick = () => { $('rp').classList.toggle('wide2'); applyView(); };
+  new MutationObserver(syncTab).observe($('pn-confirm'), { attributes: true, attributeFilter: ['class'] });
   const showRP = () => openPanel('rp');
-  const stBadge = s => ({ ok: '<span class="badge b-success">✓</span>', comb: '<span class="badge b-info">＋</span>', unreg: '<span class="badge b-warning">!</span>', ex: '<span class="badge b-violet">◆</span>', na: '<span class="badge">–</span>' })[s];
+  const stBadge = s => ({ ok: '<span class="badge b-success">✓</span>', comb: '<span class="badge b-info">＋</span>', unreg: '<span class="badge b-warning">!</span>', ex: '<span class="badge b-violet">◆</span>', na: '<span class="badge">–</span>', req: '<span class="badge b-info" title="용어 신청 중 · 결재에서 함께 확인">신청</span>' })[s];
   function consRows(e) {
     if (e.p === '—') return '<div class="banner warning"><span>!</span><div>테이블 물리명이 정해지지 않아 제약조건 이름을 만들 수 없습니다 — 게이트 A 경고</div></div>';
     const pk = e.a.filter(a => a.pk).map(a => a.p);
@@ -526,32 +580,54 @@ window.pageInit = function () {
   }
   $('b-review').onclick = ev => { ev.preventDefault(); renderReview(); openPanel('pn-review'); };
   $('rev-x').onclick = showRP;
+  $('ex-go').onclick = () => {
+    if (guard()) return; snap(); const a = ent('dlv').a[3]; a.s = 'ex'; a.exReason = $('ex-why').value.trim(); delete a.cand;
+    $('mo-ex').classList.remove('open'); $('ex-why').value = ''; render();
+    toast('예외로 기록했습니다 — 확정 결재에서 DA가 검토합니다', 'violet', { label: '실행 취소', fn: undo });
+  };
+  $('ex2-go').onclick = () => {
+    if (guard()) return; snap(); keepRecipientAsEx($('ex2-why').value.trim());
+    $('mo-ex2').classList.remove('open'); $('ex2-why').value = ''; render();
+    toast('2건을 예외로 기록했습니다 — 미준수 0건, 확정 신청할 수 있습니다', 'violet', { label: '실행 취소', fn: undo });
+  };
+  $('cf-go').onclick = () => {
+    const docs = getDocs(); const d = docs.find(x => x.id === 'REQ-2026-0015');
+    if (d) { d.step = 'da'; delete d.hist; d.reason = $('cf-why').value.trim(); d.date = '11/18 ' + new Date().toTimeString().slice(0, 5); saveDocs(docs); }
+    flash('확정 신청 REQ-2026-0015 — DA에게 보냈습니다. 이 업무 영역은 결재가 끝날 때까지 조회 전용입니다', 'info');
+    location.href = 'model.html?state=review';
+  };
+  $('wd-go').onclick = () => {
+    const docs = getDocs(); const d = docs.find(x => x.id === 'REQ-2026-0015');
+    if (d) { d.step = 'withdrawn'; d.hist = (d.hist || []).concat([{ at: '11/18', who: ME.name, act: '회수', why: $('wd-why').value.trim() }]); saveDocs(docs); }
+    flash('확정 신청을 회수했습니다 — 다시 편집할 수 있습니다', 'info');
+    location.href = 'model.html?state=resolved';
+  };
   $('rev-run').onclick = () => { renderReview(); toast('모델 검토를 다시 실행했습니다', 'info'); };
 
   // ---- grid mode (bulk edit · find/replace)
   const gsel = new Set(); let gfilter = 'all';
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+  const gpass = a => !a.edit && !(gfilter === 'bad' && !(a.s === 'comb' || a.s === 'unreg')) && !(gfilter === 'sec' && !a.sec) && !(gfilter === 'na' && a.s !== 'na');
   function renderGrid() {
     const g = $('grid'); const fv = (g.querySelector('#g-find') || {}).value || '', rv = (g.querySelector('#g-rep') || {}).value || '';
-    const rows = []; E.forEach(e => e.a.forEach((a, i) => { if (a.edit) return;
-      if (gfilter === 'bad' && !(a.s === 'comb' || a.s === 'unreg')) return;
-      if (gfilter === 'sec' && !a.sec) return;
-      if (gfilter === 'na' && a.s !== 'na') return;
-      rows.push({ e, a, k: e.id + ':' + i }); }));
-    const hl = s => fv ? s.split(fv).join(`<mark>${fv}</mark>`) : s;
+    const gstd = (g.querySelector('#g-std') || {}).value || '', gwhy = (g.querySelector('#g-why') || {}).value || '';
+    const rows = []; E.forEach(e => e.a.forEach((a, i) => { if (gpass(a)) rows.push({ e, a, k: e.id + ':' + i }); }));
+    const hl = s => fv ? esc(s).split(esc(fv)).join(`<mark>${esc(fv)}</mark>`) : esc(s);
     const hits = fv ? rows.filter(r => r.a.n.includes(fv)).length : 0;
     g.innerHTML = `<div class="gbar"><b style="font-size:14px">속성 표 보기</b><span class="caption muted">${rows.length}개</span>
         ${['all:전체', 'bad:미준수', 'sec:보안', 'na:비대상'].map(x => { const [k, l] = x.split(':'); return `<span class="chip ${gfilter === k ? 'on' : ''}" data-gf="${k}" style="height:26px;font-size:12px">${l}</span>`; }).join('')}
         <span class="grow"></span>
-        <input class="input" id="g-find" placeholder="찾기 (논리명)" value="${fv}" style="width:150px"><input class="input edit-only" id="g-rep" placeholder="바꿀 말" value="${rv}" style="width:130px">
-        <span class="caption muted" style="width:44px">${fv ? hits + '건' : ''}</span><button class="btn sm edit-only" id="g-replace" ${hits && rv ? '' : 'disabled'}>모두 바꾸기</button>
+        <input class="input" id="g-find" placeholder="찾기 (논리명)" aria-label="찾기 (논리명)" value="${esc(fv)}" style="width:150px"><input class="input edit-only" id="g-rep" placeholder="바꿀 말" aria-label="바꿀 말" value="${esc(rv)}" style="width:130px">
+        <span class="caption muted" style="width:90px">${fv ? `보이는 행 ${hits}건` : ''}</span><button class="btn sm edit-only" id="g-replace" ${hits && rv ? '' : 'disabled'}>보이는 행 바꾸기</button>
         <button class="btn sm ghost" id="g-close">닫기 (Esc)</button></div>
       <div class="gbulk edit-only ${gsel.size ? 'on' : ''}"><b>${gsel.size}개 선택</b>
         <span class="caption muted">도메인</span><select class="input" id="g-dom" style="width:130px"><option value="">유지</option>${Object.keys(DOMS).map(d => `<option>${d}</option>`).join('')}</select>
         <span class="caption muted">필수</span><select class="input" id="g-nn" style="width:90px"><option value="">유지</option><option value="1">예</option><option value="0">아니오</option></select>
-        <span class="caption muted">표준</span><select class="input" id="g-std" style="width:110px"><option value="">유지</option><option value="in">대상</option><option value="na">비대상</option></select>
+        <span class="caption muted">표준</span><select class="input" id="g-std" style="width:110px"><option value="">유지</option><option value="in" ${gstd === 'in' ? 'selected' : ''}>대상</option><option value="na" ${gstd === 'na' ? 'selected' : ''}>비대상</option></select>
+        <input class="input" id="g-why" placeholder="비대상 사유 *" aria-label="비대상 사유" value="${esc(gwhy)}" style="width:200px;${gstd === 'na' ? '' : 'display:none'}">
         <span class="grow"></span><button class="btn sm" id="g-clear">선택 해제</button><button class="btn sm primary" id="g-apply">일괄 적용</button></div>
-      <div class="gbody"><table class="tbl"><thead><tr><th style="width:32px"><input type="checkbox" id="g-all" class="edit-only"></th><th></th><th>엔터티</th><th>속성명</th><th>물리명</th><th>타입</th><th>필수</th><th>보안</th></tr></thead><tbody>
-      ${rows.map(r => `<tr><td><input type="checkbox" class="edit-only" data-k="${r.k}" ${gsel.has(r.k) ? 'checked' : ''}></td><td>${stBadge(r.a.s)}</td><td>${r.e.n}${r.e.ref ? ' <span class="badge">참조</span>' : ''}</td><td>${r.a.pk ? '# ' : ''}${hl(r.a.n)}${r.a.fk ? ' <span class="faint">(FK)</span>' : ''}</td><td class="mono">${r.a.p}</td><td class="mono">${r.a.t}</td><td>${r.a.nn || r.a.pk ? '예' : '<span class="faint">아니오</span>'}</td><td>${r.a.sec ? `<span class="badge b-danger">${r.a.sec}</span>` : ''}</td></tr>`).join('')}</tbody></table></div>`;
+      <div class="gbody"><table class="tbl"><thead><tr><th style="width:32px"><input type="checkbox" id="g-all" class="edit-only" aria-label="보이는 행 모두 선택" ${rows.length && rows.every(r => gsel.has(r.k)) ? 'checked' : ''}></th><th></th><th>엔터티</th><th>속성명</th><th>물리명</th><th>타입</th><th>필수</th><th>보안</th></tr></thead><tbody>
+      ${rows.map(r => `<tr><td><input type="checkbox" class="edit-only" data-k="${r.k}" aria-label="${esc(r.e.n + '.' + r.a.n)} 선택" ${gsel.has(r.k) ? 'checked' : ''}></td><td>${stBadge(r.a.s)}</td><td>${r.e.n}${r.e.ref ? ' <span class="badge">참조</span>' : ''}</td><td>${r.a.pk ? '# ' : ''}${hl(r.a.n)}${r.a.fk ? ' <span class="faint">(FK)</span>' : ''}</td><td class="mono">${r.a.p}</td><td class="mono">${r.a.t}</td><td>${r.a.nn || r.a.pk ? '예' : '<span class="faint">아니오</span>'}</td><td>${r.a.sec ? `<span class="badge b-danger">${r.a.sec}</span>` : ''}</td></tr>`).join('')}</tbody></table></div>`;
     const f = g.querySelector('#g-find'); if (document.activeElement && document.activeElement.id === 'g-find-focus') f.focus();
   }
   function openGrid(focusFind) {
@@ -570,24 +646,26 @@ window.pageInit = function () {
     if (ev.target.id === 'g-clear') { gsel.clear(); renderGrid(); return; }
     if (ev.target.id === 'g-replace') {
       if (guard()) return; const fv = $('g-find').value, rv = $('g-rep').value; let n = 0; snap();
-      E.forEach(e => { if (e.ref) return; e.a.forEach(a => { if (a.n.includes(fv)) { a.n = a.n.split(fv).join(rv); a.s = a.s === 'na' ? 'na' : 'comb'; n++; } }); });
-      render(); toast(`논리명 ${n}건에서 ‘${fv}’ → ‘${rv}’로 바꿨습니다 — 표준 매칭을 다시 확인합니다 · Ctrl+Z`, 'info'); return;
+      E.forEach(e => { if (e.ref) return; e.a.forEach(a => { if (gpass(a) && a.n.includes(fv)) { a.n = a.n.split(fv).join(rv); a.s = a.s === 'na' ? 'na' : 'comb'; n++; } }); });
+      render(); toast(`보이는 행 ${n}건에서 ‘${esc(fv)}’ → ‘${esc(rv)}’로 바꿨습니다(숨긴 행은 그대로) — 표준 매칭을 다시 확인합니다`, 'info', { label: '실행 취소', fn: undo }); return;
     }
     if (ev.target.id === 'g-apply') {
-      if (guard()) return; const dom = $('g-dom').value, nn = $('g-nn').value, std = $('g-std').value;
+      if (guard()) return; const dom = $('g-dom').value, nn = $('g-nn').value, std = $('g-std').value, why = ($('g-why') || {}).value || '';
       if (!dom && !nn && !std) { toast('바꿀 항목을 고르세요', 'info'); return; }
+      if (std === 'na' && !why.trim()) { toast('비대상 사유를 입력해야 합니다 — 확정 결재에서 DA가 검토합니다', 'danger'); $('g-why').focus(); return; }
       snap(); let n = 0, skip = 0;
       gsel.forEach(k => { const [eid, i] = k.split(':'); const e = ent(eid); if (!e) return; if (e.ref) { skip++; return; } const a = e.a[+i]; if (!a) return; n++;
         if (dom) { a.t = DOMS[dom]; a.d = dom; }
         if (nn) a.nn = nn === '1' ? 1 : 0;
-        if (std === 'na') a.s = 'na'; else if (std === 'in' && a.s === 'na') a.s = 'unreg'; });
+        if (std === 'na') { a.s = 'na'; a.naReason = why.trim(); } else if (std === 'in' && a.s === 'na') a.s = 'unreg'; });
       gsel.clear(); render();
-      toast(`${n}개 속성에 일괄 적용했습니다${skip ? ` · 참조 엔터티 ${skip}개는 건너뜀` : ''}${std === 'na' ? ' — 비대상은 준수율 계산에서 빠집니다' : ''} · Ctrl+Z`); return;
+      toast(`${n}개 속성에 일괄 적용했습니다${skip ? ` · 참조 엔터티 ${skip}개는 건너뜀` : ''}${std === 'na' ? ' — 비대상은 준수율 계산에서 빠지고 사유가 남습니다' : ''}`, 'success', { label: '실행 취소', fn: undo }); return;
     }
   });
   $('grid').addEventListener('change', ev => {
     const k = ev.target.dataset.k;
     if (k) { ev.target.checked ? gsel.add(k) : gsel.delete(k); renderGrid(); return; }
+    if (ev.target.id === 'g-std') { renderGrid(); if (ev.target.value === 'na') $('g-why').focus(); return; }
     if (ev.target.id === 'g-all') { $('grid').querySelectorAll('[data-k]').forEach(c => ev.target.checked ? gsel.add(c.dataset.k) : gsel.delete(c.dataset.k)); renderGrid(); }
   });
   $('grid').addEventListener('input', ev => {
@@ -629,8 +707,9 @@ window.pageInit = function () {
     const e = ent(inp.dataset.e), a = e.a[+inp.dataset.i];
     if (term) { Object.assign(a, fromTerm(term)); toast(`‘${term.n}’ 용어를 적용했습니다 · ${term.p}${term.sec ? ' · 도메인 보안 속성(개인정보) 상속' : ''}`); }
     else if (inp.value.trim()) { Object.assign(a, { n: inp.value.trim(), s: 'unreg' }); toast('용어 없이 입력했습니다 — 미준수로 집계됩니다', 'info'); }
+    else if (a.orig) { const o = JSON.parse(a.orig); Object.keys(a).forEach(k => delete a[k]); Object.assign(a, o); }
     else e.a.splice(+inp.dataset.i, 1);
-    delete a.edit; if (acEl) { acEl.remove(); acEl = null; } render();
+    delete a.edit; delete a.orig; if (acEl) { acEl.remove(); acEl = null; } render();
   }
   function commitRename(inp, ok) {
     const e = ent(inp.dataset.e); renaming = null;
@@ -665,7 +744,7 @@ window.pageInit = function () {
 
   // ---- shared (common) entity reference
   window.__importRef = id => {
-    if (guard()) return;
+    if (confirmed || review || viewOnly) { guard(); return; }
     const lib = { dept: { id: 'dept', n: '부서기본', p: 'DEPT_M', c: 'K', ref: 1, x: 800, y: 40, px: 860, py: 40, a: [{ n: '부서코드', p: 'DEPT_CD', t: 'VARCHAR2(10)', pk: 1, nn: 1, s: 'ok' }, { n: '부서명', p: 'DEPT_NM', t: 'VARCHAR2(100)', s: 'ok' }] },
       code: { id: 'code', n: '공통코드기본', p: 'CMMN_CD_M', c: 'K', ref: 1, x: 800, y: 200, px: 860, py: 220, a: [{ n: '코드그룹ID', p: 'CD_GROUP_ID', t: 'VARCHAR2(10)', pk: 1, nn: 1, s: 'ok' }, { n: '코드값', p: 'CD_VL', t: 'VARCHAR2(20)', pk: 1, nn: 1, s: 'ok' }, { n: '코드값명', p: 'CD_VL_NM', t: 'VARCHAR2(100)', s: 'ok' }] } };
     if (ent(id)) { toast('이미 이 영역에서 참조 중입니다', 'info'); return; }
@@ -674,6 +753,32 @@ window.pageInit = function () {
     $('b-sys').click(); sel = id; showRP(); render();
     toast(`공통 영역의 ‘${lib[id].n}’을(를) 참조로 가져왔습니다 — 원본은 공통 영역에서만 수정됩니다${id === 'dept' ? ' · 사원기본에 부서코드(FK) 추가' : ''}`);
   };
+
+  // ---- delete with impact preview (CX-25 · CL-24)
+  function askDelete(id) {
+    document.querySelectorAll('.pop').forEach(p => p.remove());
+    const e = ent(id), rels = R.filter(r => r.f === id || r.t === id);
+    const pk = e.a.filter(a => a.pk).map(a => a.p);
+    const kids = R.filter(r => r.f === id && r.t !== id).map(r => ent(r.t)).filter(Boolean);
+    const fks = []; kids.forEach(k => k.a.forEach(a => { if (a.fk && pk.includes(a.p)) fks.push([k, a]); }));
+    const node = $('n-' + id).getBoundingClientRect(), c = cv.getBoundingClientRect();
+    const p = document.createElement('div'); p.className = 'pop'; p.style.width = '300px';
+    p.style.left = Math.min(node.right - c.left + 8, cv.clientWidth - 316) + 'px'; p.style.top = Math.max(node.top - c.top, 60) + 'px';
+    p.innerHTML = `<b>‘${e.n}’을(를) ${e.ref ? '참조 해제' : '삭제'}할까요?</b>
+      <div class="caption" style="margin:6px 0;line-height:20px">관계 <b>${rels.length}</b>개가 함께 삭제됩니다${fks.length ? ` · 자식의 FK 속성 <b>${fks.length}</b>개: ${fks.map(([k, a]) => k.n + '.' + a.n).join(', ')}` : ''}.${remoteSel === id && !offline ? '<br><span style="color:var(--p-hong)">● 홍설계가 이 엔터티를 편집 중입니다.</span>' : ''}</div>
+      ${fks.length ? `<label class="flex caption"><input type="radio" name="fkopt" value="del" checked> FK 속성도 삭제</label><label class="flex caption" style="margin-bottom:6px"><input type="radio" name="fkopt" value="keep"> 일반 속성으로 남기기</label>` : ''}
+      <div class="flex"><button class="btn sm" id="del-no">취소</button><span class="grow"></span><button class="btn sm danger" id="del-yes">${e.ref ? '참조 해제' : '삭제'}</button></div>`;
+    cv.appendChild(p); $('del-yes').focus();
+    $('del-no').onclick = () => p.remove();
+    $('del-yes').onclick = () => {
+      const opt = (p.querySelector('[name=fkopt]:checked') || {}).value || 'del';
+      p.remove(); snap();
+      fks.forEach(([k, a]) => { if (opt === 'del') k.a.splice(k.a.indexOf(a), 1); else { delete a.fk; if (a.pk && opt === 'keep') { /* stays PK */ } } });
+      E.splice(E.indexOf(e), 1); for (let i = R.length - 1; i >= 0; i--) if (R[i].f === id || R[i].t === id) R.splice(i, 1);
+      if (remoteSel === id) remoteSel = null; sel = null; render();
+      toast(`‘${e.n}’을(를) ${e.ref ? '참조 해제' : '삭제'}했습니다 · 관계 ${rels.length}${fks.length ? ` · FK ${fks.length} ${opt === 'del' ? '삭제' : '일반 속성으로 유지'}` : ''}`, 'info', { label: '실행 취소', fn: undo });
+    };
+  }
 
   // ---- events
   let drag = null, pan = null;
@@ -723,7 +828,7 @@ window.pageInit = function () {
         p.innerHTML = `<b>재귀 관계를 만들까요?</b><div class="caption muted" style="margin:4px 0 8px">같은 엔터티를 다시 눌렀습니다. 예: 상위리스크ID → 리스크ID</div><div class="flex"><button class="btn sm" id="pop-no">취소</button><span class="grow"></span><button class="btn sm primary" id="pop-yes">재귀 관계 만들기</button></div>`;
         cv.appendChild(p);
         $('pop-no').onclick = () => { p.remove(); setTool('rel'); };
-        $('pop-yes').onclick = () => { p.remove(); snap(); R.push({ f: id, t: id, k: 'nonid', name: '상위' }); const e = ent(id); e.a.push({ n: '상위' + e.a[0].n, p: 'UPR_' + e.a[0].p, t: e.a[0].t, fk: 1, s: 'comb' }); setTool('select'); toast(`재귀 관계와 ‘상위${e.a[0].n} (FK)’를 추가했습니다`); };
+        $('pop-yes').onclick = () => { p.remove(); if (refGuard(ent(id))) { setTool('select'); return; } snap(); R.push({ f: id, t: id, k: 'nonid', name: '상위' }); const e = ent(id); e.a.push({ n: '상위' + e.a[0].n, p: 'UPR_' + e.a[0].p, t: e.a[0].t, fk: 1, s: 'comb' }); setTool('select'); toast(`재귀 관계와 ‘상위${e.a[0].n} (FK)’를 추가했습니다`); };
         return;
       }
       const parent = ent(relSrc), child = ent(id);
@@ -743,7 +848,7 @@ window.pageInit = function () {
     const title = ev.target.closest('.title');
     if (title) { if (guard() || refGuard(ent(title.dataset.e))) return; renaming = title.dataset.e; render(); return; }
     const row = ev.target.closest('.ar[data-i]');
-    if (row) { const e = ent(row.dataset.e); if (guard() || refGuard(e)) return; snap(); e.a[+row.dataset.i].edit = 1; sel = e.id; render(); return; }
+    if (row) { const e = ent(row.dataset.e); if (guard() || refGuard(e)) return; snap(); const a = e.a[+row.dataset.i]; a.orig = JSON.stringify(a); a.edit = 1; sel = e.id; render(); return; }
     if (!ev.target.closest('.node,.cv-toolbar,.cv-zoom,.cv-mini,.cv-banner,#sysview') && tool === 'select' && !locked) { setTool('entity'); cv.dispatchEvent(new MouseEvent('click', { clientX: ev.clientX, clientY: ev.clientY, bubbles: true })); }
   });
   cv.addEventListener('input', ev => {
@@ -760,7 +865,12 @@ window.pageInit = function () {
     if (ev.key === 'ArrowDown') { acIdx = Math.min(acIdx + 1, opts.length - 1); showAC(inp); ev.preventDefault(); }
     else if (ev.key === 'ArrowUp') { acIdx = Math.max(acIdx - 1, 0); showAC(inp); ev.preventDefault(); }
     else if (ev.key === 'Enter') { const o = opts[acIdx]; commitAttr(inp, o ? TERMS[+o.dataset.ti] : null); if (!ev.shiftKey && sel) setTimeout(addAttr, 0); ev.preventDefault(); }
-    else if (ev.key === 'Escape') { const e = ent(inp.dataset.e); e.a.splice(+inp.dataset.i, 1); hist.pop(); if (acEl) { acEl.remove(); acEl = null; } render(); }
+    else if (ev.key === 'Escape') {
+      const e = ent(inp.dataset.e), a = e.a[+inp.dataset.i];
+      if (a.orig) { const o = JSON.parse(a.orig); Object.keys(a).forEach(k => delete a[k]); Object.assign(a, o); }  // existing attribute: restore
+      else e.a.splice(+inp.dataset.i, 1);                                                                           // new attribute: discard
+      hist.pop(); if (acEl) { acEl.remove(); acEl = null; } render();
+    }
   });
   cv.addEventListener('focusout', ev => { if (ev.target.classList && ev.target.classList.contains('ren-in') && renaming) commitRename(ev.target, true); });
   document.addEventListener('mousedown', ev => { const o = ev.target.closest('.acl .o'); if (!o) return; ev.preventDefault(); const inp = nodes.querySelector('.attr-in'); if (inp) commitAttr(inp, o.dataset.ti ? TERMS[+o.dataset.ti] : null); });
@@ -772,16 +882,11 @@ window.pageInit = function () {
     if (ev.ctrlKey && k === 'z') { undo(); ev.preventDefault(); return; }
     if (ev.ctrlKey && k === 'y') { redoFn(); ev.preventDefault(); return; }
     if (ev.ctrlKey || ev.metaKey) return;
-    if (k === 'v') setTool('select'); else if (k === 'e') setTool('entity'); else if (k === 'r') setTool('rel'); else if (k === 'm') setTool('memo');
+    const inCanvas = singleKeys() && (document.activeElement === document.body || cv.contains(document.activeElement));
+    if (inCanvas && k === 'v') setTool('select'); else if (inCanvas && k === 'e') setTool('entity'); else if (inCanvas && k === 'r') setTool('rel'); else if (inCanvas && k === 'm') setTool('memo');
     else if (ev.key === 'Escape') { document.querySelectorAll('.pop').forEach(p => p.remove()); $('expmenu').classList.remove('open'); closeGrid(); setTool('select'); }
     else if (ev.key === 'Enter' && sel) { addAttr(); ev.preventDefault(); }
-    else if (ev.key === 'Delete' && sel) {
-      if (guard()) return;
-      const e = ent(sel);
-      if (remoteSel === sel && !offline && !confirm(`홍설계가 ‘${e.n}’을(를) 편집 중입니다. 그래도 삭제할까요?`)) return;
-      snap(); E.splice(E.indexOf(e), 1); for (let i = R.length - 1; i >= 0; i--) if (R[i].f === sel || R[i].t === sel) R.splice(i, 1);
-      if (remoteSel === sel) remoteSel = null; sel = null; render(); toast(`‘${e.n}’을(를) ${e.ref ? '이 영역에서 참조 해제' : '삭제'}했습니다 · 되돌리기 Ctrl+Z`, 'info');
-    }
+    else if (ev.key === 'Delete' && sel) { if (!guard()) askDelete(sel); }
     else if (ev.key === '!' || (ev.shiftKey && ev.code === 'Digit1')) fit();
   });
   $('dict').addEventListener('dragstart', ev => { const it = ev.target.closest('.dict-item'); if (!it) return; ev.dataTransfer.setData('text/plain', it.dataset.ti); ev.dataTransfer.effectAllowed = 'copy'; cv.classList.add('dropping'); });
@@ -877,6 +982,7 @@ window.pageInit = function () {
     const sv = $('sysview'); const on = sv.style.display !== 'block';
     sv.style.display = on ? 'block' : 'none'; world.style.display = on ? 'none' : 'block';
     $('b-sys').classList.toggle('on', on); cv.dataset.sys = on ? '1' : '';
+    if (on) { sel = null; relSrc = null; setTool('select'); closeGrid(); }
     const has = id => !!ent(id);
     if (on) sv.innerHTML = `<div class="banner info" style="position:absolute;left:12px;top:60px;z-index:5;max-width:560px"><span>ℹ</span><div class="grow"><b>시스템 전체 ERD · 조회 전용</b> — 요구사항관리의 모든 업무 영역. 공통 영역의 엔터티는 <b>참조로 가져와</b> 관계를 맺을 수 있습니다.</div></div>
       <div class="grp" style="left:80px;top:140px;width:300px;height:180px;cursor:pointer" ondblclick="document.getElementById('b-sys').click()"><h4>요구사항 · 프로젝트</h4><div class="caption muted">엔터티 ${E.length} · 미준수 6 · <span style="color:var(--p-hong)">2명 편집 중</span></div><div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:10px">${'<span style="width:40px;height:22px;border-radius:4px;background:var(--surface-2);border:1px solid var(--border)"></span>'.repeat(E.length)}</div><div class="caption faint" style="margin-top:8px">더블클릭하면 편집 캔버스로</div></div>
@@ -890,19 +996,30 @@ window.pageInit = function () {
   };
 
   // ---- states
-  if (q.get('state') === 'resolved') {
-    $('rate').textContent = '100%'; $('c-bad').textContent = '0'; $('c-ex').textContent = '3';
-    E.forEach(e => e.a.forEach(a => { if (a.s === 'comb' || a.s === 'unreg') a.s = 'ex'; }));
-    const b = $('confirm-btn'); b.classList.remove('disabled', 'has-tip'); b.classList.add('primary');
-    b.onclick = () => openPanel('pn-confirm');
-    toast('표준 맞추기 적용 — 미준수 0건, 확정 신청을 할 수 있습니다');
-  }
+  const RECIP_WHY = '‘수령자’ 단어 후보(REQ-2026-0012) 승인 전까지 임시 유지';
+  if (STATE === 'applied') { applyStd(); }
+  if (STATE === 'resolved' || locked) { applyStd(); keepRecipientAsEx(RECIP_WHY); }
+  if (q.get('ver') === 'v6') { $('ver').textContent = 'v6 작업 중'; document.querySelector('.page-header .caption.faint').innerHTML = 'v5 확정본 기준 · <a href="model.html?state=confirmed">확정본 보기</a>'; applyStd(); keepRecipientAsEx(RECIP_WHY); }
   if (locked) {
     document.body.classList.add('locked'); $('ban-lock').style.display = 'flex';
-    $('ver').textContent = 'v5 검토 중'; $('rate').textContent = '100%'; $('c-bad').textContent = '0';
-    E.forEach(e => e.a.forEach(a => { if (a.s === 'comb' || a.s === 'unreg') a.s = 'ex'; }));
-    const b = $('confirm-btn'); b.textContent = '회수'; b.classList.remove('disabled', 'has-tip'); b.dataset.toast = '확정 신청을 회수했습니다 — 다시 편집할 수 있습니다'; b.dataset.toastType = 'info';
     remoteSel = null; $('avcap').textContent = '3명 접속 · 모두 조회 전용';
+    const b = $('confirm-btn'); b.classList.remove('disabled', 'has-tip', 'primary'); b.removeAttribute('data-tip');
+    if (review) {
+      $('ver').textContent = q.get('snap') ? 'v5 스냅숏' : 'v5 검토 중';
+      if (q.get('snap')) $('ban-lock-t').innerHTML = '<b>결재 문서 REQ-2026-0015의 v5 스냅숏</b> — 신청 시점 그대로의 조회 전용 화면입니다. 표·제약·보안 탭과 변경 비교로 내용을 확인하세요.';
+      if (ME.id === 'kim' && !q.get('snap')) { b.textContent = '회수'; b.onclick = () => $('mo-wd').classList.add('open'); }
+      else b.style.display = 'none';
+    } else {
+      $('ver').textContent = 'v5 확정본';
+      $('ban-lock-t').innerHTML = '<b>v5 확정본 · REQ-2026-0015</b> — 확정된 모델은 고칠 수 없습니다. 이어서 작업하려면 다음 작업 버전을 여세요.';
+      $('ban-lock-a').textContent = '결재 이력';
+      b.textContent = 'v6 작업 시작'; b.classList.add('primary');
+      b.onclick = () => { if (viewOnly) { guard(); return; } flash('v6 작업 버전을 시작했습니다 — v5 확정본을 기준으로 변경을 기록합니다', 'success'); location.href = 'model.html?ver=v6'; };
+    }
+  }
+  if (viewOnly && !locked) {
+    document.body.classList.add('viewonly'); $('ban-view').style.display = 'flex';
+    $('ban-view-r').textContent = ME.roles.map(r => ROLE_NAME[r]).join(', ');
   }
   setTool('select'); applyView(); render(); renderReview(); setTimeout(() => { fit(); moveCursors(); }, 60);
 };

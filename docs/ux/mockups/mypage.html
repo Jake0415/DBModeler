@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>마이페이지 · DBModeler 목업</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="assets/app.css">
+<script src="assets/app.js"></script>
+<style>
+  .set-wrap { max-width:920px; }
+  .set-row { display:grid; grid-template-columns:220px 1fr; gap:24px; padding:16px 0; border-bottom:1px solid var(--border); }
+  .set-row .l b { display:block; font-size:14px; } .set-row .l span { font-size:12px; color:var(--fg-2); }
+  .ntbl td, .ntbl th { text-align:center; } .ntbl td:first-child, .ntbl th:first-child { text-align:left; }
+</style>
+</head>
+<body data-page="mypage">
+<div id="app">
+<div id="content" class="page" data-tabscope>
+  <div class="page-header" style="border-bottom:0">
+    <span class="avatar" style="width:36px;height:36px;font-size:15px" id="av"></span>
+    <h1 id="nm">마이페이지</h1><span class="role-tag" id="rb"></span>
+  </div>
+  <div class="tabs" style="margin:0;padding:0 20px;background:var(--surface)">
+    <button class="on" data-tab="profile">프로필</button>
+    <button data-tab="mine">내 신청</button>
+    <button data-tab="work">내 작업</button>
+    <button data-tab="notify">알림 설정</button>
+    <button data-tab="security">보안</button>
+    <button data-tab="env">환경</button>
+  </div>
+  <div class="scroll"><div class="pad">
+    <div class="pane on set-wrap" data-pane="profile">
+      <div class="set-row"><div class="l"><b>기본 정보</b><span>사내 SSO 디렉터리에서 가져옵니다</span></div>
+        <div class="field-row"><div class="field"><label for="p-name">이름</label><input class="input" id="p-name" readonly></div><div class="field"><label for="p-org">소속</label><input class="input" id="p-org" readonly></div><div class="field"><label for="p-mail">메일</label><input class="input mono" id="p-mail" readonly></div></div></div>
+      <div class="set-row"><div class="l"><b>표시 이름</b><span>결재·공동 편집 커서에 보이는 이름</span></div><div class="field"><label for="p-disp">표시 이름</label><input class="input" id="p-disp"></div></div>
+      <div class="set-row"><div class="l"><b>내 역할 · 담당 시스템</b><span>조회 전용 — 바꾸려면 Admin에게 요청합니다</span></div>
+        <div><div id="p-roles" style="margin-bottom:8px"></div><div class="caption" id="p-sys"></div>
+          <button class="btn sm" style="margin-top:8px" data-open="mo-rolereq">역할 변경 요청</button></div></div>
+      <div class="flex" style="margin-top:16px"><span class="grow"></span><button class="btn primary" data-toast="표시 이름을 저장했습니다">저장</button></div>
+    </div>
+
+    <div class="pane" data-pane="mine">
+      <div class="flex" style="margin-bottom:12px"><span class="chip on" data-group="mf" data-filter="">전체</span><span class="chip" data-group="mf" data-filter="ing">진행 중</span><span class="chip" data-group="mf" data-filter="fix">보완 필요</span><span class="chip" data-group="mf" data-filter="end">완료</span></div>
+      <div data-filter-target="mf"><table class="tbl" style="border:1px solid var(--border)"><thead><tr><th>신청번호</th><th>유형</th><th>제목</th><th>현재 단계</th><th>신청일</th><th></th></tr></thead><tbody id="mine-body"></tbody></table></div>
+    </div>
+
+    <div class="pane" data-pane="work">
+      <table class="tbl" style="border:1px solid var(--border)"><thead><tr><th>일시</th><th>업무 영역</th><th>작업</th><th></th></tr></thead><tbody>
+        <tr><td class="mono">11/17 16:20</td><td>요구사항 · 프로젝트</td><td>엔터티 2 · 속성 6 편집</td><td><a href="model.html">열기</a></td></tr>
+        <tr><td class="mono">11/17 15:02</td><td>사전</td><td>용어 1 · 단어 1 신청 (REQ-2026-0014)</td><td><a href="approvals.html?doc=REQ-2026-0014">열기</a></td></tr>
+        <tr><td class="mono">11/17 14:40</td><td>요구사항 · 프로젝트</td><td>후보 2건 등록 (수령자 · 검수)</td><td><a href="candidates.html">열기</a></td></tr>
+      </tbody></table>
+    </div>
+
+    <div class="pane set-wrap" data-pane="notify">
+      <div class="caption muted" style="margin-bottom:12px">메일은 기관 정책상 <b>결재선 담당자</b>에게만 갑니다. 정책 범위 안에서만 끌 수 있습니다.</div>
+      <table class="tbl ntbl" style="border:1px solid var(--border)"><thead><tr><th>종류</th><th>앱 알림</th><th>메일</th></tr></thead><tbody>
+        <tr><td>결재 요청 (내 차례)</td><td><input type="checkbox" checked aria-label="결재 요청 앱 알림"></td><td><input type="checkbox" checked disabled aria-label="결재 요청 메일(정책상 필수)"> <span class="caption faint">필수</span></td></tr>
+        <tr><td>내 신청 결과 (승인·반려·회수)</td><td><input type="checkbox" checked aria-label="결과 앱 알림"></td><td><input type="checkbox" checked aria-label="결과 메일"></td></tr>
+        <tr><td>참조</td><td><input type="checkbox" checked aria-label="참조 앱 알림"></td><td><span class="caption faint">—</span></td></tr>
+        <tr><td>후보 처리 결과</td><td><input type="checkbox" checked aria-label="후보 앱 알림"></td><td><span class="caption faint">—</span></td></tr>
+        <tr><td>긴 작업 완료 (엑셀 검증·산출물)</td><td><input type="checkbox" checked aria-label="작업 앱 알림"></td><td><span class="caption faint">—</span></td></tr>
+        <tr><td>표준 재검토 가능 · 공동 편집 충돌</td><td><input type="checkbox" checked aria-label="재검토 앱 알림"></td><td><span class="caption faint">—</span></td></tr>
+      </tbody></table>
+      <div class="flex" style="margin-top:12px"><span class="grow"></span><button class="btn primary" data-toast="알림 설정을 저장했습니다">저장</button></div>
+    </div>
+
+    <div class="pane set-wrap" data-pane="security">
+      <div class="set-row"><div class="l"><b>인증 방식</b></div><div><span class="badge b-success">사내 SSO</span> <span class="caption muted">비밀번호는 기관 통합 인증에서 바꿉니다</span> <a href="#" data-toast="기관 통합 인증 페이지를 엽니다(목업)" data-toast-type="info">비밀번호 변경 →</a>
+        <div class="caption faint" style="margin-top:6px">SSO 미연동 기관은 여기서 비밀번호를 바꿉니다(자체 계정).</div></div></div>
+      <div class="set-row"><div class="l"><b>접속 중인 세션</b><span>세션은 30분 동안 입력이 없으면 만료되고, 5분 전에 알립니다</span></div>
+        <div><table class="tbl" style="border:1px solid var(--border)"><thead><tr><th>기기 · 브라우저</th><th>IP</th><th>마지막 활동</th><th></th></tr></thead><tbody>
+          <tr><td>Windows · Chrome <span class="badge b-success">이 기기</span></td><td class="mono">10.12.3.41</td><td class="mono">방금</td><td></td></tr>
+          <tr id="s2"><td>Windows · Edge</td><td class="mono">10.12.7.18</td><td class="mono">11/16 18:40</td><td><button class="btn sm" onclick="document.getElementById('s2').remove();toast('다른 세션을 로그아웃했습니다')">로그아웃</button></td></tr>
+        </tbody></table></div></div>
+      <div class="set-row"><div class="l"><b>최근 로그인</b></div><div class="caption mono">11/18 08:52 · 10.12.3.41 · 성공<br>11/17 08:47 · 10.12.3.41 · 성공<br>11/16 18:40 · 10.12.7.18 · 성공</div></div>
+    </div>
+
+    <div class="pane set-wrap" data-pane="env">
+      <div class="set-row"><div class="l"><b>테마</b></div><div class="seg" id="env-theme"><button data-v="light">라이트</button><button data-v="dark">다크</button><button data-v="system">시스템</button></div></div>
+      <div class="set-row"><div class="l"><b>시작 화면</b></div><div class="field"><label for="env-start">로그인 후 첫 화면</label><select class="input" id="env-start" style="width:240px"><option>홈</option><option>결재함</option><option>최근 업무 영역</option></select></div></div>
+      <div class="set-row"><div class="l"><b>단축키</b><span>화면 낭독기·음성 입력을 쓰면 끄세요</span></div><label class="flex"><input type="checkbox" id="kb-single2"> 한 글자 단축키(V·E·R·M) 사용</label></div>
+      <div class="flex" style="margin-top:12px"><span class="grow"></span><button class="btn primary" data-toast="환경 설정을 저장했습니다">저장</button></div>
+    </div>
+  </div></div>
+
+  <div class="overlay" id="mo-rolereq" role="dialog" aria-modal="true" aria-labelledby="rr-t"><div class="modal">
+    <div class="m-head"><h3 id="rr-t">역할 변경 요청</h3></div>
+    <div class="m-body"><div class="caption muted" style="margin-bottom:8px">Admin(이데이터)에게 요청합니다. 자기 역할은 스스로 바꿀 수 없습니다.</div>
+      <div class="field"><label for="rr-role">요청 역할</label><select class="input" id="rr-role"><option>기관 담당자 추가</option><option>DA 추가</option><option>모델러 추가</option><option>역할 해제</option></select></div>
+      <div class="field"><label for="rr-why">사유 *</label><textarea class="input" id="rr-why" rows="2"></textarea></div></div>
+    <div class="m-foot"><button class="btn" data-close="mo-rolereq">취소</button><button class="btn primary" data-needs="rr-why" data-close="mo-rolereq" data-toast="역할 변경을 Admin에게 요청했습니다" data-toast-type="info">요청</button></div></div></div>
+</div>
+</div>
+<script>
+window.pageInit = function () {
+  const $ = id => document.getElementById(id);
+  $('av').textContent = ME.name[0]; $('nm').textContent = ME.name; $('rb').innerHTML = roleBadges(ME);
+  $('p-name').value = ME.name; $('p-org').value = ME.org; $('p-mail').value = ME.mail; $('p-disp').value = ME.name;
+  $('p-roles').innerHTML = ME.roles.map(r => `<span class="badge">${ROLE_NAME[r]}</span>`).join(' ');
+  $('p-sys').textContent = '담당 시스템: ' + ME.systems.join(', ');
+  const docs = getDocs().filter(d => d.req === ME.id);
+  const f = d => d.step === 'rejected' ? 'fix' : ['done', 'withdrawn'].includes(d.step) ? 'end' : 'ing';
+  $('mine-body').innerHTML = docs.length ? docs.map(d => `<tr data-f="${f(d)}"><td class="mono">${d.id}</td><td><span class="badge ${d.type === 'model' ? 'b-violet' : ''}">${d.type === 'model' ? '모델 확정' : '사전 신청'}</span></td><td>${d.title}</td><td><span class="badge ${f(d) === 'fix' ? 'b-danger' : 'b-info'}">● ${STEP_NAME[d.step]}</span></td><td class="mono">${d.date}</td><td><a href="approvals.html?box=mine&doc=${d.id}">열기</a></td></tr>`).join('') : '<tr><td colspan="6" class="caption muted" style="text-align:center;padding:24px">신청한 문서가 없습니다</td></tr>';
+  const t = dbmStore.get('dbm-theme', 'light');
+  document.querySelectorAll('#env-theme button').forEach(b => { b.classList.toggle('on', b.dataset.v === t); b.onclick = () => { dbmStore.set('dbm-theme', b.dataset.v); location.reload(); }; });
+  const k = $('kb-single2'); k.checked = dbmStore.get('dbm-single-keys', '1') === '1'; k.onchange = () => dbmStore.set('dbm-single-keys', k.checked ? '1' : '0');
+};
+</script>
+</body>
+</html>
