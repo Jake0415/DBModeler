@@ -123,6 +123,8 @@
 
 ## 3. 열린 질문 결정안
 
+> **2026-11-17 갱신**: Q-1 사전 기반을 sws-data-governance로 바꾸는 안을 검토했다 → [21-dictionary-sws-review.md](21-dictionary-sws-review.md). 그 문서의 §4가 아래 Q-1·Q-2·Q-4·Q-6·Q-7의 **수정안**이다(결정 전).
+
 docuCBD 공통표준 사전 설계(`D:\project\docuCBD\docs\design\std-dictionary-v1.md`, v1.6)를 함께 검토해 **결정안**을 낸다. 확정은 사용자 검토 후.
 
 | ID | 질문 | 결정안 | 근거 |
