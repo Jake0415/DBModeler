@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DDL 출력 · DBModeler 목업</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="assets/app.css">
+<script src="assets/app.js"></script>
+</head>
+<body data-page="model">
+<div id="app">
+<div id="content" class="page">
+  <div class="page-header">
+    <a class="btn ghost sm" href="model.html">← 모델</a>
+    <h1>DDL 출력</h1>
+    <span class="crumb">요구사항관리 · Oracle 19c · 스키마 RQMS</span>
+    <div class="actions"><span class="badge b-warning">초안 · 미확정 v5</span></div>
+  </div>
+  <div class="toolbar">
+    <span class="caption muted">범위 *</span>
+    <span class="chip on" data-group="scope">업무 영역 전체 (9)</span><span class="chip" data-group="scope">선택한 테이블 (0)</span><span class="chip" data-group="scope">시스템 전체 (11)</span>
+    <span style="width:1px;height:20px;background:var(--border)"></span>
+    <span class="caption muted">프리셋</span>
+    <select class="input" style="width:180px;height:28px"><option>신규 생성 (CREATE)</option><option>변경분 (ALTER)</option></select>
+    <label class="caption flex"><span class="toggle on"></span>주석 포함</label>
+    <label class="caption flex"><span class="toggle on"></span>FK 포함</label>
+    <span class="grow"></span>
+    <span class="caption muted">인코딩 UTF-8</span>
+  </div>
+  <div class="page-body">
+    <div class="main">
+      <div class="pad" style="padding-bottom:8px">
+        <div class="banner warning"><span>!</span><div class="grow"><b>게이트 B: 경고 2 · 차단 0.</b> 표준 위반 2건은 예외 사유가 있습니다. 문법 오류가 있으면 출력이 막힙니다.</div></div>
+      </div>
+      <div class="scroll" style="padding:0 20px 20px">
+        <div class="codeblock">
+<div class="ln"><i>1</i><span class="cm">-- DBModeler · 요구사항관리 / 요구사항 · 프로젝트 · v5 초안 · 2026-11-17 15:30</span></div>
+<div class="ln"><i>2</i><span class="kw">CREATE TABLE</span> RQMS.DLVRBL_M (</div>
+<div class="ln"><i>3</i>  DLVRBL_ID          VARCHAR2(10)   <span class="kw">NOT NULL</span>,</div>
+<div class="ln"><i>4</i>  DLVRBL_NM          VARCHAR2(100),</div>
+<div class="ln"><i>5</i>  DLVRBL_SBMT_DATE   CHAR(8),</div>
+<div class="ln warn"><i>6</i>  산출물수령자명        VARCHAR2(100), <span class="cm">-- ⚠ 비ASCII 식별자 · 예외 사유 있음</span></div>
+<div class="ln"><i>7</i>  DEMND_MATER_ID     VARCHAR2(10)   <span class="kw">NOT NULL</span>,</div>
+<div class="ln"><i>8</i>  <span class="kw">CONSTRAINT</span> DLVRBL_M_PK <span class="kw">PRIMARY KEY</span> (DLVRBL_ID)</div>
+<div class="ln"><i>9</i>);</div>
+<div class="ln"><i>10</i><span class="kw">COMMENT ON TABLE</span> RQMS.DLVRBL_M <span class="kw">IS</span> <span class="str">'산출물기본'</span>;</div>
+<div class="ln"><i>11</i><span class="kw">COMMENT ON COLUMN</span> RQMS.DLVRBL_M.DLVRBL_ID <span class="kw">IS</span> <span class="str">'산출물ID'</span>;</div>
+<div class="ln"><i>12</i></div>
+<div class="ln"><i>13</i><span class="kw">ALTER TABLE</span> RQMS.DLVRBL_M <span class="kw">ADD CONSTRAINT</span> DLVRBL_M_RQRM_D_FK1</div>
+<div class="ln"><i>14</i>  <span class="kw">FOREIGN KEY</span> (DEMND_MATER_ID) <span class="kw">REFERENCES</span> RQMS.RQRM_D (DEMND_MATER_ID);</div>
+<div class="ln"><i>15</i></div>
+<div class="ln warn"><i>16</i><span class="kw">CREATE TABLE</span> RQMS.PRJ_M ( <span class="cm">-- ⚠ PRJ_ENDDD 비표준 약어 · 예외 사유 있음</span></div>
+<div class="ln"><i>…</i><span class="cm">  (184줄)</span></div>
+        </div>
+      </div>
+    </div>
+    <aside class="rpanel open">
+      <div class="rp-head"><h2>점검 결과</h2><div class="caption muted">게이트 B · 출력 직전</div></div>
+      <div class="rp-body">
+        <div class="grid2" style="margin-bottom:12px">
+          <div class="card"><div class="caption muted">테이블</div><div class="mono" style="font-size:20px">9</div></div>
+          <div class="card"><div class="caption muted">FK / 관계</div><div class="mono" style="font-size:20px">8 / 8</div></div>
+        </div>
+        <table class="tbl"><thead><tr><th>구분</th><th>항목</th><th>결과</th></tr></thead><tbody>
+          <tr><td>문법</td><td>타입 누락</td><td><span class="badge b-success">0</span></td></tr>
+          <tr><td>문법</td><td>식별자 무효·예약어</td><td><span class="badge b-success">0</span></td></tr>
+          <tr><td>문법</td><td>이름 길이 (Oracle 128B)</td><td><span class="badge b-success">0</span></td></tr>
+          <tr><td>구조</td><td>FK 누락 (관계 대비)</td><td><span class="badge b-success">0</span></td></tr>
+          <tr><td>표준</td><td>비ASCII 식별자</td><td><span class="badge b-warning">1 · 예외</span></td></tr>
+          <tr><td>표준</td><td>비표준 이름</td><td><span class="badge b-warning">1 · 예외</span></td></tr>
+        </tbody></table>
+        <div class="caption muted" style="margin-top:8px">문법 오류는 차단, 표준 위반은 경고 + 예외 사유로 진행합니다.</div>
+      </div>
+      <div class="rp-foot"><button class="btn" data-toast="클립보드에 복사했습니다">복사</button><span class="grow"></span><button class="btn primary" data-toast="RQMS_v5_draft.sql 내려받기 (UTF-8)">내려받기 .sql</button></div>
+    </aside>
+  </div>
+</div>
+</div>
+</body>
+</html>

@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DBModeler 목업</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="assets/app.css">
+<style>
+  body { background:var(--bg); }
+  .wrap { max-width:1120px; margin:0 auto; padding:48px 24px; }
+  .path { display:flex; flex-wrap:wrap; gap:6px; align-items:center; font-size:13px; margin-top:8px; }
+  .path a { border:1px solid var(--border); background:var(--surface); border-radius:var(--r-md); padding:3px 8px; color:var(--fg); }
+  .path a:hover { border-color:var(--ink); text-decoration:none; }
+  .path .ar { color:var(--fg-3); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="flex" style="margin-bottom:4px"><span class="brand-mark" style="width:24px;height:24px">DB</span><h1 style="font-size:24px;letter-spacing:-.6px">DBModeler 클릭 목업 v1</h1></div>
+  <p class="muted" style="margin:8px 0 24px">1920×1080 기준 프레임입니다. 각 화면 상단 오른쪽의 <b>목업 프레임</b>에서 1600 확인 프레임과 다크 테마로 바꿀 수 있습니다. 데이터는 요구사항관리 샘플이고 저장되지 않습니다.
+  근거: <a href="../02-flows.md">02-flows.md</a> · <a href="../01-design-guide.md">01-design-guide.md</a></p>
+
+  <h2 style="font-size:16px;margin-bottom:8px">교차 시나리오 (끝까지 클릭)</h2>
+  <div class="card" style="margin-bottom:12px"><b>T1 설치 직후 첫 사용</b><div class="caption muted">기관 사전이 빈 상태 → 엑셀로 등록 → 겸임 DA 자기 승인</div>
+    <div class="path"><a href="dictionary.html">SC-10 사전(빈 상태 배너)</a><span class="ar">→</span><a href="excel-import.html">SC-13 엑셀 1~6단계</a><span class="ar">→</span><a href="approvals.html?new=excel">SC-20 대기함</a><span class="ar">→</span><a href="approvals.html?new=excel">PN-21 승인 → MO-22 자기 승인</a></div></div>
+  <div class="card" style="margin-bottom:12px"><b>T2 신규 설계 중 표준 맞추기</b><div class="caption muted">속성 입력 → 자동완성 → 미등록 단어는 후보 등록</div>
+    <div class="path"><a href="model.html">SC-31 모델 · PN-33 자동완성</a><span class="ar">→</span><a href="model.html">PN-32 사전 패널 [후보 등록]</a><span class="ar">→</span><a href="candidates.html">SC-14 후보 큐</a></div></div>
+  <div class="card" style="margin-bottom:12px"><b>T3 현행 DB 표준화</b><div class="caption muted">DDL 가져오기 → 표준 맞추기 자동 오픈 → 일괄 적용</div>
+    <div class="path"><a href="import.html">SC-36 가져오기(DDL)</a><span class="ar">→</span><a href="standardize.html?from=import">SC-34 표준 맞추기</a><span class="ar">→</span><a href="model.html?state=resolved">SC-31 준수율 100%</a></div></div>
+  <div class="card" style="margin-bottom:12px"><b>T4 후보 → 사전 → 모델</b><div class="caption muted">DA가 후보를 신청으로 전환 → 승인 → 모델 재검토</div>
+    <div class="path"><a href="candidates.html">SC-14 후보 큐</a><span class="ar">→</span><a href="dictionary.html">PN-12 단어 신청</a><span class="ar">→</span><a href="approvals.html">SC-20 승인</a><span class="ar">→</span><a href="standardize.html">SC-34 적용</a></div></div>
+  <div class="card" style="margin-bottom:24px"><b>T5 모델 확정</b><div class="caption muted">확정 신청 비활성 → 표준 맞추기 → 게이트 A → 확정 신청 → DA → 최종 승인</div>
+    <div class="path"><a href="model.html">SC-31 [확정 신청] 비활성 툴팁</a><span class="ar">→</span><a href="model.html">[물리] 게이트 A</a><span class="ar">→</span><a href="standardize.html">SC-34 8건 적용</a><span class="ar">→</span><a href="model.html?state=resolved">PN-38 확정 신청</a><span class="ar">→</span><a href="approvals.html">SC-20 모델 확정 문서</a></div></div>
+
+  <h2 style="font-size:16px;margin-bottom:8px">전체 화면</h2>
+  <table class="tbl" style="border:1px solid var(--border);border-radius:8px;overflow:hidden">
+    <thead><tr><th>ID</th><th>화면</th><th>링크</th><th>1600 프레임</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">SC-10 · PN-11 · PN-12</td><td>사전 통합 검색 · 상세 · 등록 신청</td><td><a href="dictionary.html">열기</a></td><td><a href="dictionary.html?w=1600">1600</a></td></tr>
+      <tr><td class="mono">SC-13</td><td>엑셀 가져오기 (6단계)</td><td><a href="excel-import.html">열기</a> · <a href="excel-import.html?step=5">결과 검토</a></td><td><a href="excel-import.html?step=5&w=1600">1600</a></td></tr>
+      <tr><td class="mono">SC-14</td><td>후보 큐</td><td><a href="candidates.html">열기</a></td><td></td></tr>
+      <tr><td class="mono">SC-20 · PN-21 · MO-22/23</td><td>결재함 · 문서 상세 · 자기 승인 · 반려</td><td><a href="approvals.html">열기</a></td><td><a href="approvals.html?w=1600"><b>1600 확인</b></a></td></tr>
+      <tr><td class="mono">SC-30</td><td>시스템 홈</td><td><a href="system.html">열기</a></td><td></td></tr>
+      <tr><td class="mono">SC-31 · PN-32/33/35/38</td><td>모델 화면 · 사전 패널 · 속성 패널 · 게이트 A · 확정 신청</td><td><a href="model.html">열기</a> · <a href="model.html?state=resolved">해결 후</a></td><td><a href="model.html?w=1600"><b>1600 확인</b></a></td></tr>
+      <tr><td class="mono">SC-34</td><td>표준 맞추기</td><td><a href="standardize.html">열기</a></td><td><a href="standardize.html?w=1600">1600</a></td></tr>
+      <tr><td class="mono">SC-36</td><td>가져오기 (엑셀·DDL)</td><td><a href="import.html">열기</a></td><td></td></tr>
+      <tr><td class="mono">SC-37</td><td>DDL 출력 · 게이트 B</td><td><a href="ddl.html">열기</a></td><td></td></tr>
+      <tr><td class="mono">SC-40~43</td><td>설정 — 기관 · 시스템 · 사용자·역할 · 검수 기준</td><td><a href="settings.html">열기</a></td><td></td></tr>
+    </tbody>
+  </table>
+  <p class="caption faint" style="margin-top:16px">로컬 실행: <span class="mono">powershell -File docs/ux/mockups/serve.ps1</span> → http://localhost:5178</p>
+</div>
+</body>
+</html>

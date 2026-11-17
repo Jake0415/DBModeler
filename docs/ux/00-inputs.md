@@ -121,4 +121,6 @@
 
 1. ~~§7.1의 결정을 30-metadata-design·20-priority에 반영~~ ✅ (30 v1.1, 20 §2.0·§3.2)
 2. ~~디자인 가이드~~ ✅ [01-design-guide.md](01-design-guide.md)
-3. ~~화면 흐름도~~ ✅ [02-flows.md](02-flows.md) → 다음: `docs/ux/mockups/` 클릭 목업 (교차 시나리오 T1~T5).
+3. ~~화면 흐름도~~ ✅ [02-flows.md](02-flows.md)
+4. ~~클릭 목업~~ ✅ [mockups/index.html](mockups/index.html) — 12개 화면, 교차 시나리오 T1~T5, 1920 기준 + 1600 확인 프레임, 라이트/다크. 실행: `powershell -File docs/ux/mockups/serve.ps1` → http://localhost:5178
+5. 다음: 목업 배치를 보고 UX-Q1(1920 기본·최소 1600) 확정 → 피드백 반영 v2.

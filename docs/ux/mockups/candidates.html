@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>후보 큐 · DBModeler 목업</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="assets/app.css">
+<script src="assets/app.js"></script>
+</head>
+<body data-page="candidates">
+<div id="app">
+<div id="content" class="page">
+  <div class="page-header">
+    <h1>후보 큐</h1>
+    <span class="crumb">모델링 중 나온 미등록 단어·용어</span>
+    <div class="actions"><span class="caption muted">DA만 처리할 수 있습니다</span></div>
+  </div>
+  <div class="page-body">
+    <div class="main">
+      <div class="toolbar">
+        <span class="chip on" data-group="c">대기 <span class="n">3</span></span>
+        <span class="chip" data-group="c">신청 전환 <span class="n">12</span></span>
+        <span class="chip" data-group="c">반려 <span class="n">4</span></span>
+        <span class="grow"></span>
+        <span class="chip" data-group="t" data-multi="1">단어</span><span class="chip" data-group="t" data-multi="1">용어</span>
+      </div>
+      <div class="listhead"><b style="color:var(--fg)">3건</b> · 같은 이름은 한 행으로 묶어 발생 건수를 표시합니다</div>
+      <div class="scroll">
+        <table class="tbl">
+          <thead><tr><th>유형</th><th>이름</th><th>제안 약어</th><th>발생</th><th>최초 요청</th><th>유사 표준어</th></tr></thead>
+          <tbody>
+            <tr class="click sel" data-panel="pn-cand"><td><span class="badge b-violet">단어</span></td><td><b>수령자</b></td><td class="mono">RCPNT</td><td class="num">4</td><td>김모델 · 11/17</td><td><span class="badge b-common">공통</span> 수신자 <span class="mono faint">RCVR</span></td></tr>
+            <tr class="click" data-panel="pn-cand"><td><span class="badge b-violet">단어</span></td><td>검수</td><td class="mono">INSPCT</td><td class="num">2</td><td>박설계 · 11/16</td><td><span class="badge b-common">공통</span> 검사 <span class="mono faint">INSP</span></td></tr>
+            <tr class="click" data-panel="pn-cand"><td><span class="badge b-violet">용어</span></td><td>요구사항변경사유내용</td><td class="mono">DEMND_MATER_CHG_RSN_CN</td><td class="num">1</td><td>김모델 · 11/15</td><td class="faint">없음</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <aside class="rpanel open" id="pn-cand">
+      <div class="rp-head">
+        <div class="t"><span class="badge b-violet">단어 후보</span><span class="badge">대기</span><button class="iconbtn close" data-close="pn-cand" style="width:28px;height:28px">×</button></div>
+        <h2 style="margin-top:8px">수령자</h2><div class="rp-sub">제안 약어 RCPNT</div>
+      </div>
+      <div class="rp-body">
+        <div class="banner warning"><span>!</span><div class="grow">비슷한 표준어가 있습니다: <b>수신자</b> <span class="mono">RCVR</span> (공통). 같은 뜻이면 반려하고 기존 단어를 쓰도록 안내하세요.</div></div>
+        <div class="section-t">발생 위치 <span class="badge">4</span></div>
+        <table class="tbl"><thead><tr><th>위치</th><th>속성</th><th>요청</th></tr></thead><tbody>
+          <tr><td class="wrap">요구사항관리 › 요구사항 › 산출물기본</td><td>산출물수령자명</td><td>김모델</td></tr>
+          <tr><td class="wrap">요구사항관리 › 요구사항 › 산출물이력</td><td>수령자ID</td><td>김모델</td></tr>
+          <tr><td class="wrap">인사시스템 › 교육 › 교재배부</td><td>수령자명</td><td>박설계</td></tr>
+          <tr><td class="wrap">인사시스템 › 교육 › 교재배부</td><td>수령일자</td><td>박설계</td></tr>
+        </tbody></table>
+        <div class="section-t">처리 결과는 요청자에게 앱 알림으로 갑니다</div>
+      </div>
+      <div class="rp-foot">
+        <button class="btn danger sm" data-toast="반려했습니다. 요청자 2명에게 알림을 보냈습니다" data-toast-type="danger">반려</button>
+        <button class="btn sm" data-toast="‘수신자’를 쓰도록 안내하고 반려했습니다" data-toast-type="info">기존 표준어 사용 안내</button>
+        <span class="grow"></span>
+        <a class="btn primary sm" href="dictionary.html">단어 신청으로 전환</a>
+      </div>
+    </aside>
+  </div>
+</div>
+</div>
+</body>
+</html>

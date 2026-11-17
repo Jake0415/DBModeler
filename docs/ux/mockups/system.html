@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>시스템 홈 · DBModeler 목업</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="assets/app.css">
+<script src="assets/app.js"></script>
+</head>
+<body data-page="system">
+<div id="app">
+<div id="content" class="page">
+  <div class="page-header">
+    <span class="crumb"><b style="font-size:20px;letter-spacing:-.4px">요구사항관리</b></span>
+    <span class="badge mono">Oracle 19c</span><span class="badge mono">스키마 RQMS</span>
+    <div class="actions">
+      <a class="btn" href="settings.html#system">시스템 설정</a>
+      <button class="btn primary" data-toast="새 업무 영역을 만들었습니다">+ 업무 영역</button>
+    </div>
+  </div>
+  <div class="scroll"><div class="pad">
+    <div class="grid3" style="grid-template-columns:repeat(4,1fr);margin-bottom:20px">
+      <div class="card"><div class="caption muted">업무 영역</div><div class="mono" style="font-size:20px">2</div></div>
+      <div class="card"><div class="caption muted">테이블 · 컬럼</div><div class="mono" style="font-size:20px">11 · 74</div></div>
+      <div class="card"><div class="caption muted">명명 템플릿</div><div class="mono" style="font-size:14px;margin-top:4px">%(EntityStdName)%(ClassSuffix)</div></div>
+      <div class="card"><div class="caption muted">모델 확정 최종 승인</div><div style="margin-top:4px"><span class="badge b-success">사용</span></div></div>
+    </div>
+    <div class="section-t">업무 영역</div>
+    <table class="tbl" style="border:1px solid var(--border);border-radius:8px;overflow:hidden">
+      <thead><tr><th>업무 영역</th><th>상태</th><th>작업 버전</th><th>테이블</th><th>준수율</th><th>미준수</th><th>예외</th><th>담당</th><th>수정</th></tr></thead>
+      <tbody>
+        <tr class="click" onclick="location.href='model.html'"><td><b>요구사항 · 프로젝트</b></td><td><span class="badge">작업 중</span></td><td class="mono">v5 <span class="faint">(v4 확정 기준)</span></td><td class="num">9</td><td class="mono">92%</td><td class="num">6</td><td class="num">2</td><td>김모델</td><td class="mono">11/17 15:10</td></tr>
+        <tr class="click" onclick="location.href='model.html'"><td><b>리스크</b></td><td><span class="badge b-info">● 검토 중</span></td><td class="mono">v2</td><td class="num">2</td><td class="mono">100%</td><td class="num">0</td><td class="num">0</td><td>박설계</td><td class="mono">11/16 18:02</td></tr>
+      </tbody>
+    </table>
+    <div class="caption muted" style="margin-top:8px">업무 영역을 열면 모델 화면으로 이동합니다. 준수율은 모델 화면 상단에서도 확인합니다.</div>
+  </div></div>
+</div>
+</div>
+</body>
+</html>

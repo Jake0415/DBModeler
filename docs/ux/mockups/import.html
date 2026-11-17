@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>가져오기 · DBModeler 목업</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="assets/app.css">
+<script src="assets/app.js"></script>
+</head>
+<body data-page="model">
+<div id="app">
+<div id="content" class="page">
+  <div class="page-header">
+    <a class="btn ghost sm" href="model.html">← 모델</a>
+    <h1>가져오기</h1>
+    <span class="crumb">요구사항관리 · Oracle</span>
+    <div class="actions">
+      <span class="seg"><button>엑셀 정의서</button><button class="on">DDL</button></span>
+    </div>
+  </div>
+  <div class="page-body">
+    <div class="main" style="flex:0 0 46%;border-right:1px solid var(--border)">
+      <div class="toolbar"><b style="font-size:13px">DDL 붙여넣기 또는 파일</b><span class="grow"></span><button class="btn sm">.sql 파일 선택</button></div>
+      <div class="scroll pad">
+        <div class="codeblock">
+<div class="ln"><i>1</i><span class="kw">CREATE TABLE</span> RQMS.RQRM_D (</div>
+<div class="ln"><i>2</i>  DEMND_MATER_ID   VARCHAR2(10) <span class="kw">NOT NULL</span>,</div>
+<div class="ln"><i>3</i>  RQRM_NM          VARCHAR2(100),</div>
+<div class="ln"><i>4</i>  REQ_CUST_NM      VARCHAR2(100),</div>
+<div class="ln"><i>5</i>  PRJ_ID           VARCHAR2(10),</div>
+<div class="ln"><i>6</i>  <span class="kw">CONSTRAINT</span> RQRM_D_PK <span class="kw">PRIMARY KEY</span> (DEMND_MATER_ID)</div>
+<div class="ln"><i>7</i>);</div>
+<div class="ln"><i>8</i></div>
+<div class="ln"><i>9</i><span class="kw">CREATE TABLE</span> RQMS.PRJ_M (</div>
+<div class="ln"><i>10</i>  PRJ_ID           VARCHAR2(10) <span class="kw">NOT NULL</span>,</div>
+<div class="ln"><i>11</i>  PRJ_NM           VARCHAR2(100),</div>
+<div class="ln"><i>12</i>  WINCON_AMOUNT    NUMBER(18),</div>
+<div class="ln"><i>13</i>  PRJ_ENDDD        CHAR(8)</div>
+<div class="ln"><i>14</i>);</div>
+<div class="ln"><i>15</i></div>
+<div class="ln warn"><i>16</i><span class="kw">CREATE TABLE</span> RQMS.TMP_LOG (</div>
+<div class="ln warn"><i>17</i>  LOG_TEXT         CLOB</div>
+<div class="ln warn"><i>18</i>);                         <span class="cm">-- PK 없음</span></div>
+<div class="ln"><i>19</i></div>
+<div class="ln"><i>20</i><span class="kw">ALTER TABLE</span> RQMS.RQRM_D <span class="kw">ADD CONSTRAINT</span> RQRM_D_FK1</div>
+<div class="ln"><i>21</i>  <span class="kw">FOREIGN KEY</span> (PRJ_ID) <span class="kw">REFERENCES</span> RQMS.PRJ_M (PRJ_ID);</div>
+<div class="ln"><i>…</i><span class="cm">  (182줄)</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="main">
+      <div class="toolbar"><b style="font-size:13px">파싱 미리보기</b><span class="badge b-success">✓ 파싱 완료</span><span class="grow"></span><span class="caption muted">테이블 7 · 컬럼 52 · PK 6 · FK 5</span></div>
+      <div class="scroll">
+        <table class="tbl">
+          <thead><tr><th>테이블</th><th>컬럼</th><th>PK</th><th>FK</th><th>점검</th></tr></thead>
+          <tbody>
+            <tr><td class="mono">RQRM_D</td><td class="num">12</td><td>✓</td><td class="num">1</td><td><span class="badge b-success">정상</span></td></tr>
+            <tr><td class="mono">PRJ_M</td><td class="num">8</td><td>✓</td><td class="num">0</td><td><span class="badge b-success">정상</span></td></tr>
+            <tr><td class="mono">PRJ_MBR_D</td><td class="num">6</td><td>✓</td><td class="num">2</td><td><span class="badge b-success">정상</span></td></tr>
+            <tr><td class="mono">EMP_M</td><td class="num">2</td><td>✓</td><td class="num">0</td><td><span class="badge b-success">정상</span></td></tr>
+            <tr><td class="mono">RISK_M</td><td class="num">10</td><td>✓</td><td class="num">1</td><td><span class="badge b-success">정상</span></td></tr>
+            <tr><td class="mono">RQRM_RISK_R</td><td class="num">2</td><td>✓</td><td class="num">2</td><td><span class="badge b-success">정상</span></td></tr>
+            <tr class="row-warning"><td class="mono">TMP_LOG</td><td class="num">1</td><td>—</td><td class="num">0</td><td><span class="badge b-warning">PK 없음 · 16행</span></td></tr>
+          </tbody>
+        </table>
+        <div class="pad">
+          <div class="field"><label>가져올 위치</label>
+            <div class="flex"><span class="chip on" data-group="dst">새 업무 영역</span><span class="chip" data-group="dst">현재 업무 영역(요구사항 · 프로젝트)</span></div></div>
+          <div class="field" style="max-width:360px"><label>새 업무 영역 이름</label><input class="input" value="현행 요구사항 DB"></div>
+          <div class="banner"><span>ℹ</span><div>가져온 뒤 자동 배치하고, <b>표준 맞추기</b> 화면을 바로 엽니다. 이름·타입은 표준 맞추기에서 확인한 뒤에만 바뀝니다.</div></div>
+        </div>
+      </div>
+      <div class="rp-foot" style="background:var(--surface)"><span class="caption muted">PK 없는 테이블 1개는 경고와 함께 가져옵니다</span><span class="grow"></span><a class="btn" href="model.html">취소</a><a class="btn primary" href="standardize.html?from=import">7개 테이블 가져오기</a></div>
+    </div>
+  </div>
+</div>
+</div>
+</body>
+</html>
