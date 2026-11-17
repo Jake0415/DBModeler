@@ -16,7 +16,7 @@
     <a class="btn ghost sm" href="model.html">← 모델</a>
     <h1>DDL 출력</h1>
     <span class="crumb">요구사항관리 · Oracle 19c · 스키마 RQMS</span>
-    <div class="actions"><span class="badge b-warning">초안 · 미확정 v5</span></div>
+    <div class="actions"><span class="badge b-warning">초안 · 미확정 v5</span><button class="btn sm" data-open="pn-cmp" data-close-others="pn-gateb">DBMS 비교</button></div>
   </div>
   <div class="toolbar">
     <span class="caption muted">범위 *</span>
@@ -56,7 +56,29 @@
         </div>
       </div>
     </div>
-    <aside class="rpanel open">
+    <aside class="rpanel wide" id="pn-cmp">
+      <div class="rp-head"><div class="t"><h2>DBMS 비교</h2><span class="badge">후속 차수 · 접속 필요</span><button class="iconbtn close" data-open="pn-gateb" data-close-others="pn-cmp" style="width:28px;height:28px">×</button></div>
+        <div class="caption muted" style="margin-top:4px">모델(v5 초안)과 운영 DB의 실제 구조를 비교합니다. 운영 DB 접속 정보는 시스템 설정에서 Admin이 등록합니다.</div></div>
+      <div class="rp-body">
+        <div class="field-row"><div class="field"><label>비교 대상</label><select class="input"><option>운영 · RQMS@prod (Oracle 19c)</option><option>개발 · RQMS@dev</option></select></div><div class="field"><label>기준 모델</label><select class="input"><option>v5 초안</option><option>v4 확정본</option></select></div></div>
+        <div class="grid3" style="margin-bottom:12px">
+          <div class="card"><div class="caption muted">모델에만</div><div class="mono" style="font-size:20px">2</div></div>
+          <div class="card"><div class="caption muted">DB에만</div><div class="mono" style="font-size:20px">1</div></div>
+          <div class="card"><div class="caption muted">다름</div><div class="mono" style="font-size:20px">3</div></div>
+        </div>
+        <table class="tbl"><thead><tr><th>객체</th><th>모델</th><th>운영 DB</th><th>구분</th></tr></thead><tbody>
+          <tr><td class="mono">DLVRBL_M</td><td class="mono">있음</td><td class="faint">없음</td><td><span class="badge b-info">모델에만</span></td></tr>
+          <tr><td class="mono">DLVRBL_HIST_D</td><td class="mono">있음</td><td class="faint">없음</td><td><span class="badge b-info">모델에만</span></td></tr>
+          <tr><td class="mono">RQRM_D.RQRM_NM</td><td class="mono">DEMND_MATER_NM</td><td class="mono">RQRM_NM</td><td><span class="badge b-warning">이름 다름</span></td></tr>
+          <tr><td class="mono">PRJ_M.WINCON_AMT</td><td class="mono">NUMBER(15)</td><td class="mono">NUMBER(12)</td><td><span class="badge b-warning">타입 다름</span></td></tr>
+          <tr><td class="mono">PRJ_MBR_D_EMP_M_FK2</td><td class="mono">있음</td><td class="faint">없음</td><td><span class="badge b-warning">제약 다름</span></td></tr>
+          <tr><td class="mono">RQRM_D_BAK</td><td class="faint">없음</td><td class="mono">있음</td><td><span class="badge">DB에만</span></td></tr>
+        </tbody></table>
+        <div class="caption muted" style="margin-top:8px">차이는 <b>변경분(ALTER)</b> 프리셋으로 바로 스크립트를 만들 수 있습니다. DB에만 있는 객체는 [가져오기 › DDL]로 모델에 들일 수 있습니다.</div>
+      </div>
+      <div class="rp-foot"><button class="btn" data-toast="비교 결과를 엑셀로 내려받았습니다" data-toast-type="info">엑셀</button><span class="grow"></span><button class="btn primary" data-toast="차이 4건으로 ALTER 스크립트를 만들었습니다" data-toast-type="info">ALTER 스크립트 만들기</button></div>
+    </aside>
+    <aside class="rpanel open" id="pn-gateb">
       <div class="rp-head"><h2>점검 결과</h2><div class="caption muted">게이트 B · 출력 직전</div></div>
       <div class="rp-body">
         <div class="grid2" style="margin-bottom:12px">

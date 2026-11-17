@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>산출물 · DBModeler 목업</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="assets/app.css">
+<script src="assets/app.js"></script>
+<style>
+  .ocards { display:grid; grid-template-columns:repeat(auto-fill, minmax(260px, 1fr)); gap:12px; }
+  .ocard { border:1px solid var(--border); border-radius:8px; background:var(--surface); padding:14px; cursor:pointer; display:flex; flex-direction:column; gap:6px; }
+  .ocard:hover { border-color:var(--border-strong); }
+  .ocard.on { border-color:var(--ink); box-shadow:0 0 0 1px var(--ink); }
+  .ocard .f { display:flex; gap:4px; margin-top:auto; }
+  .prev { border:1px solid var(--border); border-radius:6px; overflow:hidden; font-size:12px; }
+  .prev .ph { background:var(--surface-2); padding:6px 8px; font-weight:600; border-bottom:1px solid var(--border); }
+  .prev table { width:100%; border-collapse:collapse; }
+  .prev td, .prev th { border-bottom:1px solid var(--border); padding:3px 6px; text-align:left; white-space:nowrap; }
+  .prev th { font-weight:500; color:var(--fg-2); background:var(--surface); }
+</style>
+</head>
+<body data-page="model">
+<div id="app">
+<div id="content" class="page">
+  <div class="page-header">
+    <a class="btn ghost sm" href="model.html">← 모델</a>
+    <h1>산출물</h1>
+    <span class="crumb">요구사항관리 › <b>요구사항 · 프로젝트</b></span>
+    <div class="actions"><span class="caption muted">기관 양식: <b>KDA 산출물 양식 v2</b> · <a href="settings.html">설정</a></span></div>
+  </div>
+  <div class="page-body">
+    <div class="main"><div class="scroll"><div class="pad">
+      <div class="section-t" style="margin-top:0">표준화 산출물</div>
+      <div class="ocards" id="cards">
+        <div class="ocard on" data-k="tbl"><b>테이블 정의서</b><div class="caption muted">테이블·컬럼·타입·PK/FK·NULL·설명. 기관 양식 시트 구성</div><div class="f"><span class="badge">xlsx</span><span class="badge">pdf</span></div></div>
+        <div class="ocard" data-k="cmp"><b>표준 준수검사 결과</b><div class="caption muted">준수율 요약 + 엔터티별·속성별 상태, 예외 사유 목록</div><div class="f"><span class="badge">xlsx</span></div></div>
+        <div class="ocard" data-k="term"><b>용어 사용 현황</b><div class="caption muted">이 영역이 쓰는 표준 용어·도메인과 사용 위치</div><div class="f"><span class="badge">xlsx</span></div></div>
+        <div class="ocard" data-k="sec"><b>개인정보 컬럼 목록</b><div class="caption muted">개인정보·암호화 지정 컬럼, 도메인 상속/직접 지정 구분</div><div class="f"><span class="badge">xlsx</span><span class="badge">pdf</span></div></div>
+        <div class="ocard" data-k="erd"><b>ERD</b><div class="caption muted">논리·물리 ERD, 확정본 배치 + 표제란</div><div class="f"><span class="badge">pdf</span><span class="badge">png</span><span class="badge">svg</span></div></div>
+        <div class="ocard" data-k="rev"><b>모델 검토 결과</b><div class="caption muted">명칭 중복·미입력·관계·물리 정보 점검 결과</div><div class="f"><span class="badge">xlsx</span></div></div>
+        <div class="ocard" data-k="chg"><b>변경 이력</b><div class="caption muted">버전 간 엔터티·속성·관계 변경 내역 (v4 → v5)</div><div class="f"><span class="badge">xlsx</span><span class="badge">html</span></div></div>
+        <div class="ocard" data-k="ddl"><b>DDL 스크립트</b><div class="caption muted">게이트 B 통과 스크립트 — DDL 화면에서 만듭니다</div><div class="f"><a class="badge" href="ddl.html">DDL 화면 →</a></div></div>
+      </div>
+      <div class="section-t">최근 만든 산출물</div>
+      <table class="tbl" style="border:1px solid var(--border);border-radius:8px;overflow:hidden"><thead><tr><th>일시</th><th>산출물</th><th>범위 · 기준</th><th>만든 사람</th><th></th></tr></thead><tbody>
+        <tr><td class="mono">11/16 18:20</td><td>테이블 정의서</td><td>요구사항·프로젝트 · v4 확정본</td><td>김모델</td><td><a href="#" data-toast="요구사항_프로젝트_테이블정의서_v4.xlsx 내려받기" data-toast-type="info">내려받기</a></td></tr>
+        <tr><td class="mono">11/16 18:19</td><td>표준 준수검사 결과</td><td>요구사항·프로젝트 · v4 확정본</td><td>김모델</td><td><a href="#" data-toast="요구사항_프로젝트_준수검사_v4.xlsx 내려받기" data-toast-type="info">내려받기</a></td></tr>
+        <tr><td class="mono">11/03 10:02</td><td>ERD (공식)</td><td>시스템 전체 · v4 확정본</td><td>이데이터</td><td><a href="#" data-toast="요구사항관리_ERD_v4.pdf 내려받기" data-toast-type="info">내려받기</a></td></tr>
+      </tbody></table>
+    </div></div></div>
+
+    <aside class="rpanel open" id="pn-out">
+      <div class="rp-head"><h2 id="o-title">테이블 정의서</h2><div class="rp-sub">만들기 옵션 · 미리보기</div></div>
+      <div class="rp-body">
+        <div class="field"><label>범위</label><select class="input"><option>업무 영역 · 요구사항·프로젝트 (9)</option><option>시스템 전체 · 요구사항관리 (11)</option><option>선택한 테이블</option></select></div>
+        <div class="field-row">
+          <div class="field"><label>기준 버전</label><select class="input" id="o-ver"><option>v4 확정본 (공식)</option><option>v5 작업 중 (초안 표시)</option></select></div>
+          <div class="field"><label>형식</label><select class="input" id="o-fmt"><option>xlsx</option><option>pdf</option></select></div>
+        </div>
+        <div class="field"><label>양식</label><select class="input"><option>기관 양식 (KDA 산출물 양식 v2)</option><option>기본 양식</option></select></div>
+        <label class="flex caption" style="margin-bottom:12px"><input type="checkbox" checked> 표지에 버전·확정일·승인자 넣기</label>
+        <div class="section-t">미리보기</div>
+        <div class="prev" id="o-prev"></div>
+        <div class="banner" style="margin-top:12px" id="o-note"><span>ℹ</span><div>공식 산출물은 <b>확정본</b>으로만 만듭니다. 작업 중 버전은 모든 시트에 ‘초안’ 표시가 붙습니다.</div></div>
+      </div>
+      <div class="rp-foot"><span class="grow"></span><button class="btn primary" id="o-go">만들기</button></div>
+    </aside>
+  </div>
+</div>
+</div>
+<script>
+window.pageInit = function () {
+  const P = {
+    tbl: ['테이블 정의서', '시트 1/9 · DLVRBL_M 산출물기본', ['컬럼명', '논리명', '타입', 'PK', 'NULL', '도메인'], [['DLVRBL_ID', '산출물ID', 'VARCHAR2(10)', 'Y', 'N', 'ID V10'], ['DLVRBL_NM', '산출물명', 'VARCHAR2(100)', '', 'N', '명V100'], ['DLVRBL_SBMT_DATE', '산출물제출일자', 'CHAR(8)', '', 'Y', '연월일C8'], ['DEMND_MATER_ID', '요구사항ID', 'VARCHAR2(10)', '', 'Y', 'ID V10'], ['REG_DT', '등록일시', 'DATE', '', 'N', '일시T']]],
+    cmp: ['표준 준수검사 결과', '요약 · 준수율 100% (예외 3, 비대상 3)', ['엔터티', '대상', '표준', '예외', '비대상', '준수율'], [['프로젝트기본', '5', '4', '1', '0', '100%'], ['요구사항내역', '5', '4', '1', '0', '100%'], ['산출물기본', '5', '4', '1', '0', '100%'], ['리스크기본', '3', '3', '0', '0', '100%']]],
+    term: ['용어 사용 현황', '표준 용어 41 · 도메인 12', ['용어', '물리명', '도메인', '사용 위치 수'], [['프로젝트ID', 'PRJ_ID', 'ID V10', '3'], ['요구사항ID', 'DEMND_MATER_ID', 'ID V10', '3'], ['등록일시', 'REG_DT', '일시T', '9'], ['산출물명', 'DLVRBL_NM', '명V100', '1']]],
+    sec: ['개인정보 컬럼 목록', '개인정보 3 · 암호화 1', ['테이블.컬럼', '개인정보', '암호화', '출처'], [['EMP_M.EMP_NM', '개인정보', '없음', '도메인 상속'], ['EMP_M.MBTL_NO', '개인정보', '양방향(ARIA)', '도메인 상속'], ['RQRM_D.REQ_CUST_NM', '개인정보', '없음', '직접 지정 · 사유 있음']]],
+    erd: ['ERD', '논리 ERD · v4 확정본 배치 · A3 가로 1쪽', ['표제란', '값'], [['시스템 › 영역', '요구사항관리 › 요구사항·프로젝트'], ['버전', 'v4 · 확정 2026-11-03'], ['승인', '이DA, 최관리']]],
+    rev: ['모델 검토 결과', '확인 필요 8', ['구분', '위치', '내용'], [['관계', '요구사항내역 ↔ 리스크기본', 'M:N 미해소'], ['물리 정보', '산출물기본.산출물제출일', '타입 미정'], ['미입력', '산출물이력', '엔터티 정의 없음']]],
+    chg: ['변경 이력', 'v4 → v5 · 엔터티 +2 · 속성 +6 · 변경 5', ['구분', '대상', '변경'], [['추가', '산출물기본', '엔터티 추가'], ['추가', '산출물이력', '엔터티 추가'], ['변경', '프로젝트기본.수주금액', 'NUMBER(12) → NUMBER(15)']]],
+  };
+  const show = k => {
+    if (!P[k]) return; const [t, cap, h, rows] = P[k];
+    document.getElementById('o-title').textContent = t;
+    document.getElementById('o-prev').innerHTML = `<div class="ph">${cap}</div><table><thead><tr>${h.map(x => `<th>${x}</th>`).join('')}</tr></thead><tbody>${rows.map(r => `<tr>${r.map(c => `<td>${c}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
+    document.querySelectorAll('.ocard').forEach(c => c.classList.toggle('on', c.dataset.k === k));
+  };
+  document.getElementById('cards').addEventListener('click', e => { const c = e.target.closest('.ocard'); if (c && !e.target.closest('a')) show(c.dataset.k); });
+  document.getElementById('o-go').onclick = () => {
+    const t = document.getElementById('o-title').textContent, v = document.getElementById('o-ver').value, f = document.getElementById('o-fmt').value;
+    toast(`${t}를 만들었습니다 — ${v.startsWith('v4') ? '공식(v4 확정본)' : '초안(v5, 모든 시트에 초안 표시)'} · .${f}`);
+  };
+  show(new URLSearchParams(location.search).get('k') || 'tbl');
+};
+</script>
+</body>
+</html>

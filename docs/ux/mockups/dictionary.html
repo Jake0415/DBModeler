@@ -37,6 +37,7 @@
         <span class="chip" data-group="src" data-multi="1">공통</span>
         <span class="chip on" data-group="src" data-multi="1">기관</span>
         <span class="chip" data-group="st" data-multi="1">신청 중</span>
+        <select class="input" style="height:28px;width:150px;font-size:13px" title="도메인그룹"><option>도메인그룹: 전체</option><option>날짜</option><option>번호</option><option>명칭</option><option>코드</option><option>금액·수량</option></select>
         <span class="grow"></span>
         <button class="btn sm ghost">열 설정</button>
       </div>
@@ -140,10 +141,41 @@
       <div class="rp-head">
         <div class="t"><h2>등록 신청</h2><button class="iconbtn close" data-close="pn-request" style="width:28px;height:28px">×</button></div>
         <div style="margin-top:8px;display:flex;gap:6px">
-          <span class="chip" data-group="rk">단어</span><span class="chip" data-group="rk">도메인</span><span class="chip on" data-group="rk">용어</span><span class="chip" data-group="rk">엔터티 용어</span><span class="chip" data-group="rk">코드</span>
+          <span class="chip" data-group="rk" data-rq="word">단어</span><span class="chip" data-group="rk" data-rq="domain">도메인</span><span class="chip on" data-group="rk" data-rq="term">용어</span><span class="chip" data-group="rk" data-rq="term">엔터티 용어</span><span class="chip" data-group="rk" data-rq="term">코드</span>
         </div>
       </div>
       <div class="rp-body">
+        <!-- domain form -->
+        <div class="rq-form" data-rq="domain" hidden>
+          <div class="field-row">
+            <div class="field"><label>도메인그룹 *</label><select class="input" id="dm-grp"><option>날짜</option><option>번호</option><option>명칭</option><option selected>코드</option><option>금액·수량</option></select></div>
+            <div class="field"><label>형식단어 * <span class="faint">도메인 이름의 앞부분</span></label><select class="input" id="dm-fw"><option>코드</option><option>여부</option><option>구분</option></select></div>
+          </div>
+          <div class="field-row">
+            <div class="field"><label>논리 타입 *</label><select class="input" id="dm-type"><option value="C">문자(고정) · C</option><option value="V">문자(가변) · V</option><option value="N">숫자 · N</option><option value="T">일시 · T</option></select></div>
+            <div class="field"><label>길이 *</label><input class="input mono" id="dm-len" value="3"></div>
+            <div class="field"><label>소수점</label><input class="input mono" value="" placeholder="—" disabled></div>
+          </div>
+          <div class="card" style="background:var(--surface-2);margin-bottom:12px">
+            <div class="caption muted">자동 생성 · 형식단어 + 축약명 + 길이 (<a href="settings.html#sys">데이터타입 매핑</a>)</div>
+            <div class="flex"><b class="mono" id="dm-name" style="font-size:15px">코드C3</b><span class="caption faint">· Oracle <span class="mono" id="dm-phys">CHAR(3)</span> · PostgreSQL <span class="mono" id="dm-pg">CHAR(3)</span></span><span class="grow"></span><span class="badge b-success" id="dm-dup">중복 없음</span></div>
+          </div>
+          <div class="field-row">
+            <div class="field"><label>허용 값 범위 · 포맷</label><input class="input mono" value="[A-Z0-9]{3}"></div>
+            <div class="field"><label>보안 속성</label><select class="input"><option>없음</option><option>개인정보</option><option>개인정보 · 암호화(양방향)</option><option>개인정보 · 암호화(단방향)</option></select><span class="help">이 도메인을 쓰는 속성이 상속합니다</span></div>
+          </div>
+          <div class="field"><label>설명</label><textarea class="input" rows="2">3자리 영숫자 코드</textarea></div>
+          <div class="flex"><span class="grow"></span><button class="btn" data-toast="대기 목록에 추가했습니다">목록에 추가</button></div>
+        </div>
+        <!-- word form -->
+        <div class="rq-form" data-rq="word" hidden>
+          <div class="field-row"><div class="field"><label>단어명 *</label><input class="input" value="수령자"></div><div class="field"><label>영문약어명 * <span class="faint">6자 이내</span></label><input class="input mono" value="RCPNT"></div></div>
+          <div class="field-row"><div class="field"><label>영문명</label><input class="input" value="recipient"></div><div class="field"><label>형식단어</label><select class="input"><option>아니오</option><option>예</option></select></div></div>
+          <div class="field"><label>동의어 · 금칙어</label><input class="input" value="수취인, 수신자" placeholder="쉼표로 구분"></div>
+          <div class="banner warning"><span>!</span><div>비슷한 표준이 있습니다: <b>수신자 RCVR</b>(공통). 같은 뜻이면 기존 단어를 쓰세요.</div></div>
+          <div class="flex" style="margin-top:8px"><span class="grow"></span><button class="btn" data-toast="대기 목록에 추가했습니다">목록에 추가</button></div>
+        </div>
+        <div class="rq-form" data-rq="term">
         <div class="field"><label>용어명 *</label><input class="input" value="산출물제출일자"><span class="help">입력을 멈추면 자동으로 분석합니다</span></div>
         <div class="section-t">분석 결과 <span class="badge">후보 2</span></div>
         <div class="cand on"><input type="radio" checked><div class="grow">산출물 + 제출 + 일자</div><span class="mono">DLVRBL_SBMT_DATE</span><span class="badge b-success">✓</span></div>
@@ -155,6 +187,7 @@
         </div>
         <div class="field"><label>설명</label><textarea class="input" rows="2">산출물을 발주처에 제출한 날짜</textarea></div>
         <div class="flex"><span class="grow"></span><button class="btn" data-toast="대기 목록에 추가했습니다">목록에 추가</button></div>
+        </div>
 
         <div class="hr"></div>
         <div class="section-t">대기 목록 <span class="badge">2</span></div>
@@ -180,5 +213,28 @@
   </div>
 </div>
 </div>
+<script>
+(function () {
+  const prev = window.pageInit;
+  window.pageInit = function () {
+    if (prev) prev();
+    const panel = document.getElementById('pn-request'); if (!panel) return;
+    const show = k => panel.querySelectorAll('.rq-form').forEach(f => f.hidden = f.dataset.rq !== k);
+    panel.addEventListener('click', e => { const c = e.target.closest('[data-rq].chip'); if (c) show(c.dataset.rq); });
+    const MAP = { C: ['CHAR', 'CHAR'], V: ['VARCHAR2', 'VARCHAR'], N: ['NUMBER', 'NUMERIC'], T: ['DATE', 'TIMESTAMP'] };
+    const upd = () => {
+      const fw = document.getElementById('dm-fw').value, ty = document.getElementById('dm-type').value, len = document.getElementById('dm-len').value.trim();
+      const nm = fw + ty + (ty === 'T' ? '' : len);
+      document.getElementById('dm-name').textContent = nm;
+      document.getElementById('dm-phys').textContent = ty === 'T' ? 'DATE' : `${MAP[ty][0]}(${len})`;
+      document.getElementById('dm-pg').textContent = ty === 'T' ? 'TIMESTAMP' : `${MAP[ty][1]}(${len})`;
+      const dup = ['코드C2', '여부C1'].includes(nm); const b = document.getElementById('dm-dup');
+      b.textContent = dup ? '이미 있음 · 기존 도메인 사용' : '중복 없음'; b.className = 'badge ' + (dup ? 'b-warning' : 'b-success');
+    };
+    ['dm-fw', 'dm-type', 'dm-len'].forEach(id => { const el = document.getElementById(id); el.addEventListener('input', upd); el.addEventListener('change', upd); });
+    if (new URLSearchParams(location.search).get('req') === 'domain') { const d = document.getElementById('pn-detail'); if (d) d.classList.remove('open'); panel.classList.add('open'); panel.querySelector('[data-rq="domain"].chip').click(); }
+  };
+})();
+</script>
 </body>
 </html>

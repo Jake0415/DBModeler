@@ -10,33 +10,33 @@
 <script src="assets/app.js"></script>
 <style>
   :root { --p-hong:#de1d8d; --p-park:#0a72ef; }
-  /* dictionary side panel */
   .side .dict-item { padding:8px 12px; border-bottom:1px solid var(--border); font-size:13px; cursor:grab; }
   .side .dict-item:hover { background:var(--surface-2); }
   .side .dict-item .l1 { display:flex; gap:6px; align-items:center; }
   .side .dict-item .l2 { font-family:var(--font-mono); font-size:12px; color:var(--fg-2); }
   .s-ok { background:var(--success); } .s-comb { background:var(--info); } .s-unreg { background:var(--warning); } .s-ex { background:var(--violet); } .s-na { background:var(--border-strong); }
   #confirm-btn.disabled { pointer-events:auto; }
-  /* presence */
   .avs { display:flex; align-items:center; padding-left:6px; }
-  .avs .av { width:24px; height:24px; border-radius:50%; color:#fff; font:600 11px var(--font-sans); display:grid; place-items:center; border:2px solid var(--surface); margin-left:-6px; position:relative; }
+  .avs .av { width:24px; height:24px; border-radius:50%; color:#fff; font:600 11px var(--font-sans); display:grid; place-items:center; border:2px solid var(--surface); margin-left:-6px; }
   .avs .av.view { background:var(--surface-2) !important; color:var(--fg-2); box-shadow:inset 0 0 0 1px var(--border-strong); }
   .avs .cap { margin-left:6px; font-size:12px; color:var(--fg-2); white-space:nowrap; }
   .offline .avs .av { filter:grayscale(1); opacity:.5; }
-  /* canvas */
   #cv { flex:1; position:relative; overflow:hidden; background-color:var(--bg); background-image:radial-gradient(var(--border) 1px, transparent 1px); background-size:16px 16px; }
-  #cv.tool-entity, #cv.tool-rel { cursor:crosshair; }
+  #cv.tool-entity, #cv.tool-rel, #cv.tool-memo { cursor:crosshair; }
   #cv.panning { cursor:grabbing; }
   #cv.dropping { box-shadow:inset 0 0 0 2px var(--info); }
   #world { position:absolute; left:0; top:0; transform-origin:0 0; }
   #edges { position:absolute; left:0; top:0; overflow:visible; pointer-events:none; }
   #edges path.hit { stroke:transparent; stroke-width:16; fill:none; pointer-events:stroke; cursor:pointer; }
+  #edges path.hit.pick { stroke:color-mix(in srgb, var(--info) 35%, transparent); }
   .node { position:absolute; min-width:180px; max-width:320px; background:var(--surface); border:1px solid var(--border-strong); border-radius:8px; font-size:12px; box-shadow:var(--shadow-4); user-select:none; }
   .node.sel { border-color:var(--ink); box-shadow:0 0 0 1px var(--ink), var(--shadow-4); }
   .node.relsrc { border-color:var(--info); box-shadow:0 0 0 2px var(--info); }
   .node.drop { box-shadow:0 0 0 2px var(--info), var(--shadow-4); }
   .node.remote { box-shadow:0 0 0 2px var(--p-hong), var(--shadow-4); }
+  .node.ref { border-style:dashed; background:var(--surface-2); }
   .node .rtag { position:absolute; top:-20px; left:-2px; background:var(--p-hong); color:#fff; font-size:11px; padding:1px 6px; border-radius:4px 4px 4px 0; white-space:nowrap; }
+  .node .rtag.reft { background:var(--fg-3); }
   .node .nh { display:flex; align-items:center; gap:6px; padding:6px 10px; border-bottom:1px solid var(--border); font-weight:600; font-size:13px; cursor:move; }
   .node .nh .cls { font:600 10px var(--font-mono); border:1px solid var(--border-strong); border-radius:4px; padding:0 4px; color:var(--fg-2); }
   .node .nh .sub { font:400 11px var(--font-mono); color:var(--fg-3); margin-left:auto; }
@@ -46,17 +46,30 @@
   .node .ar .p { margin-left:auto; padding-left:12px; font:400 11px var(--font-mono); color:var(--fg-3); }
   .node .ar.fk .n { font-style:italic; color:var(--info-deep); }
   .node .ar.new { background:color-mix(in srgb, var(--p-hong) 10%, transparent); }
+  .node .ar.excl .n { color:var(--fg-3); }
   .node .ar input { border:1px solid var(--ink); border-radius:4px; font:inherit; padding:1px 4px; width:150px; background:var(--surface); color:var(--fg); }
+  .node .lk { color:var(--danger); display:inline-flex; }
   .node .more { padding:2px 10px 4px; color:var(--fg-3); display:none; }
-  #world.lod-mid .node .ar:not(.pkr) { display:none; } #world.lod-mid .node .more { display:block; }
+  .node .sysc { padding:3px 10px; border-top:1px dashed var(--border); color:var(--fg-3); font-size:11px; }
+  .node .subt { border-top:1px solid var(--border); padding:6px 8px 8px; }
+  .node .subt .cap { font-size:11px; color:var(--fg-2); margin-bottom:4px; display:flex; align-items:center; gap:4px; }
+  .node .subt .cap b { font:600 10px var(--font-mono); border:1px solid var(--border-strong); border-radius:50%; width:16px; height:16px; display:inline-grid; place-items:center; }
+  .node .subt .kids { display:flex; gap:6px; }
+  .node .subt .kids span { flex:1; border:1px solid var(--border-strong); border-radius:6px; padding:3px 6px; font-weight:500; text-align:center; background:var(--surface); }
+  #world.lod-mid .node .ar:not(.pkr), #world.lod-mid .node .sysc { display:none; } #world.lod-mid .node .more { display:block; }
   #world.lod-mid .relname, #world.lod-low .relname { display:none; }
-  #world.lod-low .node .ar, #world.lod-low .node .more, #world.lod-low .node .nh .sub { display:none; }
+  #world.lod-low .node .ar, #world.lod-low .node .more, #world.lod-low .node .nh .sub, #world.lod-low .node .sysc, #world.lod-low .node .subt, #world.lod-low .memo { display:none; }
   #world.lod-low .node .nh { border-bottom:0; font-size:15px; padding:10px 12px; }
   .relname { font:400 11px var(--font-sans); fill:var(--fg-2); paint-order:stroke; stroke:var(--bg); stroke-width:4px; }
+  .memo { position:absolute; width:200px; background:color-mix(in srgb, var(--warning) 16%, var(--surface)); border:1px solid color-mix(in srgb, var(--warning) 45%, var(--border)); border-radius:6px; font-size:12px; box-shadow:var(--shadow-4); }
+  .memo .mh { display:flex; align-items:center; padding:3px 8px; color:var(--fg-2); font-size:11px; cursor:move; }
+  .memo .mh button { margin-left:auto; border:0; background:none; cursor:pointer; color:var(--fg-3); font-size:14px; line-height:1; }
+  .memo .mb { padding:2px 8px 8px; min-height:36px; outline:none; white-space:pre-wrap; }
+  .memo .mb:empty::before { content:'메모 입력'; color:var(--fg-3); }
   .rcur { position:absolute; pointer-events:none; transition:left .9s ease, top .9s ease; z-index:5; }
-  .locked #cur-hong span::after { content:' · 조회'; }
   .rcur span { position:absolute; left:12px; top:14px; color:#fff; font-size:11px; padding:1px 6px; border-radius:4px; white-space:nowrap; }
-  .cv-toolbar { position:absolute; top:12px; left:50%; transform:translateX(-50%); display:flex; gap:2px; align-items:center; background:var(--surface); border-radius:8px; box-shadow:var(--shadow-4); padding:4px; z-index:10; }
+  .locked #cur-hong span::after { content:' · 조회'; }
+  .cv-toolbar { position:absolute; top:12px; left:50%; transform:translateX(-50%); display:flex; gap:2px; align-items:center; background:var(--surface); border-radius:8px; box-shadow:var(--shadow-4); padding:4px; z-index:20; }
   .cv-toolbar .tb { height:30px; min-width:30px; padding:0 8px; border:0; border-radius:6px; background:none; color:var(--fg); font:500 13px var(--font-sans); cursor:pointer; display:flex; align-items:center; gap:4px; white-space:nowrap; flex:0 0 auto; }
   .cv-toolbar .tb:hover { background:var(--surface-2); }
   .cv-toolbar .tb.on { background:var(--ink); color:var(--on-ink); }
@@ -67,15 +80,16 @@
   .menu.open { display:block; }
   .menu .mi { padding:6px 8px; border-radius:4px; cursor:pointer; font-size:13px; display:flex; justify-content:space-between; gap:12px; }
   .menu .mi:hover, .menu .mi.on { background:var(--surface-2); }
-  #relmenu { top:44px; left:0; width:200px; }
-  #expmenu { top:40px; right:0; width:320px; padding:12px; font-size:13px; }
+  .menu .msep { height:1px; background:var(--border); margin:4px 0; }
+  #relmenu { top:44px; left:0; width:220px; }
+  #expmenu { top:40px; right:0; width:330px; padding:12px; font-size:13px; }
   #expmenu .row { display:flex; align-items:center; gap:8px; margin-bottom:10px; }
   #expmenu .row > b { width:44px; font-weight:500; color:var(--fg-2); }
   .cv-zoom { position:absolute; left:12px; bottom:12px; display:flex; gap:4px; align-items:center; background:var(--surface); border-radius:8px; box-shadow:var(--shadow-4); padding:4px; z-index:10; font-size:12px; }
   .cv-zoom button { height:26px; min-width:26px; border:0; background:none; border-radius:6px; cursor:pointer; color:var(--fg); font:500 13px var(--font-sans); }
   .cv-zoom button:hover { background:var(--surface-2); }
   .cv-mini { position:absolute; right:12px; bottom:12px; width:180px; height:120px; background:var(--surface); border-radius:8px; box-shadow:var(--shadow-4); z-index:10; overflow:hidden; }
-  .cv-hint { position:absolute; left:50%; top:56px; transform:translateX(-50%); background:var(--ink); color:var(--on-ink); font-size:12px; padding:6px 10px; border-radius:6px; z-index:10; display:none; }
+  .cv-hint { position:absolute; left:50%; top:56px; transform:translateX(-50%); background:var(--ink); color:var(--on-ink); font-size:12px; padding:6px 10px; border-radius:6px; z-index:20; display:none; }
   .cv-banner { position:absolute; left:12px; top:60px; z-index:10; display:flex; flex-direction:column; gap:6px; max-width:440px; }
   .cv-banner > .banner { display:none; }
   .pop { position:absolute; z-index:12; background:var(--surface); border-radius:8px; box-shadow:var(--shadow-5); padding:10px; font-size:13px; width:260px; }
@@ -83,11 +97,22 @@
   .acl .o { display:grid; grid-template-columns:1fr auto; padding:4px 6px; border-radius:4px; cursor:pointer; gap:6px; }
   .acl .o.on, .acl .o:hover { background:var(--surface-2); }
   .acl .o .m { font-family:var(--font-mono); color:var(--fg-3); }
-  .grp { position:absolute; border:1px dashed var(--border-strong); border-radius:12px; background:var(--surface); padding:14px; cursor:pointer; }
+  .grp { position:absolute; border:1px dashed var(--border-strong); border-radius:12px; background:var(--surface); padding:14px; }
   .grp h4 { margin:0 0 4px; font-size:16px; }
+  .grp .refrow { display:flex; align-items:center; gap:6px; font-size:12px; padding:4px 0; border-top:1px solid var(--border); }
   #sysview { display:none; position:absolute; inset:0; }
-  #cv[data-sys="1"] .cv-banner, #cv[data-sys="1"] > .cv-zoom, #cv[data-sys="1"] .cv-mini { display:none !important; }
+  #cv[data-sys="1"] .cv-banner, #cv[data-sys="1"] > .cv-zoom, #cv[data-sys="1"] .cv-mini, #cv[data-sys="1"] .legend { display:none !important; }
   .legend { position:absolute; left:12px; bottom:52px; z-index:9; font-size:11px; color:var(--fg-3); display:flex; gap:8px; align-items:center; }
+  /* grid mode */
+  #grid { position:absolute; left:12px; right:12px; top:56px; bottom:12px; background:var(--surface); border-radius:8px; box-shadow:var(--shadow-5); z-index:15; display:none; flex-direction:column; overflow:hidden; }
+  #grid.open { display:flex; }
+  #grid .gbar { display:flex; align-items:center; gap:8px; padding:10px 12px; border-bottom:1px solid var(--border); flex-wrap:wrap; }
+  #grid .gbulk { display:none; align-items:center; gap:8px; padding:8px 12px; background:var(--surface-2); border-bottom:1px solid var(--border); font-size:13px; }
+  #grid .gbulk.on { display:flex; }
+  #grid .gbody { flex:1; overflow:auto; }
+  #grid mark { background:color-mix(in srgb, var(--warning) 40%, transparent); color:inherit; border-radius:2px; }
+  #grid select.input, #grid input.input { height:28px; font-size:13px; }
+  .locked #grid .edit-only { display:none !important; }
 </style>
 </head>
 <body data-page="model">
@@ -106,12 +131,14 @@
       <span class="seg" id="lp"><button class="on" data-v="L">논리</button><button data-v="P">물리</button></span>
       <a class="btn" href="import.html">가져오기 ▾</a>
       <a class="btn" href="ddl.html">DDL</a>
+      <a class="btn" href="outputs.html">산출물</a>
       <span style="position:relative"><button class="btn" id="b-export">내보내기 ▾</button>
         <div class="menu" id="expmenu">
           <div class="row"><b>범위</b><span class="seg" id="ex-scope"><button class="on">보이는 영역</button><button>전체</button></span></div>
           <div class="row"><b>형식</b><span class="seg" id="ex-fmt"><button class="on">PNG</button><button>SVG</button><button>PDF</button></span></div>
           <label class="row" style="align-items:flex-start;cursor:pointer"><input type="checkbox" id="ex-official" style="margin-top:3px"><span><b style="width:auto;color:var(--fg)">공식 산출물</b><br><span class="caption muted">확정본(v4) 배치 기준 · 표제란에 버전·확정일·승인자</span></span></label>
           <div class="card" id="ex-title" style="display:none;font-size:12px;margin-bottom:10px;padding:8px"><div class="caption muted">표제란 미리보기</div><div class="mono">요구사항관리 › 요구사항·프로젝트 · 논리 ERD</div><div class="mono">v4 · 확정 2026-11-03 · 승인 이DA, 최관리</div></div>
+          <div class="caption muted" style="margin-bottom:10px">테이블 정의서·준수검사 엑셀은 <a href="outputs.html">[산출물]</a>에서 만듭니다.</div>
           <div class="flex"><span class="grow"></span><button class="btn sm" id="ex-cancel">취소</button><button class="btn sm primary" id="ex-go">내보내기</button></div>
         </div></span>
       <button class="btn has-tip disabled" id="confirm-btn" data-tip="미준수 6건이 남아 있습니다 — [표준 맞추기]에서 해결하거나 사유를 남겨 예외로 처리하세요">확정 신청</button>
@@ -121,13 +148,13 @@
     <span class="caption muted">준수율</span><span class="rate" id="rate">92%</span>
     <a class="stat" href="#" id="jump-bad"><span class="dot-i s-unreg"></span>미준수 <b id="c-bad">6</b></a>
     <a class="stat" href="standardize.html?f=ex"><span class="dot-i s-ex"></span>예외 <b id="c-ex">2</b></a>
-    <a class="stat" href="standardize.html?f=na"><span class="dot-i s-na"></span>미산정 <b id="c-na">1</b></a>
+    <a class="stat" href="standardize.html?f=na"><span class="dot-i s-na"></span>비대상 <b id="c-na">1</b></a>
     <a class="stat" href="candidates.html"><span class="dot-i" style="background:var(--violet);opacity:.5"></span>후보 대기 <b>3</b></a>
+    <a class="stat" href="#" id="b-review"><span class="dot-i" style="background:var(--fg-3)"></span>검토 <b id="c-rev">5</b></a>
     <span class="grow"></span><span class="caption faint" id="sel-info">선택 없음</span>
     <a class="btn sm primary" href="standardize.html">표준 맞추기</a>
   </div>
   <div class="page-body">
-    <!-- PN-32 dictionary side panel -->
     <div class="side" id="side">
       <div style="padding:10px 12px;border-bottom:1px solid var(--border)">
         <div class="flex" style="margin-bottom:8px"><b style="font-size:13px">사전</b><span class="grow"></span><button class="btn ghost sm" data-toggle="side">접기</button></div>
@@ -141,7 +168,6 @@
       </div>
     </div>
 
-    <!-- canvas -->
     <div id="cv" tabindex="0">
       <div class="cv-toolbar">
         <button class="tb on" data-tool="select" title="선택 (V)">↖ <kbd>V</kbd></button>
@@ -152,12 +178,17 @@
             <div class="mi" data-rt="id">1:N 식별 <span class="faint">실선</span></div>
             <div class="mi" data-rt="one">1:1</div>
             <div class="mi" data-rt="mn">M:N <span class="faint">해소 필요</span></div>
+            <div class="msep"></div>
+            <div class="mi" data-rt="xor">배타 관계 묶기 <span class="faint">관계선 2개</span></div>
           </div></span>
+        <button class="tb" data-tool="memo" data-edit title="메모 (M)">✎ 메모 <kbd>M</kbd></button>
         <span class="sep"></span>
+        <button class="tb" id="b-grid" title="표 보기 · 일괄편집 · 찾기/바꾸기 (Ctrl+F)">▤ 표 보기</button>
         <button class="tb" id="b-layout" data-edit>자동 배치</button>
         <button class="tb" id="b-sys">시스템 전체</button>
         <span class="sep"></span>
         <button class="tb" id="b-undo" data-edit title="내 편집 되돌리기 (Ctrl+Z)">↶</button>
+        <button class="tb" id="b-redo" data-edit title="다시 실행 (Ctrl+Y)">↷</button>
       </div>
       <div class="cv-hint" id="hint"></div>
       <div class="cv-banner">
@@ -172,21 +203,29 @@
           <marker id="m-one" viewBox="0 0 12 12" refX="12" refY="6" markerWidth="12" markerHeight="12" orient="auto-start-reverse" markerUnits="userSpaceOnUse"><path d="M6,1 V11 M10,1 V11" fill="none" stroke="var(--fg-2)" stroke-width="1.2"/></marker>
         </defs>
         <g id="eg"></g><path id="preview" d="" fill="none" stroke="var(--info)" stroke-width="1.5" stroke-dasharray="4 3"/>
-      </svg><div id="nodes"></div>
+      </svg><div id="memos"></div><div id="nodes"></div>
         <div class="rcur" id="cur-hong"><svg width="14" height="18"><path d="M1 1 L1 15 L5 11 L8 17 L10 16 L7 10 L13 10 Z" fill="var(--p-hong)" stroke="#fff"/></svg><span style="background:var(--p-hong)">홍설계</span></div>
         <div class="rcur" id="cur-park"><svg width="14" height="18"><path d="M1 1 L1 15 L5 11 L8 17 L10 16 L7 10 L13 10 Z" fill="var(--p-park)" stroke="#fff"/></svg><span style="background:var(--p-park)">박설계 · 조회</span></div>
       </div>
       <div id="sysview"></div>
-      <div class="legend">상태 <span class="dot-i s-ok"></span>표준 <span class="dot-i s-comb"></span>조합 가능 <span class="dot-i s-unreg"></span>미등록 단어 <span class="dot-i s-ex"></span>예외</div>
+      <div id="grid"></div>
+      <div class="legend">상태 <span class="dot-i s-ok"></span>표준 <span class="dot-i s-comb"></span>조합 가능 <span class="dot-i s-unreg"></span>미등록 단어 <span class="dot-i s-ex"></span>예외 <span class="dot-i s-na"></span>비대상</div>
       <div class="cv-zoom"><button id="zo">−</button><span id="zl" class="mono" style="width:40px;text-align:center">100%</span><button id="zi">+</button><button id="zfit" title="전체 맞춤 (Shift+1)">맞춤</button>
         <select class="input" id="lodsel" style="height:26px;width:120px;font-size:12px"><option value="auto">표시: 자동</option><option value="full">전체 속성</option><option value="mid">키만</option><option value="low">이름만</option></select></div>
       <div class="cv-mini"><svg id="mini" width="180" height="120"></svg></div>
     </div>
 
-    <!-- dynamic panel: area summary / entity / relation -->
     <aside class="rpanel open" id="rp" data-tabscope>
       <div class="rp-head"><div class="t"><h2 id="rp-title">업무 영역 요약</h2></div><div class="rp-sub" id="rp-sub"></div></div>
       <div class="rp-body" id="rp-body"></div>
+    </aside>
+
+    <!-- PN-39 model review -->
+    <aside class="rpanel" id="pn-review">
+      <div class="rp-head"><div class="t"><h2>모델 검토</h2><span class="badge">자동 점검</span><button class="iconbtn close" id="rev-x" style="width:28px;height:28px">×</button></div>
+        <div class="caption muted" style="margin-top:4px">명칭 중복·미입력·관계·물리 정보를 점검합니다. 표준 준수는 상단 준수율에서 봅니다.</div></div>
+      <div class="rp-body" id="rev-body"></div>
+      <div class="rp-foot"><button class="btn" data-toast="모델 검토 결과를 엑셀로 내려받았습니다 — 요구사항_프로젝트_검토_v5.xlsx">엑셀로 내려받기</button><span class="grow"></span><button class="btn primary" id="rev-run">다시 점검</button></div>
     </aside>
 
     <!-- PN-35 gate A -->
@@ -201,7 +240,7 @@
           <tr><td>산출물이력.이력순번</td><td><span class="badge b-warning">미등록·타입 미정</span></td><td><a href="standardize.html">맞추기</a></td></tr>
           <tr><td>산출물기본 (테이블명)</td><td><span class="badge b-info">엔터티 용어 신청 중</span></td><td class="faint">대기</td></tr>
         </tbody></table>
-        <div class="caption muted" style="margin-top:8px">예외 사유는 모델 확정 결재의 ‘표준 예외 목록’에 모입니다.</div>
+        <div class="caption muted" style="margin-top:8px">물리 반영 때 시스템 컬럼 4개(<span class="mono">REG_DT · REGR_ID · MDFCN_DT · MDFR_ID</span>)가 모든 테이블에 붙습니다 — <a href="settings.html#sys">시스템 설정</a></div>
       </div>
       <div class="rp-foot"><a class="btn" href="standardize.html">표준 맞추기로 이동</a><span class="grow"></span><button class="btn primary" id="gate-go">경고 확인 후 계속</button></div>
     </aside>
@@ -247,28 +286,30 @@ window.pageInit = function () {
     { n: '제출일자', p: 'SBMT_YMD', d: '연월일C8', t: 'CHAR(8)', s: 'ok', tag: '공통' },
     { n: '산출물제출일자', p: 'DLVRBL_SBMT_DATE', d: '연월일C8', t: 'CHAR(8)', s: 'comb', tag: '신청 중' },
     { n: '제출여부', p: 'SBMT_YN', d: '여부C1', t: 'CHAR(1)', s: 'ok', tag: '공통' },
-    { n: '제출자명', p: 'SBMTR_NM', d: '명V100', t: 'VARCHAR2(100)', s: 'ok', tag: '기관' },
+    { n: '제출자명', p: 'SBMTR_NM', d: '명V100', t: 'VARCHAR2(100)', s: 'ok', tag: '기관', sec: '개인정보', enc: '없음' },
     { n: '등록일시', p: 'REG_DT', d: '일시T', t: 'DATE', s: 'ok', tag: '공통' },
     { n: '비고내용', p: 'RMRK_CN', d: '내용V1000', t: 'VARCHAR2(1000)', s: 'ok', tag: '공통' }
   ];
+  const DOMS = { '연월일C8': 'CHAR(8)', '명V100': 'VARCHAR2(100)', 'ID V10': 'VARCHAR2(10)', '코드C2': 'CHAR(2)', '여부C1': 'CHAR(1)' };
+  const SYS_COLS = [['등록일시', 'REG_DT', 'DATE'], ['등록자ID', 'REGR_ID', 'VARCHAR2(20)'], ['수정일시', 'MDFCN_DT', 'DATE'], ['수정자ID', 'MDFR_ID', 'VARCHAR2(20)']];
   const tagCls = t => t === '공통' ? 'b-common' : t === '신청 중' ? 'b-info' : 'b-org';
-  $('dict').innerHTML = TERMS.map((t, i) => `<div class="dict-item" draggable="true" data-ti="${i}"><div class="l1"><b>${t.n}</b><span class="badge ${tagCls(t.tag)}">${t.tag}</span></div><div class="l2">${t.p} · ${t.d}</div></div>`).join('');
+  $('dict').innerHTML = TERMS.map((t, i) => `<div class="dict-item" draggable="true" data-ti="${i}"><div class="l1"><b>${t.n}</b><span class="badge ${tagCls(t.tag)}">${t.tag}</span>${t.sec ? '<span class="badge b-danger" style="height:16px">개인정보</span>' : ''}</div><div class="l2">${t.p} · ${t.d}</div></div>`).join('');
 
   const E = [
     { id: 'prj', n: '프로젝트기본', p: 'PRJ_M', c: 'M', x: 60, y: 60, px: 60, py: 60, a: [
-      { n: '프로젝트ID', p: 'PRJ_ID', t: 'VARCHAR2(10)', pk: 1, s: 'ok' }, { n: '프로젝트명', p: 'PRJ_NM', t: 'VARCHAR2(100)', s: 'ok' }, { n: '발주처명', p: 'ORDR_OFC_NM', t: 'VARCHAR2(100)', s: 'ok' }, { n: '프로젝트종료일', p: 'PRJ_ENDDD', t: 'CHAR(8)', s: 'ex' }, { n: '수주금액', p: 'WINCON_AMT', t: 'NUMBER(15)', s: 'ok' }] },
+      { n: '프로젝트ID', p: 'PRJ_ID', t: 'VARCHAR2(10)', pk: 1, nn: 1, s: 'ok' }, { n: '프로젝트명', p: 'PRJ_NM', t: 'VARCHAR2(100)', nn: 1, s: 'ok' }, { n: '발주처명', p: 'ORDR_OFC_NM', t: 'VARCHAR2(100)', s: 'ok' }, { n: '프로젝트종료일', p: 'PRJ_ENDDD', t: 'CHAR(8)', s: 'ex' }, { n: '수주금액', p: 'WINCON_AMT', t: 'NUMBER(15)', s: 'ok' }] },
     { id: 'emp', n: '사원기본', p: 'EMP_M', c: 'K', x: 420, y: 40, px: 460, py: 40, a: [
-      { n: '사원번호', p: 'EMP_NO', t: 'NUMBER(6)', pk: 1, s: 'ok' }, { n: '사원명', p: 'EMP_NM', t: 'VARCHAR2(100)', s: 'ok' }] },
-    { id: 'mbr', n: '프로젝트팀원구성내역', p: 'PRJ_MBR_D', c: 'A', x: 400, y: 200, px: 440, py: 220, a: [
-      { n: '프로젝트ID', p: 'PRJ_ID', t: 'VARCHAR2(10)', pk: 1, fk: 1, s: 'ok' }, { n: '팀원사원번호', p: 'TMBR_EMP_NO', t: 'NUMBER(6)', pk: 1, fk: 1, s: 'ok' }, { n: '투입시작일자', p: 'INPT_BEGIN_YMD', t: 'CHAR(8)', s: 'ok' }, { n: '역할구분코드', p: 'ROLE_SE_CD', t: 'CHAR(1)', s: 'ok' }] },
-    { id: 'rqrm', n: '요구사항내역', p: 'RQRM_D', c: 'A', x: 60, y: 330, px: 60, py: 360, a: [
-      { n: '요구사항ID', p: 'DEMND_MATER_ID', t: 'VARCHAR2(10)', pk: 1, s: 'ok' }, { n: '요구사항명', p: 'DEMND_MATER_NM', t: 'VARCHAR2(100)', s: 'ok' }, { n: '요구사항내용', p: 'DEMND_MATER_CN', t: 'VARCHAR2(1000)', s: 'ok' }, { n: '요청고객명', p: 'REQ_CUST_NM', t: 'VARCHAR2(100)', s: 'ex' }, { n: '프로젝트ID', p: 'PRJ_ID', t: 'VARCHAR2(10)', fk: 1, s: 'ok' }] },
-    { id: 'dlv', n: '산출물기본', p: 'DLVRBL_M', c: 'M', x: 420, y: 430, px: 460, py: 470, st: 1, a: [
-      { n: '산출물ID', p: 'DLVRBL_ID', t: 'VARCHAR2(10)', pk: 1, s: 'ok' }, { n: '산출물명', p: 'DLVRBL_NM', t: 'VARCHAR2(100)', s: 'ok' }, { n: '산출물제출일', p: '—', t: '—', s: 'comb' }, { n: '산출물수령자명', p: '—', t: '—', s: 'unreg', cand: 1 }, { n: '요구사항ID', p: 'DEMND_MATER_ID', t: 'VARCHAR2(10)', fk: 1, s: 'ok' }] },
-    { id: 'hist', n: '산출물이력', p: '—', c: 'H', x: 780, y: 440, px: 840, py: 480, a: [
-      { n: '산출물ID', p: 'DLVRBL_ID', t: 'VARCHAR2(10)', pk: 1, fk: 1, s: 'ok' }, { n: '이력순번', p: '—', t: '—', pk: 1, s: 'unreg' }, { n: '수령자ID', p: '—', t: '—', s: 'unreg' }] },
-    { id: 'risk', n: '리스크기본', p: 'RISK_M', c: 'M', x: 60, y: 610, px: 60, py: 660, a: [
-      { n: '리스크ID', p: 'RISK_ID', t: 'VARCHAR2(10)', pk: 1, s: 'ok' }, { n: '리스크명', p: 'RISK_NM', t: 'VARCHAR2(100)', s: 'ok' }, { n: '리스크등급코드', p: 'RISK_GRD_CD', t: 'CHAR(1)', s: 'ok' }] }
+      { n: '사원번호', p: 'EMP_NO', t: 'NUMBER(6)', pk: 1, nn: 1, s: 'ok' }, { n: '사원명', p: 'EMP_NM', t: 'VARCHAR2(100)', nn: 1, s: 'ok', sec: '개인정보', enc: '없음' }, { n: '휴대전화번호', p: 'MBTL_NO', t: 'VARCHAR2(20)', s: 'ok', sec: '개인정보', enc: '양방향(ARIA)' }] },
+    { id: 'mbr', n: '프로젝트팀원구성내역', p: 'PRJ_MBR_D', c: 'A', x: 400, y: 220, px: 440, py: 240, a: [
+      { n: '프로젝트ID', p: 'PRJ_ID', t: 'VARCHAR2(10)', pk: 1, fk: 1, nn: 1, s: 'ok' }, { n: '팀원사원번호', p: 'TMBR_EMP_NO', t: 'NUMBER(6)', pk: 1, fk: 1, nn: 1, s: 'ok' }, { n: '투입시작일자', p: 'INPT_BEGIN_YMD', t: 'CHAR(8)', s: 'ok' }, { n: '역할구분코드', p: 'ROLE_SE_CD', t: 'CHAR(1)', s: 'ok' }] },
+    { id: 'rqrm', n: '요구사항내역', p: 'RQRM_D', c: 'A', x: 60, y: 340, px: 60, py: 380, a: [
+      { n: '요구사항ID', p: 'DEMND_MATER_ID', t: 'VARCHAR2(10)', pk: 1, nn: 1, s: 'ok' }, { n: '요구사항명', p: 'DEMND_MATER_NM', t: 'VARCHAR2(100)', nn: 1, s: 'ok' }, { n: '요구사항내용', p: 'DEMND_MATER_CN', t: 'VARCHAR2(1000)', s: 'ok' }, { n: '요청고객명', p: 'REQ_CUST_NM', t: 'VARCHAR2(100)', s: 'ex', sec: '개인정보', enc: '없음' }, { n: '프로젝트ID', p: 'PRJ_ID', t: 'VARCHAR2(10)', fk: 1, s: 'ok' }] },
+    { id: 'dlv', n: '산출물기본', p: 'DLVRBL_M', c: 'M', x: 420, y: 450, px: 460, py: 500, st: 1, uk: ['DLVRBL_NM'], sub: { disc: '산출물유형코드', kind: '배타', kids: ['문서산출물', '모델산출물'] }, a: [
+      { n: '산출물ID', p: 'DLVRBL_ID', t: 'VARCHAR2(10)', pk: 1, nn: 1, s: 'ok' }, { n: '산출물명', p: 'DLVRBL_NM', t: 'VARCHAR2(100)', nn: 1, s: 'ok' }, { n: '산출물제출일', p: '—', t: '—', s: 'comb' }, { n: '산출물수령자명', p: '—', t: '—', s: 'unreg', cand: 1 }, { n: '요구사항ID', p: 'DEMND_MATER_ID', t: 'VARCHAR2(10)', fk: 1, s: 'ok' }] },
+    { id: 'hist', n: '산출물이력', p: '—', c: 'H', x: 800, y: 470, px: 860, py: 520, a: [
+      { n: '산출물ID', p: 'DLVRBL_ID', t: 'VARCHAR2(10)', pk: 1, fk: 1, nn: 1, s: 'ok' }, { n: '이력순번', p: '—', t: '—', pk: 1, s: 'unreg' }, { n: '수령자ID', p: '—', t: '—', s: 'unreg' }] },
+    { id: 'risk', n: '리스크기본', p: 'RISK_M', c: 'M', x: 60, y: 640, px: 60, py: 700, a: [
+      { n: '리스크ID', p: 'RISK_ID', t: 'VARCHAR2(10)', pk: 1, nn: 1, s: 'ok' }, { n: '리스크명', p: 'RISK_NM', t: 'VARCHAR2(100)', s: 'ok' }, { n: '리스크등급코드', p: 'RISK_GRD_CD', t: 'CHAR(1)', s: 'ok' }] }
   ];
   const R = [
     { f: 'prj', t: 'rqrm', k: 'nonid', name: '수행한다' },
@@ -278,26 +319,38 @@ window.pageInit = function () {
     { f: 'dlv', t: 'hist', k: 'id', name: '기록된다' },
     { f: 'rqrm', t: 'risk', k: 'mn', name: '관련된다' }
   ];
+  const M = [{ id: 'm1', mode: 'L', x: 820, y: 330, text: '산출물이력 순번 체계는 DA 확인 후 확정 (11/18 회의)', by: '박설계' }];
   const cv = $('cv'), world = $('world'), nodes = $('nodes'), eg = $('eg'), preview = $('preview');
   let mode = 'L', tool = 'select', relType = 'nonid', zoom = 1, panX = 40, panY = 50, sel = null, relSrc = null, lodForce = 'auto';
-  let gateSeen = false, offline = false, remoteSel = 'rqrm', renaming = null;
+  let gateSeen = false, offline = false, remoteSel = 'rqrm', renaming = null, xorPick = [];
   const locked = q.get('state') === 'review';
   const pos = e => mode === 'L' ? { x: e.x, y: e.y } : { x: e.px, y: e.py };
   const setPos = (e, x, y) => { if (mode === 'L') { e.x = x; e.y = y; } else { e.px = x; e.py = y; } };
   const ent = id => E.find(x => x.id === id);
   const bad = e => e.a.filter(a => a.s === 'comb' || a.s === 'unreg').length;
   const guard = () => { if (locked) { toast('검토 중이라 편집할 수 없습니다 — 다음 작업 버전(v6)에서 편집하세요', 'info'); return true; } return false; };
+  const refGuard = e => { if (e && e.ref) { toast(`‘${e.n}’은(는) 공통 영역의 참조 엔터티입니다 — 원본(공통)에서만 수정할 수 있습니다`, 'info'); return true; } return false; };
+  const LOCK = '<span class="lk" title="개인정보"><svg width="10" height="11" viewBox="0 0 10 11"><rect x="1" y="5" width="8" height="6" rx="1" fill="currentColor"/><path d="M3 5V3.5a2 2 0 0 1 4 0V5" fill="none" stroke="currentColor" stroke-width="1.3"/></svg></span>';
 
-  // ---- my undo stack (per user)
-  const hist = [];
-  const snap = () => { hist.push(JSON.stringify({ E, R })); if (hist.length > 50) hist.shift(); };
+  // ---- undo / redo (my edits only)
+  const hist = [], redo = [];
+  const state = () => JSON.stringify({ E, R, M });
+  const restore = s => { E.splice(0, E.length, ...s.E); R.splice(0, R.length, ...s.R); M.splice(0, M.length, ...s.M); };
+  const snap = () => { hist.push(state()); if (hist.length > 50) hist.shift(); redo.length = 0; };
   function undo() {
     if (guard()) return;
     if (!hist.length) { toast('되돌릴 내 편집이 없습니다', 'info'); return; }
-    const s = JSON.parse(hist.pop()); E.splice(0, E.length, ...s.E); R.splice(0, R.length, ...s.R);
-    sel = null; render(); toast('내 편집 1건을 되돌렸습니다 · 다른 사람의 편집은 그대로입니다', 'info');
+    redo.push(state()); restore(JSON.parse(hist.pop())); sel = null; render(); toast('내 편집 1건을 되돌렸습니다 · 다른 사람의 편집은 그대로입니다', 'info');
   }
-  function remoteApply(fn) { fn(E); for (let i = 0; i < hist.length; i++) { const s = JSON.parse(hist[i]); fn(s.E); hist[i] = JSON.stringify(s); } }
+  function redoFn() {
+    if (guard()) return;
+    if (!redo.length) { toast('다시 실행할 편집이 없습니다', 'info'); return; }
+    hist.push(state()); restore(JSON.parse(redo.pop())); sel = null; render(); toast('되돌린 편집을 다시 실행했습니다', 'info');
+  }
+  function remoteApply(fn) {
+    fn(E);
+    [hist, redo].forEach(st => { for (let i = 0; i < st.length; i++) { const s = JSON.parse(st[i]); fn(s.E); st[i] = JSON.stringify(s); } });
+  }
 
   function nodeHTML(e) {
     const pk = e.a.filter(a => a.pk), rest = e.a.filter(a => !a.pk);
@@ -305,26 +358,36 @@ window.pageInit = function () {
       const idx = e.a.indexOf(a);
       const name = mode === 'L' ? a.n : a.p, right = mode === 'L' ? a.p : a.t;
       if (a.edit) return `<div class="ar"><span class="dot-i s-na"></span><input data-e="${e.id}" data-i="${idx}" class="attr-in" placeholder="속성명 입력 · Enter" value="${a.n}"></div>`;
-      return `<div class="ar ${a.pk ? 'pkr' : ''} ${a.fk ? 'fk' : ''} ${a.remote ? 'new' : ''}" data-e="${e.id}" data-i="${idx}"><span class="dot-i s-${a.s}" title="${({ ok: '표준', comb: '조합 가능', unreg: '미등록 단어', ex: '예외', na: '비대상' })[a.s]}"></span><span class="n">${a.pk ? '# ' : ''}${name}${a.fk ? ' (FK)' : ''}</span><span class="p">${right}</span></div>`;
+      return `<div class="ar ${a.pk ? 'pkr' : ''} ${a.fk ? 'fk' : ''} ${a.remote ? 'new' : ''} ${a.s === 'na' ? 'excl' : ''}" data-e="${e.id}" data-i="${idx}"><span class="dot-i s-${a.s}" title="${({ ok: '표준', comb: '조합 가능', unreg: '미등록 단어', ex: '예외', na: '비대상' })[a.s]}"></span><span class="n">${a.pk ? '# ' : ''}${name}${a.fk ? ' (FK)' : ''}</span>${a.sec ? LOCK : ''}<span class="p">${right}</span></div>`;
     };
     const b = bad(e);
     const title = renaming === e.id ? `<input class="ren-in" data-e="${e.id}" value="${e.n}">` : `<span class="title" data-e="${e.id}">${mode === 'L' ? e.n : e.p}</span>`;
-    return `${remoteSel === e.id && !offline ? '<span class="rtag">홍설계 편집 중</span>' : ''}<div class="nh" data-drag="${e.id}"><span class="cls">${e.c}</span>${title}${b ? `<span class="badge b-warning" style="height:16px;padding:0 5px">${b}</span>` : ''}${e.st ? '<span class="dot-i s-comb" title="엔터티 용어 신청 중"></span>' : ''}<span class="sub">${mode === 'L' ? e.p : e.n}</span></div>
-      <div class="pk">${pk.map(row).join('')}</div>${rest.map(row).join('')}<div class="more">+ ${rest.length}개 속성</div>`;
+    const tag = e.ref ? '<span class="rtag reft">공통 · 참조</span>' : remoteSel === e.id && !offline ? '<span class="rtag">홍설계 편집 중</span>' : '';
+    const subt = e.sub ? (mode === 'L'
+      ? `<div class="subt"><div class="cap"><b>${e.sub.kind === '배타' ? 'X' : 'O'}</b>서브타입 · ${e.sub.kind} · 구분 ${e.sub.disc}</div><div class="kids">${e.sub.kids.map(k => `<span>${k}</span>`).join('')}</div></div>`
+      : `<div class="subt"><div class="cap">서브타입 → 한 테이블로 통합 · 구분 컬럼 <span class="mono">DLVRBL_TYPE_CD</span></div></div>`) : '';
+    const sysc = mode === 'P' && !e.ref ? `<div class="sysc">⚙ 시스템 컬럼 ${SYS_COLS.length} · ${SYS_COLS.map(c => c[1]).join(' · ')}</div>` : '';
+    return `${tag}<div class="nh" data-drag="${e.id}"><span class="cls">${e.c}</span>${title}${b ? `<span class="badge b-warning" style="height:16px;padding:0 5px">${b}</span>` : ''}${e.st ? '<span class="dot-i s-comb" title="엔터티 용어 신청 중"></span>' : ''}<span class="sub">${mode === 'L' ? e.p : e.n}</span></div>
+      <div class="pk">${pk.map(row).join('')}</div>${rest.map(row).join('')}<div class="more">+ ${rest.length}개 속성</div>${subt}${sysc}`;
+  }
+  function renderMemos() {
+    $('memos').innerHTML = M.filter(m => m.mode === mode).map(m => `<div class="memo" id="m-${m.id}" style="left:${m.x}px;top:${m.y}px"><div class="mh" data-mdrag="${m.id}">메모 · ${m.by}<button data-mdel="${m.id}" title="메모 삭제">×</button></div><div class="mb" contenteditable="${!locked}" data-mid="${m.id}">${m.text}</div></div>`).join('');
   }
   function render() {
     nodes.innerHTML = '';
     E.forEach(e => {
       const d = document.createElement('div');
-      d.className = 'node' + (sel === e.id ? ' sel' : '') + (relSrc === e.id ? ' relsrc' : '') + (remoteSel === e.id && !offline ? ' remote' : '');
+      d.className = 'node' + (sel === e.id ? ' sel' : '') + (relSrc === e.id ? ' relsrc' : '') + (remoteSel === e.id && !offline ? ' remote' : '') + (e.ref ? ' ref' : '');
       d.id = 'n-' + e.id; const p = pos(e);
       d.style.left = p.x + 'px'; d.style.top = p.y + 'px';
       d.innerHTML = nodeHTML(e);
       nodes.appendChild(d);
     });
-    drawEdges(); mini(); panel();
+    renderMemos(); drawEdges(); mini(); panel();
+    $('c-na').textContent = E.reduce((n, e) => n + e.a.filter(a => a.s === 'na').length, 0) || 1;
     const inp = nodes.querySelector('.attr-in'); if (inp) { inp.focus(); inp.select(); showAC(inp); }
     const ren = nodes.querySelector('.ren-in'); if (ren) { ren.focus(); ren.select(); }
+    if ($('grid').classList.contains('open')) renderGrid();
   }
   function box(id) { const d = $('n-' + id); return { x: d.offsetLeft, y: d.offsetTop, w: d.offsetWidth, h: d.offsetHeight }; }
   function edgePath(a, b) {
@@ -336,8 +399,13 @@ window.pageInit = function () {
     const right = b.x > a.x; const x1 = right ? a.x + a.w : a.x, x2 = right ? b.x : b.x + b.w; const mx = (x1 + x2) / 2;
     return { d: `M${x1},${ac.y} H${mx} V${bc.y} H${x2}`, lx: mx + 4, ly: (ac.y + bc.y) / 2 - 4 };
   }
+  function along(d, dist) {
+    const m = d.match(/^M([\d.-]+),([\d.-]+) ([VH])([\d.-]+)/); if (!m) return null;
+    const x = +m[1], y = +m[2], v = +m[4];
+    return m[3] === 'V' ? [x, y + Math.sign(v - y) * dist] : [x + Math.sign(v - x) * dist, y];
+  }
   function drawEdges() {
-    let s = '';
+    let s = ''; const groups = {};
     R.forEach((r, i) => {
       if (!$('n-' + r.f) || !$('n-' + r.t)) return;
       let p;
@@ -346,9 +414,16 @@ window.pageInit = function () {
       const dash = r.k === 'id' || r.k === 'one' ? '' : 'stroke-dasharray="5 4"';
       const endM = r.k === 'one' ? 'url(#m-one)' : 'url(#m-many)';
       const startM = r.k === 'mn' ? 'url(#m-many)' : 'url(#m-one)';
-      s += `<path class="hit" d="${p.d}" data-r="${i}"/><path d="${p.d}" fill="none" stroke="var(--fg-2)" stroke-width="1.2" ${dash} marker-start="${startM}" marker-end="${endM}"/>`;
+      s += `<path class="hit ${xorPick.includes(i) ? 'pick' : ''}" d="${p.d}" data-r="${i}"/><path d="${p.d}" fill="none" stroke="var(--fg-2)" stroke-width="1.2" ${dash} marker-start="${startM}" marker-end="${endM}"/>`;
       s += `<text class="relname" x="${p.lx}" y="${p.ly}">${r.name || ''}</text>`;
       if (r.k === 'mn') s += `<text class="relname" x="${p.lx}" y="${p.ly + 14}" style="fill:var(--warning-deep)">M:N 해소 필요</text>`;
+      if (r.xg) { const pt = along(p.d, 22); if (pt) (groups[r.xg] = groups[r.xg] || { f: r.f, pts: [] }).pts.push(pt); }
+    });
+    Object.values(groups).forEach(g => {
+      if (g.pts.length < 2) return; const [a, b] = g.pts, pb = box(g.f);
+      const cx = pb.x + pb.w / 2, cy = pb.y + pb.h / 2, mx = (a[0] + b[0]) / 2, my = (a[1] + b[1]) / 2;
+      const kx = mx + (mx - cx) * 0.35, ky = my + (my - cy) * 0.35;
+      s += `<path d="M${a[0]},${a[1]} Q${kx},${ky} ${b[0]},${b[1]}" fill="none" stroke="var(--violet)" stroke-width="1.6"/><text class="relname" x="${kx + 4}" y="${ky + 4}" style="fill:var(--violet)">배타</text>`;
     });
     eg.innerHTML = s;
   }
@@ -367,8 +442,29 @@ window.pageInit = function () {
     s += `<rect x="${(-panX / zoom - ox) * k}" y="${(-panY / zoom - oy) * k}" width="${cv.clientWidth / zoom * k}" height="${cv.clientHeight / zoom * k}" fill="none" stroke="var(--ink)" stroke-width="1"/>`;
     m.innerHTML = s;
   }
-  function showRP() { $('rp').classList.add('open'); $('pn-gate').classList.remove('open'); $('pn-confirm').classList.remove('open'); }
+  const PANELS = ['rp', 'pn-gate', 'pn-confirm', 'pn-review'];
+  function openPanel(id) { PANELS.forEach(p => $(p).classList.toggle('open', p === id)); }
+  const showRP = () => openPanel('rp');
   const stBadge = s => ({ ok: '<span class="badge b-success">✓</span>', comb: '<span class="badge b-info">＋</span>', unreg: '<span class="badge b-warning">!</span>', ex: '<span class="badge b-violet">◆</span>', na: '<span class="badge">–</span>' })[s];
+  function consRows(e) {
+    if (e.p === '—') return '<div class="banner warning"><span>!</span><div>테이블 물리명이 정해지지 않아 제약조건 이름을 만들 수 없습니다 — 게이트 A 경고</div></div>';
+    const pk = e.a.filter(a => a.pk).map(a => a.p);
+    const fks = R.filter(r => r.t === e.id && r.f !== r.t && r.k !== 'mn').map((r, i) => { const par = ent(r.f); return { n: `${e.p}_${par.p}_FK${i + 1}`, c: par.a.filter(a => a.pk).map(a => a.p).join(', '), note: `→ ${par.p}` }; });
+    let rows = `<tr><td><span class="badge">PK</span></td><td class="mono">${e.p}_PK</td><td class="mono">${pk.join(', ')}</td><td class="faint">인덱스 자동</td></tr>`;
+    rows += (e.uk || []).map((c, i) => `<tr><td><span class="badge">UK</span></td><td class="mono">${e.p}_UK${i + 1}</td><td class="mono">${c}</td><td></td></tr>`).join('');
+    rows += fks.map(f => `<tr><td><span class="badge b-info">FK</span></td><td class="mono">${f.n}</td><td class="mono">${f.c}</td><td class="mono faint">${f.note}</td></tr>`).join('');
+    rows += fks.map((f, i) => `<tr><td><span class="badge">IX</span></td><td class="mono">${e.p}_IX${String(i + 1).padStart(2, '0')}</td><td class="mono">${f.c}</td><td class="faint">FK 인덱스</td></tr>`).join('');
+    rows += (e.ix || []).map(x => `<tr><td><span class="badge">IX</span></td><td class="mono">${x.n}</td><td class="mono">${x.c}</td><td class="faint">직접 추가</td></tr>`).join('');
+    return `<table class="tbl"><thead><tr><th>종류</th><th>이름</th><th>컬럼</th><th></th></tr></thead><tbody>${rows}</tbody></table>
+      <div class="flex" style="margin-top:8px"><button class="btn sm" id="ix-add">+ 인덱스</button><button class="btn sm" id="uk-add">+ UK</button><span class="grow"></span><span class="caption muted">이름은 <a href="settings.html#sys">명명 템플릿</a>을 따릅니다</span></div>`;
+  }
+  function secRows(e) {
+    const list = e.a.filter(a => a.sec);
+    return `<div class="caption muted" style="margin-bottom:8px">도메인의 보안 속성을 상속합니다. 직접 바꾸면 사유가 남고 확정 결재에서 DA가 확인합니다.</div>
+      <table class="tbl"><thead><tr><th>${mode === 'L' ? '속성' : '컬럼'}</th><th>개인정보</th><th>암호화</th><th>출처</th></tr></thead><tbody>
+      ${e.a.map(a => `<tr><td>${mode === 'L' ? a.n : a.p}</td><td>${a.sec ? `<span class="badge b-danger">${a.sec}</span>` : '<span class="faint">—</span>'}</td><td>${a.enc && a.enc !== '없음' ? `<span class="mono">${a.enc}</span>` : '<span class="faint">없음</span>'}</td><td class="caption">${a.sec ? (a.secSrc || '도메인 상속') : ''} <a href="#" data-toast="사유를 입력하면 보안 속성을 직접 지정할 수 있습니다(목업)" data-toast-type="info">변경</a></td></tr>`).join('')}</tbody></table>
+      ${list.length ? `<div class="caption" style="margin-top:8px">개인정보 ${list.length}개 · 암호화 ${list.filter(a => a.enc && a.enc !== '없음').length}개 — 산출물 ‘개인정보 컬럼 목록’에 포함됩니다.</div>` : ''}`;
+  }
   function panel() {
     const t = $('rp-title'), sub = $('rp-sub'), body = $('rp-body');
     $('sel-info').textContent = sel ? `선택: ${ent(sel).n}` : '선택 없음';
@@ -381,40 +477,140 @@ window.pageInit = function () {
         <div class="caption" style="line-height:22px"><span class="dot-i" style="background:var(--ink)"></span> 김모델 (나) · ${locked ? '조회' : '편집'}<br><span class="dot-i" style="background:var(--p-hong)"></span> 홍설계 · ${locked ? '조회' : '편집 — ' + (remoteSel ? ent(remoteSel).n : '—')}<br><span class="dot-i" style="background:var(--p-park)"></span> 박설계 · 조회</div>
         <div class="flex" style="margin-top:8px;gap:6px;${locked ? 'display:none' : ''}"><button class="btn sm" id="demo-conflict">동시 수정 충돌 보기</button><button class="btn sm" id="demo-off">연결 끊김 보기</button></div>
         <div class="section-t">이 화면에서 해 보기</div>
-        <div class="caption" style="line-height:20px">· 엔터티 제목을 끌어 이동 → 관계선이 따라옵니다<br>· <b>R</b> → 부모 클릭 → 자식 클릭 (같은 엔터티면 재귀 확인)<br>· 엔터티 선택 후 <b>Enter</b> → 속성 추가 + 용어 자동완성<br>· 왼쪽 사전의 용어를 엔터티에 <b>끌어 놓기</b><br>· 제목 <b>더블클릭</b> → 이름 수정 · <b>Ctrl+Z</b> → 내 편집만 되돌리기<br>· <b>Ctrl+휠</b>·[−][+] → 줌에 따라 상세도 자동 축소<br>· 헤더 <b>[물리]</b> → 게이트 A 후 별도 배치 · <b>[내보내기]</b><br>· 툴바 <b>[시스템 전체]</b> → 조회 전용 전체 보기</div>`;
+        <div class="caption" style="line-height:20px">· 엔터티 제목을 끌어 이동 · <b>R</b> → 부모 → 자식 (같은 엔터티면 재귀)<br>· <b>R ▾ 배타 관계 묶기</b> → 같은 부모의 관계선 2개 클릭<br>· 엔터티 선택 후 <b>Enter</b> → 속성 추가 + 자동완성 · 사전 용어 <b>끌어 놓기</b><br>· <b>M</b> → 메모 · 제목 <b>더블클릭</b> → 이름 수정<br>· <b>Ctrl+Z / Ctrl+Y</b> → 내 편집 되돌리기·다시 실행<br>· <b>▤ 표 보기 (Ctrl+F)</b> → 일괄편집·찾기/바꾸기·비대상 지정<br>· 상단 <b>검토</b> → 명칭 중복·미입력·관계 점검<br>· <b>[물리]</b> → 게이트 A → 제약·인덱스·시스템 컬럼<br>· <b>[시스템 전체]</b> → 공통 엔터티를 참조로 가져오기</div>`;
       $('demo-conflict').onclick = demoConflict; $('demo-off').onclick = () => setOffline(true);
       body.querySelectorAll('[data-goto]').forEach(c => c.onclick = () => focusEnt(c.dataset.goto));
       return;
     }
     const e = ent(sel);
-    t.textContent = mode === 'L' ? e.n : e.p; sub.textContent = (mode === 'L' ? e.p : e.n) + ' · 분류 ' + e.c;
-    const rels = R.filter(r => r.f === e.id || r.t === e.id).map(r => `${ent(r.f).n} → ${ent(r.t).n} <span class="faint">(${({ nonid: '1:N 비식별', id: '1:N 식별', one: '1:1', mn: 'M:N' })[r.k]})</span>`);
-    body.innerHTML = `${remoteSel === e.id && !offline ? '<div class="banner" style="margin-bottom:12px;border-left:3px solid var(--p-hong)"><span>●</span><div><b>홍설계가 이 엔터티를 편집 중</b>입니다. 같이 고칠 수 있고, 같은 칸을 동시에 고치면 마지막 입력이 남습니다.</div></div>' : ''}
+    t.textContent = mode === 'L' ? e.n : e.p; sub.textContent = (mode === 'L' ? e.p : e.n) + ' · 분류 ' + e.c + (e.ref ? ' · 공통 참조' : '');
+    const rels = R.filter(r => r.f === e.id || r.t === e.id).map(r => `${ent(r.f).n} → ${ent(r.t).n} <span class="faint">(${({ nonid: '1:N 비식별', id: '1:N 식별', one: '1:1', mn: 'M:N' })[r.k]}${r.xg ? ' · 배타' : ''})</span>`);
+    const sysRows = mode === 'P' && !e.ref ? SYS_COLS.map(c => `<tr style="color:var(--fg-3)"><td><span class="badge">시스템</span></td><td>${c[1]}</td><td class="mono">${c[2]}</td></tr>`).join('') : '';
+    body.innerHTML = `${e.ref ? '<div class="banner" style="margin-bottom:12px"><span>ℹ</span><div><b>공통 영역의 참조 엔터티</b>입니다. 이 영역에서는 관계만 맺을 수 있고, 수정은 공통 영역에서 합니다.</div></div>' : ''}
+      ${remoteSel === e.id && !offline ? '<div class="banner" style="margin-bottom:12px;border-left:3px solid var(--p-hong)"><span>●</span><div><b>홍설계가 이 엔터티를 편집 중</b>입니다. 같이 고칠 수 있고, 같은 칸을 동시에 고치면 마지막 입력이 남습니다.</div></div>' : ''}
       ${e.st ? '<div class="flex" style="margin-bottom:8px;gap:6px"><span class="badge b-info">엔터티 용어 신청 중</span><span class="caption muted">분류어 ‘기본’ → _M</span></div>' : ''}
-      <div class="tabs"><button class="on" data-tab="attrs">속성 <span class="n">${e.a.length}</span></button><button data-tab="ent">엔터티</button><button data-tab="rel">관계 <span class="n">${rels.length}</span></button></div>
+      <div class="tabs"><button class="on" data-tab="attrs">${mode === 'L' ? '속성' : '컬럼'} <span class="n">${e.a.length}</span></button>${mode === 'P' ? '<button data-tab="cons">제약·인덱스</button>' : ''}<button data-tab="sec">보안</button><button data-tab="ent">${mode === 'L' ? '엔터티' : '테이블'}</button><button data-tab="rel">관계 <span class="n">${rels.length}</span></button></div>
       <div class="pane on" data-pane="attrs"><table class="tbl"><thead><tr><th></th><th>${mode === 'L' ? '속성명' : '컬럼명'}</th><th>${mode === 'L' ? '물리명' : '타입'}</th></tr></thead><tbody>
-      ${e.a.map(a => `<tr><td>${stBadge(a.s)}</td><td>${a.pk ? '# ' : ''}${mode === 'L' ? a.n : a.p}${a.fk ? ' <span class="faint">(FK)</span>' : ''}${a.cand ? ' <span class="badge b-violet" style="height:16px">후보 대기</span>' : ''}</td><td class="mono">${mode === 'L' ? a.p : a.t}</td></tr>`).join('')}</tbody></table>
-      <div class="flex" style="margin-top:8px"><button class="btn sm" id="rp-add">+ 속성 (Enter)</button><span class="grow"></span><span class="caption muted">입력하면 표준 용어를 바로 제안합니다</span></div>
-      ${e.id === 'dlv' ? `<div class="section-t" style="margin-top:16px">선택한 속성</div><dl class="kv"><dt>논리명</dt><dd>산출물제출일 <span class="badge b-info">＋ 조합 가능</span></dd><dt>분석</dt><dd>산출물 + 제출 + 일 → 용어 미등록</dd><dt>도메인</dt><dd class="faint">용어를 고르면 채워집니다</dd></dl>
+      ${e.a.map(a => `<tr><td>${stBadge(a.s)}</td><td>${a.pk ? '# ' : ''}${mode === 'L' ? a.n : a.p}${a.fk ? ' <span class="faint">(FK)</span>' : ''}${a.cand ? ' <span class="badge b-violet" style="height:16px">후보 대기</span>' : ''}${a.sec ? ' ' + LOCK : ''}</td><td class="mono">${mode === 'L' ? a.p : a.t}</td></tr>`).join('')}${sysRows}</tbody></table>
+      <div class="flex" style="margin-top:8px"><button class="btn sm" id="rp-add">+ ${mode === 'L' ? '속성' : '컬럼'} (Enter)</button><span class="grow"></span><span class="caption muted">${mode === 'P' ? '시스템 컬럼은 <a href="settings.html#sys">시스템 설정</a>에서 관리' : '입력하면 표준 용어를 바로 제안합니다'}</span></div>
+      ${e.id === 'dlv' && mode === 'L' ? `<div class="section-t" style="margin-top:16px">선택한 속성</div><dl class="kv"><dt>논리명</dt><dd>산출물제출일 <span class="badge b-info">＋ 조합 가능</span></dd><dt>분석</dt><dd>산출물 + 제출 + 일 → 용어 미등록</dd><dt>도메인</dt><dd class="faint">용어를 고르면 채워집니다</dd></dl>
       <div class="banner warning" style="margin-top:12px"><span>!</span><div class="grow"><b>산출물수령자명</b> — 미등록 단어 ‘수령자’. 후보 큐에 등록됐습니다(DA 처리 대기). <a href="#" data-open="mo-ex">예외로 유지</a></div></div>` : ''}</div>
-      <div class="pane" data-pane="ent"><dl class="kv"><dt>엔터티명</dt><dd>${e.n}</dd><dt>테이블명</dt><dd class="mono">${e.p}</dd><dt>분류</dt><dd>${e.c}</dd><dt>표준화</dt><dd>대상</dd></dl></div>
+      ${mode === 'P' ? `<div class="pane" data-pane="cons">${consRows(e)}</div>` : ''}
+      <div class="pane" data-pane="sec">${secRows(e)}</div>
+      <div class="pane" data-pane="ent"><dl class="kv"><dt>엔터티명</dt><dd>${e.n}</dd><dt>테이블명</dt><dd class="mono">${e.p}</dd><dt>분류</dt><dd>${e.c}</dd><dt>표준화</dt><dd>대상</dd>${e.sub ? `<dt>서브타입</dt><dd>${e.sub.kind} · 구분 ${e.sub.disc} · ${e.sub.kids.join(', ')}<br><span class="caption muted">물리 변환: 한 테이블로 통합(기본) · <a href="#" data-toast="서브타입별 테이블로 분할하는 변환을 미리 봅니다(목업)" data-toast-type="info">분할 미리보기</a></span></dd>` : ''}</dl></div>
       <div class="pane" data-pane="rel"><div class="caption" style="line-height:22px">${rels.join('<br>') || '관계 없음'}</div></div>`;
     $('rp-add').onclick = () => addAttr();
+    const ix = $('ix-add'); if (ix) ix.onclick = () => { if (guard() || refGuard(e)) return; snap(); (e.ix = e.ix || []).push({ n: `${e.p}_IX${String(90 + (e.ix.length)).padStart(2, '0')}`, c: e.a[1] ? e.a[1].p : e.a[0].p }); render(); document.querySelector('#rp [data-tab="cons"]').click(); toast('인덱스를 추가했습니다 · 이름은 명명 템플릿을 따릅니다'); };
+    const uk = $('uk-add'); if (uk) uk.onclick = () => toast('UK로 묶을 컬럼을 고르세요(목업)', 'info');
   }
+
+  // ---- model review (PN-39)
+  function renderReview() {
+    const noRel = E.filter(e => !R.some(r => r.f === e.id || r.t === e.id));
+    const mn = R.filter(r => r.k === 'mn');
+    const typeless = []; E.forEach(e => e.a.forEach(a => { if (a.t === '—') typeless.push([e, a]); }));
+    const nameDup = []; E.forEach(e => e.a.forEach(a => { if (!a.fk && E.some(o => o !== e && o.a.some(b => !b.fk && b.n === a.n))) nameDup.push([e, a]); }));
+    const noPk = E.filter(e => !e.a.some(a => a.pk));
+    const noDef = E.filter(e => ['hist', 'risk', 'emp'].includes(e.id));
+    const sec = (title, items, lvl, render) => `<div class="section-t">${title} <span class="badge ${items.length ? lvl : 'b-success'}">${items.length}</span></div>${items.length ? `<table class="tbl"><tbody>${items.map(render).join('')}</tbody></table>` : '<div class="caption faint">문제 없음</div>'}`;
+    const total = noRel.length + mn.length + typeless.length + nameDup.length + noPk.length + noDef.length;
+    $('c-rev').textContent = total;
+    $('rev-body').innerHTML = `<div class="grid2" style="margin-bottom:8px"><div class="card"><div class="caption muted">점검 항목</div><div class="mono" style="font-size:20px">6</div></div><div class="card"><div class="caption muted">확인 필요</div><div class="mono" style="font-size:20px">${total}</div></div></div>` +
+      sec('관계 · M:N 미해소', mn, 'b-warning', r => `<tr data-goto="${r.f}" class="click"><td>${ent(r.f).n} ↔ ${ent(r.t).n}</td><td class="caption">교차 엔터티 필요</td></tr>`) +
+      sec('물리 정보 · 타입 미정', typeless, 'b-warning', ([e, a]) => `<tr data-goto="${e.id}" class="click"><td>${e.n}.${a.n}</td><td class="caption">표준 맞추기</td></tr>`) +
+      sec('명칭 중복 · 같은 이름 다른 엔터티', nameDup, 'b-info', ([e, a]) => `<tr data-goto="${e.id}" class="click"><td>${e.n}.${a.n}</td><td class="caption">FK가 아닌데 이름이 같음</td></tr>`) +
+      sec('식별자 없음', noPk, 'b-danger', e => `<tr data-goto="${e.id}" class="click"><td>${e.n}</td><td class="caption">PK 지정 필요</td></tr>`) +
+      sec('참조 없는 엔터티', noRel, 'b-info', e => `<tr data-goto="${e.id}" class="click"><td>${e.n}</td><td class="caption">관계 없음</td></tr>`) +
+      sec('미입력 · 엔터티 정의', noDef, 'b-info', e => `<tr data-goto="${e.id}" class="click"><td>${e.n}</td><td class="caption">정의 비어 있음</td></tr>`);
+    $('rev-body').querySelectorAll('[data-goto]').forEach(r => r.onclick = () => { focusEnt(r.dataset.goto); openPanel('pn-review'); });
+  }
+  $('b-review').onclick = ev => { ev.preventDefault(); renderReview(); openPanel('pn-review'); };
+  $('rev-x').onclick = showRP;
+  $('rev-run').onclick = () => { renderReview(); toast('모델 검토를 다시 실행했습니다', 'info'); };
+
+  // ---- grid mode (bulk edit · find/replace)
+  const gsel = new Set(); let gfilter = 'all';
+  function renderGrid() {
+    const g = $('grid'); const fv = (g.querySelector('#g-find') || {}).value || '', rv = (g.querySelector('#g-rep') || {}).value || '';
+    const rows = []; E.forEach(e => e.a.forEach((a, i) => { if (a.edit) return;
+      if (gfilter === 'bad' && !(a.s === 'comb' || a.s === 'unreg')) return;
+      if (gfilter === 'sec' && !a.sec) return;
+      if (gfilter === 'na' && a.s !== 'na') return;
+      rows.push({ e, a, k: e.id + ':' + i }); }));
+    const hl = s => fv ? s.split(fv).join(`<mark>${fv}</mark>`) : s;
+    const hits = fv ? rows.filter(r => r.a.n.includes(fv)).length : 0;
+    g.innerHTML = `<div class="gbar"><b style="font-size:14px">속성 표 보기</b><span class="caption muted">${rows.length}개</span>
+        ${['all:전체', 'bad:미준수', 'sec:보안', 'na:비대상'].map(x => { const [k, l] = x.split(':'); return `<span class="chip ${gfilter === k ? 'on' : ''}" data-gf="${k}" style="height:26px;font-size:12px">${l}</span>`; }).join('')}
+        <span class="grow"></span>
+        <input class="input" id="g-find" placeholder="찾기 (논리명)" value="${fv}" style="width:150px"><input class="input edit-only" id="g-rep" placeholder="바꿀 말" value="${rv}" style="width:130px">
+        <span class="caption muted" style="width:44px">${fv ? hits + '건' : ''}</span><button class="btn sm edit-only" id="g-replace" ${hits && rv ? '' : 'disabled'}>모두 바꾸기</button>
+        <button class="btn sm ghost" id="g-close">닫기 (Esc)</button></div>
+      <div class="gbulk edit-only ${gsel.size ? 'on' : ''}"><b>${gsel.size}개 선택</b>
+        <span class="caption muted">도메인</span><select class="input" id="g-dom" style="width:130px"><option value="">유지</option>${Object.keys(DOMS).map(d => `<option>${d}</option>`).join('')}</select>
+        <span class="caption muted">필수</span><select class="input" id="g-nn" style="width:90px"><option value="">유지</option><option value="1">예</option><option value="0">아니오</option></select>
+        <span class="caption muted">표준</span><select class="input" id="g-std" style="width:110px"><option value="">유지</option><option value="in">대상</option><option value="na">비대상</option></select>
+        <span class="grow"></span><button class="btn sm" id="g-clear">선택 해제</button><button class="btn sm primary" id="g-apply">일괄 적용</button></div>
+      <div class="gbody"><table class="tbl"><thead><tr><th style="width:32px"><input type="checkbox" id="g-all" class="edit-only"></th><th></th><th>엔터티</th><th>속성명</th><th>물리명</th><th>타입</th><th>필수</th><th>보안</th></tr></thead><tbody>
+      ${rows.map(r => `<tr><td><input type="checkbox" class="edit-only" data-k="${r.k}" ${gsel.has(r.k) ? 'checked' : ''}></td><td>${stBadge(r.a.s)}</td><td>${r.e.n}${r.e.ref ? ' <span class="badge">참조</span>' : ''}</td><td>${r.a.pk ? '# ' : ''}${hl(r.a.n)}${r.a.fk ? ' <span class="faint">(FK)</span>' : ''}</td><td class="mono">${r.a.p}</td><td class="mono">${r.a.t}</td><td>${r.a.nn || r.a.pk ? '예' : '<span class="faint">아니오</span>'}</td><td>${r.a.sec ? `<span class="badge b-danger">${r.a.sec}</span>` : ''}</td></tr>`).join('')}</tbody></table></div>`;
+    const f = g.querySelector('#g-find'); if (document.activeElement && document.activeElement.id === 'g-find-focus') f.focus();
+  }
+  function openGrid(focusFind) {
+    if (!$('grid').classList.contains('open')) { sideWas = $('side').classList.contains('closed'); $('side').classList.add('closed'); }
+    $('grid').classList.add('open'); $('b-grid').classList.add('on'); renderGrid();
+    if (focusFind) { const f = $('g-find'); f.focus(); }
+  }
+  let sideWas = false;
+  function closeGrid() { if (!$('grid').classList.contains('open')) return; $('grid').classList.remove('open'); $('b-grid').classList.remove('on'); $('side').classList.toggle('closed', sideWas); }
+  $('b-grid').onclick = () => $('grid').classList.contains('open') ? closeGrid() : openGrid(false);
+  $('grid').addEventListener('mousedown', ev => ev.stopPropagation());
+  $('grid').addEventListener('click', ev => {
+    ev.stopPropagation();
+    const chip = ev.target.closest('[data-gf]'); if (chip) { gfilter = chip.dataset.gf; renderGrid(); return; }
+    if (ev.target.id === 'g-close') { closeGrid(); return; }
+    if (ev.target.id === 'g-clear') { gsel.clear(); renderGrid(); return; }
+    if (ev.target.id === 'g-replace') {
+      if (guard()) return; const fv = $('g-find').value, rv = $('g-rep').value; let n = 0; snap();
+      E.forEach(e => { if (e.ref) return; e.a.forEach(a => { if (a.n.includes(fv)) { a.n = a.n.split(fv).join(rv); a.s = a.s === 'na' ? 'na' : 'comb'; n++; } }); });
+      render(); toast(`논리명 ${n}건에서 ‘${fv}’ → ‘${rv}’로 바꿨습니다 — 표준 매칭을 다시 확인합니다 · Ctrl+Z`, 'info'); return;
+    }
+    if (ev.target.id === 'g-apply') {
+      if (guard()) return; const dom = $('g-dom').value, nn = $('g-nn').value, std = $('g-std').value;
+      if (!dom && !nn && !std) { toast('바꿀 항목을 고르세요', 'info'); return; }
+      snap(); let n = 0, skip = 0;
+      gsel.forEach(k => { const [eid, i] = k.split(':'); const e = ent(eid); if (!e) return; if (e.ref) { skip++; return; } const a = e.a[+i]; if (!a) return; n++;
+        if (dom) { a.t = DOMS[dom]; a.d = dom; }
+        if (nn) a.nn = nn === '1' ? 1 : 0;
+        if (std === 'na') a.s = 'na'; else if (std === 'in' && a.s === 'na') a.s = 'unreg'; });
+      gsel.clear(); render();
+      toast(`${n}개 속성에 일괄 적용했습니다${skip ? ` · 참조 엔터티 ${skip}개는 건너뜀` : ''}${std === 'na' ? ' — 비대상은 준수율 계산에서 빠집니다' : ''} · Ctrl+Z`); return;
+    }
+  });
+  $('grid').addEventListener('change', ev => {
+    const k = ev.target.dataset.k;
+    if (k) { ev.target.checked ? gsel.add(k) : gsel.delete(k); renderGrid(); return; }
+    if (ev.target.id === 'g-all') { $('grid').querySelectorAll('[data-k]').forEach(c => ev.target.checked ? gsel.add(c.dataset.k) : gsel.delete(c.dataset.k)); renderGrid(); }
+  });
+  $('grid').addEventListener('input', ev => {
+    if (ev.target.id === 'g-find' || ev.target.id === 'g-rep') { const id = ev.target.id, pos0 = ev.target.selectionStart; renderGrid(); const el = $(id); el.focus(); el.setSelectionRange(pos0, pos0); }
+  });
+  $('grid').addEventListener('keydown', ev => { ev.stopPropagation(); if (ev.key === 'Escape') closeGrid(); });
+
   function hint(msg) { const h = $('hint'); h.style.display = msg ? 'block' : 'none'; h.textContent = msg || ''; }
   function setTool(t) {
     if (t !== 'select' && guard()) t = 'select';
-    tool = t; relSrc = null; preview.setAttribute('d', ''); hint('');
-    document.querySelectorAll('.cv-toolbar .tb[data-tool]').forEach(b => b.classList.toggle('on', b.dataset.tool === t));
-    cv.classList.toggle('tool-entity', t === 'entity'); cv.classList.toggle('tool-rel', t === 'rel');
+    tool = t; relSrc = null; xorPick = []; preview.setAttribute('d', ''); hint('');
+    document.querySelectorAll('.cv-toolbar .tb[data-tool]').forEach(b => b.classList.toggle('on', b.dataset.tool === t || (t === 'xor' && b.dataset.tool === 'rel')));
+    cv.classList.toggle('tool-entity', t === 'entity'); cv.classList.toggle('tool-rel', t === 'rel' || t === 'xor'); cv.classList.toggle('tool-memo', t === 'memo');
     if (t === 'rel') hint('부모 엔터티를 클릭하세요 · Esc 취소');
+    if (t === 'xor') hint('같은 부모에서 나간 관계선 2개를 차례로 클릭하세요 · Esc 취소');
     if (t === 'entity') hint('엔터티를 놓을 곳을 클릭하세요');
+    if (t === 'memo') hint('메모를 놓을 곳을 클릭하세요');
     render();
   }
   function toWorld(ev) { const r = cv.getBoundingClientRect(); return { x: (ev.clientX - r.left - panX) / zoom, y: (ev.clientY - r.top - panY) / zoom }; }
   function focusEnt(id) { sel = id; showRP(); render(); const b = box(id); panX = cv.clientWidth / 2 - (b.x + b.w / 2) * zoom; panY = cv.clientHeight / 2 - (b.y + b.h / 2) * zoom; applyView(); }
   function addAttr() {
-    if (!sel || guard()) return; const e = ent(sel);
+    if (!sel || guard()) return; const e = ent(sel); if (refGuard(e)) return;
     e.a.forEach(a => delete a.edit); snap(); e.a.push({ n: '', p: '—', t: '—', s: 'na', edit: 1 }); render();
   }
   let acEl = null, acIdx = 0;
@@ -424,13 +620,14 @@ window.pageInit = function () {
     acEl = document.createElement('div'); acEl.className = 'acl';
     const r = inp.getBoundingClientRect(), c = cv.getBoundingClientRect();
     acEl.style.left = (r.left - c.left) + 'px'; acEl.style.top = (r.bottom - c.top + 4) + 'px';
-    acEl.innerHTML = list.map((t, i) => `<div class="o ${i === acIdx ? 'on' : ''}" data-ti="${TERMS.indexOf(t)}"><span>${t.n} <span class="badge ${tagCls(t.tag)}" style="height:16px">${t.tag}</span></span><span class="m">${t.d}</span><span class="m" style="grid-column:1/3">${t.p}</span></div>`).join('') +
+    acEl.innerHTML = list.map((t, i) => `<div class="o ${i === acIdx ? 'on' : ''}" data-ti="${TERMS.indexOf(t)}"><span>${t.n} <span class="badge ${tagCls(t.tag)}" style="height:16px">${t.tag}</span></span><span class="m">${t.d}</span><span class="m" style="grid-column:1/3">${t.p}${t.sec ? ' · 개인정보' : ''}</span></div>`).join('') +
       (v ? `<div class="o" data-new="1" style="border-top:1px solid var(--border)"><span>＋ ‘${v}’ 그대로 입력 (미매핑)</span></div>` : '');
     cv.appendChild(acEl);
   }
+  const fromTerm = t => ({ n: t.n, p: t.p, t: t.t, s: t.s, sec: t.sec, enc: t.enc });
   function commitAttr(inp, term) {
     const e = ent(inp.dataset.e), a = e.a[+inp.dataset.i];
-    if (term) { Object.assign(a, { n: term.n, p: term.p, t: term.t, s: term.s }); toast(`‘${term.n}’ 용어를 적용했습니다 · ${term.p}`); }
+    if (term) { Object.assign(a, fromTerm(term)); toast(`‘${term.n}’ 용어를 적용했습니다 · ${term.p}${term.sec ? ' · 도메인 보안 속성(개인정보) 상속' : ''}`); }
     else if (inp.value.trim()) { Object.assign(a, { n: inp.value.trim(), s: 'unreg' }); toast('용어 없이 입력했습니다 — 미준수로 집계됩니다', 'info'); }
     else e.a.splice(+inp.dataset.i, 1);
     delete a.edit; if (acEl) { acEl.remove(); acEl = null; } render();
@@ -455,7 +652,7 @@ window.pageInit = function () {
   }
   function moveCursors() {
     if (offline) return;
-    const rb = $('n-' + remoteSel) ? box(remoteSel) : { x: 100, y: 300, w: 200, h: 120 };
+    const rb = remoteSel && $('n-' + remoteSel) ? box(remoteSel) : { x: 100, y: 300, w: 200, h: 120 };
     const ch = $('cur-hong'); ch.style.left = (rb.x + 20 + Math.random() * (rb.w - 40)) + 'px'; ch.style.top = (rb.y + 10 + Math.random() * (rb.h - 20)) + 'px';
     const pb = box('emp'); const cp = $('cur-park'); cp.style.left = (pb.x + 40 + Math.random() * 160) + 'px'; cp.style.top = (pb.y + pb.h + 10 + Math.random() * 40) + 'px';
   }
@@ -466,10 +663,24 @@ window.pageInit = function () {
     render(); toast('홍설계가 ‘요구사항내역’에 ‘요구사항상태코드’를 추가했습니다', 'info');
   }, 7000);
 
+  // ---- shared (common) entity reference
+  window.__importRef = id => {
+    if (guard()) return;
+    const lib = { dept: { id: 'dept', n: '부서기본', p: 'DEPT_M', c: 'K', ref: 1, x: 800, y: 40, px: 860, py: 40, a: [{ n: '부서코드', p: 'DEPT_CD', t: 'VARCHAR2(10)', pk: 1, nn: 1, s: 'ok' }, { n: '부서명', p: 'DEPT_NM', t: 'VARCHAR2(100)', s: 'ok' }] },
+      code: { id: 'code', n: '공통코드기본', p: 'CMMN_CD_M', c: 'K', ref: 1, x: 800, y: 200, px: 860, py: 220, a: [{ n: '코드그룹ID', p: 'CD_GROUP_ID', t: 'VARCHAR2(10)', pk: 1, nn: 1, s: 'ok' }, { n: '코드값', p: 'CD_VL', t: 'VARCHAR2(20)', pk: 1, nn: 1, s: 'ok' }, { n: '코드값명', p: 'CD_VL_NM', t: 'VARCHAR2(100)', s: 'ok' }] } };
+    if (ent(id)) { toast('이미 이 영역에서 참조 중입니다', 'info'); return; }
+    snap(); E.push(lib[id]);
+    if (id === 'dept') { R.push({ f: 'dept', t: 'emp', k: 'nonid', name: '소속된다' }); ent('emp').a.push({ n: '부서코드', p: 'DEPT_CD', t: 'VARCHAR2(10)', fk: 1, s: 'ok' }); }
+    $('b-sys').click(); sel = id; showRP(); render();
+    toast(`공통 영역의 ‘${lib[id].n}’을(를) 참조로 가져왔습니다 — 원본은 공통 영역에서만 수정됩니다${id === 'dept' ? ' · 사원기본에 부서코드(FK) 추가' : ''}`);
+  };
+
   // ---- events
   let drag = null, pan = null;
   cv.addEventListener('mousedown', ev => {
-    if (ev.target.closest('.cv-toolbar,.cv-zoom,.cv-mini,.cv-banner,.pop,.acl,#sysview,.hit,input')) return;
+    if (ev.target.closest('.cv-toolbar,.cv-zoom,.cv-mini,.cv-banner,.pop,.acl,#sysview,#grid,.hit,input,.mb,[data-mdel]')) return;
+    const md = ev.target.closest('[data-mdrag]');
+    if (md && !locked) { const m = M.find(x => x.id === md.dataset.mdrag), w = toWorld(ev); drag = { memo: m, dx: w.x - m.x, dy: w.y - m.y, moved: false }; return; }
     const nh = ev.target.closest('[data-drag]'), node = ev.target.closest('.node');
     if (tool === 'select' && node) {
       const e = ent(node.id.slice(2)); sel = e.id; showRP();
@@ -479,14 +690,25 @@ window.pageInit = function () {
     if (!node && tool === 'select') { if (sel) { sel = null; render(); } pan = { x: ev.clientX - panX, y: ev.clientY - panY }; cv.classList.add('panning'); }
   });
   window.addEventListener('mousemove', ev => {
-    if (drag) { if (!drag.moved) { snap(); drag.moved = true; } const w = toWorld(ev); setPos(drag.e, Math.round((w.x - drag.dx) / 8) * 8, Math.round((w.y - drag.dy) / 8) * 8); const d = $('n-' + drag.e.id); const p = pos(drag.e); d.style.left = p.x + 'px'; d.style.top = p.y + 'px'; drawEdges(); mini(); }
+    if (drag) {
+      if (!drag.moved) { snap(); drag.moved = true; } const w = toWorld(ev);
+      if (drag.memo) { drag.memo.x = Math.round(w.x - drag.dx); drag.memo.y = Math.round(w.y - drag.dy); const el = $('m-' + drag.memo.id); el.style.left = drag.memo.x + 'px'; el.style.top = drag.memo.y + 'px'; return; }
+      setPos(drag.e, Math.round((w.x - drag.dx) / 8) * 8, Math.round((w.y - drag.dy) / 8) * 8); const d = $('n-' + drag.e.id); const p = pos(drag.e); d.style.left = p.x + 'px'; d.style.top = p.y + 'px'; drawEdges(); mini();
+    }
     if (pan) { panX = ev.clientX - pan.x; panY = ev.clientY - pan.y; applyView(); }
     if (tool === 'rel' && relSrc) { const a = box(relSrc), w = toWorld(ev); preview.setAttribute('d', `M${a.x + a.w / 2},${a.y + a.h / 2} L${w.x},${w.y}`); }
   });
   window.addEventListener('mouseup', () => { drag = null; pan = null; cv.classList.remove('panning'); });
   cv.addEventListener('click', ev => {
-    if (ev.target.closest('.cv-toolbar,.cv-zoom,.cv-mini,.cv-banner,.acl,#sysview,.pop')) return;
+    const del = ev.target.closest('[data-mdel]');
+    if (del) { if (guard()) return; snap(); M.splice(M.findIndex(m => m.id === del.dataset.mdel), 1); render(); toast('메모를 삭제했습니다 · Ctrl+Z', 'info'); return; }
+    if (ev.target.closest('.cv-toolbar,.cv-zoom,.cv-mini,.cv-banner,.acl,#sysview,.pop,#grid,.memo')) return;
     const node = ev.target.closest('.node');
+    if (tool === 'memo' && !node) {
+      const w = toWorld(ev), id = 'm' + Date.now(); snap();
+      M.push({ id, mode, x: Math.round(w.x), y: Math.round(w.y), text: '', by: '김모델' });
+      setTool('select'); const mb = document.querySelector(`[data-mid="${id}"]`); if (mb) mb.focus(); return;
+    }
     if (tool === 'entity' && !node) {
       const w = toWorld(ev), id = 'e' + Date.now(); snap();
       E.push({ id, n: '새엔터티', p: '—', c: 'M', x: w.x, y: w.y, px: w.x, py: w.y, a: [{ n: '', p: '—', t: '—', s: 'na', pk: 1, edit: 1 }] });
@@ -504,8 +726,9 @@ window.pageInit = function () {
         $('pop-yes').onclick = () => { p.remove(); snap(); R.push({ f: id, t: id, k: 'nonid', name: '상위' }); const e = ent(id); e.a.push({ n: '상위' + e.a[0].n, p: 'UPR_' + e.a[0].p, t: e.a[0].t, fk: 1, s: 'comb' }); setTool('select'); toast(`재귀 관계와 ‘상위${e.a[0].n} (FK)’를 추가했습니다`); };
         return;
       }
-      const parent = ent(relSrc), child = ent(id); snap();
-      R.push({ f: relSrc, t: id, k: relType, name: '' });
+      const parent = ent(relSrc), child = ent(id);
+      if (child.ref) { toast('참조 엔터티는 자식이 될 수 없습니다 — 공통 영역에서 수정하세요', 'info'); setTool('select'); return; }
+      snap(); R.push({ f: relSrc, t: id, k: relType, name: '' });
       if (relType !== 'mn') parent.a.filter(a => a.pk).forEach(k => {
         const clash = child.a.some(a => a.n === k.n);
         child.a.push({ n: clash ? '원' + k.n : k.n, p: clash ? 'ORG_' + k.p : k.p, t: k.t, fk: 1, pk: relType === 'id' ? 1 : 0, s: clash ? 'comb' : 'ok' });
@@ -516,15 +739,20 @@ window.pageInit = function () {
     }
   });
   cv.addEventListener('dblclick', ev => {
-    if (ev.target.closest('input')) return;
+    if (ev.target.closest('input,.memo,#grid')) return;
     const title = ev.target.closest('.title');
-    if (title) { if (guard()) return; renaming = title.dataset.e; render(); return; }
+    if (title) { if (guard() || refGuard(ent(title.dataset.e))) return; renaming = title.dataset.e; render(); return; }
     const row = ev.target.closest('.ar[data-i]');
-    if (row) { if (guard()) return; const e = ent(row.dataset.e); snap(); e.a[+row.dataset.i].edit = 1; sel = e.id; render(); return; }
+    if (row) { const e = ent(row.dataset.e); if (guard() || refGuard(e)) return; snap(); e.a[+row.dataset.i].edit = 1; sel = e.id; render(); return; }
     if (!ev.target.closest('.node,.cv-toolbar,.cv-zoom,.cv-mini,.cv-banner,#sysview') && tool === 'select' && !locked) { setTool('entity'); cv.dispatchEvent(new MouseEvent('click', { clientX: ev.clientX, clientY: ev.clientY, bubbles: true })); }
   });
-  cv.addEventListener('input', ev => { if (ev.target.classList.contains('attr-in')) { acIdx = 0; showAC(ev.target); } });
+  cv.addEventListener('input', ev => {
+    if (ev.target.classList.contains('attr-in')) { acIdx = 0; showAC(ev.target); }
+    const mb = ev.target.closest && ev.target.closest('.mb'); if (mb) { const m = M.find(x => x.id === mb.dataset.mid); if (m) m.text = mb.textContent; }
+  });
+  cv.addEventListener('focusin', ev => { if (ev.target.classList && ev.target.classList.contains('mb')) snap(); });
   cv.addEventListener('keydown', ev => {
+    if (ev.target.closest && ev.target.closest('.mb')) { if (ev.key === 'Escape') ev.target.blur(); return; }
     const ren = ev.target.closest('.ren-in');
     if (ren) { if (ev.key === 'Enter') commitRename(ren, true); else if (ev.key === 'Escape') commitRename(ren, false); return; }
     const inp = ev.target.closest('.attr-in'); if (!inp) return;
@@ -537,23 +765,25 @@ window.pageInit = function () {
   cv.addEventListener('focusout', ev => { if (ev.target.classList && ev.target.classList.contains('ren-in') && renaming) commitRename(ev.target, true); });
   document.addEventListener('mousedown', ev => { const o = ev.target.closest('.acl .o'); if (!o) return; ev.preventDefault(); const inp = nodes.querySelector('.attr-in'); if (inp) commitAttr(inp, o.dataset.ti ? TERMS[+o.dataset.ti] : null); });
   document.addEventListener('keydown', ev => {
-    if (ev.target.closest && ev.target.closest('input,textarea,select')) return;
     const k = ev.key.toLowerCase();
+    if (ev.ctrlKey && k === 'f') { openGrid(true); ev.preventDefault(); return; }
+    if (ev.target.closest && ev.target.closest('input,textarea,select,[contenteditable="true"]')) return;
+    if (ev.ctrlKey && k === 'z' && ev.shiftKey) { redoFn(); ev.preventDefault(); return; }
     if (ev.ctrlKey && k === 'z') { undo(); ev.preventDefault(); return; }
+    if (ev.ctrlKey && k === 'y') { redoFn(); ev.preventDefault(); return; }
     if (ev.ctrlKey || ev.metaKey) return;
-    if (k === 'v') setTool('select'); else if (k === 'e') setTool('entity'); else if (k === 'r') setTool('rel');
-    else if (ev.key === 'Escape') { document.querySelectorAll('.pop').forEach(p => p.remove()); $('expmenu').classList.remove('open'); setTool('select'); }
+    if (k === 'v') setTool('select'); else if (k === 'e') setTool('entity'); else if (k === 'r') setTool('rel'); else if (k === 'm') setTool('memo');
+    else if (ev.key === 'Escape') { document.querySelectorAll('.pop').forEach(p => p.remove()); $('expmenu').classList.remove('open'); closeGrid(); setTool('select'); }
     else if (ev.key === 'Enter' && sel) { addAttr(); ev.preventDefault(); }
     else if (ev.key === 'Delete' && sel) {
       if (guard()) return;
       const e = ent(sel);
       if (remoteSel === sel && !offline && !confirm(`홍설계가 ‘${e.n}’을(를) 편집 중입니다. 그래도 삭제할까요?`)) return;
       snap(); E.splice(E.indexOf(e), 1); for (let i = R.length - 1; i >= 0; i--) if (R[i].f === sel || R[i].t === sel) R.splice(i, 1);
-      if (remoteSel === sel) remoteSel = null; sel = null; render(); toast(`‘${e.n}’을(를) 삭제했습니다 · 되돌리기 Ctrl+Z`, 'info');
+      if (remoteSel === sel) remoteSel = null; sel = null; render(); toast(`‘${e.n}’을(를) ${e.ref ? '이 영역에서 참조 해제' : '삭제'}했습니다 · 되돌리기 Ctrl+Z`, 'info');
     }
     else if (ev.key === '!' || (ev.shiftKey && ev.code === 'Digit1')) fit();
   });
-  // drag a dictionary term onto an entity
   $('dict').addEventListener('dragstart', ev => { const it = ev.target.closest('.dict-item'); if (!it) return; ev.dataTransfer.setData('text/plain', it.dataset.ti); ev.dataTransfer.effectAllowed = 'copy'; cv.classList.add('dropping'); });
   $('dict').addEventListener('dragend', () => { cv.classList.remove('dropping'); nodes.querySelectorAll('.drop').forEach(n => n.classList.remove('drop')); });
   cv.addEventListener('dragover', ev => { ev.preventDefault(); nodes.querySelectorAll('.drop').forEach(n => n.classList.remove('drop')); const n = ev.target.closest('.node'); if (n) n.classList.add('drop'); });
@@ -561,12 +791,13 @@ window.pageInit = function () {
     ev.preventDefault(); cv.classList.remove('dropping');
     const n = ev.target.closest('.node'), ti = ev.dataTransfer.getData('text/plain');
     if (!n) { toast('엔터티 위에 놓으세요', 'info'); return; }
-    if (guard()) return;
-    const e = ent(n.id.slice(2)), t = TERMS[+ti]; snap();
-    e.a.push({ n: t.n, p: t.p, t: t.t, s: t.s }); sel = e.id; showRP(); render();
-    toast(`‘${t.n}’을(를) ${e.n}에 속성으로 추가했습니다 · ${t.p}`);
+    const e = ent(n.id.slice(2)); if (guard() || refGuard(e)) return;
+    const t = TERMS[+ti]; snap();
+    e.a.push(fromTerm(t)); sel = e.id; showRP(); render();
+    toast(`‘${t.n}’을(를) ${e.n}에 속성으로 추가했습니다 · ${t.p}${t.sec ? ' · 개인정보 상속' : ''}`);
   });
   cv.addEventListener('wheel', ev => {
+    if (ev.target.closest('#grid')) return;
     ev.preventDefault();
     if (ev.ctrlKey) { const r = cv.getBoundingClientRect(); const mx = ev.clientX - r.left, my = ev.clientY - r.top; const nz = Math.min(2, Math.max(0.15, zoom * (ev.deltaY < 0 ? 1.1 : 0.9))); panX = mx - (mx - panX) * nz / zoom; panY = my - (my - panY) * nz / zoom; zoom = nz; }
     else { panX -= ev.deltaX; panY -= ev.deltaY; }
@@ -577,50 +808,64 @@ window.pageInit = function () {
   function fit() { let maxx = 0, maxy = 0; E.forEach(e => { const b = box(e.id); maxx = Math.max(maxx, b.x + b.w); maxy = Math.max(maxy, b.y + b.h); }); zoom = Math.min(1.2, (cv.clientWidth - 80) / maxx, (cv.clientHeight - 140) / maxy); panX = 40; panY = 80; applyView(); }
   $('zfit').onclick = fit;
   $('lodsel').onchange = ev => { lodForce = ev.target.value; applyView(); };
-  $('b-undo').onclick = undo;
+  $('b-undo').onclick = undo; $('b-redo').onclick = redoFn;
   document.querySelectorAll('.cv-toolbar .tb[data-tool]').forEach(b => b.addEventListener('click', () => {
-    if (b.dataset.tool === 'rel' && tool === 'rel') { $('relmenu').classList.toggle('open'); return; }
+    if (b.dataset.tool === 'rel' && (tool === 'rel' || tool === 'xor')) { $('relmenu').classList.toggle('open'); return; }
     setTool(b.dataset.tool); if (b.dataset.tool === 'rel' && tool === 'rel') $('relmenu').classList.add('open');
   }));
-  $('relmenu').addEventListener('click', ev => { ev.stopPropagation(); const d = ev.target.closest('[data-rt]'); if (!d) return; relType = d.dataset.rt; $('reltype').textContent = ({ nonid: '1:N 비식별', id: '1:N 식별', one: '1:1', mn: 'M:N' })[relType]; document.querySelectorAll('#relmenu .mi').forEach(x => x.classList.toggle('on', x === d)); $('relmenu').classList.remove('open'); });
+  $('relmenu').addEventListener('click', ev => {
+    ev.stopPropagation(); const d = ev.target.closest('[data-rt]'); if (!d) return; $('relmenu').classList.remove('open');
+    if (d.dataset.rt === 'xor') { setTool('xor'); return; }
+    relType = d.dataset.rt; $('reltype').textContent = ({ nonid: '1:N 비식별', id: '1:N 식별', one: '1:1', mn: 'M:N' })[relType];
+    document.querySelectorAll('#relmenu .mi[data-rt]').forEach(x => x.classList.toggle('on', x === d)); setTool('rel');
+  });
   eg.addEventListener('click', ev => {
-    const h = ev.target.closest('.hit'); if (!h) return; const r = R[+h.dataset.r];
+    const h = ev.target.closest('.hit'); if (!h) return; const i = +h.dataset.r, r = R[i];
+    if (tool === 'xor') {
+      if (xorPick.includes(i)) return; xorPick.push(i); drawEdges();
+      if (xorPick.length < 2) { hint('두 번째 관계선을 클릭하세요 · 같은 부모에서 나간 관계여야 합니다'); return; }
+      const [a, b] = xorPick.map(j => R[j]);
+      if (a.f !== b.f || a.f === a.t || b.f === b.t) { toast('같은 부모에서 나간 관계선 2개를 고르세요', 'danger'); setTool('xor'); return; }
+      snap(); const g = 'x' + Date.now(); a.xg = g; b.xg = g; setTool('select');
+      toast(`‘${ent(a.f).n}’에서 나가는 관계 2개를 배타 관계로 묶었습니다 — 한 행은 둘 중 하나와만 관계를 가집니다`, 'violet'); return;
+    }
     sel = null; render(); showRP();
     $('rp-title').textContent = '관계'; $('rp-sub').textContent = `${ent(r.f).n} → ${ent(r.t).n}`;
-    $('rp-body').innerHTML = `<dl class="kv"><dt>관계명</dt><dd>${r.name || '—'}</dd><dt>유형</dt><dd>${({ nonid: '1:N 비식별', id: '1:N 식별', one: '1:1', mn: 'M:N' })[r.k]}</dd><dt>부모 선택성</dt><dd>필수</dd><dt>자식 선택성</dt><dd>선택</dd></dl>` +
+    $('rp-body').innerHTML = `<dl class="kv"><dt>관계명</dt><dd>${r.name || '—'}</dd><dt>유형</dt><dd>${({ nonid: '1:N 비식별', id: '1:N 식별', one: '1:1', mn: 'M:N' })[r.k]}${r.xg ? ' · <span style="color:var(--violet)">배타</span>' : ''}</dd><dt>부모 선택성</dt><dd>필수</dd><dt>자식 선택성</dt><dd>선택</dd></dl>` +
+      (r.xg ? `<div class="flex" style="margin-top:8px"><span class="grow"></span><button class="btn sm" id="xor-off">배타 해제</button></div>` : '') +
       (r.k === 'mn' ? `<div class="banner warning"><span>!</span><div class="grow"><b>M:N 해소 필요</b><div class="caption">교차 엔터티 제안: <b>요구사항리스크관계</b> <span class="mono">RQRM_RISK_R</span> · 식별 관계(PK = 두 FK)</div></div></div><div class="flex" style="margin-top:8px"><span class="grow"></span><button class="btn primary sm" id="mn-go">미리보기 후 해소</button></div>` : '');
+    const xo = $('xor-off'); if (xo) xo.onclick = () => { if (guard()) return; snap(); const g = r.xg; R.forEach(x => { if (x.xg === g) delete x.xg; }); render(); toast('배타 관계를 해제했습니다', 'info'); };
     const go = $('mn-go'); if (go) go.onclick = () => {
       if (guard()) return; snap();
       R.splice(R.indexOf(r), 1); const a = box(r.f), b = box(r.t);
-      E.push({ id: 'rr', n: '요구사항리스크관계', p: 'RQRM_RISK_R', c: 'A', x: (a.x + b.x) / 2 + 300, y: (a.y + b.y) / 2, px: (a.x + b.x) / 2 + 320, py: (a.y + b.y) / 2, a: [{ n: '요구사항ID', p: 'DEMND_MATER_ID', t: 'VARCHAR2(10)', pk: 1, fk: 1, s: 'ok' }, { n: '리스크ID', p: 'RISK_ID', t: 'VARCHAR2(10)', pk: 1, fk: 1, s: 'ok' }] });
+      E.push({ id: 'rr', n: '요구사항리스크관계', p: 'RQRM_RISK_R', c: 'A', x: (a.x + b.x) / 2 + 300, y: (a.y + b.y) / 2, px: (a.x + b.x) / 2 + 320, py: (a.y + b.y) / 2, a: [{ n: '요구사항ID', p: 'DEMND_MATER_ID', t: 'VARCHAR2(10)', pk: 1, fk: 1, nn: 1, s: 'ok' }, { n: '리스크ID', p: 'RISK_ID', t: 'VARCHAR2(10)', pk: 1, fk: 1, nn: 1, s: 'ok' }] });
       R.push({ f: r.f, t: 'rr', k: 'id', name: '' }, { f: r.t, t: 'rr', k: 'id', name: '' });
       sel = 'rr'; render(); toast('M:N을 해소했습니다 — 교차 엔터티 ‘요구사항리스크관계’(식별 관계)');
     };
   });
   $('b-layout').onclick = () => {
     if (guard() || !confirm('계층 자동 배치를 적용합니다.\n접속 중인 2명(홍설계·박설계)의 화면도 같이 바뀝니다. 계속할까요?')) return;
-    snap(); const cols = { prj: [0, 0], emp: [1, 0], mbr: [1, 1], rqrm: [0, 1], dlv: [1, 2], hist: [2, 2], risk: [0, 2], rr: [0.5, 3] };
-    E.forEach((e, i) => { const c = cols[e.id] || [2, i]; setPos(e, 60 + c[0] * 380, 60 + c[1] * 230); }); render(); toast('계층 자동 배치를 적용했습니다 · 모든 접속자에게 반영 · Ctrl+Z로 되돌리기', 'info');
+    snap(); const cols = { prj: [0, 0], emp: [1, 0], dept: [2, 0], mbr: [1, 1], code: [2, 1], rqrm: [0, 1], dlv: [1, 2], hist: [2, 2], risk: [0, 2], rr: [0.5, 3] };
+    E.forEach((e, i) => { const c = cols[e.id] || [3, i]; setPos(e, 60 + c[0] * 380, 60 + c[1] * 250); }); render(); toast('계층 자동 배치를 적용했습니다 · 모든 접속자에게 반영 · Ctrl+Z로 되돌리기', 'info');
   };
   $('jump-bad').onclick = ev => { ev.preventDefault(); focusEnt('dlv'); toast('미준수 속성이 있는 ‘산출물기본’으로 이동했습니다', 'info'); };
   function setMode(v) {
     mode = v; document.querySelectorAll('#lp button').forEach(b => b.classList.toggle('on', b.dataset.v === v));
     $('ban-gate').style.display = $('ban-sync').style.display = v === 'P' ? 'flex' : 'none';
-    sel = null; showRP(); render(); toast(v === 'P' ? '물리 캔버스 — 배치는 논리와 따로 저장됩니다' : '논리 캔버스', 'info');
+    sel = null; showRP(); render(); toast(v === 'P' ? '물리 캔버스 — 배치는 논리와 따로 저장됩니다 · 시스템 컬럼 4개 포함' : '논리 캔버스', 'info');
   }
   $('lp').addEventListener('click', ev => {
     const v = ev.target.dataset.v; if (!v || v === mode) return;
-    if (v === 'P' && !gateSeen) { $('rp').classList.remove('open'); $('pn-confirm').classList.remove('open'); $('pn-gate').classList.add('open'); return; }
+    if (v === 'P' && !gateSeen) { openPanel('pn-gate'); return; }
     setMode(v);
   });
   $('gate-go').onclick = () => { gateSeen = true; setMode('P'); toast('경고 4건을 남긴 채 물리 모델을 열었습니다 · 변경: 테이블 +2, 컬럼 +6', 'info'); };
   $('gate-x').onclick = showRP;
-  $('b-gate').onclick = () => { $('rp').classList.remove('open'); $('pn-gate').classList.add('open'); };
+  $('b-gate').onclick = () => openPanel('pn-gate');
   $('b-reconnect').onclick = () => setOffline(false);
-  // export menu
   $('b-export').onclick = ev => { ev.stopPropagation(); $('expmenu').classList.toggle('open'); };
   $('expmenu').addEventListener('click', ev => { ev.stopPropagation(); const b = ev.target.closest('.seg button'); if (b) b.parentElement.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); });
-  $('ex-official').onchange = ev => { $('ex-title').style.display = ev.target.checked ? 'block' : 'none'; if (ev.target.checked) { $('ex-scope').children[1].click(); } };
+  $('ex-official').onchange = ev => { $('ex-title').style.display = ev.target.checked ? 'block' : 'none'; if (ev.target.checked) $('ex-scope').children[1].click(); };
   $('ex-cancel').onclick = () => $('expmenu').classList.remove('open');
   $('ex-go').onclick = () => {
     const sc = $('ex-scope').querySelector('.on').textContent, f = $('ex-fmt').querySelector('.on').textContent, off = $('ex-official').checked;
@@ -632,31 +877,34 @@ window.pageInit = function () {
     const sv = $('sysview'); const on = sv.style.display !== 'block';
     sv.style.display = on ? 'block' : 'none'; world.style.display = on ? 'none' : 'block';
     $('b-sys').classList.toggle('on', on); cv.dataset.sys = on ? '1' : '';
-    if (on) sv.innerHTML = `<div class="banner info" style="position:absolute;left:12px;top:60px;z-index:5;max-width:520px"><span>ℹ</span><div class="grow"><b>시스템 전체 ERD · 조회 전용</b> — 요구사항관리의 모든 업무 영역. 영역을 더블클릭하면 편집 캔버스로 이동합니다.</div></div>
-      <div class="grp" style="left:80px;top:140px;width:300px;height:180px" ondblclick="document.getElementById('b-sys').click()"><h4>요구사항 · 프로젝트</h4><div class="caption muted">엔터티 ${E.length} · 미준수 6 · <span style="color:var(--p-hong)">2명 편집 중</span></div><div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:10px">${'<span style="width:40px;height:22px;border-radius:4px;background:var(--surface-2);border:1px solid var(--border)"></span>'.repeat(E.length)}</div></div>
+    const has = id => !!ent(id);
+    if (on) sv.innerHTML = `<div class="banner info" style="position:absolute;left:12px;top:60px;z-index:5;max-width:560px"><span>ℹ</span><div class="grow"><b>시스템 전체 ERD · 조회 전용</b> — 요구사항관리의 모든 업무 영역. 공통 영역의 엔터티는 <b>참조로 가져와</b> 관계를 맺을 수 있습니다.</div></div>
+      <div class="grp" style="left:80px;top:140px;width:300px;height:180px;cursor:pointer" ondblclick="document.getElementById('b-sys').click()"><h4>요구사항 · 프로젝트</h4><div class="caption muted">엔터티 ${E.length} · 미준수 6 · <span style="color:var(--p-hong)">2명 편집 중</span></div><div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:10px">${'<span style="width:40px;height:22px;border-radius:4px;background:var(--surface-2);border:1px solid var(--border)"></span>'.repeat(E.length)}</div><div class="caption faint" style="margin-top:8px">더블클릭하면 편집 캔버스로</div></div>
       <div class="grp" style="left:520px;top:180px;width:220px;height:130px"><h4>리스크</h4><div class="caption muted">엔터티 2 · 검토 중</div></div>
-      <div class="grp" style="left:300px;top:400px;width:260px;height:140px"><h4>공통 (참조)</h4><div class="caption muted">사원기본 · 부서기본 · 공통코드</div></div>
-      <svg style="position:absolute;inset:0;pointer-events:none" width="100%" height="100%"><g stroke="var(--fg-3)" fill="none"><path d="M380 240 H520" stroke-width="3"/><path d="M230 320 V470 H300" stroke-width="2"/><path d="M630 310 V440 H560" stroke-width="1"/></g><text x="430" y="232" font-size="11" fill="var(--fg-2)">관계 3</text></svg>
+      <div class="grp" style="left:300px;top:400px;width:340px"><h4>공통</h4><div class="caption muted" style="margin-bottom:6px">여러 업무 영역이 함께 쓰는 엔터티</div>
+        <div class="refrow"><b class="grow">사원기본</b><span class="mono faint">EMP_M</span><span class="badge">사용 중</span></div>
+        <div class="refrow"><b class="grow">부서기본</b><span class="mono faint">DEPT_M</span>${has('dept') ? '<span class="badge">참조 중</span>' : '<button class="btn sm" onclick="window.__importRef(\'dept\')">참조로 가져오기</button>'}</div>
+        <div class="refrow"><b class="grow">공통코드기본</b><span class="mono faint">CMMN_CD_M</span>${has('code') ? '<span class="badge">참조 중</span>' : '<button class="btn sm" onclick="window.__importRef(\'code\')">참조로 가져오기</button>'}</div></div>
+      <svg style="position:absolute;inset:0;pointer-events:none" width="100%" height="100%"><g stroke="var(--fg-3)" fill="none"><path d="M380 240 H520" stroke-width="3"/><path d="M230 320 V470 H300" stroke-width="2"/><path d="M630 310 V400" stroke-width="1"/></g><text x="430" y="232" font-size="11" fill="var(--fg-2)">관계 3</text></svg>
       <div class="cv-zoom" style="left:12px;bottom:12px"><span class="caption muted" style="padding:0 8px">15% · 영역 묶음 보기 · 확대하면 엔터티가 펼쳐집니다</span></div>`;
   };
 
   // ---- states
   if (q.get('state') === 'resolved') {
-    $('rate').textContent = '100%'; $('c-bad').textContent = '0'; $('c-ex').textContent = '3'; $('c-na').textContent = '0';
+    $('rate').textContent = '100%'; $('c-bad').textContent = '0'; $('c-ex').textContent = '3';
     E.forEach(e => e.a.forEach(a => { if (a.s === 'comb' || a.s === 'unreg') a.s = 'ex'; }));
     const b = $('confirm-btn'); b.classList.remove('disabled', 'has-tip'); b.classList.add('primary');
-    b.dataset.open = 'pn-confirm'; b.dataset.closeOthers = 'rp,pn-gate';
+    b.onclick = () => openPanel('pn-confirm');
     toast('표준 맞추기 적용 — 미준수 0건, 확정 신청을 할 수 있습니다');
   }
   if (locked) {
-    document.body.classList.add('locked'); cv.classList.add('locked'); $('ban-lock').style.display = 'flex';
+    document.body.classList.add('locked'); $('ban-lock').style.display = 'flex';
     $('ver').textContent = 'v5 검토 중'; $('rate').textContent = '100%'; $('c-bad').textContent = '0';
     E.forEach(e => e.a.forEach(a => { if (a.s === 'comb' || a.s === 'unreg') a.s = 'ex'; }));
     const b = $('confirm-btn'); b.textContent = '회수'; b.classList.remove('disabled', 'has-tip'); b.dataset.toast = '확정 신청을 회수했습니다 — 다시 편집할 수 있습니다'; b.dataset.toastType = 'info';
     remoteSel = null; $('avcap').textContent = '3명 접속 · 모두 조회 전용';
-    document.querySelector('.cv-toolbar').classList.add('locked');
   }
-  setTool('select'); applyView(); render(); setTimeout(() => { fit(); moveCursors(); }, 60);
+  setTool('select'); applyView(); render(); renderReview(); setTimeout(() => { fit(); moveCursors(); }, 60);
 };
 </script>
 </body>

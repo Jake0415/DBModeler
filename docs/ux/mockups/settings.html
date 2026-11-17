@@ -49,6 +49,17 @@
           <div class="caption muted" style="margin-top:8px">신청 조건: 미준수 0건(사유 있는 예외 제외)</div>
         </div>
       </div></div>
+    <div class="set-row"><div class="l"><b>도메인그룹</b><span>도메인을 묶는 분류. 사전 필터·도메인 신청·엑셀 가져오기에 쓰임</span></div>
+      <div>
+        <table class="tbl" style="border:1px solid var(--border)"><thead><tr><th>그룹</th><th>설명</th><th class="num">도메인</th><th>범위</th><th></th></tr></thead><tbody>
+          <tr><td><b>날짜</b></td><td class="caption">연월일·일시·시각</td><td class="num">6</td><td><span class="badge b-common">공통</span></td><td class="faint">공통 사전에서만 수정</td></tr>
+          <tr><td><b>번호</b></td><td class="caption">ID·순번·번호</td><td class="num">9</td><td><span class="badge b-common">공통</span></td><td class="faint">공통 사전에서만 수정</td></tr>
+          <tr><td><b>명칭</b></td><td class="caption">명·내용·설명</td><td class="num">7</td><td><span class="badge b-common">공통</span></td><td class="faint">공통 사전에서만 수정</td></tr>
+          <tr><td><b>코드</b></td><td class="caption">코드·여부·구분</td><td class="num">8</td><td><span class="badge b-org">기관</span></td><td><a href="#" data-toast="도메인그룹 수정은 사전 신청과 같은 결재선을 거칩니다" data-toast-type="info">수정</a></td></tr>
+          <tr><td><b>금액·수량</b></td><td class="caption">금액·수·율</td><td class="num">5</td><td><span class="badge b-org">기관</span></td><td><a href="#" data-toast="도메인그룹 수정은 사전 신청과 같은 결재선을 거칩니다" data-toast-type="info">수정</a></td></tr>
+        </tbody></table>
+        <div class="flex" style="margin-top:8px"><button class="btn sm" data-toast="도메인그룹 추가 신청을 만들었습니다 — DA 승인 후 반영" data-toast-type="info">+ 그룹 추가 신청</button><span class="caption muted">도메인이 있는 그룹은 삭제할 수 없고 ‘미사용’만 가능</span></div>
+      </div></div>
     <div class="set-row"><div class="l"><b>자기 승인</b><span>역할을 겸한 사용자가 자기 신청을 승인할 때</span></div><div>허용 · <b>사유 필수</b> · 감사 로그에 ‘자기 승인’ 표시</div></div>
     <div class="set-row"><div class="l"><b>메일 알림</b><span>결재선 담당자에게만 발송</span></div>
       <div><div class="field-row"><div class="field"><label>SMTP 서버</label><input class="input mono" value="mail.kda.go.kr:587"></div><div class="field"><label>발신 주소</label><input class="input mono" value="dbmodeler@kda.go.kr"></div></div>
@@ -65,6 +76,27 @@
         <div class="field"><label>테이블</label><input class="input mono" value="%(EntityStdName)%(ClassSuffix)"></div>
         <div class="field-row"><div class="field"><label>PK</label><input class="input mono" value="%(TableName)_PK"></div><div class="field"><label>FK</label><input class="input mono" value="%(ChildTable)_%(ParentTable)_FK%(Seq)"></div></div>
         <div class="card" style="background:var(--surface-2)"><div class="caption muted">미리보기 · 산출물기본 → 요구사항내역</div><div class="mono">DLVRBL_M · DLVRBL_M_PK · DLVRBL_M_RQRM_D_FK1</div></div>
+      </div></div>
+    <div class="set-row"><div class="l"><b>데이터타입 매핑</b><span>도메인의 논리 타입 → 이 시스템 DBMS의 물리 타입. 축약명은 도메인 이름 자동 생성에 쓰임(예: 연월일<b class="mono">C</b>8)</span></div>
+      <div>
+        <table class="tbl" style="border:1px solid var(--border)"><thead><tr><th>논리 타입</th><th>축약명</th><th>Oracle 19c</th><th>길이 조건</th><th>비고</th></tr></thead><tbody>
+          <tr><td>문자(고정)</td><td class="mono">C</td><td><input class="input mono" value="CHAR(n)" style="height:26px;width:130px"></td><td class="mono">1~2000</td><td></td></tr>
+          <tr><td>문자(가변)</td><td class="mono">V</td><td><input class="input mono" value="VARCHAR2(n)" style="height:26px;width:130px"></td><td class="mono">1~4000</td><td class="caption">4000 초과 → CLOB</td></tr>
+          <tr><td>숫자</td><td class="mono">N</td><td><input class="input mono" value="NUMBER(p,s)" style="height:26px;width:130px"></td><td class="mono">p 1~38</td><td></td></tr>
+          <tr><td>일시</td><td class="mono">T</td><td><input class="input mono" value="DATE" style="height:26px;width:130px"></td><td class="mono">—</td><td class="caption">밀리초 필요 시 TIMESTAMP</td></tr>
+          <tr><td>대용량 문자</td><td class="mono">L</td><td><input class="input mono" value="CLOB" style="height:26px;width:130px"></td><td class="mono">—</td><td></td></tr>
+        </tbody></table>
+        <div class="flex" style="margin-top:8px"><span class="caption muted">DBMS를 바꾸면 기본 매핑(PostgreSQL·Tibero·MySQL/MariaDB)을 불러온 뒤 고칠 수 있습니다.</span><span class="grow"></span><button class="btn sm" data-toast="기본 매핑으로 되돌렸습니다(Oracle 19c)" data-toast-type="info">기본값으로</button></div>
+      </div></div>
+    <div class="set-row"><div class="l"><b>시스템 컬럼</b><span>물리 반영 때 모든 테이블에 붙는 공통 컬럼. 표준 용어로만 지정</span></div>
+      <div>
+        <table class="tbl" style="border:1px solid var(--border)"><thead><tr><th>#</th><th>용어</th><th>컬럼명</th><th>타입</th><th>필수</th><th>표준 검사</th></tr></thead><tbody>
+          <tr><td class="mono">1</td><td>등록일시</td><td class="mono">REG_DT</td><td class="mono">DATE</td><td>✓</td><td><span class="badge">비대상</span></td></tr>
+          <tr><td class="mono">2</td><td>등록자ID</td><td class="mono">REGR_ID</td><td class="mono">VARCHAR2(20)</td><td>✓</td><td><span class="badge">비대상</span></td></tr>
+          <tr><td class="mono">3</td><td>수정일시</td><td class="mono">MDFCN_DT</td><td class="mono">DATE</td><td></td><td><span class="badge">비대상</span></td></tr>
+          <tr><td class="mono">4</td><td>수정자ID</td><td class="mono">MDFR_ID</td><td class="mono">VARCHAR2(20)</td><td></td><td><span class="badge">비대상</span></td></tr>
+        </tbody></table>
+        <div class="flex" style="margin-top:8px"><button class="btn sm" data-toast="사전에서 표준 용어를 골라 시스템 컬럼을 추가합니다(목업)" data-toast-type="info">+ 용어로 추가</button><label class="flex caption"><input type="checkbox" checked> 논리 모델에는 표시하지 않음</label><label class="flex caption"><input type="checkbox" checked> 코드성 테이블(_R)은 등록 컬럼만</label></div>
       </div></div>
     <div class="set-row"><div class="l"><b>모델 확정 최종 승인</b><span>이 시스템의 모델 확정에 기관 담당자 승인 추가</span></div><div class="flex"><span class="toggle on"></span>사용</div></div>
     <div class="set-row"><div class="l"><b>업무 영역</b></div><div><span class="badge">요구사항 · 프로젝트</span> <span class="badge">리스크</span> <button class="btn ghost sm">+ 추가</button></div></div>
@@ -108,6 +140,18 @@
       <tr><td>설명</td><td></td><td class="mono">1000자</td><td>제한 없음</td><td><span class="badge b-warning">경고</span></td></tr>
     </tbody></table>
     <div class="banner info" style="margin-top:12px"><span>ℹ</span><div>저장하면 이전 기준으로 검증한 엑셀은 다시 검증해야 합니다. 이름 길이 경고는 각 시스템의 DBMS 기준을 따릅니다.</div></div>
+
+    <h3 style="font-size:15px;margin:28px 0 4px">표준 제외 규칙</h3>
+    <div class="caption muted" style="margin-bottom:12px">여기에 해당하면 자동으로 <b>비대상</b>이 되어 준수율 계산에서 빠집니다. 모델에서 직접 비대상으로 바꾼 항목은 사유가 남고 확정 결재에서 DA가 확인합니다.</div>
+    <div class="set-row"><div class="l"><b>엔터티</b><span>유형으로 제외</span></div>
+      <div class="flex" style="flex-wrap:wrap;gap:12px"><label class="flex"><input type="checkbox" checked> 가상(Pseudo)</label><label class="flex"><input type="checkbox" checked> 외부(External)</label><label class="flex"><input type="checkbox" checked> 공통 참조</label><label class="flex"><input type="checkbox"> 삭제 예정(Drop)</label></div></div>
+    <div class="set-row"><div class="l"><b>속성·컬럼</b><span>유형·이름으로 제외</span></div>
+      <div>
+        <div class="flex" style="flex-wrap:wrap;gap:12px;margin-bottom:8px"><label class="flex"><input type="checkbox" checked> 시스템 컬럼</label><label class="flex"><input type="checkbox" checked> FK(부모가 표준이면 상속)</label><label class="flex"><input type="checkbox"> 가상 속성</label></div>
+        <div class="field"><label>이름 패턴(쉼표로 구분)</label><input class="input mono" value="*_BAK, TMP_*, ETL_*"></div>
+      </div></div>
+    <div class="set-row"><div class="l"><b>논리 → 물리</b></div><div><label class="flex"><input type="checkbox" checked> 논리에서 비대상이면 물리에서도 비대상</label></div></div>
+    <div class="set-row"><div class="l"><b>직접 지정</b><span>모델 [표 보기]·[표준 맞추기]에서 비대상 지정</span></div><div>허용 · <b>사유 필수</b> · 현재 <span class="mono">1</span>건 (<a href="standardize.html?f=na">목록 보기</a>)</div></div>
   </div>
 
   </div></div>
@@ -116,6 +160,7 @@
 <script>
 window.pageInit = function () {
   if (location.hash === '#system') document.querySelector('.tabs button[data-tab="sys"]').click();
+  // C-legacy hash support; #sys / #rules handled in app.js
 };
 </script>
 </body>

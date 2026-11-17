@@ -30,7 +30,7 @@
     <span class="chip" data-group="s" data-filter="unreg">! 미등록 단어 <span class="n">3</span></span>
     <span class="chip" data-group="s" data-filter="sus">? 의심 <span class="n">1</span></span>
     <span class="chip" data-group="s" data-filter="ex">◆ 예외 <span class="n">2</span></span>
-    <span class="chip" data-group="s" data-filter="na">– 비대상 <span class="n">2</span></span>
+    <span class="chip" data-group="s" data-filter="na">– 비대상 <span class="n">3</span></span>
     <span class="grow"></span>
     <span class="caption muted">상태별로 골라 한 번에 처리합니다</span>
   </div>
@@ -52,18 +52,28 @@
             <tr class="row-success" data-f="ok"><td><input type="checkbox" checked></td><td><span class="badge b-success">✓ 표준</span></td><td>프로젝트기본</td><td>프로젝트ID</td><td class="mono">PRJ_ID</td><td class="arrow">=</td><td>프로젝트ID</td><td class="mono">PRJ_ID</td><td class="mono">ID V10</td><td class="caption muted">변경 없음</td></tr>
             <tr data-f="ex"><td><input type="checkbox" disabled></td><td><span class="badge b-violet">◆ 예외</span></td><td>요구사항내역</td><td>요청고객명</td><td class="mono">REQ_CUST_NM</td><td class="arrow">·</td><td>요청고객명</td><td class="mono faint">REQST_CUST_NM</td><td class="mono">명V100</td><td class="caption">사유: 대외 연계 컬럼명 유지</td></tr>
             <tr data-f="ex"><td><input type="checkbox" disabled></td><td><span class="badge b-violet">◆ 예외</span></td><td>프로젝트기본</td><td>프로젝트종료일</td><td class="mono">PRJ_ENDDD</td><td class="arrow">·</td><td>프로젝트종료일자</td><td class="mono faint">PRJ_END_YMD</td><td class="mono">연월일C8</td><td class="caption">사유: 운영 배치 영향</td></tr>
-            <tr class="row-mute" data-f="na"><td><input type="checkbox" disabled></td><td><span class="badge">– 비대상</span></td><td>요구사항내역</td><td>등록자ID</td><td class="mono">REG_ID</td><td class="arrow">·</td><td colspan="3" class="faint">시스템 속성 · 표준 제외 규칙</td><td></td></tr>
+            <tr class="row-mute" data-f="na"><td><input type="checkbox" disabled></td><td><span class="badge">– 비대상</span></td><td>요구사항내역</td><td>등록자ID</td><td class="mono">REG_ID</td><td class="arrow">·</td><td colspan="3" class="faint">시스템 컬럼 · <a href="settings.html#rules">표준 제외 규칙</a>(자동)</td><td></td></tr>
+            <tr class="row-mute" data-f="na"><td><input type="checkbox" disabled></td><td><span class="badge">– 비대상</span></td><td>프로젝트기본</td><td>이관작업키</td><td class="mono">ETL_JOB_KEY</td><td class="arrow">·</td><td colspan="3" class="faint">이름 패턴 <span class="mono">ETL_*</span> · 표준 제외 규칙(자동)</td><td></td></tr>
           </tbody>
         </table>
       </div>
       <div class="rp-foot" style="background:var(--surface)">
         <div class="caption"><b>미리보기</b> · 이름 변경 <b class="mono">2</b> · 용어 신청 묶음 <b class="mono">4</b>건 · 후보 등록 <b class="mono">2</b>건 · 의심 확인 필요 <b class="mono">1</b></div>
         <span class="grow"></span>
+        <button class="btn" data-open="mo-na">선택 항목 비대상 지정</button>
         <button class="btn" data-open="mo-ex">선택 항목 예외로 유지</button>
         <a class="btn primary" href="model.html?state=resolved">8건 적용</a>
       </div>
     </div>
   </div>
+  <div class="overlay" id="mo-na"><div class="modal"><div class="m-head"><h3>비대상으로 지정 (선택 항목)</h3></div>
+    <div class="m-body">
+      <div class="caption muted" style="margin-bottom:8px">비대상은 표준 검사와 준수율 계산에서 빠집니다. <b>예외</b>(표준을 알지만 유지)와 달리 처음부터 표준화 대상이 아닌 항목에 씁니다.</div>
+      <div class="field"><label>구분</label><select class="input"><option>연계·이관용 임시 컬럼</option><option>외부 시스템 소유 컬럼</option><option>기타</option></select></div>
+      <div class="field"><label>사유 * <span class="faint">모델 확정 결재에서 DA가 검토합니다</span></label><textarea class="input" rows="2">외부 ETL 도구가 쓰는 작업 키</textarea></div>
+      <label class="flex caption"><input type="checkbox"> 같은 이름 패턴을 <a href="settings.html#rules">표준 제외 규칙</a>에 추가 신청</label>
+    </div>
+    <div class="m-foot"><button class="btn" data-close="mo-na">취소</button><button class="btn primary" data-close="mo-na" data-toast="선택 항목을 비대상으로 지정했습니다 — 준수율 계산에서 빠집니다" data-toast-type="info">비대상 지정</button></div></div></div>
   <div class="overlay" id="mo-ex"><div class="modal"><div class="m-head"><h3>예외로 유지 (선택 1건)</h3></div>
     <div class="m-body"><div class="field"><label>사유 * <span class="faint">모델 확정 결재에서 DA가 검토합니다</span></label><textarea class="input" rows="3"></textarea></div></div>
     <div class="m-foot"><button class="btn" data-close="mo-ex">취소</button><button class="btn primary" data-close="mo-ex" data-toast="예외로 기록했습니다" data-toast-type="violet">예외 기록</button></div></div></div>

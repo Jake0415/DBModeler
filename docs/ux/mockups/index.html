@@ -18,7 +18,8 @@
 </head>
 <body>
 <div class="wrap">
-  <div class="flex" style="margin-bottom:4px"><span class="brand-mark" style="width:24px;height:24px">DB</span><h1 style="font-size:24px;letter-spacing:-.6px">DBModeler 클릭 목업 v2</h1></div>
+  <div class="flex" style="margin-bottom:4px"><span class="brand-mark" style="width:24px;height:24px">DB</span><h1 style="font-size:24px;letter-spacing:-.6px">DBModeler 클릭 목업 v3</h1></div>
+  <p class="caption" style="margin:4px 0 0">v3 (2026-11-17): DA# 비교 보완 13개 — 제약·인덱스, 타입 매핑, 표준 제외 규칙·비대상, 도메인 신청, 산출물, 표 보기·일괄편집·찾기/바꾸기, 보안 속성, 모델 검토, 시스템 컬럼, 서브타입·배타관계, 도메인그룹, 공통 엔터티 참조, 메모·다시 실행·DBMS 비교 — <a href="../05-mockup-vs-da.md">05-mockup-vs-da.md</a></p>
   <p class="caption" style="margin:4px 0 0">v2 (2026-11-17): 모델 화면과 ERD 캔버스 통합, 실시간 공동 편집·내보내기 표시, 고정폭 글꼴의 한글 깨짐 수정 — <a href="../04-mockup-v2-review.md">04-mockup-v2-review.md</a></p>
   <p class="muted" style="margin:8px 0 24px">1920×1080 기준 프레임입니다. 각 화면 상단 오른쪽의 <b>목업 프레임</b>에서 1600 확인 프레임과 다크 테마로 바꿀 수 있습니다. 데이터는 요구사항관리 샘플이고 저장되지 않습니다.
   근거: <a href="../02-flows.md">02-flows.md</a> · <a href="../01-design-guide.md">01-design-guide.md</a></p>
@@ -41,16 +42,17 @@
   <table class="tbl" style="border:1px solid var(--border);border-radius:8px;overflow:hidden">
     <thead><tr><th>ID</th><th>화면</th><th>링크</th><th>1600 프레임</th></tr></thead>
     <tbody>
-      <tr><td class="mono">SC-10 · PN-11 · PN-12</td><td>사전 통합 검색 · 상세 · 등록 신청</td><td><a href="dictionary.html">열기</a></td><td><a href="dictionary.html?w=1600">1600</a></td></tr>
+      <tr><td class="mono">SC-10 · PN-11 · PN-12</td><td>사전 통합 검색 · 상세 · 등록 신청(단어·도메인·용어) · 도메인그룹 필터</td><td><a href="dictionary.html">열기</a> · <a href="dictionary.html?req=domain">도메인 신청</a></td><td><a href="dictionary.html?w=1600">1600</a></td></tr>
       <tr><td class="mono">SC-13</td><td>엑셀 가져오기 (6단계)</td><td><a href="excel-import.html">열기</a> · <a href="excel-import.html?step=5">결과 검토</a></td><td><a href="excel-import.html?step=5&w=1600">1600</a></td></tr>
       <tr><td class="mono">SC-14</td><td>후보 큐</td><td><a href="candidates.html">열기</a></td><td></td></tr>
       <tr><td class="mono">SC-20 · PN-21 · MO-22/23</td><td>결재함 · 문서 상세 · 자기 승인 · 반려</td><td><a href="approvals.html">열기</a></td><td><a href="approvals.html?w=1600"><b>1600 확인</b></a></td></tr>
       <tr><td class="mono">SC-30</td><td>시스템 홈</td><td><a href="system.html">열기</a></td><td></td></tr>
       <tr><td class="mono">SC-31 · PN-32/33/35/38</td><td>모델 화면 = ERD 캔버스(IE 표기·관계 2단계·LOD·논리/물리 별도 배치·시스템 전체) · 사전 패널(끌어 놓기) · 속성 패널 · 게이트 A · 확정 신청 · 공동 편집 · 내보내기</td><td><a href="model.html">열기</a> · <a href="model.html?state=resolved">해결 후</a> · <a href="model.html?state=review">검토 중</a></td><td><a href="model.html?w=1600"><b>1600 확인</b></a></td></tr>
-      <tr><td class="mono">SC-34</td><td>표준 맞추기</td><td><a href="standardize.html">열기</a></td><td><a href="standardize.html?w=1600">1600</a></td></tr>
+      <tr><td class="mono">SC-34</td><td>표준 맞추기 · 비대상 지정</td><td><a href="standardize.html">열기</a></td><td><a href="standardize.html?w=1600">1600</a></td></tr>
       <tr><td class="mono">SC-36</td><td>가져오기 (엑셀·DDL)</td><td><a href="import.html">열기</a></td><td></td></tr>
-      <tr><td class="mono">SC-37</td><td>DDL 출력 · 게이트 B</td><td><a href="ddl.html">열기</a></td><td></td></tr>
-      <tr><td class="mono">SC-40~43</td><td>설정 — 기관 · 시스템 · 사용자·역할 · 검수 기준</td><td><a href="settings.html">열기</a></td><td></td></tr>
+      <tr><td class="mono">SC-37 · PN-37</td><td>DDL 출력 · 게이트 B · DBMS 비교</td><td><a href="ddl.html">열기</a></td><td></td></tr>
+      <tr><td class="mono">SC-38</td><td>산출물 — 테이블 정의서 · 준수검사 · 용어 사용 · 개인정보 · ERD · 검토 · 변경 이력</td><td><a href="outputs.html">열기</a></td><td><a href="outputs.html?w=1600">1600</a></td></tr>
+      <tr><td class="mono">SC-40~43</td><td>설정 — 기관(도메인그룹) · 시스템(타입 매핑·시스템 컬럼) · 사용자·역할 · 검수 기준(표준 제외 규칙)</td><td><a href="settings.html">열기</a></td><td></td></tr>
     </tbody>
   </table>
   <p class="caption faint" style="margin-top:16px">로컬 실행: <span class="mono">powershell -File docs/ux/mockups/serve.ps1</span> → http://localhost:5178</p>
