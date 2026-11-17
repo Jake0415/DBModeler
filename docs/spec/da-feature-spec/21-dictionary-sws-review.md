@@ -1,6 +1,8 @@
 # 표준 사전 구조 검토 — sws-data-governance 적용 여부 (Q-1 재검토)
 
-> 상태: **검토안** (2026-11-17). 결정 전.
+> **결정 (2026-11-17, 사용자)**: SWS의 **메타데이터 부분 시나리오만 참조**하여 DBModeler에 맞게 **새로 구현**한다. SWS 코드·DB·API는 공유·복사하지 않는다(§5의 A/B/C 안은 채택하지 않음). 설계는 [30-metadata-design.md](30-metadata-design.md). 아래 본문은 결정 전 검토 기록으로 남긴다.
+>
+> 상태: 검토안 (2026-11-17).
 > 요청: Q-1의 사전 기반을 docuCBD 대신 `D:\project\sws-data-governance`(이하 **sws**)의 사전 구조로 가져오는 안을 검토한다.
 > 근거: sws 저장소 코드·문서를 읽기 전용으로 확인(`backend/app/models/*`, `services/dictionary_rules.py`, `standard_compliance_service.py`, `docs/getting-started/scope.md`, `docs/architecture/modeling-redesign.md`, `docs/user-guide/metadata-terminology.md`). 표의 파일 경로는 sws 저장소 기준이다.
 > 연관: [20-priority.md](20-priority.md) §3 Q-1~Q-7 · [04-standard.md](04-standard.md) ST-R01~R10.
@@ -93,7 +95,9 @@
 | **B. sws 사전을 서비스로 분리해 API로 사용** | DBModeler는 별도 앱, 사전은 sws API 호출 | 제품 독립성 | 토큰 인증·프로젝트 범위 API 신설 필요. 결재·후보 큐가 두 앱에 걸침 |
 | **C. 스키마·규칙 코드를 복사해 DBModeler에 내장** | sws 모델·서비스를 가져와 독자 운영 | 초기 속도 | 두 사전이 갈라짐(이중 유지보수), 시드·규칙 갱신 중복 |
 
-**제안: A를 우선 검토한다.**
+> **결정으로 대체됨**: 어느 안도 채택하지 않는다. "D. 메타데이터 시나리오만 참조해 새로 구현"으로 결정했다 → [30-metadata-design.md](30-metadata-design.md). C(코드 복사)와 다르게 코드·스키마를 가져오지 않고 시나리오·규칙만 기준으로 삼으므로 이중 유지보수 문제가 없다.
+
+(결정 전 제안: A를 우선 검토한다.)
 - sws는 이미 "표준사전 기반 모델링·ERD·DDL·표준화 검수"를 갖고 있다.
 - DA# 분석 결과 W1에 필요한 사전·결재·업로드·DDL 기반의 상당 부분이 sws에 있다.
 - DBModeler가 새로 만들 것은 **대화형 다이어그램 편집기**, **"표준 맞추기" 일괄 흐름**, **엔터티 용어·명명 템플릿**, **게이트 A·B**, **프로젝트 세트**로 좁혀진다.

@@ -215,6 +215,8 @@ Pseudo·External·Drop·Import 엔터티, Pseudo·Drop·Additional·System 속�
 
 ## 4. 웹 버전 기능 요구사항 (표준 영역, 1차안)
 
+> 아래 요구사항의 상세 시나리오·데이터 모델은 [30-metadata-design.md](30-metadata-design.md)(SWS 메타데이터 시나리오 참조 재구현)에 있다. §1의 DA# 사전 스키마는 비교용 As-Is로만 남긴다.
+
 | ID | 요구사항 | 대응 문제 | 우선 |
 |---|---|---|---|
 | ST-R01 | 사전은 서버 측 하나, 사용자 연결 단계 없음 | F-01~F-03 | P0 |

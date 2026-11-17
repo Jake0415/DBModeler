@@ -308,5 +308,6 @@ S6 검증·산출                                              준수검사(준�
 | 4차 ✅ 완료 | 물리·명명규칙·산출 — PH-01~08, OUT-01~05, F-38~F-41(U-02 원인 확정), 요구사항 PH-R01~R06·OUT-R01~R05 | [03-physical.md](03-physical.md), [05-output.md](05-output.md) |
 | 5차 ✅ 완료 | 다이어그램·리버스·저장소 — DG-01~07, RV-01~05, RP-01~03, F-42~F-47, 요구사항 DG-R·RV-R·RP-R | [01](01-model-diagram.md), [06](06-reverse.md), [07](07-repository.md) |
 | 마무리 ✅ | **요구사항 45개 통합 우선순위(W0~W3) + 열린 질문 결정안 + 공통 UI 규칙** | [20-priority.md](20-priority.md) |
-| 검토 | 사전 기반을 sws-data-governance로 — 적합성·갭 5개·통합 방식 A/B/C | [21-dictionary-sws-review.md](21-dictionary-sws-review.md) |
+| 검토 | 사전 기반을 sws-data-governance로 — 적합성·갭 5개 (통합 방식은 "시나리오 참조 재구현"으로 결정) | [21-dictionary-sws-review.md](21-dictionary-sws-review.md) |
+| 설계 v1 | **메타데이터(표준 사전) 설계** — SWS 메타데이터 시나리오 참조 재구현, 개념 모델·시나리오 MD-01~55·SWS 대비 변경 | [30-metadata-design.md](30-metadata-design.md) |
 | 남음 | 옵션 상세(`08`, 2.9절로 대부분 커버), 배타 관계·서브타입 Transforms·DB 리버스(DB 필요) 재확인 | — |
