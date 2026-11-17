@@ -124,4 +124,5 @@
 3. ~~화면 흐름도~~ ✅ [02-flows.md](02-flows.md)
 4. ~~클릭 목업~~ ✅ [mockups/index.html](mockups/index.html) — 12개 화면, 교차 시나리오 T1~T5, 1920 기준 + 1600 확인 프레임, 라이트/다크. 실행: `powershell -File docs/ux/mockups/serve.ps1` → http://localhost:5178
 5. ~~UX-Q1 확정~~ ✅ 1920 기본·최소 1600.
-6. 다음: 목업 피드백 반영 v2, 또는 ERD 편집기(캔버스) 화면 설계.
+6. ERD 편집기(캔버스) 화면 설계 ✅ — `docs/ux/03-erd-editor.md`, 목업 `mockups/erd.html`.
+7. 다음: 목업 피드백 반영 v2, ERD-Q1(캔버스 라이브러리 스파이크)·ERD-Q2·ERD-Q3 결정.

@@ -1,0 +1,431 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ERD 편집기 · DBModeler 목업</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="assets/app.css">
+<script src="assets/app.js"></script>
+<style>
+  #cv { flex:1; position:relative; overflow:hidden; background-color:var(--bg); background-image:radial-gradient(var(--border) 1px, transparent 1px); background-size:16px 16px; cursor:default; }
+  #cv.tool-entity, #cv.tool-rel { cursor:crosshair; }
+  #cv.panning { cursor:grabbing; }
+  #world { position:absolute; left:0; top:0; transform-origin:0 0; }
+  #edges { position:absolute; left:0; top:0; overflow:visible; pointer-events:none; }
+  #edges path.rel { pointer-events:stroke; cursor:pointer; }
+  #edges path.hit { stroke:transparent; stroke-width:16; fill:none; pointer-events:stroke; cursor:pointer; }
+  .node { position:absolute; min-width:180px; max-width:320px; background:var(--surface); border:1px solid var(--border-strong); border-radius:8px; font-size:12px; box-shadow:var(--shadow-4); user-select:none; }
+  .node.sel { border-color:var(--ink); box-shadow:0 0 0 1px var(--ink), var(--shadow-4); }
+  .node.relsrc { border-color:var(--info); box-shadow:0 0 0 2px var(--info); }
+  .node .nh { display:flex; align-items:center; gap:6px; padding:6px 10px; border-bottom:1px solid var(--border); font-weight:600; font-size:13px; cursor:move; }
+  .node .nh .cls { font:600 10px var(--font-mono); border:1px solid var(--border-strong); border-radius:4px; padding:0 4px; color:var(--fg-2); }
+  .node .nh .sub { font:400 11px var(--font-mono); color:var(--fg-3); margin-left:auto; }
+  .node .pk { border-bottom:1px solid var(--border); }
+  .node .ar { display:flex; align-items:center; gap:6px; padding:2px 10px; min-height:20px; white-space:nowrap; }
+  .node .ar .p { margin-left:auto; padding-left:12px; font:400 11px var(--font-mono); color:var(--fg-3); }
+  .node .ar.fk .n { font-style:italic; color:var(--info-deep); }
+  .node .ar input { border:1px solid var(--ink); border-radius:4px; font:inherit; padding:1px 4px; width:150px; background:var(--surface); color:var(--fg); }
+  .node .more { padding:2px 10px 4px; color:var(--fg-3); display:none; }
+  .node .ar .dot-i { flex:0 0 8px; }
+  .s-ok { background:var(--success); } .s-comb { background:var(--info); } .s-unreg { background:var(--warning); } .s-ex { background:var(--violet); } .s-na { background:var(--border-strong); }
+  /* LOD */
+  #world.lod-mid .node .ar:not(.pkr) { display:none; } #world.lod-mid .node .more { display:block; }
+  #world.lod-mid .relname { display:none; }
+  #world.lod-low .node .ar, #world.lod-low .node .more, #world.lod-low .node .nh .sub { display:none; }
+  #world.lod-low .node .nh { border-bottom:0; font-size:15px; padding:10px 12px; }
+  #world.lod-low .relname { display:none; }
+  .relname { font:400 11px var(--font-sans); fill:var(--fg-2); paint-order:stroke; stroke:var(--bg); stroke-width:4px; }
+  .cv-toolbar { position:absolute; top:12px; left:50%; transform:translateX(-50%); display:flex; gap:2px; align-items:center; background:var(--surface); border-radius:8px; box-shadow:var(--shadow-4); padding:4px; z-index:10; }
+  .cv-toolbar .tb { height:30px; min-width:30px; padding:0 8px; border:0; border-radius:6px; background:none; color:var(--fg); font:500 13px var(--font-sans); cursor:pointer; display:flex; align-items:center; gap:4px; white-space:nowrap; flex:0 0 auto; }
+  .cv-toolbar .tb:hover { background:var(--surface-2); }
+  .cv-toolbar .tb.on { background:var(--ink); color:var(--on-ink); }
+  .cv-toolbar .sep { width:1px; height:20px; background:var(--border); margin:0 4px; }
+  .cv-toolbar kbd { font-size:10px; padding:0 3px; }
+  .relmenu { position:absolute; top:44px; left:0; background:var(--surface); border-radius:8px; box-shadow:var(--shadow-5); padding:4px; display:none; z-index:11; width:200px; }
+  .relmenu.open { display:block; }
+  .relmenu div { padding:6px 8px; border-radius:4px; cursor:pointer; font-size:13px; display:flex; justify-content:space-between; }
+  .relmenu div:hover, .relmenu div.on { background:var(--surface-2); }
+  .cv-zoom { position:absolute; left:12px; bottom:12px; display:flex; gap:4px; align-items:center; background:var(--surface); border-radius:8px; box-shadow:var(--shadow-4); padding:4px; z-index:10; font-size:12px; }
+  .cv-zoom button { height:26px; min-width:26px; border:0; background:none; border-radius:6px; cursor:pointer; color:var(--fg); font:500 13px var(--font-sans); }
+  .cv-zoom button:hover { background:var(--surface-2); }
+  .cv-mini { position:absolute; right:12px; bottom:12px; width:180px; height:120px; background:var(--surface); border-radius:8px; box-shadow:var(--shadow-4); z-index:10; overflow:hidden; }
+  .cv-hint { position:absolute; left:50%; top:56px; transform:translateX(-50%); background:var(--ink); color:var(--on-ink); font-size:12px; padding:6px 10px; border-radius:6px; z-index:10; display:none; }
+  .cv-banner { position:absolute; left:12px; top:60px; z-index:10; display:none; flex-direction:column; gap:6px; max-width:420px; }
+  .pop { position:absolute; z-index:12; background:var(--surface); border-radius:8px; box-shadow:var(--shadow-5); padding:10px; font-size:13px; width:260px; }
+  .acl { position:absolute; z-index:13; background:var(--surface); border-radius:6px; box-shadow:var(--shadow-5); padding:4px; width:280px; font-size:12px; }
+  .acl .o { display:grid; grid-template-columns:1fr auto; padding:4px 6px; border-radius:4px; cursor:pointer; gap:6px; }
+  .acl .o.on, .acl .o:hover { background:var(--surface-2); }
+  .acl .o .m { font-family:var(--font-mono); color:var(--fg-3); }
+  .grp { position:absolute; border:1px dashed var(--border-strong); border-radius:12px; background:var(--surface); padding:14px; cursor:pointer; }
+  .grp h4 { margin:0 0 4px; font-size:16px; }
+  #sysview { display:none; position:absolute; inset:0; }
+  #cv[data-sys="1"] #pbanner, #cv[data-sys="1"] > .cv-zoom, #cv[data-sys="1"] .cv-mini { display:none !important; }
+  .side { width:var(--dictpanel); }
+</style>
+</head>
+<body data-page="model">
+<div id="app">
+<div id="content" class="page">
+  <div class="page-header">
+    <span class="crumb"><a href="system.html">요구사항관리</a> › <b>요구사항 · 프로젝트</b></span>
+    <span class="seg" id="lp"><button class="on" data-v="L">논리</button><button data-v="P">물리</button></span>
+    <span class="badge mono">v5 작업 중</span>
+    <div class="actions"><a class="btn" href="import.html">가져오기 ▾</a><a class="btn" href="ddl.html">DDL</a><a class="btn has-tip disabled" data-tip="미준수 6건 — 표준 맞추기에서 해결">확정 신청</a></div>
+  </div>
+  <div class="compbar">
+    <span class="caption muted">준수율</span><span class="rate">92%</span>
+    <a class="stat" href="#" id="jump-bad"><span class="dot-i s-unreg"></span>미준수 <b>6</b></a>
+    <a class="stat" href="#"><span class="dot-i s-ex"></span>예외 <b>2</b></a>
+    <span class="grow"></span><span class="caption faint" id="sel-info">선택 없음</span>
+    <a class="btn sm primary" href="standardize.html">표준 맞추기</a>
+  </div>
+  <div class="page-body">
+    <div class="side" id="side">
+      <div style="padding:10px 12px;border-bottom:1px solid var(--border)">
+        <div class="flex" style="margin-bottom:8px"><b style="font-size:13px">사전</b><span class="grow"></span><button class="btn ghost sm" data-toggle="side">접기</button></div>
+        <input class="input" placeholder="용어 검색 · 끌어서 엔터티에 놓기" style="height:28px">
+      </div>
+      <div class="scroll" style="font-size:13px">
+        <div style="padding:8px 12px;border-bottom:1px solid var(--border)" draggable="true" data-term="산출물제출일자"><b>산출물제출일자</b> <span class="badge b-info">신청 중</span><div class="mono faint" style="font-size:12px">DLVRBL_SBMT_DATE · 연월일C8</div></div>
+        <div style="padding:8px 12px;border-bottom:1px solid var(--border)" draggable="true" data-term="제출일자"><b>제출일자</b> <span class="badge b-common">공통</span><div class="mono faint" style="font-size:12px">SBMT_YMD · 연월일C8</div></div>
+        <div style="padding:8px 12px;border-bottom:1px solid var(--border)" draggable="true" data-term="등록일시"><b>등록일시</b> <span class="badge b-common">공통</span><div class="mono faint" style="font-size:12px">REG_DT · 일시T</div></div>
+      </div>
+    </div>
+
+    <div id="cv" tabindex="0">
+      <div class="cv-toolbar">
+        <button class="tb on" data-tool="select" title="선택 (V)">↖ <kbd>V</kbd></button>
+        <button class="tb" data-tool="entity" title="엔터티 (E)">▭ 엔터티 <kbd>E</kbd></button>
+        <span style="position:relative"><button class="tb" data-tool="rel" id="relbtn" title="관계 (R)">⟜ <span id="reltype">1:N 비식별</span> ▾ <kbd>R</kbd></button>
+          <div class="relmenu" id="relmenu">
+            <div data-rt="nonid" class="on">1:N 비식별 <span class="faint">점선</span></div>
+            <div data-rt="id">1:N 식별 <span class="faint">실선</span></div>
+            <div data-rt="one">1:1</div>
+            <div data-rt="mn">M:N <span class="faint">해소 필요</span></div>
+          </div></span>
+        <button class="tb" data-tool="memo" title="메모 (M)">✎</button>
+        <span class="sep"></span>
+        <button class="tb" id="b-layout" title="자동 배치">자동 배치</button>
+        <button class="tb" id="b-sys" title="시스템 전체 ERD (조회)">시스템 전체</button>
+        <span class="sep"></span>
+        <button class="tb" id="b-undo" title="실행 취소 (Ctrl+Z)">↶</button>
+        <button class="tb" title="다시 실행">↷</button>
+      </div>
+      <div class="cv-hint" id="hint"></div>
+      <div class="cv-banner" id="pbanner">
+        <div class="banner warning"><span>!</span><div class="grow"><b>게이트 A · 경고 3</b> — 미매핑 2 · 타입 미정 1. 진행은 막지 않습니다.</div><a class="btn sm" href="model.html">점검 보기</a></div>
+        <div class="banner info"><span>●</span><div class="grow"><b>논리 변경 2건 대기</b> — 물리에 자동 반영하지 않습니다.</div><button class="btn sm" data-toast="논리 변경 2건을 물리에 반영했습니다 · 컬럼 +2" data-toast-type="info">미리보기 · 반영</button></div>
+      </div>
+      <div id="world"><svg id="edges" width="2400" height="1600">
+        <defs>
+          <marker id="m-many" viewBox="0 0 12 12" refX="12" refY="6" markerWidth="12" markerHeight="12" orient="auto-start-reverse" markerUnits="userSpaceOnUse"><path d="M12,0 L1,6 L12,12 M1,6 L12,6 M0,2 V10" fill="none" stroke="var(--fg-2)" stroke-width="1.2"/></marker>
+          <marker id="m-one" viewBox="0 0 12 12" refX="12" refY="6" markerWidth="12" markerHeight="12" orient="auto-start-reverse" markerUnits="userSpaceOnUse"><path d="M6,1 V11 M10,1 V11" fill="none" stroke="var(--fg-2)" stroke-width="1.2"/></marker>
+        </defs>
+        <g id="eg"></g><path id="preview" d="" fill="none" stroke="var(--info)" stroke-width="1.5" stroke-dasharray="4 3"/>
+      </svg><div id="nodes"></div></div>
+      <div id="sysview"></div>
+      <div class="cv-zoom"><button id="zo">−</button><span id="zl" class="mono" style="width:40px;text-align:center">100%</span><button id="zi">+</button><button id="zfit" title="전체 맞춤 (Shift+1)">맞춤</button>
+        <select class="input" id="lodsel" style="height:26px;width:120px;font-size:12px"><option value="auto">표시: 자동</option><option value="full">전체 속성</option><option value="mid">키만</option><option value="low">이름만</option></select></div>
+      <div class="cv-mini"><svg id="mini" width="180" height="120"></svg></div>
+    </div>
+
+    <aside class="rpanel open" id="rp">
+      <div class="rp-head"><h2 id="rp-title">업무 영역 요약</h2><div class="rp-sub" id="rp-sub">요구사항 · 프로젝트</div></div>
+      <div class="rp-body" id="rp-body"></div>
+    </aside>
+  </div>
+</div>
+</div>
+<script>
+window.pageInit = function () {
+  const TERMS = [
+    { n: '산출물제출일자', p: 'DLVRBL_SBMT_DATE', t: 'CHAR(8)', s: 'comb', tag: '신청 중' },
+    { n: '제출일자', p: 'SBMT_YMD', t: 'CHAR(8)', s: 'ok', tag: '공통' },
+    { n: '등록일시', p: 'REG_DT', t: 'DATE', s: 'ok', tag: '공통' },
+    { n: '산출물버전번호', p: 'DLVRBL_VER_NO', t: 'NUMBER(5)', s: 'ok', tag: '기관' },
+    { n: '비고내용', p: 'RMRK_CN', t: 'VARCHAR2(1000)', s: 'ok', tag: '공통' }
+  ];
+  const E = [
+    { id: 'prj', n: '프로젝트기본', p: 'PRJ_M', c: 'M', x: 60, y: 60, px: 60, py: 60, a: [
+      { n: '프로젝트ID', p: 'PRJ_ID', t: 'VARCHAR2(10)', pk: 1, s: 'ok' }, { n: '프로젝트명', p: 'PRJ_NM', t: 'VARCHAR2(100)', s: 'ok' }, { n: '발주처명', p: 'ORDR_OFC_NM', t: 'VARCHAR2(100)', s: 'ok' }, { n: '프로젝트종료일', p: 'PRJ_ENDDD', t: 'CHAR(8)', s: 'ex' }, { n: '수주금액', p: 'WINCON_AMT', t: 'NUMBER(15)', s: 'ok' }] },
+    { id: 'emp', n: '사원기본', p: 'EMP_M', c: 'K', x: 420, y: 40, px: 460, py: 40, a: [
+      { n: '사원번호', p: 'EMP_NO', t: 'NUMBER(6)', pk: 1, s: 'ok' }, { n: '사원명', p: 'EMP_NM', t: 'VARCHAR2(100)', s: 'ok' }] },
+    { id: 'mbr', n: '프로젝트팀원구성내역', p: 'PRJ_MBR_D', c: 'A', x: 400, y: 200, px: 440, py: 220, a: [
+      { n: '프로젝트ID', p: 'PRJ_ID', t: 'VARCHAR2(10)', pk: 1, fk: 1, s: 'ok' }, { n: '팀원사원번호', p: 'TMBR_EMP_NO', t: 'NUMBER(6)', pk: 1, fk: 1, s: 'ok' }, { n: '투입시작일자', p: 'INPT_BEGIN_YMD', t: 'CHAR(8)', s: 'ok' }, { n: '역할구분코드', p: 'ROLE_SE_CD', t: 'CHAR(1)', s: 'ok' }] },
+    { id: 'rqrm', n: '요구사항내역', p: 'RQRM_D', c: 'A', x: 60, y: 330, px: 60, py: 360, a: [
+      { n: '요구사항ID', p: 'DEMND_MATER_ID', t: 'VARCHAR2(10)', pk: 1, s: 'ok' }, { n: '요구사항명', p: 'DEMND_MATER_NM', t: 'VARCHAR2(100)', s: 'ok' }, { n: '요구사항내용', p: 'DEMND_MATER_CN', t: 'VARCHAR2(1000)', s: 'ok' }, { n: '요청고객명', p: 'REQ_CUST_NM', t: 'VARCHAR2(100)', s: 'ex' }, { n: '프로젝트ID', p: 'PRJ_ID', t: 'VARCHAR2(10)', fk: 1, s: 'ok' }] },
+    { id: 'dlv', n: '산출물기본', p: 'DLVRBL_M', c: 'M', x: 420, y: 430, px: 460, py: 470, st: 'comb', a: [
+      { n: '산출물ID', p: 'DLVRBL_ID', t: 'VARCHAR2(10)', pk: 1, s: 'ok' }, { n: '산출물명', p: 'DLVRBL_NM', t: 'VARCHAR2(100)', s: 'ok' }, { n: '산출물제출일', p: '—', t: '—', s: 'comb' }, { n: '산출물수령자명', p: '—', t: '—', s: 'unreg' }, { n: '요구사항ID', p: 'DEMND_MATER_ID', t: 'VARCHAR2(10)', fk: 1, s: 'ok' }] },
+    { id: 'risk', n: '리스크기본', p: 'RISK_M', c: 'M', x: 60, y: 610, px: 60, py: 660, a: [
+      { n: '리스크ID', p: 'RISK_ID', t: 'VARCHAR2(10)', pk: 1, s: 'ok' }, { n: '리스크명', p: 'RISK_NM', t: 'VARCHAR2(100)', s: 'ok' }, { n: '리스크등급코드', p: 'RISK_GRD_CD', t: 'CHAR(1)', s: 'ok' }] }
+  ];
+  const R = [
+    { f: 'prj', t: 'rqrm', k: 'nonid', name: '수행한다' },
+    { f: 'prj', t: 'mbr', k: 'id', name: '구성된다' },
+    { f: 'emp', t: 'mbr', k: 'id', name: '참여한다' },
+    { f: 'rqrm', t: 'dlv', k: 'nonid', name: '산출한다' },
+    { f: 'rqrm', t: 'risk', k: 'mn', name: '관련된다' }
+  ];
+  const $ = id => document.getElementById(id);
+  const cv = $('cv'), world = $('world'), nodes = $('nodes'), eg = $('eg'), preview = $('preview');
+  let mode = 'L', tool = 'select', relType = 'nonid', zoom = 1, panX = 40, panY = 50, sel = null, relSrc = null, lodForce = 'auto';
+  const pos = e => mode === 'L' ? { x: e.x, y: e.y } : { x: e.px, y: e.py };
+  const setPos = (e, x, y) => { if (mode === 'L') { e.x = x; e.y = y; } else { e.px = x; e.py = y; } };
+
+  function nodeHTML(e) {
+    const pk = e.a.filter(a => a.pk), rest = e.a.filter(a => !a.pk);
+    const row = (a, i) => {
+      const idx = e.a.indexOf(a);
+      const name = mode === 'L' ? a.n : a.p;
+      const right = mode === 'L' ? a.p : a.t;
+      if (a.edit) return `<div class="ar"><span class="dot-i s-na"></span><input data-e="${e.id}" data-i="${idx}" class="attr-in" placeholder="속성명 입력 · Enter" value="${a.n}"></div>`;
+      return `<div class="ar ${a.pk ? 'pkr' : ''} ${a.fk ? 'fk' : ''}" data-e="${e.id}" data-i="${idx}"><span class="dot-i s-${a.s}" title="${({ ok: '표준', comb: '조합 가능', unreg: '미등록 단어', ex: '예외', na: '비대상' })[a.s]}"></span><span class="n">${a.pk ? '# ' : ''}${name}${a.fk ? ' (FK)' : ''}</span><span class="p">${right}</span></div>`;
+    };
+    const bad = e.a.filter(a => a.s === 'comb' || a.s === 'unreg').length;
+    return `<div class="nh" data-drag="${e.id}"><span class="cls">${e.c}</span><span class="title" data-e="${e.id}">${mode === 'L' ? e.n : e.p}</span>${bad ? `<span class="badge b-warning" style="height:16px;padding:0 5px">${bad}</span>` : ''}${e.st ? '<span class="dot-i s-comb" title="엔터티 용어 신청 중"></span>' : ''}<span class="sub">${mode === 'L' ? e.p : e.n}</span></div>
+      <div class="pk">${pk.map(row).join('')}</div>${rest.map(row).join('')}<div class="more">+ ${rest.length}개 속성</div>`;
+  }
+  function render() {
+    nodes.innerHTML = '';
+    E.forEach(e => {
+      const d = document.createElement('div');
+      d.className = 'node' + (sel === e.id ? ' sel' : '') + (relSrc === e.id ? ' relsrc' : '');
+      d.id = 'n-' + e.id; const p = pos(e);
+      d.style.left = p.x + 'px'; d.style.top = p.y + 'px';
+      d.innerHTML = nodeHTML(e);
+      nodes.appendChild(d);
+    });
+    drawEdges(); mini(); panel();
+    const inp = nodes.querySelector('.attr-in'); if (inp) { inp.focus(); inp.select(); showAC(inp); }
+  }
+  function box(id) { const d = $('n-' + id); return { x: d.offsetLeft, y: d.offsetTop, w: d.offsetWidth, h: d.offsetHeight }; }
+  function edgePath(a, b) {
+    const ac = { x: a.x + a.w / 2, y: a.y + a.h / 2 }, bc = { x: b.x + b.w / 2, y: b.y + b.h / 2 };
+    if (b.y > a.y + a.h + 20 || a.y > b.y + b.h + 20) {
+      const down = b.y > a.y; const y1 = down ? a.y + a.h : a.y, y2 = down ? b.y : b.y + b.h; const my = (y1 + y2) / 2;
+      return { d: `M${ac.x},${y1} V${my} H${bc.x} V${y2}`, lx: (ac.x + bc.x) / 2, ly: my - 4 };
+    }
+    const right = b.x > a.x; const x1 = right ? a.x + a.w : a.x, x2 = right ? b.x : b.x + b.w; const mx = (x1 + x2) / 2;
+    return { d: `M${x1},${ac.y} H${mx} V${bc.y} H${x2}`, lx: mx + 4, ly: (ac.y + bc.y) / 2 - 4 };
+  }
+  function drawEdges() {
+    let s = '';
+    R.forEach((r, i) => {
+      let p;
+      if (r.f === r.t) { const a = box(r.f); p = { d: `M${a.x + a.w},${a.y + 30} H${a.x + a.w + 30} V${a.y - 20} H${a.x + a.w - 30} V${a.y}`, lx: a.x + a.w + 34, ly: a.y - 8 }; }
+      else p = edgePath(box(r.f), box(r.t));
+      const dash = r.k === 'id' || r.k === 'one' ? '' : 'stroke-dasharray="5 4"';
+      const endM = r.k === 'one' ? 'url(#m-one)' : 'url(#m-many)';
+      const startM = r.k === 'mn' ? 'url(#m-many)' : 'url(#m-one)';
+      s += `<path class="hit" d="${p.d}" data-r="${i}"/><path d="${p.d}" fill="none" stroke="var(--fg-2)" stroke-width="1.2" ${dash} marker-start="${startM}" marker-end="${endM}"/>`;
+      s += `<text class="relname" x="${p.lx}" y="${p.ly}">${r.name || ''}</text>`;
+      if (r.k === 'mn') s += `<text class="relname" x="${p.lx}" y="${p.ly + 14}" style="fill:var(--warning-deep)">M:N 해소 필요</text>`;
+    });
+    eg.innerHTML = s;
+  }
+  function applyView() {
+    world.style.transform = `translate(${panX}px,${panY}px) scale(${zoom})`;
+    $('zl').textContent = Math.round(zoom * 100) + '%';
+    const lod = lodForce !== 'auto' ? lodForce : zoom >= 0.75 ? 'full' : zoom >= 0.4 ? 'mid' : 'low';
+    world.className = 'lod-' + lod; mini();
+  }
+  function mini() {
+    const m = $('mini'); if (!nodes.children.length) return;
+    let minx = 1e9, miny = 1e9, maxx = -1e9, maxy = -1e9;
+    E.forEach(e => { const b = box(e.id); minx = Math.min(minx, b.x); miny = Math.min(miny, b.y); maxx = Math.max(maxx, b.x + b.w); maxy = Math.max(maxy, b.y + b.h); });
+    const W = maxx - minx + 200, H = maxy - miny + 200, k = Math.min(180 / W, 120 / H);
+    const ox = minx - 100, oy = miny - 100;
+    let s = E.map(e => { const b = box(e.id); const col = e.a.some(a => a.s === 'unreg' || a.s === 'comb') ? 'var(--warning)' : 'var(--border-strong)'; return `<rect x="${(b.x - ox) * k}" y="${(b.y - oy) * k}" width="${b.w * k}" height="${b.h * k}" fill="${col}" opacity=".6" rx="1"/>`; }).join('');
+    const vx = (-panX / zoom - ox) * k, vy = (-panY / zoom - oy) * k, vw = cv.clientWidth / zoom * k, vh = cv.clientHeight / zoom * k;
+    s += `<rect x="${vx}" y="${vy}" width="${vw}" height="${vh}" fill="none" stroke="var(--ink)" stroke-width="1"/>`;
+    m.innerHTML = s;
+  }
+  function panel() {
+    const t = $('rp-title'), sub = $('rp-sub'), body = $('rp-body');
+    $('sel-info').textContent = sel ? `선택: ${E.find(e => e.id === sel).n}` : '선택 없음';
+    if (!sel) {
+      t.textContent = '업무 영역 요약'; sub.textContent = mode === 'L' ? '요구사항 · 프로젝트 · 논리' : '요구사항 · 프로젝트 · 물리(Oracle)';
+      body.innerHTML = `<div class="grid2" style="margin-bottom:12px"><div class="card"><div class="caption muted">엔터티</div><div class="mono" style="font-size:20px">${E.length}</div></div><div class="card"><div class="caption muted">관계</div><div class="mono" style="font-size:20px">${R.length}</div></div></div>
+        <div class="section-t">미준수 엔터티</div>
+        ${E.filter(e => e.a.some(a => a.s === 'comb' || a.s === 'unreg')).map(e => `<div class="cand" data-goto="${e.id}"><span class="grow">${e.n}</span><span class="badge b-warning">${e.a.filter(a => a.s === 'comb' || a.s === 'unreg').length}</span></div>`).join('')}
+        <div class="section-t">이 화면에서 해 보기</div>
+        <div class="caption" style="line-height:20px">· 엔터티 제목을 끌어 이동 → 관계선이 따라옵니다<br>· <b>R</b> → 부모 클릭 → 자식 클릭 (같은 엔터티면 재귀 확인)<br>· 엔터티 선택 후 <b>Enter</b> → 속성 추가 + 용어 자동완성<br>· 제목 <b>더블클릭</b> → 이름 수정<br>· <b>Ctrl+휠</b>·[−][+] → 줌에 따라 상세도 자동 축소<br>· 헤더 <b>[물리]</b> → 별도 배치·게이트 A<br>· 툴바 <b>[시스템 전체]</b> → 조회 전용 전체 보기</div>`;
+      return;
+    }
+    const e = E.find(x => x.id === sel);
+    t.textContent = mode === 'L' ? e.n : e.p; sub.textContent = (mode === 'L' ? e.p : e.n) + ' · 분류 ' + e.c;
+    body.innerHTML = `<table class="tbl"><thead><tr><th></th><th>${mode === 'L' ? '속성명' : '컬럼명'}</th><th>${mode === 'L' ? '물리명' : '타입'}</th></tr></thead><tbody>
+      ${e.a.map(a => `<tr><td><span class="dot-i s-${a.s}"></span></td><td>${a.pk ? '# ' : ''}${mode === 'L' ? a.n : a.p}${a.fk ? ' <span class="faint">(FK)</span>' : ''}</td><td class="mono">${mode === 'L' ? a.p : a.t}</td></tr>`).join('')}</tbody></table>
+      <div class="flex" style="margin-top:8px"><button class="btn sm" id="rp-add">+ 속성 (Enter)</button><span class="grow"></span><a class="btn sm ghost" href="standardize.html">표준 맞추기</a></div>`;
+    $('rp-add').onclick = () => addAttr();
+  }
+  function hint(msg) { const h = $('hint'); if (!msg) { h.style.display = 'none'; return; } h.textContent = msg; h.style.display = 'block'; }
+  function setTool(t) {
+    tool = t; relSrc = null; preview.setAttribute('d', ''); hint('');
+    document.querySelectorAll('.cv-toolbar .tb[data-tool]').forEach(b => b.classList.toggle('on', b.dataset.tool === t));
+    cv.className = t === 'entity' ? 'tool-entity' : t === 'rel' ? 'tool-rel' : '';
+    if (t === 'rel') hint('부모 엔터티를 클릭하세요 · Esc 취소');
+    if (t === 'entity') hint('엔터티를 놓을 곳을 클릭하세요');
+    render();
+  }
+  function toWorld(ev) { const r = cv.getBoundingClientRect(); return { x: (ev.clientX - r.left - panX) / zoom, y: (ev.clientY - r.top - panY) / zoom }; }
+  function addAttr() {
+    if (!sel) return; const e = E.find(x => x.id === sel);
+    e.a.forEach(a => delete a.edit); e.a.push({ n: '', p: '—', t: '—', s: 'na', edit: 1 }); render();
+  }
+  let acEl = null, acIdx = 0;
+  function showAC(inp) {
+    if (acEl) acEl.remove();
+    const q = inp.value.trim(); const list = TERMS.filter(t => !q || t.n.includes(q));
+    acEl = document.createElement('div'); acEl.className = 'acl';
+    const r = inp.getBoundingClientRect(), c = cv.getBoundingClientRect();
+    acEl.style.left = (r.left - c.left) + 'px'; acEl.style.top = (r.bottom - c.top + 4) + 'px';
+    acEl.innerHTML = list.map((t, i) => `<div class="o ${i === acIdx ? 'on' : ''}" data-ti="${TERMS.indexOf(t)}"><span>${t.n} <span class="badge ${t.tag === '공통' ? 'b-common' : t.tag === '신청 중' ? 'b-info' : 'b-org'}" style="height:16px">${t.tag}</span></span><span class="m">${t.t}</span><span class="m" style="grid-column:1/3">${t.p}</span></div>`).join('') +
+      (q ? `<div class="o" data-new="1" style="border-top:1px solid var(--border)"><span>＋ ‘${q}’ 그대로 입력 (미매핑)</span></div>` : '');
+    cv.appendChild(acEl);
+  }
+  function commitAttr(inp, term) {
+    const e = E.find(x => x.id === inp.dataset.e), a = e.a[+inp.dataset.i];
+    if (term) { Object.assign(a, { n: term.n, p: term.p, t: term.t, s: term.s }); toast(`‘${term.n}’ 용어를 적용했습니다 · ${term.p}`); }
+    else if (inp.value.trim()) { Object.assign(a, { n: inp.value.trim(), s: 'unreg' }); toast('용어 없이 입력했습니다 — 미준수로 집계됩니다', 'info'); }
+    else e.a.splice(+inp.dataset.i, 1);
+    delete a.edit; if (acEl) { acEl.remove(); acEl = null; } render();
+  }
+
+  // ---- events
+  let drag = null, pan = null;
+  cv.addEventListener('mousedown', ev => {
+    if (ev.target.closest('.cv-toolbar,.cv-zoom,.cv-mini,.cv-banner,.pop,.acl,#sysview')) return;
+    const nh = ev.target.closest('[data-drag]');
+    const node = ev.target.closest('.node');
+    if (tool === 'select' && nh) { const e = E.find(x => x.id === nh.dataset.drag); const p = pos(e); const w = toWorld(ev); drag = { e, dx: w.x - p.x, dy: w.y - p.y }; sel = e.id; render(); return; }
+    if (tool === 'select' && node) { sel = node.id.slice(2); render(); return; }
+    if (!node && tool === 'select') { if (sel) { sel = null; render(); } pan = { x: ev.clientX - panX, y: ev.clientY - panY }; cv.classList.add('panning'); }
+  });
+  window.addEventListener('mousemove', ev => {
+    if (drag) { const w = toWorld(ev); setPos(drag.e, Math.round((w.x - drag.dx) / 8) * 8, Math.round((w.y - drag.dy) / 8) * 8); const d = $('n-' + drag.e.id); const p = pos(drag.e); d.style.left = p.x + 'px'; d.style.top = p.y + 'px'; drawEdges(); mini(); }
+    if (pan) { panX = ev.clientX - pan.x; panY = ev.clientY - pan.y; applyView(); }
+    if (tool === 'rel' && relSrc) { const a = box(relSrc); const w = toWorld(ev); preview.setAttribute('d', `M${a.x + a.w / 2},${a.y + a.h / 2} L${w.x},${w.y}`); }
+  });
+  window.addEventListener('mouseup', () => { drag = null; pan = null; cv.classList.remove('panning'); });
+  cv.addEventListener('click', ev => {
+    if (ev.target.closest('.cv-toolbar,.cv-zoom,.cv-mini,.cv-banner,.acl,#sysview')) return;
+    const pop = ev.target.closest('.pop');
+    if (pop) return;
+    const node = ev.target.closest('.node');
+    if (tool === 'entity' && !node) {
+      const w = toWorld(ev); const id = 'e' + Date.now();
+      const e = { id, n: '새엔터티', p: '—', c: 'M', x: w.x, y: w.y, px: w.x, py: w.y, a: [{ n: '', p: '—', t: '—', s: 'na', pk: 1, edit: 1 }] };
+      E.push(e); sel = id; setTool('select'); toast('엔터티를 추가했습니다 — 식별자부터 입력하세요', 'info'); return;
+    }
+    if (tool === 'rel' && node) {
+      const id = node.id.slice(2);
+      if (!relSrc) { relSrc = id; hint('자식 엔터티를 클릭하세요 · 같은 엔터티를 누르면 재귀 확인 · Esc 취소'); render(); return; }
+      if (id === relSrc) {
+        const b = node.getBoundingClientRect(), c = cv.getBoundingClientRect();
+        const p = document.createElement('div'); p.className = 'pop'; p.style.left = (b.right - c.left + 8) + 'px'; p.style.top = (b.top - c.top) + 'px';
+        p.innerHTML = `<b>재귀 관계를 만들까요?</b><div class="caption muted" style="margin:4px 0 8px">같은 엔터티를 다시 눌렀습니다. 예: 상위리스크ID → 리스크ID</div><div class="flex"><button class="btn sm" id="pop-no">취소</button><span class="grow"></span><button class="btn sm primary" id="pop-yes">재귀 관계 만들기</button></div>`;
+        cv.appendChild(p);
+        $('pop-no').onclick = () => { p.remove(); setTool('rel'); };
+        $('pop-yes').onclick = () => { p.remove(); R.push({ f: id, t: id, k: 'nonid', name: '상위' }); const e = E.find(x => x.id === id); e.a.push({ n: '상위' + e.a[0].n, p: 'UPR_' + e.a[0].p, t: e.a[0].t, fk: 1, s: 'comb' }); setTool('select'); toast(`재귀 관계와 ‘상위${e.a[0].n} (FK)’를 추가했습니다`); };
+        return;
+      }
+      const parent = E.find(x => x.id === relSrc), child = E.find(x => x.id === id);
+      R.push({ f: relSrc, t: id, k: relType, name: '' });
+      if (relType !== 'mn') parent.a.filter(a => a.pk).forEach(k => {
+        const clash = child.a.some(a => a.n === k.n);
+        child.a.push({ n: clash ? '원' + k.n : k.n, p: clash ? 'ORG_' + k.p : k.p, t: k.t, fk: 1, pk: relType === 'id' ? 1 : 0, s: clash ? 'comb' : 'ok' });
+        toast(clash ? `이름이 겹쳐 ‘원${k.n} (FK)’로 추가했습니다 — 역할명을 확인하세요` : `‘${k.n} (FK)’가 ${child.n}에 추가됐습니다 · 실행 취소 Ctrl+Z`, clash ? 'violet' : 'success');
+      });
+      else toast('M:N 관계를 만들었습니다 — 관계를 선택해 [M:N 해소]로 교차 엔터티를 만드세요', 'info');
+      setTool('select'); return;
+    }
+  });
+  cv.addEventListener('dblclick', ev => {
+    const title = ev.target.closest('.title');
+    if (title) { const e = E.find(x => x.id === title.dataset.e); const v = prompt('엔터티 이름 (인라인 편집 목업)', e.n); if (v) { e.n = v; render(); toast('이름을 바꿨습니다 · 엔터티 용어를 다시 확인합니다', 'info'); } return; }
+    const row = ev.target.closest('.ar[data-i]');
+    if (row) { const e = E.find(x => x.id === row.dataset.e); e.a[+row.dataset.i].edit = 1; sel = e.id; render(); return; }
+    if (!ev.target.closest('.node') && tool === 'select' && !ev.target.closest('.cv-toolbar,.cv-zoom,.cv-mini,.cv-banner')) { setTool('entity'); cv.dispatchEvent(new MouseEvent('click', { clientX: ev.clientX, clientY: ev.clientY, bubbles: true })); }
+  });
+  cv.addEventListener('input', ev => { if (ev.target.classList.contains('attr-in')) { acIdx = 0; showAC(ev.target); } });
+  cv.addEventListener('keydown', ev => {
+    const inp = ev.target.closest('.attr-in');
+    if (inp) {
+      const opts = acEl ? acEl.querySelectorAll('.o[data-ti]') : [];
+      if (ev.key === 'ArrowDown') { acIdx = Math.min(acIdx + 1, opts.length - 1); showAC(inp); ev.preventDefault(); }
+      else if (ev.key === 'ArrowUp') { acIdx = Math.max(acIdx - 1, 0); showAC(inp); ev.preventDefault(); }
+      else if (ev.key === 'Enter') { const o = opts[acIdx]; commitAttr(inp, o ? TERMS[+o.dataset.ti] : null); if (!ev.shiftKey && sel) setTimeout(addAttr, 0); ev.preventDefault(); }
+      else if (ev.key === 'Escape') { const e = E.find(x => x.id === inp.dataset.e); e.a.splice(+inp.dataset.i, 1); if (acEl) { acEl.remove(); acEl = null; } render(); }
+      return;
+    }
+  });
+  document.addEventListener('mousedown', ev => { const o = ev.target.closest('.acl .o'); if (!o) return; ev.preventDefault(); const inp = nodes.querySelector('.attr-in'); if (!inp) return; commitAttr(inp, o.dataset.ti ? TERMS[+o.dataset.ti] : null); });
+  document.addEventListener('keydown', ev => {
+    if (ev.target.closest('input,textarea,select')) return;
+    const k = ev.key.toLowerCase();
+    if (k === 'v') setTool('select'); else if (k === 'e') setTool('entity'); else if (k === 'r') setTool('rel');
+    else if (ev.key === 'Escape') { document.querySelectorAll('.pop').forEach(p => p.remove()); setTool('select'); }
+    else if (ev.key === 'Enter' && sel) { addAttr(); ev.preventDefault(); }
+    else if (ev.key === '!' || (ev.shiftKey && ev.code === 'Digit1')) fit();
+  });
+  cv.addEventListener('wheel', ev => {
+    ev.preventDefault();
+    if (ev.ctrlKey) { const r = cv.getBoundingClientRect(); const mx = ev.clientX - r.left, my = ev.clientY - r.top; const nz = Math.min(2, Math.max(0.15, zoom * (ev.deltaY < 0 ? 1.1 : 0.9))); panX = mx - (mx - panX) * nz / zoom; panY = my - (my - panY) * nz / zoom; zoom = nz; }
+    else { panX -= ev.deltaX; panY -= ev.deltaY; }
+    applyView();
+  }, { passive: false });
+  $('zi').onclick = () => { zoom = Math.min(2, zoom * 1.2); applyView(); };
+  $('zo').onclick = () => { zoom = Math.max(0.15, zoom / 1.2); applyView(); };
+  function fit() { let maxx = 0, maxy = 0; E.forEach(e => { const b = box(e.id); maxx = Math.max(maxx, b.x + b.w); maxy = Math.max(maxy, b.y + b.h); }); zoom = Math.min(1.2, (cv.clientWidth - 80) / maxx, (cv.clientHeight - 120) / maxy); panX = 40; panY = 70; applyView(); }
+  $('zfit').onclick = fit;
+  $('lodsel').onchange = ev => { lodForce = ev.target.value; applyView(); };
+  document.querySelectorAll('.cv-toolbar .tb[data-tool]').forEach(b => b.addEventListener('click', ev => {
+    if (b.dataset.tool === 'rel' && ev.target.closest('#relbtn') && tool === 'rel') { $('relmenu').classList.toggle('open'); return; }
+    setTool(b.dataset.tool); if (b.dataset.tool === 'rel') $('relmenu').classList.add('open');
+  }));
+  $('relmenu').addEventListener('click', ev => { const d = ev.target.closest('[data-rt]'); if (!d) return; relType = d.dataset.rt; $('reltype').textContent = d.textContent.split(' ')[0] + (d.dataset.rt === 'nonid' ? ' 비식별' : d.dataset.rt === 'id' ? ' 식별' : ''); document.querySelectorAll('#relmenu div').forEach(x => x.classList.toggle('on', x === d)); $('relmenu').classList.remove('open'); hint('부모 엔터티를 클릭하세요 · Esc 취소'); });
+  $('eg').addEventListener('click', ev => {
+    const h = ev.target.closest('.hit'); if (!h) return; const r = R[+h.dataset.r];
+    sel = null; render();
+    const body = $('rp-body'); $('rp-title').textContent = '관계'; $('rp-sub').textContent = `${E.find(e => e.id === r.f).n} → ${E.find(e => e.id === r.t).n}`;
+    body.innerHTML = `<dl class="kv"><dt>관계명</dt><dd>${r.name || '—'}</dd><dt>유형</dt><dd>${({ nonid: '1:N 비식별', id: '1:N 식별', one: '1:1', mn: 'M:N' })[r.k]}</dd><dt>부모 선택성</dt><dd>필수</dd><dt>자식 선택성</dt><dd>선택</dd></dl>` +
+      (r.k === 'mn' ? `<div class="banner warning"><span>!</span><div class="grow"><b>M:N 해소 필요</b><div class="caption">교차 엔터티 제안: <b>요구사항리스크관계</b> <span class="mono">RQRM_RISK_R</span> · 식별 관계(PK = 두 FK)</div></div></div><div class="flex" style="margin-top:8px"><span class="grow"></span><button class="btn primary sm" id="mn-go">미리보기 후 해소</button></div>` : '');
+    const go = $('mn-go'); if (go) go.onclick = () => {
+      const i = R.indexOf(r); R.splice(i, 1);
+      const a = box(r.f), b = box(r.t);
+      E.push({ id: 'rr', n: '요구사항리스크관계', p: 'RQRM_RISK_R', c: 'A', x: (a.x + b.x) / 2 + 260, y: (a.y + b.y) / 2, px: (a.x + b.x) / 2 + 280, py: (a.y + b.y) / 2, a: [{ n: '요구사항ID', p: 'DEMND_MATER_ID', t: 'VARCHAR2(10)', pk: 1, fk: 1, s: 'ok' }, { n: '리스크ID', p: 'RISK_ID', t: 'VARCHAR2(10)', pk: 1, fk: 1, s: 'ok' }] });
+      R.push({ f: r.f, t: 'rr', k: 'id', name: '' }, { f: r.t, t: 'rr', k: 'id', name: '' });
+      sel = 'rr'; render(); toast('M:N을 해소했습니다 — 교차 엔터티 ‘요구사항리스크관계’(식별 관계)');
+    };
+  });
+  $('b-layout').onclick = () => {
+    if (!confirm('계층 자동 배치를 미리보기 후 적용합니다 (목업에서는 바로 적용). 계속할까요?')) return;
+    const cols = { prj: [0, 0], emp: [1, 0], mbr: [1, 1], rqrm: [0, 1], dlv: [1, 2], risk: [0, 2], rr: [0.5, 3] };
+    E.forEach((e, i) => { const c = cols[e.id] || [2, i]; setPos(e, 60 + c[0] * 380, 60 + c[1] * 230); }); render(); toast('계층 자동 배치를 적용했습니다 · Ctrl+Z로 되돌리기', 'info');
+  };
+  $('jump-bad').onclick = ev => { ev.preventDefault(); sel = 'dlv'; render(); const b = box('dlv'); panX = cv.clientWidth / 2 - (b.x + b.w / 2) * zoom; panY = cv.clientHeight / 2 - (b.y + b.h / 2) * zoom; applyView(); toast('미준수 속성이 있는 ‘산출물기본’으로 이동했습니다', 'info'); };
+  $('lp').addEventListener('click', ev => {
+    const v = ev.target.dataset.v; if (!v || v === mode) return; mode = v;
+    document.querySelectorAll('#lp button').forEach(b => b.classList.toggle('on', b.dataset.v === v));
+    $('pbanner').style.display = v === 'P' ? 'flex' : 'none';
+    sel = null; render(); toast(v === 'P' ? '물리 캔버스 — 배치는 논리와 따로 저장됩니다' : '논리 캔버스', 'info');
+  });
+  $('b-sys').onclick = () => {
+    const sv = $('sysview'); const on = sv.style.display !== 'block';
+    sv.style.display = on ? 'block' : 'none'; world.style.display = on ? 'none' : 'block';
+    $('b-sys').classList.toggle('on', on); cv.dataset.sys = on ? '1' : '';
+    if (on) sv.innerHTML = `<div class="banner info" style="position:absolute;left:12px;top:60px;z-index:5;max-width:520px"><span>ℹ</span><div class="grow"><b>시스템 전체 ERD · 조회 전용</b> — 요구사항관리의 모든 업무 영역. 영역을 더블클릭하면 편집 캔버스로 이동합니다.</div></div>
+      <div class="grp" style="left:80px;top:120px;width:300px;height:180px" ondblclick="document.getElementById('b-sys').click()"><h4>요구사항 · 프로젝트</h4><div class="caption muted">엔터티 9 · 미준수 6</div><div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:10px">${'<span style="width:40px;height:22px;border-radius:4px;background:var(--surface-2);border:1px solid var(--border)"></span>'.repeat(9)}</div></div>
+      <div class="grp" style="left:520px;top:160px;width:220px;height:130px"><h4>리스크</h4><div class="caption muted">엔터티 2 · 검토 중</div></div>
+      <div class="grp" style="left:300px;top:380px;width:260px;height:140px"><h4>공통 (참조)</h4><div class="caption muted">사원기본 · 부서기본 · 공통코드</div></div>
+      <svg style="position:absolute;inset:0;pointer-events:none" width="100%" height="100%"><g stroke="var(--fg-3)" fill="none"><path d="M380 220 H520" stroke-width="3"/><path d="M230 300 V450 H300" stroke-width="2"/><path d="M630 290 V420 H560" stroke-width="1"/></g><text x="430" y="212" font-size="11" fill="var(--fg-2)">관계 3</text></svg>
+      <div class="cv-zoom" style="left:12px;bottom:12px"><span class="caption muted" style="padding:0 8px">15% · 영역 묶음 보기 · 확대하면 엔터티가 펼쳐집니다</span></div>`;
+  };
+  setTool('select'); applyView(); render(); setTimeout(fit, 50);
+};
+</script>
+</body>
+</html>
