@@ -121,4 +121,4 @@
 
 1. ~~§7.1의 결정을 30-metadata-design·20-priority에 반영~~ ✅ (30 v1.1, 20 §2.0·§3.2)
 2. ~~디자인 가이드~~ ✅ [01-design-guide.md](01-design-guide.md)
-3. `docs/ux/02-flows.md` 화면 흐름도 → `docs/ux/mockups/` 클릭 목업.
+3. ~~화면 흐름도~~ ✅ [02-flows.md](02-flows.md) → 다음: `docs/ux/mockups/` 클릭 목업 (교차 시나리오 T1~T5).
