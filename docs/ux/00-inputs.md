@@ -125,5 +125,5 @@
 4. ~~클릭 목업~~ ✅ [mockups/index.html](mockups/index.html) — 12개 화면, 교차 시나리오 T1~T5, 1920 기준 + 1600 확인 프레임, 라이트/다크. 실행: `powershell -File docs/ux/mockups/serve.ps1` → http://localhost:5178
 5. ~~UX-Q1 확정~~ ✅ 1920 기본·최소 1600.
 6. ERD 편집기(캔버스) 화면 설계 ✅ — `docs/ux/03-erd-editor.md`, 목업 `mockups/erd.html`.
-7. ERD-Q2 확정(PNG·SVG·PDF), ERD-Q3 확정(실시간 공동 편집, 03 §13). ERD-Q1은 erd-editor와 React Flow를 비교한 뒤 결정(03 §12).
-8. 다음: ERD-Q1 결정(필요하면 스파이크), 목업 피드백 반영 v2.
+7. ERD-Q2 확정(PNG·SVG·PDF), ERD-Q3 확정(실시간 공동 편집, 03 §13). ERD-Q1 확정 — React Flow + Yjs(03 §12).
+8. 다음: 목업 피드백 반영 v2.

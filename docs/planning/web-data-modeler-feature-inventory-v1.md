@@ -163,7 +163,7 @@
 | OQ-2 | DBModeler는 독립 프로젝트(`D:\project\DBModeler`)다. docuCBD 자산(§4)을 코드 복사·공유 패키지·API 연동 중 어떤 방식으로 재사용할지 | 아키텍처·기술 스택 |
 | OQ-3 | 기존 `.damx` 모델 가져오기가 1차에 필요한가 (필요 시 포맷 분석 + 샘플 6종으로 검증) | P2 → P0 승격 여부 |
 | OQ-4 | 1차 지원 DBMS (Oracle·PostgreSQL·MySQL·Tibero 등) | 물리모델·DDL 범위 |
-| OQ-5 | 다이어그램 라이브러리 선정 (React Flow · JointJS · AntV X6 등) — 대형 모델(엔터티 수백 개) 성능 | 기술 스파이크 필요 |
+| OQ-5 | 다이어그램 라이브러리 선정 (React Flow · JointJS · AntV X6 등) — 대형 모델(엔터티 수백 개) 성능 | **결정 (2026-11-17): React Flow + Yjs + elkjs** — docs/ux/03-erd-editor.md §12 |
 
 ## 변경 이력
 

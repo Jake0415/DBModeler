@@ -167,7 +167,7 @@ docuCBD 공통표준 사전 설계(`D:\project\docuCBD\docs\design\std-dictionar
 | OQ-2 외부 자산 재사용 방식 | **해소** — 사전은 SWS 메타데이터 시나리오를 참조해 DBModeler에 새로 구현(코드·DB·API 공유 없음). 정의서 생성기 등 docuCBD 자산 재사용 여부는 별도 |
 | OQ-3 `.damx` 가져오기 | Q-5와 함께 W3 |
 | OQ-4 1차 DBMS | **해소** — Oracle·PostgreSQL·Tibero·MySQL/MariaDB 4종 (UX 입력 1-7) |
-| OQ-5 다이어그램 라이브러리 | 미결 — W0 착수 전 기술 스파이크 필요 (엔터티 수백 개 성능) |
+| OQ-5 다이어그램 라이브러리 | **결정 (2026-11-17): React Flow + Yjs + elkjs** (ux/03 §12). 착수 시 성능·라우팅·동기화 검증 1~2일 |
 
 ## 4. 다음 단계 제안
 
