@@ -51,7 +51,11 @@
     { id: 'REQ-2026-0010', type: 'dict', title: "도메인 '코드C2' 규격 변경", req: 'lee', step: 'final', n: 1, date: '11/16 17:05', cc: [], reason: '2자리 코드 허용 문자 확대', hist: [{ at: '11/16 17:40', who: '김모델', act: 'DA 승인', why: '', step: 'da' }], items: [{ id: 'D-0031', name: '코드C2', act: '변경', chg: { '허용 값': ['[A-Z]{2}', '[A-Z0-9]{2}'] } }] },
     { id: 'REQ-2026-0009', type: 'dict', title: '단어 3건 등록', req: 'park', step: 'da', n: 3, date: '11/16 09:12', cc: ['kim'], reason: '인사시스템 신규 화면', hist: [], items: [{ k: 'word', name: '교재', abbr: 'TXTBK' }, { k: 'word', name: '배부', abbr: 'DSTRB' }, { k: 'word', name: '수강', abbr: 'ATND' }] },
     { id: 'REQ-2026-0005', type: 'dict', title: '엑셀 일괄 — 단어 86건 (기관단어_초기.xlsx)', req: 'kim', step: 'done', n: 86, date: '11/14 17:45', cc: [], reason: '기관 단어 초기 적재', kind: 'excel', batch: 'UP-2026-0006', hist: [{ at: '11/14 18:00', who: '이데이터', act: 'DA 승인', step: 'da' }, { at: '11/15 09:10', who: '이현업', act: '최종 승인', step: 'final' }] },
-    { id: 'REQ-2026-0003', type: 'model', area: 'rq', ver: 4, title: '요구사항관리 › 요구사항·프로젝트 v4 확정', req: 'park', step: 'done', n: 7, date: '11/03 10:00', cc: [], reason: 'v4 확정', hist: [{ at: '11/03 10:05', who: '이데이터', act: 'DA 승인', step: 'da' }, { at: '11/03 10:20', who: '최관리', act: '최종 승인', step: 'final' }] }
+    { id: 'REQ-2026-0003', type: 'model', area: 'rq', ver: 4, title: '요구사항관리 › 요구사항·프로젝트 v4 확정', req: 'park', step: 'done', n: 7, date: '11/03 10:00', cc: [], reason: 'v4 확정', hist: [{ at: '11/03 10:05', who: '이데이터', act: 'DA 승인', step: 'da' }, { at: '11/03 10:20', who: '최관리', act: '최종 승인', step: 'final' }] },
+    // past documents referenced by dictionary history (so every history link opens a real document)
+    { id: 'REQ-2026-0008', type: 'dict', title: "용어 '수주금액' 설명 변경", req: 'lee', step: 'done', n: 1, date: '11/16 14:40', cc: [], reason: '부가세 포함 명시', applied: { applied: 1, failed: [] }, hist: [{ at: '11/16 15:00', who: '김모델', act: 'DA 승인', step: 'da' }, { at: '11/16 15:10', who: '이현업', act: '최종 승인', step: 'final' }], items: [{ k: 'term', id: 'T-0201', name: '수주금액', act: '변경', chg: { 설명: ['수주한 금액', '계약 수주 금액(부가세 포함)'] } }] },
+    { id: 'REQ-2026-0007', type: 'dict', title: "단어 '산출물' 외 용어 2건 등록", req: 'kim', step: 'done', n: 3, date: '11/17 11:40', cc: [], reason: '산출물 테이블 표준화', applied: { applied: 3, failed: [] }, hist: [{ at: '11/17 11:58', who: '김모델', act: 'DA 승인', step: 'da', self: true, why: '겸임 DA — 산출물 테이블 착수 일정' }, { at: '11/17 11:58', who: '시스템', act: '최종 승인 생략(기관 설정: 사전 최종 승인 끔 당시)', step: 'final' }], items: [{ k: 'word', name: '산출물', abbr: 'DLVRBL', act: '추가' }, { k: 'term', name: '산출물ID', abbr: 'DLVRBL_ID', dom: 'ID V10', act: '추가' }, { k: 'term', name: '산출물명', abbr: 'DLVRBL_NM', dom: '명V100', act: '추가' }] },
+    { id: 'REQ-2026-0001', type: 'dict', title: "단어 '산출서' 미사용", req: 'lee', step: 'done', n: 1, date: '10/02 13:50', cc: [], reason: '산출물로 통합', applied: { applied: 1, failed: [] }, hist: [{ at: '10/02 14:00', who: '이데이터', act: 'DA 승인', step: 'da', self: true, why: '통합 결정 회의(10/01) 반영' }, { at: '10/02 14:20', who: '이현업', act: '최종 승인', step: 'final' }], items: [{ k: 'word', id: 'W-0099', name: '산출서', act: '미사용', why: '산출물로 통합' }] }
   ];
   window.getDocs = () => J('dbm-docs', clone(DOCS0));
   window.saveDocs = d => S('dbm-docs', d);
@@ -300,6 +304,88 @@
   };
   window.ICON = ICON;
 
+  /* ---- screen map (mockup review tool): one registry for the per-screen info panel and the index map ----
+     docs are relative to /mockups/ — serve.ps1 serves ../*.md (docs/ux) and ../../spec/*.md (docs/spec) read-only */
+  const D = { flows: '../02-flows.md', erd: '../03-erd-editor.md', plan: '../06-ux-review-plan.md', excel: '../07-dict-excel-roundtrip.md', da: '../05-mockup-vs-da.md', meta: '../../spec/da-feature-spec/30-metadata-design.md', prio: '../../spec/da-feature-spec/20-priority.md', sws: '../../spec/da-feature-spec/22-sws-comparison.md', perf: '../../spec/da-feature-spec/23-performance-spike.md', guide: '../01-design-guide.md' };
+  const SCREENS = [
+    { file: 'home.html', ids: 'SC-55', name: '홈', menu: '홈', docs: [['02 §1 화면 목록', D.flows], ['06 §3 새 화면 명세', D.plan]], states: [['김모델(모델러·DA)', 'home.html?as=kim'], ['박설계(모델러)', 'home.html?as=park'], ['이현업(기관 담당자)', 'home.html?as=hyun']] },
+    { file: 'dictionary.html', ids: 'SC-10 · PN-11 · PN-12', name: '사전 통합 검색 · 상세 · 등록 신청', menu: '사전', docs: [['02 §3.1~3.2', D.flows], ['30 MD-01~12 사전 규칙', D.meta], ['07 E6 검색', D.excel], ['23 §6-1 검색 숫자', D.perf]], states: [['기본(최근 변경)', 'dictionary.html'], ['도메인 신청', 'dictionary.html?req=domain'], ['편집용 내려받기', 'dictionary.html#download'], ['검색: 산출', 'dictionary.html?q=산출']] },
+    { file: 'dict-history.html', ids: 'SC-16', name: '사전 변경 내역 · 공표', menu: '사전', docs: [['07 E5 버전·이력', D.excel], ['30 MD-23', D.meta]], states: [['전체', 'dict-history.html'], ['미공표만', 'dict-history.html?unpub=1']] },
+    { file: 'excel-import.html', ids: 'SC-13', name: '엑셀 가져오기(왕복 편집)', menu: '사전', docs: [['02 §3.3', D.flows], ['07 E1~E4 왕복 편집', D.excel], ['30 MD-08·09', D.meta], ['23 §6-4 행 상한', D.perf]], states: [['1단계부터(실제 작업)', 'excel-import.html'], ['5단계 예시(저장 안 함)', 'excel-import.html?step=5'], ['신청된 묶음 열람', 'excel-import.html?resume=UP-2026-0007'], ['반영본 확인', 'excel-import.html?verify=UP-2026-0007']] },
+    { file: 'uploads.html', ids: 'SC-15', name: '업로드 이력', menu: '사전', docs: [['07 E4', D.excel]], states: [['전체', 'uploads.html'], ['UP-2026-0007', 'uploads.html?b=UP-2026-0007']] },
+    { file: 'candidates.html', ids: 'SC-14', name: '후보 큐', menu: '사전', docs: [['02 §3.4', D.flows], ['30 MD-42·43', D.meta]], states: [['DA로 보기', 'candidates.html?as=lee'], ['모델러로 보기', 'candidates.html?as=park']] },
+    { file: 'approvals.html', ids: 'SC-20 · PN-21 · MO-22 · MO-23', name: '결재함 · 문서 상세 · 자기 승인 · 반려', menu: '결재', docs: [['02 §4 결재 흐름', D.flows], ['30 MD-20~27', D.meta]], states: [['대기함(김모델)', 'approvals.html'], ['엑셀 문서', 'approvals.html?doc=REQ-2026-0016'], ['모델 확정(리스크 v2)', 'approvals.html?doc=REQ-2026-0011'], ['최종 승인 차례(이현업)', 'approvals.html?doc=REQ-2026-0010&as=hyun'], ['완료 문서', 'approvals.html?doc=REQ-2026-0007']] },
+    { file: 'system.html', ids: 'SC-30', name: '시스템 홈', menu: '시스템', docs: [['02 §1', D.flows]], states: [['요구사항관리', 'system.html']] },
+    { file: 'model.html', ids: 'SC-31 · PN-32 · PN-33 · PN-31G · PN-39 · PN-35 · PN-38 · PN-37', name: '모델(ERD 캔버스 · 사전 패널 · 엔터티 패널 · 표 보기 · 모델 검토 · 게이트 A · 확정 신청 · DBMS 비교)', menu: '시스템', docs: [['03 ERD 편집기', D.erd], ['02 §5.1~5.4·5.7', D.flows], ['22 §6 SWS 비교 결정', D.sws], ['23 §6-2·5·6 캔버스 숫자', D.perf]], states: [['요구사항·프로젝트(편집)', 'model.html'], ['리스크(검토 중)', 'model.html?area=risk'], ['v4 확정본 사본', 'model.html?area=rq&snap=REQ-2026-0003'], ['예시: 미준수 해결 후(조회 전용)', 'model.html?state=resolved']] },
+    { file: 'standardize.html', ids: 'SC-34', name: '표준 맞추기', menu: '시스템', docs: [['02 §5.3', D.flows], ['30 MD-42·50~55', D.meta]], states: [['요구사항·프로젝트', 'standardize.html'], ['예외만', 'standardize.html?f=ex'], ['DDL 가져오기 직후', 'standardize.html?from=import'], ['리스크(대상 없음)', 'standardize.html?area=risk']] },
+    { file: 'import.html', ids: 'SC-36', name: '가져오기(엑셀·DDL → 모델)', menu: '시스템', docs: [['02 §5.6', D.flows]], states: [['기본', 'import.html']] },
+    { file: 'ddl.html', ids: 'SC-37', name: 'DDL 출력 · 게이트 B', menu: '시스템', docs: [['02 §5.5', D.flows]], states: [['기본', 'ddl.html']] },
+    { file: 'outputs.html', ids: 'SC-38', name: '산출물', menu: '시스템', docs: [['05 §8 DA# 비교', D.da]], states: [['테이블 정의서', 'outputs.html?k=tbl']] },
+    { file: 'settings.html', ids: 'SC-40 · SC-41 · SC-42 · SC-43', name: '설정(기관 · 시스템 · 사용자·역할 · 검수 기준)', menu: '관리', docs: [['02 §6 설정 흐름', D.flows], ['30 §4 검수 기준', D.meta]], states: [['기관(이데이터 Admin)', 'settings.html?as=lee'], ['시스템', 'settings.html?as=lee#sys'], ['검수 기준', 'settings.html?as=lee#rules'], ['Admin 아님 → 403', 'settings.html?as=kim']] },
+    { file: 'audit.html', ids: 'SC-58', name: '감사 로그', menu: '관리', docs: [['06 §3', D.plan]], states: [['DA로 보기', 'audit.html?as=lee']] },
+    { file: 'mypage.html', ids: 'SC-51 · PN-50', name: '마이페이지 · 사용자 메뉴', menu: '사용자', docs: [['06 §3', D.plan]], states: [['프로필', 'mypage.html'], ['내 신청', 'mypage.html#mine'], ['알림 설정', 'mypage.html#notify']] },
+    { file: 'error.html', ids: 'SC-57', name: '오류·안내', menu: '공통', docs: [['06 §3', D.plan]], states: [['403', 'error.html?code=403&need=Admin&what=설정'], ['404', 'error.html?code=404'], ['500', 'error.html?code=500'], ['점검', 'error.html?code=maint'], ['로그아웃', 'error.html?code=logout'], ['세션 만료', 'error.html?code=expired&from=model.html']] }
+  ];
+  /* decisions made after the v7.1 freeze that the screens do not show yet (22 §6 · 23 §6 · 03 §13.1 · 06 남은 범위) */
+  const TODO = {
+    'home.html': [['전역 검색 Ctrl+K(사전·모델·결재) — 셸 공통, 아직 표시만', '06 남은 범위'], ['로그인 화면 SC-56 없음', '06 남은 범위']],
+    'dictionary.html': [['2글자 이하 검색은 앞부분 일치, 부분 일치 총건수는 1,000건까지만 세고 "1,000건 이상 — 더 입력하세요" 표시', '23 §6-1'], ['사전 목록 가상화(행 40개만 그림)', '23 §6-3'], ['목록 필터 보강: 길이 범위·도메인 연결 여부·원본 폐기', '22 §6-10'], ['영구 삭제 절차(V0 보관 → 대상 이름 입력 확인·사유·삭제 로그, 참조 시 차단) 화면 없음', '30 v1.2 ⑦'], ['상세 패널 재검토 사유를 진단 코드 목록으로', '30 v1.2 ⑥']],
+    'dict-history.html': [['영구 삭제 수행 로그 보기(DA·Admin)', '30 v1.2 ⑦']],
+    'excel-import.html': [['업로드 상한 20MB·10만 행 안내와 초과 시 차단', '23 §6-4'], ['검증 토큰: 검수 기준(정책 버전)·사전이 바뀌면 "다시 검증" 안내', '30 v1.2 ⑤'], ['오류 행 파일의 \'오류 및 수정 가이드\' 시트 안내', '07 §4'], ['결과 표 가상화', '23 §6-3']],
+    'uploads.html': [['검증 토큰 만료(정책·사전 변경) 표시', '30 v1.2 ⑤']],
+    'approvals.html': [['결재 문서에 신청·승인 시점의 정책 버전과 경고 표시', '30 v1.2 ⑤'], ['모델 확정: 서버가 고정한 시점·내용 해시 표시', '03 §13.1-2']],
+    'system.html': [['시스템 전체 ERD 진입 — 영역 묶음 보기가 기본', '23 §6-2']],
+    'model.html': [['카드 안 편집은 속성 추가·이름 바꾸기만, 나머지는 오른쪽 패널', '03 §0'], ['관계선을 FK 속성 행에 붙이기(컬럼 단위)', '22 §6-5'], ['부모 PK를 자식에 끌어다 놓아 키 전달', '22 §6-5'], ['복합 FK 묶음 관리(식별 전환 시 묶음 전체 PK, 삭제 시 유지/삭제 선택)', '22 §6-5'], ['자동 배치 진행 표시·취소(Worker)', '23 §6-5'], ['상세도 전환 0.35배 요약 · 0.2배 영역 묶음, 확대가 멈춘 뒤 전환', '23 §6-6'], ['업무 영역 300 엔터티 초과 경고', '23 §6-2'], ['조회자 화면 읽기 전용(서버 차단과 같이)', '23 §5 · 03 §13.1-1'], ['ERD 편집 완결(남은 범위)', '06 남은 범위']],
+    'standardize.html': [['재검토 사유를 진단 코드 목록으로(용어·단어·도메인 연결, 기준 서명 변경 등)', '30 v1.2 ⑥']],
+    'import.html': [['엑셀 테이블 정의서 → ERD 초안(가져올 때 중복만, 표준 검사는 표준 맞추기)', '20 · W2 후보']],
+    'outputs.html': [['공식 산출물 ERD는 서버 캡처로(화면과 동일), 사용자 내보내기는 그대로', '03 ERD-Q2 보강']],
+    'settings.html': [['검수 기준에 정책 버전 번호·변경 이력', '30 v1.2 ⑤'], ['T11 가져오기·출력 결과물 / T12 운영·관리 테마', '06 남은 범위']],
+    'audit.html': [['영구 삭제 로그를 감사 로그에 포함', '30 v1.2 ⑦']]
+  };
+  SCREENS.forEach(s => { s.todo = TODO[s.file] || []; });
+  window.SCREENS = SCREENS; window.SCREEN_DOCS = D;
+  const curFile = () => (location.pathname.split('/').pop() || 'index.html');
+  /* per-screen review notes — kept across ↺ reset; exported as markdown for planning */
+  const getNotes = () => J('dbm-notes', {});
+  const saveNotes = n => S('dbm-notes', n);
+  window.getNotes = getNotes;
+  window.notesMarkdown = () => { const n = getNotes(); const rows = []; SCREENS.forEach(s => (n[s.file] || []).forEach(x => rows.push(`| ${s.ids} | ${s.name} | ${x.done ? '✅' : '☐'} | ${x.text.replace(/\|/g, '\\|').replace(/\n/g, '<br>')} | ${x.by} · ${x.at} |`))); return rows.length ? `| 화면 | 이름 | 처리 | 메모 | 작성 |\n|---|---|---|---|---|\n${rows.join('\n')}` : '(메모 없음)'; };
+  function screenPanel() {
+    const f = curFile(); const i = SCREENS.findIndex(s => s.file === f); const s = SCREENS[i];
+    const p = document.getElementById('scr-panel'); if (!p) return;
+    if (!s) { p.innerHTML = '<div class="scr-b">이 화면은 화면 목록에 없습니다.</div>'; return; }
+    const prev = SCREENS[(i - 1 + SCREENS.length) % SCREENS.length], next = SCREENS[(i + 1) % SCREENS.length];
+    const notes = getNotes()[f] || [];
+    p.innerHTML = `<div class="scr-h"><div><span class="badge">${s.menu}</span> <b class="mono">${s.ids}</b></div><button class="iconbtn" id="scr-x" aria-label="화면 정보 닫기" style="width:26px;height:26px">${ICON.x}</button></div>
+      <div class="scr-b">
+        <div class="scr-name">${s.name}</div>
+        <div class="scr-sec">상태별 바로가기</div><div class="scr-links">${s.states.map(([l, u]) => `<a href="${u}">${l}</a>`).join('')}</div>
+        <div class="scr-sec">관련 설계 문서</div><div class="scr-links">${s.docs.map(([l, u]) => `<a href="${u}" target="_blank" rel="noopener">${l} ↗</a>`).join('')}</div>
+        <div class="scr-sec">설계 결정 반영 대기 <span class="badge">${s.todo.length}</span> <span class="caption muted">목업 동결 뒤 결정 — 아직 화면에 없음</span></div>
+        ${s.todo.length ? `<ul class="scr-todo">${s.todo.map(([t, r]) => `<li>${t} <span class="caption faint">${r}</span></li>`).join('')}</ul>` : '<div class="caption muted">없음</div>'}
+        <div class="scr-sec">검토 메모 <span class="caption muted">${notes.filter(x => !x.done).length}건 남음 · 이 브라우저에 저장(↺ 초기화에도 유지)</span></div>
+        <div class="scr-notes">${notes.map((x, k) => `<div class="scr-note ${x.done ? 'done' : ''}"><label><input type="checkbox" data-nd="${k}" ${x.done ? 'checked' : ''} aria-label="처리 표시"></label><div class="grow"><div class="t">${x.text.replace(/</g, '&lt;').replace(/\n/g, '<br>')}</div><div class="caption faint">${x.by} · ${x.at}</div></div><button class="btn ghost sm" data-nx="${k}" aria-label="메모 삭제">삭제</button></div>`).join('') || '<div class="caption muted">아직 메모가 없습니다.</div>'}</div>
+        <textarea class="input" id="scr-text" rows="3" placeholder="이 화면에서 고칠 점·확인할 점 (Ctrl+Enter 추가)"></textarea>
+        <div class="flex" style="margin-top:6px"><button class="btn sm" id="scr-export">전체 메모 복사(마크다운)</button><span class="grow"></span><button class="btn sm primary" id="scr-add">메모 추가</button></div>
+      </div>
+      <div class="scr-f"><a href="${prev.file}">← ${prev.ids.split(' · ')[0]} ${prev.name.split('(')[0]}</a><a href="index.html">목업 지도</a><a href="${next.file}">${next.ids.split(' · ')[0]} ${next.name.split('(')[0]} →</a></div>`;
+    p.querySelector('#scr-x').onclick = () => toggleScreenPanel(false);
+    const add = () => { const v = p.querySelector('#scr-text').value.trim(); if (!v) return; const n = getNotes(); (n[f] = n[f] || []).push({ text: v, at: now(), by: ME.name, done: false }); saveNotes(n); screenPanel(); toast('메모를 추가했습니다', 'info'); };
+    p.querySelector('#scr-add').onclick = add;
+    p.querySelector('#scr-text').onkeydown = e => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); add(); } };
+    p.querySelectorAll('[data-nd]').forEach(c => c.onchange = () => { const n = getNotes(); n[f][+c.dataset.nd].done = c.checked; saveNotes(n); screenPanel(); });
+    p.querySelectorAll('[data-nx]').forEach(b => b.onclick = () => { const n = getNotes(); n[f].splice(+b.dataset.nx, 1); saveNotes(n); screenPanel(); });
+    p.querySelector('#scr-export').onclick = () => { const md = notesMarkdown(); (navigator.clipboard ? navigator.clipboard.writeText(md) : Promise.reject()).then(() => toast('전체 화면의 메모를 마크다운 표로 복사했습니다', 'success'), () => { window.prompt('복사해서 쓰세요', md); }); };
+  }
+  function toggleScreenPanel(on) {
+    const p = document.getElementById('scr-panel'); if (!p) return;
+    const open = on == null ? !p.classList.contains('open') : on;
+    p.classList.toggle('open', open); store.set('dbm-scr-open', open ? '1' : '0');
+    const b = document.getElementById('mk-scr'); if (b) b.setAttribute('aria-expanded', open ? 'true' : 'false');
+    if (open) screenPanel();
+  }
+  window.toggleScreenPanel = toggleScreenPanel;
+
   function navLink(href, label, key, extra) {
     const page = document.body.dataset.page;
     const on = key && page === key ? ' on' : '';
@@ -328,7 +414,9 @@
         <select id="mk-role" aria-label="역할 보기 전환">${Object.values(USERS).map(u => `<option value="${u.id}" ${u.id === ME.id ? 'selected' : ''}>${u.name} · ${u.roles.map(r => ROLE_NAME[r]).join('·')}</option>`).join('')}</select>
         <span class="seg" id="seg-frame"><button data-v="1920">1920</button><button data-v="1600">1600</button></span>
         <span class="seg" id="seg-theme"><button data-v="light">라이트</button><button data-v="dark">다크</button></span>
-        <button class="reset" id="mk-reset" title="목업 데이터 초기화(결재 진행 상태·알림 읽음)">↺</button>
+        <button class="reset" id="mk-reset" title="목업 데이터 초기화(결재 진행 상태·알림 읽음) — 검토 메모는 유지">↺</button>
+        <button class="reset scr-btn" id="mk-scr" title="화면 정보 · 상태별 바로가기 · 설계 문서 · 검토 메모" aria-expanded="false">화면${(() => { const n = (J('dbm-notes', {})[curFile()] || []).filter(x => !x.done).length; return n ? ` <span class="scr-n">${n}</span>` : ''; })()}</button>
+        <a class="reset" href="index.html" title="목업 지도(전체 화면·교차 시나리오)">지도</a>
       </div>
       <button class="iconbtn" id="btn-bell" aria-label="알림 ${nUnread}건" aria-haspopup="true" aria-expanded="false">${ICON.bell}${nUnread ? `<span class="dot">${nUnread}</span>` : ''}</button>
       <button class="avatar btnlike" id="btn-user" aria-label="사용자 메뉴 · ${ME.name}" aria-haspopup="true" aria-expanded="false">${ME.name[0]}${store.get('dbm-seen-ver', '') !== PRODUCT.version ? '<span class="newdot" title="새 기능"></span>' : ''}</button>
@@ -408,7 +496,10 @@
     sf.addEventListener('click', e => { const v = e.target.dataset.v; if (!v) return; store.set('dbm-frame', v); const p = new URLSearchParams(location.search); p.set('w', v); location.search = p.toString(); });
     st.addEventListener('click', e => { const v = e.target.dataset.v; if (!v) return; store.set('dbm-theme', v); applyTheme(v); st.querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.v === v)); });
     top.querySelector('#mk-role').addEventListener('change', e => { store.set('dbm-role', e.target.value); const p = new URLSearchParams(location.search); p.delete('as'); location.search = p.toString(); location.reload(); });
-    top.querySelector('#mk-reset').addEventListener('click', () => { const keep = ['dbm-frame', 'dbm-theme', 'dbm-role', 'dbm-single-keys']; try { Object.keys(localStorage).filter(k => k.startsWith('dbm-') && !keep.includes(k)).forEach(k => store.del(k)); } catch (e) {} Object.keys(USERS).forEach(u => store.del('dbm-read-' + u)); flash('목업 데이터를 초기화했습니다', 'info'); location.reload(); });
+    top.querySelector('#mk-scr').addEventListener('click', e => { e.stopPropagation(); toggleScreenPanel(); });
+    const sp = document.createElement('aside'); sp.className = 'scr-panel'; sp.id = 'scr-panel'; sp.setAttribute('aria-label', '화면 정보'); sp.addEventListener('click', e => e.stopPropagation()); app.appendChild(sp);
+    if (store.get('dbm-scr-open', '0') === '1') toggleScreenPanel(true);
+    top.querySelector('#mk-reset').addEventListener('click', () => { const keep = ['dbm-frame', 'dbm-theme', 'dbm-role', 'dbm-single-keys', 'dbm-notes', 'dbm-scr-open']; try { Object.keys(localStorage).filter(k => k.startsWith('dbm-') && !keep.includes(k)).forEach(k => store.del(k)); } catch (e) {} Object.keys(USERS).forEach(u => store.del('dbm-read-' + u)); flash('목업 데이터를 초기화했습니다', 'info'); location.reload(); });
 
     // notifications
     const pn = top.querySelector('#pn-notif'), pu = top.querySelector('#pn-user');

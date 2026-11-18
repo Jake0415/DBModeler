@@ -201,6 +201,8 @@ window.pageInit = function () {
     location.href = `model.html?area=${AREA}`;
   };
   draw();
+  // ?f=ex|na|comb|unreg|ok — open with that status filter (links from the model's compliance bar)
+  if (q.get('f')) { const chip = document.querySelector(`.toolbar .chip[data-filter="${q.get('f')}"]`); if (chip) chip.click(); }
 };
 </script>
 </body>

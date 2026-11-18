@@ -18,7 +18,8 @@
 </head>
 <body>
 <div class="wrap">
-  <div class="flex" style="margin-bottom:4px"><span class="brand-mark" style="width:24px;height:24px">DB</span><h1 style="font-size:24px;letter-spacing:-.6px">DBModeler 클릭 목업 v7</h1></div>
+  <div class="flex" style="margin-bottom:4px"><span class="brand-mark" style="width:24px;height:24px">DB</span><h1 style="font-size:24px;letter-spacing:-.6px">DBModeler 클릭 목업 v7.2</h1></div>
+  <p class="caption" style="margin:4px 0 0"><b>v7.2 (2026-11-18, 시나리오 검증 단계)</b>: 모든 화면에 <b>목업 › 화면</b> 패널(화면 ID·상태별 바로가기·설계 문서·설계 결정 반영 대기·검토 메모·이전/다음) + <b>지도</b> 링크. 설계 문서(.md) 링크가 목업 서버에서 열림. 끊긴 연결 수정(과거 결재 문서 3건, 표준 맞추기 상태 필터, 없는 문서 안내) — <a href="../06-ux-review-plan.md">06 §4.10</a></p>
   <p class="caption" style="margin:4px 0 0">v7 (2026-11-18, 마지막 목업 차수): 반려·회수 → 진행 중 해제·보완 재신청(제출 항목·의견 채움) · 결재함 [확정본 보기]가 문서 사본을 엶·없는 스냅숏은 ‘열 수 없음’·직전 확정본 비교 · 예시 주소(<code>?state=</code>)는 조회 전용 · 표준 맞추기 행별 처리·사유·영역·버전 인계, 용어 문서에 실제 항목, 승인·반려 뒤 모델 상태 · 결재 상세가 제출 행·선택·사유로 그려지고 검사 탭 = 승인 직전 재검사 · 사전 반영이 칸 값까지 정확(대상 없으면 실패) · 역할 바뀐 탭·다른 탭 저장·다음 버전 중복 시작 차단 · 엑셀 실패 값 복원·보이는 대상만 자동 수정·경고 확인·없는 묶음 종료·반영본 확인 검증·보류 행 새 묶음 · 공표 대상 고정 — <a href="../06-ux-review-plan.md">06 §4.8</a></p>
   <p class="caption" style="margin:4px 0 0">v6 (2026-11-18): 제출 내용을 문서에 고정(신청된 업로드는 열람 전용, 예시 주소는 저장 안 함) · 사전 항목·기준본을 상태 계층에(승인하면 항목 V1/V+1·항목별 변경 내역, 신청은 실제 대기 목록) · 버튼 조건 한 함수(사유 규칙이 차단을 덮지 않음) · 실행 시점 역할·잠금 재확인(다른 탭 변경 감지) · 모델 업무 영역·버전별 저장·확정 스냅숏·다음 버전 승계 · 표준 맞추기 예외·비대상 인계 · 반영본 재업로드 확인 · 후보 전환 = 실제 문서 · 공표는 항목 단위 — <a href="../06-ux-review-plan.md">06 §4.6</a></p>
   <p class="caption" style="margin:4px 0 0">v5 (2026-11-18): <b>공통 상태 계층</b>(결재 문서·모델 버전/잠금·업로드 묶음·사전 변경 내역·사람 기준 알림) — 모델 잠금은 결재 문서에서 계산, 신청마다 새 번호·이력은 추가만, 표준 맞추기는 선택한 행만 반영, 준수율 한 판정·승인 직전 재검사 · <b>엑셀 왕복 편집</b>(기준본·차이 비교·칸 단위 3방향·보류·브라우저 보정·보정본·업로드 이력) · 사전 검색(초성·과거명·금칙어)·버전 이력·DA 공표 · 대비·키보드·포커스 — <a href="../07-dict-excel-roundtrip.md">07</a> · <a href="../06-ux-review-plan.md">06 §4.2</a></p>
@@ -30,7 +31,7 @@
 
   <h2 style="font-size:16px;margin-bottom:8px">교차 시나리오 (끝까지 클릭)</h2>
   <div class="card" style="margin-bottom:12px"><b>T1 설치 직후 첫 사용</b><div class="caption muted">기관 사전이 빈 상태 → 엑셀로 등록 → 겸임 DA 자기 승인</div>
-    <div class="path"><a href="dictionary.html">SC-10 사전(빈 상태 배너)</a><span class="ar">→</span><a href="excel-import.html">SC-13 엑셀 1~6단계</a><span class="ar">→</span><a href="approvals.html?new=excel">SC-20 대기함</a><span class="ar">→</span><a href="approvals.html?new=excel">PN-21 승인 → MO-22 자기 승인</a></div></div>
+    <div class="path"><a href="dictionary.html">SC-10 사전(빈 상태 배너)</a><span class="ar">→</span><a href="excel-import.html">SC-13 엑셀 1~6단계</a><span class="ar">→</span><a href="approvals.html">SC-20 대기함</a><span class="ar">→</span><a href="approvals.html?doc=REQ-2026-0016">PN-21 승인 → MO-22 자기 승인</a></div></div>
   <div class="card" style="margin-bottom:12px"><b>T2 신규 설계 중 표준 맞추기</b><div class="caption muted">속성 입력 → 자동완성 → 미등록 단어는 후보 등록</div>
     <div class="path"><a href="model.html">SC-31 모델 · PN-33 자동완성</a><span class="ar">→</span><a href="model.html">PN-32 사전 패널 [후보 등록]</a><span class="ar">→</span><a href="candidates.html">SC-14 후보 큐</a></div></div>
   <div class="card" style="margin-bottom:12px"><b>T3 현행 DB 표준화</b><div class="caption muted">DDL 가져오기 → 표준 맞추기 자동 오픈 → 일괄 적용</div>
@@ -47,6 +48,18 @@
     <div class="path"><a href="dictionary.html#download">SC-10 내려받기</a><span class="ar">→</span><a href="excel-import.html">SC-13 1~4</a><span class="ar">→</span><a href="excel-import.html?step=5">5 결과 검토·보정</a><span class="ar">→</span><a href="uploads.html">SC-15 업로드 이력</a><span class="ar">→</span><a href="approvals.html?doc=REQ-2026-0016">결재</a><span class="ar">→</span><a href="dict-history.html">SC-16 변경 내역 · 공표</a></div></div>
   <div class="card" style="margin-bottom:24px"><b>T6 같은 업무 영역 동시 편집</b><div class="caption muted">홍설계와 함께 편집 → 동시 수정·연결 끊김 → 확정 신청하면 모두 조회 전용</div>
     <div class="path"><a href="model.html">SC-31 접속자·커서·'편집 중' 표시</a><span class="ar">→</span><a href="model.html">[동시 수정 충돌 보기]·[연결 끊김 보기]</a><span class="ar">→</span><a href="model.html?area=risk">검토 중 영역(리스크 · REQ-2026-0011) — 전원 조회 전용</a></div></div>
+
+  <h2 style="font-size:16px;margin-bottom:4px">화면 지도 — 화면 단위 검토</h2>
+  <p class="caption muted" style="margin:0 0 8px">모든 화면 상단의 <b>목업 › 화면</b> 버튼을 누르면 그 화면의 ID, 상태별 바로가기, 관련 설계 문서, <b>검토 메모</b>가 열립니다. 이전·다음 화면으로도 이동할 수 있습니다. 메모는 이 브라우저에 저장되고 ↺ 초기화에도 남습니다. <button class="btn sm" id="map-export">전체 메모 복사(마크다운)</button></p>
+  <table class="tbl" id="screen-map" style="border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:24px"><thead><tr><th>메뉴</th><th>화면 ID</th><th>화면</th><th>상태별 바로가기</th><th>설계 문서</th><th class="num">반영 대기</th><th class="num">남은 메모</th></tr></thead><tbody></tbody></table>
+  <script src="assets/app.js"></script>
+  <script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const notes = getNotes();
+    document.querySelector('#screen-map tbody').innerHTML = SCREENS.map(s => `<tr><td>${s.menu}</td><td class="mono" style="white-space:nowrap">${s.ids.replace(/ · /g, '<br>')}</td><td><a href="${s.file}"><b>${s.name}</b></a></td><td class="caption">${s.states.map(([l, u]) => `<a href="${u}">${l}</a>`).join(' · ')}</td><td class="caption">${s.docs.map(([l, u]) => `<a href="${u}" target="_blank" rel="noopener">${l}</a>`).join(' · ')}</td><td class="num" title="${s.todo.map(t => t[0]).join('\n').replace(/"/g, '&quot;')}">${s.todo.length || ''}</td><td class="num">${(notes[s.file] || []).filter(x => !x.done).length || ''}</td></tr>`).join('');
+    document.getElementById('map-export').onclick = () => { const md = notesMarkdown(); (navigator.clipboard ? navigator.clipboard.writeText(md) : Promise.reject()).then(() => alert('전체 메모를 마크다운 표로 복사했습니다'), () => window.prompt('복사해서 쓰세요', md)); };
+  });
+  </script>
 
   <h2 style="font-size:16px;margin-bottom:8px">전체 화면</h2>
   <table class="tbl" style="border:1px solid var(--border);border-radius:8px;overflow:hidden">
