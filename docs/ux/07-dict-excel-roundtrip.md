@@ -1,6 +1,6 @@
 # 표준 사전 엑셀 왕복 편집 · 버전 · 이력 · 오류 보정 · 검색 — 설계 플랜
 
-> 작성 2026-11-18 · 상태: **v1.0 — Codex·Claude 교차 검토 반영** (§7) · 초안 v0.1에서 바뀐 곳은 §2·§4·§5에 반영
+> 작성 2026-11-18 · 상태: **v1.0 — Codex·Claude 교차 검토 반영** (§7) · 초안 v0.1에서 바뀐 곳은 §2·§4·§5에 반영 · **목업 v5에 반영** ([06 §4.4](06-ux-review-plan.md))
 > 검토 원본: [review/codex-r5.md](review/codex-r5.md) · [review/claude-r5.md](review/claude-r5.md) (독립) · [review/codex-r6.md](review/codex-r6.md) · [review/claude-r6.md](review/claude-r6.md) (교차)
 > 근거: 사용자 업무 설명 — "표준 사전을 엑셀로 작성 중이고, 기존 작업을 템플릿에 맞춰 업로드하면서 수정한다. 그래서 수정 버전·변경 이력·오류 체크와 수정 편의·검색을 통한 정보 확인이 중요하다."
 > 비교 대상: [30-metadata-design.md](../spec/da-feature-spec/30-metadata-design.md) MD-08·09·10·11·12·23·24, §4 검증 규칙 · [02-flows.md](02-flows.md) §3.1·§3.3 · [06-ux-review-plan.md](06-ux-review-plan.md) §4.2 v5 Top 10 · 목업 `excel-import.html`·`dictionary.html`

@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>업로드 이력 · DBModeler 목업</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="assets/app.css">
+<script src="assets/app.js"></script>
+</head>
+<body data-page="excel">
+<div id="app">
+<div id="content" class="page">
+  <div class="page-header">
+    <a class="btn ghost sm" href="dictionary.html">← 사전</a>
+    <h1>업로드 이력</h1>
+    <span class="caption muted">엑셀 왕복 편집 묶음 · 30일 임시 보관 · 원본 열람은 올린 사람·DA</span>
+    <div class="actions"><a class="btn primary" href="excel-import.html">엑셀 가져오기</a></div>
+  </div>
+  <div class="toolbar">
+    <button class="chip on" data-uf="">전체</button><button class="chip" data-uf="임시 저장">임시 저장</button><button class="chip" data-uf="신청됨">신청됨</button><button class="chip" data-uf="반영됨">반영됨</button><button class="chip" data-uf="보완">반려·회수</button><button class="chip" data-uf="취소">취소</button>
+  </div>
+  <div class="page-body">
+    <div class="main"><div class="scroll">
+      <table class="tbl"><thead><tr><th>업로드</th><th>파일</th><th>종류</th><th>올린 사람</th><th>기준본</th><th class="num">행</th><th>결과</th><th>연결 신청</th><th>상태</th></tr></thead><tbody id="ub"></tbody></table>
+    </div></div>
+    <aside class="rpanel open" id="pn-up" aria-label="업로드 상세"></aside>
+  </div>
+</div>
+</div>
+<script>
+window.pageInit = function () {
+  const $ = id => document.getElementById(id);
+  let f = '', sel = new URLSearchParams(location.search).get('b');
+  const docs = getDocs();
+  const docOf = id => docs.find(d => d.id === id);
+  const stateOf = b => { const d = (b.docs || []).map(docOf).filter(Boolean).slice(-1)[0]; if (d && ['rejected', 'withdrawn'].includes(d.step)) return '보완'; if (d && d.step === 'done') return '반영됨'; return b.status; };
+  const vis = b => b.by === ME.id || ME.has('da');
+  function draw() {
+    const L = getBatches().filter(vis).filter(b => !f || stateOf(b) === f);
+    if (!sel && L[0]) sel = L[0].id;
+    $('ub').innerHTML = L.map(b => { const c = b.counts; const st = stateOf(b); const d = (b.docs || []).map(docOf).filter(Boolean);
+      return `<tr class="click ${sel === b.id ? 'sel' : ''}" data-b="${b.id}" tabindex="0"><td class="mono">${b.id}<div class="caption faint">${b.at}</div></td><td>${b.file}</td><td>${b.kind}</td><td>${USERS[b.by] ? USERS[b.by].name : b.by}</td><td class="mono caption">${b.baseline}</td><td class="num">${b.rows}</td><td class="caption">${c ? `신규 ${c.new} · 변경 ${c.chg} · 동일 ${c.same} · 보류 ${c.waitDiff + c.pre} · 오류 ${c.err}` : b.note || '—'}</td><td>${d.map(x => `<a class="mono" href="approvals.html?doc=${x.id}">${x.id}</a> <span class="caption">${STEP_NAME[x.step]}</span>`).join('<br>') || '—'}</td><td><span class="badge ${st === '반영됨' ? 'b-success' : st === '보완' ? 'b-danger' : st === '취소' ? '' : 'b-info'}">${st === '보완' ? '반려·회수 — 보완 필요' : st}</span></td></tr>`; }).join('') || '<tr><td colspan="9" class="caption muted" style="text-align:center;padding:30px">업로드가 없습니다</td></tr>';
+    panel();
+  }
+  function panel() {
+    const b = getBatches().find(x => x.id === sel); const p = $('pn-up'); if (!b) { p.innerHTML = ''; return; }
+    const st = stateOf(b), c = b.counts || {}, s = b.sub;
+    const ds = (b.docs || []).map(docOf).filter(Boolean);
+    const canResume = b.by === ME.id && ['임시 저장', '보완'].includes(st);
+    p.innerHTML = `<div class="rp-head"><div class="t"><span class="mono">${b.id}</span><span class="badge">${b.kind}</span></div><h2 style="margin-top:6px">${b.file}</h2><div class="rp-sub">${USERS[b.by] ? USERS[b.by].name : ''} · ${b.at} · 기준본 ${b.baseline}</div></div>
+      <div class="rp-body">
+        ${b.counts ? `<div class="section-t" style="margin-top:0">검증·비교 결과</div><table class="tbl"><tbody>${[['신규', c.new], ['변경', c.chg], ['동일', c.same], ['동일 내용 대기', c.waitSame], ['다른 내용 대기(보류)', c.waitDiff], ['버전 충돌', c.conflict], ['후보 선택', c.pick], ['선행 승인(보류)', c.pre], ['오류', c.err], ['파일에서 빠짐', c.missing]].map(([l, n]) => `<tr><td>${l}</td><td class="num mono">${n || 0}</td></tr>`).join('')}</tbody></table>` : `<div class="banner warning"><span>!</span><div>${b.note || '검증 결과 없음'}</div></div>`}
+        ${s ? `<div class="section-t">신청한 내용</div><div class="caption">신규 ${s.new} · 변경 ${s.chg + s.conflict} · 후보 ${s.pick} · 미사용 ${s.unuse} — 보류 ${s.hold} · 제외 ${s.ex}</div>` : ''}
+        <div class="section-t">연결 신청</div>${ds.map(d => `<div class="flex" style="margin-bottom:4px"><a class="mono" href="approvals.html?doc=${d.id}">${d.id}</a><span class="badge ${d.step === 'done' ? 'b-success' : ['rejected', 'withdrawn'].includes(d.step) ? 'b-danger' : 'b-info'}">${STEP_NAME[d.step]}</span><span class="caption muted">${d.n}건</span></div>`).join('') || '<div class="caption muted">아직 신청하지 않았습니다</div>'}
+        ${st === '보완' ? '<div class="banner warning" style="margin-top:8px"><span>!</span><div>반려·회수됐습니다. 이어서 보정한 뒤 다시 신청하면 <b>새 신청번호</b>가 만들어지고 이 묶음에 연결됩니다.</div></div>' : ''}
+        ${(c.waitDiff || c.pre) && st !== '임시 저장' ? `<div class="banner" style="margin-top:8px"><span>●</span><div class="grow">보류 ${(c.waitDiff || 0) + (c.pre || 0)}행 — 앞선 신청이 끝나면 다시 검증할 수 있습니다.</div><button class="btn sm" data-toast="보류 행을 현재 사전 기준으로 다시 검증했습니다 — 신청 가능 1 · 아직 대기 1(목업)" data-toast-type="info">보류 행 다시 검증</button></div>` : ''}
+      </div>
+      <div class="rp-foot">${canResume ? `<a class="btn primary" href="excel-import.html?resume=${b.id}">이어서 작업</a>` : ''}<span class="grow"></span>
+        <button class="btn sm" data-toast="원본_${b.file} 내려받기 — 열람 기록이 감사 로그에 남습니다" data-toast-type="info">원본</button>
+        ${b.counts ? `<button class="btn sm" data-toast="보정본_${b.id}.xlsx — 화면에서 고친 값 + ‘변경점’ 시트" data-toast-type="info">보정본</button>` : ''}
+        ${st === '반영됨' ? `<button class="btn sm primary" data-toast="반영본_${b.id}.xlsx — 새 버전·ID 반영. 다시 올리면 모두 ‘동일’로 나옵니다" data-toast-type="success">반영본</button>` : ''}</div>`;
+  }
+  $('ub').addEventListener('click', e => { const r = e.target.closest('[data-b]'); if (r) { sel = r.dataset.b; draw(); } });
+  document.querySelector('.toolbar').addEventListener('click', e => { const c = e.target.closest('[data-uf]'); if (!c) return; document.querySelectorAll('[data-uf]').forEach(x => x.classList.toggle('on', x === c)); f = c.dataset.uf; sel = null; draw(); });
+  draw();
+};
+</script>
+</body>
+</html>

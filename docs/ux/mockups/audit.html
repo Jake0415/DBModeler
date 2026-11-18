@@ -26,22 +26,36 @@
     <span class="chip" data-group="ak" data-filter="model">모델 확정</span>
     <span class="grow"></span>
     <select class="input" style="width:140px;height:28px" aria-label="기간"><option>최근 30일</option><option>최근 1년</option><option>전체</option></select>
-    <input class="input" style="width:200px;height:28px" placeholder="사용자·문서 번호" aria-label="사용자·문서 번호 검색">
+    <input class="input" id="aq" style="width:200px;height:28px" placeholder="사용자·문서 번호" aria-label="사용자·문서 번호 검색">
   </div>
+  <div class="listhead" id="alh"></div>
   <div class="scroll" data-filter-target="ak">
-    <table class="tbl"><thead><tr><th>일시</th><th>사용자</th><th>종류</th><th>대상</th><th>내용 (전 → 후)</th><th>사유</th><th>IP</th></tr></thead><tbody>
+    <table class="tbl"><thead><tr><th>일시</th><th>사용자</th><th>종류</th><th>대상</th><th>내용 (전 → 후)</th><th>사유</th><th>IP</th></tr></thead><tbody id="ab">
       <tr data-f="appr self"><td class="mono">11/17 15:06</td><td>김모델 <span class="badge">DA</span></td><td><span class="badge b-violet">자기 승인</span></td><td class="mono">REQ-2026-0014</td><td>DA 승인 → 최종 승인 대기</td><td class="caption">DA 1인 운영 기간 · 최종 승인에서 재검토</td><td class="mono">10.12.3.41</td></tr>
       <tr data-f="set"><td class="mono">11/17 11:20</td><td>이데이터 <span class="badge">Admin</span></td><td><span class="badge">설정</span></td><td>사전 신청 최종 승인</td><td>끔 → <b>켬</b> (진행 중 3건은 기존 결재선 유지)</td><td class="caption">기관 담당자 지정 완료</td><td class="mono">10.12.3.12</td></tr>
       <tr data-f="role"><td class="mono">11/17 10:02</td><td>이데이터 <span class="badge">Admin</span></td><td><span class="badge b-warning">역할 변경</span></td><td>김모델</td><td>모델러 → 모델러 · <b>DA</b></td><td class="caption">DA 1인 운영 보완</td><td class="mono">10.12.3.12</td></tr>
       <tr data-f="role"><td class="mono">11/17 09:58</td><td>김모델</td><td><span class="badge b-danger">거부</span></td><td>김모델</td><td>자기 역할 변경 시도 → 거부됨</td><td class="caption">정책: 자기 역할 변경 불가</td><td class="mono">10.12.3.41</td></tr>
-      <tr data-f="dict"><td class="mono">11/16 18:10</td><td>시스템</td><td><span class="badge b-success">사전 반영</span></td><td class="mono">REQ-2026-0008</td><td>단어 12건 반영 · 제정 12차</td><td></td><td class="mono">—</td></tr>
+      <tr data-f="dict"><td class="mono">11/16 18:10</td><td>시스템</td><td><span class="badge b-success">사전 반영</span></td><td class="mono">REQ-2026-0008</td><td>단어 12건 반영 · 항목 버전 +1</td><td></td><td class="mono">—</td></tr>
       <tr data-f="model appr"><td class="mono">11/03 10:20</td><td>최관리 <span class="badge">기관 담당자</span></td><td><span class="badge b-violet">모델 확정</span></td><td class="mono">REQ-2026-0003</td><td>요구사항·프로젝트 v4 확정본</td><td class="caption">예외 2건 확인</td><td class="mono">10.12.5.3</td></tr>
     </tbody></table>
   </div>
 </div>
 </div>
 <script>
-window.pageInit = function () { if (!ME.has('da') && !ME.has('admin')) location.replace('error.html?code=403&need=DA 또는 Admin&what=감사 로그'); };
+window.pageInit = function () {
+  if (!ME.has('da') && !ME.has('admin')) { location.replace('error.html?code=403&need=DA 또는 Admin&what=감사 로그'); return; }
+  // live rows: every approval history entry and every publication is an audit row (single source)
+  const ab = document.getElementById('ab'); const live = [];
+  getDocs().forEach(d => (d.hist || []).forEach(h => live.push({ at: h.at, who: h.who, f: 'appr' + (h.self ? ' self' : '') + (d.type === 'model' && /최종/.test(h.act) ? ' model' : ''), kind: h.self ? '<span class="badge b-violet">자기 승인</span>' : `<span class="badge">${h.act}</span>`, tgt: d.id, what: `${d.title}`, why: h.why || '' })));
+  getChanges().filter(c => c.act === '공표').forEach(c => live.push({ at: c.at.slice(5).replace('-', '/'), who: c.by, f: 'dict', kind: '<span class="badge b-violet">공표</span>', tgt: c.item, what: '기관 사전 제정차수 +1', why: c.diff }));
+  live.sort((a, b) => b.at.localeCompare(a.at));
+  ab.insertAdjacentHTML('afterbegin', live.map(r => `<tr data-f="${r.f}"><td class="mono">${r.at}</td><td>${r.who}</td><td>${r.kind}</td><td class="mono">${r.tgt}</td><td>${r.what}</td><td class="caption">${r.why}</td><td class="mono">—</td></tr>`).join(''));
+  const aq = document.getElementById('aq');
+  const count = () => { document.getElementById('alh').innerHTML = `<b style="color:var(--fg)">${[...ab.rows].filter(r => r.style.display !== 'none').length}건</b> · 결재 이력·공표는 실시간 반영`; };
+  aq.oninput = () => { const v = aq.value.trim(); [...ab.rows].forEach(r => { r.style.display = !v || r.innerText.includes(v) ? '' : 'none'; }); count(); };
+  document.querySelector('.toolbar').addEventListener('click', () => setTimeout(count, 0));
+  count();
+};
 </script>
 </body>
 </html>

@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>사전 변경 내역 · DBModeler 목업</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="assets/app.css">
+<script src="assets/app.js"></script>
+</head>
+<body data-page="dictionary">
+<div id="app">
+<div id="content" class="page">
+  <div class="page-header">
+    <a class="btn ghost sm" href="dictionary.html">← 사전</a>
+    <h1>사전 변경 내역</h1>
+    <span class="badge" id="pubtag"></span>
+    <div class="actions"><button class="btn" id="b-xls">엑셀 보고서</button></div>
+  </div>
+  <div class="toolbar">
+    <select class="input" id="per" style="width:160px;height:28px" aria-label="기간"><option value="">기간: 전체</option><option value="7">최근 7일</option><option value="30" selected>최근 30일</option><option value="pub">직전 공표 이후</option></select>
+    <button class="chip on" data-a="">전체</button><button class="chip" data-a="추가">추가</button><button class="chip" data-a="변경">변경</button><button class="chip" data-a="미사용">미사용</button><button class="chip" data-a="공표">공표</button>
+    <input class="input" id="qq" style="width:220px;height:28px" placeholder="항목·신청번호·사람" aria-label="항목·신청번호·사람 검색">
+    <span class="grow"></span>
+    <button class="btn sm" disabled title="W2: 두 기준 시각 비교(History로 그 시점 재구성)">기준 시각 비교 (W2)</button>
+  </div>
+  <div class="listhead" id="lh" aria-live="polite"></div>
+  <div class="scroll" style="flex:1">
+    <table class="tbl"><thead><tr><th>반영 시각</th><th>항목</th><th>종류</th><th>변경</th><th>버전</th><th>내용</th><th>신청</th><th>처리</th><th>공표</th></tr></thead><tbody id="cb"></tbody></table>
+  </div>
+</div>
+</div>
+<script>
+window.pageInit = function () {
+  const $ = id => document.getElementById(id);
+  const pub = getPub();
+  $('pubtag').textContent = `현재 제정 ${pub.cha}차 · ${pub.at} 공표`;
+  let act = '';
+  if (new URLSearchParams(location.search).get('unpub')) $('per').value = 'pub';
+  const L = () => {
+    const per = $('per').value, qq = $('qq').value.trim(), today = new Date('2026-11-18');
+    return getChanges().filter(c => (!act || c.act.includes(act)) && (!qq || (c.item + c.doc + c.by).includes(qq)) && (!per || (per === 'pub' ? !c.pub : (today - new Date(c.at.slice(0, 10))) / 864e5 <= +per)));
+  };
+  function draw() {
+    const R = L();
+    $('lh').innerHTML = `<b style="color:var(--fg)">${R.length}건</b> · 반영 구분: 초기 적재 / 데이터 보완 / 사용자 변경 승인 · 이력은 추가만 되고 지워지지 않습니다`;
+    $('cb').innerHTML = R.map(c => `<tr><td class="mono">${c.at}</td><td><b>${c.item}</b></td><td>${c.kind}</td><td><span class="badge ${c.act === '공표' ? 'b-violet' : c.act.includes('미사용') ? '' : 'b-success'}">${c.act}</span></td><td class="mono">${c.ver}</td><td class="caption wrap">${c.diff || ''}</td><td>${c.doc && c.doc !== '—' ? `<a class="mono" href="approvals.html?doc=${c.doc}">${c.doc}</a>` : '—'}</td><td class="caption">${c.by}</td><td>${c.pub ? `<span class="badge">${c.pub}차</span>` : '<span class="caption muted">미공표</span>'}</td></tr>`).join('') || '<tr><td colspan="9" class="caption muted" style="text-align:center;padding:30px">조건에 맞는 변경이 없습니다</td></tr>';
+  }
+  document.querySelector('.toolbar').addEventListener('click', e => { const c = e.target.closest('[data-a]'); if (!c) return; document.querySelectorAll('[data-a]').forEach(x => x.classList.toggle('on', x === c)); act = c.dataset.a; draw(); });
+  $('per').onchange = draw; $('qq').oninput = draw;
+  $('b-xls').onclick = () => toast(`사전변경내역_${$('per').selectedOptions[0].text.replace(/[: ]/g, '')}.xlsx — ${L().length}건 · 필드별 전후 · 신청번호 · 모델 사용처 수`, 'info');
+  draw();
+};
+</script>
+</body>
+</html>

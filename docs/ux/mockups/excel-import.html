@@ -13,6 +13,14 @@
   .drop { border:1px dashed var(--border-strong); border-radius:var(--r-lg); padding:40px; text-align:center; color:var(--fg-2); background:var(--surface); }
   .kindcard { border:1px solid var(--border); border-radius:var(--r-lg); padding:16px; background:var(--surface); cursor:pointer; }
   .kindcard.on { border-color:var(--ink); box-shadow:0 0 0 1px var(--ink); }
+  .modecard { border:1px solid var(--border); border-radius:var(--r-lg); padding:14px 16px; background:var(--surface); cursor:pointer; display:flex; gap:10px; align-items:flex-start; }
+  .modecard.on { border-color:var(--ink); box-shadow:0 0 0 1px var(--ink); }
+  #grid-body tr.sel td { background:var(--surface-2); }
+  .st { display:inline-flex; align-items:center; gap:4px; }
+  .lg { display:inline-flex; align-items:center; gap:4px; font-size:12px; color:var(--fg-2); }
+  .lg i { width:10px; height:10px; border-radius:2px; display:inline-block; }
+  .three td:first-child { color:var(--fg-2); }
+  .saved { font-size:12px; color:var(--fg-2); }
 </style>
 </head>
 <body data-page="excel">
@@ -20,132 +28,105 @@
 <div id="content" class="page">
   <div class="page-header">
     <h1>엑셀 가져오기</h1>
-    <span class="crumb">기관 사전 · 표준용어</span>
-    <div class="actions">
-      <div class="steps" id="steps"></div>
-    </div>
+    <span class="crumb" id="crumb">기관 사전 · 표준용어</span>
+    <div class="actions"><span class="saved" id="saved"></span><div class="steps" id="steps"></div></div>
   </div>
 
   <div class="page-body"><div class="main">
+  <div class="pad" style="padding-bottom:0" id="resume-banner" hidden></div>
 
-  <!-- 1 kind -->
-  <section class="stepview" data-step="1"><div class="pad" style="max-width:960px">
-    <h2 style="font-size:16px;margin-bottom:12px">어떤 사전을 가져올까요?</h2>
-    <div class="grid3" style="grid-template-columns:repeat(4,1fr)">
-      <div class="kindcard"><b>표준단어</b><div class="caption muted">단어명·약어·영문명·형식단어·동의어·금칙어</div></div>
-      <div class="kindcard"><b>표준도메인</b><div class="caption muted">도메인명·그룹·타입·길이·소수점</div></div>
-      <div class="kindcard on"><b>표준용어</b><div class="caption muted">용어명·도메인명·설명 (분석으로 약어 생성)</div></div>
-      <div class="kindcard"><b>코드값</b><div class="caption muted">선택한 표준코드의 코드값·의미·유효기간</div></div>
+  <!-- 1 kind & mode -->
+  <section class="stepview" data-step="1"><div class="pad" style="max-width:980px">
+    <h2 style="font-size:16px;margin-bottom:12px">어떻게 가져올까요?</h2>
+    <div class="grid2" style="margin-bottom:20px">
+      <div class="modecard on" data-mode="round" tabindex="0" role="button"><input type="radio" name="mode" checked aria-label="편집용 파일 다시 올리기"><div><b>편집용 파일 다시 올리기</b><div class="caption muted">사전에서 [내려받기 › 편집용 엑셀]로 받아 고친 파일. 숨김 열(항목 ID·버전·기준본)로 <b>바뀐 것만</b> 찾아 신규·변경으로 나눕니다.</div></div></div>
+      <div class="modecard" data-mode="new" tabindex="0" role="button"><input type="radio" name="mode" aria-label="새 항목 등록"><div><b>새 항목 등록 (빈 양식)</b><div class="caption muted">처음 적재하거나 새 항목만 올릴 때. 기관 사전이 비어 있으면 <b>초기 적재</b>로 기록됩니다.</div></div></div>
     </div>
-    <div class="flex" style="margin-top:16px"><button class="btn">표준용어 양식 내려받기 (.xlsx)</button><span class="caption muted">양식이 아니어도 헤더 이름으로 열을 찾습니다</span></div>
-    <div class="grid2" style="margin-top:32px;grid-template-columns:3fr 2fr;align-items:start">
+    <div class="section-t">종류</div>
+    <div class="grid3" style="grid-template-columns:repeat(4,1fr)" id="kinds">
+      <div class="kindcard" data-k="단어"><b>표준단어</b><div class="caption muted">단어명·약어·영문명·형식단어·동의어·금칙어</div></div>
+      <div class="kindcard" data-k="도메인"><b>표준도메인</b><div class="caption muted">그룹·형식단어·타입·길이 (도메인명은 계산)</div></div>
+      <div class="kindcard on" data-k="용어"><b>표준용어</b><div class="caption muted">용어명·도메인·설명 (약어는 계산)</div></div>
+      <div class="kindcard" data-k="코드"><b>코드값</b><div class="caption muted">코드 그룹별로 한 결재 단위</div></div>
+    </div>
+    <div class="flex" style="margin-top:12px"><a class="btn" href="dictionary.html#download">사전에서 편집용 엑셀 내려받기</a><button class="btn ghost" data-toast="빈 양식_표준용어_양식v2.xlsx — 안내·목록 시트 포함" data-toast-type="info">빈 양식 내려받기</button><span class="caption muted">양식이 아니어도 머리글 이름으로 열을 찾습니다</span></div>
+    <div class="grid2" style="margin-top:28px;grid-template-columns:3fr 2fr;align-items:start">
       <div>
-        <div class="section-t">최근 가져오기</div>
-        <table class="tbl" style="border:1px solid var(--border);border-radius:8px;overflow:hidden"><thead><tr><th>일시</th><th>종류</th><th>파일</th><th class="num">건수</th><th>결과</th></tr></thead><tbody>
-          <tr><td class="mono">11/16 09:12</td><td>표준용어</td><td>요구사항_용어_1차.xlsx</td><td class="num">120</td><td><a href="approvals.html">REQ-2026-0009 결재 중</a></td></tr>
-          <tr><td class="mono">11/14 17:40</td><td>표준단어</td><td>기관단어_초기.xlsx</td><td class="num">86</td><td><span class="badge b-success">✓ 승인</span></td></tr>
-          <tr><td class="mono">11/14 17:05</td><td>표준단어</td><td>기관단어_초기.xlsx</td><td class="num">86</td><td><span class="badge">취소 · 헤더 오류</span></td></tr>
-          <tr><td class="mono">11/13 10:20</td><td>표준도메인</td><td>도메인_기관.xlsx</td><td class="num">24</td><td><span class="badge b-success">✓ 승인</span></td></tr>
-        </tbody></table>
+        <div class="flex"><div class="section-t" style="margin:0">최근 업로드</div><span class="grow"></span><a class="caption" href="uploads.html">업로드 이력 전체 →</a></div>
+        <table class="tbl" style="border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-top:6px"><thead><tr><th>업로드</th><th>파일</th><th>상태</th><th></th></tr></thead><tbody id="recent"></tbody></table>
       </div>
       <div class="card">
-        <div class="section-t" style="margin-top:0">진행 순서</div>
-        <div class="caption" style="line-height:22px">1 종류 → 2 업로드 → 3 열 매핑(헤더 이름으로 자동) → 4 검증 → 5 결과 검토(5색 상태) → 6 일괄 신청<br>· 행마다 <b>신규·변경·동일·오류·확인 필요</b>로 나뉩니다<br>· 오류 행은 빼고 신청할 수 있고, 엑셀로 내려받아 고칠 수 있습니다<br>· 신청은 결재선(DA 필수)을 거쳐 사전에 반영됩니다</div>
+        <div class="section-t" style="margin-top:0">왕복 편집 규칙</div>
+        <div class="caption" style="line-height:22px">· <b>빈 칸 = 그대로 둠.</b> 값을 지우려면 <span class="mono">#지움</span><br>· 모든 칸을 글자로 읽습니다(앞자리 0·날짜 자동 변환 경고)<br>· 약어·도메인명은 계산 값이라 고쳐도 반영되지 않습니다<br>· 파일에서 지운 행은 <b>자동 삭제하지 않습니다</b><br>· 결재 중인 항목에 고친 값은 <b>보류</b>로 보존됩니다</div>
       </div>
     </div>
   </div></section>
 
   <!-- 2 upload -->
   <section class="stepview" data-step="2"><div class="pad" style="max-width:960px">
-    <div class="drop"><b style="color:var(--fg)">파일을 끌어 놓거나 선택하세요</b><div class="caption">XLSX · CSV · 최대 20MB · 50,000행</div><div style="margin-top:12px"><button class="btn">파일 선택</button></div></div>
-    <div class="card" style="margin-top:16px;display:flex;gap:12px;align-items:center"><span class="badge">XLSX</span><div class="grow"><b>요구사항관리_용어_2차.xlsx</b><div class="caption muted">시트 ‘표준용어’ · 986행 · 412KB</div></div><button class="btn ghost sm">바꾸기</button></div>
+    <div class="drop"><b style="color:var(--fg)">파일을 끌어 놓거나 선택하세요</b><div class="caption">XLSX · CSV(UTF-8/CP949 자동 판별) · 최대 20MB</div><div style="margin-top:12px"><button class="btn" id="pick">파일 선택</button></div></div>
+    <div id="filecard" hidden>
+      <div class="card" style="margin-top:16px;display:flex;gap:12px;align-items:center"><span class="badge">XLSX</span><div class="grow"><b>요구사항관리_용어_2차.xlsx</b><div class="caption muted">시트 ‘표준용어’ · 14행 · 38KB · 양식 v2</div></div><button class="btn ghost sm" id="repick">바꾸기</button></div>
+      <div class="banner success" style="margin-top:8px" id="bl-ok"><span>✓</span><div><b>기준본 BL-20261116-0905</b> — 11/16 09:05 김모델이 내려받은 편집용 파일입니다(용어 · 필터: 요구사항 · 13건). 이 기준으로 바뀐 것과 빠진 것을 판정합니다.</div></div>
+    </div>
   </div></section>
 
   <!-- 3 mapping -->
   <section class="stepview" data-step="3"><div class="pad" style="max-width:960px">
     <h2 style="font-size:16px;margin-bottom:4px">열 매핑 확인</h2>
-    <div class="caption muted" style="margin-bottom:12px">파일의 헤더 이름으로 자동 연결했습니다. 위치(몇 번째 열)로는 연결하지 않습니다.</div>
-    <table class="tbl"><thead><tr><th>파일 헤더</th><th>예시 값</th><th>DBModeler 항목</th><th>상태</th></tr></thead><tbody>
+    <div class="caption muted" style="margin-bottom:12px">머리글 이름으로 자동 연결했습니다(위치로 연결하지 않음). 숨김 열도 확인했습니다.</div>
+    <table class="tbl"><thead><tr><th>파일 머리글</th><th>예시 값</th><th>DBModeler 항목</th><th>상태</th></tr></thead><tbody>
       <tr><td>용어명</td><td>산출물제출일자</td><td>용어명 *</td><td><span class="badge b-success">✓ 자동</span></td></tr>
       <tr><td>표준도메인</td><td>연월일C8</td><td>도메인명 * <span class="caption faint">(구 양식 별칭)</span></td><td><span class="badge b-success">✓ 자동</span></td></tr>
       <tr><td>용어설명</td><td>산출물을 제출한 날짜</td><td>설명</td><td><span class="badge b-success">✓ 자동</span></td></tr>
-      <tr><td>담당자</td><td>김모델</td><td><select class="input" style="height:28px;width:200px"><option>(가져오지 않음)</option></select></td><td><span class="badge">미사용 열</span></td></tr>
+      <tr><td>영문약어</td><td>DLVRBL_SBMT_DATE</td><td>용어 영문약어명 <span class="caption faint">계산 값 — 참고만</span></td><td><span class="badge">읽기 전용</span></td></tr>
+      <tr><td class="mono caption">(숨김) 항목ID · 버전 · 기준본</td><td class="mono">T-0412 · V2 · BL-20261116-0905</td><td>왕복 식별</td><td><span class="badge b-success">✓ 13/14행</span></td></tr>
+      <tr><td>담당자</td><td>김모델</td><td><select class="input" style="height:28px;width:200px" aria-label="담당자 열 매핑"><option>(가져오지 않음)</option><option>설명에 덧붙이기</option></select></td><td><span class="badge">미사용 열</span></td></tr>
     </tbody></table>
-    <div class="banner success" style="margin-top:12px"><span>✓</span><div>필수 항목(용어명·도메인명)이 모두 연결됐습니다.</div></div>
+    <div class="banner success" style="margin-top:12px"><span>✓</span><div>필수 항목이 모두 연결됐습니다. 1행은 숨김 열이 없어 <b>이름+약어</b>로 짝을 찾습니다.</div></div>
   </div></section>
 
   <!-- 4 validating -->
   <section class="stepview" data-step="4"><div class="pad" style="max-width:640px">
-    <h2 style="font-size:16px;margin-bottom:12px">검증 중…</h2>
-    <div class="progress"><i style="width:62%"></i></div>
-    <div class="flex caption muted" style="margin-top:8px"><span>611 / 986행 · 단어 분해·도메인·중복·결재 대기 확인</span><span class="grow"></span><span>약 12초 남음</span></div>
-    <div class="banner" style="margin-top:16px"><span>ℹ</span><div class="grow">검증은 서버에서 계속됩니다. 다른 화면으로 이동해도 끝나면 알림을 보냅니다.</div><button class="btn sm">취소</button></div>
+    <h2 style="font-size:16px;margin-bottom:12px">검증·비교 중…</h2>
+    <div class="progress"><i id="prog" style="width:10%"></i></div>
+    <div class="flex caption muted" style="margin-top:8px"><span id="progt">입력 형식 → 업무 규칙 → 기준본·현재 사전 비교 → 결재 대기 확인</span></div>
+    <div class="banner" style="margin-top:16px"><span>ℹ</span><div class="grow">검증은 서버에서 계속됩니다. 다른 화면으로 가도 끝나면 알림을 보내고, 업로드 이력에서 이어서 볼 수 있습니다.</div><button class="btn sm" id="cancel-val">취소</button></div>
   </div></section>
 
   <!-- 5 results -->
   <section class="stepview" data-step="5">
-    <div class="toolbar">
-      <span class="chip on" data-group="r" data-filter="">전체 <span class="n">986</span></span>
-      <span class="chip" data-group="r" data-filter="ok" style="border-color:var(--success)">정상 <span class="n">120</span></span>
-      <span class="chip" data-group="r" data-filter="same">동일 <span class="n">840</span></span>
-      <span class="chip" data-group="r" data-filter="wait" style="border-color:var(--info)">대기 중 <span class="n">3</span></span>
-      <span class="chip" data-group="r" data-filter="conf" style="border-color:var(--warning)">충돌 <span class="n">7</span></span>
-      <span class="chip" data-group="r" data-filter="err" style="border-color:var(--danger)">오류 <span class="n">12</span></span>
-      <span class="chip" data-group="r" data-filter="pick">후보 선택 필요 <span class="n">4</span></span>
-      <span class="grow"></span>
-      <button class="btn sm">오류 행 엑셀로 내려받기</button>
-    </div>
+    <div class="toolbar" id="chips"></div>
+    <div class="errbar" id="errbar"></div>
     <div class="page-body" style="flex:1;min-height:0">
-      <div class="main"><div class="scroll" data-filter-target="r">
+      <div class="main"><div class="scroll">
         <table class="tbl">
-          <thead><tr><th>행</th><th>상태</th><th>용어명</th><th>분해 / 약어</th><th>도메인</th><th>사유</th></tr></thead>
-          <tbody>
-            <tr class="click row-success sel" data-panel="pn-row" data-f="ok"><td class="num">2</td><td><span class="badge b-success">정상</span></td><td>산출물제출일자</td><td class="mono">DLVRBL_SBMT_DATE</td><td class="mono">연월일C8</td><td class="muted">신규</td></tr>
-            <tr class="click row-success" data-panel="pn-row" data-f="ok"><td class="num">3</td><td><span class="badge b-success">정상</span></td><td>산출물검수결과코드</td><td class="mono">DLVRBL_INSPCT_RSLT_CD</td><td class="mono">코드C2</td><td class="muted">신규</td></tr>
-            <tr class="click row-mute" data-panel="pn-row" data-f="same"><td class="num">4</td><td><span class="badge">동일</span></td><td>요구사항ID</td><td class="mono">DEMND_MATER_ID</td><td class="mono">ID V10</td><td class="muted">기등록과 같음 · 건너뜀</td></tr>
-            <tr class="click row-info" data-panel="pn-row" data-f="wait"><td class="num">5</td><td><span class="badge b-info">대기 중</span></td><td>산출물기본</td><td class="mono">DLVRBL_M</td><td class="faint">엔터티</td><td class="muted">REQ-2026-0013 결재 대기</td></tr>
-            <tr class="click row-warning" data-panel="pn-row" data-f="conf"><td class="num">6</td><td><span class="badge b-warning">충돌</span></td><td>요구사항명</td><td class="mono">RQRM_NM</td><td class="mono">명V100</td><td class="wrap muted">기존 ‘요구사항명 = DEMND_MATER_NM’과 약어가 다름</td></tr>
-            <tr class="click" data-panel="pn-row" data-f="pick"><td class="num">7</td><td><span class="badge b-violet">후보 선택</span></td><td>검사결과</td><td><select class="input mono" style="height:26px;width:220px"><option>검사+결과 · INSPCT_RSLT</option><option>검+사결과 · ? 의심</option></select></td><td class="mono">내용V1000</td><td class="muted">분해 후보 2개</td></tr>
-            <tr class="click row-danger" data-panel="pn-row" data-f="err"><td class="num">8</td><td><span class="badge b-danger">오류</span></td><td>납품물수령자명</td><td class="faint">—</td><td class="mono">명V100</td><td class="wrap" style="color:var(--danger-deep)">미등록 단어 ‘수령자’ · 단어 먼저 신청하거나 후보로 등록</td></tr>
-            <tr class="click row-danger" data-panel="pn-row" data-f="err"><td class="num">9</td><td><span class="badge b-danger">오류</span></td><td>프로젝트종료일</td><td class="mono">PRJ_END_DE</td><td class="mono">연월일C9</td><td class="wrap" style="color:var(--danger-deep)">도메인 ‘연월일C9’ 없음</td></tr>
-            <tr class="click row-success" data-panel="pn-row" data-f="ok"><td class="num">10</td><td><span class="badge b-success">정상</span></td><td>산출물버전번호</td><td class="mono">DLVRBL_VER_NO</td><td class="mono">번호N5</td><td class="muted">신규</td></tr>
-          </tbody>
+          <thead><tr><th>행</th><th>상태</th><th>용어명</th><th>약어 <span class="caption faint">계산</span></th><th>도메인</th><th>설명</th><th>사유 · 규칙</th></tr></thead>
+          <tbody id="grid-body"></tbody>
         </table>
+        <div class="flex" style="padding:10px 20px;gap:12px" id="legend"></div>
       </div></div>
-      <aside class="rpanel open" id="pn-row">
-        <div class="rp-head"><div class="t"><h2>2행 · 산출물제출일자</h2><button class="iconbtn close" data-close="pn-row" style="width:28px;height:28px">×</button></div><div class="rp-sub">정상 · 신규 등록</div></div>
-        <div class="rp-body">
-          <div class="section-t">원본 → 적용 값</div>
-          <table class="tbl"><thead><tr><th>항목</th><th>파일</th><th>적용</th></tr></thead><tbody>
-            <tr><td>용어명</td><td>산출물제출일자</td><td>산출물제출일자</td></tr>
-            <tr><td>영문약어</td><td class="faint">(비어 있음)</td><td class="mono">DLVRBL_SBMT_DATE <span class="badge">자동</span></td></tr>
-            <tr><td>구성 단어</td><td class="faint">—</td><td>산출물 · 제출 · 일자</td></tr>
-            <tr><td>도메인</td><td class="mono">연월일C8</td><td class="mono">연월일C8</td></tr>
-          </tbody></table>
-          <div class="section-t">검사</div>
-          <div class="caption">✓ 미등록 단어 없음 · ✓ 형식단어 ‘일자’ 분류의 도메인 · ✓ 약어 16/30자 · ✓ 중복 없음</div>
-        </div>
-      </aside>
+      <aside class="rpanel open" id="pn-row" aria-label="행 상세"></aside>
     </div>
   </section>
 
   <!-- 6 submit -->
-  <section class="stepview" data-step="6"><div class="pad" style="max-width:720px">
+  <section class="stepview" data-step="6"><div class="pad" style="max-width:760px">
     <h2 style="font-size:16px;margin-bottom:12px">신청</h2>
-    <div class="banner success"><span>✓</span><div class="grow"><b>정상 120건만 신청합니다.</b> 동일 840건은 건너뛰고, 대기 3 · 충돌 7 · 오류 12건은 제외합니다. 후보 선택 4건은 선택을 마쳐 정상에 포함됐습니다.</div></div>
-    <div class="field" style="margin-top:16px"><label>신청 사유 *</label><textarea class="input" rows="3">요구사항관리 2차 용어 일괄 등록</textarea></div>
+    <table class="tbl" id="sum6" style="border:1px solid var(--border)"></table>
+    <div class="banner violet" style="margin-top:12px" id="selfnote" hidden><span>◆</span><div>DA 역할도 있어 이 문서를 직접 승인하면 <b>자기 승인</b>입니다. 건수가 많으면 기관 담당자 최종 승인을 권장합니다.</div></div>
+    <div class="field" style="margin-top:16px"><label for="why6">신청 사유 * <span class="faint">1~1,000자</span></label><textarea class="input" id="why6" rows="3"></textarea></div>
     <div class="section-t">결재선</div>
     <div class="approval-line">
       <div class="al-step"><span class="pt"></span><div><b>DA 승인</b> <span class="caption faint">필수</span></div></div>
       <div class="al-step"><span class="pt"></span><div><b>최종 승인 (기관 담당자)</b> <span class="caption faint">기관 설정 사용 중</span></div></div>
     </div>
-    <div class="flex" style="margin-top:8px"><span class="caption muted">참조</span><button class="btn ghost sm">+ 참조자</button></div>
   </div></section>
 
   <div class="rp-foot" style="background:var(--surface)">
     <button class="btn" id="prev">이전</button>
     <span class="grow"></span>
-    <span class="caption muted" id="hint"></span>
+    <span class="caption muted" id="hint" aria-live="polite"></span>
     <button class="btn primary" id="next">다음</button>
   </div>
   </div></div>
@@ -153,27 +134,180 @@
 </div>
 <script>
 window.pageInit = function () {
-  const names = ['종류', '업로드', '열 매핑', '검증', '결과 검토', '신청'];
-  const hints = ['', '', '', '검증이 끝나면 자동으로 다음 단계로 넘어갑니다', '정상 120 · 후보 선택 4건 완료', ''];
-  let cur = parseInt(new URLSearchParams(location.search).get('step') || '1', 10);
-  const steps = document.getElementById('steps');
-  function render() {
-    steps.innerHTML = names.map((n, i) => {
-      const k = i + 1; const c = k < cur ? 'done' : k === cur ? 'cur' : '';
-      return (i ? '<span class="step-sep"></span>' : '') + `<span class="step ${c}"><span class="n">${k < cur ? '✓' : k}</span>${n}</span>`;
-    }).join('');
-    document.querySelectorAll('.stepview').forEach(s => s.classList.toggle('on', +s.dataset.step === cur));
-    document.getElementById('prev').disabled = cur === 1;
-    const nx = document.getElementById('next');
-    nx.textContent = cur === 6 ? '120건 신청' : cur === 5 ? '신청 준비' : '다음';
-    document.getElementById('hint').textContent = hints[cur - 1];
-  }
-  document.getElementById('prev').onclick = () => { if (cur > 1) { cur--; render(); } };
-  document.getElementById('next').onclick = () => {
-    if (cur === 6) { location.href = 'approvals.html?new=excel'; return; }
-    cur++; render();
-    if (cur === 4) setTimeout(() => { cur = 5; render(); toast('검증 완료 — 정상 120 · 오류 12 · 후보 선택 4', 'info'); }, 1600);
+  const $ = id => document.getElementById(id);
+  const q = new URLSearchParams(location.search);
+  const DOMS = ['연월일C8', '명V100', 'ID V10', '코드C2', '코드C1', '내용V1000', '금액N15', '일련번호N10', '번호N5'];
+  const ST = {
+    new: ['신규', 'b-success', 'row-success', '등록 신청'], chg: ['변경', 'b-success', 'row-success', '변경 신청'], same: ['동일', '', 'row-mute', '제외'],
+    waitSame: ['동일 내용 대기', 'b-info', 'row-info', '제외'], waitDiff: ['다른 내용 대기', 'b-warning', 'row-warning', '보류'],
+    conflict: ['버전 충돌', 'b-warning', 'row-warning', '선택'], pick: ['후보 선택', 'b-warning', 'row-warning', '선택'], pre: ['선행 승인 필요', 'b-warning', 'row-warning', '보류'],
+    err: ['오류', 'b-danger', 'row-danger', '보정'], missing: ['파일에서 빠짐', '', 'row-mute', '무시']
   };
+  const ROWS0 = [
+    { r: 2, st: 'new', name: '산출물제출일자', abbr: 'DLVRBL_SBMT_DATE', dom: '연월일C8', desc: '산출물을 발주처에 제출한 날짜', why: '신규' },
+    { r: 3, st: 'new', name: '산출물검수결과코드', abbr: 'DLVRBL_INSPCT_RSLT_CD', dom: '코드C2', desc: '검수 결과 구분', why: '신규' },
+    { r: 4, st: 'chg', id: 'T-0412', name: '요청부서명', abbr: 'REQ_DEPT_NM', dom: '명V100', desc: '요청한 부서의 공식 명칭', old: { desc: '요청 부서명' }, why: '설명 1칸 변경 · V2 → V3' },
+    { r: 5, st: 'chg', id: 'T-0388', name: '요구사항상태코드', abbr: 'DEMND_MATER_STTS_CD', dom: '코드C2', desc: '요구사항 진행 상태', old: { dom: '코드C1' }, why: '도메인 1칸 변경 · 모델 사용처 3', warn: '도메인 변경 — 사용 중 컬럼 3개 재검토 알림(MD-11)' },
+    { r: 6, st: 'same', id: 'T-0101', name: '요구사항ID', abbr: 'DEMND_MATER_ID', dom: 'ID V10', desc: '요구사항 식별자', why: '바뀐 것 없음' },
+    { r: 7, st: 'waitSame', id: 'T-0430', name: '산출물기본', abbr: 'DLVRBL_M', dom: '—', desc: '산출물 기본 정보 테이블', why: 'REQ-2026-0013 진행 중(같은 내용)', doc: 'REQ-2026-0013' },
+    { r: 8, st: 'waitDiff', id: 'T-0425', name: '산출물제출자명', abbr: 'DLVRBL_SBMTR_NM', dom: '명V100', desc: '제출한 담당자 이름', old: { desc: '제출자 이름' }, why: 'REQ-2026-0014 진행 중(다른 내용) — 고친 값 보류', doc: 'REQ-2026-0014' },
+    { r: 9, st: 'conflict', id: 'T-0201', name: '수주금액', abbr: 'WINCON_AMT', dom: '금액N15', desc: '계약 수주 금액', three: { field: '설명', base: '수주한 금액', cur: '계약 수주 금액(부가세 포함)', file: '계약 수주 금액' }, why: '내려받은 뒤 이데이터가 설명 변경(V3 → V4)' },
+    { r: 10, st: 'pick', name: '검사결과내용', abbr: '—', dom: '내용V1000', desc: '검사 결과 서술', cands: ['검사+결과+내용 · INSP_RSLT_CN', '검+사결과+내용 · ? 의심(1음절)'], why: '분해 후보 2개(MD-09)' },
+    { r: 11, st: 'pre', name: '수령자명', abbr: 'RCPNT_NM', dom: '명V100', desc: '받은 사람 이름', why: '새 단어 ‘수령자’ 승인 후 자동 재검증(REQ-2026-0012)' },
+    { r: 12, st: 'err', name: '프로젝트종료일자', abbr: 'PRJ_END_YMD', dom: '연월일C9', desc: '프로젝트 종료 날짜', rule: 'D-NOTFOUND', bad: 'dom', why: "도메인 '연월일C9' 없음", fix: { dom: '연월일C8' } },
+    { r: 13, st: 'err', name: '산출물 검수 일자', abbr: '—', dom: '연월일C8', desc: '검수한 날짜', rule: 'T-SPACE', bad: 'name', why: '용어명에 공백', fix: { name: '산출물검수일자', abbr: 'DLVRBL_INSPCT_YMD' }, auto: 1 },
+    { r: 14, st: 'err', name: '요구사항순번', abbr: 'DEMND_MATER_SN', dom: '일련번호N10', desc: '0012 형식 순번', rule: 'X-ZERO', bad: 'desc', shown: '12 형식 순번', why: "엑셀이 '0012'를 숫자 12로 바꾼 흔적", fix: { desc: '0012 형식 순번' } },
+    { r: 15, st: 'err', id: 'T-0233', name: '요청고객명', abbr: 'REQ_CUST_NM', dom: '명V100', desc: '요청 고객 이름', rule: 'X-DUPID', bad: 'id', why: '같은 항목 ID(T-0233)가 16행에도 있음 — 행 복사?' },
+    { r: '—', st: 'missing', id: 'T-0150', name: '산출근거내용', abbr: 'CALC_BASIS_CN', dom: '내용V1000', desc: '산출 근거 설명', why: '기준본에 있었는데 파일에 없음' }
+  ];
+  const RULES = { 'D-NOTFOUND': '도메인 없음', 'T-SPACE': '용어명 공백', 'X-ZERO': '자동 형 변환', 'X-DUPID': '항목 ID 중복' };
+  // ---- batch (upload) — one source of counts
+  let batches = getBatches();
+  const resumeId = q.get('resume');
+  let B = resumeId ? batches.find(b => b.id === resumeId) : null;
+  let ROWS = B && B.draft ? B.draft : JSON.parse(JSON.stringify(ROWS0));
+  let cur = resumeId ? 5 : parseInt(q.get('step') || '1', 10), file = !!resumeId, timer = null, sel = null, kind = '용어';
+  let undoStack = [];
+  if (resumeId && B) {
+    const d = (B.docs || []).map(id => getDocs().find(x => x.id === id)).filter(Boolean)[0];
+    $('resume-banner').hidden = false;
+    $('resume-banner').innerHTML = `<div class="banner ${d && ['rejected', 'withdrawn'].includes(d.step) ? 'warning' : 'info'}"><span>ℹ</span><div class="grow"><b>${B.id} · ${B.file}</b> 이어서 작업 — ${d ? `${d.id} ${STEP_NAME[d.step]}${d.step === 'rejected' ? ': 보완해서 다시 신청하면 새 신청번호가 만들어집니다' : ''}` : B.status}</div></div>`;
+  }
+  const counts = () => { const c = { new: 0, chg: 0, same: 0, waitSame: 0, waitDiff: 0, conflict: 0, dup: 0, pre: 0, err: 0, missing: 0, pick: 0 }; ROWS.forEach(r => { c[r.st === 'pick' ? 'pick' : r.st]++; }); return c; };
+  function persist() {
+    batches = getBatches();
+    if (!B) { const id = 'UP-2026-' + String(Math.max(...batches.map(b => +b.id.slice(-4))) + 1).padStart(4, '0'); B = { id, file: '요구사항관리_용어_2차.xlsx', kind, by: ME.id, at: nowStr(), baseline: 'BL-20261116-0905', rows: 15, docs: [], status: '임시 저장' }; batches.unshift(B); }
+    const i = batches.findIndex(b => b.id === B.id); B.counts = counts(); B.draft = ROWS; batches[i] = B; saveBatches(batches);
+    $('saved').textContent = `${B.id} · 임시 저장 ${nowStr().split(' ')[1]}`;
+    $('crumb').textContent = `기관 사전 · 표준${kind} · ${B.id}`;
+  }
+  // ---- step 1
+  const recent = getBatches().slice(0, 4);
+  $('recent').innerHTML = recent.map(b => `<tr><td class="mono">${b.id}<div class="caption faint">${b.at}</div></td><td>${b.file}<div class="caption faint">${b.kind} · ${b.rows}행</div></td><td><span class="badge ${b.status === '반영됨' ? 'b-success' : b.status === '취소' ? '' : 'b-info'}">${b.status}</span>${b.docs && b.docs[0] ? ` <a href="approvals.html?doc=${b.docs[0]}" class="caption">${b.docs[0]}</a>` : ''}</td><td>${b.status === '임시 저장' ? `<a class="btn sm" href="excel-import.html?resume=${b.id}">이어서 작업</a>` : `<a class="caption" href="uploads.html?b=${b.id}">보기</a>`}</td></tr>`).join('');
+  document.querySelectorAll('.modecard').forEach(m => m.onclick = () => { document.querySelectorAll('.modecard').forEach(x => { x.classList.toggle('on', x === m); x.querySelector('input').checked = x === m; }); });
+  $('kinds').addEventListener('click', e => { const k = e.target.closest('.kindcard'); if (!k) return; document.querySelectorAll('.kindcard').forEach(x => x.classList.toggle('on', x === k)); kind = k.dataset.k; if (kind !== '용어') toast(`목업은 용어 예시로 진행합니다 — 실제로는 ${kind} 양식 열이 바뀝니다`, 'info'); });
+  // ---- step 2
+  $('pick').onclick = () => { file = true; $('filecard').hidden = false; render(); };
+  $('repick').onclick = () => { file = false; $('filecard').hidden = true; render(); };
+  $('cancel-val').onclick = () => { clearTimeout(timer); timer = null; cur = 3; render(); toast('검증을 취소했습니다', 'info'); };
+  // ---- step 5 grid
+  const cellV = (r, f) => {
+    const v = r[f]; const o = r.old && r.old[f];
+    if (r.st === 'err' && r.bad === f) return `<td class="cell-err" contenteditable="true" data-f="${f}" data-r="${r.r}" aria-label="${r.r}행 ${f} 수정">${r.shown && f === 'desc' ? r.shown : v}</td>`;
+    if (r.fixed && r.fixed[f]) return `<td class="cell-fix" title="파일 값: ${r.fixed[f]}"><span class="old-v">${r.fixed[f]}</span>${v}</td>`;
+    if (o !== undefined) return `<td class="cell-chg"><span class="old-v">${o}</span>${v}</td>`;
+    return `<td${f === 'abbr' || f === 'dom' ? ' class="mono"' : ''}>${v}</td>`;
+  };
+  let filt = '', ruleF = '';
+  function drawGrid() {
+    const c = counts();
+    const chips = [['', '전체', ROWS.length], ['new', '신규', c.new], ['chg', '변경', c.chg], ['same', '동일', c.same], ['waitSame', '동일 내용 대기', c.waitSame], ['waitDiff', '다른 내용 대기', c.waitDiff], ['conflict', '충돌', c.conflict], ['pick', '후보 선택', c.pick], ['pre', '선행 승인', c.pre], ['err', '오류', c.err], ['missing', '빠짐', c.missing]];
+    $('chips').innerHTML = chips.map(([k, l, n]) => `<button class="chip ${filt === k ? 'on' : ''}" data-f="${k}">${l} <span class="n">${n}</span></button>`).join('') + `<span class="grow"></span><button class="btn sm" id="dl-err">오류 행 내려받기</button><button class="btn sm" id="dl-fix">보정본 내려받기</button>`;
+    const errs = ROWS.filter(r => r.st === 'err'); const by = {}; errs.forEach(r => { by[r.rule] = (by[r.rule] || 0) + 1; });
+    const autos = errs.filter(r => r.auto);
+    $('errbar').innerHTML = errs.length ? `<b style="color:var(--danger-deep)">오류 ${errs.length}</b>${Object.entries(by).map(([k, n]) => `<button data-rule="${k}" class="${ruleF === k ? 'on' : ''}"><span class="rule">${k}</span> ${RULES[k]} ${n}</button>`).join('')}<span class="grow"></span>${autos.length ? `<button id="auto-all">자동 수정 제안 ${autos.length}건 미리보기</button>` : ''}<button id="next-err">다음 오류 <kbd>F8</kbd></button>` : `<b style="color:var(--success-deep)">✓ 오류 없음</b> <span class="caption muted">보류·선택 행만 남았습니다</span>`;
+    const L = ROWS.filter(r => (!filt || r.st === filt) && (!ruleF || r.rule === ruleF));
+    $('grid-body').innerHTML = L.map(r => { const s = ST[r.st]; return `<tr class="click ${s[2]} ${sel === r.r ? 'sel' : ''}" data-r="${r.r}" tabindex="0"><td class="num">${r.r}</td><td><span class="st"><span class="badge ${s[1]}">${s[0]}</span>${r.warn ? '<span title="⚠ 경고 — 신청 시 확인 기록" aria-label="경고">⚠</span>' : ''}</span></td>${cellV(r, 'name')}${cellV(r, 'abbr')}${cellV(r, 'dom')}${cellV(r, 'desc')}<td class="wrap caption">${r.rule ? `<span class="rule">${r.rule}</span> ` : ''}${r.why}</td></tr>`; }).join('') || '<tr><td colspan="7" class="caption muted" style="text-align:center;padding:30px">이 조건의 행이 없습니다</td></tr>';
+    $('legend').innerHTML = `<span class="lg"><i style="background:var(--success)"></i>녹색 신청</span><span class="lg"><i style="background:var(--border-strong)"></i>회색 제외</span><span class="lg"><i style="background:var(--info)"></i>파랑 같은 내용 대기</span><span class="lg"><i style="background:var(--warning)"></i>주황 확인·선택·보류</span><span class="lg"><i style="background:var(--danger)"></i>붉은색 오류(⛔)</span><span class="lg">⚠ 경고(신청 가능, 기록)</span><span class="lg"><span class="old-v">전</span>후 = 바뀐 칸</span>`;
+    drawPanel();
+  }
+  function drawPanel() {
+    const r = ROWS.find(x => x.r === sel) || ROWS[0]; if (!r) return; sel = r.r;
+    const s = ST[r.st];
+    let body = `<div class="section-t">값 비교</div><table class="tbl three"><thead><tr><th>항목</th><th>${r.id ? '현재 사전' : '—'}</th><th>파일</th></tr></thead><tbody>${['name', 'dom', 'desc'].map(f => `<tr><td>${{ name: '용어명', dom: '도메인', desc: '설명' }[f]}</td><td>${r.id ? ((r.old && r.old[f]) || r[f]) : '—'}</td><td>${r[f]}</td></tr>`).join('')}<tr><td>항목 ID</td><td class="mono" colspan="2">${r.id || '(없음 — 이름+약어로 짝짓기)'}</td></tr></tbody></table>`;
+    if (r.st === 'conflict') body = `<div class="section-t">칸 단위 3방향 비교 · ${r.three.field}</div><table class="tbl three"><tbody><tr><td>내려받은 값 (V3)</td><td>${r.three.base}</td></tr><tr><td>현재 사전 (V4)</td><td>${r.three.cur}</td></tr><tr><td>파일 값</td><td>${r.three.file}</td></tr></tbody></table>
+      <div class="caption muted" style="margin:8px 0">같은 칸을 서로 고쳤습니다. 다른 칸끼리였다면 자동으로 합칩니다.</div>
+      <label class="flex"><input type="radio" name="cf" value="keep" ${r.choice !== 'file' ? 'checked' : ''}> 현재 값 유지 <span class="caption faint">(기본 · 이 행 제외)</span></label><label class="flex"><input type="radio" name="cf" value="file" ${r.choice === 'file' ? 'checked' : ''}> 파일 값으로 변경 신청</label>`;
+    if (r.st === 'waitSame' || r.st === 'waitDiff') body += `<div class="banner ${r.st === 'waitSame' ? 'info' : 'warning'}" style="margin-top:12px"><span>●</span><div class="grow"><b>${r.doc}</b> 진행 중 — ${r.st === 'waitSame' ? '같은 내용이라 제외합니다.' : '<b>고친 값은 보류로 보존</b>됩니다. 그 신청이 끝나면 [보류 행 다시 검증]으로 이어갑니다.'}</div><a class="btn sm" href="approvals.html?doc=${r.doc}">결재 보기</a></div>`;
+    if (r.st === 'pick') body += `<div class="section-t">분해 후보 선택 (MD-09)</div>${r.cands.map((c, i) => `<label class="cand ${r.choice === i ? 'on' : ''}"><input type="radio" name="pk" value="${i}" ${r.choice === i ? 'checked' : ''}><span class="grow">${c}</span></label>`).join('')}`;
+    if (r.st === 'pre') body += `<div class="banner warning" style="margin-top:12px"><span>!</span><div>같은 묶음의 새 단어 ‘수령자’가 아직 승인 전입니다. 이 행은 <b>보류</b>되고, 단어가 승인되면 자동으로 다시 검증해 알려 드립니다.</div></div>`;
+    if (r.st === 'err') body += `<div class="section-t">무엇이 틀렸나 · <span class="rule">${r.rule}</span></div><div class="caption" style="line-height:20px">${r.why}.<br>${r.rule === 'X-DUPID' ? '한 항목 ID는 한 행에만 있어야 합니다. 복사한 행이면 ID를 지우고 새 항목으로 처리하세요.' : '표에서 붉은 칸을 바로 고치면 즉시 다시 검증합니다.'}</div>
+      ${r.fix ? `<div class="card" style="margin-top:8px"><div class="caption muted">수정 제안</div><div>${Object.entries(r.fix).map(([k, v]) => `<span class="old-v">${r.shown && k === 'desc' ? r.shown : r[k]}</span>${v}`).join(' · ')}</div><div class="flex" style="margin-top:6px"><span class="grow"></span><button class="btn sm primary" id="apply-fix">제안 적용</button></div></div>` : ''}
+      ${r.rule === 'X-DUPID' ? `<div class="flex" style="margin-top:8px"><span class="grow"></span><button class="btn sm" id="as-new">ID 지우고 새 항목으로</button></div>` : ''}`;
+    if (r.st === 'missing') body += `<div class="section-t">처리</div><label class="flex"><input type="radio" name="ms" value="ignore" ${r.choice !== 'unuse' ? 'checked' : ''}> 무시 <span class="caption faint">(기본 · 사전 그대로)</span></label><label class="flex"><input type="radio" name="ms" value="unuse" ${r.choice === 'unuse' ? 'checked' : ''}> 미사용 신청 — 사용처 모델 컬럼 2개 영향</label>${r.choice === 'unuse' ? `<div class="field" style="margin-top:6px"><label for="ms-why">미사용 사유 *</label><input class="input" id="ms-why" value="${r.why2 || ''}"></div>` : ''}<div class="caption muted">삭제(V0)는 W2 — 여기서는 하지 않습니다.</div>`;
+    if (r.warn) body += `<div class="banner warning" style="margin-top:12px"><span>⚠</span><div>${r.warn}</div></div>`;
+    $('pn-row').innerHTML = `<div class="rp-head"><div class="t"><h2>${r.r}행 · ${r.name}</h2></div><div class="rp-sub"><span class="badge ${s[1]}">${s[0]}</span> · 처리: ${s[3]}</div></div><div class="rp-body">${body}</div>`;
+    const af = $('apply-fix'); if (af) af.onclick = () => fixRow(r);
+    const an = $('as-new'); if (an) an.onclick = () => { pushUndo(); delete r.id; r.st = 'new'; r.why = '복사한 행 → 새 항목'; r.rule = null; afterEdit(`${r.r}행을 새 항목으로 바꿨습니다`); };
+    $('pn-row').querySelectorAll('input[name=cf]').forEach(i => i.onchange = () => { r.choice = i.value; persist(); });
+    $('pn-row').querySelectorAll('input[name=pk]').forEach(i => i.onchange = () => { r.choice = +i.value; if (r.choice === 1) toast('1음절 분해는 의심 — 확인 후 선택했습니다', 'info'); persist(); drawPanel(); });
+    $('pn-row').querySelectorAll('input[name=ms]').forEach(i => i.onchange = () => { r.choice = i.value; persist(); drawPanel(); });
+    const mw = $('ms-why'); if (mw) mw.oninput = () => { r.why2 = mw.value; persist(); };
+  }
+  function pushUndo() { undoStack.push(JSON.stringify(ROWS)); }
+  function afterEdit(msg) { persist(); drawGrid(); const t = undoStack.length; toast(msg, 'success', { label: '실행 취소', fn: () => { if (undoStack.length !== t) { toast('이후 다른 보정이 있어 이 작업만 되돌릴 수 없습니다', 'info'); return; } ROWS = JSON.parse(undoStack.pop()); persist(); drawGrid(); toast('되돌렸습니다', 'info'); } }); }
+  function fixRow(r) {
+    pushUndo(); r.fixed = {}; Object.entries(r.fix).forEach(([k, v]) => { r.fixed[k] = r.shown && k === 'desc' ? r.shown : r[k]; r[k] = v; });
+    r.st = r.id ? 'chg' : 'new'; r.why = `보정됨(${r.rule}) — 파일 값과 다름`; r.rule = null; delete r.shown;
+    afterEdit(`${r.r}행을 보정했습니다 — 다시 검증 통과`);
+  }
+  function revalidate(r, f, val) {
+    pushUndo(); r.fixed = r.fixed || {}; r.fixed[f] = r.shown && f === 'desc' ? r.shown : r[f]; r[f] = val; delete r.shown;
+    const ok = f === 'dom' ? DOMS.includes(val) : f === 'name' ? !/\s/.test(val) : f === 'desc' ? /^0/.test(val) : true;
+    if (ok) { r.st = r.id ? 'chg' : 'new'; r.why = `보정됨(${r.rule}) — 다시 검증 통과`; r.rule = null; if (f === 'name' && r.fix && r.fix.abbr) r.abbr = r.fix.abbr; afterEdit(`${r.r}행 다시 검증 — 통과`); }
+    else { undoStack.pop(); toast(`${r.r}행: 아직 ${RULES[r.rule]} — ${f === 'dom' ? '사전에 있는 도메인을 쓰세요(예: 연월일C8)' : '규칙을 확인하세요'}`, 'danger'); drawGrid(); }
+  }
+  $('grid-body').addEventListener('click', e => { const tr = e.target.closest('tr[data-r]'); if (!tr || e.target.isContentEditable) return; sel = isNaN(+tr.dataset.r) ? tr.dataset.r : +tr.dataset.r; drawGrid(); });
+  $('grid-body').addEventListener('focusout', e => { const td = e.target.closest('td[contenteditable]'); if (!td) return; const r = ROWS.find(x => String(x.r) === td.dataset.r); const v = td.textContent.trim(); const before = r.shown && td.dataset.f === 'desc' ? r.shown : r[td.dataset.f]; if (v && v !== before) revalidate(r, td.dataset.f, v); });
+  $('grid-body').addEventListener('keydown', e => { if (e.target.isContentEditable && e.key === 'Enter') { e.preventDefault(); e.target.blur(); } });
+  function nextErr() { const errs = ROWS.filter(r => r.st === 'err'); if (!errs.length) { toast('남은 오류가 없습니다', 'info'); return; } const i = errs.findIndex(r => r.r === sel); const n = errs[(i + 1) % errs.length]; sel = n.r; filt = ''; drawGrid(); const td = document.querySelector(`#grid-body tr[data-r="${n.r}"] td[contenteditable]`); if (td) td.focus(); }
+  document.addEventListener('keydown', e => { if (e.key === 'F8' && cur === 5) { e.preventDefault(); nextErr(); } });
+  document.querySelector('[data-step="5"]').addEventListener('click', e => {
+    const ch = e.target.closest('#chips [data-f]'); if (ch) { filt = ch.dataset.f; ruleF = ''; drawGrid(); return; }
+    const rb = e.target.closest('#errbar [data-rule]'); if (rb) { ruleF = ruleF === rb.dataset.rule ? '' : rb.dataset.rule; filt = ''; drawGrid(); return; }
+    if (e.target.closest('#next-err')) { nextErr(); return; }
+    if (e.target.closest('#auto-all')) { const autos = ROWS.filter(r => r.st === 'err' && r.auto); if (!confirmAuto(autos)) return; pushUndo(); autos.forEach(r => { r.fixed = {}; Object.entries(r.fix).forEach(([k, v]) => { r.fixed[k] = r[k]; r[k] = v; }); r.st = 'new'; r.why = `자동 수정(${r.rule})`; r.rule = null; }); afterEdit(`자동 수정 ${autos.length}건 적용`); return; }
+    if (e.target.closest('#dl-err')) { const n = ROWS.filter(r => r.st === 'err').length; toast(`오류행_${B ? B.id : ''}.xlsx — ${n}행, 칸 메모에 규칙·고치는 법`, 'info'); return; }
+    if (e.target.closest('#dl-fix')) { const n = ROWS.filter(r => r.fixed).length; toast(`보정본_${B ? B.id : ''}.xlsx — 화면에서 고친 ${n}행 반영 + ‘변경점’ 시트(파일 값 → 보정 값). 엑셀 원본을 이것으로 맞추세요`, 'info'); return; }
+  });
+  function confirmAuto(list) { return window.confirm(`자동 수정 제안 ${list.length}건을 적용합니다(보이는 대상만):\n\n` + list.map(r => `${r.r}행: ${Object.entries(r.fix).map(([k, v]) => `${r[k]} → ${v}`).join(', ')}`).join('\n') + '\n\n적용 후 [실행 취소]로 되돌릴 수 있습니다.'); }
+  // ---- step 6
+  function plan() {
+    const sub = ROWS.filter(r => ['new', 'chg'].includes(r.st) || (r.st === 'conflict' && r.choice === 'file') || (r.st === 'pick' && r.choice !== undefined));
+    const unuse = ROWS.filter(r => r.st === 'missing' && r.choice === 'unuse');
+    const hold = ROWS.filter(r => ['waitDiff', 'pre'].includes(r.st));
+    const ex = ROWS.filter(r => !sub.includes(r) && !unuse.includes(r) && !hold.includes(r));
+    return { sub, unuse, hold, ex, err: ROWS.filter(r => r.st === 'err').length, pickLeft: ROWS.filter(r => r.st === 'pick' && r.choice === undefined).length, unuseNoWhy: unuse.filter(r => !(r.why2 || '').trim()).length };
+  }
+  function drawSubmit() {
+    const p = plan();
+    $('sum6').innerHTML = `<tbody><tr><td><b>신청</b> (등록·변경)</td><td class="num mono"><b>${p.sub.length}</b></td><td class="caption">${p.sub.map(r => r.name).join(', ')}</td></tr>
+      <tr><td>미사용 신청</td><td class="num mono">${p.unuse.length}</td><td class="caption">${p.unuse.map(r => r.name).join(', ') || '—'}</td></tr>
+      <tr><td>보류 (다른 신청 끝난 뒤 다시 검증)</td><td class="num mono">${p.hold.length}</td><td class="caption">${p.hold.map(r => r.name).join(', ') || '—'}</td></tr>
+      <tr><td>제외 (동일·같은 내용 대기·현재 값 유지·빠짐 무시·남은 오류)</td><td class="num mono">${p.ex.length}</td><td class="caption">남은 오류 ${p.err} · 후보 미선택 ${p.pickLeft}</td></tr></tbody>`;
+    $('selfnote').hidden = !ME.has('da');
+  }
+  // ---- wizard
+  const names = ['방식·종류', '업로드', '열 매핑', '검증·비교', '결과 검토·보정', '신청'];
+  const steps = $('steps');
+  function render() {
+    steps.innerHTML = names.map((n, i) => { const k = i + 1; const c = k < cur ? 'done' : k === cur ? 'cur' : ''; return (i ? '<span class="step-sep"></span>' : '') + `<span class="step ${c}"><span class="n">${k < cur ? '✓' : k}</span>${n}</span>`; }).join('');
+    document.querySelectorAll('.stepview').forEach(s => s.classList.toggle('on', +s.dataset.step === cur));
+    $('prev').disabled = cur === 1 || cur === 4;
+    const nx = $('next'); nx.disabled = (cur === 2 && !file) || cur === 4; nx.removeAttribute('data-needs');
+    const p = plan();
+    nx.textContent = cur === 6 ? `${p.sub.length + p.unuse.length}건 신청` : cur === 5 ? '신청 준비' : '다음';
+    $('hint').textContent = cur === 2 && !file ? '파일을 선택하세요' : cur === 4 ? '검증이 끝나면 결과 검토로 넘어갑니다' : cur === 5 ? (p.err ? `오류 ${p.err}행은 신청에서 빠집니다 · F8 다음 오류` : '오류 없음') : cur === 6 && p.unuseNoWhy ? '미사용 사유를 입력하세요' : '';
+    if (cur === 5) drawGrid();
+    if (cur === 6) { drawSubmit(); nx.setAttribute('data-needs', 'why6'); nx.disabled = p.unuseNoWhy > 0 || (p.sub.length + p.unuse.length) === 0; }
+    updateNeeds();
+  }
+  $('prev').onclick = () => { if (cur > 1 && cur !== 4) { cur = cur === 5 ? 3 : cur - 1; render(); } };
+  $('next').onclick = () => {
+    if (cur === 6) {
+      const p = plan(); const n = p.sub.length + p.unuse.length; persist();
+      const r = createDoc({ type: 'dict', kind: 'excel', batch: B.id, key: 'batch:' + B.id + ':' + (B.docs || []).length, n, title: `엑셀 일괄 — 용어 ${n}건 (${B.file})`, reason: $('why6').value.trim() });
+      batches = getBatches(); const b = batches.find(x => x.id === B.id); b.status = '신청됨'; b.docs = (b.docs || []).concat(r.dup ? [] : [r.doc.id]); b.counts = counts();
+      // what was actually submitted — the approval document reads exactly this (single source)
+      b.sub = { new: p.sub.filter(x => x.st === 'new').length, chg: p.sub.filter(x => x.st === 'chg').length, pick: p.sub.filter(x => x.st === 'pick').length, conflict: p.sub.filter(x => x.st === 'conflict').length, unuse: p.unuse.length, hold: p.hold.length, ex: p.ex.length };
+      saveBatches(batches);
+      location.href = `approvals.html?new=1&doc=${r.doc.id}${r.dup ? '&dup=1' : ''}`; return;
+    }
+    cur++; render();
+    if (cur === 4) { let pct = 10; const tick = () => { pct += 30; $('prog').style.width = pct + '%'; if (pct >= 100) { timer = null; cur = 5; persist(); render(); toast(`검증·비교 완료 — ${B.id}로 임시 저장했습니다`, 'info'); } else timer = setTimeout(tick, 400); }; timer = setTimeout(tick, 400); }
+  };
+  if (cur >= 5) persist();
+  if (file) $('filecard').hidden = false;
   render();
 };
 </script>

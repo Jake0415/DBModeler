@@ -31,27 +31,19 @@
         <table class="tbl">
           <thead><tr><th>유형</th><th>이름</th><th>제안 약어</th><th>발생</th><th>최초 요청</th><th>유사 표준어</th></tr></thead>
           <tbody>
-            <tr class="click sel" data-panel="pn-cand"><td><span class="badge b-violet">단어</span></td><td><b>수령자</b></td><td class="mono">RCPNT</td><td class="num">4</td><td>김모델 · 11/17</td><td><span class="badge b-common">공통</span> 수신자 <span class="mono faint">RCVR</span></td></tr>
-            <tr class="click" data-panel="pn-cand"><td><span class="badge b-violet">단어</span></td><td>검수</td><td class="mono">INSPCT</td><td class="num">2</td><td>박설계 · 11/16</td><td><span class="badge b-common">공통</span> 검사 <span class="mono faint">INSP</span></td></tr>
-            <tr class="click" data-panel="pn-cand"><td><span class="badge b-violet">용어</span></td><td>요구사항변경사유내용</td><td class="mono">DEMND_MATER_CHG_RSN_CN</td><td class="num">1</td><td>김모델 · 11/15</td><td class="faint">없음</td></tr>
+            <tr class="click sel" data-panel="pn-cand" data-c="0"><td><span class="badge b-violet">단어</span></td><td><b>수령자</b></td><td class="mono">RCPNT</td><td class="num">4</td><td>김모델 · 11/17</td><td><span class="badge b-common">공통</span> 수신자 <span class="mono faint">RCVR</span></td></tr>
+            <tr class="click" data-panel="pn-cand" data-c="1"><td><span class="badge b-violet">단어</span></td><td>검수</td><td class="mono">INSPCT</td><td class="num">2</td><td>박설계 · 11/16</td><td><span class="badge b-common">공통</span> 검사 <span class="mono faint">INSP</span></td></tr>
+            <tr class="click" data-panel="pn-cand" data-c="2"><td><span class="badge b-violet">용어</span></td><td>요구사항변경사유내용</td><td class="mono">DEMND_MATER_CHG_RSN_CN</td><td class="num">1</td><td>김모델 · 11/15</td><td class="faint">없음</td></tr>
           </tbody>
         </table>
       </div>
     </div>
     <aside class="rpanel open" id="pn-cand">
       <div class="rp-head">
-        <div class="t"><span class="badge b-violet">단어 후보</span><span class="badge">대기</span><button class="iconbtn close" data-close="pn-cand" style="width:28px;height:28px">×</button></div>
-        <h2 style="margin-top:8px">수령자</h2><div class="rp-sub">제안 약어 RCPNT</div>
+        <div class="t"><span class="badge b-violet" id="cd-type">단어 후보</span><span class="badge">대기</span><button class="iconbtn close" data-close="pn-cand" aria-label="닫기" style="width:28px;height:28px">×</button></div>
+        <h2 style="margin-top:8px" id="cd-name">수령자</h2><div class="rp-sub" id="cd-abbr">제안 약어 RCPNT</div>
       </div>
-      <div class="rp-body">
-        <div class="banner warning"><span>!</span><div class="grow">비슷한 표준어가 있습니다: <b>수신자</b> <span class="mono">RCVR</span> (공통). 같은 뜻이면 반려하고 기존 단어를 쓰도록 안내하세요.</div></div>
-        <div class="section-t">발생 위치 <span class="badge">4</span></div>
-        <table class="tbl"><thead><tr><th>위치</th><th>속성</th><th>요청</th></tr></thead><tbody>
-          <tr><td class="wrap">요구사항관리 › 요구사항 › 산출물기본</td><td>산출물수령자명</td><td>김모델</td></tr>
-          <tr><td class="wrap">요구사항관리 › 요구사항 › 산출물이력</td><td>수령자ID</td><td>김모델</td></tr>
-          <tr><td class="wrap">인사시스템 › 교육 › 교재배부</td><td>수령자명</td><td>박설계</td></tr>
-          <tr><td class="wrap">인사시스템 › 교육 › 교재배부</td><td>수령일자</td><td>박설계</td></tr>
-        </tbody></table>
+      <div class="rp-body" id="cd-body">
         <div class="section-t">처리 결과는 요청자에게 앱 알림으로 갑니다</div>
       </div>
       <div class="rp-foot" id="cd-foot">
@@ -76,15 +68,37 @@
 <script>
 window.pageInit = function () {
   const $ = id => document.getElementById(id);
-  if (!ME.has('da')) { $('cd-foot').innerHTML = '<span class="caption muted">후보 처리는 DA만 할 수 있습니다 — 내가 등록한 후보의 처리 결과는 알림으로 받습니다.</span>'; return; }
-  const closeCand = (msg, type) => {
-    const row = document.querySelector('tbody tr.sel') || document.querySelector('tbody tr');
-    if (row) { const last = row.lastElementChild; last.innerHTML = '<span class="badge">처리됨</span>'; row.style.opacity = '.55'; }
-    $('cd-foot').innerHTML = '<span class="badge b-success">✓ 처리 완료</span><span class="grow"></span><a class="btn sm" href="candidates.html">다음 후보</a>';
-    toast(msg, type);
+  // candidate data — the panel and every action follow the SELECTED row (CL3)
+  const C = [
+    { t: '단어', name: '수령자', abbr: 'RCPNT', sim: ['수신자', 'RCVR', '공통'], loc: [['요구사항관리 › 요구사항·프로젝트 › 산출물기본', '산출물수령자명', 'kim'], ['요구사항관리 › 요구사항·프로젝트 › 산출물이력', '수령자ID', 'kim'], ['인사시스템 › 교육 › 교재배부', '수령자명', 'park'], ['인사시스템 › 교육 › 교재배부', '수령일자', 'park']] },
+    { t: '단어', name: '검수', abbr: 'INSPCT', sim: ['검사', 'INSP', '공통'], loc: [['요구사항관리 › 요구사항·프로젝트 › 산출물기본', '산출물검수결과코드', 'park'], ['요구사항관리 › 요구사항·프로젝트 › 산출물이력', '검수일자', 'park']] },
+    { t: '용어', name: '요구사항변경사유내용', abbr: 'DEMND_MATER_CHG_RSN_CN', sim: null, loc: [['요구사항관리 › 요구사항·프로젝트 › 요구사항내역', '변경사유', 'kim']] }
+  ];
+  let sel = 0; const done = {};
+  const reqs = c => [...new Set(c.loc.map(l => l[2]))];
+  function panel() {
+    const c = C[sel];
+    $('cd-type').textContent = c.t + ' 후보'; $('cd-name').textContent = c.name; $('cd-abbr').textContent = '제안 약어 ' + c.abbr;
+    $('cd-body').innerHTML = `${c.sim ? `<div class="banner warning"><span>!</span><div class="grow">비슷한 표준어가 있습니다: <b>${c.sim[0]}</b> <span class="mono">${c.sim[1]}</span> (${c.sim[2]}). 같은 뜻이면 기존 단어를 쓰도록 안내하세요.</div></div>` : ''}
+      <div class="section-t">발생 위치 <span class="badge">${c.loc.length}</span></div>
+      <table class="tbl"><thead><tr><th>위치</th><th>속성</th><th>요청</th></tr></thead><tbody>${c.loc.map(l => `<tr><td class="wrap"><a href="model.html">${l[0]}</a></td><td>${l[1]}</td><td>${USERS[l[2]].name}</td></tr>`).join('')}</tbody></table>
+      <div class="section-t">처리 결과는 요청자 ${reqs(c).map(u => USERS[u].name).join(' · ')}에게 앱 알림으로 갑니다</div>`;
+    if (!ME.has('da')) { $('cd-foot').innerHTML = '<span class="caption muted">후보 처리는 DA만 할 수 있습니다 — 내가 등록한 후보의 처리 결과는 알림으로 받습니다.</span>'; return; }
+    $('cd-foot').innerHTML = done[sel] ? `<span class="badge b-success">✓ ${done[sel]}</span><span class="grow"></span>` : `<button class="btn danger sm" data-open="mo-crej">반려</button>${c.sim ? '<button class="btn sm" data-open="mo-cstd">기존 표준어 사용 안내</button>' : ''}<span class="grow"></span><a class="btn primary sm" href="dictionary.html?q=${encodeURIComponent(c.name)}">${c.t} 신청으로 전환</a>`;
+    $('crej-t').textContent = `후보 반려 · ${c.name}`;
+    document.querySelector('#mo-crej .m-body .caption').innerHTML = `발생 위치 ${c.loc.length}곳의 요청자 <b>${reqs(c).map(u => USERS[u].name).join(' · ')}</b>에게 앱 알림이 갑니다. 해당 속성은 미준수로 남습니다.`;
+    if (c.sim) { $('cstd-to').innerHTML = `<option>${c.sim[0]} ${c.sim[1]} (${c.sim[2]} 단어)</option>`; $('cstd-msg').value = `‘${c.name}’ 대신 같은 뜻의 ${c.sim[2]} 표준 ‘${c.sim[0]}(${c.sim[1]})’를 쓰세요. 표준 맞추기에서 바로 바꿀 수 있습니다.`; }
+  }
+  document.querySelector('tbody').addEventListener('click', e => { const r = e.target.closest('tr[data-c]'); if (r) { sel = +r.dataset.c; panel(); } });
+  const closeCand = (label, msg, type) => {
+    const c = C[sel]; done[sel] = label;
+    const row = document.querySelector(`tbody tr[data-c="${sel}"]`); row.lastElementChild.innerHTML = `<span class="badge">${label}</span>`; row.style.opacity = '.55';
+    pushNotif({ to: reqs(c), k: 'cand', t: `후보 ‘${c.name}’ — ${label}`, m: msg, href: 'candidates.html' });
+    panel(); toast(`${c.name}: ${msg} — 요청자 ${reqs(c).length}명에게 알림`, type);
   };
-  $('crej-go').onclick = () => { $('mo-crej').classList.remove('open'); closeCand(`반려했습니다 — 요청자 2명에게 사유와 함께 알림을 보냈습니다`, 'danger'); };
-  $('cstd-go').onclick = () => { $('mo-cstd').classList.remove('open'); closeCand(`‘${$('cstd-to').value.split(' ')[0]}’ 사용을 안내하고 후보를 닫았습니다 — 요청자 2명에게 알림`, 'info'); };
+  $('crej-go').onclick = () => { $('mo-crej').classList.remove('open'); closeCand('반려', `사유: ${$('crej-why').value.trim()}`, 'danger'); $('crej-why').value = ''; };
+  $('cstd-go').onclick = () => { $('mo-cstd').classList.remove('open'); closeCand('기존 표준어 안내', `‘${C[sel].sim[0]}’ 사용 안내`, 'info'); };
+  panel();
 };
 </script>
 </body>

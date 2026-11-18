@@ -18,7 +18,8 @@
 </head>
 <body>
 <div class="wrap">
-  <div class="flex" style="margin-bottom:4px"><span class="brand-mark" style="width:24px;height:24px">DB</span><h1 style="font-size:24px;letter-spacing:-.6px">DBModeler 클릭 목업 v4</h1></div>
+  <div class="flex" style="margin-bottom:4px"><span class="brand-mark" style="width:24px;height:24px">DB</span><h1 style="font-size:24px;letter-spacing:-.6px">DBModeler 클릭 목업 v5</h1></div>
+  <p class="caption" style="margin:4px 0 0">v5 (2026-11-18): <b>공통 상태 계층</b>(결재 문서·모델 버전/잠금·업로드 묶음·사전 변경 내역·사람 기준 알림) — 모델 잠금은 결재 문서에서 계산, 신청마다 새 번호·이력은 추가만, 표준 맞추기는 선택한 행만 반영, 준수율 한 판정·승인 직전 재검사 · <b>엑셀 왕복 편집</b>(기준본·차이 비교·칸 단위 3방향·보류·브라우저 보정·보정본·업로드 이력) · 사전 검색(초성·과거명·금칙어)·버전 이력·DA 공표 · 대비·키보드·포커스 — <a href="../07-dict-excel-roundtrip.md">07</a> · <a href="../06-ux-review-plan.md">06 §4.2</a></p>
   <p class="caption" style="margin:4px 0 0">v4 (2026-11-18): Codex·Claude 교차 검증 P0 반영 — 결재 문서별 상세·역할별 차례·사유 필수, 표준 적용 요약·준수율 재계산, 확정 → 최종 승인 → 확정본 → v6, Esc 복원·삭제 영향 확인, 사용자 메뉴·마이페이지·알림 센터·제품 정보·단축키·홈·오류·감사 로그. 상단 <b>목업 › 역할 보기</b>로 사용자를 바꿔 보세요(↺ 초기화) — <a href="../06-ux-review-plan.md">06-ux-review-plan.md</a></p>
   <p class="caption" style="margin:4px 0 0">v3 (2026-11-17): DA# 비교 보완 13개 — 제약·인덱스, 타입 매핑, 표준 제외 규칙·비대상, 도메인 신청, 산출물, 표 보기·일괄편집·찾기/바꾸기, 보안 속성, 모델 검토, 시스템 컬럼, 서브타입·배타관계, 도메인그룹, 공통 엔터티 참조, 메모·다시 실행·DBMS 비교 — <a href="../05-mockup-vs-da.md">05-mockup-vs-da.md</a></p>
   <p class="caption" style="margin:4px 0 0">v2 (2026-11-17): 모델 화면과 ERD 캔버스 통합, 실시간 공동 편집·내보내기 표시, 고정폭 글꼴의 한글 깨짐 수정 — <a href="../04-mockup-v2-review.md">04-mockup-v2-review.md</a></p>
@@ -40,6 +41,8 @@
     <div class="path"><a href="approvals.html?doc=REQ-2026-0009">남의 신청 승인</a><span class="ar">→</span><a href="approvals.html?doc=REQ-2026-0014">내 신청 자기 승인</a><span class="ar">→</span><a href="approvals.html?doc=REQ-2026-0010">최종 승인 단계(조회만)</a><span class="ar">→</span><a href="settings.html">설정(Admin 아니면 403)</a><span class="ar">→</span><a href="error.html?code=403&need=Admin&what=설정">403 화면</a></div></div>
   <div class="card" style="margin-bottom:12px"><b>T8 모델 확정 끝까지</b><div class="caption muted">표준 맞추기 적용(요약·사유) → 남은 미준수 2건 예외(사유) → 확정 신청 → DA 자기 승인 → (역할: 이현업) 최종 승인 → 확정본 → v6 작업 시작</div>
     <div class="path"><a href="standardize.html">SC-34 적용</a><span class="ar">→</span><a href="model.html?state=applied">남은 2건 예외</a><span class="ar">→</span><a href="model.html?state=resolved">PN-38 확정 신청</a><span class="ar">→</span><a href="approvals.html?doc=REQ-2026-0015">DA 승인 → 최종 승인</a><span class="ar">→</span><a href="model.html?state=confirmed">확정본 → v6</a></div></div>
+  <div class="card" style="margin-bottom:12px"><b>T9 엑셀 왕복 편집 (사전)</b><div class="caption muted">편집용 엑셀 내려받기(기준본) → 고친 파일 업로드 → 신규·변경(바뀐 칸)·대기·충돌(3방향)·후보·선행 승인·오류·빠짐 → 붉은 칸 바로 고치기·F8·자동 수정 → 보정본 → 신청(새 번호) → 승인 → 반영본 · 변경 내역 · 공표</div>
+    <div class="path"><a href="dictionary.html#download">SC-10 내려받기</a><span class="ar">→</span><a href="excel-import.html">SC-13 1~4</a><span class="ar">→</span><a href="excel-import.html?step=5">5 결과 검토·보정</a><span class="ar">→</span><a href="uploads.html">SC-15 업로드 이력</a><span class="ar">→</span><a href="approvals.html?doc=REQ-2026-0016">결재</a><span class="ar">→</span><a href="dict-history.html">SC-16 변경 내역 · 공표</a></div></div>
   <div class="card" style="margin-bottom:24px"><b>T6 같은 업무 영역 동시 편집</b><div class="caption muted">홍설계와 함께 편집 → 동시 수정·연결 끊김 → 확정 신청하면 모두 조회 전용</div>
     <div class="path"><a href="model.html">SC-31 접속자·커서·'편집 중' 표시</a><span class="ar">→</span><a href="model.html">[동시 수정 충돌 보기]·[연결 끊김 보기]</a><span class="ar">→</span><a href="model.html?state=resolved">PN-38 확정 신청</a><span class="ar">→</span><a href="model.html?state=review">검토 중 · 전원 조회 전용</a></div></div>
 
@@ -54,6 +57,8 @@
       <tr><td class="mono">SC-58</td><td>감사 로그 (DA·Admin)</td><td><a href="audit.html">열기</a></td><td></td></tr>
       <tr><td class="mono">SC-10 · PN-11 · PN-12</td><td>사전 통합 검색 · 상세 · 등록 신청(단어·도메인·용어) · 도메인그룹 필터</td><td><a href="dictionary.html">열기</a> · <a href="dictionary.html?req=domain">도메인 신청</a></td><td><a href="dictionary.html?w=1600">1600</a></td></tr>
       <tr><td class="mono">SC-13</td><td>엑셀 가져오기 (6단계)</td><td><a href="excel-import.html">열기</a> · <a href="excel-import.html?step=5">결과 검토</a></td><td><a href="excel-import.html?step=5&w=1600">1600</a></td></tr>
+      <tr><td class="mono">SC-15</td><td>업로드 이력 — 이어서 작업·보정본·반영본·보류 행 다시 검증·원본</td><td><a href="uploads.html">열기</a></td><td><a href="uploads.html?w=1600">1600</a></td></tr>
+      <tr><td class="mono">SC-16</td><td>사전 변경 내역 — 기간·변경 구분·공표 차수, 엑셀 보고서 (시점 비교 W2)</td><td><a href="dict-history.html">열기</a></td><td></td></tr>
       <tr><td class="mono">SC-14</td><td>후보 큐</td><td><a href="candidates.html">열기</a></td><td></td></tr>
       <tr><td class="mono">SC-20 · PN-21 · MO-22/23</td><td>결재함 · 문서 상세 · 자기 승인 · 반려</td><td><a href="approvals.html">열기</a></td><td><a href="approvals.html?w=1600"><b>1600 확인</b></a></td></tr>
       <tr><td class="mono">SC-30</td><td>시스템 홈</td><td><a href="system.html">열기</a></td><td></td></tr>

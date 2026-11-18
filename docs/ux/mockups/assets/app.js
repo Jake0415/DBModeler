@@ -30,33 +30,94 @@
   window.ME = ME;
   window.roleBadges = u => u.roles.map(r => `<span class="badge">${ROLE_NAME[r]}</span>`).join(' ');
 
-  /* ---- approval documents (shared, persisted per viewer) ---- */
+  /* ================= v5 shared state layer =================
+     One source of truth for documents, model versions/locks, upload batches,
+     dictionary changes and notifications. Screens only read/write through these. */
+  const J = (k, d) => { try { const v = JSON.parse(store.get(k, 'null')); return v == null ? d : v; } catch (e) { return d; } };
+  const S = (k, v) => store.set(k, JSON.stringify(v));
+  const clone = o => JSON.parse(JSON.stringify(o));
+  const now = () => { const t = new Date(); return `${t.getMonth() + 1}/${t.getDate()} ${String(t.getHours()).padStart(2, '0')}:${String(t.getMinutes()).padStart(2, '0')}`; };
+  window.nowStr = now;
+
+  /* ---- approval documents: new ID per request, history is append-only ---- */
   const DOCS0 = [
-    { id: 'REQ-2026-0016', type: 'dict', title: '엑셀 일괄 — 용어 120건', req: 'kim', step: 'da', n: 120, date: '11/17 16:10', cc: [], reason: '요구사항관리 용어 초기 적재(엑셀 가져오기)', kind: 'excel' },
-    { id: 'REQ-2026-0015', type: 'model', title: '요구사항관리 › 요구사항·프로젝트 v5 확정', req: 'kim', step: 'da', n: 9, date: '11/17 16:30', cc: ['hyun'], reason: '산출물 관리 테이블 추가에 따른 v5 확정' },
-    { id: 'REQ-2026-0014', type: 'dict', title: '산출물제출일자 외 1건 등록', req: 'kim', step: 'da', n: 2, date: '11/17 15:02', cc: ['hyun'], reason: '요구사항관리 산출물 제출 관리 기능 추가', kind: 'r14' },
-    { id: 'REQ-2026-0013', type: 'dict', title: "엔터티 용어 '산출물기본' 등록", req: 'kim', step: 'da', n: 1, date: '11/17 14:20', cc: [], reason: '산출물 관리 엔터티 추가' },
-    { id: 'REQ-2026-0012', type: 'dict', title: "단어 '수령자' 등록 (후보 전환)", req: 'lee', step: 'da', n: 1, date: '11/17 11:05', cc: ['kim'], reason: '후보 큐 4건 발생 — 수령자 RCPNT' },
-    { id: 'REQ-2026-0010', type: 'dict', title: "도메인 '코드C2' 규격 변경", req: 'lee', step: 'final', n: 1, date: '11/16 17:05', cc: [], reason: '2자리 코드 허용 문자 확대' },
-    { id: 'REQ-2026-0009', type: 'dict', title: '단어 3건 등록', req: 'park', step: 'da', n: 3, date: '11/16 09:12', cc: ['kim'], reason: '인사시스템 신규 화면' },
-    { id: 'REQ-2026-0003', type: 'model', title: '요구사항관리 › 요구사항·프로젝트 v4 확정', req: 'park', step: 'done', n: 7, date: '11/03 10:00', cc: [], reason: 'v4 확정' }
+    { id: 'REQ-2026-0016', type: 'dict', title: '엑셀 일괄 — 용어 120건 (요구사항_용어_1차.xlsx)', req: 'kim', step: 'da', n: 120, date: '11/16 09:20', cc: [], reason: '요구사항관리 용어 1차 적재(엑셀 가져오기)', kind: 'excel', batch: 'UP-2026-0007', key: 'batch:UP-2026-0007', hist: [] },
+    { id: 'REQ-2026-0014', type: 'dict', title: '산출물제출일자 외 1건 등록', req: 'kim', step: 'da', n: 2, date: '11/17 15:02', cc: ['hyun'], reason: '요구사항관리 산출물 제출 관리 기능 추가', kind: 'r14', hist: [] },
+    { id: 'REQ-2026-0013', type: 'dict', title: "엔터티 용어 '산출물기본' 등록", req: 'kim', step: 'da', n: 1, date: '11/17 14:20', cc: [], reason: '산출물 관리 엔터티 추가', hist: [] },
+    { id: 'REQ-2026-0012', type: 'dict', title: "단어 '수령자' 등록 (후보 전환)", req: 'lee', step: 'da', n: 1, date: '11/17 11:05', cc: ['kim'], reason: '후보 큐 4건 발생 — 수령자 RCPNT', hist: [] },
+    { id: 'REQ-2026-0011', type: 'model', area: 'risk', ver: 2, title: '요구사항관리 › 리스크 v2 확정', req: 'park', step: 'da', n: 2, date: '11/16 18:02', cc: ['hyun'], reason: '리스크 등급 코드 추가', hist: [] },
+    { id: 'REQ-2026-0010', type: 'dict', title: "도메인 '코드C2' 규격 변경", req: 'lee', step: 'final', n: 1, date: '11/16 17:05', cc: [], reason: '2자리 코드 허용 문자 확대', hist: [{ at: '11/16 17:40', who: '김모델', act: 'DA 승인', why: '', step: 'da' }] },
+    { id: 'REQ-2026-0009', type: 'dict', title: '단어 3건 등록', req: 'park', step: 'da', n: 3, date: '11/16 09:12', cc: ['kim'], reason: '인사시스템 신규 화면', hist: [] },
+    { id: 'REQ-2026-0005', type: 'dict', title: '엑셀 일괄 — 단어 86건 (기관단어_초기.xlsx)', req: 'kim', step: 'done', n: 86, date: '11/14 17:45', cc: [], reason: '기관 단어 초기 적재', kind: 'excel', batch: 'UP-2026-0006', hist: [{ at: '11/14 18:00', who: '이데이터', act: 'DA 승인', step: 'da' }, { at: '11/15 09:10', who: '이현업', act: '최종 승인', step: 'final' }] },
+    { id: 'REQ-2026-0003', type: 'model', area: 'rq', ver: 4, title: '요구사항관리 › 요구사항·프로젝트 v4 확정', req: 'park', step: 'done', n: 7, date: '11/03 10:00', cc: [], reason: 'v4 확정', hist: [{ at: '11/03 10:05', who: '이데이터', act: 'DA 승인', step: 'da' }, { at: '11/03 10:20', who: '최관리', act: '최종 승인', step: 'final' }] }
   ];
-  window.getDocs = () => { try { const s = JSON.parse(store.get('dbm-docs', 'null')); if (Array.isArray(s)) return s; } catch (e) {} return JSON.parse(JSON.stringify(DOCS0)); };
-  window.saveDocs = d => store.set('dbm-docs', JSON.stringify(d));
+  window.getDocs = () => J('dbm-docs', clone(DOCS0));
+  window.saveDocs = d => S('dbm-docs', d);
   window.myQueue = (docs) => docs.filter(d => (d.step === 'da' && ME.has('da')) || (d.step === 'final' && ME.has('owner')));
   window.STEP_NAME = { da: 'DA 승인', final: '최종 승인', done: '완료', withdrawn: '회수됨', rejected: '반려됨' };
+  window.nextDocId = docs => 'REQ-2026-' + String(Math.max(...docs.map(d => +d.id.slice(-4))) + 1).padStart(4, '0');
+  /* createDoc: requester = current user, fresh ID; same `key` while still in progress returns the existing doc (idempotent submit) */
+  window.createDoc = o => {
+    const docs = getDocs();
+    if (o.key) { const ex = docs.find(d => d.key === o.key && ['da', 'final'].includes(d.step)); if (ex) return { doc: ex, dup: true }; }
+    const doc = Object.assign({ id: nextDocId(docs), req: ME.id, step: 'da', date: now(), cc: [], hist: [], n: 1 }, o);
+    docs.unshift(doc); saveDocs(docs);
+    pushNotif({ to: Object.values(USERS).filter(u => u.roles.includes('da') && u.id !== ME.id).map(u => u.id), k: 'appr', t: `${doc.id} ${doc.type === 'model' ? '모델 확정' : '사전 신청'} — DA 승인 차례`, m: `${ME.name} · ${doc.title}`, href: `approvals.html?doc=${doc.id}` });
+    return { doc, dup: false };
+  };
+  window.addHist = (doc, e) => { doc.hist = (doc.hist || []).concat([Object.assign({ at: now(), who: ME.name }, e)]); };
+
+  /* ---- model versions & locks: computed from documents, never from the URL ---- */
+  const MODEL0 = { rq: { ver: 5, base: 4, name: '요구사항 · 프로젝트' }, risk: { ver: 2, base: 1, name: '리스크' } };
+  window.getModel = area => (J('dbm-model', clone(MODEL0)))[area] || MODEL0.rq;
+  window.setModel = (area, m) => { const all = J('dbm-model', clone(MODEL0)); all[area] = m; S('dbm-model', all); };
+  window.modelLock = area => {
+    const m = getModel(area);
+    const d = getDocs().filter(x => x.type === 'model' && x.area === area && x.ver === m.ver).sort((a, b) => b.id.localeCompare(a.id))[0];
+    if (d && ['da', 'final'].includes(d.step)) return { state: 'review', doc: d, model: m };
+    if (d && d.step === 'done') return { state: 'confirmed', doc: d, model: m };
+    return { state: 'edit', doc: d || null, model: m };
+  };
+  window.startNextVersion = area => { const m = getModel(area); setModel(area, Object.assign({}, m, { ver: m.ver + 1, base: m.ver })); };
+  window.getComp = area => J('dbm-comp-' + area, null);
+  window.setComp = (area, c) => S('dbm-comp-' + area, c);
+
+  /* ---- upload batches (one source for counts on every screen) ---- */
+  const BATCH0 = [
+    { id: 'UP-2026-0007', file: '요구사항_용어_1차.xlsx', kind: '용어', by: 'kim', at: '11/16 09:12', baseline: 'BL-20261116-0905', rows: 128, counts: { new: 112, chg: 4, same: 4, waitSame: 0, waitDiff: 0, conflict: 0, dup: 0, pre: 0, err: 4, missing: 0, pick: 4 }, docs: ['REQ-2026-0016'], status: '신청됨' },
+    { id: 'UP-2026-0006', file: '기관단어_초기.xlsx', kind: '단어', by: 'kim', at: '11/14 17:40', baseline: '—(초기 적재)', rows: 86, counts: { new: 86, chg: 0, same: 0, waitSame: 0, waitDiff: 0, conflict: 0, dup: 0, pre: 0, err: 0, missing: 0, pick: 0 }, docs: ['REQ-2026-0005'], status: '반영됨' },
+    { id: 'UP-2026-0005', file: '기관단어_초기.xlsx', kind: '단어', by: 'kim', at: '11/14 17:05', baseline: '—', rows: 86, counts: null, docs: [], status: '취소', note: '머리글 오류(필수 열 ‘단어명’ 없음)' }
+  ];
+  window.getBatches = () => J('dbm-batches', clone(BATCH0));
+  window.saveBatches = b => S('dbm-batches', b);
+  window.batchOf = id => getBatches().find(b => b.id === id);
+  window.submitCount = c => c ? c.new + c.chg + c.pick : 0;
+
+  /* ---- dictionary change log & publication (제정차수) ---- */
+  const CHG0 = [
+    { at: '2026-11-17 11:58', item: '산출물', kind: '단어', act: '추가', ver: 'V1', doc: 'REQ-2026-0007', by: '김모델', diff: '' },
+    { at: '2026-11-15 09:10', item: '기관 단어 86건', kind: '단어', act: '추가', ver: 'V1', doc: 'REQ-2026-0005', by: '이현업(최종)', diff: '엑셀 초기 적재 · UP-2026-0006' },
+    { at: '2026-10-02 14:20', item: '산출서', kind: '단어', act: '미사용', ver: 'V2', doc: 'REQ-2026-0001', by: '이데이터', diff: '사용상태: 사용 → 미사용 · 산출물로 통합', pub: 12 }
+  ];
+  window.getChanges = () => J('dbm-changes', clone(CHG0));
+  window.saveChanges = c => S('dbm-changes', c);
+  window.getPub = () => J('dbm-pub', { cha: 12, at: '2026-11-03 10:00', by: '이데이터', why: '공통표준 2025.11 반영' });
+  window.savePub = p => S('dbm-pub', p);
+
+  /* ---- notifications: addressed to people, created by events ---- */
+  window.pushNotif = n => { const all = J('dbm-notifs', []); all.unshift(Object.assign({ id: 'd' + Date.now() + Math.random().toString(36).slice(2, 5), at: now() }, n)); S('dbm-notifs', all.slice(0, 50)); };
 
   /* ---- notifications ---- */
   const NOTIFS0 = [
-    { id: 'n1', k: 'appr', t: 'REQ-2026-0015 모델 확정 — DA 승인 차례', m: '김모델 · 요구사항·프로젝트 v5', href: 'approvals.html?doc=REQ-2026-0015', at: '11/17 16:30', for: ['da'] },
-    { id: 'n2', k: 'job', t: '엑셀 검증 완료 — 용어 120건', m: '정상 112 · 확인 필요 4 · 오류 4 → 결과 검토', href: 'excel-import.html?step=5', at: '11/17 16:02', for: ['modeler', 'da'] },
-    { id: 'n3', k: 'cand', t: "후보 '수령자'가 단어 신청으로 전환됐습니다", m: 'REQ-2026-0012 · 내가 등록한 후보 2건', href: 'approvals.html?doc=REQ-2026-0012', at: '11/17 11:05', for: ['modeler'] },
-    { id: 'n4', k: 'cc', t: '참조: REQ-2026-0009 단어 3건 등록', m: '박설계 신청 · DA 승인 대기', href: 'approvals.html?box=cc&doc=REQ-2026-0009', at: '11/16 09:12', for: ['modeler', 'da'] },
-    { id: 'n5', k: 'appr', t: "REQ-2026-0010 도메인 '코드C2' — 최종 승인 차례", m: '이데이터 신청 · DA 승인 완료', href: 'approvals.html?doc=REQ-2026-0010', at: '11/16 17:40', for: ['owner'] },
-    { id: 'n6', k: 'sys', t: `DBModeler ${PRODUCT.version} 새 기능`, m: '산출물 화면 · 표 보기 · 모델 검토 — 릴리스 노트', href: '#about', at: '11/17 09:00', for: ['modeler', 'da', 'owner', 'admin'] }
+    { id: 'n1', k: 'appr', t: 'REQ-2026-0011 모델 확정(리스크 v2) — DA 승인 차례', m: '박설계 · 요구사항관리 › 리스크', href: 'approvals.html?doc=REQ-2026-0011', at: '11/16 18:02', to: ['kim', 'lee'] },
+    { id: 'n2', k: 'job', t: '엑셀 검증 완료 — 요구사항_용어_1차.xlsx', m: '신규 112 · 변경 4 · 후보 확정 4 · 오류 4 → REQ-2026-0016', href: 'uploads.html?b=UP-2026-0007', at: '11/16 09:15', to: ['kim'] },
+    { id: 'n3', k: 'cand', t: "후보 '수령자'가 단어 신청으로 전환됐습니다", m: 'REQ-2026-0012 · 내가 등록한 후보 2건', href: 'approvals.html?doc=REQ-2026-0012', at: '11/17 11:05', to: ['kim', 'park'] },
+    { id: 'n4', k: 'cc', t: '참조: REQ-2026-0009 단어 3건 등록', m: '박설계 신청 · DA 승인 대기', href: 'approvals.html?box=cc&doc=REQ-2026-0009', at: '11/16 09:12', to: ['kim'] },
+    { id: 'n5', k: 'appr', t: "REQ-2026-0010 도메인 '코드C2' — 최종 승인 차례", m: '이데이터 신청 · DA 승인 완료', href: 'approvals.html?doc=REQ-2026-0010', at: '11/16 17:40', to: ['hyun'] },
+    { id: 'n6', k: 'sys', t: `DBModeler ${PRODUCT.version} 새 기능`, m: '산출물 화면 · 표 보기 · 모델 검토 — 릴리스 노트', href: '#about', at: '11/17 09:00', to: ['kim', 'park', 'lee', 'hyun'] }
   ];
   const readSet = new Set((store.get('dbm-read-' + ME.id, '') || '').split(',').filter(Boolean));
-  const myNotifs = () => NOTIFS0.filter(n => n.for.some(r => ME.has(r)));
+  const myNotifs = () => J('dbm-notifs', []).concat(NOTIFS0).filter(n => (n.to || []).includes(ME.id));
   const unread = () => myNotifs().filter(n => !readSet.has(n.id)).length;
   const markRead = ids => { ids.forEach(i => readSet.add(i)); store.set('dbm-read-' + ME.id, [...readSet].join(',')); };
 
@@ -84,6 +145,12 @@
     const app = document.getElementById('app');
     const content = document.getElementById('content');
     if (!app || !content) return;
+    // signed-out pages show no product shell (CL3: logout page still showed the logged-in shell)
+    if (document.body.dataset.page === 'error' && ['logout', 'expired'].includes(qs.get('code'))) {
+      app.classList.add('bare');
+      const t = document.createElement('div'); t.className = 'toasts'; t.id = 'toasts'; t.setAttribute('role', 'status'); app.appendChild(t);
+      return;
+    }
     const top = document.createElement('header');
     top.className = 'topbar';
     const nUnread = unread();
@@ -120,7 +187,7 @@
         <div class="nav-title">시스템</div>
         ${navLink('system.html', ICON.db + '요구사항관리<span class="tag">Oracle</span>', 'system')}
         ${navLink('model.html', '요구사항 · 프로젝트', 'model', 'sub2')}
-        ${navLink('model.html?area=risk&state=review', '리스크', '', 'sub2')}
+        ${navLink('model.html?area=risk', '리스크', '', 'sub2')}
         ${navLink('error.html?code=404&what=인사시스템', ICON.db + '인사시스템<span class="tag">Tibero</span>', '')}
         ${navLink('error.html?code=404&what=회계시스템', ICON.db + '회계시스템<span class="tag">PostgreSQL</span>', '')}
       </div>
@@ -175,7 +242,7 @@
     sf.addEventListener('click', e => { const v = e.target.dataset.v; if (!v) return; store.set('dbm-frame', v); const p = new URLSearchParams(location.search); p.set('w', v); location.search = p.toString(); });
     st.addEventListener('click', e => { const v = e.target.dataset.v; if (!v) return; store.set('dbm-theme', v); applyTheme(v); st.querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.v === v)); });
     top.querySelector('#mk-role').addEventListener('change', e => { store.set('dbm-role', e.target.value); const p = new URLSearchParams(location.search); p.delete('as'); location.search = p.toString(); location.reload(); });
-    top.querySelector('#mk-reset').addEventListener('click', () => { ['dbm-docs', 'dbm-seen-ver'].forEach(k => store.del(k)); Object.keys(USERS).forEach(u => store.del('dbm-read-' + u)); flash('목업 데이터를 초기화했습니다', 'info'); location.reload(); });
+    top.querySelector('#mk-reset').addEventListener('click', () => { ['dbm-docs', 'dbm-seen-ver', 'dbm-model', 'dbm-batches', 'dbm-changes', 'dbm-pub', 'dbm-notifs', 'dbm-comp-rq', 'dbm-comp-risk', 'dbm-apply'].forEach(k => store.del(k)); Object.keys(USERS).forEach(u => store.del('dbm-read-' + u)); flash('목업 데이터를 초기화했습니다', 'info'); location.reload(); });
 
     // notifications
     const pn = top.querySelector('#pn-notif'), pu = top.querySelector('#pn-user');
@@ -259,11 +326,11 @@
       const op = e.target.closest('[data-open]');
       if (op && !op.disabled) {
         e.preventDefault();
-        op.dataset.open.split(',').forEach(id => { const el = document.getElementById(id.trim()); if (el) { el.classList.add('open'); const f = el.querySelector('textarea, input, select, button'); if (el.classList.contains('overlay') && f) setTimeout(() => f.focus(), 0); } });
+        op.dataset.open.split(',').forEach(id => { const el = document.getElementById(id.trim()); if (el) { el.classList.add('open'); if (el.classList.contains('overlay')) { el._opener = op; const f = el.querySelector('textarea, input, select, button'); if (f) setTimeout(() => f.focus(), 0); } } });
         if (op.dataset.closeOthers) op.dataset.closeOthers.split(',').forEach(id => { const el = document.getElementById(id.trim()); if (el) el.classList.remove('open'); });
       }
       const cl = e.target.closest('[data-close]');
-      if (cl && !cl.disabled) { e.preventDefault(); cl.dataset.close.split(',').forEach(id => { const el = document.getElementById(id.trim()); if (el) el.classList.remove('open'); }); }
+      if (cl && !cl.disabled) { e.preventDefault(); cl.dataset.close.split(',').forEach(id => { const el = document.getElementById(id.trim()); if (el) { el.classList.remove('open'); if (el._opener && el._opener.isConnected) el._opener.focus(); } }); }
       const tg = e.target.closest('[data-toggle]');
       if (tg) { e.preventDefault(); const el = document.getElementById(tg.dataset.toggle); if (el) el.classList.toggle('closed'); }
       const tb = e.target.closest('.tabs button[data-tab]');
@@ -298,9 +365,22 @@
     });
     document.addEventListener('input', updateNeeds);
     document.addEventListener('keydown', e => {
-      if (e.key === 'Escape') { const o = document.querySelector('.overlay.open'); if (o) o.classList.remove('open'); }
+      const ov = document.querySelector('.overlay.open');
+      if (e.key === 'Escape' && ov) { ov.classList.remove('open'); if (ov._opener && ov._opener.isConnected) ov._opener.focus(); return; }
+      // focus trap inside an open dialog
+      if (e.key === 'Tab' && ov) {
+        const f = [...ov.querySelectorAll('button:not([disabled]), [href], input:not([disabled]), select, textarea, [tabindex]:not([tabindex="-1"])')].filter(x => x.offsetParent !== null);
+        if (f.length) { const i = f.indexOf(document.activeElement); if (e.shiftKey && i <= 0) { f[f.length - 1].focus(); e.preventDefault(); } else if (!e.shiftKey && (i === f.length - 1 || i === -1)) { f[0].focus(); e.preventDefault(); } }
+      }
+      // keyboard activation for non-button widgets (chips, clickable rows, cards)
+      if ((e.key === 'Enter' || e.key === ' ') && e.target.matches && e.target.matches('.chip:not(button), .kindcard, .ocard, tr.click, .cand, .dict-item')) { e.preventDefault(); e.target.click(); }
       if (e.key === '?' && !(e.target.closest && e.target.closest('input,textarea,select,[contenteditable="true"]'))) { e.preventDefault(); openKeys(); }
     });
+    // make those widgets focusable and announce pressed state
+    const a11y = () => document.querySelectorAll('.chip:not(button):not([tabindex]), .kindcard:not([tabindex]), .ocard:not([tabindex]), tr.click:not([tabindex])').forEach(el => { el.tabIndex = 0; if (!el.matches('tr')) el.setAttribute('role', 'button'); });
+    const pressed = () => document.querySelectorAll('.chip').forEach(c => c.setAttribute('aria-pressed', c.classList.contains('on') ? 'true' : 'false'));
+    new MutationObserver(() => { a11y(); pressed(); }).observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] });
+    a11y(); pressed();
     document.addEventListener('change', e => { if (e.target.id === 'kb-single') store.set('dbm-single-keys', e.target.checked ? '1' : '0'); });
   }
 

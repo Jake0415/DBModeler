@@ -134,12 +134,18 @@ window.pageInit = function () {
   function items(d) {
     if (d.kind === 'r14') return `<div class="card" style="margin-bottom:8px"><div class="flex"><span class="badge">용어 · 등록</span><b>산출물제출일자</b><span class="grow"></span><span class="mono">DLVRBL_SBMT_DATE</span></div><dl class="kv" style="margin:8px 0 0"><dt>구성 단어</dt><dd>산출물 · 제출 · 일자</dd><dt>도메인</dt><dd class="mono">연월일C8</dd><dt>설명</dt><dd>산출물을 발주처에 제출한 날짜</dd></dl></div>
       <div class="card"><div class="flex"><span class="badge">단어 · 등록</span><b>검수</b><span class="grow"></span><span class="mono">INSPCT</span></div><dl class="kv" style="margin:8px 0 0"><dt>영문명</dt><dd>inspection</dd><dt>중복 허용 사유</dt><dd>약어 INSPCT가 ‘검사(INSP)’와 다르지만 업무상 ‘검수’를 구분해야 함</dd></dl></div>`;
-    if (d.kind === 'excel') return `<div class="grid3" style="margin-bottom:8px"><div class="card"><div class="caption muted">신규</div><div class="mono" style="font-size:20px">112</div></div><div class="card"><div class="caption muted">변경</div><div class="mono" style="font-size:20px">4</div></div><div class="card"><div class="caption muted">후보 확정</div><div class="mono" style="font-size:20px">4</div></div></div>
-      <div class="caption muted" style="margin-bottom:6px">오류 4행은 신청에서 제외됨 · 원본 파일 요구사항_용어_1차.xlsx</div>
-      <table class="tbl"><thead><tr><th>용어</th><th>약어</th><th>도메인</th><th>구분</th></tr></thead><tbody><tr><td>요구사항상태코드</td><td class="mono">DEMND_MATER_STTS_CD</td><td class="mono">코드C2</td><td>신규</td></tr><tr><td>요구사항우선순위</td><td class="mono">DEMND_MATER_PRIOR</td><td class="mono">순위N3</td><td>신규</td></tr><tr><td>요청부서명</td><td class="mono">REQ_DEPT_NM</td><td class="mono">명V100</td><td>변경</td></tr><tr><td colspan="4" class="caption muted">… 117건 더 · <a href="#" data-toast="전체 항목을 엑셀로 내려받았습니다" data-toast-type="info">엑셀로 보기</a></td></tr></tbody></table>`;
-    if (d.type === 'model') return `<div class="grid3" style="margin:4px 0 12px"><div class="card"><div class="caption muted">준수율</div><div class="mono" style="font-size:20px;font-weight:500">100%</div><div class="caption muted">신청 시점 · 승인 때 재검사</div></div><div class="card"><div class="caption muted">표준 예외</div><div class="mono" style="font-size:20px;font-weight:500;color:var(--violet)">3</div><div class="caption muted">사유 기록됨</div></div><div class="card"><div class="caption muted">v4 대비 변경</div><div class="mono" style="font-size:20px;font-weight:500">+2 ~3</div><div class="caption muted"><a href="#" data-open="mo-diff">변경 비교</a></div></div></div>
-      <div class="section-t">표준 예외 목록 <span class="badge b-violet">◆ 3</span> <span class="caption muted">확정 결재에서 반드시 검토</span></div>
-      <table class="tbl"><thead><tr><th>위치</th><th>항목</th><th>사유</th></tr></thead><tbody><tr><td>RQRM_D</td><td class="mono">REQ_CUST_NM</td><td class="wrap">대외 연계 시스템이 컬럼명을 참조</td></tr><tr><td>PRJ_M</td><td class="mono">PRJ_ENDDD</td><td class="wrap">운영 DB 컬럼 · 배치 영향</td></tr><tr><td>DLVRBL_M</td><td>산출물수령자명</td><td class="wrap">‘수령자’ 후보(REQ-0012) 승인 전 임시 유지</td></tr></tbody></table>`;
+    if (d.kind === 'excel') { const b = batchOf(d.batch) || { counts: {}, file: '—', id: '—' }; const c = b.counts || {}; const s = b.sub || { new: c.new || 0, chg: c.chg || 0, pick: c.pick || 0, conflict: 0, unuse: 0, hold: (c.waitDiff || 0) + (c.pre || 0), ex: (c.err || 0) + (c.same || 0) }; return `<div class="grid3" style="margin-bottom:8px;grid-template-columns:repeat(4,1fr)"><div class="card"><div class="caption muted">신규</div><div class="mono" style="font-size:20px">${s.new}</div></div><div class="card"><div class="caption muted">변경 <span class="faint">(충돌 해결 포함)</span></div><div class="mono" style="font-size:20px">${s.chg + s.conflict}</div></div><div class="card"><div class="caption muted">후보 확정</div><div class="mono" style="font-size:20px">${s.pick}</div></div><div class="card"><div class="caption muted">미사용</div><div class="mono" style="font-size:20px">${s.unuse}</div></div></div>
+      <div class="caption muted" style="margin-bottom:6px">합계 ${s.new + s.chg + s.conflict + s.pick + s.unuse}건 = 이 문서 ${d.n}건 · 업로드 <a href="uploads.html?b=${b.id}">${b.id}</a> · ${b.file} · 기준본 ${b.baseline || '—'} · 보류 ${s.hold} · 제외 ${s.ex}</div>`
+      + `<table class="tbl"><thead><tr><th>용어</th><th>약어</th><th>도메인</th><th>구분</th></tr></thead><tbody><tr><td>요구사항상태코드</td><td class="mono">DEMND_MATER_STTS_CD</td><td class="mono">코드C2</td><td>신규</td></tr><tr><td>요구사항우선순위</td><td class="mono">DEMND_MATER_PRIOR</td><td class="mono">순위N3</td><td>신규</td></tr><tr><td>요청부서명</td><td class="mono">REQ_DEPT_NM</td><td class="mono">명V100</td><td>변경 <span class="caption faint">설명</span></td></tr><tr><td colspan="4" class="caption muted">… ${Math.max(0, d.n - 3)}건 더 · <a href="#" data-toast="전체 항목을 엑셀로 내려받았습니다" data-toast-type="info">엑셀로 보기</a></td></tr></tbody></table>`; }
+    if (d.type === 'model') {
+      const snap = d.snap || getComp(d.area) || { rate: 100, bad: 0, exList: [] };
+      const cur = getComp(d.area);
+      const changed = cur && (cur.bad !== snap.bad || (cur.exList || []).length !== (snap.exList || []).length);
+      return `<div class="grid3" style="margin:4px 0 12px"><div class="card"><div class="caption muted">준수율 (신청 시점)</div><div class="mono" style="font-size:20px;font-weight:500">${snap.rate}%</div><div class="caption muted">미준수 ${snap.bad} · 승인 때 재검사</div></div><div class="card"><div class="caption muted">표준 예외</div><div class="mono" style="font-size:20px;font-weight:500;color:var(--violet)">${(snap.exList || []).length}</div><div class="caption muted">사유 기록됨</div></div><div class="card"><div class="caption muted">v${d.ver - 1} 대비 변경</div><div class="mono" style="font-size:20px;font-weight:500">+2 ~3</div><div class="caption muted"><a href="#" data-open="mo-diff">변경 비교</a></div></div></div>
+      ${changed ? `<div class="banner warning" style="margin-bottom:8px"><span>!</span><div>신청 이후 모델 판정이 바뀌었습니다 — 현재 미준수 ${cur.bad}건. 승인 시 현재 기준으로 재검사합니다.</div></div>` : ''}
+      <div class="section-t">표준 예외 목록 <span class="badge b-violet">◆ ${(snap.exList || []).length}</span> <span class="caption muted">확정 결재에서 반드시 검토</span></div>
+      <table class="tbl"><thead><tr><th>위치</th><th>항목</th><th>사유</th></tr></thead><tbody>${(snap.exList || []).map(x => `<tr><td>${x[0]}</td><td class="mono">${x[1]}</td><td class="wrap">${x[2]}</td></tr>`).join('') || '<tr><td colspan="3" class="caption muted">예외 없음</td></tr>'}</tbody></table>`;
+    }
     return `<div class="card"><div class="flex"><span class="badge">사전 · 신청</span><b>${d.title}</b></div><div class="caption muted" style="margin-top:6px">항목 ${d.n}건 · 상세는 목업에서 생략</div></div>`;
   }
   function panel() {
@@ -153,12 +159,13 @@ window.pageInit = function () {
     else if (d.step === 'done') right = `<div class="foot-zone"><span class="badge b-success">✓ 처리 완료</span>${d.type === 'model' ? '<a class="btn primary" href="model.html?state=confirmed">확정본 보기</a>' : ''}</div>`;
     else if (live) right = `<span class="caption muted">지금은 <b>${stepRole(d.step)}</b> 차례입니다${ME.has(d.step === 'da' ? 'da' : 'owner') ? '' : ' · 내 역할로는 조회만 가능'}</span>`;
     else right = `<span class="caption muted">${STEP_NAME[d.step]} — 더 처리할 일이 없습니다</span>`;
-    const left = mine && live ? `<div class="foot-zone"><span class="zl">신청자로서</span><button class="btn sm" data-open="mo-wd">회수</button></div>` : mine && d.step === 'rejected' ? `<div class="foot-zone"><span class="zl">신청자로서</span><a class="btn sm primary" href="${d.type === 'model' ? 'model.html' : 'dictionary.html'}">보완해서 다시 신청</a></div>` : '';
+    const fixHref = d.type === 'model' ? `model.html?area=${d.area}` : d.batch ? `excel-import.html?resume=${d.batch}` : 'dictionary.html';
+    const left = mine && live ? `<div class="foot-zone"><span class="zl">신청자로서</span><button class="btn sm" id="btn-wd">회수</button></div>` : mine && ['rejected', 'withdrawn'].includes(d.step) ? `<div class="foot-zone"><span class="zl">신청자로서</span><a class="btn sm primary" href="${fixHref}">보완해서 다시 신청</a><span class="caption muted">새 신청번호로 만들어집니다</span></div>` : '';
     p.innerHTML = `<div class="rp-head">
         <div class="t"><span class="mono">${d.id}</span><span class="badge ${d.type === 'model' ? 'b-violet' : ''}">${d.type === 'model' ? '모델 확정' : '사전 신청'}</span>${stBadge(d)}<button class="iconbtn close" id="pn-x" aria-label="닫기" style="width:28px;height:28px">×</button></div>
         <h2 style="margin-top:8px">${d.title}</h2>
         <div class="caption muted">신청 ${nameOf(d.req)} · ${d.date}${(d.cc || []).length ? ' · 참조 ' + d.cc.map(nameOf).join(', ') : ''}</div>
-        ${d.type === 'model' ? `<div class="doclinks"><a class="btn sm" href="model.html?state=review&snap=1">모델 보기 · 조회 전용 v5 스냅숏</a><button class="btn sm" data-open="mo-diff">v4 대비 변경 비교</button><a class="btn sm" href="outputs.html?k=tbl">산출물 미리보기</a></div>` : ''}
+        ${d.type === 'model' ? `<div class="doclinks"><a class="btn sm" href="model.html?area=${d.area}&snap=${d.id}">모델 보기 · 조회 전용 v${d.ver} 스냅숏</a><button class="btn sm" data-open="mo-diff">v${d.ver - 1} 대비 변경 비교</button><a class="btn sm" href="outputs.html?k=tbl">산출물 미리보기</a></div>` : d.batch ? `<div class="doclinks"><a class="btn sm" href="uploads.html?b=${d.batch}">업로드 ${d.batch} 보기</a></div>` : ''}
       </div>
       <div class="rp-body">
         ${line(d)}
@@ -172,28 +179,52 @@ window.pageInit = function () {
     $('pn-x').onclick = () => { sel = null; p.classList.remove('open'); drawRows(); };
     const a = $('btn-apr');
     if (a) a.onclick = () => {
-      if (mine) { $('self-step').textContent = stepRole(d.step); $('self-why').value = ''; $('mo-self').classList.add('open'); $('self-why').focus(); }
-      else { $('apr-sum').innerHTML = `<b>${d.id}</b> ${d.title}<br>${d.step === 'da' ? '승인하면 최종 승인(기관 담당자)으로 넘어갑니다.' : '승인하면 ' + (d.type === 'model' ? '<b>확정본</b>이 되고 업무 영역은 다음 작업 버전으로 넘어갑니다.' : '사전에 <b>반영</b>됩니다.')}`; $('apr-note').value = ''; $('mo-apr').classList.add('open'); }
+      pending = { id: d.id, step: d.step };   // the dialog is bound to THIS document and step (CX4-01)
+      if (mine) { $('self-step').textContent = `${d.id} · ${stepRole(d.step)}`; $('self-why').value = ''; $('mo-self').classList.add('open'); $('mo-self')._opener = a; $('self-why').focus(); }
+      else { $('apr-sum').innerHTML = `<b>${d.id}</b> ${d.title}${d.batch ? ` · ${d.n}건` : ''}<br>${d.step === 'da' ? '승인하면 최종 승인(기관 담당자)으로 넘어갑니다.' : '승인하면 ' + (d.type === 'model' ? '<b>확정본</b>이 되고 업무 영역은 다음 작업 버전으로 넘어갑니다.' : '사전에 <b>반영</b>되고 각 항목의 버전이 올라갑니다.')}`; $('apr-note').value = ''; $('mo-apr').classList.add('open'); $('mo-apr')._opener = a; }
       updateNeeds();
     };
+    const wd = $('btn-wd'); if (wd) wd.onclick = () => { pending = { id: d.id, step: d.step }; $('wd-t').textContent = `회수 · ${d.id}`; $('mo-wd').classList.add('open'); $('mo-wd')._opener = wd; $('wd-why').focus(); updateNeeds(); };
+    const rj = p.querySelector('[data-open="mo-reject"]'); if (rj) rj.addEventListener('click', () => { pending = { id: d.id, step: d.step }; $('rej-t').textContent = `반려 · ${d.id}`; });
   }
-  const now = () => { const t = new Date(); return `${t.getMonth() + 1}/${t.getDate()} ${String(t.getHours()).padStart(2, '0')}:${String(t.getMinutes()).padStart(2, '0')}`; };
+  let pending = null;
   function act(kind, why, self) {
-    const d = docs.find(x => x.id === sel); d.hist = d.hist || [];
+    docs = getDocs();                       // re-read: another tab or role may have changed it
+    const d = docs.find(x => x.id === (pending && pending.id));
+    if (!d || d.step !== pending.step) { toast(`${pending ? pending.id : ''}의 상태가 바뀌어 처리하지 않았습니다 — 최신 상태를 다시 확인하세요`, 'danger'); drawBoxes(); drawRows(); panel(); return; }
+    sel = d.id;
+    const notifyReq = (t, m) => { if (d.req !== ME.id) pushNotif({ to: [d.req], k: 'appr', t, m, href: `approvals.html?box=mine&doc=${d.id}` }); };
     if (kind === 'approve') {
-      d.hist.push({ at: now(), who: ME.name, act: `${stepRole(d.step)} 승인`, why, step: d.step, self });
+      // re-check against the current model judgement before approving a model confirmation (MD-20)
+      if (d.type === 'model') { const c = getComp(d.area); if (c && c.bad > 0) { addHist(d, { act: '재검사 실패 — 승인 취소', why: `미준수 ${c.bad}건`, step: d.step }); saveDocs(docs); toast(`재검사 실패 — 현재 미준수 ${c.bad}건이라 승인하지 않았습니다. 이력에 남겼습니다`, 'danger'); drawRows(); panel(); return; } }
+      addHist(d, { act: `${stepRole(d.step)} 승인`, why, step: d.step, self });
       const was = d.step; d.step = was === 'da' ? 'final' : 'done';
       saveDocs(docs);
-      if (d.step === 'final') toast(`${was === 'da' ? 'DA' : ''} 승인 — 최종 승인(기관 담당자) 2명에게 메일을 보냈습니다`, 'info');
-      else toast(d.type === 'model' ? '최종 승인 — v5가 확정본이 됐습니다' : '최종 승인 — 사전에 반영했습니다 (제정 13차)', 'success', d.type === 'model' ? { label: '확정본 보기', fn: () => location.href = 'model.html?state=confirmed' } : null);
+      if (d.step === 'final') {
+        pushNotif({ to: Object.values(USERS).filter(u => u.roles.includes('owner')).map(u => u.id), k: 'appr', t: `${d.id} — 최종 승인 차례`, m: d.title, href: `approvals.html?doc=${d.id}` });
+        notifyReq(`${d.id} DA 승인됨 — 최종 승인 대기`, d.title);
+        toast('DA 승인 — 최종 승인(기관 담당자)에게 알렸습니다', 'info');
+      } else if (d.type === 'model') {
+        notifyReq(`${d.id} 최종 승인 — v${d.ver} 확정본`, d.title);
+        toast(`최종 승인 — v${d.ver}이 확정본이 됐습니다`, 'success', { label: '확정본 보기', fn: () => location.href = `model.html?area=${d.area}` });
+      } else {
+        const ch = getChanges();
+        if (d.kind === 'r14') ch.unshift({ at: '2026-' + nowStr().replace(' ', ' ').replace('/', '-'), item: '산출물제출일자', kind: '용어', act: '추가', ver: 'V1', doc: d.id, by: ME.name, diff: '' }, { at: '2026-' + nowStr().replace('/', '-'), item: '검수', kind: '단어', act: '추가', ver: 'V1', doc: d.id, by: ME.name, diff: '중복 허용 사유 있음' });
+        else ch.unshift({ at: '2026-' + nowStr().replace('/', '-'), item: d.title, kind: '사전', act: d.batch ? '추가·변경' : '추가', ver: 'V+1', doc: d.id, by: ME.name, diff: d.batch ? `업로드 ${d.batch}` : '' });
+        saveChanges(ch);
+        if (d.batch) { const bs = getBatches(); const b = bs.find(x => x.id === d.batch); if (b) { b.status = '반영됨'; saveBatches(bs); } }
+        notifyReq(`${d.id} 반영됨 — ${d.batch ? '반영본 내려받기' : '사전에 반영'}`, d.title + (d.batch ? ' · 엑셀 원본을 반영본으로 맞추세요' : ''));
+        toast(`최종 승인 — 사전에 반영했습니다 · 항목 버전이 올라갔습니다(제정차수는 DA 공표 때만)`, 'success', d.batch ? { label: '반영본 내려받기', fn: () => toast(`반영본_${d.batch}.xlsx — 새 버전·ID가 들어간 편집용 엑셀`, 'info') } : null);
+      }
     } else if (kind === 'reject') {
-      d.hist.push({ at: now(), who: ME.name, act: '반려', why, step: d.step }); d.step = 'rejected'; saveDocs(docs);
-      toast('반려했습니다 — 신청자에게 의견과 함께 메일을 보냈습니다', 'danger');
+      addHist(d, { act: '반려', why, step: d.step }); d.step = 'rejected'; saveDocs(docs);
+      notifyReq(`${d.id} 반려됨 — 보완 필요`, why);
+      toast('반려했습니다 — 신청자에게 의견과 함께 알렸습니다', 'danger');
     } else if (kind === 'withdraw') {
-      d.hist.push({ at: now(), who: ME.name, act: '회수', why }); d.step = 'withdrawn'; saveDocs(docs);
-      toast(d.type === 'model' ? '회수했습니다 — 업무 영역 잠금이 풀려 다시 편집할 수 있습니다' : '회수했습니다', 'info', d.type === 'model' ? { label: '모델 열기', fn: () => location.href = 'model.html' } : null);
+      addHist(d, { act: '회수', why }); d.step = 'withdrawn'; saveDocs(docs);
+      toast(d.type === 'model' ? '회수했습니다 — 업무 영역 잠금이 풀려 다시 편집할 수 있습니다' : '회수했습니다', 'info', d.type === 'model' ? { label: '모델 열기', fn: () => location.href = `model.html?area=${d.area}` } : null);
     }
-    drawBoxes(); drawRows(); panel();
+    pending = null; drawBoxes(); drawRows(); panel();
   }
   $('do-self').onclick = () => { $('mo-self').classList.remove('open'); act('approve', $('self-why').value.trim(), true); };
   $('do-apr').onclick = () => { $('mo-apr').classList.remove('open'); act('approve', $('apr-note').value.trim(), false); };
@@ -201,17 +232,20 @@ window.pageInit = function () {
   $('do-wd').onclick = () => { $('mo-wd').classList.remove('open'); act('withdraw', $('wd-why').value.trim()); $('wd-why').value = ''; };
   $('boxes').addEventListener('click', e => { const b = e.target.closest('[data-box]'); if (!b) return; box = b.dataset.box; sel = (list()[0] || {}).id || null; drawBoxes(); drawRows(); panel(); });
   $('rows').addEventListener('click', e => { const r = e.target.closest('tr[data-id]'); if (!r) return; sel = r.dataset.id; drawRows(); panel(); });
-  $('rows').addEventListener('keydown', e => { const r = e.target.closest('tr[data-id]'); if (!r) return; if (e.key === 'Enter') { sel = r.dataset.id; drawRows(); panel(); } if (e.key === 'ArrowDown' && r.nextElementSibling) r.nextElementSibling.focus(); if (e.key === 'ArrowUp' && r.previousElementSibling) r.previousElementSibling.focus(); });
+  $('rows').addEventListener('keydown', e => {
+    const r = e.target.closest('tr[data-id]'); if (!r) return;
+    if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); sel = r.dataset.id; drawRows(); panel(); const n = $('rows').querySelector(`tr[data-id="${sel}"]`); if (n) n.focus(); }   // keep focus (CL4-01)
+    if (e.key === 'ArrowDown' && r.nextElementSibling) { e.preventDefault(); r.nextElementSibling.focus(); }
+    if (e.key === 'ArrowUp' && r.previousElementSibling) { e.preventDefault(); r.previousElementSibling.focus(); }
+  });
   ['f-type', 'f-step'].forEach(id => $(id).onchange = drawRows); $('f-q').oninput = drawRows;
 
-  const nw = q.get('new');
-  if (nw) {
-    const id = nw === 'excel' ? 'REQ-2026-0016' : nw === 'model' ? 'REQ-2026-0015' : 'REQ-2026-0014';
-    const d = docs.find(x => x.id === id);
-    if (d && !d.hist) { d.step = 'da'; saveDocs(docs); }
+  // ?new=1&doc=ID — the source screen already created the document (createDoc); we only show it
+  if (q.get('new') && q.get('doc')) {
+    const id = q.get('doc'), d = docs.find(x => x.id === id);
     $('new-banner').hidden = false;
-    $('new-banner').innerHTML = `<div class="banner success"><span>✓</span><div class="grow"><b>${id} 신청됨</b> — ${d ? d.title : ''}. ${ME.has('da') ? 'DA 역할도 있어 바로 대기함에 들어왔습니다. 직접 승인하면 ‘자기 승인’으로 남습니다.' : 'DA에게 메일을 보냈습니다.'}</div></div>`;
-    sel = id; box = ME.has('da') ? 'queue' : 'mine';
+    $('new-banner').innerHTML = `<div class="banner success"><span>✓</span><div class="grow"><b>${id} ${q.get('dup') ? '이미 신청돼 있습니다' : '신청됨'}</b> — ${d ? d.title : ''}. ${q.get('dup') ? '같은 내용의 진행 중 신청이 있어 새로 만들지 않았습니다.' : ME.has('da') ? 'DA 역할도 있어 바로 대기함에 들어왔습니다. 직접 승인하면 ‘자기 승인’으로 남습니다.' : 'DA에게 알렸습니다.'}</div></div>`;
+    box = ME.has('da') ? 'queue' : 'mine';
   }
   if (q.get('doc')) { sel = q.get('doc'); const d = docs.find(x => x.id === sel); if (d && !BOX[box][1](d)) box = BOX.queue[1](d) ? 'queue' : BOX.mine[1](d) ? 'mine' : BOX.cc[1](d) ? 'cc' : 'all'; }
   if (!sel) sel = (list()[0] || {}).id || null;
