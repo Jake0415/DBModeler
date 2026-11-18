@@ -105,6 +105,13 @@ window.pageInit = function () {
   document.querySelector('.crumb b').textContent = LK.model.name + ` · v${LK.model.ver}`;
   document.querySelector('.page-header a.btn').href = `model.html?area=${AREA}`;
   if (AREA !== 'rq') document.querySelector('tbody').innerHTML = `<tr><td colspan="10" class="caption muted" style="text-align:center;padding:40px">${LK.model.name} 영역은 미준수 항목이 없습니다 — 맞출 것이 없습니다.</td></tr>`;
+  // ?redo=REQ-… : re-applying after a rejected / withdrawn term request keeps its reason and shows the reviewer's comment
+  const redoDoc = q.get('redo') ? getDocs().find(x => x.id === q.get('redo') && x.kind === 'std') : null;
+  if (redoDoc && ['rejected', 'withdrawn'].includes(redoDoc.step)) {
+    const last = (redoDoc.hist || []).slice(-1)[0];
+    document.querySelector('.page-header').insertAdjacentHTML('afterend', `<div class="pad" style="padding-bottom:0"><div class="banner warning"><span>!</span><div class="grow"><b>${redoDoc.id} 보완해서 다시 적용</b> — ${STEP_NAME[redoDoc.step]}${last && last.why ? ` · 의견: ${last.why}` : ''}. 그때 신청한 용어: ${(redoDoc.items || []).map(i => i.name).join(', ')}. 다시 적용하면 <b>새 신청번호</b>가 만들어집니다.</div></div></div>`);
+    $('ap-why').value = redoDoc.reason || '';
+  }
   // permission & lock: same judgement as the model screen (R5)
   const readOnly = !ME.has('modeler') || LK.state !== 'edit';
   if (readOnly) {

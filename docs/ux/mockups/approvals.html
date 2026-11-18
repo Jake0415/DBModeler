@@ -140,8 +140,8 @@ window.pageInit = function () {
   // check tab: same judgement as the final-approval re-check (checkDictDoc)
   function checks(d) {
     if (d.type === 'model') {
-      const bad = modelBad(d.model); const s = d.snap || {};
-      return `<table class="tbl"><thead><tr><th>검사</th><th>신청 시점</th><th>제출 모델 재검사</th></tr></thead><tbody><tr><td>미준수 (조합 가능·미등록)</td><td>${s.bad != null ? s.bad + '건' : '—'}</td><td>${bad == null ? '<span class="caption muted">제출 사본 없음(목업 시드)</span>' : bad ? `<span class="badge b-danger">${bad}건</span>` : '<span class="badge b-success">통과</span>'}</td></tr><tr><td>표준 예외 (사유 기록)</td><td>${(s.exList || []).length}건</td><td>${d.model ? d.model.E.reduce((n, e) => n + e.a.filter(a => a.s === 'ex').length, 0) + '건' : '—'}</td></tr></tbody></table><div class="caption muted" style="margin-top:8px">승인은 <b>제출된 모델 사본</b>으로 다시 검사합니다(지금 작업 중인 모델이 아님).</div>`;
+      const bad = modelBad(d.model); const s = d.snap || {}; const ended = reqEnded(d.model);
+      return `<table class="tbl"><thead><tr><th>검사</th><th>신청 시점</th><th>제출 모델 재검사</th></tr></thead><tbody><tr><td>미준수 (조합 가능·미등록)</td><td>${s.bad != null ? s.bad + '건' : '—'}</td><td>${bad == null ? `<span class="caption muted">제출 사본 없음(목업 시드) — 신청 시점 값 ${s.bad != null ? s.bad + '건' : '0건'}으로 판정</span>` : bad ? `<span class="badge b-danger">${bad}건</span>` : '<span class="badge b-success">통과</span>'}</td></tr><tr><td>연결된 용어 신청</td><td>—</td><td>${ended.length ? `<span class="badge b-danger">반려·회수 ${ended.length}건</span> <span class="caption">${ended.join(', ')}</span>` : '<span class="badge b-success">통과</span>'}</td></tr><tr><td>표준 예외 (사유 기록)</td><td>${(s.exList || []).length}건</td><td>${d.model ? d.model.E.reduce((n, e) => n + e.a.filter(a => a.s === 'ex').length, 0) + '건' : '—'}</td></tr></tbody></table><div class="caption muted" style="margin-top:8px">승인은 <b>제출된 모델 사본</b>으로 다시 검사합니다(지금 작업 중인 모델이 아님).</div>`;
     }
     const R = checkDictDoc(d);
     if (!R.length) return '<div class="caption muted">검사할 항목이 없습니다.</div>';
@@ -188,7 +188,7 @@ window.pageInit = function () {
     else if (live) right = `<span class="caption muted">지금은 <b>${stepRole(d.step)}</b> 차례입니다${ME.has(d.step === 'da' ? 'da' : 'owner') ? '' : ' · 내 역할로는 조회만 가능'}</span>`;
     else right = `<span class="caption muted">${STEP_NAME[d.step]} — 더 처리할 일이 없습니다</span>`;
     // re-request starts from what was submitted (items, reason) — not an empty screen (CL10-03)
-    const fixHref = d.type === 'model' ? `model.html?area=${d.area}` : d.batch ? `excel-import.html?resume=${d.batch}` : d.kind === 'std' ? `standardize.html?area=${d.area || 'rq'}` : `dictionary.html?redo=${d.id}`;
+    const fixHref = d.type === 'model' ? `model.html?area=${d.area}` : d.batch ? `excel-import.html?resume=${d.batch}` : d.kind === 'std' ? `standardize.html?area=${d.area || 'rq'}&redo=${d.id}` : `dictionary.html?redo=${d.id}`;
     const left = mine && live ? `<div class="foot-zone"><span class="zl">신청자로서</span><button class="btn sm" id="btn-wd">회수</button></div>` : mine && ['rejected', 'withdrawn'].includes(d.step) ? `<div class="foot-zone"><span class="zl">신청자로서</span><a class="btn sm primary" href="${fixHref}">보완해서 다시 신청</a><span class="caption muted">새 신청번호로 만들어집니다</span></div>` : '';
     p.innerHTML = `<div class="rp-head">
         <div class="t"><span class="mono">${d.id}</span><span class="badge ${d.type === 'model' ? 'b-violet' : ''}">${d.type === 'model' ? '모델 확정' : '사전 신청'}</span>${stBadge(d)}<button class="iconbtn close" id="pn-x" aria-label="닫기" style="width:28px;height:28px">×</button></div>
@@ -233,7 +233,7 @@ window.pageInit = function () {
     const notifyReq =(t, m) => { if (d.req !== ME.id) pushNotif({ to: [d.req], k: 'appr', t, m, href: `approvals.html?box=mine&doc=${d.id}` }); };
     if (kind === 'approve') {
       // re-check the SUBMITTED snapshot (not the area's shared cache) before approving a model confirmation (MD-20)
-      if (d.type === 'model') { const bad = d.model ? modelBad(d.model) : (d.snap ? d.snap.bad : 0); if (bad > 0) { addHist(d, { act: '재검사 실패 — 승인 취소', why: `제출 모델 미준수 ${bad}건`, step: d.step }); saveDocs(docs); toast(`재검사 실패 — 제출된 모델에 미준수 ${bad}건이 있어 승인하지 않았습니다. 이력에 남겼습니다`, 'danger'); drawRows(); panel(); return; } }
+      if (d.type === 'model') { const bad = (d.model ? modelBad(d.model) : (d.snap ? d.snap.bad : 0)) + reqEnded(d.model).length; if (bad > 0) { addHist(d, { act: '재검사 실패 — 승인 취소', why: `제출 모델 미준수 ${bad}건`, step: d.step }); saveDocs(docs); toast(`재검사 실패 — 제출된 모델에 미준수 ${bad}건이 있어 승인하지 않았습니다. 이력에 남겼습니다`, 'danger'); drawRows(); panel(); return; } }
       // dictionary documents: same checks before the final step applies anything
       if (d.type === 'dict' && d.step === 'final') { const bad = checkDictDoc(d).filter(r => r.problems.length); if (bad.length) { addHist(d, { act: '재검사 실패 — 승인 취소', why: bad.map(r => `${r.name}: ${r.problems[0]}`).join(' · '), step: d.step }); saveDocs(docs); toast(`재검사 실패 ${bad.length}건 — 사전에 반영하지 않았습니다. [검사 결과] 탭과 이력을 확인하고 반려하세요`, 'danger'); drawRows(); panel(); return; } }
       addHist(d, { act: `${stepRole(d.step)} 승인`, why, step: d.step, self });
@@ -265,7 +265,7 @@ window.pageInit = function () {
     } else if (kind === 'withdraw') {
       addHist(d, { act: '회수', why }); d.step = 'withdrawn'; saveDocs(docs);
       const rel = releaseDoc(d);
-      toast(d.type === 'model' ? '회수했습니다 — 업무 영역 잠금이 풀려 다시 편집할 수 있습니다' : `회수했습니다${rel ? ` · 사전 항목 ${rel}건의 '진행 중'을 풀었습니다` : ''}`, 'info', d.type === 'model' ? { label: '모델 열기', fn: () => location.href = `model.html?area=${d.area}` } : { label: '보완해서 다시 신청', fn: () => location.href = d.batch ? `excel-import.html?resume=${d.batch}` : d.kind === 'std' ? `standardize.html?area=${d.area || 'rq'}` : `dictionary.html?redo=${d.id}` });
+      toast(d.type === 'model' ? '회수했습니다 — 업무 영역 잠금이 풀려 다시 편집할 수 있습니다' : `회수했습니다${rel ? ` · 사전 항목 ${rel}건의 '진행 중'을 풀었습니다` : ''}`, 'info', d.type === 'model' ? { label: '모델 열기', fn: () => location.href = `model.html?area=${d.area}` } : { label: '보완해서 다시 신청', fn: () => location.href = d.batch ? `excel-import.html?resume=${d.batch}` : d.kind === 'std' ? `standardize.html?area=${d.area || 'rq'}&redo=${d.id}` : `dictionary.html?redo=${d.id}` });
     }
     pending = null; drawBoxes(); drawRows(); panel();
     const row = $('rows').querySelector(`tr[data-id="${sel}"]`); if (row) row.focus(); else { const pb = document.querySelector('#pn-doc .rp-head h2'); if (pb) { pb.tabIndex = -1; pb.focus(); } }   // focus returns after the dialog
@@ -285,8 +285,13 @@ window.pageInit = function () {
   ['f-type', 'f-step'].forEach(id => $(id).onchange = drawRows); $('f-q').oninput = drawRows;
 
   // ?new=1&doc=ID — the source screen already created the document (createDoc); we only show it
-  if (q.get('new') && q.get('doc')) {
-    const id = q.get('doc'), d = docs.find(x => x.id === id);
+  // the success banner only for a real, visible, still-open request of mine — not for any URL with new=1 (CX11-03 · CL11-03)
+  const nd = q.get('new') && q.get('doc') ? docs.find(x => x.id === q.get('doc')) : null;
+  if (q.get('new') && q.get('doc') && !(nd && canSeeDoc(nd) && nd.req === ME.id && ['da', 'final'].includes(nd.step))) {
+    $('new-banner').hidden = false;
+    $('new-banner').innerHTML = `<div class="banner ${nd ? 'info' : 'danger'}"><span>${nd ? 'ℹ' : '!'}</span><div class="grow">${nd && canSeeDoc(nd) ? `<b>${nd.id}</b>는 지금 ${STEP_NAME[nd.step]} 상태입니다 — 새 신청 결과 화면이 아닙니다.` : `<b>${q.get('doc')}</b> 신청을 찾을 수 없거나 볼 수 없습니다 — 신청이 만들어지지 않았을 수 있습니다. 내 신청에서 확인하세요.`}</div></div>`;
+  } else if (q.get('new') && q.get('doc')) {
+    const id = q.get('doc'), d = nd;
     $('new-banner').hidden = false;
     $('new-banner').innerHTML = `<div class="banner success"><span>✓</span><div class="grow"><b>${id} ${q.get('dup') ? '이미 신청돼 있습니다' : '신청됨'}</b> — ${d ? d.title : ''}. ${q.get('dup') ? '같은 내용의 진행 중 신청이 있어 새로 만들지 않았습니다.' : ME.has('da') ? 'DA 역할도 있어 바로 대기함에 들어왔습니다. 직접 승인하면 ‘자기 승인’으로 남습니다.' : 'DA에게 알렸습니다.'}</div></div>`;
     box = ME.has('da') ? 'queue' : 'mine';

@@ -164,7 +164,8 @@ window.pageInit = function () {
   const RULES = { 'D-NOTFOUND': '도메인 없음', 'T-SPACE': '용어명 공백', 'X-ZERO': '자동 형 변환', 'X-DUPID': '항목 ID 중복' };
   // ---- batch (upload) — one source of counts
   let batches = getBatches();
-  const resumeId = q.get('resume'), verifyId = q.get('verify');
+  // an empty ?resume= / ?verify= is an invalid address (not "new upload") (CX11-03)
+  const resumeId = q.has('resume') ? (q.get('resume') || '(빈 값)') : null, verifyId = q.has('verify') ? (q.get('verify') || '(빈 값)') : null;
   const lookupId = resumeId || verifyId;
   let B = lookupId ? batches.find(b => b.id === lookupId) : null;
   // a missing / foreign batch id stops here: nothing is created or saved under it (CL9-13 · CX9-09)
@@ -174,7 +175,19 @@ window.pageInit = function () {
   // re-uploading the reflected copy: only a batch whose request was APPROVED can be verified; rows come from what was applied
   const vDoc = verifyId && B ? (B.docs || []).map(id => getDocs().find(x => x.id === id)).filter(Boolean).slice(-1)[0] : null;
   const verifyOk = !!(vDoc && vDoc.step === 'done' && (vDoc.items || []).length);   // nothing to compare → no "round trip complete"
-  if (verifyId && verifyOk) { const src = (vDoc.items || []).filter(it => it.act !== '미사용'); ROWS = src.map((it, i) => ({ r: it.row || i + 2, st: 'same', id: it.id || '(새 ID)', name: it.name, abbr: it.abbr || '', dom: it.dom || '', desc: (it.chg && Object.values(it.chg)[0] ? Object.values(it.chg)[0][1] : it.desc) || '', why: `반영본과 같음 · ${vDoc.id}` })); }
+  // the reflected copy (what was applied) is compared with the CURRENT dictionary, field by field, unuse included (CX11-02)
+  let verifySame = false;
+  if (verifyId && verifyOk) {
+    const dict = getDict(), KEY = FIELD_KEY;
+    ROWS = (vDoc.items || []).map((it, i) => {
+      const d = it.id ? dict.find(x => x.id === it.id) : dict.find(x => x.name === it.name && (!it.k || x.k === it.k) && x.ver > 0);
+      const expect = it.act === '미사용' ? { st: '미사용' } : it.chg ? Object.fromEntries(Object.entries(it.chg).map(([l, v]) => [KEY[l] || l, v[1]])) : { name: it.name, abbr: it.abbr, dom: it.dom, desc: it.desc };
+      const diff = !d ? ['사전에 없음'] : Object.entries(expect).filter(([k, v]) => v != null && v !== '' && String(d[k] == null ? '' : d[k]) !== String(v)).map(([k, v]) => `${({ name: '용어명', abbr: '영문약어명', dom: '도메인', desc: '설명', st: '사용상태', allow: '허용 값' })[k] || k}: 반영본 ${v} · 현재 ${d[k] == null ? '(빈 값)' : d[k]}`);
+      const base = { r: it.row || i + 2, id: d ? d.id : (it.id || '—'), name: it.name, abbr: d ? d.abbr : (it.abbr || ''), dom: d ? d.dom : (it.dom || ''), desc: d ? (d.desc || d.eng || '') : (it.desc || '') };
+      return diff.length ? Object.assign(base, { st: 'chg', why: `반영본과 다름 — ${diff.join(' / ')}` }) : Object.assign(base, { st: 'same', why: `반영본과 같음 · ${vDoc.id}${it.act === '미사용' ? ' (미사용)' : ''}` });
+    });
+    verifySame = ROWS.every(r => r.st === 'same');
+  }
   else if (verifyId) ROWS = [];
   let cur = missingB ? 1 : (resumeId || verifyId) ? 5 : parseInt(q.get('step') || '1', 10), file = !missingB && !!(resumeId || verifyId), timer = null, sel = null, kind = '용어';
   let undoStack = [];
@@ -185,24 +198,26 @@ window.pageInit = function () {
   const notMine = B && B.by !== ME.id;
   const canWrite = !demo && !frozen && !notMine && !missingB;
   if (missingB) { $('resume-banner').hidden = false; $('resume-banner').innerHTML = `<div class="banner danger"><span>!</span><div class="grow"><b>${lookupId}</b> 업로드를 찾을 수 없거나 열람 권한이 없습니다. 새 업로드는 1단계부터 시작하세요 — 이 화면은 아무것도 저장하지 않습니다.</div><a class="btn sm" href="uploads.html">업로드 이력</a><a class="btn sm" href="excel-import.html">새 업로드</a></div>`; }
-  if (B || demo) {
+  if ((B || demo) && !missingB) {
     $('resume-banner').hidden = false;
-    const msg = verifyId ? (verifyOk ? `<b>반영본 재업로드 확인</b> — ${verifyId}의 반영본(${vDoc.id} 반영 ${ROWS.length}행)을 현재 사전과 비교했습니다. <b>${ROWS.length}행 모두 동일 → 왕복 완료.</b>${B.sample ? ' (목업 시드는 대표 행만)' : ''}` : vDoc && vDoc.step === 'done' ? `<b>${verifyId}</b> — 연결 신청 ${vDoc.id}에 제출 행 상세가 없어(목업 시드) 행 단위로 비교할 수 없습니다. 왕복 완료로 기록하지 않습니다.` : `<b>${verifyId}</b>는 아직 반영 완료된 묶음이 아닙니다(${vDoc ? STEP_NAME[vDoc.step] : '신청 없음'}) — 반영본 확인은 최종 승인 뒤에 할 수 있습니다.`)
+    const msg = verifyId ? (verifyOk ? `<b>반영본 재업로드 확인</b> — ${verifyId}의 반영본(${vDoc.id} 반영 ${ROWS.length}행)을 현재 사전과 칸 단위로 비교했습니다. ${verifySame ? `<b>${ROWS.length}행 모두 동일 → 왕복 완료.</b>` : `<b>${ROWS.filter(r => r.st !== 'same').length}행이 현재 사전과 다릅니다</b> — 반영 뒤 사전이 다시 바뀌었습니다. 왕복 완료로 기록하지 않습니다. 최신 편집용 엑셀을 다시 내려받으세요.`}${B.sample ? ' (목업 시드는 대표 행만)' : ''}` : vDoc && vDoc.step === 'done' ? `<b>${verifyId}</b> — 연결 신청 ${vDoc.id}에 제출 행 상세가 없어(목업 시드) 행 단위로 비교할 수 없습니다. 왕복 완료로 기록하지 않습니다.` : `<b>${verifyId}</b>는 아직 반영 완료된 묶음이 아닙니다(${vDoc ? STEP_NAME[vDoc.step] : '신청 없음'}) — 반영본 확인은 최종 승인 뒤에 할 수 있습니다.`)
       : demo ? '<b>예시 화면</b> — 주소로 바로 연 결과 화면이라 저장하지 않습니다. 실제 작업은 1단계부터 하세요.'
       : frozen ? `<b>${B.id} · ${B.file}</b> — ${lastDoc.id} ${STEP_NAME[lastDoc.step]}. <b>신청된 묶음은 열람 전용</b>입니다(결재 문서 내용을 바꾸지 않음). 보완하려면 반려·회수 뒤에 다시 여세요.`
       : notMine ? `<b>${B.id}</b> — ${USERS[B.by] ? USERS[B.by].name : B.by}이 올린 묶음이라 열람만 할 수 있습니다.`
       : `<b>${B.id} · ${B.file}</b> 이어서 작업${lastDoc ? ` — ${lastDoc.id} ${STEP_NAME[lastDoc.step]}: 보완해서 다시 신청하면 <b>새 신청번호</b>가 만들어집니다` : ''}`;
-    $('resume-banner').innerHTML = `<div class="banner ${verifyId ? (verifyOk ? 'success' : 'danger') : frozen || notMine || demo ? 'info' : lastDoc ? 'warning' : 'info'}"><span>ℹ</span><div class="grow">${msg}</div></div>`;
-    if (verifyId && verifyOk && B) { const bs = getBatches(); const bb = bs.find(x => x.id === B.id); if (bb && !bb.roundTrip) { bb.roundTrip = { at: nowStr(), by: ME.id, rows: ROWS.length }; saveBatches(bs); } }   // round-trip completion is recorded
+    $('resume-banner').innerHTML = `<div class="banner ${verifyId ? (verifyOk && verifySame ? 'success' : verifyOk ? 'warning' : 'danger') : frozen || notMine || demo ? 'info' : lastDoc ? 'warning' : 'info'}"><span>ℹ</span><div class="grow">${msg}</div></div>`;
+    if (verifyId && verifyOk && verifySame && B) { const bs = getBatches(); const bb = bs.find(x => x.id === B.id); if (bb && !bb.roundTrip) { bb.roundTrip = { at: nowStr(), by: ME.id, rows: ROWS.length }; saveBatches(bs); } }   // round-trip completion is recorded
   }
   const counts = () => { const c = { new: 0, chg: 0, same: 0, waitSame: 0, waitDiff: 0, conflict: 0, dup: 0, pre: 0, err: 0, missing: 0, pick: 0 }; ROWS.forEach(r => { c[r.st === 'pick' ? 'pick' : r.st]++; }); return c; };
   function persist() {
     if (!canWrite) { $('saved').textContent = demo ? '예시 · 저장 안 함' : '열람 전용'; return; }
     batches = getBatches();
     // another tab may have submitted this batch meanwhile — never overwrite its links/status with this tab's older copy (CX9-08)
-    if (B) { const st = batches.find(b => b.id === B.id); if (st && ((st.docs || []).length !== (B.docs || []).length || st.status !== B.status)) { toast(`${B.id}가 다른 탭에서 바뀌었습니다(${batchStateLabel(batchState(st))}) — 이 탭의 내용은 저장하지 않았습니다. 새로고침하세요`, 'danger', { label: '새로고침', fn: () => location.reload() }); $('saved').textContent = '저장 안 함 · 다른 탭 변경'; return false; } }
+    // the user who opened this tab must still be the selected user, and the batch revision must be the one this tab loaded (CX11-04)
+    if (liveRoleChanged()) { staleRoleToast(); $('saved').textContent = '저장 안 함 · 사용자 바뀜'; return false; }
+    if (B) { const st = batches.find(b => b.id === B.id); if (st && ((st.docs || []).length !== (B.docs || []).length || st.status !== B.status || (st.rev || 0) !== (B.rev || 0))) { toast(`${B.id}가 다른 탭에서 바뀌었습니다(${batchStateLabel(batchState(st))}) — 이 탭의 내용은 저장하지 않았습니다. 새로고침하세요`, 'danger', { label: '새로고침', fn: () => location.reload() }); $('saved').textContent = '저장 안 함 · 다른 탭 변경'; return false; } }
     if (!B) { const id = 'UP-2026-' + String(Math.max(...batches.map(b => +b.id.slice(-4))) + 1).padStart(4, '0'); B = { id, file: '요구사항관리_용어_2차.xlsx', kind, by: ME.id, at: nowStr(), baseline: 'BL-20261116-0905', rows: 15, docs: [], status: '임시 저장' }; batches.unshift(B); }
-    const i = batches.findIndex(b => b.id === B.id); B.counts = counts(); B.draft = ROWS; batches[i] = B; saveBatches(batches);
+    const i = batches.findIndex(b => b.id === B.id); B.counts = counts(); B.draft = ROWS; B.rev = (B.rev || 0) + 1; batches[i] = B; saveBatches(batches);
     $('saved').textContent = `${B.id} · 임시 저장 ${nowStr().split(' ')[1]}`;
     $('crumb').textContent = `기관 사전 · 표준${kind} · ${B.id}`;
     return true;
