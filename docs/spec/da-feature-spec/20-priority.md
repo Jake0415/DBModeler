@@ -168,6 +168,7 @@ docuCBD 공통표준 사전 설계(`D:\project\docuCBD\docs\design\std-dictionar
 | OQ-3 `.damx` 가져오기 | Q-5와 함께 W3 |
 | OQ-4 1차 DBMS | **해소** — Oracle·PostgreSQL·Tibero·MySQL/MariaDB 4종 (UX 입력 1-7) |
 | OQ-5 다이어그램 라이브러리 | **결정 (2026-11-17): React Flow + Yjs + elkjs** (ux/03 §12). 착수 시 성능·라우팅·동기화 검증 1~2일 |
+| 공동 편집 (재확인) | **결정 (2026-11-18): W1부터 Yjs 실시간 공동 편집 유지** — SWS 단독 편집 lease 사례를 검토한 뒤 유지(22 §6-1). W1 범위에 서버 쓰기 권한 검사·확정 시 서버 고정·스냅숏·성능 측정 6항목 포함(ux/03 §13.1), 스파이크 실패 시 재논의 |
 
 ## 4. 다음 단계 제안
 
