@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>디자인 견본 · DBModeler 목업</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="assets/app.css">
+<script src="assets/app.js"></script>
+<style>
+  .sg { display:grid; grid-template-columns:minmax(0, 8fr) minmax(0, 4fr); gap:48px; max-width:1500px; }
+  .sw { display:grid; grid-template-columns:repeat(6, minmax(0, 1fr)); gap:16px 12px; margin-top:12px; }
+  .sw div { font-size:12px; color:var(--fg-2); }
+  .sw i { display:block; height:36px; border:1px solid var(--border); margin-bottom:6px; }
+  .sw code { font:400 11px var(--font-mono); color:var(--fg-3); display:block; }
+  .row-demo { display:flex; flex-wrap:wrap; gap:16px; align-items:center; padding:12px 0; }
+  .rule-list { margin:8px 0 0; padding-left:18px; font-size:13px; line-height:22px; color:var(--fg-2); }
+  .icons { display:flex; flex-wrap:wrap; gap:16px 20px; padding:12px 0; font-size:12px; color:var(--fg-2); }
+  .icons span { display:inline-flex; align-items:center; gap:6px; }
+</style>
+</head>
+<body data-page="styleguide">
+<div id="app">
+<div id="content" class="page">
+  <div class="page-header"><h1>디자인 견본</h1><div class="actions"></div></div>
+  <div class="scroll"><div class="pad" id="sg"></div></div>
+</div>
+</div>
+<script>
+window.pageInit = function () {
+  const SW = (name, v) => `<div><i style="background:var(${v})"></i>${name}<code>${v}</code></div>`;
+  document.getElementById('sg').innerHTML = `<div class="sg"><div>
+    <section class="sec"><div class="sec-h"><h2>색</h2></div>
+      <div class="sw">${SW('바탕', '--bg')}${SW('면', '--surface')}${SW('면 2', '--surface-2')}${SW('선', '--border')}${SW('강한 선', '--border-strong')}${SW('잉크', '--ink')}
+      ${SW('글자', '--fg')}${SW('보조 글자', '--fg-2')}${SW('메타 글자', '--fg-3')}${SW('강조(청록)', '--accent')}${SW('강조 바탕', '--accent-soft')}${SW('정상(아이콘만)', '--success')}
+      ${SW('경고 글자', '--warning-deep')}${SW('경고 바탕', '--warning-soft')}${SW('오류 글자', '--danger-deep')}${SW('오류 바탕', '--danger-soft')}</div></section>
+
+    <section class="sec"><div class="sec-h"><h2>상태 표시</h2></div>
+      <table class="tbl plain"><thead><tr><th>상태</th><th>모양</th><th>쓰는 곳</th></tr></thead><tbody>
+        <tr><td>정상</td><td>${tag('ok', '완료')} ${tag('ok', '통과')}</td><td>완료, 검사 통과, 표준</td></tr>
+        <tr><td>진행</td><td>${tag('run', 'DA 승인')} ${tag('run', '검토 중')}</td><td>결재 단계, 신청 중</td></tr>
+        <tr><td>진행 · 내 차례</td><td>${tag('mine', 'DA 승인 · 내 차례')}</td><td>내가 처리할 문서</td></tr>
+        <tr><td>주의</td><td>${tag('warn', '2일 · 임박')}</td><td>기한 임박, 경고 확인</td></tr>
+        <tr><td>오류</td><td>${tag('err', '반려됨')} ${tag('err', '4일 · 기한 넘김')} ${tag('err', '미준수 3')}</td><td>반려, 기한 넘김, 미준수, 검사 실패</td></tr>
+        <tr><td>예외</td><td>${tag('ex', '예외 2')}</td><td>사유가 기록된 표준 예외</td></tr>
+        <tr><td>종결</td><td>${tag('end', '회수됨')}</td><td>회수</td></tr>
+        <tr><td>종류</td><td><span class="muted">모델 확정 · 사전 신청</span></td><td>배지가 아니라 글자</td></tr>
+      </tbody></table></section>
+
+    <section class="sec"><div class="sec-h"><h2>표 · 구획</h2></div>
+      <table class="tbl plain"><thead><tr><th>할 일</th><th class="r">건수</th><th class="r">가장 오래</th><th>상태</th><th></th></tr></thead><tbody>
+        <tr><td>결재 대기 · 내 차례</td><td class="r mono">6</td><td class="r mono">3일</td><td>${tag('err', '기한 넘김 3')}</td><td class="r"><a href="approvals.html">결재함</a></td></tr>
+        <tr><td>후보 큐</td><td class="r mono">2</td><td class="r mono">1일</td><td></td><td class="r"><a href="candidates.html">후보 큐</a></td></tr>
+        <tr class="sel"><td>선택된 행</td><td class="r mono">1</td><td class="r mono">0일</td><td>${tag('mine', 'DA 승인 · 내 차례')}</td><td class="r"><a href="#">열기</a></td></tr>
+      </tbody></table></section>
+
+    <section class="sec"><div class="sec-h"><h2>지표</h2></div>
+      <table class="tbl plain ledger"><thead><tr><th>항목</th><th class="r">값</th><th>기준</th><th class="r">차이</th></tr></thead><tbody>
+        <tr><td>표준 준수율</td><td class="v">88%</td><td class="muted">목표 90%</td><td class="gap bad">−2%p</td></tr>
+        <tr><td>결재 평균 처리</td><td class="v">0.2일</td><td class="muted">기한 3일</td><td class="gap ok">안</td></tr>
+      </tbody></table>
+      <div class="mline" style="margin-top:16px"><span><b>92%</b>준수율</span><span><b>3</b>미준수</span><span><b>2</b>예외</span><span><b>14</b>v3 대비 변경</span></div>
+      <div style="max-width:560px"><div class="hbar"><span>DA 승인 대기</span><span class="t"><i style="width:60%"></i></span><span class="v">6 · 2.5일</span></div><div class="hbar"><span>최종 승인 대기</span><span class="t"><i class="hi" style="width:20%"></i></span><span class="v">1 · 3.0일</span></div></div>
+      <div style="margin-top:12px;font-size:13px">요구사항 · 프로젝트 <span class="mono">85%</span><span class="mbar bad"><i style="width:85%"></i><b style="left:90%"></b></span>　리스크 <span class="mono">100%</span><span class="mbar"><i style="width:100%"></i><b style="left:90%"></b></span></div></section>
+  </div>
+  <div>
+    <section class="sec"><div class="sec-h"><h2>버튼 · 탭 · 링크</h2></div>
+      <div class="row-demo"><button class="btn primary">승인</button><button class="btn">취소</button><button class="btn danger">반려</button><button class="btn ghost">닫기</button></div>
+      <div class="page-header" style="height:44px;padding:0;border-bottom:1px solid var(--border);background:none"><div class="utabs"><button class="on">대기함 <span class="n">6</span></button><button>내 신청 <span class="n">3</span></button><button>참조함 <span class="n">1</span></button></div></div>
+      <div class="linkrow">${'<a href="#">' + icon('ext') + '모델 보기</a><button>' + icon('compare') + '변경 비교</button><a href="#">' + icon('file') + '산출물</a>'}</div></section>
+    <section class="sec"><div class="sec-h"><h2>안내</h2></div>
+      <div class="banner danger">${icon('err')}<div class="grow">연결 용어 신청 REQ-2026-0013이 진행 중입니다. 완료해야 확정할 수 있습니다.</div></div></section>
+    <section class="sec"><div class="sec-h"><h2>결재선</h2></div>
+      <div class="approval-line" style="margin-top:8px"><div class="al-step done"><span class="pt">${icon('check', 12)}</span><div><b>신청</b><div class="caption muted">김모델 · 11/17</div></div></div><div class="al-step cur"><span class="pt"></span><div><b>DA 승인</b><div class="caption muted">내 차례</div></div></div><div class="al-step"><span class="pt"></span><div><b>최종 승인</b><div class="caption muted">기관 담당자</div></div></div><div class="al-step rej"><span class="pt">${icon('x', 12)}</span><div><b>반려 예</b><div class="caption muted">반려된 단계</div></div></div><div class="al-step skip"><span class="pt"></span><div><b>최종 승인 · 사용 안 함</b><div class="caption muted">설정으로 생략된 단계</div></div></div></div></section>
+    <section class="sec"><div class="sec-h"><h2>아이콘</h2></div>
+      <div class="icons">${['check', 'clock', 'warn', 'err', 'info', 'flag', 'x', 'search', 'right', 'down', 'ext', 'compare', 'filter', 'download', 'upload', 'history', 'lock', 'file', 'table', 'user'].map(n => `<span>${icon(n)}${n}</span>`).join('')}</div></section>
+    <section class="sec"><div class="sec-h"><h2>쓰지 않는 것</h2></div>
+      <ol class="rule-list"><li>이모지·기호 아이콘, 보라·그라데이션·발광</li><li>같은 크기 타일 격자, 아이콘+제목+설명 카드</li><li>상자 속 상자, 왼쪽 색 막대 카드</li><li>정상 상태의 색 배경·색 글자</li><li>기준 없는 큰 숫자, 장식 추세선</li><li>인사말, 구역 제목 옆 부연 문구</li><li>링크 뒤 화살표, 가운뎃점 네 개 넘는 나열</li><li>가운데 정렬, 한글 음수 자간, 굵기 700</li><li>배너 둘 이상, 권유·감탄 말투</li></ol></section>
+  </div></div>`;
+};
+</script>
+</body>
+</html>

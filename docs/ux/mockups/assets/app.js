@@ -432,6 +432,46 @@
     x: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>'
   };
   window.ICON = ICON;
+  /* v8 icon set (Lucide paths, ISC) — 16px/1.5 stroke, 12px/2 stroke inside tags; meaning-bearing places only */
+  const LU = {
+    check: '<path d="M20 6 9 17l-5-5"/>',
+    clock: '<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>',
+    warn: '<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/>',
+    err: '<path d="M12 16h.01"/><path d="M12 8v4"/><path d="M15.31 2a2 2 0 0 1 1.42.59l4.68 4.68A2 2 0 0 1 22 8.69v6.62a2 2 0 0 1-.59 1.42l-4.68 4.68a2 2 0 0 1-1.42.59H8.69a2 2 0 0 1-1.42-.59l-4.68-4.68A2 2 0 0 1 2 15.31V8.69a2 2 0 0 1 .59-1.42l4.68-4.68A2 2 0 0 1 8.69 2z"/>',
+    info: '<circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>',
+    flag: '<path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><path d="M4 22v-7"/>',
+    x: '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
+    search: '<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>',
+    right: '<path d="m9 18 6-6-6-6"/>', down: '<path d="m6 9 6 6 6-6"/>',
+    ext: '<path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>',
+    compare: '<circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><path d="M13 6h3a2 2 0 0 1 2 2v7"/><path d="M11 18H8a2 2 0 0 1-2-2V9"/>',
+    filter: '<path d="M22 3H2l8 9.46V19l4 2v-8.54z"/>',
+    download: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/>',
+    upload: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m17 8-5-5-5 5"/><path d="M12 3v12"/>',
+    history: '<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/>',
+    lock: '<rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
+    file: '<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M16 13H8"/><path d="M16 17H8"/>',
+    table: '<path d="M12 3v18"/><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M3 15h18"/>',
+    user: '<path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>'
+  };
+  window.icon = (n, s = 16) => `<svg class="ic${s === 12 ? ' s12' : ''}" width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${s === 12 ? 2 : 1.5}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${LU[n] || ''}</svg>`;
+  /* status tag: ok · run · mine · warn · err · ex · end — one per row */
+  const TAG_IC = { ok: 'check', mine: 'clock', warn: 'warn', err: 'err', ex: 'flag' };
+  window.tag = (kind, label) => `<span class="tag ${kind}">${TAG_IC[kind] ? icon(TAG_IC[kind], 12) : ''}${label}</span>`;
+  /* the mock's reference day and the age of a document in its current step (home · approvals use the same count) */
+  window.MOCK_TODAY = new Date(2026, 10, 19);
+  const toDay = s => { if (!s) return null; let m = /(\d{4})-(\d{2})-(\d{2})/.exec(s); if (m) return new Date(+m[1], m[2] - 1, +m[3]); m = /(\d{1,2})\/(\d{1,2})/.exec(s); return m ? new Date(2026, m[1] - 1, +m[2]) : null; };
+  window.toDay = toDay;
+  /* days in the current step: DA waits from submission, final waits from the DA approval — failed re-checks do not restart the clock */
+  window.docAge = d => { let from = d.date; if (d.step === 'final') { const a = (d.hist || []).filter(x => x.step === 'da' && /승인/.test(x.act || '') && !/실패|취소/.test(x.act || '')).pop(); if (a) from = a.at; }
+    const t = toDay(from) || MOCK_TODAY; return Math.max(0, Math.round((MOCK_TODAY - t) / 864e5)); };
+  window.docLate = d => ['da', 'final'].includes(d.step) && docAge(d) >= ((getOrg && getOrg().sla) || 3);
+  /* document state as a tag: in progress = outline (accent when it is my turn), late = error, rejected = error, done = ok, withdrawn = faint */
+  window.docTag = d => { const mineTurn = (d.step === 'da' && ME.has('da')) || (d.step === 'final' && ME.has('owner'));
+    if (d.step === 'rejected') return tag('err', STEP_NAME[d.step]);
+    if (d.step === 'withdrawn') return tag('end', STEP_NAME[d.step]);
+    if (d.step === 'done') return tag('ok', '완료');
+    return tag(mineTurn ? 'mine' : 'run', STEP_NAME[d.step] + (mineTurn ? ' · 내 차례' : '')); };
 
   /* ---- screen map (mockup review tool): one registry for the per-screen info panel and the index map ----
      docs are relative to /mockups/ — serve.ps1 serves ../*.md (docs/ux) and ../../spec/*.md (docs/spec) read-only */
@@ -710,11 +750,12 @@
   /* ---- toast (aria-live, error stays until closed, optional action) ---- */
   window.toast = function (msg, type, action) {
     const box = document.getElementById('toasts'); if (!box) return;
-    const colors = { success: 'var(--success)', info: 'var(--info)', danger: 'var(--danger)', violet: 'var(--violet)' };
-    const marks = { success: '✓', info: 'i', danger: '!', violet: '◆' };
+    // v8: a state-coloured line icon, no filled circle (success icon only in green; info neutral)
+    const colors = { success: 'var(--success)', info: 'var(--fg-3)', danger: 'var(--danger)', violet: 'var(--fg-3)' };
+    const marks = { success: 'check', info: 'info', danger: 'err', violet: 'info' };
     const t = document.createElement('div');
-    t.className = 'toast'; if (type === 'danger') t.setAttribute('role', 'alert');
-    t.innerHTML = `<span class="ic" style="background:${colors[type || 'success']}" aria-hidden="true">${marks[type || 'success']}</span><div class="tx">${msg}</div>${action ? `<button class="act">${action.label}</button>` : ''}${type === 'danger' || action ? '<button class="tclose" aria-label="닫기">×</button>' : ''}`;
+    t.className = 'toast'; if (type === 'danger') t.setAttribute('role', 'alert'); else t.setAttribute('role', 'status');
+    t.innerHTML = `<span style="color:${colors[type || 'success']};display:flex;margin-top:2px">${icon(marks[type || 'success'])}</span><div class="tx">${msg}</div>${action ? `<button class="act">${action.label}</button>` : ''}${type === 'danger' || action ? `<button class="tclose" aria-label="닫기">${icon('x')}</button>` : ''}`;
     box.appendChild(t);
     if (action) t.querySelector('.act').onclick = () => { t.remove(); action.fn(); };
     const c = t.querySelector('.tclose'); if (c) c.onclick = () => t.remove();

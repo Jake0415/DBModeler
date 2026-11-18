@@ -23,7 +23,7 @@
 <div id="content" class="page">
   <div class="page-header">
     <h1>결재함</h1>
-    <div class="actions" id="boxes"></div>
+    <div class="utabs" id="boxes" role="tablist" aria-label="결재함" style="margin-left:24px"></div>
   </div>
   <div class="page-body">
     <div class="main">
@@ -32,11 +32,11 @@
         <select class="input" id="f-type" style="width:160px;height:28px" aria-label="문서 유형"><option value="">문서 유형: 전체</option><option value="dict">사전 신청</option><option value="model">모델 확정</option></select>
         <select class="input" id="f-step" style="width:150px;height:28px" aria-label="단계"><option value="">단계: 전체</option><option value="da">DA 승인</option><option value="final">최종 승인</option><option value="done">완료</option><option value="rejected">반려됨</option><option value="withdrawn">회수됨</option></select>
         <div class="search" style="flex-basis:280px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input class="input" id="f-q" placeholder="신청번호·제목·요청자" style="height:28px" aria-label="신청번호·제목·요청자 검색"></div>
-        <span class="grow"></span><span class="caption muted" id="boxhint"></span>
+        <span class="grow"></span><span class="caption muted" id="boxhint" hidden></span>
       </div>
       <div class="scroll">
         <table class="tbl">
-          <thead><tr><th>신청번호</th><th>유형</th><th>제목</th><th>요청자</th><th>현재 단계</th><th>건수</th><th>신청일</th></tr></thead>
+          <thead><tr><th>신청번호</th><th>유형</th><th>제목</th><th>요청자</th><th>현재 단계</th><th class="r">머문 일</th><th class="r">건수</th><th>신청일</th></tr></thead>
           <tbody id="rows"></tbody>
         </table>
       </div>
@@ -48,7 +48,7 @@
   <div class="overlay" id="mo-self" role="dialog" aria-modal="true" aria-labelledby="self-t"><div class="modal">
     <div class="m-head"><h3 id="self-t">자기 승인</h3></div>
     <div class="m-body">
-      <div class="banner violet" style="margin-bottom:12px"><span>◆</span><div>본인이 신청한 문서를 <b id="self-step">DA</b> 단계에서 승인합니다. 사유는 결재 이력과 감사 로그에 <b>‘자기 승인’</b>으로 남습니다.</div></div><label class="flex caption" id="self-ack-w" hidden style="margin-bottom:8px"><input type="checkbox" id="self-ack"> <span id="self-ack-t"></span></label>
+      <div class="banner" style="margin-bottom:12px"><span class="sg-ic" data-ic="info"></span><div>본인이 신청한 문서를 <b id="self-step">DA</b> 단계에서 승인합니다. 사유는 결재 이력과 감사 로그에 <b>‘자기 승인’</b>으로 남습니다.</div></div><label class="flex caption" id="self-ack-w" hidden style="margin-bottom:8px"><input type="checkbox" id="self-ack"> <span id="self-ack-t"></span></label>
       <div class="field"><label for="self-why">자기 승인 사유 *</label><textarea class="input" id="self-why" rows="3"></textarea></div>
     </div>
     <div class="m-foot"><button class="btn" data-close="mo-self">취소</button><button class="btn primary" id="do-self" data-needs="self-why">사유 남기고 승인</button></div>
@@ -75,7 +75,7 @@
   </div></div>
   <!-- MO-26 diff -->
   <div class="overlay" id="mo-diff" role="dialog" aria-modal="true" aria-labelledby="diff-t"><div class="modal" style="width:720px">
-    <div class="m-head"><div class="flex"><h3 id="diff-t">직전 확정본 대비 변경</h3><span class="grow"></span><button class="iconbtn" data-close="mo-diff" aria-label="닫기" style="width:28px;height:28px">×</button></div></div>
+    <div class="m-head"><div class="flex"><h3 id="diff-t">직전 확정본 대비 변경</h3><span class="grow"></span><button class="iconbtn" data-close="mo-diff" aria-label="닫기" style="width:28px;height:28px;border-radius:var(--r-md)"><span class="sg-ic" data-ic="x"></span></button></div></div>
     <div class="m-body" style="max-height:60vh;overflow:auto" id="diff-body"></div>
     <div class="m-foot"><a class="btn" id="diff-erd" href="model.html">ERD로 보기</a><button class="btn primary" data-close="mo-diff">닫기</button></div>
   </div></div>
@@ -84,6 +84,7 @@
 <script>
 window.pageInit = function () {
   const $ = id => document.getElementById(id);
+  document.querySelectorAll('.sg-ic').forEach(s => { s.outerHTML = icon(s.dataset.ic); });
   const q = new URLSearchParams(location.search);
   let docs = getDocs();
   const nameOf = id => USERS[id] ? USERS[id].name : id;
@@ -98,31 +99,35 @@ window.pageInit = function () {
   if (box === 'queue' && !(ME.has('da') || ME.has('owner'))) box = 'mine';
   let sel = null;
   const stepRole = s => s === 'da' ? 'DA' : s === 'final' ? '기관 담당자' : '';
-  const stBadge = d => `<span class="badge ${d.step === 'rejected' ? 'b-danger' : d.step === 'done' ? 'b-success' : d.step === 'withdrawn' ? '' : 'b-info'}">● ${STEP_NAME[d.step]}</span>`;
+  const stBadge = d => docTag(d);
+  const ageCell = d => ['da', 'final'].includes(d.step) ? (docLate(d) ? `<span class="mono" style="color:var(--danger-deep)">${icon('err', 12)} ${docAge(d)}일<span class="sr-only"> 기한 넘김</span></span>` : `<span class="mono">${docAge(d)}일</span>`) : '';
 
   function drawBoxes() {
-    $('boxes').innerHTML = Object.entries(BOX).filter(([k]) => k !== 'all' && (k !== 'queue' || ME.has('da') || ME.has('owner'))).map(([k, [l, f]]) => `<button class="chip ${box === k ? 'on' : ''}" data-box="${k}">${l} <span class="n">${docs.filter(f).length}</span></button>`).join('');
+    $('boxes').innerHTML = Object.entries(BOX).filter(([k]) => k !== 'all' && (k !== 'queue' || ME.has('da') || ME.has('owner'))).map(([k, [l, f]]) => `<button role="tab" aria-selected="${box === k}" class="${box === k ? 'on' : ''}" data-box="${k}">${l} <span class="n">${docs.filter(f).length}</span></button>`).join('');
     $('boxhint').textContent = box === 'queue' ? (ME.has('da') || ME.has('owner') ? `지금 내 역할(${ME.roles.filter(r => r === 'da' || r === 'owner').map(r => ROLE_NAME[r]).join('·')}) 차례인 문서만` : '결재 역할이 없습니다') : box === 'mine' ? '내가 신청한 문서 · 회수·보완' : '참조로 지정된 문서 · 조회 전용';
   }
   function list() {
     const ft = $('f-type').value, fs = $('f-step').value, fq = $('f-q').value.trim();
-    return docs.filter(BOX[box][1]).filter(d => (!ft || d.type === ft) && (!fs || d.step === fs) && (!fq || (d.id + d.title + nameOf(d.req)).includes(fq)));
+    return docs.filter(BOX[box][1]).filter(d => (!ft || d.type === ft) && (!fs || d.step === fs) && (!fq || (d.id + d.title + nameOf(d.req)).includes(fq))).map((d, i) => [d, i]).sort((a, b) => ((inQueue(b[0]) ? 1 : 0) - (inQueue(a[0]) ? 1 : 0)) || ((['da', 'final'].includes(b[0].step) ? docAge(b[0]) : -1) - (['da', 'final'].includes(a[0].step) ? docAge(a[0]) : -1)) || a[1] - b[1]).map(x => x[0]);
   }
   function drawRows() {
     const L = list();
-    $('rows').innerHTML = L.length ? L.map(d => `<tr class="click ${sel === d.id ? 'sel' : ''} ${['done', 'withdrawn', 'rejected'].includes(d.step) ? 'dim' : ''}" data-id="${d.id}" tabindex="0"><td class="mono">${d.id}</td><td><span class="badge ${d.type === 'model' ? 'b-violet' : ''}">${d.type === 'model' ? '모델 확정' : '사전 신청'}</span></td><td>${d.title}</td><td>${nameOf(d.req)}${d.req === ME.id ? ' <span class="badge">나</span>' : ''}</td><td>${stBadge(d)}</td><td class="num">${d.n}</td><td class="mono">${d.date}</td></tr>`).join('')
-      : `<tr><td colspan="7" style="text-align:center;padding:40px" class="caption muted">${box === 'queue' ? '지금 처리할 결재가 없습니다.' : '조건에 맞는 문서가 없습니다.'} ${($('f-type').value || $('f-step').value || $('f-q').value) ? '<button class="btn sm ghost" id="f-clear">필터 지우기</button>' : ''}</td></tr>`;
+    $('rows').innerHTML = L.length ? L.map(d => `<tr aria-selected="${sel === d.id}" class="click ${sel === d.id ? 'sel' : ''} ${['done', 'withdrawn', 'rejected'].includes(d.step) ? 'dim' : ''}" data-id="${d.id}" tabindex="0"><td class="mono">${d.id}</td><td class="muted">${d.type === 'model' ? '모델 확정' : '사전 신청'}</td><td>${d.title}</td><td>${nameOf(d.req)}${d.req === ME.id ? ' <span class="muted">(나)</span>' : ''}</td><td>${box === 'queue' ? tag('run', STEP_NAME[d.step]) + '<span class="sr-only"> 내 차례</span>' : stBadge(d)}</td><td class="r">${ageCell(d)}</td><td class="num">${d.n}</td><td class="mono">${d.date}</td></tr>`).join('')
+      : `<tr><td colspan="8" style="padding:16px 12px" class="caption muted">${box === 'queue' ? '지금 처리할 결재가 없습니다.' : '조건에 맞는 문서가 없습니다.'} ${($('f-type').value || $('f-step').value || $('f-q').value) ? '<button class="btn sm ghost" id="f-clear">필터 지우기</button>' : ''}</td></tr>`;
     const c = $('f-clear'); if (c) c.onclick = () => { $('f-type').value = ''; $('f-step').value = ''; $('f-q').value = ''; drawRows(); };
   }
   function line(d) {
     const h = d.hist || [];
-    const daH = h.find(x => x.step === 'da'), fH = h.find(x => x.step === 'final');
-    const cls = s => (d.step === s ? 'cur' : (s === 'da' && ['final', 'done'].includes(d.step)) || (s === 'final' && d.step === 'done') ? 'done' : '');
-    const who = (x, s) => x ? `${x.who} · ${x.at}${x.self ? ' <span class="badge b-violet">자기 승인</span>' : ''}` : d.step === s ? (inQueue(d) ? '<b>내 차례</b>' : `${stepRole(s)} 처리 대기`) : '';
+    const ok = s => h.filter(x => x.step === s && /승인/.test(x.act || '') && !/실패|취소/.test(x.act || '')).pop();
+    const rj = h.filter(x => /반려/.test(x.act || '')).pop();
+    const daH = ok('da') || (rj && rj.step === 'da' ? rj : null), fH = ok('final') || (rj && rj.step === 'final' ? rj : null);
+    const cls = s => (d.step === 'rejected' && rj && rj.step === s ? 'rej' : d.step === s ? 'cur' : (s === 'da' && ['final', 'done'].includes(d.step)) || (s === 'final' && d.step === 'done') ? 'done' : '');
+    const pt = c => `<span class="pt">${c === 'done' ? icon('check', 12) : c === 'rej' ? icon('x', 12) : ''}</span>`;
+    const who = (x, s) => x ? `${x.who} · ${x.at}${x.self ? ' ' + tag('run', '자기 승인') : ''}` : d.step === s ? (inQueue(d) ? '<b style="color:var(--accent)">내 차례</b>' : `${stepRole(s)} 처리 대기`) : '';
     return `<div class="approval-line">
-      <div class="al-step done"><span class="pt"></span><div><b>신청</b><div class="caption muted">${nameOf(d.req)} · ${d.date}</div></div></div>
-      <div class="al-step ${cls('da')}"><span class="pt"></span><div><b>DA 승인</b><div class="caption muted">${who(daH, 'da')}</div></div></div>
-      ${hasFinal(d) ? `<div class="al-step ${cls('final')}"><span class="pt"></span><div><b>최종 승인 (기관 담당자)</b><div class="caption muted">${who(fH, 'final') || (d.type === 'model' ? '시스템 설정: 모델 확정 최종 승인 사용(신청 당시)' : '기관 설정: 사전 신청 최종 승인 사용(신청 당시)')}</div></div></div>` : '<div class="al-step done"><span class="pt"></span><div><b>최종 승인</b><div class="caption muted">신청 당시 설정: 최종 승인 사용 안 함 — DA 승인으로 완료</div></div></div>'}
+      <div class="al-step done">${pt('done')}<div><b>신청</b><div class="caption muted">${nameOf(d.req)} · ${d.date}</div></div></div>
+      <div class="al-step ${cls('da')}">${pt(cls('da'))}<div><b>DA 승인</b><div class="caption muted">${who(daH, 'da')}</div></div></div>
+      ${hasFinal(d) ? `<div class="al-step ${cls('final')}">${pt(cls('final'))}<div><b>최종 승인 (기관 담당자)</b><div class="caption muted">${who(fH, 'final') || (d.type === 'model' ? '시스템 설정: 모델 확정 최종 승인 사용(신청 당시)' : '기관 설정: 사전 신청 최종 승인 사용(신청 당시)')}</div></div></div>` : '<div class="al-step skip"><span class="pt"></span><div><b>최종 승인 · 사용 안 함</b><div class="caption muted">신청 당시 설정에 따라 DA 승인으로 완료됩니다</div></div></div>'}
     </div>`;
   }
   const KN = { word: '단어', term: '용어', domain: '도메인', code: '코드' };
@@ -130,38 +135,38 @@ window.pageInit = function () {
   // the rows the requester actually submitted (S1): op · fields before/after · per-row choice and reason
   function itemRows(d) {
     const L = d.items || [];
-    if (!L.length) return `<div class="banner danger"><span>!</span><div>이 문서에는 반영할 항목이 없습니다 — 승인해도 사전이 바뀌지 않습니다. 반려 후 항목을 담아 다시 신청해야 합니다.</div></div>`;
+    if (!L.length) return `<div class="banner danger">${icon('err')}<div>이 문서에는 반영할 항목이 없습니다. 승인해도 사전이 바뀌지 않습니다. 반려 후 항목을 담아 다시 신청해야 합니다.</div></div>`;
     return `<table class="tbl items-t"><colgroup><col class="c1"><col class="c2"><col><col class="c4"><col></colgroup><thead><tr><th>${d.batch ? '행' : '#'}</th><th>구분</th><th>항목</th><th>약어 · 도메인</th><th>바뀌는 칸 / 선택·사유</th></tr></thead><tbody>${L.map((it, i) => {
       const op = opOf(it);
       const fields = it.chg ? Object.entries(it.chg).map(([k, v]) => `${k}: <span class="diff-old">${v[0] || '(빈 값)'}</span> → <span class="diff-new">${v[1]}</span>`).join('<br>') : '';
-      const extra = [it.pick ? `분해 후보 선택: <b>${it.pick}</b>` : '', it.why ? `사유: ${it.why}` : '', it.warn ? `⚠ 경고 확인: ${it.warn}` : '', it.from ? `<span class="faint">${it.from}</span>` : ''].filter(Boolean).join('<br>');
-      return `<tr><td class="mono">${it.row || i + 1}</td><td><span class="badge ${op === '추가' ? 'b-success' : op === '미사용' ? '' : 'b-info'}">${KN[it.k] || '항목'} · ${op}</span></td><td><b>${it.name}</b>${it.id ? ` <span class="mono faint">${it.id}</span>` : ''}</td><td class="mono">${it.abbr || ''}${it.dom ? ' · ' + it.dom : ''}</td><td class="caption wrap">${fields}${fields && extra ? '<br>' : ''}${extra || (fields ? '' : '—')}</td></tr>`; }).join('')}</tbody></table>
-      ${d.sample ? `<div class="banner warning" style="margin-top:8px"><span>!</span><div>목업 시드: 이 문서는 ${d.n}건 중 <b>대표 ${L.length}행만</b> 담고 있습니다. 승인하면 이 ${L.length}행만 반영됩니다.</div></div>` : ''}`;
+      const extra = [it.pick ? `분해 후보 선택: <b>${it.pick}</b>` : '', it.why ? `사유: ${it.why}` : '', it.warn ? `${icon('warn', 12)} 경고 확인: ${it.warn}` : '', it.from ? `<span class="faint">${it.from}</span>` : ''].filter(Boolean).join('<br>');
+      return `<tr><td class="mono">${it.row || i + 1}</td><td class="muted">${KN[it.k] || '항목'} ${op}</td><td><b>${it.name}</b>${it.id ? ` <span class="mono faint">${it.id}</span>` : ''}</td><td class="mono">${it.abbr || ''}${it.dom ? ' · ' + it.dom : ''}</td><td class="caption wrap">${fields}${fields && extra ? '<br>' : ''}${extra || (fields ? '' : '—')}</td></tr>`; }).join('')}</tbody></table>
+      ${d.sample ? `<div class="banner warning" style="margin-top:8px">${icon('warn')}<div>목업 시드: 이 문서는 ${d.n}건 중 <b>대표 ${L.length}행만</b> 담고 있습니다. 승인하면 이 ${L.length}행만 반영됩니다.</div></div>` : ''}`;
   }
   // check tab: same judgement as the final-approval re-check (checkDictDoc)
   function checks(d) {
     if (d.type === 'model') {
       const bad = modelBad(d.model); const s = d.snap || {}; const ended = reqEnded(d.model);
-      return `<table class="tbl"><thead><tr><th>검사</th><th>신청 시점</th><th>제출 모델 재검사</th></tr></thead><tbody><tr><td>미준수 (조합 가능·미등록)</td><td>${s.bad != null ? s.bad + '건' : '—'}</td><td>${bad == null ? `<span class="caption muted">제출 사본 없음(목업 시드) — 신청 시점 값 ${s.bad != null ? s.bad + '건' : '0건'}으로 판정</span>` : bad ? `<span class="badge b-danger">${bad}건</span>` : '<span class="badge b-success">통과</span>'}</td></tr><tr><td>연결된 용어 신청</td><td>—</td><td>${ended.length ? `<span class="badge b-danger">반려·회수 ${ended.length}건</span> <span class="caption">${ended.join(', ')}</span>` : '<span class="badge b-success">통과</span>'}</td></tr><tr><td>표준 예외 (사유 기록)</td><td>${(s.exList || []).length}건</td><td>${d.model ? d.model.E.reduce((n, e) => n + e.a.filter(a => a.s === 'ex').length, 0) + '건' : '—'}</td></tr></tbody></table><div class="caption muted" style="margin-top:8px">승인은 <b>제출된 모델 사본</b>으로 다시 검사합니다(지금 작업 중인 모델이 아님).</div>`;
+      return `<table class="tbl"><thead><tr><th>검사</th><th>신청 시점</th><th>제출 모델 재검사</th></tr></thead><tbody><tr><td>미준수 (조합 가능·미등록)</td><td>${s.bad != null ? s.bad + '건' : '—'}</td><td>${bad == null ? `<span class="caption muted">제출 사본 없음(목업 시드). 신청 시점 값 ${s.bad != null ? s.bad + '건' : '0건'}으로 판정</span>` : bad ? tag('err', bad + '건') : tag('ok', '통과')}</td></tr><tr><td>연결된 용어 신청</td><td>—</td><td>${ended.length ? tag('err', '반려·회수 ' + ended.length + '건') + ` <span class="caption">${ended.join(', ')}</span>` : tag('ok', '통과')}</td></tr><tr><td>표준 예외 (사유 기록)</td><td>${(s.exList || []).length}건</td><td>${d.model ? d.model.E.reduce((n, e) => n + e.a.filter(a => a.s === 'ex').length, 0) + '건' : '—'}</td></tr></tbody></table><div class="caption muted" style="margin-top:8px">승인은 <b>제출된 모델 사본</b>으로 다시 검사합니다(지금 작업 중인 모델이 아님).</div>`;
     }
-    // finished documents show what the approval applied — re-checking them against today's dictionary would only report themselves as duplicates
-    if (d.step === 'done') { const a = d.applied || {}; return `<div class="banner success"><span>✓</span><div>최종 승인 때 검사를 통과해 반영했습니다 — 반영 ${a.applied != null ? a.applied : (d.items || []).length}건${a.failed && a.failed.length ? ` · 실패 ${a.failed.length}건(${a.failed.map(f => f.join(': ')).join(', ')})` : ''}. 반영 뒤 바뀐 내용은 <a href="dict-history.html">사전 변경 내역</a>에서 확인하세요.</div></div>`; }
+    // finished documents show what the approval applied. re-checking them against today's dictionary would only report themselves as duplicates
+    if (d.step === 'done') { const a = d.applied || {}; return `<div class="banner">${icon('check')}<div>최종 승인 때 검사를 통과해 반영했습니다. 반영 ${a.applied != null ? a.applied : (d.items || []).length}건${a.failed && a.failed.length ? ` · 실패 ${a.failed.length}건(${a.failed.map(f => f.join(': ')).join(', ')})` : ''}. 반영 뒤 바뀐 내용은 <a href="dict-history.html">사전 변경 내역</a>에서 확인하세요.</div></div>`; }
     const R = checkDictDoc(d);
     if (!R.length) return '<div class="caption muted">검사할 항목이 없습니다.</div>';
-    const pol = getPolicy(); const pv = `<div class="caption muted" style="margin-bottom:6px">검수 기준: 신청 시점 v${d.policyVer || '—'} · 현재 v${pol.ver}${d.policyVer && d.policyVer !== pol.ver ? ' — <b style="color:var(--warning-deep)">신청 뒤 기준이 바뀌어 현재 기준으로 다시 검사합니다</b>' : ''}</div>`;
+    const pol = getPolicy(); const pv = `<div class="caption muted" style="margin-bottom:6px">검수 기준: 신청 시점 v${d.policyVer || '—'} · 현재 v${pol.ver}${d.policyVer && d.policyVer !== pol.ver ? '. <b style="color:var(--warning-deep)">신청 뒤 기준이 바뀌어 현재 기준으로 다시 검사합니다</b>' : ''}</div>`;
     const n = R.filter(r => r.problems.length).length;
-    return pv + `<table class="tbl"><thead><tr><th>항목</th><th>구분</th><th>현재 사전 기준</th></tr></thead><tbody>${R.map(r => `<tr><td>${r.name}</td><td>${r.op}</td><td>${r.problems.length ? r.problems.map(p => `<span class="badge b-danger">${p}</span>`).join(' ') : '<span class="badge b-success">통과</span>'}</td></tr>`).join('')}</tbody></table><div class="caption ${n ? '' : 'muted'}" style="margin-top:8px">${n ? `<b style="color:var(--danger-deep)">${n}건 실패</b> — DA 승인과 최종 승인 모두 이 검사를 다시 하며, 실패가 있으면 승인하지 않고 이력에 남깁니다. 반려해 보완을 요청하세요.` : '승인할 때마다(DA·최종) 현재 사전 기준으로 다시 검사합니다.'}</div>`;
+    return pv + `<table class="tbl"><thead><tr><th>항목</th><th>구분</th><th>현재 사전 기준</th></tr></thead><tbody>${R.map(r => `<tr><td>${r.name}</td><td>${r.op}</td><td>${r.problems.length ? tag('err', r.problems.length + '건') + ' <span class="caption">' + r.problems.join(' / ') + '</span>' : tag('ok', '통과')}</td></tr>`).join('')}</tbody></table><div class="caption ${n ? '' : 'muted'}" style="margin-top:8px">${n ? `<b style="color:var(--danger-deep)">${n}건 실패</b>. DA 승인과 최종 승인 모두 이 검사를 다시 하며, 실패가 있으면 승인하지 않고 이력에 남깁니다. 반려해 보완을 요청하세요.` : '승인할 때마다(DA·최종) 현재 사전 기준으로 다시 검사합니다.'}</div>`;
   }
   function items(d) {
-    if (d.kind === 'excel') { const b = batchOf(d.batch) || { counts: {}, file: '—', id: '—' }; const c = b.counts || {}; const s = d.sub || {   /* frozen in the document at submit (S1) */ new: c.new || 0, chg: c.chg || 0, pick: c.pick || 0, conflict: 0, unuse: 0, hold: (c.waitDiff || 0) + (c.pre || 0), ex: (c.err || 0) + (c.same || 0) }; return `<div class="grid3" style="margin-bottom:8px;grid-template-columns:repeat(4,1fr)"><div class="card"><div class="caption muted">신규</div><div class="mono" style="font-size:20px">${s.new}</div></div><div class="card"><div class="caption muted">변경 <span class="faint">(충돌 해결 포함)</span></div><div class="mono" style="font-size:20px">${s.chg + s.conflict}</div></div><div class="card"><div class="caption muted">후보 확정</div><div class="mono" style="font-size:20px">${s.pick}</div></div><div class="card"><div class="caption muted">미사용</div><div class="mono" style="font-size:20px">${s.unuse}</div></div></div>
-      <div class="caption muted" style="margin-bottom:6px">합계 ${s.new + s.chg + s.conflict + s.pick + s.unuse}건 = 이 문서 ${d.n}건 · 업로드 <a href="uploads.html?b=${b.id}">${b.id}</a> · ${b.file} · 기준본 ${d.baseline || b.baseline || '—'} · 보류 ${s.hold} · 제외 ${s.ex}</div>` + itemRows(d); }
+    if (d.kind === 'excel') { const b = batchOf(d.batch) || { counts: {}, file: '—', id: '—' }; const c = b.counts || {}; const s = d.sub || {   /* frozen in the document at submit (S1) */ new: c.new || 0, chg: c.chg || 0, pick: c.pick || 0, conflict: 0, unuse: 0, hold: (c.waitDiff || 0) + (c.pre || 0), ex: (c.err || 0) + (c.same || 0) }; return `<div class="mline"><span><b>${s.new}</b>신규</span><span><b>${s.chg + s.conflict}</b>변경</span><span><b>${s.pick}</b>후보 확정</span><span><b>${s.unuse}</b>미사용</span></div>
+      <div class="mline" style="margin-top:-4px"><span><b>${s.hold}</b>보류</span><span><b>${s.ex}</b>제외</span><span>업로드 <a href="uploads.html?b=${b.id}">${b.id}</a></span><span>기준본 ${d.baseline || b.baseline || '없음'}</span></div>` + itemRows(d); }
     if (d.type === 'model') {
       const snap = d.snap || { rate: 100, bad: 0, exList: [] };
       const df = diffOf(d);
-      return `<div class="grid3" style="margin:4px 0 12px"><div class="card"><div class="caption muted">준수율 (신청 시점)</div><div class="mono" style="font-size:20px;font-weight:500">${snap.rate}%</div><div class="caption muted">미준수 ${snap.bad} · 승인 때 제출 사본으로 재검사</div></div><div class="card"><div class="caption muted">표준 예외</div><div class="mono" style="font-size:20px;font-weight:500;color:var(--violet)">${(snap.exList || []).length}</div><div class="caption muted">사유 기록됨</div></div><div class="card"><div class="caption muted">v${d.ver - 1} 대비 변경</div><div class="mono" style="font-size:20px;font-weight:500">${df.rows ? df.rows.length + '건' : '—'}</div><div class="caption muted"><a href="#" data-open="mo-diff">변경 비교</a></div></div></div>
+      return `<div class="mline"><span><b>${snap.rate}%</b>준수율(신청 시점)</span><span><b>${snap.bad}</b>미준수</span><span><b>${(snap.exList || []).length}</b>예외</span><span><b>${df.rows ? df.rows.length : '없음'}</b>v${d.ver - 1} 대비 변경</span></div>
       ${linkedHtml(d)}
-      <div class="caption muted" style="margin:6px 0 8px">제출 ${d.submittedAt || d.date} · v${d.ver} · ${d.model ? `<a href="model.html?area=${d.area}&snap=${d.id}">제출 사본 보기</a>` : '제출 사본 없음(목업 시드)'} · 승인은 이 사본으로 판정합니다 · 내용 해시 <span class="mono">${(() => { let h = 0; const s = d.id + d.area + d.ver + (d.submittedAt || d.date); for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0; return 'sha256:' + h.toString(16).padStart(8, '0') + '…'; })()}</span>(서버가 신청 시점에 고정 — 신청 뒤 편집은 들어가지 않음)</div>
-      <div class="section-t">표준 예외 목록 <span class="badge b-violet">◆ ${(snap.exList || []).length}</span> <span class="caption muted">확정 결재에서 반드시 검토</span></div>
+      <div class="caption muted" style="margin:6px 0 8px">승인은 제출 사본(${d.submittedAt || d.date})으로 판정합니다. ${d.model ? `<a href="model.html?area=${d.area}&snap=${d.id}">제출 사본 보기</a>` : '제출 사본 없음(목업 시드)'}<span hidden>내용 해시 <span class="mono">${(() => { let h = 0; const s = d.id + d.area + d.ver + (d.submittedAt || d.date); for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0; return 'sha256:' + h.toString(16).padStart(8, '0') + '…'; })()}</span></span></div>
+      <div class="section-t">표준 예외 목록 ${tag('ex', '예외 ' + (snap.exList || []).length)}</div>
       <table class="tbl"><thead><tr><th>위치</th><th>항목</th><th>사유</th></tr></thead><tbody>${(snap.exList || []).map(x => `<tr><td>${x[0]}</td><td class="mono">${x[1]}</td><td class="wrap">${x[2]}</td></tr>`).join('') || '<tr><td colspan="3" class="caption muted">예외 없음</td></tr>'}</tbody></table>`;
     }
     return itemRows(d);
@@ -169,8 +174,8 @@ window.pageInit = function () {
   // term requests the submitted model relies on (attributes in 's: req'): listed, live ones need an approver acknowledgement
   const linkedReqs = d => { if (!d.model) return []; const out = []; d.model.E.forEach(e => { if (e.st && !e.ref) { const x = e.reqDoc && docs.find(y => y.id === e.reqDoc); out.push({ at: `${e.n} (엔터티)`, doc: x, live: !x || ['da', 'final'].includes(x.step), ended: x && ['rejected', 'withdrawn'].includes(x.step) }); } }); d.model.E.forEach(e => e.a.forEach(a => { if (a.s === 'req') { const x = a.reqDoc && docs.find(y => y.id === a.reqDoc); out.push({ at: `${e.n}.${a.n}`, doc: x, live: x && ['da', 'final'].includes(x.step), ended: x && ['rejected', 'withdrawn'].includes(x.step) }); } })); return out; };
   function linkedHtml(d) { const L = linkedReqs(d); if (!L.length) return '';
-    return `<div class="section-t">연결된 용어 신청 <span class="badge b-info">${L.length}</span> <span class="caption muted">신청 중 용어로 준수에 들어간 속성</span></div><table class="tbl"><thead><tr><th>속성</th><th>용어 신청</th><th>단계</th></tr></thead><tbody>${L.map(x => `<tr><td>${x.at}</td><td>${x.doc ? `<a class="mono" href="approvals.html?doc=${x.doc.id}">${x.doc.id}</a>` : '<span class="faint">연결 없음</span>'}</td><td>${x.doc ? `<span class="badge ${x.ended ? 'b-danger' : x.live ? 'b-info' : 'b-success'}">${STEP_NAME[x.doc.step]}</span>` : '—'}</td></tr>`).join('')}</tbody></table>${L.some(x => x.live) ? `<div class="caption" style="margin-top:4px">진행 중인 용어 신청이 있습니다 — ${d.step === 'da' && hasFinal(d) ? 'DA 단계는 확인 표시 후 넘길 수 있지만, <b>최종 승인(확정)은 연결 신청이 모두 완료돼야</b> 합니다.' : '<b>연결 신청이 모두 완료돼야 확정할 수 있습니다.</b>'} 반려·회수된 신청이 있으면 승인할 수 없습니다.</div>` : ''}`; }
-  // diff of a model document against the previous confirmed version (stored copies only — no fixed sample rows)
+    return `<div class="section-t">연결된 용어 신청 <span class="mono muted">${L.length}</span></div><table class="tbl"><thead><tr><th>속성</th><th>용어 신청</th><th>단계</th></tr></thead><tbody>${L.map(x => `<tr><td>${x.at}</td><td>${x.doc ? `<a class="mono" href="approvals.html?doc=${x.doc.id}">${x.doc.id}</a>` : '<span class="faint">연결 없음</span>'}</td><td>${x.doc ? `${docTag(x.doc)}` : '—'}</td></tr>`).join('')}</tbody></table>${L.some(x => x.live) ? `<div class="caption" style="margin-top:4px">진행 중인 용어 신청이 있습니다. ${d.step === 'da' && hasFinal(d) ? 'DA 단계는 확인 표시 후 넘길 수 있지만, <b>최종 승인(확정)은 연결 신청이 모두 완료돼야</b> 합니다.' : '<b>연결 신청이 모두 완료돼야 확정할 수 있습니다.</b>'} 반려·회수된 신청이 있으면 승인할 수 없습니다.</div>` : ''}`; }
+  // diff of a model document against the previous confirmed version (stored copies only. no fixed sample rows)
   function diffOf(d) {
     const prevDoc = docs.filter(x => x.type === 'model' && x.area === d.area && x.ver === d.ver - 1 && x.step === 'done' && x.model).slice(-1)[0];
     const prev = prevDoc ? prevDoc.model : getModelData(d.area, d.ver - 1);
@@ -180,33 +185,35 @@ window.pageInit = function () {
     const df = diffOf(d);
     $('diff-t').textContent = `v${d.ver - 1} 확정본 대비 변경 · v${d.ver} (${d.id})`;
     $('diff-erd').href = `model.html?area=${d.area}&snap=${d.id}`;
-    $('diff-body').innerHTML = !d.model ? '<div class="banner"><span>ℹ</span><div>이 문서에는 제출 모델 사본이 없습니다(목업 시드 문서). 비교는 사본이 있는 문서에서만 보여 줍니다.</div></div>'
-      : !df.hasPrev ? `<div class="banner"><span>ℹ</span><div>v${d.ver - 1} 확정본 사본이 없어 비교할 수 없습니다. 제출 사본은 [ERD로 보기]에서 확인하세요.</div></div>`
-      : `<table class="tbl"><thead><tr><th>구분</th><th>대상</th><th>v${d.ver - 1}</th><th>v${d.ver}</th></tr></thead><tbody>${df.rows.map(r => `<tr><td><span class="badge ${r[0] === '추가' ? 'b-success' : r[0] === '삭제' ? 'b-danger' : r[0] === '예외' ? 'b-violet' : 'b-info'}">${r[0]}</span></td><td>${r[1]}</td><td class="mono ${r[0] === '변경' ? 'diff-old' : 'faint'}">${r[2]}</td><td class="mono ${r[0] === '변경' ? 'diff-new' : ''}">${r[3]}</td></tr>`).join('') || '<tr><td colspan="4" class="caption muted">바뀐 것이 없습니다</td></tr>'}</tbody></table>`;
+    $('diff-body').innerHTML = !d.model ? '<div class="banner">' + icon('info') + '<div>이 문서에는 제출 모델 사본이 없습니다(목업 시드 문서). 비교는 사본이 있는 문서에서만 보여 줍니다.</div></div>'
+      : !df.hasPrev ? `<div class="banner">${icon('info')}<div>v${d.ver - 1} 확정본 사본이 없어 비교할 수 없습니다. 제출 사본은 [ERD로 보기]에서 확인하세요.</div></div>`
+      : `<table class="tbl"><thead><tr><th>구분</th><th>대상</th><th>v${d.ver - 1}</th><th>v${d.ver}</th></tr></thead><tbody>${df.rows.map(r => `<tr><td>${r[0] === '삭제' ? tag('err', '삭제') : r[0] === '예외' ? tag('ex', '예외') : `<span class="muted">${r[0]}</span>`}</td><td>${r[1]}</td><td class="mono ${r[0] === '변경' ? 'diff-old' : 'faint'}">${r[2]}</td><td class="mono ${r[0] === '변경' ? 'diff-new' : ''}">${r[3]}</td></tr>`).join('') || '<tr><td colspan="4" class="caption muted">바뀐 것이 없습니다</td></tr>'}</tbody></table>`;
   }
   function panel() {
     const p = $('pn-doc'); const d = docs.find(x => x.id === sel);
     // a link to a document that does not exist says so instead of silently showing nothing
-    if (!d && sel && sel === q.get('doc')) { p.classList.add('open'); p.innerHTML = `<div class="rp-head"><div class="t"><span class="mono">${sel}</span><button class="iconbtn close" id="pn-x" aria-label="닫기" style="width:28px;height:28px">×</button></div><h2 style="margin-top:8px">문서를 찾을 수 없습니다</h2></div><div class="rp-body"><div class="banner"><span>ℹ</span><div>${sel} 결재 문서가 없거나 삭제됐습니다. 신청번호를 확인하거나 목록에서 찾으세요.</div></div></div>`; $('pn-x').onclick = () => { sel = null; p.classList.remove('open'); }; return; }
+    if (!d && sel && sel === q.get('doc')) { p.classList.add('open'); p.innerHTML = `<div class="rp-head"><div class="t"><span class="mono">${sel}</span><button class="iconbtn close" id="pn-x" aria-label="닫기" style="width:28px;height:28px;border-radius:var(--r-md)">${icon('x')}</button></div><h2 style="margin-top:8px">문서를 찾을 수 없습니다</h2></div><div class="rp-body"><div class="banner">${icon('info')}<div>${sel} 결재 문서가 없거나 삭제됐습니다. 신청번호를 확인하거나 목록에서 찾으세요.</div></div></div>`; $('pn-x').onclick = () => { sel = null; p.classList.remove('open'); }; return; }
     if (!d) { p.classList.remove('open'); return; }
     p.classList.add('open');
     // deep links follow the same visibility rule as the lists (CL9-22)
-    if (!canSeeDoc(d)) { p.innerHTML = `<div class="rp-head"><div class="t"><span class="mono">${d.id}</span><button class="iconbtn close" id="pn-x" aria-label="닫기" style="width:28px;height:28px">×</button></div><h2 style="margin-top:8px">열람 권한이 없습니다</h2></div><div class="rp-body"><div class="banner"><span>ℹ</span><div>이 결재 문서는 신청자·참조자·결재 역할(DA·기관 담당자)만 볼 수 있습니다. 지금 역할: ${ME.roles.map(r => ROLE_NAME[r]).join('·')}</div></div></div>`; $('pn-x').onclick = () => { sel = null; p.classList.remove('open'); }; return; }
+    if (!canSeeDoc(d)) { p.innerHTML = `<div class="rp-head"><div class="t"><span class="mono">${d.id}</span><button class="iconbtn close" id="pn-x" aria-label="닫기" style="width:28px;height:28px;border-radius:var(--r-md)">${icon('x')}</button></div><h2 style="margin-top:8px">열람 권한이 없습니다</h2></div><div class="rp-body"><div class="banner">${icon('info')}<div>이 결재 문서는 신청자·참조자·결재 역할(DA·기관 담당자)만 볼 수 있습니다. 지금 역할: ${ME.roles.map(r => ROLE_NAME[r]).join('·')}</div></div></div>`; $('pn-x').onclick = () => { sel = null; p.classList.remove('open'); }; return; }
     const mine = d.req === ME.id, live = ['da', 'final'].includes(d.step);
     const hist = [{ at: d.date, who: nameOf(d.req), act: '신청', why: d.reason }].concat(d.hist || []);
     let right = '';
-    if (inQueue(d)) right = `<div class="foot-zone"><span class="zl">${stepRole(d.step)}로서</span><button class="btn danger" data-open="mo-reject">반려</button><button class="btn primary" id="btn-apr">${mine ? '자기 승인' : '승인'}</button></div>`;
-    else if (d.step === 'done') right = `<div class="foot-zone"><span class="badge b-success">✓ 처리 완료</span>${d.type === 'model' ? `<a class="btn primary" href="model.html?area=${d.area}&snap=${d.id}">v${d.ver} 확정본 보기</a>` : ''}</div>`;
+    const blockLv = d.type === 'model' && !(d.step === 'da' && hasFinal(d)) ? [...new Set(linkedReqs(d).filter(x => x.live).map(x => x.doc ? x.doc.id : x.at))] : [];
+    if (inQueue(d) && blockLv.length) right = `<div class="foot-zone"><span class="caption" style="color:var(--danger-deep)">${icon('err', 12)} ${blockLv.join(', ')} 완료 전에는 확정할 수 없습니다</span><button class="btn danger" data-open="mo-reject">반려</button><button class="btn primary" disabled aria-disabled="true" title="연결 용어 신청이 끝나야 확정할 수 있습니다">${mine ? '자기 승인' : '승인'}</button></div>`;
+    else if (inQueue(d)) right = `<div class="foot-zone"><span class="zl">${stepRole(d.step)}로서</span><button class="btn danger" data-open="mo-reject">반려</button><button class="btn primary" id="btn-apr">${mine ? '자기 승인' : '승인'}</button></div>`;
+    else if (d.step === 'done') right = `<div class="foot-zone"><span class="caption muted">완료${(d.hist || []).length ? ' · ' + d.hist[d.hist.length - 1].at + ' ' + d.hist[d.hist.length - 1].who : ''}</span>${d.type === 'model' ? `<a class="btn primary" href="model.html?area=${d.area}&snap=${d.id}">v${d.ver} 확정본 보기</a>` : ''}</div>`;
     else if (live) right = `<span class="caption muted">지금은 <b>${stepRole(d.step)}</b> 차례입니다${ME.has(d.step === 'da' ? 'da' : 'owner') ? '' : ' · 내 역할로는 조회만 가능'}</span>`;
-    else right = `<span class="caption muted">${STEP_NAME[d.step]} — 더 처리할 일이 없습니다</span>`;
-    // re-request starts from what was submitted (items, reason) — not an empty screen (CL10-03)
+    else right = `<span class="caption muted">${STEP_NAME[d.step]}. 더 처리할 일이 없습니다</span>`;
+    // re-request starts from what was submitted (items, reason). not an empty screen (CL10-03)
     const fixHref = d.type === 'model' ? `model.html?area=${d.area}` : d.batch ? `excel-import.html?resume=${d.batch}` : d.kind === 'std' ? `standardize.html?area=${d.area || 'rq'}&redo=${d.id}` : `dictionary.html?redo=${d.id}`;
     const left = mine && live ? `<div class="foot-zone"><span class="zl">신청자로서</span><button class="btn sm" id="btn-wd">회수</button></div>` : mine && ['rejected', 'withdrawn'].includes(d.step) ? `<div class="foot-zone"><span class="zl">신청자로서</span><a class="btn sm primary" href="${fixHref}">보완해서 다시 신청</a><span class="caption muted">새 신청번호로 만들어집니다</span></div>` : '';
     p.innerHTML = `<div class="rp-head">
-        <div class="t"><span class="mono">${d.id}</span><span class="badge ${d.type === 'model' ? 'b-violet' : ''}">${d.type === 'model' ? '모델 확정' : '사전 신청'}</span>${stBadge(d)}<button class="iconbtn close" id="pn-x" aria-label="닫기" style="width:28px;height:28px">×</button></div>
+        <div class="t"><span class="mono">${d.id}</span><span class="muted">${d.type === 'model' ? '모델 확정' : '사전 신청'}</span>${stBadge(d)}<button class="iconbtn close" id="pn-x" aria-label="닫기" style="width:28px;height:28px;border-radius:var(--r-md)">${icon('x')}</button></div>
         <h2 style="margin-top:8px">${d.title}</h2>
         <div class="caption muted">신청 ${nameOf(d.req)} · ${d.date}${(d.cc || []).length ? ' · 참조 ' + d.cc.map(nameOf).join(', ') : ''}</div>
-        ${d.type === 'model' ? `<div class="doclinks"><a class="btn sm" href="model.html?area=${d.area}&snap=${d.id}">모델 보기 · 조회 전용 v${d.ver} 스냅숏</a><button class="btn sm" data-open="mo-diff">v${d.ver - 1} 대비 변경 비교</button><a class="btn sm" href="outputs.html?k=tbl">산출물 미리보기</a></div>` : d.batch ? `<div class="doclinks">${canSeeBatch(batchOf(d.batch)) ? `<a class="btn sm" href="uploads.html?b=${d.batch}">업로드 ${d.batch} 보기</a>` : `<span class="caption muted">업로드 ${d.batch} — 제출된 행과 집계는 아래 [항목] 탭에서 확인합니다(원본 파일은 올린 사람·DA만)</span>`}</div>` : ''}
+        ${d.type === 'model' ? `<div class="linkrow"><a href="model.html?area=${d.area}&snap=${d.id}">${icon('ext')}v${d.ver} 모델 보기</a><button data-open="mo-diff">${icon('compare')}v${d.ver - 1} 대비 변경</button><a href="outputs.html?k=tbl">${icon('file')}산출물</a></div>` : d.batch ? `<div class="linkrow">${canSeeBatch(batchOf(d.batch)) ? `<a href="uploads.html?b=${d.batch}">${icon('upload')}업로드 ${d.batch}</a>` : `<span class="caption muted">업로드 ${d.batch}: 원본 파일은 올린 사람과 DA만 볼 수 있습니다</span>`}</div>` : ''}
       </div>
       <div class="rp-body">
         ${line(d)}
@@ -214,7 +221,7 @@ window.pageInit = function () {
         <div class="tabs" style="margin-top:12px"><button class="on" data-tab="items">항목 <span class="n">${d.n}</span></button><button data-tab="check">검사 결과</button><button data-tab="hist">처리 이력 <span class="n">${hist.length}</span></button></div>
         <div class="pane on" data-pane="items">${items(d)}</div>
         <div class="pane" data-pane="check">${checks(d)}</div>
-        <div class="pane" data-pane="hist"><table class="tbl"><tbody>${hist.map(h => `<tr><td class="mono" style="white-space:nowrap">${h.at}</td><td>${h.who}</td><td>${h.act}${h.self ? ' <span class="badge b-violet">자기 승인</span>' : ''}</td><td class="caption">${h.why || ''}</td></tr>`).join('')}</tbody></table></div>
+        <div class="pane" data-pane="hist"><table class="tbl"><tbody>${hist.map(h => `<tr><td class="mono" style="white-space:nowrap">${h.at}</td><td>${h.who}</td><td>${h.act}${h.self ? ' ' + tag('run', '자기 승인') : ''}</td><td class="caption">${h.why || ''}</td></tr>`).join('')}</tbody></table></div>
       </div>
       <div class="rp-foot">${left}<span class="grow"></span>${right}</div>`;
     $('pn-x').onclick = () => { sel = null; p.classList.remove('open'); drawRows(); };
@@ -222,7 +229,7 @@ window.pageInit = function () {
     const a = $('btn-apr');
     if (a) a.onclick = () => {
       pending = { id: d.id, step: d.step };   // the dialog is bound to THIS document and step (CX4-01)
-      const live = linkedReqs(d).filter(x => x.live); const ackTxt = `진행 중인 용어 신청 ${live.length}건(${[...new Set(live.map(x => x.doc ? x.doc.id : x.at))].join(', ')})을 확인했습니다 — 반려되면 확정본에서 다시 맞춰야 합니다`;
+      const live = linkedReqs(d).filter(x => x.live); const ackTxt = `진행 중인 용어 신청 ${live.length}건(${[...new Set(live.map(x => x.doc ? x.doc.id : x.at))].join(', ')})을 확인했습니다. 반려되면 확정본에서 다시 맞춰야 합니다`;
       ['apr', 'self'].forEach(k => { $(k + '-ack-w').hidden = !live.length; $(k + '-ack').checked = false; $(k + '-ack-t').textContent = ackTxt; });
       if (mine) { $('self-step').textContent = `${d.id} · ${stepRole(d.step)}`; $('self-why').value = ''; $('mo-self').classList.add('open'); $('mo-self')._opener = a; $('self-why').focus(); }
       else { $('apr-sum').innerHTML = `<b>${d.id}</b> ${d.title}${d.batch ? ` · ${d.n}건` : ''}<br>${d.step === 'da' && hasFinal(d) ? '승인하면 최종 승인(기관 담당자)으로 넘어갑니다.' : '승인하면 ' + (d.type === 'model' ? '<b>확정본</b>이 되고, 모델 화면에서 다음 작업 버전을 시작할 수 있습니다.' : '사전에 <b>반영</b>되고 각 항목의 버전이 올라갑니다.')}`; $('apr-note').value = ''; $('mo-apr').classList.add('open'); $('mo-apr')._opener = a; }
@@ -233,13 +240,13 @@ window.pageInit = function () {
   }
   let pending = null;
   function act(kind, why, self) {
-    // the user this page was opened with must still be the selected user (another tab may have switched — CX9-06)
+    // the user this page was opened with must still be the selected user (another tab may have switched. CX9-06)
     if (liveRoleChanged()) { staleRoleToast(); pending = null; return; }
     docs = getDocs();                       // re-read: another tab or role may have changed it
     const d = docs.find(x => x.id === (pending && pending.id));
     // approve / reject act on one exact step; withdraw only needs the request to be still open (DA → final is fine)
     const stale = !d || (kind === 'withdraw' ? !['da', 'final'].includes(d.step) : d.step !== pending.step);
-    if (stale) { toast(`${pending ? pending.id : ''}의 상태가 바뀌어 처리하지 않았습니다(지금 ${d ? STEP_NAME[d.step] : '없음'}) — 최신 상태를 다시 확인하세요`, 'danger'); drawBoxes(); drawRows(); panel(); return; }
+    if (stale) { toast(`${pending ? pending.id : ''}의 상태가 바뀌어 처리하지 않았습니다(지금 ${d ? STEP_NAME[d.step] : '없음'}). 최신 상태를 다시 확인하세요`, 'danger'); drawBoxes(); drawRows(); panel(); return; }
     sel = d.id;
     // permission re-checked at execution time (S4)
     if ((kind === 'approve' || kind === 'reject') && !inQueue(d)) { toast(`지금 역할(${ME.roles.map(r => ROLE_NAME[r]).join('·')})로는 ${d.id}의 ${stepRole(d.step)} 단계를 처리할 수 없습니다`, 'danger'); pending = null; drawBoxes(); drawRows(); panel(); return; }
@@ -250,43 +257,43 @@ window.pageInit = function () {
       if (d.type === 'model' && linkedReqs(d).some(x => x.live)) {
         // the step that confirms the model (final, or DA without a final step) needs every linked request completed
         const completes = !(d.step === 'da' && hasFinal(d));
-        if (completes) { const lv = linkedReqs(d).filter(x => x.live).map(x => x.doc ? x.doc.id : x.at); const first = linkedReqs(d).find(x => x.live && x.doc); toast(`연결된 용어 신청이 아직 진행 중이라 확정할 수 없습니다 — ${[...new Set(lv)].join(', ')}. 먼저 처리하거나 신청자에게 보완을 요청하세요`, 'danger', first ? { label: `${first.doc.id} 열기`, fn: () => { location.href = `approvals.html?doc=${first.doc.id}`; } } : undefined); return; }
+        if (completes) { const lv = linkedReqs(d).filter(x => x.live).map(x => x.doc ? x.doc.id : x.at); const first = linkedReqs(d).find(x => x.live && x.doc); toast(`연결된 용어 신청이 아직 진행 중이라 확정할 수 없습니다. ${[...new Set(lv)].join(', ')}. 먼저 처리하거나 신청자에게 보완을 요청하세요`, 'danger', first ? { label: `${first.doc.id} 열기`, fn: () => { location.href = `approvals.html?doc=${first.doc.id}`; } } : undefined); return; }
         if (!(self ? $('self-ack') : $('apr-ack')).checked) { toast('진행 중인 연결 용어 신청을 확인했다고 표시해야 승인할 수 있습니다', 'danger'); return; }
       }
       // re-check the SUBMITTED snapshot (not the area's shared cache) before approving a model confirmation (MD-20)
-      if (d.type === 'model') { const bad = (d.model ? modelBad(d.model) : (d.snap ? d.snap.bad : 0)) + reqEnded(d.model).length; if (bad > 0) { addHist(d, { act: '재검사 실패 — 승인 취소', why: `제출 모델 미준수 ${bad}건`, step: d.step }); saveDocs(docs); toast(`재검사 실패 — 제출된 모델에 미준수 ${bad}건이 있어 승인하지 않았습니다. 이력에 남겼습니다`, 'danger'); drawRows(); panel(); return; } }
+      if (d.type === 'model') { const bad = (d.model ? modelBad(d.model) : (d.snap ? d.snap.bad : 0)) + reqEnded(d.model).length; if (bad > 0) { addHist(d, { act: '재검사 실패. 승인 취소', why: `제출 모델 미준수 ${bad}건`, step: d.step }); saveDocs(docs); toast(`재검사 실패. 제출된 모델에 미준수 ${bad}건이 있어 승인하지 않았습니다. 이력에 남겼습니다`, 'danger'); drawRows(); panel(); return; } }
       // dictionary documents: same checks before the final step applies anything
-      if (d.type === 'dict' && ['da', 'final'].includes(d.step)) { const bad = checkDictDoc(d).filter(r => r.problems.length); if (bad.length) { addHist(d, { act: '재검사 실패 — 승인 취소', why: bad.map(r => `${r.name}: ${r.problems[0]}`).join(' · '), step: d.step }); saveDocs(docs); toast(`재검사 실패 ${bad.length}건 — 사전에 반영하지 않았습니다. [검사 결과] 탭과 이력을 확인하고 반려하세요`, 'danger'); drawRows(); panel(); return; } }
+      if (d.type === 'dict' && ['da', 'final'].includes(d.step)) { const bad = checkDictDoc(d).filter(r => r.problems.length); if (bad.length) { addHist(d, { act: '재검사 실패. 승인 취소', why: bad.map(r => `${r.name}: ${r.problems[0]}`).join(' · '), step: d.step }); saveDocs(docs); toast(`재검사 실패 ${bad.length}건. 사전에 반영하지 않았습니다. [검사 결과] 탭과 이력을 확인하고 반려하세요`, 'danger'); drawRows(); panel(); return; } }
       addHist(d, { act: `${stepRole(d.step)} 승인`, why, step: d.step, self });
       const was = d.step; d.step = was === 'da' && hasFinal(d) ? 'final' : 'done'; d.decisionPolicyVer = getPolicy().ver;
       saveDocs(docs);
       if (d.step === 'final') {
-        pushNotif({ to: Object.values(USERS).filter(u => u.roles.includes('owner')).map(u => u.id), k: 'appr', t: `${d.id} — 최종 승인 차례`, m: d.title, href: `approvals.html?doc=${d.id}` });
-        notifyReq(`${d.id} DA 승인됨 — 최종 승인 대기`, d.title);
-        toast('DA 승인 — 최종 승인(기관 담당자)에게 알렸습니다', 'info');
+        pushNotif({ to: Object.values(USERS).filter(u => u.roles.includes('owner')).map(u => u.id), k: 'appr', t: `${d.id}. 최종 승인 차례`, m: d.title, href: `approvals.html?doc=${d.id}` });
+        notifyReq(`${d.id} DA 승인됨. 최종 승인 대기`, d.title);
+        toast('DA 승인. 최종 승인(기관 담당자)에게 알렸습니다', 'info');
       } else if (d.type === 'model') {
-        notifyReq(`${d.id} 최종 승인 — v${d.ver} 확정본`, d.title);
-        toast(`${was === 'da' ? 'DA 승인으로 완료' : '최종 승인'} — v${d.ver}이 확정본이 됐습니다. 모델 화면에서 다음 작업 버전을 시작할 수 있습니다`, 'success', { label: '확정본 보기', fn: () => location.href = `model.html?area=${d.area}&snap=${d.id}` });
+        notifyReq(`${d.id} 최종 승인. v${d.ver} 확정본`, d.title);
+        toast(`${was === 'da' ? 'DA 승인으로 완료' : '최종 승인'}. v${d.ver}이 확정본이 됐습니다. 모델 화면에서 다음 작업 버전을 시작할 수 있습니다`, 'success', { label: '확정본 보기', fn: () => location.href = `model.html?area=${d.area}&snap=${d.id}` });
       } else {
         // each submitted item is applied to the dictionary (new V1 / version +1, pending cleared, one change row per item)
         const res = applyDictDoc(d);
         d.applied = res; saveDocs(docs);
         // notify only when something in use changed (changed/unused items), and point at the area that uses them
         const touched = (d.items || []).filter(it => it.id && it.act !== '추가');
-        if (touched.length) pushNotif({ to: Object.values(USERS).filter(u => u.roles.includes('modeler')).map(u => u.id), k: 'sys', t: `${d.id} 사전 반영 — 사용 중인 항목 ${touched.length}건 변경`, m: `${touched.map(it => it.name).join(', ')} · 사용하는 모델은 [표준 맞추기]에서 다시 판정`, href: 'standardize.html' });   // one grouped notice per document
+        if (touched.length) pushNotif({ to: Object.values(USERS).filter(u => u.roles.includes('modeler')).map(u => u.id), k: 'sys', t: `${d.id} 사전 반영. 사용 중인 항목 ${touched.length}건 변경`, m: `${touched.map(it => it.name).join(', ')} · 사용하는 모델은 [표준 맞추기]에서 다시 판정`, href: 'standardize.html' });   // one grouped notice per document
         if (d.batch) { const bs = getBatches(); const b = bs.find(x => x.id === d.batch); if (b) { b.status = '반영됨'; b.applied = { doc: d.id, ids: (d.items || []).map(it => it.name), at: nowStr() }; saveBatches(bs); } }
-        notifyReq(`${d.id} 반영됨 — ${d.batch ? '반영본 내려받기' : '사전에 반영'}`, d.title + (d.batch ? ' · 엑셀 원본을 반영본으로 맞추세요' : ''));
-        toast(`최종 승인 — 사전에 ${res.applied}건 반영${d.sample ? `(목업 시드: ${d.n}건 중 대표 행만)` : ''}${res.failed.length ? ` · 실패 ${res.failed.length}건` : ''} · 항목 버전이 올라갔습니다(제정차수는 DA 공표 때만)`, res.failed.length ? 'danger' : 'success', d.batch ? { label: '반영본 내려받기', fn: () => toast(`반영본_${d.batch}.xlsx — 새 버전·ID가 들어간 편집용 엑셀`, 'info') } : null);
+        notifyReq(`${d.id} 반영됨. ${d.batch ? '반영본 내려받기' : '사전에 반영'}`, d.title + (d.batch ? ' · 엑셀 원본을 반영본으로 맞추세요' : ''));
+        toast(`최종 승인. 사전에 ${res.applied}건 반영${d.sample ? `(목업 시드: ${d.n}건 중 대표 행만)` : ''}${res.failed.length ? ` · 실패 ${res.failed.length}건` : ''} · 항목 버전이 올라갔습니다(제정차수는 DA 공표 때만)`, res.failed.length ? 'danger' : 'success', d.batch ? { label: '반영본 내려받기', fn: () => toast(`반영본_${d.batch}.xlsx. 새 버전·ID가 들어간 편집용 엑셀`, 'info') } : null);
       }
     } else if (kind === 'reject') {
       addHist(d, { act: '반려', why, step: d.step }); d.step = 'rejected'; saveDocs(docs);
       const rel = releaseDoc(d);   // pending markers of this document are released → the requester can re-request (CL9-07)
-      notifyReq(`${d.id} 반려됨 — 보완 필요`, why);
-      toast(`반려했습니다 — 신청자에게 의견과 함께 알렸습니다${rel ? ` · 사전 항목 ${rel}건의 '진행 중'을 풀었습니다` : ''}`, 'danger');
+      notifyReq(`${d.id} 반려됨. 보완 필요`, why);
+      toast(`반려했습니다. 신청자에게 의견과 함께 알렸습니다${rel ? ` · 사전 항목 ${rel}건의 '진행 중'을 풀었습니다` : ''}`, 'info');
     } else if (kind === 'withdraw') {
       addHist(d, { act: '회수', why }); d.step = 'withdrawn'; saveDocs(docs);
       const rel = releaseDoc(d);
-      toast(d.type === 'model' ? '회수했습니다 — 업무 영역 잠금이 풀려 다시 편집할 수 있습니다' : `회수했습니다${rel ? ` · 사전 항목 ${rel}건의 '진행 중'을 풀었습니다` : ''}`, 'info', d.type === 'model' ? { label: '모델 열기', fn: () => location.href = `model.html?area=${d.area}` } : { label: '보완해서 다시 신청', fn: () => location.href = d.batch ? `excel-import.html?resume=${d.batch}` : d.kind === 'std' ? `standardize.html?area=${d.area || 'rq'}&redo=${d.id}` : `dictionary.html?redo=${d.id}` });
+      toast(d.type === 'model' ? '회수했습니다. 업무 영역 잠금이 풀려 다시 편집할 수 있습니다' : `회수했습니다${rel ? ` · 사전 항목 ${rel}건의 '진행 중'을 풀었습니다` : ''}`, 'info', d.type === 'model' ? { label: '모델 열기', fn: () => location.href = `model.html?area=${d.area}` } : { label: '보완해서 다시 신청', fn: () => location.href = d.batch ? `excel-import.html?resume=${d.batch}` : d.kind === 'std' ? `standardize.html?area=${d.area || 'rq'}&redo=${d.id}` : `dictionary.html?redo=${d.id}` });
     }
     pending = null; drawBoxes(); drawRows(); panel();
     const row = $('rows').querySelector(`tr[data-id="${sel}"]`); if (row) row.focus(); else { const pb = document.querySelector('#pn-doc .rp-head h2'); if (pb) { pb.tabIndex = -1; pb.focus(); } }   // focus returns after the dialog
@@ -295,7 +302,7 @@ window.pageInit = function () {
   $('do-apr').onclick = () => { $('mo-apr').classList.remove('open'); act('approve', $('apr-note').value.trim(), false); };
   $('do-rej').onclick = () => { $('mo-reject').classList.remove('open'); act('reject', $('rej-why').value.trim()); $('rej-why').value = ''; };
   $('do-wd').onclick = () => { $('mo-wd').classList.remove('open'); act('withdraw', $('wd-why').value.trim()); $('wd-why').value = ''; };
-  $('boxes').addEventListener('click', e => { const b = e.target.closest('[data-box]'); if (!b) return; box = b.dataset.box; sel = (list()[0] || {}).id || null; drawBoxes(); drawRows(); panel(); });
+  $('boxes').addEventListener('click', e => { const b = e.target.closest('[data-box]'); if (!b) return; box = b.dataset.box; sel = (list()[0] || {}).id || null; drawBoxes(); drawRows(); panel(); const nb = $('boxes').querySelector(`[data-box="${box}"]`); if (nb) nb.focus(); });
   $('rows').addEventListener('click', e => { const r = e.target.closest('tr[data-id]'); if (!r) return; sel = r.dataset.id; drawRows(); panel(); });
   $('rows').addEventListener('keydown', e => {
     const r = e.target.closest('tr[data-id]'); if (!r) return;
@@ -305,16 +312,16 @@ window.pageInit = function () {
   });
   ['f-type', 'f-step'].forEach(id => $(id).onchange = drawRows); $('f-q').oninput = drawRows;
 
-  // ?new=1&doc=ID — the source screen already created the document (createDoc); we only show it
-  // the success banner only for a real, visible, still-open request of mine — not for any URL with new=1 (CX11-03 · CL11-03)
+  // ?new=1&doc=ID. the source screen already created the document (createDoc); we only show it
+  // the success banner only for a real, visible, still-open request of mine. not for any URL with new=1 (CX11-03 · CL11-03)
   const nd = q.get('new') && q.get('doc') ? docs.find(x => x.id === q.get('doc')) : null;
   if (q.get('new') && q.get('doc') && !(nd && canSeeDoc(nd) && nd.req === ME.id && ['da', 'final'].includes(nd.step))) {
     $('new-banner').hidden = false;
-    $('new-banner').innerHTML = `<div class="banner ${nd ? 'info' : 'danger'}"><span>${nd ? 'ℹ' : '!'}</span><div class="grow">${nd && canSeeDoc(nd) ? `<b>${nd.id}</b>는 지금 ${STEP_NAME[nd.step]} 상태입니다 — 새 신청 결과 화면이 아닙니다.` : `<b>${q.get('doc')}</b> 신청을 찾을 수 없거나 볼 수 없습니다 — 신청이 만들어지지 않았을 수 있습니다. 내 신청에서 확인하세요.`}</div></div>`;
+    $('new-banner').innerHTML = `<div class="banner ${nd ? '' : 'danger'}">${icon(nd ? 'info' : 'err')}<div class="grow">${nd && canSeeDoc(nd) ? `<b>${nd.id}</b>는 지금 ${STEP_NAME[nd.step]} 상태입니다. 새 신청 결과 화면이 아닙니다.` : `<b>${q.get('doc')}</b> 신청을 찾을 수 없거나 볼 수 없습니다. 신청이 만들어지지 않았을 수 있습니다. 내 신청에서 확인하세요.`}</div></div>`;
   } else if (q.get('new') && q.get('doc')) {
     const id = q.get('doc'), d = nd;
     $('new-banner').hidden = false;
-    $('new-banner').innerHTML = `<div class="banner success"><span>✓</span><div class="grow"><b>${id} ${q.get('dup') ? '이미 신청돼 있습니다' : '신청됨'}</b> — ${d ? d.title : ''}. ${q.get('dup') ? '같은 내용의 진행 중 신청이 있어 새로 만들지 않았습니다.' : ME.has('da') ? 'DA 역할도 있어 바로 대기함에 들어왔습니다. 직접 승인하면 ‘자기 승인’으로 남습니다.' : 'DA에게 알렸습니다.'}</div></div>`;
+    $('new-banner').innerHTML = `<div class="banner">${icon('check')}<div class="grow"><b>${id} ${q.get('dup') ? '이미 신청돼 있습니다' : '신청됨'}</b>. ${d ? d.title : ''}. ${q.get('dup') ? '같은 내용의 진행 중 신청이 있어 새로 만들지 않았습니다.' : ME.has('da') ? 'DA 역할도 있어 바로 대기함에 들어왔습니다. 직접 승인하면 ‘자기 승인’으로 남습니다.' : 'DA에게 알렸습니다.'}</div></div>`;
     box = ME.has('da') ? 'queue' : 'mine';
   }
   if (q.get('doc')) { sel = q.get('doc'); const d = docs.find(x => x.id === sel); if (d && !BOX[box][1](d)) box = BOX.queue[1](d) ? 'queue' : BOX.mine[1](d) ? 'mine' : BOX.cc[1](d) ? 'cc' : 'all'; }

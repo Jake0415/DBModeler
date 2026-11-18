@@ -9,99 +9,29 @@
 <link rel="stylesheet" href="assets/app.css">
 <script src="assets/app.js"></script>
 <style>
-  .hsec { margin-bottom:20px; }
-  .hsec > .st { display:flex; align-items:baseline; gap:8px; margin:0 0 8px; }
-  .hsec > .st h2 { font-size:15px; margin:0; }
-  .hcard { border:1px solid var(--border); border-radius:8px; background:var(--surface); }
-  .hcard .hh { display:flex; align-items:center; gap:8px; padding:12px 16px; border-bottom:1px solid var(--border); }
-  .hcard .hh h3 { font-size:14px; margin:0; }
-  .hcard .hb { padding:12px 16px; }
-  /* today's work */
-  .todo { display:grid; grid-template-columns:repeat(auto-fill, minmax(230px, 1fr)); gap:12px; }
-  .tcard { border:1px solid var(--border); border-left:4px solid var(--border-strong); border-radius:8px; background:var(--surface); padding:12px 14px; display:flex; flex-direction:column; gap:6px; color:var(--fg); text-decoration:none; }
-  .tcard:hover { border-color:var(--border-strong); background:var(--surface-2); }
-  .tcard.wait { border-left-color:var(--info); }
-  .tcard.mine { border-left-color:var(--violet); }
-  .tcard.late { border-left-color:var(--danger); }
-  .tcard .k { font-size:12px; color:var(--fg-2); display:flex; gap:6px; align-items:center; }
-  .tcard .n { font-size:26px; font-weight:700; line-height:1.1; font-variant-numeric:tabular-nums; }
-  .tcard .n small { font-size:13px; font-weight:500; color:var(--fg-2); margin-left:4px; }
-  .tcard .d { font-size:12px; color:var(--fg-2); min-height:18px; }
-  .tcard .go { font-size:12px; font-weight:600; margin-top:auto; }
-  .tcard.late .d b { color:var(--danger); }
-  .todo-empty { border:1px dashed var(--border); border-radius:8px; padding:16px; color:var(--fg-2); font-size:13px; }
-  /* KPI */
-  .kpi { display:grid; grid-template-columns:repeat(5, minmax(0, 1fr)); gap:12px; }
-  @media (max-width:1300px) { .kpi { grid-template-columns:repeat(3, minmax(0, 1fr)); } }
-  .kt { border:1px solid var(--border); border-radius:8px; background:var(--surface); padding:12px 14px; color:var(--fg); text-decoration:none; display:flex; flex-direction:column; gap:6px; min-height:132px; }
-  .kt:hover { border-color:var(--border-strong); }
-  .kt .k { font-size:12px; color:var(--fg-2); }
-  .kt .v { font-size:28px; font-weight:700; line-height:1.1; font-variant-numeric:tabular-nums; }
-  .kt .v small { font-size:13px; font-weight:500; color:var(--fg-2); margin-left:4px; }
-  .kt .s { font-size:12px; color:var(--fg-2); }
-  .kt .s .bad { color:var(--danger); font-weight:600; }
-  .kt .s .good { color:var(--success-deep); font-weight:600; }
-  .stack { display:flex; height:10px; border-radius:5px; overflow:hidden; background:var(--surface-2); }
-  .stack > i { display:block; height:100%; }
-  .legend { display:flex; flex-wrap:wrap; gap:4px 10px; font-size:12px; color:var(--fg-2); }
-  .legend i { display:inline-block; width:8px; height:8px; border-radius:2px; margin-right:4px; vertical-align:0; }
-  .spark { width:100%; height:30px; }
-  /* stats */
-  .sgrid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
-  @media (max-width:1200px) { .sgrid { grid-template-columns:1fr; } }
-  .bar-row { display:grid; grid-template-columns:120px 1fr 92px; gap:10px; align-items:center; font-size:13px; padding:5px 0; }
-  .bar-row .lb { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  .bar-row .tr { position:relative; height:14px; background:var(--surface-2); border-radius:3px; }
-  .bar-row .tr > i { position:absolute; left:0; top:0; bottom:0; border-radius:3px; }
-  .bar-row .tr > .goal { position:absolute; top:-3px; bottom:-3px; width:0; border-left:2px dashed var(--fg); }
-  .bar-row .vv { text-align:right; font-variant-numeric:tabular-nums; color:var(--fg-2); font-size:12px; }
-  .bar-row .vv b { color:var(--fg); font-size:13px; }
-  a.bar-row { color:var(--fg); text-decoration:none; border-radius:4px; }
-  a.bar-row:hover { background:var(--surface-2); }
-  .cols { display:flex; align-items:flex-end; gap:10px; height:120px; padding-top:8px; }
-  .cols .c { flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; height:100%; justify-content:flex-end; font-size:11px; color:var(--fg-2); }
-  .cols .c .b { width:100%; max-width:38px; display:flex; flex-direction:column-reverse; border-radius:3px 3px 0 0; overflow:hidden; background:var(--surface-2); }
-  .cols .c .b i { display:block; }
-  .cols .c .pub { color:var(--violet-deep); font-weight:600; }
-  .tbl-s { width:100%; border-collapse:collapse; font-size:13px; }
-  .tbl-s td { padding:7px 4px; border-bottom:1px solid var(--border); }
-  .tbl-s tr:last-child td { border-bottom:0; }
-  .tbl-s a { color:var(--fg); }
-  /* stepper */
-  .prow { display:grid; grid-template-columns:minmax(150px, 1.1fr) minmax(320px, 2fr) minmax(170px, 1fr) minmax(150px, auto); gap:14px; align-items:center; padding:10px 0; border-bottom:1px solid var(--border); font-size:13px; }
-  .prow:last-child { border-bottom:0; }
-  .prow .nm a { font-weight:600; color:var(--fg); }
-  .prow .nm .caption { display:block; }
-  .stp { display:flex; align-items:center; gap:0; }
-  .stp .s { display:flex; align-items:center; gap:5px; font-size:12px; color:var(--fg-3); white-space:nowrap; }
-  .stp .s .dot { width:16px; height:16px; border-radius:50%; border:2px solid var(--border-strong); background:var(--surface); flex:0 0 auto; display:inline-flex; align-items:center; justify-content:center; font-size:10px; color:var(--on-ink); }
-  .stp .s.done { color:var(--fg-2); }
-  .stp .s.done .dot { background:var(--success); border-color:var(--success); }
-  .stp .s.cur { color:var(--fg); font-weight:600; }
-  .stp .s.cur .dot { border-color:var(--info); box-shadow:0 0 0 3px var(--info-soft); background:var(--info); }
-  .stp .s.bad .dot { border-color:var(--danger); background:var(--danger); box-shadow:0 0 0 3px var(--danger-soft); }
-  .stp .ln { flex:1; min-width:14px; height:2px; background:var(--border); margin:0 6px; }
-  .stp .ln.done { background:var(--success); }
-  .gauge { display:flex; align-items:center; gap:8px; font-size:12px; color:var(--fg-2); }
-  .gauge .tr { position:relative; flex:1; height:8px; border-radius:4px; background:var(--surface-2); }
-  .gauge .tr > i { position:absolute; left:0; top:0; bottom:0; border-radius:4px; }
-  .gauge .tr > .goal { position:absolute; top:-3px; bottom:-3px; border-left:2px dashed var(--fg); }
-  .gauge b { color:var(--fg); font-variant-numeric:tabular-nums; }
-  .note { font-size:12px; color:var(--fg-2); }
-  .note .warn { color:var(--danger); }
-  .foot { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
-  .seed-tag { font-size:11px; color:var(--fg-3); }
+  /* 8:4 asymmetric — work on the left, the ledger on the right (08 §10) */
+  .hl { display:grid; grid-template-columns:minmax(0, 8fr) minmax(0, 4fr); gap:32px; padding:24px 32px 32px; }
+  .hl.lf { grid-template-columns:minmax(0, 4fr) minmax(0, 8fr); }
+  .hl > div { min-width:0; }
+  .ok-line { font-size:12px; color:var(--fg-3); padding-top:8px; }
+  .reasons { margin:8px 0 0; padding-left:20px; font-size:13px; line-height:28px; }
+  .reasons li::marker { font-family:var(--font-mono); color:var(--fg-3); }
+  .cols6 { display:grid; grid-template-columns:repeat(6, 1fr); gap:8px; align-items:end; height:96px; margin-top:12px; }
+  .cols6 .c { display:flex; flex-direction:column; align-items:stretch; gap:4px; height:100%; justify-content:flex-end; font:400 11px var(--font-mono); color:var(--fg-3); text-align:left; }
+  .cols6 .c i { display:block; background:var(--border-strong); min-height:1px; }
+  .cols6 .c.pub i { background:var(--accent); }
+  .cols6 .c b { font-weight:500; color:var(--fg-2); }
+  .page-header .d { font:400 13px var(--font-mono); color:var(--fg-3); }
 </style>
 </head>
 <body data-page="home">
 <div id="app">
 <div id="content" class="page">
   <div class="page-header">
-    <h1 id="hello">안녕하세요</h1>
-    <span class="role-tag" id="roles"></span>
+    <h1>홈</h1><span class="d" id="today"></span>
     <div class="actions"><span class="caption muted" id="dictver"></span></div>
   </div>
-  <div class="scroll"><div class="pad" id="home"></div></div>
+  <div class="scroll"><div id="home"></div></div>
 </div>
 </div>
 <script>
@@ -109,159 +39,130 @@ window.pageInit = function () {
   const $ = id => document.getElementById(id);
   const docs = getDocs(), org = getOrg(), models = getModels();
   const GOAL = org.goal || 90, SLA = org.sla || 3;
-  $('hello').textContent = `${ME.name}님, 안녕하세요`;
-  $('roles').innerHTML = roleBadges(ME);
-  $('dictver').textContent = `사전 기준 · 공통표준 2025.11 · 기관 사전 제정 ${getPub().cha}차(${getPub().at.slice(5, 10).replace('-', '/')} 공표)`;
-
-  /* ---- time: the mock's reference day; ages are counted from the time the document reached its current step ---- */
-  const TODAY = new Date(2026, 10, 19);
-  const toDate = s => { if (!s) return null; let m = /(\d{4})-(\d{2})-(\d{2})/.exec(s); if (m) return new Date(+m[1], m[2] - 1, +m[3]); m = /(\d{1,2})\/(\d{1,2})/.exec(s); return m ? new Date(2026, m[1] - 1, +m[2]) : null; };
-  const days = (a, b) => Math.max(0, Math.round(((b || TODAY) - a) / 864e5));
-  const stepSince = d => { const h = (d.hist || []).filter(x => x.at); return toDate(h.length ? h[h.length - 1].at : d.date) || TODAY; };
-  const age = d => days(stepSince(d));
+  const T0 = MOCK_TODAY;
+  $('today').textContent = `${T0.getMonth() + 1}/${T0.getDate()}(${'일월화수목금토'[T0.getDay()]})`;
+  $('dictver').textContent = `공통표준 2025.11 · 기관 사전 제정 ${getPub().cha}차`;
+  const days = (a, b) => Math.max(0, Math.round(((b || T0) - a) / 864e5));
   const live = docs.filter(d => ['da', 'final'].includes(d.step));
-  const late = d => age(d) >= SLA;
+  const lead = ME.has('admin') ? 'admin' : ME.has('da') ? 'da' : ME.has('owner') ? 'owner' : 'modeler';
+  const showStats = lead !== 'modeler';
 
-  /* ---- areas: one compliance function (compOf) and one lock judgement (modelLock) — same numbers as model / system ERD / outputs ---- */
+  /* ---- areas: compOf / modelLock / linkState — same numbers as the model screen ---- */
   const AREAS = Object.entries(models).map(([id, m]) => {
     const L = modelLock(id); const mo = L.state !== 'edit' && L.doc && L.doc.model ? L.doc.model : modelOf(id, m.ver);
-    const C = compOf(mo);
-    const linked = []; (mo.E || []).forEach(e => { if (e.st && e.reqDoc) linked.push(e.reqDoc); e.a.forEach(a => { if (a.s === 'req' && a.reqDoc) linked.push(a.reqDoc); }); });
+    const C = compOf(mo); if (L.state === 'edit') { const ended = reqEnded(mo).length; if (ended) { C.bad += ended; C.rate = C.tot ? Math.floor((C.tot - C.bad) / C.tot * 100) : 0; } } const linked = [];
+    (mo.E || []).forEach(e => { if (e.st && e.reqDoc) linked.push(e.reqDoc); e.a.forEach(a => { if (a.s === 'req' && a.reqDoc) linked.push(a.reqDoc); }); });
     const open = [...new Set(linked)].filter(x => linkState(x).s === 'live');
     const ents = (mo.E || []).filter(e => !e.ref).length;
-    // lifecycle: 작업 → 표준 맞추기 → 검토 → 확정
-    const stage = L.state === 'confirmed' ? 4 : L.state === 'review' ? 2 : !ents ? 0 : C.bad > 0 ? 1 : 2;
+    const stage = L.state === 'confirmed' ? '확정' : L.state === 'review' ? '검토' : !ents ? '작업' : C.bad ? '표준 맞추기' : '확정 신청 전';
     return { id, m, L, C, open, ents, stage, sys: m.sys || '요구사항관리', dbms: m.dbms || 'Oracle' };
   });
-  const tot = AREAS.reduce((n, a) => n + a.C.tot, 0), ok = AREAS.reduce((n, a) => n + a.C.tot - a.C.bad, 0);
-  const RATE = tot ? Math.floor(ok / tot * 100) : 0;
-  const myAreas = AREAS.filter(a => ME.has('modeler') && (ME.systems.includes('전체') || ME.systems.includes(a.sys)));
+  const tot = AREAS.reduce((n, a) => n + a.C.tot, 0), okN = AREAS.reduce((n, a) => n + a.C.tot - a.C.bad, 0);
+  const RATE = tot ? Math.floor(okN / tot * 100) : 0;
+  const myAreas = AREAS.filter(a => ME.systems.includes('전체') || ME.systems.includes(a.sys));
+  const areaList = lead === 'modeler' ? myAreas : AREAS;
 
-  /* ---- today's work: others waiting on me first, then my own work ---- */
+  /* ---- today's work: one table, others waiting on me first ---- */
   const T = [];
   const q = myQueue(docs);
-  if (ME.has('da') || ME.has('owner')) {
-    const lt = q.filter(late), old = q.length ? Math.max(...q.map(age)) : 0;
-    T.push({ cls: lt.length ? 'late' : 'wait', k: '결재 대기 · 내 차례', n: q.length, u: '건', d: q.length ? (lt.length ? `<b>기한 ${SLA}일 넘김 ${lt.length}건</b> · 가장 오래 ${old}일` : `가장 오래 ${old}일 · 기한 ${SLA}일`) : '지금 처리할 결재가 없습니다', go: '결재함에서 처리', href: 'approvals.html?box=queue', w: 100 + lt.length });
-  }
+  const oldest = L => L.length ? Math.max(...L.map(docAge)) : null;
+  if (ME.has('da') || ME.has('owner')) { const lt = q.filter(docLate); T.push({ w: 100 + lt.length, t: '결재 대기 · 내 차례', n: q.length, old: oldest(q), st: lt.length ? tag('err', `기한 넘김 ${lt.length}`) : '', go: ['결재함', 'approvals.html?box=queue'] }); }
   if (ME.has('da')) {
-    const n = candOpenCount();
-    T.push({ cls: 'wait', k: '후보 큐 · DA 판단 대기', n, u: '건', d: n ? '모델러가 등록한 미등록 단어·용어' : '대기 중인 후보가 없습니다', go: '후보 큐 열기', href: 'candidates.html', w: 90 });
-    const fail = live.filter(d => (d.hist || []).some(h => /재검사 실패/.test(h.act || '')));
-    if (fail.length) T.push({ cls: 'late', k: '재검사 실패 · 신청자 보완 필요', n: fail.length, u: '건', d: fail.map(d => d.id).join(', '), go: '문서 열기', href: `approvals.html?doc=${fail[0].id}`, w: 95 });
+    const c = getCands().filter(x => candState(x) === '대기'); T.push({ w: 90, t: '후보 큐 · 판단 대기', n: c.length, old: null, st: '', go: ['후보 큐', 'candidates.html'] });
+    const fail = live.filter(d => (d.hist || []).some(h => /재검사 실패/.test(h.act || ''))); if (fail.length) T.push({ w: 95, t: '재검사 실패 · 신청자 보완', n: fail.length, old: oldest(fail), st: tag('err', '실패'), go: [fail[0].id, `approvals.html?doc=${fail[0].id}`] });
   }
   if (ME.has('admin')) {
     const rq = Object.values(USERS).map(u => { try { const r = JSON.parse(dbmStore.get('dbm-rolereq-' + u.id) || 'null'); return r ? Object.assign({ u }, r) : null; } catch (e) { return null; } }).filter(Boolean);
-    if (rq.length) T.push({ cls: 'wait', k: '역할 요청 · Admin 처리', n: rq.length, u: '건', d: rq.map(r => `${r.u.name} → ${r.role}`).join(', '), go: '사용자·역할에서 처리', href: `settings.html?user=${rq[0].u.id}`, w: 92 });
-    const allLate = live.filter(late);
-    T.push({ cls: allLate.length ? 'late' : 'wait', k: `기한 넘긴 결재 · 기관 전체`, n: allLate.length, u: '건', d: allLate.length ? `가장 오래 ${Math.max(...allLate.map(age))}일 · ${allLate.slice(0, 3).map(d => d.id.slice(-4)).join(', ')}` : `기한(${SLA}일) 안에 처리되고 있습니다`, go: '오래 머무는 문서 보기', href: '#stale', w: 80 + allLate.length });
+    T.push({ w: 92, t: '역할 요청', n: rq.length, old: null, st: '', go: rq.length ? [rq[0].u.name, `settings.html?user=${rq[0].u.id}`] : ['사용자·역할', 'settings.html'] });
+    const al = live.filter(docLate); T.push({ w: 80 + al.length, t: '기한 넘긴 결재 · 기관 전체', n: al.length, old: oldest(al), st: al.length ? tag('err', `${SLA}일 넘김`) : '', go: ['오래 머무는 결재', '#stale'] });
   }
   if (ME.has('modeler')) {
-    const badA = myAreas.filter(a => a.L.state === 'edit' && a.C.bad > 0); const nb = badA.reduce((n, a) => n + a.C.bad, 0);
-    if (myAreas.length) T.push({ cls: 'mine', k: '미준수 · 내 업무 영역', n: nb, u: '건', d: badA.length ? badA.map(a => `${a.m.name} ${a.C.bad}`).join(' · ') : '모든 작업 영역이 표준을 지킵니다', go: badA.length ? '표준 맞추기' : '업무 영역 보기', href: badA.length ? `standardize.html?area=${badA[0].id}` : '#areas', w: 60 + nb });
-    const blk = myAreas.filter(a => a.L.state === 'edit' && a.open.length);
-    if (blk.length) { const ids = [...new Set(blk.flatMap(a => a.open))]; T.push({ cls: 'mine', k: '확정 막힘 · 연결 신청 진행 중', n: ids.length, u: '건', d: ids.join(', ') + ' — 끝나야 모델 최종 확정', go: `${ids[0]} 열기`, href: `approvals.html?doc=${ids[0]}`, w: 70 }); }
+    const bad = myAreas.filter(a => a.L.state === 'edit' && a.C.bad > 0); const nb = bad.reduce((n, a) => n + a.C.bad, 0);
+    T.push({ w: 60 + nb, t: '미준수 · 내 업무 영역', n: nb, old: null, st: '', go: bad.length ? ['표준 맞추기', `standardize.html?area=${bad[0].id}`] : ['업무 영역', '#areas'] });
+    const blk = [...new Set(myAreas.filter(a => a.L.state === 'edit').flatMap(a => a.open))];
+    if (blk.length) T.push({ w: 70, t: '확정 전 완료할 연결 신청', n: blk.length, old: null, st: '', go: [blk[0], `approvals.html?doc=${blk[0]}`] });
   }
   const fix = docs.filter(d => d.req === ME.id && docGroup(d) === 'fix');
-  if (fix.length) T.push({ cls: 'late', k: '보완 필요 · 내 신청', n: fix.length, u: '건', d: fix.map(d => `${d.id} ${STEP_NAME[d.step]}`).join(', '), go: '내 신청 열기', href: 'approvals.html?box=mine', w: 85 });
-  const mineLive = docs.filter(d => d.req === ME.id && docGroup(d) === 'live');
-  if (mineLive.length) T.push({ cls: '', k: '진행 중 · 내 신청', n: mineLive.length, u: '건', d: `DA ${mineLive.filter(d => d.step === 'da').length} · 최종 ${mineLive.filter(d => d.step === 'final').length}`, go: '진행 단계 보기', href: '#mine', w: 10 });
+  T.push({ w: 85, t: '보완 필요 · 내 신청', n: fix.length, old: null, st: fix.length ? tag('err', '반려·회수') : '', go: fix.length ? [fix[0].id, `approvals.html?doc=${fix[0].id}`] : ['내 신청', 'approvals.html?box=mine'] });
   T.sort((a, b) => b.w - a.w);
-  const todoHtml = () => { const act = T.filter(t => t.n > 0 || t.cls === 'late'); const rest = T.filter(t => !act.includes(t));
-    return `<section class="hsec"><div class="st"><h2>오늘 할 일</h2><span class="caption muted">남이 기다리는 일 먼저 · 기한 ${SLA}일을 넘기면 빨간색</span></div>
-      ${act.length ? `<div class="todo">${act.map(t => `<a class="tcard ${t.cls}" href="${t.href}"><span class="k">${t.k}</span><span class="n">${t.n}<small>${t.u}</small></span><span class="d">${t.d}</span><span class="go">${t.go} →</span></a>`).join('')}</div>` : `<div class="todo-empty">처리할 일이 없습니다. ${mineDone()}</div>`}
-      ${rest.length ? `<div class="caption muted" style="margin-top:8px">문제 없음: ${rest.map(t => t.k.split(' · ')[0]).join(' · ')}</div>` : ''}</section>`; };
-  const mineDone = () => { const d = docs.filter(x => x.req === ME.id && x.step === 'done').slice(0, 3); return d.length ? '최근 완료: ' + d.map(x => `<a href="approvals.html?doc=${x.id}">${x.id}</a>`).join(', ') : ''; };
+  const act = T.filter(t => t.n > 0), calm = T.filter(t => !t.n);
+  const todo = `<section class="sec"><div class="sec-h"><h2>오늘 할 일</h2></div>
+    ${act.length ? `<table class="tbl plain"><thead><tr><th>할 일</th><th class="r">건수</th><th class="r">가장 오래</th><th>상태</th><th class="r">바로 가기</th></tr></thead><tbody>${act.map(t => `<tr><td>${t.t}</td><td class="r mono">${t.n}</td><td class="r mono">${t.old == null ? '' : t.old + '일'}</td><td>${t.st}</td><td class="r"><a href="${t.go[1]}">${t.go[0]}</a></td></tr>`).join('')}</tbody></table>` : '<div class="ok-line" style="padding:12px 0">처리할 일이 없습니다.</div>'}
+    ${calm.length ? `<div class="ok-line">문제 없음: ${calm.map(t => t.t.split(' · ')[0]).join(', ')}</div>` : ''}</section>`;
 
-  /* ---- KPI tiles ---- */
-  const C_OK = 'var(--success)', C_INFO = 'var(--info)', C_BAD = 'var(--danger)', C_VI = 'var(--violet)', C_MUT = 'var(--border-strong)';
-  const spark = (vals, goal) => { const w = 200, h = 30, mn = Math.min(...vals, goal) - 4, mx = Math.max(...vals, goal) + 2; const X = i => i * w / (vals.length - 1), Y = v => h - (v - mn) / (mx - mn) * h;
-    return `<svg class="spark" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" aria-hidden="true"><line x1="0" x2="${w}" y1="${Y(goal)}" y2="${Y(goal)}" stroke="var(--fg-3)" stroke-dasharray="3 3" stroke-width="1"/><polyline fill="none" stroke="var(--ink)" stroke-width="2" points="${vals.map((v, i) => `${X(i)},${Y(v)}`).join(' ')}"/><circle cx="${X(vals.length - 1)}" cy="${Y(vals[vals.length - 1])}" r="3" fill="var(--ink)"/></svg>`; };
-  const trend = [Math.max(0, RATE - 13), Math.max(0, RATE - 9), Math.max(0, RATE - 4), RATE];   // weekly snapshots — seed until the weekly snapshot job exists
-  const doneDocs = docs.filter(d => d.step === 'done' && (d.hist || []).length);
-  const lead = doneDocs.length ? (doneDocs.reduce((n, d) => n + days(toDate(d.date), toDate(d.hist[d.hist.length - 1].at)), 0) / doneDocs.length) : 0;
-  const st = { edit: AREAS.filter(a => a.L.state === 'edit').length, review: AREAS.filter(a => a.L.state === 'review').length, conf: AREAS.filter(a => a.L.state === 'confirmed').length };
+  /* ---- business areas: a table, not steppers ---- */
+  const areas = `<section class="sec" id="areas"><div class="sec-h"><h2>업무 영역</h2><a class="end" href="system.html">시스템 홈</a></div>
+    <table class="tbl plain"><thead><tr><th>영역</th><th>시스템</th><th>단계</th><th class="r">준수율</th><th class="r">미준수</th><th>다음 행동</th></tr></thead><tbody>${areaList.map(a => {
+      const below = a.C.rate < GOAL;
+      const next = a.L.state === 'review' ? `<a href="approvals.html?doc=${a.L.doc.id}">${a.L.doc.id}</a> ${docLate(a.L.doc) ? tag('err', docAge(a.L.doc) + '일') : `<span class="muted">${STEP_NAME[a.L.doc.step]} ${docAge(a.L.doc)}일</span>`}`
+        : a.L.state === 'confirmed' ? `<a href="model.html?area=${a.id}">다음 버전 시작</a>`
+        : !a.ents ? `<a href="model.html?area=${a.id}">모델 시작</a>`
+        : a.C.bad ? `<a href="standardize.html?area=${a.id}">표준 맞추기</a>`
+        : a.open.length ? `<span class="muted">${a.open.join(', ')} 완료 후 확정</span>` : `<a href="model.html?area=${a.id}">확정 신청</a>`;
+      return `<tr><td><a href="model.html?area=${a.id}">${a.m.name}</a></td><td class="muted">${a.sys} <span class="mono faint">${a.dbms}</span></td><td>${a.L.state === 'review' ? tag('run', '검토') : a.L.state === 'confirmed' ? tag('ok', '확정') : `<span class="muted">${a.stage}</span>`}</td><td class="r"><span class="mono">${a.C.rate}%</span><span class="mbar${below ? ' bad' : ''}"><i style="width:${a.C.rate}%"></i><b style="left:${GOAL}%"></b></span></td><td class="r mono">${a.C.bad || ''}</td><td>${next}</td></tr>`; }).join('') || '<tr><td colspan="6" class="muted">담당 업무 영역이 없습니다.</td></tr>'}</tbody></table>
+    <div class="ok-line">막대의 세로 눈금은 목표 준수율 ${GOAL}%입니다.</div></section>`;
+
+  /* ---- ledger (right): value · basis · gap ---- */
+  const lt = live.filter(docLate);
+  const done = docs.filter(d => d.step === 'done' && (d.hist || []).length);
+  const leadT = done.length ? done.reduce((n, d) => n + days(toDay(d.date), toDay(d.hist[d.hist.length - 1].at)), 0) / done.length : 0;
+  const st = { conf: AREAS.filter(a => a.L.state === 'confirmed').length, rev: AREAS.filter(a => a.L.state === 'review').length };
   const dict = getDict().filter(x => x.ver > 0 || x.st === '사용');
-  const dk = k => dict.filter(x => x.k === k).length;
   const month = dict.filter(x => (x.dt || '').startsWith('2026-11')).length;
-  const cands = getCands(); const cs = s => cands.filter(c => candState(c) === s).length;
-  const kpiHtml = () => `<section class="hsec"><div class="st"><h2>현황</h2><span class="caption muted">숫자를 누르면 해당 화면으로 · 모델·결재·사전 화면과 같은 계산</span></div><div class="kpi">
-    <a class="kt" href="#areas"><span class="k">표준 준수율 · 전체 업무 영역</span><span class="v">${RATE}<small>%</small></span>${spark(trend, GOAL)}<span class="s">목표 ${GOAL}% · ${RATE >= GOAL ? '<span class="good">달성</span>' : `<span class="bad">${GOAL - RATE}%p 부족</span>`} · 미준수 ${AREAS.reduce((n, a) => n + a.C.bad, 0)}건 <span class="seed-tag">(추세: 목업 시드)</span></span></a>
-    <a class="kt" href="approvals.html${ME.has('da') || ME.has('owner') ? '?box=queue' : '?box=mine'}"><span class="k">결재 진행 · 기관 전체</span><span class="v">${live.length}<small>건 진행 중</small></span><div class="stack"><i style="width:${live.length ? live.filter(d => d.step === 'da').length / live.length * 100 : 0}%;background:${C_INFO}"></i><i style="width:${live.length ? live.filter(d => d.step === 'final').length / live.length * 100 : 0}%;background:${C_VI}"></i></div><span class="legend"><span><i style="background:${C_INFO}"></i>DA ${live.filter(d => d.step === 'da').length}</span><span><i style="background:${C_VI}"></i>최종 ${live.filter(d => d.step === 'final').length}</span></span><span class="s">평균 처리 ${lead.toFixed(1)}일 · ${live.filter(late).length ? `<span class="bad">기한 넘김 ${live.filter(late).length}</span>` : '기한 넘김 0'}</span></a>
-    <a class="kt" href="#areas"><span class="k">모델 진행 · 업무 영역 ${AREAS.length}개</span><span class="v">${st.conf}<small>/ ${AREAS.length} 확정</small></span><div class="stack"><i style="width:${st.conf / AREAS.length * 100}%;background:${C_OK}"></i><i style="width:${st.review / AREAS.length * 100}%;background:${C_INFO}"></i><i style="width:${st.edit / AREAS.length * 100}%;background:${C_MUT}"></i></div><span class="legend"><span><i style="background:${C_OK}"></i>확정 ${st.conf}</span><span><i style="background:${C_INFO}"></i>검토 중 ${st.review}</span><span><i style="background:${C_MUT}"></i>작업 중 ${st.edit}</span></span></a>
-    <a class="kt" href="dictionary.html"><span class="k">표준 사전 · 기관+공통</span><span class="v">${dict.length}<small>항목</small></span><span class="legend"><span>단어 <b>${dk('word')}</b></span><span>용어 <b>${dk('term')}</b></span><span>도메인 <b>${dk('domain')}</b></span></span><span class="s">이번 달 등록·변경 <b>${month}</b> · 제정 ${getPub().cha}차</span></a>
-    <a class="kt" href="candidates.html"><span class="k">후보 큐 · 미등록 단어·용어</span><span class="v">${cs('대기')}<small>건 대기</small></span><div class="stack"><i style="width:${cands.length ? cs('대기') / cands.length * 100 : 0}%;background:${C_BAD}"></i><i style="width:${cands.length ? cs('신청 전환') / cands.length * 100 : 0}%;background:${C_INFO}"></i><i style="width:${cands.length ? cs('등록 완료') / cands.length * 100 : 0}%;background:${C_OK}"></i></div><span class="legend"><span><i style="background:${C_BAD}"></i>대기 ${cs('대기')}</span><span><i style="background:${C_INFO}"></i>신청 전환 ${cs('신청 전환')}</span><span><i style="background:${C_OK}"></i>등록 ${cs('등록 완료')}</span></span></a>
-  </div></section>`;
+  const candN = getCands().filter(x => candState(x) === '대기').length;
+  const judge = (bad, txt) => `<td class="gap ${bad ? 'bad' : 'ok'}">${txt}</td>`;
+  const ledger = `<section class="sec"><div class="sec-h"><h2>현황</h2></div>
+    <table class="tbl plain ledger"><thead><tr><th>항목</th><th class="r">값</th><th>기준</th><th class="r">판정</th></tr></thead><tbody>
+      <tr><td><a href="#areas">표준 준수율</a></td><td class="v">${RATE}%</td><td class="muted">목표 ${GOAL}%</td>${judge(RATE < GOAL, RATE < GOAL ? (GOAL - RATE) + '%p 부족' : '충족')}</tr>
+      <tr><td><a href="#stale">기한 넘긴 결재</a></td><td class="v">${lt.length}</td><td class="muted">0건</td>${judge(lt.length > 0, lt.length ? lt.length + '건 넘김' : '충족')}</tr>
+      <tr><td>평균 처리 기간</td><td class="v">${leadT.toFixed(1)}일</td><td class="muted">${SLA}일 이내</td>${judge(leadT > SLA, leadT > SLA ? (leadT - SLA).toFixed(1) + '일 초과' : '충족')}</tr>
+      <tr><td><a href="approvals.html${ME.has('da') || ME.has('owner') ? '?box=all' : '?box=mine'}">진행 중 결재</a></td><td class="v">${live.length}</td><td class="muted"></td><td class="gap ok"></td></tr>
+      <tr><td><a href="#areas">확정된 업무 영역</a></td><td class="v">${st.conf}/${AREAS.length}</td><td class="muted"></td><td class="gap ok">검토 중 ${st.rev}</td></tr>
+      <tr><td><a href="dictionary.html">표준 사전 항목</a></td><td class="v">${dict.length}</td><td class="muted"></td><td class="gap ok">이번 달 ${month}건 변경</td></tr>
+      <tr><td><a href="candidates.html">후보 큐 대기</a></td><td class="v">${candN}</td><td class="muted"></td><td class="gap ok"></td></tr>
+    </tbody></table></section>`;
 
-  /* ---- statistics (DA · owner · Admin) ---- */
-  const statsHtml = () => {
-    // approval funnel with dwell days
-    const all = docs.filter(d => d.step !== 'withdrawn');
-    const F = [['신청', all.length, ''], ['DA 승인 대기', docs.filter(d => d.step === 'da').length, 'da'], ['최종 승인 대기', docs.filter(d => d.step === 'final').length, 'final'], ['완료(반영)', docs.filter(d => d.step === 'done').length, 'done'], ['반려·회수', docs.filter(d => docGroup(d) === 'fix').length, 'fix']];
-    const fmax = Math.max(...F.map(f => f[1]), 1);
-    const dwell = s => { const x = docs.filter(d => d.step === s); return x.length ? `평균 ${(x.reduce((n, d) => n + age(d), 0) / x.length).toFixed(1)}일 체류` : ''; };
-    const funnel = F.map(([l, n, s]) => `<div class="bar-row"><span class="lb">${l}</span><span class="tr"><i style="width:${n / fmax * 100}%;background:${s === 'fix' ? C_BAD : s === 'done' ? C_OK : s === 'final' ? C_VI : s === 'da' ? C_INFO : C_MUT}"></i></span><span class="vv"><b>${n}</b>${s === 'da' || s === 'final' ? ' · ' + dwell(s).replace('평균 ', '') : ''}</span></div>`).join('');
-    const worst = ['da', 'final'].map(s => ({ s, d: docs.filter(d => d.step === s) })).filter(x => x.d.length).map(x => ({ s: x.s, a: x.d.reduce((n, d) => n + age(d), 0) / x.d.length })).sort((a, b) => b.a - a.a)[0];
-    // compliance by area, grouped by system, with the goal line
-    const bySys = {}; AREAS.forEach(a => (bySys[a.sys] = bySys[a.sys] || []).push(a));
-    const comp = Object.entries(bySys).map(([s, list]) => `<div class="caption muted" style="margin:6px 0 2px">${s} · ${list[0].dbms}</div>` + list.map(a => `<a class="bar-row" href="model.html?area=${a.id}&sys=1"><span class="lb">${a.m.name}</span><span class="tr"><i style="width:${a.C.rate}%;background:${a.C.rate >= GOAL ? C_OK : a.C.rate >= GOAL - 10 ? 'var(--warning)' : C_BAD}"></i><span class="goal" style="left:${GOAL}%"></span></span><span class="vv"><b>${a.C.rate}%</b> · 미준수 ${a.C.bad}</span></a>`).join('')).join('') + `<div class="caption muted" style="margin-top:6px">인사시스템·회계시스템은 아직 모델이 연결되지 않아 집계에서 빠졌습니다 · 점선 = 목표 ${GOAL}%</div>`;
-    // dictionary changes by week (last 6 weeks, from item dates) + publication marker
-    const weeks = []; for (let i = 5; i >= 0; i--) { const end = new Date(TODAY - i * 7 * 864e5), start = new Date(end - 6 * 864e5); weeks.push({ start, end, add: 0, chg: 0 }); }
-    getDict().forEach(x => { const d = toDate(x.dt); if (!d) return; const w = weeks.find(w => d >= w.start && d <= new Date(+w.end + 864e5 - 1)); if (w) (x.ver > 1 ? w.chg++ : w.add++); });
-    const pubD = toDate(getPub().at); const wmax = Math.max(...weeks.map(w => w.add + w.chg), 1);
-    const cols = weeks.map(w => { const isPub = pubD && pubD >= w.start && pubD <= w.end; const h = n => n / wmax * 88; return `<div class="c"><span>${w.add + w.chg || ''}</span><div class="b" style="height:${h(w.add + w.chg) || 2}px"><i style="height:${h(w.add)}px;background:${C_INFO}"></i><i style="height:${h(w.chg)}px;background:${C_VI}"></i></div><span>${w.end.getMonth() + 1}/${w.end.getDate()}</span>${isPub ? '<span class="pub">공표</span>' : '<span>&nbsp;</span>'}</div>`; }).join('');
-    // block reasons: past rejections / failed re-checks + what the shared check finds in open requests now
-    const R = {}; const add = (t, id) => { const k = t.replace(/'[^']*'/g, '‘…’').replace(/\([^)]*\)/g, '').replace(/[A-Z]{1,3}-\d{4}(-\d{4})?/g, '…').replace(/\d+자/g, 'N자').trim(); (R[k] = R[k] || new Set()).add(id); };
-    docs.forEach(d => (d.hist || []).forEach(h => { if (/반려|재검사 실패/.test(h.act || '') && h.why) add(h.why, d.id); }));
-    live.filter(d => d.type === 'dict').forEach(d => { try { checkDictDoc(d).forEach(r => r.problems.forEach(p => add(p, d.id))); } catch (e) {} });
-    const top = Object.entries(R).map(([k, s]) => [k, s.size, [...s]]).sort((a, b) => b[1] - a[1]).slice(0, 5);
-    // stale documents
-    const stale = live.slice().sort((a, b) => age(b) - age(a)).slice(0, 5);
-    return `<section class="hsec"><div class="st"><h2>통계</h2><span class="caption muted">${ME.has('admin') ? 'Admin' : ME.has('da') ? 'DA' : '기관 담당자'}에게만 보입니다</span></div><div class="sgrid">
-      <div class="hcard"><div class="hh"><h3>결재 흐름</h3><span class="grow"></span>${worst ? `<span class="badge ${worst.a >= SLA ? 'b-danger' : 'b-info'}">병목 · ${STEP_NAME[worst.s]} ${worst.a.toFixed(1)}일</span>` : ''}</div><div class="hb">${funnel}<div class="caption muted" style="margin-top:6px">체류일 = 지금 단계에 들어온 뒤 지난 날 · 기준일 11/19 · 기한 ${SLA}일</div></div></div>
-      <div class="hcard"><div class="hh"><h3>업무 영역별 준수율</h3><span class="grow"></span><a class="caption" href="system.html">시스템 홈 →</a></div><div class="hb">${comp}</div></div>
-      <div class="hcard"><div class="hh"><h3>사전 변화 · 최근 6주</h3><span class="grow"></span><span class="legend"><span><i style="background:${C_INFO}"></i>신규</span><span><i style="background:${C_VI}"></i>변경</span></span></div><div class="hb"><div class="cols">${cols}</div><div class="caption muted" style="margin-top:6px">사전 항목의 등록·변경일 기준 · <a href="dict-history.html">변경 내역 →</a></div></div></div>
-      <div class="hcard"><div class="hh"><h3>막힘 사유 상위 ${top.length || ''}</h3><span class="caption muted">지난 반려·재검사 실패 + 진행 중 신청 검사</span></div><div class="hb">${top.length ? `<table class="tbl-s">${top.map(([k, n, ids]) => `<tr><td>${k}</td><td style="text-align:right;white-space:nowrap"><b>${n}</b>건 · ${ids.slice(0, 2).map(id => `<a class="mono" href="approvals.html?doc=${id}">${id.slice(-4)}</a>`).join(' ')}</td></tr>`).join('')}</table><div class="caption muted" style="margin-top:6px">자주 나오는 사유는 검수 기준이나 교육으로 줄입니다 · <a href="settings.html#rules">검수 기준 →</a></div>` : '<div class="caption muted">막힌 신청이 없습니다.</div>'}</div></div>
-      <div class="hcard" id="stale" style="grid-column:1 / -1"><div class="hh"><h3>오래 머무는 결재</h3><span class="caption muted">진행 중 ${live.length}건 중 오래된 순</span><span class="grow"></span><a class="caption" href="approvals.html">결재함 →</a></div><div class="hb"><table class="tbl-s">${stale.map(d => `<tr><td class="mono"><a href="approvals.html?doc=${d.id}">${d.id}</a></td><td>${d.title}</td><td class="caption muted">${USERS[d.req] ? USERS[d.req].name : d.req} 신청</td><td><span class="badge ${d.step === 'final' ? 'b-violet' : 'b-info'}">${STEP_NAME[d.step]} · ${d.step === 'final' ? '기관 담당자' : 'DA'}</span></td><td style="text-align:right;white-space:nowrap">${late(d) ? `<span class="badge b-danger">${age(d)}일 · 기한 넘김</span>` : `<span class="caption muted">${age(d)}일</span>`}</td></tr>`).join('') || '<tr><td class="caption muted">진행 중인 결재가 없습니다.</td></tr>'}</table></div></div>
-    </div></section>`;
-  };
-
-  /* ---- business-area board (lifecycle stepper) ---- */
-  const STG = ['작업', '표준 맞추기', '검토', '확정'];
-  const stepper = (cur, labels, badAt) => `<div class="stp">${labels.map((l, i) => { const c = i < cur ? 'done' : i === cur ? ('cur' + (badAt === i ? ' bad' : '')) : ''; return `${i ? `<span class="ln ${i <= cur ? 'done' : ''}"></span>` : ''}<span class="s ${c}"><span class="dot">${i < cur ? '✓' : ''}</span>${l}</span>`; }).join('')}</div>`;
-  const areasHtml = list => `<section class="hsec" id="areas"><div class="st"><h2>업무 영역 진행</h2><span class="caption muted">${list === AREAS ? '기관 전체' : '내 시스템'} · 작업 → 표준 맞추기 → 검토 → 확정</span><span class="grow"></span><a class="caption" href="system.html">시스템 홈 →</a></div><div class="hcard"><div class="hb">${list.map(a => {
-      const st = a.stage; const late2 = a.L.state === 'review' && late(a.L.doc);
-      const note = a.L.state === 'review' ? `<a href="approvals.html?doc=${a.L.doc.id}">${a.L.doc.id}</a> ${STEP_NAME[a.L.doc.step]} ${age(a.L.doc)}일${late2 ? ' <span class="warn">· 기한 넘김</span>' : ''}`
-        : a.L.state === 'confirmed' ? `v${a.m.ver} 확정본 · <a href="model.html?area=${a.id}">다음 버전 시작</a>`
-        : !a.ents ? '엔터티가 없습니다 — 모델에서 시작하거나 DDL 가져오기'
-        : a.C.bad ? `미준수 <b class="warn">${a.C.bad}</b>건 — <a href="standardize.html?area=${a.id}">표준 맞추기</a>`
-        : a.open.length ? `확정 신청 가능 · <span class="warn">최종 확정 전 ${a.open.join(', ')} 완료 필요</span>` : '확정 신청 가능 — 모델에서 [확정 신청]';
-      return `<div class="prow"><div class="nm"><a href="model.html?area=${a.id}">${a.m.name}</a><span class="caption muted">${a.sys} · ${a.dbms} · v${a.m.ver}</span></div>${stepper(st === 4 ? 4 : st, STG, st === 1 ? 1 : -1)}<div class="gauge"><span class="tr"><i style="width:${a.C.rate}%;background:${a.C.rate >= GOAL ? C_OK : a.C.rate >= GOAL - 10 ? 'var(--warning)' : C_BAD}"></i><span class="goal" style="left:${GOAL}%"></span></span><b>${a.C.rate}%</b></div><div class="note">${note}</div></div>`; }).join('') || '<div class="caption muted">담당 업무 영역이 없습니다.</div>'}</div></div></section>`;
-
-  /* ---- my requests as steppers ---- */
-  const myHtml = () => { const mine = docs.filter(d => d.req === ME.id); const act = mine.filter(d => docGroup(d) !== 'done'); const done = mine.filter(d => docGroup(d) === 'done');
-    return `<section class="hsec" id="mine"><div class="st"><h2>내 신청</h2><span class="caption muted">진행 ${act.filter(d => docGroup(d) === 'live').length} · 보완 ${act.filter(d => docGroup(d) === 'fix').length} · 완료 ${done.length}</span><span class="grow"></span><a class="caption" href="approvals.html?box=mine">전체 →</a></div><div class="hcard"><div class="hb">${act.map(d => {
-      const L = hasFinal(d) ? ['신청', 'DA 승인', '최종 승인', '반영'] : ['신청', 'DA 승인', '반영'];
-      const cur = d.step === 'da' ? 1 : d.step === 'final' ? 2 : 1; const fixd = docGroup(d) === 'fix';
-      return `<div class="prow"><div class="nm"><a class="mono" href="approvals.html?doc=${d.id}">${d.id}</a><span class="caption muted">${d.type === 'model' ? '모델 확정' : '사전 신청'}${d.n ? ' · ' + d.n + '건' : ''}</span></div>${stepper(cur, L, fixd ? cur : -1)}<div class="caption" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${d.title}</div><div class="note">${fixd ? `<span class="warn">${STEP_NAME[d.step]}</span> — <a href="approvals.html?doc=${d.id}">사유 보고 보완</a>` : `${STEP_NAME[d.step]} 차례 · ${age(d)}일${late(d) ? ' <span class="warn">· 기한 넘김</span>' : ''}`}</div></div>`; }).join('') || '<div class="caption muted" style="padding:6px 0">진행 중인 신청이 없습니다.</div>'}${done.length ? `<div class="caption muted" style="padding-top:8px">완료 ${done.length}건 · ${done.slice(0, 4).map(d => `<a href="approvals.html?doc=${d.id}">${d.id}</a>`).join(', ')}</div>` : ''}</div></div></section>`; };
+  /* ---- my requests (right): short table, fix first ---- */
+  const mineAll = docs.filter(d => d.req === ME.id);
+  const mineOpen = mineAll.filter(d => docGroup(d) !== 'done').sort((a, b) => (docGroup(a) === 'fix' ? -1 : 0) - (docGroup(b) === 'fix' ? -1 : 0));
+  const mineDone = mineAll.filter(d => docGroup(d) === 'done');
+  const mine = `<section class="sec" id="mine"><div class="sec-h"><h2>내 신청</h2><a class="end" href="approvals.html?box=mine">전체</a></div>
+    ${mineOpen.length ? `<table class="tbl plain"><thead><tr><th>신청번호</th><th>단계</th><th class="r">머문 일</th></tr></thead><tbody>${mineOpen.map(d => `<tr><td><a class="mono" href="approvals.html?doc=${d.id}" title="${d.title}">${d.id}</a></td><td>${docTag(d)}</td><td class="r mono">${docGroup(d) === 'live' ? docAge(d) + '일' : ''}</td></tr>`).join('')}</tbody></table>` : '<div class="ok-line" style="padding:12px 0">진행 중인 신청이 없습니다.</div>'}
+    ${mineDone.length ? `<div class="ok-line">완료 ${mineDone.length}건: ${mineDone.slice(0, 3).map(d => `<a class="mono" href="approvals.html?doc=${d.id}">${d.id.slice(-4)}</a>`).join(', ')}</div>` : ''}</section>`;
 
   /* ---- my candidates (modeler) ---- */
-  const candHtml = () => { const myC = cands.filter(c => c.loc.some(l => l.by === ME.id)); if (!myC.length) return '';
-    return `<div class="hcard"><div class="hh"><h3>내 후보 처리 결과</h3><span class="grow"></span><a class="caption" href="candidates.html">후보 큐 →</a></div><div class="hb"><table class="tbl-s">${myC.map(c => { const s = candState(c); return `<tr><td><span class="badge b-violet">${c.t}</span> <a href="candidates.html?c=${c.id}">${c.name}</a></td><td style="text-align:right" class="caption${s === '대기' ? ' muted' : ''}">${s === '대기' ? 'DA 처리 대기' : s}${c.doc && s !== '대기' ? ' · ' + c.doc : ''}</td></tr>`; }).join('')}</table></div></div>`; };
-  const auditHtml = () => { const a = getAudit().slice(-5).reverse(); return `<div class="hcard"><div class="hh"><h3>최근 관리 이력</h3><span class="grow"></span><a class="caption" href="audit.html">감사 로그 →</a></div><div class="hb">${a.length ? `<table class="tbl-s">${a.map(x => `<tr><td class="mono caption">${(x.at || '').slice(5, 16)}</td><td>${x.act}</td><td class="caption muted">${x.who || ''}</td></tr>`).join('')}</table>` : '<div class="caption muted">이번 세션의 설정·역할 변경이 없습니다.</div>'}</div></div>`; };
-  const infoHtml = () => `<div style="display:flex;flex-direction:column;gap:12px"><div class="hcard"><div class="hh"><h3>새 기능</h3><span class="badge b-info">${PRODUCT.version}</span><span class="grow"></span><button class="btn sm ghost" onclick="openAbout()">릴리스 노트</button></div><div class="hb caption">산출물 화면 · 표 보기 · 모델 검토 · 제약·인덱스 · 서브타입·배타 관계</div></div>
-    <div class="hcard"><div class="hh"><h3>공지</h3></div><div class="hb caption" style="line-height:22px">11/20(목) 18:00~19:00 정기 점검 — 편집 내용은 자동 보관됩니다.<br>공통표준 2025.11 반영 완료(11/03).</div></div></div>`;
+  const myC = getCands().filter(c => c.loc.some(l => l.by === ME.id));
+  const cand = ME.has('modeler') && myC.length ? `<section class="sec"><div class="sec-h"><h2>내 후보</h2><a class="end" href="candidates.html">후보 큐</a></div><table class="tbl plain"><tbody>${myC.map(c => { const s = candState(c); return `<tr><td><a href="candidates.html?c=${c.id}">${c.name}</a> <span class="muted">${c.t}</span></td><td class="r">${s === '등록 완료' ? tag('ok', s) : s === '대기' ? `<span class="muted">판단 대기</span>` : tag('run', s)}</td></tr>`; }).join('')}</tbody></table></section>` : '';
 
-  /* ---- layout by role: Admin/owner see the picture first; DA and modelers start from today's work ---- */
-  const lead2 = ME.has('admin') ? 'admin' : ME.has('da') ? 'da' : ME.has('owner') ? 'owner' : 'modeler';
-  const foot = (a, b) => `<section class="hsec foot">${a}${b}</section>`;
-  const S = {
-    admin: () => kpiHtml() + todoHtml() + statsHtml() + areasHtml(AREAS) + foot(auditHtml(), infoHtml()),
-    owner: () => kpiHtml() + todoHtml() + statsHtml() + areasHtml(AREAS) + (ME.has('modeler') ? myHtml() : '') + foot(infoHtml(), ''),
-    da: () => todoHtml() + kpiHtml() + statsHtml() + areasHtml(ME.has('modeler') ? myAreas : AREAS) + myHtml() + foot(candHtml() || infoHtml(), candHtml() ? infoHtml() : ''),
-    modeler: () => todoHtml() + areasHtml(myAreas) + myHtml() + foot(candHtml() || infoHtml(), candHtml() ? infoHtml() : '')
-  };
-  $('home').innerHTML = S[lead2]();
+  /* ---- statistics (DA · owner · Admin) ---- */
+  let stats = '', staleS = '', weeksS = '';
+  if (showStats) {
+    const F = [['DA 승인 대기', 'da'], ['최종 승인 대기', 'final']].map(([l, s]) => { const x = docs.filter(d => d.step === s); return { l, n: x.length, a: x.length ? x.reduce((n, d) => n + docAge(d), 0) / x.length : 0 }; });
+    F.push({ l: '완료', n: docs.filter(d => d.step === 'done').length, a: null }, { l: '반려·회수', n: docs.filter(d => docGroup(d) === 'fix').length, a: null });
+    const fmax = Math.max(...F.map(f => f.n), 1); const worst0 = F.slice(0, 2).filter(f => f.n).sort((a, b) => b.a - a.a)[0]; const worst = worst0 && worst0.a >= SLA ? worst0 : null;
+    const R = new Map(); const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]); const add = (t, id) => { const k = esc(t).replace(/'[^']*'/g, '‘…’').replace(/\([^)]*\)/g, '').replace(/[A-Z]{1,3}-\d{4}(-\d{4})?/g, '…').replace(/\d+자/g, 'N자').trim(); if (!R.has(k)) R.set(k, new Set()); R.get(k).add(id); };
+    docs.forEach(d => (d.hist || []).forEach(h => { if (/반려|재검사 실패/.test(h.act || '') && h.why) add(h.why, d.id); }));
+    live.filter(d => d.type === 'dict').forEach(d => { try { checkDictDoc(d).forEach(r => r.problems.forEach(p => add(p, d.id))); } catch (e) {} });
+    const top = [...R.entries()].map(([k, s]) => [k, s.size, [...s]]).sort((a, b) => b[1] - a[1]).slice(0, 5);
+    stats = `<section class="sec"><div class="sec-h"><h2>결재 흐름</h2>${worst ? `<span class="end">${tag('err', `병목 ${worst.l.replace(' 대기', '')} ${worst.a.toFixed(1)}일`)}</span>` : ''}</div>
+      <div style="max-width:640px;margin-top:8px">${F.map(f => `<div class="hbar"><span>${f.l}</span><span class="t"><i class="${f === worst ? 'hi' : ''}" style="width:${f.n / fmax * 100}%"></i></span><span class="v">${f.n}${f.a != null && f.n ? ' · ' + f.a.toFixed(1) + '일' : ''}</span></div>`).join('')}</div></section>
+      <section class="sec"><div class="sec-h"><h2>막힘 사유</h2><a class="end" href="settings.html#rules">검수 기준</a></div>
+      ${top.length ? `<ol class="reasons">${top.map(([k, n, ids]) => `<li>${k} <span class="mono muted">${n}건</span> ${ids.slice(0, 2).map(id => `<a class="mono" href="approvals.html?doc=${id}">${id.slice(-4)}</a>`).join(' ')}</li>`).join('')}</ol>` : '<div class="ok-line">막힌 신청이 없습니다.</div>'}</section>`;
+    const stale = live.slice().sort((a, b) => docAge(b) - docAge(a)).slice(0, 5);
+    staleS = `<section class="sec" id="stale"><div class="sec-h"><h2>오래 머무는 결재</h2><a class="end" href="approvals.html">결재함</a></div>
+      <table class="tbl plain"><tbody>${stale.map(d => `<tr><td><a class="mono" href="approvals.html?doc=${d.id}" title="${d.title}">${d.id}</a></td><td class="muted">${STEP_NAME[d.step]}</td><td class="r">${docLate(d) ? tag('err', docAge(d) + '일') : `<span class="mono muted">${docAge(d)}일</span>`}</td></tr>`).join('') || '<tr><td class="muted">진행 중인 결재가 없습니다.</td></tr>'}</tbody></table></section>`;
+    const weeks = []; for (let i = 5; i >= 0; i--) { const end = new Date(T0 - i * 7 * 864e5), start = new Date(end - 6 * 864e5); weeks.push({ start, end, n: 0 }); }
+    getDict().forEach(x => { const d = toDay(x.dt); if (!d) return; const w = weeks.find(w => d >= w.start && d <= w.end); if (w) w.n++; });
+    const pubD = toDay(getPub().at); const wmax = Math.max(...weeks.map(w => w.n), 1);
+    weeksS = `<section class="sec"><div class="sec-h"><h2>사전 변경 · 최근 6주</h2><a class="end" href="dict-history.html">변경 내역</a></div>
+      <div class="cols6">${weeks.map(w => { const pub = pubD && pubD >= w.start && pubD <= w.end; return `<div class="c${pub ? ' pub' : ''}"><b>${w.n || ''}</b><i style="height:${w.n / wmax * 64}px"></i><span>${w.end.getMonth() + 1}/${w.end.getDate()}${pub ? ' 공표' : ''}</span></div>`; }).join('')}</div></section>`;
+  }
+
+  /* ---- layout by role: same frame, order differs ---- */
+  const left = lead === 'modeler' ? todo + areas : todo + areas + stats;
+  const right = lead === 'modeler' ? mine + cand : (lead === 'admin' || lead === 'owner' ? ledger + staleS + weeksS + (ME.has('modeler') ? mine : '') : ledger + mine + staleS + weeksS + cand);
+  const lf = lead === 'admin' || lead === 'owner';
+  $('home').innerHTML = lf ? `<div class="hl lf"><div>${right}</div><div>${left}</div></div>` : `<div class="hl"><div>${left}</div><div>${right}</div></div>`;
 };
 </script>
 </body>
