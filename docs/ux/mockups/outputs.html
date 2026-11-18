@@ -27,7 +27,7 @@
   <div class="page-header">
     <a class="btn ghost sm" href="model.html">← 모델</a>
     <h1>산출물</h1>
-    <span class="crumb">요구사항관리 › <b>요구사항 · 프로젝트</b></span>
+    <span class="crumb">요구사항관리 › <b id="crumb-area"></b></span>
     <div class="actions"><span class="caption muted">기관 양식: <b>KDA 산출물 양식 v2</b> · <a href="settings.html">설정</a></span></div>
   </div>
   <div class="page-body">
@@ -44,7 +44,7 @@
         <div class="ocard" data-k="ddl"><b>DDL 스크립트</b><div class="caption muted">게이트 B 통과 스크립트 — DDL 화면에서 만듭니다</div><div class="f"><a class="badge" href="ddl.html">DDL 화면 →</a></div></div>
       </div>
       <div class="section-t">최근 만든 산출물</div>
-      <table class="tbl" style="border:1px solid var(--border);border-radius:8px;overflow:hidden"><thead><tr><th>일시</th><th>산출물</th><th>범위 · 기준</th><th>만든 사람</th><th></th></tr></thead><tbody>
+      <table class="tbl" style="border:1px solid var(--border);border-radius:8px;overflow:hidden"><thead><tr><th>일시</th><th>산출물</th><th>범위 · 기준</th><th>만든 사람</th><th></th></tr></thead><tbody id="recent">
         <tr><td class="mono">11/16 18:20</td><td>테이블 정의서</td><td>요구사항·프로젝트 · v4 확정본</td><td>김모델</td><td><a href="#" data-toast="요구사항_프로젝트_테이블정의서_v4.xlsx 내려받기" data-toast-type="info">내려받기</a></td></tr>
         <tr><td class="mono">11/16 18:19</td><td>표준 준수검사 결과</td><td>요구사항·프로젝트 · v4 확정본</td><td>김모델</td><td><a href="#" data-toast="요구사항_프로젝트_준수검사_v4.xlsx 내려받기" data-toast-type="info">내려받기</a></td></tr>
         <tr><td class="mono">11/03 10:02</td><td>ERD (공식)</td><td>시스템 전체 · v4 확정본</td><td>이데이터</td><td><a href="#" data-toast="요구사항관리_ERD_v4.pdf 내려받기" data-toast-type="info">내려받기</a></td></tr>
@@ -54,10 +54,10 @@
     <aside class="rpanel open" id="pn-out">
       <div class="rp-head"><h2 id="o-title">테이블 정의서</h2><div class="rp-sub">만들기 옵션 · 미리보기</div></div>
       <div class="rp-body">
-        <div class="field"><label>범위</label><select class="input"><option>업무 영역 · 요구사항·프로젝트 (9)</option><option>시스템 전체 · 요구사항관리 (11)</option><option>선택한 테이블</option></select></div>
+        <div class="field"><label for="o-scope">범위</label><select class="input" id="o-scope"></select></div>
         <div class="field-row">
-          <div class="field"><label>기준 버전</label><select class="input" id="o-ver"><option>v4 확정본 (공식)</option><option>v5 작업 중 (초안 표시)</option></select></div>
-          <div class="field"><label>형식</label><select class="input" id="o-fmt"><option>xlsx</option><option>pdf</option></select></div>
+          <div class="field"><label>기준 버전</label><select class="input" id="o-ver"></select></div>
+          <div class="field"><label>형식</label><select class="input" id="o-fmt"></select></div>
         </div>
         <div class="field"><label>양식</label><select class="input"><option>기관 양식 (KDA 산출물 양식 v2)</option><option>기본 양식</option></select></div>
         <label class="flex caption" style="margin-bottom:12px"><input type="checkbox" checked> 표지에 버전·확정일·승인자 넣기</label>
@@ -65,7 +65,7 @@
         <div class="prev" id="o-prev"></div>
         <div class="banner" style="margin-top:12px" id="o-note"><span>ℹ</span><div>공식 산출물은 <b>확정본</b>으로만 만듭니다. 작업 중 버전은 모든 시트에 ‘초안’ 표시가 붙습니다.</div></div>
       </div>
-      <div class="rp-foot"><span class="grow"></span><button class="btn primary" id="o-go">만들기</button></div>
+      <div class="rp-foot"><span class="caption muted" id="o-prog"></span><span class="grow"></span><button class="btn primary" id="o-go">만들기</button></div>
     </aside>
   </div>
 </div>
@@ -81,17 +81,54 @@ window.pageInit = function () {
     rev: ['모델 검토 결과', '확인 필요 8', ['구분', '위치', '내용'], [['관계', '요구사항내역 ↔ 리스크기본', 'M:N 미해소'], ['물리 정보', '산출물기본.산출물제출일', '타입 미정'], ['미입력', '산출물이력', '엔터티 정의 없음']]],
     chg: ['변경 이력', 'v4 → v5 · 엔터티 +2 · 속성 +6 · 변경 5', ['구분', '대상', '변경'], [['추가', '산출물기본', '엔터티 추가'], ['추가', '산출물이력', '엔터티 추가'], ['변경', '프로젝트기본.수주금액', 'NUMBER(12) → NUMBER(15)']]],
   };
+  const $ = id => document.getElementById(id), qp = new URLSearchParams(location.search);
+  // area + versions from the documents (CX12-32): confirmed copies are official, the working version is a draft
+  const AREA = getModels()[qp.get('area')] ? qp.get('area') : 'rq'; const L = modelLock(AREA);
+  $('crumb-area').textContent = L.model.name;
+  const done = getDocs().filter(x => x.type === 'model' && x.area === AREA && x.step === 'done').sort((a, b) => b.ver - a.ver);
+  const ents = modelOf(AREA, L.model.ver).E.filter(e => !e.ref).length;
+  $('o-scope').innerHTML = `<option>업무 영역 · ${L.model.name} (${ents})</option><option>선택한 테이블</option>`;
+  $('o-ver').innerHTML = done.map(d => `<option value="${d.id}">v${d.ver} 확정본 (공식) · ${d.id}</option>`).join('') + (L.state === 'edit' ? `<option value="work">v${L.model.ver} 작업 중 (초안 표시)</option>` : L.state === 'review' ? `<option value="work">v${L.model.ver} 검토 중 사본 (초안 표시)</option>` : '');
+  const FMT = { tbl: ['xlsx', 'pdf'], cmp: ['xlsx'], term: ['xlsx'], sec: ['xlsx', 'pdf'], erd: ['pdf', 'png', 'svg'], rev: ['xlsx'], chg: ['xlsx', 'html'] };
+  let cur = 'tbl';
+  const verDoc = () => done.find(d => d.id === $('o-ver').value);
+  function erdTitle() { const d = verDoc(); if (!d) return [['시스템 › 영역', `요구사항관리 › ${L.model.name}`], ['버전', `v${L.model.ver} 작업 중 — 초안(공식 아님)`], ['승인', '—']]; const who = (d.hist || []).filter(h => /승인/.test(h.act)).map(h => h.who).join(', '); return [['시스템 › 영역', `요구사항관리 › ${L.model.name}`], ['버전', `v${d.ver} · 확정 ${d.date} · ${d.id}`], ['승인', who || '—']]; }
+  // the version the user came from is selected (CX14-14): snapshot → that copy, otherwise the working version, else the latest confirmed copy
+  const snapQ = qp.get('snap'); if (snapQ && done.some(d => d.id === snapQ)) $('o-ver').value = snapQ; else if (L.state !== 'confirmed' && $('o-ver').querySelector('[value="work"]')) $('o-ver').value = 'work';
+  // previews are computed from the selected area + version (no fixed rows)
+  const mdl = () => { const d = verDoc(); return (d && d.model) || (d && getModelData(AREA, d.ver)) || modelOf(AREA, d ? d.ver : L.model.ver); };
+  function compute() {
+    const m = mdl(), E = m.E.filter(e => !e.ref); const first = E[0];
+    const cnt = st => E.reduce((s, e) => s + e.a.filter(a => a.s === st).length, 0);
+    const tot = E.reduce((s, e) => s + e.a.length, 0), na = cnt('na'), ok = cnt('ok') + cnt('ex'), tgt = tot - na;
+    P.tbl = ['테이블 정의서', first ? `시트 1/${E.length} · ${first.p} ${first.n}` : '테이블 없음', ['컬럼명', '논리명', '타입', 'PK', 'NULL', '도메인'], first ? first.a.slice(0, 6).map(a => [a.p || '—', a.n, a.t || '—', a.pk ? 'Y' : '', a.nn ? 'N' : 'Y', a.dom || '—']) : []];
+    const C = compOf(m); P.cmp = ['표준 준수검사 결과', `요약 · 준수율 ${C.rate}% (미준수 ${C.bad}, 예외 ${C.ex}, 신청 중 ${C.req}, 비대상 ${C.na}) — 모델 화면과 같은 계산`, ['엔터티', '대상', '미준수', '예외', '비대상', '준수율'], E.slice(0, 6).map(e => { const c = compOf({ E: [e] }); return [e.n, String(c.tot), String(c.bad), String(c.ex), String(c.na), c.rate + '%']; })];
+    const terms = {}; E.forEach(e => e.a.filter(a => a.s === 'ok').forEach(a => { terms[a.n] = terms[a.n] || [a.n, a.p, a.dom || '—', 0]; terms[a.n][3]++; }));
+    const tl = Object.values(terms).sort((a, b) => b[3] - a[3]); P.term = ['용어 사용 현황', `표준 용어 ${tl.length}`, ['용어', '물리명', '도메인', '사용 위치 수'], tl.slice(0, 6).map(r => [r[0], r[1], r[2], String(r[3])])];
+    const prev = verDoc() ? getModelData(AREA, verDoc().ver - 1) : (done[0] && (done[0].model || getModelData(AREA, done[0].ver)));
+    const df = prev ? (modelDiff(prev, m) || []) : null; P.chg = ['변경 이력', df ? `직전 확정본 대비 ${df.length}건` : '비교할 이전 확정본 없음', ['구분', '대상', '변경'], (df || []).slice(0, 6).map(r => [r[0], r[1], `${r[2]} → ${r[3]}`])];
+  }
   const show = k => {
-    if (!P[k]) return; const [t, cap, h, rows] = P[k];
+    if (!P[k]) return; cur = k; compute(); if (k === 'erd') P.erd[3] = erdTitle(); P.erd[1] = `논리 ERD · ${verDoc() ? `v${verDoc().ver} 확정본 배치` : '작업 중 배치(초안)'} · A3 가로 1쪽`;
+    // the format list follows the selected output (CX12-33)
+    $('o-fmt').innerHTML = FMT[k].map(f => `<option>${f}</option>`).join('');
+    const [t, cap, h, rows] = P[k];
     document.getElementById('o-title').textContent = t;
     document.getElementById('o-prev').innerHTML = `<div class="ph">${cap}</div><table><thead><tr>${h.map(x => `<th>${x}</th>`).join('')}</tr></thead><tbody>${rows.map(r => `<tr>${r.map(c => `<td>${c}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
     document.querySelectorAll('.ocard').forEach(c => c.classList.toggle('on', c.dataset.k === k));
   };
   document.getElementById('cards').addEventListener('click', e => { const c = e.target.closest('.ocard'); if (c && !e.target.closest('a')) show(c.dataset.k); });
-  document.getElementById('o-go').onclick = () => {
-    const t = document.getElementById('o-title').textContent, v = document.getElementById('o-ver').value, f = document.getElementById('o-fmt').value;
-    toast(`${t}를 만들었습니다 — ${v.startsWith('v4') ? '공식(v4 확정본)' : '초안(v5, 모든 시트에 초안 표시)'} · .${f}`);
+  $('o-ver').onchange = () => show(cur);
+  // generation shows progress and the version it was made from; official ERD is rendered on the server (03 ERD-Q2 보강) — the mockup shows the states
+  $('o-go').onclick = () => {
+    const t = $('o-title').textContent, d = verDoc(), f = $('o-fmt').value;
+    if (!$('o-ver').value) { toast('기준 버전을 고르세요', 'info'); return; }
+    $('o-go').disabled = true; $('o-prog').textContent = `${cur === 'erd' && d ? '서버에서 공식 ERD를 그리는 중' : '만드는 중'}… (${d ? `v${d.ver} 확정본` : '작업본 초안'})`;
+    setTimeout(() => { $('o-go').disabled = false; $('o-prog').textContent = '';
+      $('recent').insertAdjacentHTML('afterbegin', `<tr><td class="mono">${nowStr()}</td><td>${t}${cur === 'erd' && d ? ' (공식)' : ''}</td><td>${L.model.name} · ${d ? `v${d.ver} 확정본` : `v${L.model.ver} 초안`}</td><td>${ME.name}</td><td><a href="#" data-toast="${L.model.name}_${t}_${d ? 'v' + d.ver : '초안'}.${f} 내려받기" data-toast-type="info">내려받기</a></td></tr>`);
+      toast(`${t}를 만들었습니다 — ${d ? `공식(v${d.ver} 확정본 · ${d.id})` : `초안(v${L.model.ver}, 모든 시트에 초안 표시)`} · .${f}`, 'success'); }, 1200);
   };
+  if (!done.length) $('o-note').innerHTML = '<span>ℹ</span><div>이 업무 영역에는 아직 <b>확정본</b>이 없어 공식 산출물을 만들 수 없습니다. 작업 중 버전은 모든 시트에 ‘초안’ 표시가 붙습니다.</div>';
   show(new URLSearchParams(location.search).get('k') || 'tbl');
 };
 </script>

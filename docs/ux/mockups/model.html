@@ -58,8 +58,10 @@
   .node .subt .kids span { flex:1; border:1px solid var(--border-strong); border-radius:6px; padding:3px 6px; font-weight:500; text-align:center; background:var(--surface); }
   #world.lod-mid .node .ar:not(.pkr), #world.lod-mid .node .sysc { display:none; } #world.lod-mid .node .more { display:block; }
   #world.lod-mid .relname, #world.lod-low .relname { display:none; }
-  #world.lod-low .node .ar, #world.lod-low .node .more, #world.lod-low .node .nh .sub, #world.lod-low .node .sysc, #world.lod-low .node .subt, #world.lod-low .memo { display:none; }
-  #world.lod-low .node .nh { border-bottom:0; font-size:15px; padding:10px 12px; }
+  /* summary keeps every row's space so node size and relation endpoints don't jump (22 §6-5 · 23 §6-6) */
+  #world.lod-low .node .ar, #world.lod-low .node .nh .sub, #world.lod-low .node .sysc, #world.lod-low .node .subt { visibility:hidden; }
+  #world.lod-low .node .more, #world.lod-low .memo { display:none; }
+  #world.lod-low .node .nh .title { font-size:15px; }
   .relname { font:400 11px var(--font-sans); fill:var(--fg-2); paint-order:stroke; stroke:var(--bg); stroke-width:4px; }
   .memo { position:absolute; width:200px; background:color-mix(in srgb, var(--warning) 16%, var(--surface)); border:1px solid color-mix(in srgb, var(--warning) 45%, var(--border)); border-radius:6px; font-size:12px; box-shadow:var(--shadow-4); }
   .memo .mh { display:flex; align-items:center; padding:3px 8px; color:var(--fg-2); font-size:11px; cursor:move; }
@@ -122,12 +124,7 @@
   <div class="page-header">
     <span class="crumb"><a href="system.html">요구사항관리</a> › <b>요구사항 · 프로젝트</b></span>
     <span class="badge mono" id="ver">v5 작업 중</span><span class="caption faint">v4 확정본 기준 · <a href="#" data-toast="v4 확정본 대비: 엔터티 +2, 속성 +6, 변경 5" data-toast-type="info">확정본과 비교</a></span>
-    <div class="avs" id="avs" title="이 업무 영역에 접속한 사람">
-      <span class="av" style="background:var(--ink);color:var(--on-ink)" title="김모델 (나)">김</span>
-      <span class="av" style="background:var(--p-hong)" title="홍설계 · 편집 중">홍</span>
-      <span class="av view" title="박설계 · 조회">박</span>
-      <span class="cap" id="avcap">3명 접속 · 2명 편집</span>
-    </div>
+    <div class="avs" id="avs" title="이 업무 영역에 접속한 사람"><span id="av-list"></span><span class="cap" id="avcap">3명 접속 · 2명 편집</span></div>
     <div class="actions">
       <span class="seg" id="lp"><button class="on" data-v="L">논리</button><button data-v="P">물리</button></span>
       <a class="btn" href="import.html">가져오기 ▾</a>
@@ -137,8 +134,8 @@
         <div class="menu" id="expmenu">
           <div class="row"><b>범위</b><span class="seg" id="ex-scope"><button class="on">보이는 영역</button><button>전체</button></span></div>
           <div class="row"><b>형식</b><span class="seg" id="ex-fmt"><button class="on">PNG</button><button>SVG</button><button>PDF</button></span></div>
-          <label class="row" style="align-items:flex-start;cursor:pointer"><input type="checkbox" id="ex-official" style="margin-top:3px"><span><b style="width:auto;color:var(--fg)">공식 산출물</b><br><span class="caption muted">확정본(v4) 배치 기준 · 표제란에 버전·확정일·승인자</span></span></label>
-          <div class="card" id="ex-title" style="display:none;font-size:12px;margin-bottom:10px;padding:8px"><div class="caption muted">표제란 미리보기</div><div class="mono">요구사항관리 › 요구사항·프로젝트 · 논리 ERD</div><div class="mono">v4 · 확정 2026-11-03 · 승인 이DA, 최관리</div></div>
+          <label class="row" style="align-items:flex-start;cursor:pointer"><input type="checkbox" id="ex-official" style="margin-top:3px"><span><b style="width:auto;color:var(--fg)">공식 산출물</b><br><span class="caption muted" id="ex-official-t">확정본 배치 기준 · 표제란에 버전·확정일·승인자</span></span></label>
+          <div class="card" id="ex-title" style="display:none;font-size:12px;margin-bottom:10px;padding:8px"><div class="caption muted">표제란 미리보기</div><div class="mono" id="ex-title-1"></div><div class="mono" id="ex-title-2"></div></div>
           <div class="caption muted" style="margin-bottom:10px">테이블 정의서·준수검사 엑셀은 <a href="outputs.html">[산출물]</a>에서 만듭니다.</div>
           <div class="flex"><span class="grow"></span><button class="btn sm" id="ex-cancel">취소</button><button class="btn sm primary" id="ex-go">내보내기</button></div>
         </div></span>
@@ -150,7 +147,7 @@
     <a class="stat" href="#" id="jump-bad"><span class="dot-i s-unreg"></span>미준수 <b id="c-bad">6</b></a>
     <a class="stat" href="standardize.html?f=ex"><span class="dot-i s-ex"></span>예외 <b id="c-ex">2</b></a>
     <a class="stat" href="standardize.html?f=na"><span class="dot-i s-na"></span>비대상 <b id="c-na">1</b></a>
-    <a class="stat" href="candidates.html"><span class="dot-i" style="background:var(--violet);opacity:.5"></span>후보 대기 <b>3</b></a>
+    <a class="stat" href="candidates.html"><span class="dot-i" style="background:var(--violet);opacity:.5"></span>후보 대기 <b id="c-cand">0</b></a>
     <a class="stat" href="#" id="b-review"><span class="dot-i" style="background:var(--fg-3)"></span>검토 <b id="c-rev">5</b></a>
     <span class="grow"></span><span class="caption faint" id="sel-info">선택 없음</span>
     <a class="btn sm primary" href="standardize.html">표준 맞추기</a>
@@ -159,13 +156,13 @@
     <div class="side" id="side">
       <div style="padding:10px 12px;border-bottom:1px solid var(--border)">
         <div class="flex" style="margin-bottom:8px"><b style="font-size:13px">사전</b><span class="grow"></span><button class="btn ghost sm" data-toggle="side">접기</button></div>
-        <input class="input" value="제출" style="height:28px">
+        <input class="input" id="dict-q" value="제출" placeholder="용어 검색 · 없으면 후보 등록" aria-label="사전 용어 검색" style="height:28px">
         <div class="flex" style="margin-top:8px;gap:4px"><span class="chip on" data-group="sk" style="height:24px;font-size:12px">용어</span><span class="chip" data-group="sk" style="height:24px;font-size:12px">단어</span><span class="chip" data-group="sk" style="height:24px;font-size:12px">도메인</span></div>
       </div>
       <div class="scroll" id="dict"></div>
       <div style="padding:10px 12px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:6px">
         <div class="caption muted">용어를 엔터티에 끌어 놓으면 속성으로 추가됩니다</div>
-        <div class="flex"><button class="btn sm grow" data-toast="후보 큐에 등록했습니다 — 모델 작업은 계속할 수 있습니다" data-toast-type="violet">후보 등록</button><a class="btn sm grow" href="excel-import.html">엑셀 가져오기</a></div>
+        <div class="flex"><button class="btn sm grow" id="dict-cand" title="검색어를 단어 후보로 등록 — 선택한 속성이 발생 위치가 됩니다">후보 등록</button><a class="btn sm grow" href="excel-import.html">엑셀 가져오기</a></div>
       </div>
     </div>
 
@@ -196,10 +193,11 @@
       <button class="rp-tab" id="rp-tab" title="우측 패널 열기">패널 ◂</button>
       <div class="cv-banner">
         <div class="banner info" id="ban-lock"><span>●</span><div class="grow" id="ban-lock-t"></div><a class="btn sm" id="ban-lock-a" href="approvals.html">결재 보기</a></div>
-        <div class="banner warning" id="ban-left"><span>!</span><div class="grow"><b>남은 미준수 2</b> — ‘수령자’ 단어가 후보(REQ-2026-0012)로 승인 대기 중입니다. 사유를 남기고 예외로 유지하면 확정 신청할 수 있습니다.</div><button class="btn sm" data-open="mo-ex2">2건 예외로 유지</button></div>
+        <div class="banner warning" id="ban-left"><span>!</span><div class="grow" id="ban-left-t"></div><button class="btn sm" id="ban-left-b">예외로 유지</button></div>
         <div class="banner" id="ban-view"><span>ℹ</span><div class="grow"><b>조회 전용</b> — 모델 편집은 <b>모델러</b> 역할만 할 수 있습니다. 지금 역할: <span id="ban-view-r"></span></div></div>
         <div class="banner danger" id="ban-off"><span>!</span><div class="grow"><b>연결 끊김</b> — 편집 내용은 이 브라우저에 보관하고, 다시 연결되면 병합합니다.</div><button class="btn sm" id="b-reconnect">다시 연결</button></div>
-        <div class="banner warning" id="ban-gate"><span>!</span><div class="grow"><b>게이트 A · 경고 4</b> — 미매핑 3 · 타입 미정 2. 진행은 막지 않습니다.</div><button class="btn sm" id="b-gate">점검 보기</button></div>
+        <div class="banner warning" id="ban-gate"><span>!</span><div class="grow" id="ban-gate-t"></div><button class="btn sm" id="b-gate">점검 보기</button></div>
+        <div class="banner warning" id="ban-big" style="display:none"><span>!</span><div class="grow" id="ban-big-t"></div></div>
         <div class="banner info" id="ban-sync"><span>●</span><div class="grow"><b>논리 변경 2건 대기</b> — 물리에 자동 반영하지 않습니다.</div><button class="btn sm" data-toast="논리 변경 2건을 물리에 반영했습니다 · 컬럼 +2" data-toast-type="info">미리보기 · 반영</button></div>
       </div>
       <div id="world"><svg id="edges" width="2400" height="1600">
@@ -216,7 +214,7 @@
       <div id="grid"></div>
       <div class="legend">상태 <span class="dot-i s-ok"></span>표준 <span class="dot-i s-comb"></span>조합 가능 <span class="dot-i s-unreg"></span>미등록 단어 <span class="dot-i s-ex"></span>예외 <span class="dot-i s-na"></span>비대상</div>
       <div class="cv-zoom"><button id="zo">−</button><span id="zl" class="mono" style="width:40px;text-align:center">100%</span><button id="zi">+</button><button id="zfit" title="전체 맞춤 (Shift+1)">맞춤</button>
-        <select class="input" id="lodsel" style="height:26px;width:120px;font-size:12px"><option value="auto">표시: 자동</option><option value="full">전체 속성</option><option value="mid">키만</option><option value="low">이름만</option></select></div>
+        <select class="input" id="lodsel" style="height:26px;width:120px;font-size:12px"><option value="auto">표시: 자동(0.35배 미만 요약)</option><option value="full">전체 속성</option><option value="mid">키만</option><option value="low">요약(이름만)</option></select></div>
       <div class="cv-mini"><svg id="mini" width="180" height="120"></svg></div>
     </div>
 
@@ -238,13 +236,7 @@
       <div class="rp-head"><div class="t"><h2>물리 반영 전 점검</h2><span class="badge b-warning">게이트 A</span><button class="iconbtn close" id="gate-x" style="width:28px;height:28px">×</button></div>
         <div class="caption muted" style="margin-top:4px">논리 → 물리(Oracle) 반영 직전에 확인합니다. 진행을 막지는 않습니다.</div></div>
       <div class="rp-body">
-        <div class="grid2" style="margin-bottom:12px"><div class="card"><div class="caption muted">미매핑</div><div class="mono" style="font-size:20px">3</div></div><div class="card"><div class="caption muted">타입 미정</div><div class="mono" style="font-size:20px">2</div></div></div>
-        <table class="tbl"><thead><tr><th>위치</th><th>문제</th><th></th></tr></thead><tbody>
-          <tr><td>산출물기본.산출물제출일</td><td><span class="badge b-info">미매핑</span></td><td><a href="standardize.html">맞추기</a></td></tr>
-          <tr><td>산출물기본.산출물수령자명</td><td><span class="badge b-warning">미등록·타입 미정</span></td><td><a href="#" data-open="mo-ex">예외</a></td></tr>
-          <tr><td>산출물이력.이력순번</td><td><span class="badge b-warning">미등록·타입 미정</span></td><td><a href="standardize.html">맞추기</a></td></tr>
-          <tr><td>산출물기본 (테이블명)</td><td><span class="badge b-info">엔터티 용어 신청 중</span></td><td class="faint">대기</td></tr>
-        </tbody></table>
+        <div id="gate-body"></div>
         <div class="caption muted" style="margin-top:8px">물리 반영 때 시스템 컬럼 4개(<span class="mono">REG_DT · REGR_ID · MDFCN_DT · MDFR_ID</span>)가 모든 테이블에 붙습니다 — <a href="settings.html#sys">시스템 설정</a></div>
       </div>
       <div class="rp-foot"><a class="btn" href="standardize.html">표준 맞추기로 이동</a><span class="grow"></span><button class="btn primary" id="gate-go">경고 확인 후 계속</button></div>
@@ -252,20 +244,22 @@
 
     <!-- PN-38 confirm -->
     <aside class="rpanel wide" id="pn-confirm">
-      <div class="rp-head"><div class="t"><h2>모델 확정 신청</h2><button class="iconbtn close" data-close="pn-confirm" style="width:28px;height:28px">×</button></div><div class="rp-sub">요구사항관리 › 요구사항 · v5</div></div>
+      <div class="rp-head"><div class="t"><h2>모델 확정 신청</h2><button class="iconbtn close" data-close="pn-confirm" style="width:28px;height:28px">×</button></div><div class="rp-sub" id="cf-sub"></div></div>
       <div class="rp-body">
         <div class="grid3" style="margin-bottom:12px">
           <div class="card"><div class="caption muted">준수율</div><div class="mono" style="font-size:20px" id="cf-rate">—</div></div>
           <div class="card"><div class="caption muted">예외</div><div class="mono" style="font-size:20px;color:var(--violet)" id="cf-exc">—</div></div>
           <div class="card"><div class="caption muted" id="cf-base">확정본 대비</div><div class="mono" style="font-size:20px" id="cf-diff">—</div></div>
         </div>
-        <div class="section-t">표준 예외 <span class="badge b-violet" id="cf-exn">◆ 0</span> <span class="caption muted">신청 중 용어는 결재에서 함께 확인</span></div>
+        <div class="section-t">표준 예외 <span class="badge b-violet" id="cf-exn">◆ 0</span> </div>
         <table class="tbl"><thead><tr><th>항목</th><th>사유</th></tr></thead><tbody id="cf-ex"></tbody></table>
+        <div class="section-t">연결된 용어 신청 <span class="badge b-info" id="cf-reqn">0</span> <span class="caption muted">신청 중 용어로 준수에 들어간 속성 — 결재자가 확인합니다</span></div>
+        <div id="cf-req"></div>
         <div class="field" style="margin-top:12px"><label for="cf-why">신청 사유 *</label><textarea class="input" id="cf-why" rows="2" placeholder="예: 산출물 관리 테이블 추가에 따른 확정"></textarea></div>
         <div class="section-t">결재선</div>
         <div class="approval-line">
           <div class="al-step"><span class="pt"></span><div><b>DA 승인</b> <span class="caption faint">필수</span></div></div>
-          <div class="al-step"><span class="pt"></span><div><b>최종 승인 (기관 담당자)</b> <span class="caption faint">시스템 설정 사용 중</span></div></div>
+          <div class="al-step" id="cf-final"><span class="pt"></span><div><b>최종 승인 (기관 담당자)</b> <span class="caption faint">시스템 설정 사용 중</span></div></div>
         </div>
         <div class="flex" style="margin-top:8px"><span class="caption muted">참조</span><button class="btn ghost sm">+ 참조자</button></div>
         <div class="banner" style="margin-top:12px"><span>ℹ</span><div>신청하면 이 업무 영역은 <b>검토 중</b>이 되어 <b>접속 중인 모든 사람</b>에게 조회 전용으로 바뀝니다(지금 홍설계 편집 중). 회수하면 다시 편집할 수 있습니다.</div></div>
@@ -275,11 +269,11 @@
   </div>
 
   <div class="overlay" id="mo-ex" role="dialog" aria-modal="true" aria-labelledby="ex-t"><div class="modal"><div class="m-head"><h3 id="ex-t">표준 예외로 유지</h3></div>
-    <div class="m-body"><div class="caption muted" style="margin-bottom:8px">산출물기본.산출물수령자명</div><div class="field"><label for="ex-why">사유 *</label><textarea class="input" id="ex-why" rows="3"></textarea></div></div>
+    <div class="m-body"><div class="caption muted" style="margin-bottom:8px" id="ex-target">—</div><div class="field"><label for="ex-why">사유 *</label><textarea class="input" id="ex-why" rows="3"></textarea></div></div>
     <div class="m-foot"><button class="btn" data-close="mo-ex">취소</button><button class="btn primary" id="exr-go" data-needs="ex-why">예외 기록</button></div></div></div>
-  <div class="overlay" id="mo-ex2" role="dialog" aria-modal="true" aria-labelledby="ex2-t"><div class="modal"><div class="m-head"><h3 id="ex2-t">예외로 유지 (2건)</h3></div>
-    <div class="m-body"><div class="caption muted" style="margin-bottom:8px">산출물기본.산출물수령자명 · 산출물이력.수령자ID — 미등록 단어 ‘수령자’</div><div class="field"><label for="ex2-why">사유 * <span class="faint">확정 결재에서 DA가 검토합니다</span></label><textarea class="input" id="ex2-why" rows="3"></textarea></div></div>
-    <div class="m-foot"><button class="btn" data-close="mo-ex2">취소</button><button class="btn primary" id="ex2-go" data-needs="ex2-why">2건 예외 기록</button></div></div></div>
+  <div class="overlay" id="mo-ex2" role="dialog" aria-modal="true" aria-labelledby="ex2-t"><div class="modal"><div class="m-head"><h3 id="ex2-t">예외로 유지</h3></div>
+    <div class="m-body"><div class="caption muted" style="margin-bottom:8px" id="ex2-target">—</div><div class="field"><label for="ex2-why">사유 * <span class="faint">확정 결재에서 DA가 검토합니다</span></label><textarea class="input" id="ex2-why" rows="3"></textarea></div></div>
+    <div class="m-foot"><button class="btn" data-close="mo-ex2">취소</button><button class="btn primary" id="ex2-go" data-needs="ex2-why">예외 기록</button></div></div></div>
   <div class="overlay" id="mo-wd" role="dialog" aria-modal="true" aria-labelledby="wd-t"><div class="modal"><div class="m-head"><h3 id="wd-t">확정 신청 회수</h3></div>
     <div class="m-body"><div class="caption muted" style="margin-bottom:8px" id="wd-desc">결재가 취소되고, 이 업무 영역의 잠금이 풀려 모든 접속자가 다시 편집할 수 있습니다.</div><div class="field"><label for="wd-why">회수 사유 *</label><textarea class="input" id="wd-why" rows="2"></textarea></div></div>
     <div class="m-foot"><button class="btn" data-close="mo-wd">취소</button><button class="btn primary" id="wd-go" data-needs="wd-why">회수</button></div></div></div>
@@ -289,54 +283,30 @@
 window.pageInit = function () {
   const q = new URLSearchParams(location.search);
   const $ = id => document.getElementById(id);
-  const TERMS = [
-    { n: '제출일자', p: 'SBMT_YMD', d: '연월일C8', t: 'CHAR(8)', s: 'ok', tag: '공통' },
-    { n: '산출물제출일자', p: 'DLVRBL_SBMT_DATE', d: '연월일C8', t: 'CHAR(8)', s: 'comb', tag: '신청 중' },
-    { n: '제출여부', p: 'SBMT_YN', d: '여부C1', t: 'CHAR(1)', s: 'ok', tag: '공통' },
-    { n: '제출자명', p: 'SBMTR_NM', d: '명V100', t: 'VARCHAR2(100)', s: 'ok', tag: '기관', sec: '개인정보', enc: '없음' },
-    { n: '등록일시', p: 'REG_DT', d: '일시T', t: 'DATE', s: 'ok', tag: '공통' },
-    { n: '비고내용', p: 'RMRK_CN', d: '내용V1000', t: 'VARCHAR2(1000)', s: 'ok', tag: '공통' }
-  ];
+  const DOMT = { '연월일C8': 'CHAR(8)', '명V100': 'VARCHAR2(100)', 'ID V10': 'VARCHAR2(10)', '코드C2': 'CHAR(2)', '코드C1': 'CHAR(1)', '여부C1': 'CHAR(1)', '내용V1000': 'VARCHAR2(1000)', '금액N15': 'NUMBER(15)', '일련번호N10': 'NUMBER(10)', '일시T': 'DATE', '순위N3': 'NUMBER(3)' };
+  const TERMS = getDict().filter(x => x.k === 'term' && x.st === '사용' && x.ver > 0 && x.dom !== '엔터티 용어').map(x => ({ n: x.name, p: x.abbr, d: x.dom, t: DOMT[x.dom] || 'VARCHAR2(100)', s: 'ok', tag: x.src }))
+    .concat(openItems().filter(o => o.it.k === 'term' && (o.it.act || '추가') === '추가' && o.it.dom !== '엔터티').map(o => ({ n: o.it.name, p: o.it.abbr, d: o.it.dom, t: DOMT[o.it.dom] || 'VARCHAR2(100)', s: 'req', tag: '신청 중', doc: o.doc })))
+    .concat([{ n: '제출일자', p: 'SBMT_YMD', d: '연월일C8', t: 'CHAR(8)', s: 'ok', tag: '공통' }, { n: '제출여부', p: 'SBMT_YN', d: '여부C1', t: 'CHAR(1)', s: 'ok', tag: '공통' }, { n: '등록일시', p: 'REG_DT', d: '일시T', t: 'DATE', s: 'ok', tag: '공통' }, { n: '비고내용', p: 'RMRK_CN', d: '내용V1000', t: 'VARCHAR2(1000)', s: 'ok', tag: '공통' }, { n: '제출자명', p: 'SBMTR_NM', d: '명V100', t: 'VARCHAR2(100)', s: 'ok', tag: '기관', sec: '개인정보', enc: '없음' }]);
   const DOMS = { '연월일C8': 'CHAR(8)', '명V100': 'VARCHAR2(100)', 'ID V10': 'VARCHAR2(10)', '코드C2': 'CHAR(2)', '여부C1': 'CHAR(1)' };
   const SYS_COLS = [['등록일시', 'REG_DT', 'DATE'], ['등록자ID', 'REGR_ID', 'VARCHAR2(20)'], ['수정일시', 'MDFCN_DT', 'DATE'], ['수정자ID', 'MDFR_ID', 'VARCHAR2(20)']];
   const tagCls = t => t === '공통' ? 'b-common' : t === '신청 중' ? 'b-info' : 'b-org';
-  $('dict').innerHTML = TERMS.map((t, i) => `<div class="dict-item" draggable="true" data-ti="${i}"><div class="l1"><b>${t.n}</b><span class="badge ${tagCls(t.tag)}">${t.tag}</span>${t.sec ? '<span class="badge b-danger" style="height:16px">개인정보</span>' : ''}</div><div class="l2">${t.p} · ${t.d}</div></div>`).join('');
+  const renderDict = () => { const v = ($('dict-q').value || '').trim(); const L = TERMS.map((t, i) => [t, i]).filter(([t]) => !v || t.n.includes(v) || t.p.includes(v.toUpperCase()));
+    $('dict').innerHTML = L.map(([t, i]) => `<div class="dict-item" draggable="true" data-ti="${i}"><div class="l1"><b>${t.n}</b><span class="badge ${tagCls(t.tag)}">${t.tag}${t.doc ? ' · ' + t.doc : ''}</span>${t.sec ? '<span class="badge b-danger" style="height:16px">개인정보</span>' : ''}</div><div class="l2">${t.p} · ${t.d}</div></div>`).join('') || `<div class="caption muted" style="padding:12px">‘${v}’에 맞는 표준 용어가 없습니다 — 아래 [후보 등록]으로 후보 큐에 올리세요.</div>`; };
+  renderDict(); $('dict-q').addEventListener('input', renderDict);
+  $('dict-cand').onclick = () => {
+    const v = ($('dict-q').value || '').trim(); if (!v) { toast('후보로 올릴 단어를 검색창에 입력하세요', 'info'); return; }
+    if (viewOnly || DEMO) { guard(); return; }
+    const e = sel && ent(sel); const c = addCandidate({ t: '단어', name: v, abbr: '' }, { area: AREA, e: e ? e.id : null, ent: e ? e.n : LOCK.model.name, attr: e ? (e.a.find(a => a.s === 'unreg' || a.s === 'comb') || {}).n || v : v });
+    toast(`‘${v}’을 단어 후보로 등록했습니다 — 발생 위치 ${c.loc.length}곳 · DA가 후보 큐에서 처리합니다`, 'violet', { label: '후보 큐 열기', fn: () => location.href = `candidates.html?c=${c.id}` });
+    $('c-cand').textContent = candOpenCount();
+  };
 
-  const E = [
-    { id: 'prj', n: '프로젝트기본', p: 'PRJ_M', c: 'M', x: 60, y: 60, px: 60, py: 60, a: [
-      { n: '프로젝트ID', p: 'PRJ_ID', t: 'VARCHAR2(10)', pk: 1, nn: 1, s: 'ok' }, { n: '프로젝트명', p: 'PRJ_NM', t: 'VARCHAR2(100)', nn: 1, s: 'ok' }, { n: '발주처명', p: 'ORDR_OFC_NM', t: 'VARCHAR2(100)', s: 'ok' }, { n: '프로젝트종료일', p: 'PRJ_ENDDD', t: 'CHAR(8)', s: 'ex', exReason: '운영 DB 컬럼 · 배치 영향' }, { n: '수주금액', p: 'WINCON_AMT', t: 'NUMBER(15)', s: 'ok' }] },
-    { id: 'emp', n: '사원기본', p: 'EMP_M', c: 'K', x: 420, y: 40, px: 460, py: 40, a: [
-      { n: '사원번호', p: 'EMP_NO', t: 'NUMBER(6)', pk: 1, nn: 1, s: 'ok' }, { n: '사원명', p: 'EMP_NM', t: 'VARCHAR2(100)', nn: 1, s: 'ok', sec: '개인정보', enc: '없음' }, { n: '휴대전화번호', p: 'MBTL_NO', t: 'VARCHAR2(20)', s: 'ok', sec: '개인정보', enc: '양방향(ARIA)' }] },
-    { id: 'mbr', n: '프로젝트팀원구성내역', p: 'PRJ_MBR_D', c: 'A', x: 400, y: 220, px: 440, py: 240, a: [
-      { n: '프로젝트ID', p: 'PRJ_ID', t: 'VARCHAR2(10)', pk: 1, fk: 1, nn: 1, s: 'ok' }, { n: '팀원사원번호', p: 'TMBR_EMP_NO', t: 'NUMBER(6)', pk: 1, fk: 1, nn: 1, s: 'ok' }, { n: '투입시작일자', p: 'INPT_BEGIN_YMD', t: 'CHAR(8)', s: 'ok' }, { n: '역할구분코드', p: 'ROLE_SE_CD', t: 'CHAR(1)', s: 'ok' }] },
-    { id: 'rqrm', n: '요구사항내역', p: 'RQRM_D', c: 'A', x: 60, y: 340, px: 60, py: 380, a: [
-      { n: '요구사항ID', p: 'DEMND_MATER_ID', t: 'VARCHAR2(10)', pk: 1, nn: 1, s: 'ok' }, { n: '요구사항명', p: 'DEMND_MATER_NM', t: 'VARCHAR2(100)', nn: 1, s: 'ok' }, { n: '요구사항내용', p: 'DEMND_MATER_CN', t: 'VARCHAR2(1000)', s: 'ok' }, { n: '요청고객명', p: 'REQ_CUST_NM', t: 'VARCHAR2(100)', s: 'ex', exReason: '대외 연계 컬럼명 유지', sec: '개인정보', enc: '없음', secSrc: '직접 지정 · 사유 있음' }, { n: '프로젝트ID', p: 'PRJ_ID', t: 'VARCHAR2(10)', fk: 1, s: 'ok' }] },
-    { id: 'dlv', n: '산출물기본', p: 'DLVRBL_M', c: 'M', x: 420, y: 450, px: 460, py: 500, st: 1, uk: ['DLVRBL_NM'], sub: { disc: '산출물유형코드', kind: '배타', kids: ['문서산출물', '모델산출물'] }, a: [
-      { n: '산출물ID', p: 'DLVRBL_ID', t: 'VARCHAR2(10)', pk: 1, nn: 1, s: 'ok' }, { n: '산출물명', p: 'DLVRBL_NM', t: 'VARCHAR2(100)', nn: 1, s: 'ok' }, { n: '산출물제출일', p: '—', t: '—', s: 'comb' }, { n: '산출물수령자명', p: '—', t: '—', s: 'unreg', cand: 1 }, { n: '요구사항ID', p: 'DEMND_MATER_ID', t: 'VARCHAR2(10)', fk: 1, s: 'ok' }] },
-    { id: 'hist', n: '산출물이력', p: '—', c: 'H', x: 800, y: 470, px: 860, py: 520, a: [
-      { n: '산출물ID', p: 'DLVRBL_ID', t: 'VARCHAR2(10)', pk: 1, fk: 1, nn: 1, s: 'ok' }, { n: '이력순번', p: '—', t: '—', pk: 1, s: 'unreg' }, { n: '수령자ID', p: '—', t: '—', s: 'unreg' }] },
-    { id: 'risk', n: '리스크기본', p: 'RISK_M', c: 'M', x: 60, y: 640, px: 60, py: 700, a: [
-      { n: '리스크ID', p: 'RISK_ID', t: 'VARCHAR2(10)', pk: 1, nn: 1, s: 'ok' }, { n: '리스크명', p: 'RISK_NM', t: 'VARCHAR2(100)', s: 'ok' }, { n: '리스크등급코드', p: 'RISK_GRD_CD', t: 'CHAR(1)', s: 'ok' }] }
-  ];
-  const R = [
-    { f: 'prj', t: 'rqrm', k: 'nonid', name: '수행한다' },
-    { f: 'prj', t: 'mbr', k: 'id', name: '구성된다' },
-    { f: 'emp', t: 'mbr', k: 'id', name: '참여한다' },
-    { f: 'rqrm', t: 'dlv', k: 'nonid', name: '산출한다' },
-    { f: 'dlv', t: 'hist', k: 'id', name: '기록된다' },
-    { f: 'rqrm', t: 'risk', k: 'mn', name: '관련된다' }
-  ];
-  const M = [{ id: 'm1', mode: 'L', x: 820, y: 330, text: '산출물이력 순번 체계는 DA 확인 후 확정 (11/18 회의)', by: '박설계' }];
-  // ---- business area (v5): each area has its own data, version and lock
-  const AREA = q.get('area') === 'risk' ? 'risk' : 'rq';
-  if (AREA === 'risk') {
-    E.splice(0, E.length,
-      { id: 'risk', n: '리스크기본', p: 'RISK_M', c: 'M', x: 60, y: 60, px: 60, py: 60, a: [{ n: '리스크ID', p: 'RISK_ID', t: 'VARCHAR2(10)', pk: 1, nn: 1, s: 'ok' }, { n: '리스크명', p: 'RISK_NM', t: 'VARCHAR2(100)', s: 'ok' }, { n: '리스크등급코드', p: 'RISK_GRD_CD', t: 'CHAR(1)', s: 'ok' }] },
-      { id: 'rsp', n: '리스크대응내역', p: 'RISK_RSPNS_D', c: 'A', x: 420, y: 60, px: 460, py: 60, a: [{ n: '리스크ID', p: 'RISK_ID', t: 'VARCHAR2(10)', pk: 1, fk: 1, nn: 1, s: 'ok' }, { n: '대응순번', p: 'RSPNS_SN', t: 'NUMBER(5)', pk: 1, nn: 1, s: 'ok' }, { n: '대응내용', p: 'RSPNS_CN', t: 'VARCHAR2(1000)', s: 'ok' }] });
-    R.splice(0, R.length, { f: 'risk', t: 'rsp', k: 'id', name: '대응한다' });
-    M.splice(0, M.length);
-  }
+  // ---- business area: seed structure comes from the shared state layer (app.js modelSeed)
+  const AREA = getModels()[q.get('area')] ? q.get('area') : 'rq';
+  const _seed = modelSeed(AREA);
+  const E = _seed.E, R = _seed.R, M = _seed.M;
   const cv = $('cv'), world = $('world'), nodes = $('nodes'), eg = $('eg'), preview = $('preview');
+  let lodTimer = null, lodHinted = false;
   let mode = 'L', tool = 'select', relType = 'nonid', zoom = 1, panX = 40, panY = 50, sel = null, relSrc = null, lodForce = 'auto';
   let gateSeen = false, offline = false, remoteSel = 'rqrm', renaming = null, xorPick = [];
   const STATE = q.get('state') || '';          // only a data preset now (applied / resolved) — never the lock
@@ -347,7 +317,7 @@ window.pageInit = function () {
   if (SNAPDOC && SNAPDOC.area !== AREA) { location.replace(`model.html?area=${SNAPDOC.area}&snap=${SNAPDOC.id}`); return; }
   const SNAP_BAD = !!SNAP && !SNAPDOC;
   // ?state= presets are read-only samples: never saved, never submitted, never written to the shared judgement (CX9-01)
-  const DEMO = !!STATE && !SNAP;
+  const DEMO = (!!STATE || q.has('big')) && !SNAP;   // ?big=1 → 300+ entity sample to show the size warning (read-only)
   const confirmed = LOCK.state === 'confirmed' && !SNAP, review = LOCK.state === 'review' || !!SNAP;
   const locked = review || confirmed;
   const VER = LOCK.model.ver, BASE = LOCK.model.base;
@@ -401,10 +371,15 @@ window.pageInit = function () {
   // seed / sample presets only (no request documents behind them)
   function applyRows(keys) { if (AREA !== 'rq') return []; const done = []; keys.forEach(k => { const t = STD_MAP[k] && stdTarget(k); if (t) { STD_MAP[k](t); if (/제출일|이력순번/.test(k)) t.s = 'req'; done.push(k); } }); return done; }
   function applyStd() { applyRows(Object.keys(STD_MAP)); }
-  function keepRecipientAsEx(why) {
-    if (AREA !== 'rq') return;
-    [ent('dlv').a[3], ent('hist').a[2]].forEach(a => { a.s = 'ex'; a.exReason = why; delete a.cand; });
+  // attributes still unregistered because their word is only a candidate (by flag, not by array position)
+  const candAttrs = () => { const L = []; E.forEach(e => e.a.forEach(a => { if (a.s === 'unreg' && !a.edit) L.push([e, a]); })); return L; };   // every still-unregistered attribute (word not approved yet)
+  function keepRecipientAsEx(why, list) {
+    const L = list || candAttrs();
+    L.forEach(([e, a]) => { a.s = 'ex'; a.exReason = why; delete a.cand; });
+    return L.length;
   }
+  let exTarget = null;   // { e: entity id, a: attribute name } for the single-exception dialog
+  window.__openEx = (eid, aname) => { exTarget = { e: eid, a: aname }; $('ex-target').textContent = `${ent(eid).n}.${aname}`; $('mo-ex').classList.add('open'); $('ex-why').focus(); };
   // compliance recalculated from data on every render (CX-21)
   function updateComp() {
     let tot = 0, okc = 0, bad = 0, exc = 0, nac = 0, reqc = 0;
@@ -415,6 +390,10 @@ window.pageInit = function () {
     $('rate').textContent = rate + '%'; $('c-bad').textContent = bad; $('c-ex').textContent = exc; $('c-na').textContent = nac;
     const exList = []; E.forEach(e => e.a.forEach(a => { if (a.s === 'ex') exList.push([e.p !== '—' ? e.p : e.n, a.p !== '—' ? a.p : a.n, a.exReason || '—']); }));
     lastComp = { rate, bad, req: reqc, na: nac, exList };
+    $('c-cand').textContent = candOpenCount();
+    // area size guidance (23 §6-2): recommended up to 300 entities, warn only
+    $('ban-big').style.display = E.length > 300 ? 'flex' : 'none';
+    if (E.length > 300) $('ban-big-t').innerHTML = `<b>엔터티 ${E.length}개</b> — 업무 영역 권장 상한 300개를 넘었습니다. 계속 편집할 수 있지만 화면이 느려질 수 있습니다. 영역을 나누는 것을 검토하세요.`;
     if (!locked && !DEMO && !viewOnly) setComp(AREA, lastComp);          // home / system badges read this; approvals re-check the submitted copy
     const b = $('confirm-btn');
     if (locked) return;
@@ -425,10 +404,19 @@ window.pageInit = function () {
     b.dataset.tip = viewOnly ? '확정 신청은 모델러 역할만 할 수 있습니다' : `미준수 ${bad}건이 남아 있습니다 — [표준 맞추기]에서 해결하거나 사유를 남겨 예외로 처리하세요`;
     b.setAttribute('aria-label', can ? '확정 신청' : '확정 신청 (불가: ' + b.dataset.tip + ')');
     b.onclick = () => { if (!can) { toast(b.dataset.tip, 'info'); return; } fillConfirm(); openPanel('pn-confirm'); };
-    $('ban-left').style.display = E.some(e => e.a.some(a => a.cand && a.s === 'unreg')) ? 'flex' : 'none';
+    // remaining-unregistered banner from the current attributes and the candidate's real state (CX12-22)
+    const left = candAttrs();
+    $('ban-left').style.display = left.length && !viewOnly ? 'flex' : 'none';
+    if (left.length) { const c = getCands().find(x => x.name === '수령자'); const st = c ? candState(c) : '대기'; const docTxt = c && c.doc && st !== '대기' ? ` — ${c.doc}` : ''; $('ban-left-t').innerHTML = `<b>남은 미준수 ${left.length}</b> — ${left.map(([e, a]) => e.n + '.' + a.n).join(', ')}: 단어 ‘수령자’가 아직 승인 전입니다(후보 ${st}${docTxt}). 사유를 남기고 예외로 유지하면 확정 신청할 수 있습니다.`; $('ban-left-b').textContent = `${left.length}건 예외로 유지`; }
+
   }
   let lastComp = null;
   function fillConfirm() {
+    $('cf-sub').textContent = `요구사항관리 › ${LOCK.model.name} · v${VER}`;
+    const reqs = []; const docsNow = getDocs(); E.forEach(e => e.a.forEach(a => { if (a.s === 'req') { const d = a.reqDoc && docsNow.find(x => x.id === a.reqDoc); reqs.push([e, a, d]); } }));
+    $('cf-reqn').textContent = reqs.length;
+    $('cf-req').innerHTML = reqs.length ? `<table class="tbl"><thead><tr><th>속성</th><th>용어 신청</th><th>단계</th></tr></thead><tbody>${reqs.map(([e, a, d]) => `<tr><td>${e.n}.${a.n}</td><td>${d ? `<a class="mono" href="approvals.html?doc=${d.id}">${d.id}</a>` : '<span class="faint">연결 문서 없음(시드)</span>'}</td><td>${d ? STEP_NAME[d.step] : '—'}</td></tr>`).join('')}</tbody></table><div class="caption muted" style="margin-top:4px">진행 중인 용어 신청은 결재 상세에 함께 표시되고, 승인자가 확인해야 승인됩니다. 반려·회수된 신청이 있으면 확정할 수 없습니다.</div>` : '<div class="caption muted">없음</div>';
+    $('cf-final').style.display = lineFor('model', AREA).includes('final') ? '' : 'none';
     const ex = []; E.forEach(e => e.a.forEach(a => { if (a.s === 'ex') ex.push([e, a]); }));
     $('cf-exn').textContent = '◆ ' + ex.length;
     // panel cards from the same judgement (no fixed numbers)
@@ -540,8 +528,11 @@ window.pageInit = function () {
   function applyView() {
     world.style.transform = `translate(${panX}px,${panY}px) scale(${zoom})`;
     $('zl').textContent = Math.round(zoom * 100) + '%';
-    const lod = lodForce !== 'auto' ? lodForce : zoom >= 0.75 ? 'full' : zoom >= 0.4 ? 'mid' : 'low';
-    world.className = 'lod-' + lod; mini();
+    const want = lodForce !== 'auto' ? lodForce : zoom >= 0.35 ? 'full' : 'low';
+    clearTimeout(lodTimer);
+    const applyLod = () => { world.className = 'lod-' + want; if (lodForce === 'auto' && zoom < 0.2 && !lodHinted) { lodHinted = true; toast('더 넓게 보려면 [시스템 전체] — 영역 묶음 보기로 전체를 봅니다', 'info'); } };
+    if (lodForce !== 'auto' || !world.className) applyLod(); else lodTimer = setTimeout(applyLod, 150);
+    mini();
   }
   function mini() {
     const m = $('mini'); if (!nodes.children.length) return;
@@ -642,14 +633,18 @@ window.pageInit = function () {
   $('b-review').onclick = ev => { ev.preventDefault(); renderReview(); openPanel('pn-review'); };
   $('rev-x').onclick = showRP;
   $('exr-go').onclick = () => {   // was 'ex-go' — collided with the export button's id, so this dialog did nothing
-    if (guard()) return; snap(); const a = ent('dlv').a[3]; a.s = 'ex'; a.exReason = $('ex-why').value.trim(); delete a.cand;
+    if (guard()) return;
+    const e = exTarget && ent(exTarget.e), a = e && e.a.find(x => x.n === exTarget.a || x.orig === exTarget.a);
+    if (!a) { $('mo-ex').classList.remove('open'); toast(`예외로 둘 속성을 찾지 못했습니다(${exTarget ? exTarget.a : '대상 없음'}) — 이름이 바뀌었거나 삭제됐습니다`, 'danger'); return; }
+    snap(); a.s = 'ex'; a.exReason = $('ex-why').value.trim(); delete a.cand;
     $('mo-ex').classList.remove('open'); $('ex-why').value = ''; render();
-    toast('예외로 기록했습니다 — 확정 결재에서 DA가 검토합니다', 'violet', undoAction());
+    toast(`‘${e.n}.${a.n}’을 예외로 기록했습니다 — 남은 미준수 ${lastComp ? lastComp.bad : '?'}건 · 확정 결재에서 DA가 검토합니다`, 'violet', undoAction());
   };
+  $('ban-left-b').onclick = () => { const L = candAttrs(); $('ex2-t').textContent = `예외로 유지 (${L.length}건)`; $('ex2-target').textContent = L.map(([e, a]) => e.n + '.' + a.n).join(' · ') + ' — 미등록 단어 ‘수령자’'; $('mo-ex2').classList.add('open'); $('ex2-why').focus(); };
   $('ex2-go').onclick = () => {
-    if (guard()) return; snap(); keepRecipientAsEx($('ex2-why').value.trim());
+    if (guard()) return; if (!candAttrs().length) { $('mo-ex2').classList.remove('open'); toast('예외로 둘 미등록 속성이 없습니다', 'info'); return; } snap(); keepRecipientAsEx($('ex2-why').value.trim());
     $('mo-ex2').classList.remove('open'); $('ex2-why').value = ''; render();
-    toast('2건을 예외로 기록했습니다 — 미준수 0건, 확정 신청할 수 있습니다', 'violet', undoAction());
+    toast(`예외로 기록했습니다 — 남은 미준수 ${lastComp.bad}건${lastComp.bad ? '' : ' · 확정 신청할 수 있습니다'}`, 'violet', undoAction());
   };
   $('cf-go').onclick = () => {
     if (guard()) return;
@@ -774,7 +769,7 @@ window.pageInit = function () {
       (v ? `<div class="o" data-new="1" style="border-top:1px solid var(--border)"><span>＋ ‘${v}’ 그대로 입력 (미매핑)</span></div>` : '');
     cv.appendChild(acEl);
   }
-  const fromTerm = t => ({ n: t.n, p: t.p, t: t.t, s: t.s, sec: t.sec, enc: t.enc });
+  const fromTerm = t => Object.assign({ n: t.n, p: t.p, t: t.t, s: t.s, sec: t.sec, enc: t.enc }, t.doc ? { reqDoc: t.doc } : {});   // a 신청 중 term keeps its document link
   function commitAttr(inp, term) {
     const e = ent(inp.dataset.e), a = e.a[+inp.dataset.i];
     if (term) { Object.assign(a, fromTerm(term)); toast(`‘${term.n}’ 용어를 적용했습니다 · ${term.p}${term.sec ? ' · 도메인 보안 속성(개인정보) 상속' : ''}`); }
@@ -790,9 +785,16 @@ window.pageInit = function () {
   }
 
   // ---- collaboration demo
+  function drawParticipants() {
+    const editing = !locked && !viewOnly && !DEMO;
+    const others = [['홍설계', 'var(--p-hong)', '편집 중']].concat(Object.values(USERS).filter(u => u.id !== ME.id && u.roles.includes('modeler')).slice(0, 1).map(u => [u.name, 'var(--p-park)', '조회']));
+    $('av-list').innerHTML = `<span class="av" style="background:var(--ink);color:var(--on-ink)" title="${ME.name} (나) · ${editing ? '편집' : '조회'}">${ME.name[0]}</span>` + others.map(([n, c, s]) => `<span class="av ${s === '조회' ? 'view' : ''}" style="${s === '조회' ? '' : 'background:' + c}" title="${n} · ${s}">${n[0]}</span>`).join('');
+    $('avcap').textContent = `${others.length + 1}명 접속 · ${(editing ? 1 : 0) + 1}명 편집`;
+    $('cur-park').querySelector('span').textContent = `${others[1] ? others[1][0] : '박설계'} · 조회`;
+  }
   function setOffline(v) {
     offline = v; document.body.classList.toggle('offline', v); $('ban-off').style.display = v ? 'flex' : 'none';
-    $('avcap').textContent = v ? '연결 끊김 · 로컬 보관 중' : '3명 접속 · 2명 편집';
+    if (v) $('avcap').textContent = '연결 끊김 · 로컬 보관 중'; else drawParticipants();
     $('cur-hong').style.display = $('cur-park').style.display = v ? 'none' : 'block';
     render(); if (!v) toast('다시 연결했습니다 — 끊긴 동안의 내 편집 0건, 다른 사람 편집 1건을 병합했습니다', 'info');
   }
@@ -885,7 +887,7 @@ window.pageInit = function () {
     const node = ev.target.closest('.node');
     if (tool === 'memo' && !node) {
       const w = toWorld(ev), id = 'm' + Date.now(); snap();
-      M.push({ id, mode, x: Math.round(w.x), y: Math.round(w.y), text: '', by: '김모델' });
+      M.push({ id, mode, x: Math.round(w.x), y: Math.round(w.y), text: '', by: ME.name });
       setTool('select'); const mb = document.querySelector(`[data-mid="${id}"]`); if (mb) mb.focus(); return;
     }
     if (tool === 'entity' && !node) {
@@ -907,10 +909,10 @@ window.pageInit = function () {
       }
       const parent = ent(relSrc), child = ent(id);
       if (child.ref) { toast('참조 엔터티는 자식이 될 수 없습니다 — 공통 영역에서 수정하세요', 'info'); setTool('select'); return; }
-      snap(); R.push({ f: relSrc, t: id, k: relType, name: '' });
+      const g = 'g' + Date.now(); snap(); R.push({ f: relSrc, t: id, k: relType, name: '', g });
       if (relType !== 'mn') parent.a.filter(a => a.pk).forEach(k => {
         const clash = child.a.some(a => a.n === k.n);
-        child.a.push({ n: clash ? '원' + k.n : k.n, p: clash ? 'ORG_' + k.p : k.p, t: k.t, fk: 1, pk: relType === 'id' ? 1 : 0, s: clash ? 'comb' : 'ok' });
+        child.a.push({ n: clash ? '원' + k.n : k.n, p: clash ? 'ORG_' + k.p : k.p, t: k.t, fk: 1, fkg: g, pk: relType === 'id' ? 1 : 0, nn: relType === 'id' ? 1 : 0, s: clash ? 'comb' : 'ok' });
         toast(clash ? `이름이 겹쳐 ‘원${k.n} (FK)’로 추가했습니다 — 역할명을 확인하세요` : `‘${k.n} (FK)’가 ${child.n}에 추가됐습니다 · 되돌리기 Ctrl+Z`, clash ? 'violet' : 'success');
       });
       else toast('M:N 관계를 만들었습니다 — 관계를 선택해 [M:N 해소]로 교차 엔터티를 만드세요', 'info');
@@ -1013,6 +1015,19 @@ window.pageInit = function () {
     $('rp-body').innerHTML = `<dl class="kv"><dt>관계명</dt><dd>${r.name || '—'}</dd><dt>유형</dt><dd>${({ nonid: '1:N 비식별', id: '1:N 식별', one: '1:1', mn: 'M:N' })[r.k]}${r.xg ? ' · <span style="color:var(--violet)">배타</span>' : ''}</dd><dt>부모 선택성</dt><dd>필수</dd><dt>자식 선택성</dt><dd>선택</dd></dl>` +
       (r.xg ? `<div class="flex" style="margin-top:8px"><span class="grow"></span><button class="btn sm" id="xor-off">배타 해제</button></div>` : '') +
       (r.k === 'mn' ? `<div class="banner warning"><span>!</span><div class="grow"><b>M:N 해소 필요</b><div class="caption">교차 엔터티 제안: <b>요구사항리스크관계</b> <span class="mono">RQRM_RISK_R</span> · 식별 관계(PK = 두 FK)</div></div></div><div class="flex" style="margin-top:8px"><span class="grow"></span><button class="btn primary sm" id="mn-go">미리보기 후 해소</button></div>` : '');
+    // the FK attributes this relation brought into the child, handled as one group
+    const fkAttrs = () => { const c = ent(r.t), p = ent(r.f); const pk = p.a.filter(a => a.pk); return c.a.filter(a => a.fk && (r.g ? a.fkg === r.g : pk.some(k => k.p === a.p || k.n === a.n))); };
+    if (r.f !== r.t && r.k !== 'mn') {
+      const fa = fkAttrs();
+      $('rp-body').insertAdjacentHTML('beforeend', `<div class="section-t">FK 묶음 <span class="badge">${fa.length}</span> <span class="caption muted">이 관계로 자식에 생긴 속성 — 함께 바뀝니다</span></div><div class="caption">${fa.map(a => `${a.n} <span class="mono faint">${a.p}</span>${a.pk ? ' <span class="badge">PK</span>' : ''}`).join(' · ') || '—'}</div>
+        <div class="flex" style="margin-top:8px"><button class="btn sm" id="rel-ident">${r.k === 'id' ? '비식별로 전환' : '식별로 전환'}</button><span class="grow"></span><button class="btn sm danger" id="rel-del">관계 삭제</button></div>`);
+      $('rel-ident').onclick = () => { if (guard()) return; snap(); const toId = r.k !== 'id'; r.k = toId ? 'id' : 'nonid'; fkAttrs().forEach(a => { a.pk = toId ? 1 : 0; if (toId) a.nn = 1; }); render(); toast(toId ? `식별 관계로 바꿨습니다 — FK ${fa.length}개가 모두 PK·NOT NULL이 됐습니다` : `비식별 관계로 바꿨습니다 — FK ${fa.length}개를 PK에서 뺐습니다`, 'info', undoAction()); };
+      $('rel-del').onclick = () => { const box2 = document.createElement('div'); box2.className = 'banner warning'; box2.style.marginTop = '8px';
+        box2.innerHTML = `<span>!</span><div class="grow">관계를 삭제합니다. 자식의 FK 속성 ${fa.length}개를 어떻게 할까요?<div class="flex" style="margin-top:6px"><button class="btn sm" id="rd-keep">일반 속성으로 유지</button><button class="btn sm danger" id="rd-del">FK 속성도 삭제</button></div></div>`;
+        $('rp-body').appendChild(box2);
+        const go = keep => { if (guard()) return; snap(); const c = ent(r.t); fkAttrs().forEach(a => { if (keep) { delete a.fk; delete a.fkg; } else c.a.splice(c.a.indexOf(a), 1); }); R.splice(R.indexOf(r), 1); render(); showRP(); toast(`관계를 삭제했습니다 · FK ${fa.length}개 ${keep ? '일반 속성으로 유지' : '삭제'}`, 'info', undoAction()); };
+        $('rd-keep').onclick = () => go(true); $('rd-del').onclick = () => go(false); };
+    }
     const xo = $('xor-off'); if (xo) xo.onclick = () => { if (guard()) return; snap(); const g = r.xg; R.forEach(x => { if (x.xg === g) delete x.xg; }); render(); toast('배타 관계를 해제했습니다', 'info'); };
     const go = $('mn-go'); if (go) go.onclick = () => {
       if (guard()) return; snap();
@@ -1024,27 +1039,54 @@ window.pageInit = function () {
   });
   $('b-layout').onclick = () => {
     if (guard() || !confirm('계층 자동 배치를 적용합니다.\n접속 중인 2명(홍설계·박설계)의 화면도 같이 바뀝니다. 계속할까요?')) return;
-    snap(); const cols = { prj: [0, 0], emp: [1, 0], dept: [2, 0], mbr: [1, 1], code: [2, 1], rqrm: [0, 1], dlv: [1, 2], hist: [2, 2], risk: [0, 2], rr: [0.5, 3] };
-    E.forEach((e, i) => { const c = cols[e.id] || [3, i]; setPos(e, 60 + c[0] * 380, 60 + c[1] * 250); }); render(); toast('계층 자동 배치를 적용했습니다 · 모든 접속자에게 반영 · Ctrl+Z로 되돌리기', 'info');
+    let cancelled = false; $('b-layout').disabled = true; $('b-layout').textContent = '배치 계산 중…';
+    toast(`자동 배치 계산 중 — 엔터티 ${E.length}개 · 별도 작업자에서 계산해 편집은 막지 않습니다`, 'info', { label: '취소', fn: () => { cancelled = true; } });
+    setTimeout(() => {
+      $('b-layout').disabled = false; $('b-layout').textContent = '자동 배치';
+      if (cancelled) { toast('자동 배치를 취소했습니다 — 위치는 그대로입니다', 'info'); return; }
+      if (guard()) return;
+      snap(); const cols = { prj: [0, 0], emp: [1, 0], dept: [2, 0], mbr: [1, 1], code: [2, 1], rqrm: [0, 1], dlv: [1, 2], hist: [2, 2], risk: [0, 2], rr: [0.5, 3] };
+      E.forEach((e, i) => { const c = cols[e.id] || [3, i]; setPos(e, 60 + c[0] * 380, 60 + c[1] * 250); }); render(); toast('계층 자동 배치를 적용했습니다 · 모든 접속자에게 반영 · Ctrl+Z로 되돌리기', 'info');
+    }, 1200);
   };
   if (AREA === 'risk') remoteSel = 'rsp';
   $('jump-bad').onclick = ev => { ev.preventDefault(); const t = E.find(bad); if (!t) { toast('미준수 항목이 없습니다', 'info'); return; } focusEnt(t.id); toast(`미준수 속성이 있는 ‘${t.n}’으로 이동했습니다`, 'info'); };
   function setMode(v) {
     mode = v; document.querySelectorAll('#lp button').forEach(b => b.classList.toggle('on', b.dataset.v === v));
-    $('ban-gate').style.display = $('ban-sync').style.display = v === 'P' ? 'flex' : 'none';
+    $('ban-gate').style.display = $('ban-sync').style.display = v === 'P' ? 'flex' : 'none'; if (v === 'P') drawGate();
     sel = null; showRP(); render(); toast(v === 'P' ? '물리 캔버스 — 배치는 논리와 따로 저장됩니다 · 시스템 컬럼 4개 포함' : '논리 캔버스', 'info');
   }
   $('lp').addEventListener('click', ev => {
     const v = ev.target.dataset.v; if (!v || v === mode) return;
-    if (v === 'P' && !gateSeen) { openPanel('pn-gate'); return; }
+    if (v === 'P' && !gateSeen) { if (drawGate()) { openPanel('pn-gate'); return; } gateSeen = true; }   // nothing to check → straight to physical
     setMode(v);
   });
-  $('gate-go').onclick = () => { gateSeen = true; setMode('P'); toast('경고 4건을 남긴 채 물리 모델을 열었습니다 · 변경: 테이블 +2, 컬럼 +6', 'info'); };
+  function gateRows() {
+    const rows = [];
+    E.forEach(e => { if (e.ref) return; if (e.p === '—') rows.push([e, null, '테이블명 미정', e.st ? '엔터티 용어 신청 중' : '맞추기']);
+      e.a.forEach(a => { if (a.edit || a.s === 'na') return; const um = a.p === '—', tn = a.t === '—';
+        if (um || tn) rows.push([e, a, [um ? '미매핑' : '', tn ? '타입 미정' : ''].filter(Boolean).join('·') + (a.s === 'ex' ? ' (예외)' : a.s === 'unreg' ? ' · 미등록' : ''), a.s === 'unreg' || a.s === 'ex' ? 'ex' : 'std']); }); });
+    return rows;
+  }
+  function drawGate() {
+    const rows = gateRows(), um = rows.filter(r => r[2].includes('미매핑') || r[2].includes('테이블명')).length, tn = rows.filter(r => r[2].includes('타입')).length;
+    $('ban-gate-t').innerHTML = rows.length ? `<b>게이트 A · 경고 ${rows.length}</b> — 미매핑 ${um} · 타입 미정 ${tn}. 진행은 막지 않습니다.` : '<b>게이트 A · 통과</b> — 물리 반영 전 점검에서 남은 경고가 없습니다.';
+    $('ban-gate').className = 'banner ' + (rows.length ? 'warning' : 'success');
+    $('gate-body').innerHTML = `<div class="grid2" style="margin-bottom:12px"><div class="card"><div class="caption muted">미매핑</div><div class="mono" style="font-size:20px">${um}</div></div><div class="card"><div class="caption muted">타입 미정</div><div class="mono" style="font-size:20px">${tn}</div></div></div>` +
+      (rows.length ? `<table class="tbl"><thead><tr><th>위치</th><th>문제</th><th></th></tr></thead><tbody>${rows.map(([e, a, w, act]) => `<tr><td>${e.n}${a ? '.' + a.n : ' (테이블명)'}</td><td><span class="badge ${w.includes('미등록') ? 'b-warning' : 'b-info'}">${w}</span></td><td>${act === 'ex' && a && a.s !== 'ex' ? `<a href="#" data-gex="${e.id}|${a.n}">예외</a>` : act === '엔터티 용어 신청 중' ? '<span class="faint">대기</span>' : `<a href="standardize.html?area=${AREA}">맞추기</a>`}</td></tr>`).join('')}</tbody></table>` : '<div class="banner success"><span>✓</span><div>점검할 항목이 없습니다.</div></div>');
+    $('gate-body').querySelectorAll('[data-gex]').forEach(x => x.onclick = ev => { ev.preventDefault(); const [eid, an] = x.dataset.gex.split('|'); window.__openEx(eid, an); });
+    return rows.length;
+  }
+  $('gate-go').onclick = () => { gateSeen = true; const n = gateRows().length; setMode('P'); toast(n ? `경고 ${n}건을 남긴 채 물리 모델을 열었습니다` : '점검 통과 — 물리 모델을 열었습니다', 'info'); };
   $('gate-x').onclick = showRP;
-  $('b-gate').onclick = () => openPanel('pn-gate');
+  $('b-gate').onclick = () => { drawGate(); openPanel('pn-gate'); };
   $('b-reconnect').onclick = () => setOffline(false);
   $('b-export').onclick = ev => { ev.stopPropagation(); $('expmenu').classList.toggle('open'); };
   $('expmenu').addEventListener('click', ev => { ev.stopPropagation(); const b = ev.target.closest('.seg button'); if (b) b.parentElement.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); });
+  (() => { const bd = getDocs().find(x => x.type === 'model' && x.area === AREA && x.ver === BASE && x.step === 'done');
+    $('ex-title-1').textContent = `요구사항관리 › ${LOCK.model.name} · ${mode === 'L' ? '논리' : '물리'} ERD`;
+    if (bd) { const who = (bd.hist || []).filter(h => /승인/.test(h.act)).map(h => h.who).join(', '); $('ex-title-2').textContent = `v${bd.ver} · 확정 ${bd.date} · 승인 ${who || '—'} · ${bd.id}`; $('ex-official-t').textContent = `확정본(v${bd.ver}) 배치 기준 · 표제란에 버전·확정일·승인자`; }
+    else { $('ex-official').disabled = true; $('ex-official-t').textContent = '이 업무 영역에는 아직 확정본이 없어 공식 산출물을 만들 수 없습니다'; } })();
   $('ex-official').onchange = ev => { $('ex-title').style.display = ev.target.checked ? 'block' : 'none'; if (ev.target.checked) $('ex-scope').children[1].click(); };
   $('ex-cancel').onclick = () => $('expmenu').classList.remove('open');
   $('ex-go').onclick = () => {
@@ -1060,13 +1102,11 @@ window.pageInit = function () {
     if (on) { sel = null; relSrc = null; setTool('select'); closeGrid(); }
     const has = id => !!ent(id);
     if (on) sv.innerHTML = `<div class="banner info" style="position:absolute;left:12px;top:60px;z-index:5;max-width:560px"><span>ℹ</span><div class="grow"><b>시스템 전체 ERD · 조회 전용</b> — 요구사항관리의 모든 업무 영역. 공통 영역의 엔터티는 <b>참조로 가져와</b> 관계를 맺을 수 있습니다.</div></div>
-      <div class="grp" style="left:80px;top:140px;width:300px;height:180px;cursor:pointer" ondblclick="document.getElementById('b-sys').click()"><h4>요구사항 · 프로젝트</h4><div class="caption muted">엔터티 ${E.length} · 미준수 6 · <span style="color:var(--p-hong)">2명 편집 중</span></div><div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:10px">${'<span style="width:40px;height:22px;border-radius:4px;background:var(--surface-2);border:1px solid var(--border)"></span>'.repeat(E.length)}</div><div class="caption faint" style="margin-top:8px">더블클릭하면 편집 캔버스로</div></div>
-      <div class="grp" style="left:520px;top:180px;width:220px;height:130px"><h4>리스크</h4><div class="caption muted">엔터티 2 · 검토 중</div></div>
-      <div class="grp" style="left:300px;top:400px;width:340px"><h4>공통</h4><div class="caption muted" style="margin-bottom:6px">여러 업무 영역이 함께 쓰는 엔터티</div>
+      ${Object.entries(getModels()).map(([id, m], i) => { const mo = id === AREA ? { E } : modelOf(id, m.ver); const es = mo.E.filter(x => !x.ref); const bad = compOf(mo).bad; const lk = modelLock(id); const st = lk.state === 'review' ? '검토 중' : lk.state === 'confirmed' ? '확정' : `v${m.ver} 작업 중`; const col = i % 3, row = Math.floor(i / 3); return `<div class="grp" style="left:${60 + col * 300}px;top:${130 + row * 200}px;width:270px;min-height:120px;cursor:pointer" ondblclick="location.href='model.html?area=${id}'" title="더블클릭하면 이 업무 영역을 엽니다"><h4>${m.name}${id === AREA ? ' <span class="badge">지금 영역</span>' : ''}</h4><div class="caption muted">엔터티 ${es.length} · 미준수 ${bad} · ${st}</div><div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:10px">${'<span style="width:34px;height:18px;border-radius:4px;background:var(--surface-2);border:1px solid var(--border)"></span>'.repeat(Math.min(es.length, 18))}</div><div class="caption faint" style="margin-top:8px"><a href="model.html?area=${id}">열기</a> · 더블클릭해도 열립니다</div></div>`; }).join('')}
+      <div class="grp" style="left:${60 + 300 * Math.min(2, Object.keys(getModels()).length % 3)}px;top:${130 + 200 * Math.ceil(Object.keys(getModels()).length / 3)}px;width:340px"><h4>공통</h4><div class="caption muted" style="margin-bottom:6px">여러 업무 영역이 함께 쓰는 엔터티</div>
         <div class="refrow"><b class="grow">사원기본</b><span class="mono faint">EMP_M</span><span class="badge">사용 중</span></div>
         <div class="refrow"><b class="grow">부서기본</b><span class="mono faint">DEPT_M</span>${has('dept') ? '<span class="badge">참조 중</span>' : '<button class="btn sm" onclick="window.__importRef(\'dept\')">참조로 가져오기</button>'}</div>
         <div class="refrow"><b class="grow">공통코드기본</b><span class="mono faint">CMMN_CD_M</span>${has('code') ? '<span class="badge">참조 중</span>' : '<button class="btn sm" onclick="window.__importRef(\'code\')">참조로 가져오기</button>'}</div></div>
-      <svg style="position:absolute;inset:0;pointer-events:none" width="100%" height="100%"><g stroke="var(--fg-3)" fill="none"><path d="M380 240 H520" stroke-width="3"/><path d="M230 320 V470 H300" stroke-width="2"/><path d="M630 310 V400" stroke-width="1"/></g><text x="430" y="232" font-size="11" fill="var(--fg-2)">관계 3</text></svg>
       <div class="cv-zoom" style="left:12px;bottom:12px"><span class="caption muted" style="padding:0 8px">15% · 영역 묶음 보기 · 확대하면 엔터티가 펼쳐집니다</span></div>`;
   };
 
@@ -1076,6 +1116,7 @@ window.pageInit = function () {
   const loadData = d => { if (!d) return false; E.splice(0, E.length, ...JSON.parse(JSON.stringify(d.E))); R.splice(0, R.length, ...JSON.parse(JSON.stringify(d.R))); M.splice(0, M.length, ...JSON.parse(JSON.stringify(d.M || []))); return true; };
   const snapDoc = SNAP ? SNAPDOC : (locked ? LOCK.doc : null);
   if (SNAP_BAD) { E.splice(0, E.length); R.splice(0, R.length); M.splice(0, M.length); }   // nothing to show rather than the wrong model
+  else if (q.has('big')) { for (let i = 0; i < 305; i++) E.push({ id: 'b' + i, n: `대용량엔터티${i}`, p: `BIG${i}_M`, c: 'M', x: 1300 + (i % 20) * 280, y: 60 + Math.floor(i / 20) * 200, px: 1300 + (i % 20) * 280, py: 60 + Math.floor(i / 20) * 200, a: [{ n: `대용량${i}ID`, p: `BIG${i}_ID`, t: 'VARCHAR2(10)', pk: 1, nn: 1, s: 'ok' }, { n: '이름', p: 'NM', t: 'VARCHAR2(100)', s: 'ok' }] }); }
   else if (STATE === 'applied') { applyStd(); }
   else if (STATE === 'resolved') { applyStd(); keepRecipientAsEx(RECIP_WHY); }
   else if (snapDoc && snapDoc.model) loadData(snapDoc.model);
@@ -1087,6 +1128,7 @@ window.pageInit = function () {
     const docsNow = getDocs(); let fin = 0, back = 0;
     E.forEach(e => e.a.forEach(a => { if (a.s !== 'req' || !a.reqDoc) return; const d = docsNow.find(x => x.id === a.reqDoc); if (!d) return;
       if (d.step === 'done') { a.s = 'ok'; delete a.reqDoc; fin++; } else if (['rejected', 'withdrawn'].includes(d.step)) { a.s = 'comb'; a.reqNote = `${d.id} ${STEP_NAME[d.step]}`; delete a.reqDoc; back++; } }));
+    E.forEach(e => { if (!e.st || !e.reqDoc) return; const L = linkState(e.reqDoc); if (L.s === 'done') { delete e.st; delete e.reqDoc; fin++; } else if (L.s === 'ended') { delete e.st; delete e.reqDoc; back++; } });
     // a candidate word that has since been approved makes its attributes combinable again (re-judged in standardize)
     const dictNow = getDict(); const rc = dictNow.find(x => x.name === '수령자' && x.k === 'word' && x.ver > 0 && x.st === '사용');
     let cnd = 0; if (rc) E.forEach(e => e.a.forEach(a => { if (a.cand && a.s === 'unreg') { a.s = 'comb'; delete a.cand; cnd++; } }));
@@ -1102,26 +1144,27 @@ window.pageInit = function () {
     const findAttr = x => { const e = E.find(y => y.id === x.e); return e ? e.a.find(a => a.n === x.a || a.orig === x.a) : null; };
     (applied.rows || []).forEach(x => {
       if (x.proc === '예외로 유지') { const a = findAttr(x); if (a) { a.s = 'ex'; a.exReason = x.why; delete a.cand; done.push(x.key); } else miss.push(x.key); return; }
-      if (!STD_MAP[x.key]) { miss.push(x.key); return; }
-      // apply only when the analysed target is still there (entity row → entity id; attribute row → attribute name) — never by fixed position (CX11-06)
-      const entRow = x.key.split('.')[0] === x.key.split('.')[1];
-      const tgt = entRow ? E.find(y => y.id === x.e) : findAttr(x);   // resolve before the rename
-      if (!tgt) { miss.push(x.key); return; }
-      STD_MAP[x.key](tgt); done.push(x.key);
-      const a = entRow ? null : tgt;
-      if (a && x.proc === '용어 신청 묶음' && applied.doc) { a.s = 'req'; a.reqDoc = applied.doc; delete a.reqNote; }
-      else if (a && x.wait) { a.s = 'req'; a.reqDoc = x.wait; delete a.reqNote; }   // waits on the request that already covers this term
-    });
+      // generic hand-off (CX13-04): the analysis sends the proposed term / physical name / type with each row
+      if (x.entRow) { const e = E.find(y => y.id === x.e); if (!e) { miss.push(x.key); return; } if (x.phys) e.p = x.phys; if (x.proc.includes('용어 신청') || x.wait) { e.st = 1; e.reqDoc = x.proc.includes('용어 신청') && applied.doc ? applied.doc : x.wait || e.reqDoc; } done.push(x.key); return; }
+      const a = findAttr(x); if (!a) { miss.push(x.key); return; }   // resolve before the rename — never by fixed position
+      if (x.proc === '후보 등록' || x.proc === '선행 승인 대기') { a.cand = 1; done.push(x.key); return; }   // stays unregistered, now linked to the candidate
+      if (x.proc === '결재 대기 유지') { done.push(x.key); return; }
+      if (x.term && x.term !== a.n) { a.orig = a.orig || a.n; a.n = x.term; }
+      if (x.phys) a.p = x.phys; if (x.t) a.t = x.t;
+      if (x.proc === '용어 적용') { a.s = 'ok'; delete a.reqDoc; delete a.cand; }
+      else if (x.proc.includes('용어 신청') && applied.doc) { a.s = 'req'; a.reqDoc = applied.doc; delete a.reqNote; delete a.cand; }
+      else if (x.wait) { a.s = 'req'; a.reqDoc = x.wait; delete a.reqNote; delete a.cand; }   // waits on the request that already covers this term
+      done.push(x.key);    });
     (applied.ex || []).forEach(x => { const a = findAttr(x); if (a) { a.s = 'ex'; a.exReason = x.why; delete a.cand; done.push(x.key); } else miss.push(x.key); });
     (applied.na || []).forEach(x => { const a = findAttr(x); if (a) { a.s = 'na'; a.naReason = x.why; done.push(x.key); } else miss.push(x.key); });
-    setTimeout(() => toast(`표준 맞추기 반영 — 모델 변경 ${done.length}건${miss.length ? ` · <b>찾지 못해 적용 못 함 ${miss.length}건</b>(${miss.join(', ')})` : ''}${applied.doc ? ` · 용어 신청 ${applied.doc}(${applied.req}건)` : ''}${applied.cand ? ` · 후보 ‘수령자’ 발생 위치 ${applied.cand}건 연결` : ''}`, miss.length ? 'danger' : 'success', undoAction()), 300);
+    setTimeout(() => toast(`표준 맞추기 반영 — 모델 변경 ${done.length}건${miss.length ? ` · <b>찾지 못해 적용 못 함 ${miss.length}건</b>(${miss.join(', ')})` : ''}${applied.doc ? ` · 용어 신청 ${applied.doc}(${applied.req}건)` : ''}${applied.cand ? ` · 후보 발생 위치 ${applied.cand}건 등록` : ''}${applied.doc ? ' · 실행 취소해도 용어 신청은 남습니다(결재함에서 회수)' : ''}`, miss.length ? 'danger' : 'success', undoAction()), 300);
   } else if (applied) {
     // the area changed state (locked / other version) between standardize and here: keep the hand-off, say why
     setTimeout(() => toast(`표준 맞추기 결과를 반영하지 않았습니다 — ${applied.area !== AREA ? '다른 업무 영역' : applied.ver !== VER ? `v${applied.ver}용 결과(지금 v${VER})` : '이 영역은 지금 편집할 수 없음'}. 선택은 보존돼 있으니 표준 맞추기에서 다시 적용하세요`, 'danger'), 300);
   }
   $('ver').textContent = `v${VER} 작업 중`;
   const bdoc = getDocs().find(x => x.type === 'model' && x.area === AREA && x.ver === BASE && x.step === 'done');
-  document.querySelector('.page-header .caption.faint').innerHTML = `v${BASE} 확정본 기준${bdoc ? ` · <a href="model.html?area=${AREA}&snap=${bdoc.id}">v${BASE} 확정본 보기</a>` : ''}`;
+  document.querySelector('.page-header .caption.faint').innerHTML = (BASE ? `v${BASE} 확정본 기준` : '확정본 없음 — 첫 작업 버전') + `${bdoc ? ` · <a href="model.html?area=${AREA}&snap=${bdoc.id}">v${BASE} 확정본 보기</a>` : ''}`;
   document.querySelectorAll('a[href^="standardize.html"]').forEach(a => { const u = new URL(a.getAttribute('href'), location.href); u.searchParams.set('area', AREA); a.setAttribute('href', 'standardize.html' + u.search); });
   if (DEMO) {
     $('ver').textContent = '예시 · 저장 안 함';
@@ -1174,8 +1217,13 @@ window.pageInit = function () {
   new MutationObserver(() => dbmStore.set('dbm-side', $('side').classList.contains('closed') ? 'closed' : 'open')).observe($('side'), { attributes: true, attributeFilter: ['class'] });
   if (viewOnly && !locked) {
     document.body.classList.add('viewonly'); $('ban-view').style.display = 'flex';
-    $('ban-view-r').textContent = ME.roles.map(r => ROLE_NAME[r]).join(', ');
+    if ($('ban-view-r')) $('ban-view-r').textContent = ME.roles.map(r => ROLE_NAME[r]).join(', ');
   }
+  drawParticipants();
+  if (q.get('focus') && ent(q.get('focus'))) setTimeout(() => focusEnt(q.get('focus')), 120);
+  if (q.get('sys')) setTimeout(() => $('b-sys').click(), 150);
+  // DDL / outputs open for THIS area (and this submitted copy when viewing one) — CX12-30
+  document.querySelectorAll('a[href="ddl.html"], a[href^="outputs.html"]').forEach(a => { const u = new URL(a.getAttribute('href'), location.href); u.searchParams.set('area', AREA); if (SNAP && SNAPDOC) u.searchParams.set('snap', SNAPDOC.id); a.setAttribute('href', u.pathname.split('/').pop() + u.search); });   // system home → whole-system ERD (area group view)
   setTool('select'); applyView(); render(); renderReview(); setTimeout(() => { fit(); moveCursors(); }, 60);
 };
 </script>

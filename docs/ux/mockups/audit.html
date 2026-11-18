@@ -14,7 +14,7 @@
 <div id="content" class="page">
   <div class="page-header">
     <h1>감사 로그</h1><span class="badge">수정·삭제 불가 · 5년 보관</span>
-    <div class="actions"><button class="btn" data-toast="감사 로그를 엑셀로 내려받았습니다(현재 필터)" data-toast-type="info">엑셀</button></div>
+    <div class="actions"><button class="btn" id="axl">엑셀</button></div>
   </div>
   <div class="toolbar">
     <span class="chip on" data-group="ak" data-filter="">전체</span>
@@ -24,37 +24,44 @@
     <span class="chip" data-group="ak" data-filter="set">설정</span>
     <span class="chip" data-group="ak" data-filter="dict">사전 반영</span>
     <span class="chip" data-group="ak" data-filter="model">모델 확정</span>
+    <span class="chip" data-group="ak" data-filter="purge">영구 삭제</span>
     <span class="grow"></span>
-    <select class="input" style="width:140px;height:28px" aria-label="기간"><option>최근 30일</option><option>최근 1년</option><option>전체</option></select>
+    <select class="input" id="aper" style="width:140px;height:28px" aria-label="기간"><option value="30">최근 30일</option><option value="365">최근 1년</option><option value="0" selected>전체</option></select>
     <input class="input" id="aq" style="width:200px;height:28px" placeholder="사용자·문서 번호" aria-label="사용자·문서 번호 검색">
   </div>
   <div class="listhead" id="alh"></div>
   <div class="scroll">
-    <table class="tbl"><thead><tr><th>일시</th><th>사용자</th><th>종류</th><th>대상</th><th>내용 (전 → 후)</th><th>사유</th><th>IP</th></tr></thead><tbody id="ab">
-      <tr data-f="appr self"><td class="mono">11/17 15:06</td><td>김모델 <span class="badge">DA</span></td><td><span class="badge b-violet">자기 승인</span></td><td class="mono">REQ-2026-0014</td><td>DA 승인 → 최종 승인 대기</td><td class="caption">DA 1인 운영 기간 · 최종 승인에서 재검토</td><td class="mono">10.12.3.41</td></tr>
-      <tr data-f="set"><td class="mono">11/17 11:20</td><td>이데이터 <span class="badge">Admin</span></td><td><span class="badge">설정</span></td><td>사전 신청 최종 승인</td><td>끔 → <b>켬</b> (진행 중 3건은 기존 결재선 유지)</td><td class="caption">기관 담당자 지정 완료</td><td class="mono">10.12.3.12</td></tr>
-      <tr data-f="role"><td class="mono">11/17 10:02</td><td>이데이터 <span class="badge">Admin</span></td><td><span class="badge b-warning">역할 변경</span></td><td>김모델</td><td>모델러 → 모델러 · <b>DA</b></td><td class="caption">DA 1인 운영 보완</td><td class="mono">10.12.3.12</td></tr>
-      <tr data-f="role"><td class="mono">11/17 09:58</td><td>김모델</td><td><span class="badge b-danger">거부</span></td><td>김모델</td><td>자기 역할 변경 시도 → 거부됨</td><td class="caption">정책: 자기 역할 변경 불가</td><td class="mono">10.12.3.41</td></tr>
-      <tr data-f="dict"><td class="mono">11/16 18:10</td><td>시스템</td><td><span class="badge b-success">사전 반영</span></td><td class="mono">REQ-2026-0008</td><td>단어 12건 반영 · 항목 버전 +1</td><td></td><td class="mono">—</td></tr>
-      <tr data-f="model appr"><td class="mono">11/03 10:20</td><td>최관리 <span class="badge">기관 담당자</span></td><td><span class="badge b-violet">모델 확정</span></td><td class="mono">REQ-2026-0003</td><td>요구사항·프로젝트 v4 확정본</td><td class="caption">예외 2건 확인</td><td class="mono">10.12.5.3</td></tr>
-    </tbody></table>
+    <table class="tbl"><thead><tr><th>일시</th><th>사용자</th><th>종류</th><th>대상</th><th>내용 (전 → 후)</th><th>사유</th><th>IP</th></tr></thead><tbody id="ab"></tbody></table>
   </div>
 </div>
 </div>
 <script>
 window.pageInit = function () {
   if (!ME.has('da') && !ME.has('admin')) { location.replace('error.html?code=403&need=DA 또는 Admin&what=감사 로그'); return; }
-  // live rows: every approval history entry and every publication is an audit row (single source)
-  const ab = document.getElementById('ab'); const live = [];
-  getDocs().forEach(d => (d.hist || []).forEach(h => live.push({ at: h.at, who: h.who, f: 'appr' + (h.self ? ' self' : '') + (d.type === 'model' && /최종/.test(h.act) ? ' model' : ''), kind: h.self ? '<span class="badge b-violet">자기 승인</span>' : `<span class="badge">${h.act}</span>`, tgt: d.id, what: `${d.title}`, why: h.why || '' })));
-  getChanges().filter(c => c.act === '공표').forEach(c => live.push({ at: c.at.slice(5).replace('-', '/'), who: c.by, f: 'dict', kind: '<span class="badge b-violet">공표</span>', tgt: c.item, what: '기관 사전 제정차수 +1', why: c.diff }));
-  live.sort((a, b) => b.at.localeCompare(a.at));
-  ab.insertAdjacentHTML('afterbegin', live.map(r => `<tr data-f="${r.f}"><td class="mono">${r.at}</td><td>${r.who}</td><td>${r.kind}</td><td class="mono">${r.tgt}</td><td>${r.what}</td><td class="caption">${r.why}</td><td class="mono">—</td></tr>`).join(''));
-  // chip filter AND text search combined in one pass (S6)
-  const aq = document.getElementById('aq'); let kind = '';
-  const apply = () => { const v = aq.value.trim(); let n = 0; [...ab.rows].forEach(r => { const okK = !kind || (r.dataset.f || '').split(' ').includes(kind); const okQ = !v || r.innerText.includes(v); const show = okK && okQ; r.style.display = show ? '' : 'none'; if (show) n++; }); document.getElementById('alh').innerHTML = `<b style="color:var(--fg)">${n}건</b>${kind || v ? ' · 필터 적용' : ''} · 결재 이력·공표는 실시간 반영`; };
-  aq.oninput = apply;
+  // single source (CX13-14): approval history of every document + dictionary publications + settings/role/candidate audit entries + permanent deletions.
+  // nothing is typed into the page; every row comes from the shared state, sorted by time
+  const key = at => { at = String(at || ''); if (/^\d\d\/\d\d/.test(at)) return '2026-' + at.slice(0, 2) + '-' + at.slice(3); return at.replace('T', ' ').slice(0, 16); };
+  const docLink = id => /^REQ-/.test(id) ? `<a class="mono" href="approvals.html?doc=${id}">${id}</a>` : `<span class="mono">${id}</span>`;
+  const rows = [];
+  const FIXED = [];   // only events that happened in this state (CX14-12)
+  getDocs().forEach(d => (d.hist || []).forEach(h => rows.push({ at: key(h.at), who: h.who, f: 'appr' + (h.self ? ' self' : '') + (d.type === 'model' && (h.step === 'final' || /확정/.test(h.act)) ? ' model' : '') + (d.type === 'dict' && /승인/.test(h.act) && d.step === 'done' && h === d.hist[d.hist.length - 1] ? ' dict' : ''),
+    kind: h.self ? '<span class="badge b-violet">자기 승인</span>' : /반려/.test(h.act) ? `<span class="badge b-danger">${h.act}</span>` : `<span class="badge">${h.act}</span>`, tgt: docLink(d.id), what: d.title + (d.step === 'done' && h === d.hist[d.hist.length - 1] ? (d.type === 'model' ? ' · <b>확정본</b>' : ' · <b>사전 반영</b>') : ''), why: h.why || '' })));
+  getChanges().filter(c => c.act === '공표').forEach(c => rows.push({ at: key(c.at), who: c.by, f: 'dict', kind: '<span class="badge b-violet">공표</span>', tgt: `<a href="dict-history.html#pub">${c.item}</a>`, what: '기관 사전 제정차수 +1', why: c.diff || '' }));
+  const F2 = a => /역할/.test(a) ? 'role' : /설정|검수 기준/.test(a) ? 'set' : /후보/.test(a) ? 'dict' : 'set';
+  getAudit().filter(a => a.act !== '영구 삭제').forEach(a => rows.push({ at: key(a.at), who: a.who, f: F2(a.act), kind: `<span class="badge ${/역할/.test(a.act) ? 'b-warning' : ''}">${a.act}</span>`, tgt: a.target || '', what: a.what || a.why || '', why: a.what ? (a.why || '') : '' }));
+  JSON.parse(dbmStore.get('dbm-purge', '[]')).forEach(p => rows.push({ at: key(p.at), who: p.who, f: 'purge', kind: '<span class="badge b-danger">영구 삭제</span>', tgt: `<span class="mono">${p.id}</span> ${p.name}`, what: `${p.kind || ''} 항목 영구 삭제 · 근거 ${p.doc !== '—' ? docLink(p.doc) : '—'}`, why: p.why || '' }));
+  rows.push(...FIXED); rows.sort((a, b) => b.at.localeCompare(a.at));
+  const ab = document.getElementById('ab');
+  ab.innerHTML = rows.map(r => `<tr data-f="${r.f}" data-at="${r.at}"><td class="mono">${r.at}</td><td>${r.who}</td><td>${r.kind}</td><td>${r.tgt}</td><td>${r.what}</td><td class="caption">${r.why}</td><td class="mono">${r.ip || '—'}</td></tr>`).join('') || '<tr><td colspan="7" class="caption muted" style="text-align:center;padding:24px">기록이 없습니다</td></tr>';
+  // chip + period + text search in one pass
+  const aq = document.getElementById('aq'), per = document.getElementById('aper'); let kind = '';
+  const since = () => { const n = +per.value; if (!n) return ''; const d = new Date(Date.now() - n * 864e5); return d.toISOString().slice(0, 10); };
+  let shown = 0;
+  const apply = () => { const v = aq.value.trim(), lo = since(); shown = 0; [...ab.rows].forEach(r => { if (!r.dataset.at) return; const ok = (!kind || (r.dataset.f || '').split(' ').includes(kind)) && (!v || r.innerText.includes(v)) && (!lo || r.dataset.at >= lo); r.style.display = ok ? '' : 'none'; if (ok) shown++; });
+    document.getElementById('alh').innerHTML = `<b style="color:var(--fg)">${shown}건</b>${kind || v || lo ? ' · 필터 적용' : ''} · 결재 이력·공표·설정·역할·영구 삭제를 한 곳에서 시간순으로`; };
+  aq.oninput = apply; per.onchange = apply;
   document.querySelector('.toolbar').addEventListener('click', e => { const c = e.target.closest('.chip[data-filter]'); if (!c) return; kind = c.dataset.filter; setTimeout(apply, 0); });
+  document.getElementById('axl').onclick = () => toast(`감사 로그 ${shown}건을 엑셀로 내려받았습니다(현재 필터 기준)`, 'info');
   apply();
 };
 </script>

@@ -22,11 +22,16 @@
     kim: { id: 'kim', name: '김모델', org: '데이터정책팀', mail: 'kim@kda.go.kr', roles: ['modeler', 'da'], systems: ['요구사항관리', '인사시스템'] },
     park: { id: 'park', name: '박설계', org: '정보화사업팀', mail: 'park@kda.go.kr', roles: ['modeler'], systems: ['요구사항관리'] },
     lee: { id: 'lee', name: '이데이터', org: '데이터정책팀', mail: 'lee@kda.go.kr', roles: ['da', 'admin'], systems: ['전체'] },
-    hyun: { id: 'hyun', name: '이현업', org: '기획조정실', mail: 'hyun@kda.go.kr', roles: ['owner'], systems: ['전체'] }
+    hyun: { id: 'hyun', name: '이현업', org: '기획조정실', mail: 'hyun@kda.go.kr', roles: ['owner'], systems: ['전체'] },
+    choi: { id: 'choi', name: '최담당', org: '재무회계팀', mail: 'choi@kda.go.kr', roles: ['owner', 'modeler'], systems: ['회계시스템'] }
   };
   const ROLE_NAME = { modeler: '모델러', da: 'DA', owner: '기관 담당자', admin: 'Admin' };
   window.USERS = USERS; window.ROLE_NAME = ROLE_NAME;
-  const meId = qs.get('as') || store.get('dbm-role', 'kim');
+  // roles changed in settings (SC-42) apply to everyone — the mock "server" copy of user roles
+  try { const ov = JSON.parse(store.get('dbm-user-roles', 'null')); if (ov) Object.entries(ov).forEach(([id, r]) => { if (USERS[id]) USERS[id].roles = r; }); } catch (e) {}
+  // ?as=role from a scenario/shortcut link becomes the selected demo user (kept while moving between screens — CL12-01)
+  if (qs.get('as') && USERS[qs.get('as')] && store.get('dbm-role', 'kim') !== qs.get('as')) store.set('dbm-role', qs.get('as'));
+  const meId = store.get('dbm-role', 'kim');
   const ME = Object.assign({}, USERS[meId] || USERS.kim, { has(r) { return this.roles.includes(r); } });
   window.ME = ME;
   window.roleBadges = u => u.roles.map(r => `<span class="badge">${ROLE_NAME[r]}</span>`).join(' ');
@@ -74,7 +79,8 @@
       const nameBusy = o.items.filter(it => opOf(it) === '추가').map(it => openNames.find(x => x.it.name === it.name)).filter(Boolean);
       if (busy.length || nameBusy.length) return { doc: null, conflict: busy.map(d => `${d.name}(${d.pending})`).concat(nameBusy.map(x => `${x.it.name}(${x.doc})`)) };
     }
-    const doc = Object.assign({ id: nextDocId(docs), req: ME.id, step: 'da', date: now(), cc: [], hist: [], n: 1 }, o);
+    // the approval line and the validation-policy version are frozen into the document when it is created
+    const doc = Object.assign({ id: nextDocId(docs), req: ME.id, step: 'da', date: now(), cc: [], hist: [], n: 1, line: lineFor(o.type, o.area), policyVer: getPolicy().ver, submittedAt: today() + ' ' + now().split(' ')[1] }, o);
     docs.unshift(doc); saveDocs(docs);
     // items with an existing id become "pending" in the dictionary (MD-10: one open request per item)
     if (doc.items) { const dict = getDict(); doc.items.forEach(it => { const d = it.id && dict.find(x => x.id === it.id); if (d) d.pending = doc.id; }); saveDict(dict); }
@@ -85,7 +91,15 @@
 
   /* ---- model versions & locks: computed from documents, never from the URL ---- */
   const MODEL0 = { rq: { ver: 5, base: 4, name: '요구사항 · 프로젝트' }, risk: { ver: 2, base: 1, name: '리스크' } };
-  window.getModel = area => (J('dbm-model', clone(MODEL0)))[area] || MODEL0.rq;
+  window.getModels = () => J('dbm-model', clone(MODEL0));
+  window.getModel = area => getModels()[area] || MODEL0.rq;
+  /* new business area (system home [+ 업무 영역], DDL import): id, name, v1 working version, optional imported structure */
+  window.addArea = (name, structure, meta) => {
+    const all = getModels(); let n = 1; while (all['a' + n]) n++; const id = 'a' + n;
+    all[id] = Object.assign({ ver: 1, base: 0, name }, meta || {}); S('dbm-model', all);
+    if (structure) { S('dbm-area-seed-' + id, structure); setModelData(id, 1, Object.assign({}, structure, { rev: 0 })); }
+    return id;
+  };
   window.setModel = (area, m) => { const all = J('dbm-model', clone(MODEL0)); all[area] = m; S('dbm-model', all); };
   window.modelLock = area => {
     const m = getModel(area);
@@ -104,6 +118,38 @@
     setModel(area, Object.assign({}, m, { ver: m.ver + 1, base: m.ver }));
     return { ok: true, ver: m.ver + 1 };
   };
+
+  /* ---- model seed per business area (v7.3): model, standardize, DDL, system home and import read the same structure ---- */
+  const MODEL_SEED = {
+    rq: { E: [
+    { id: 'prj', n: '프로젝트기본', p: 'PRJ_M', c: 'M', x: 60, y: 60, px: 60, py: 60, a: [
+      { n: '프로젝트ID', p: 'PRJ_ID', t: 'VARCHAR2(10)', pk: 1, nn: 1, s: 'ok' }, { n: '프로젝트명', p: 'PRJ_NM', t: 'VARCHAR2(100)', nn: 1, s: 'ok' }, { n: '발주처명', p: 'ORDR_OFC_NM', t: 'VARCHAR2(100)', s: 'ok' }, { n: '프로젝트종료일', p: 'PRJ_ENDDD', t: 'CHAR(8)', s: 'ex', exReason: '운영 DB 컬럼 · 배치 영향' }, { n: '수주금액', p: 'WINCON_AMT', t: 'NUMBER(15)', s: 'ok' }] },
+    { id: 'emp', n: '사원기본', p: 'EMP_M', c: 'K', x: 420, y: 40, px: 460, py: 40, a: [
+      { n: '사원번호', p: 'EMP_NO', t: 'NUMBER(6)', pk: 1, nn: 1, s: 'ok' }, { n: '사원명', p: 'EMP_NM', t: 'VARCHAR2(100)', nn: 1, s: 'ok', sec: '개인정보', enc: '없음' }, { n: '휴대전화번호', p: 'MBTL_NO', t: 'VARCHAR2(20)', s: 'ok', sec: '개인정보', enc: '양방향(ARIA)' }] },
+    { id: 'mbr', n: '프로젝트팀원구성내역', p: 'PRJ_MBR_D', c: 'A', x: 400, y: 220, px: 440, py: 240, a: [
+      { n: '프로젝트ID', p: 'PRJ_ID', t: 'VARCHAR2(10)', pk: 1, fk: 1, nn: 1, s: 'ok' }, { n: '팀원사원번호', p: 'TMBR_EMP_NO', t: 'NUMBER(6)', pk: 1, fk: 1, nn: 1, s: 'ok' }, { n: '투입시작일자', p: 'INPT_BEGIN_YMD', t: 'CHAR(8)', s: 'ok' }, { n: '역할구분코드', p: 'ROLE_SE_CD', t: 'CHAR(1)', s: 'ok' }] },
+    { id: 'rqrm', n: '요구사항내역', p: 'RQRM_D', c: 'A', x: 60, y: 340, px: 60, py: 380, a: [
+      { n: '요구사항ID', p: 'DEMND_MATER_ID', t: 'VARCHAR2(10)', pk: 1, nn: 1, s: 'ok' }, { n: '요구사항명', p: 'DEMND_MATER_NM', t: 'VARCHAR2(100)', nn: 1, s: 'ok' }, { n: '요구사항내용', p: 'DEMND_MATER_CN', t: 'VARCHAR2(1000)', s: 'ok' }, { n: '요청고객명', p: 'REQ_CUST_NM', t: 'VARCHAR2(100)', s: 'ex', exReason: '대외 연계 컬럼명 유지', sec: '개인정보', enc: '없음', secSrc: '직접 지정 · 사유 있음' }, { n: '프로젝트ID', p: 'PRJ_ID', t: 'VARCHAR2(10)', fk: 1, s: 'ok' }] },
+    { id: 'dlv', n: '산출물기본', p: 'DLVRBL_M', c: 'M', x: 420, y: 450, px: 460, py: 500, st: 1, reqDoc: 'REQ-2026-0013', uk: ['DLVRBL_NM'], sub: { disc: '산출물유형코드', kind: '배타', kids: ['문서산출물', '모델산출물'] }, a: [
+      { n: '산출물ID', p: 'DLVRBL_ID', t: 'VARCHAR2(10)', pk: 1, nn: 1, s: 'ok' }, { n: '산출물명', p: 'DLVRBL_NM', t: 'VARCHAR2(100)', nn: 1, s: 'ok' }, { n: '산출물제출일', p: '—', t: '—', s: 'comb' }, { n: '산출물수령자명', p: '—', t: '—', s: 'unreg', cand: 1 }, { n: '요구사항ID', p: 'DEMND_MATER_ID', t: 'VARCHAR2(10)', fk: 1, s: 'ok' }] },
+    { id: 'hist', n: '산출물이력', p: '—', c: 'H', x: 800, y: 470, px: 860, py: 520, a: [
+      { n: '산출물ID', p: 'DLVRBL_ID', t: 'VARCHAR2(10)', pk: 1, fk: 1, nn: 1, s: 'ok' }, { n: '이력순번', p: '—', t: '—', pk: 1, s: 'unreg' }, { n: '수령자ID', p: '—', t: '—', s: 'unreg' }] },
+    { id: 'risk', n: '리스크기본', p: 'RISK_M', c: 'M', x: 60, y: 640, px: 60, py: 700, a: [
+      { n: '리스크ID', p: 'RISK_ID', t: 'VARCHAR2(10)', pk: 1, nn: 1, s: 'ok' }, { n: '리스크명', p: 'RISK_NM', t: 'VARCHAR2(100)', s: 'ok' }, { n: '리스크등급코드', p: 'RISK_GRD_CD', t: 'CHAR(1)', s: 'ok' }] }
+  ], R: [
+    { f: 'prj', t: 'rqrm', k: 'nonid', name: '수행한다' },
+    { f: 'prj', t: 'mbr', k: 'id', name: '구성된다' },
+    { f: 'emp', t: 'mbr', k: 'id', name: '참여한다' },
+    { f: 'rqrm', t: 'dlv', k: 'nonid', name: '산출한다' },
+    { f: 'dlv', t: 'hist', k: 'id', name: '기록된다' },
+    { f: 'rqrm', t: 'risk', k: 'mn', name: '관련된다' }
+  ], M: [{ id: 'm1', mode: 'L', x: 820, y: 330, text: '산출물이력 순번 체계는 DA 확인 후 확정 (11/18 회의)', by: '박설계' }] },
+    risk: { E: [{ id: 'risk', n: '리스크기본', p: 'RISK_M', c: 'M', x: 60, y: 60, px: 60, py: 60, a: [{ n: '리스크ID', p: 'RISK_ID', t: 'VARCHAR2(10)', pk: 1, nn: 1, s: 'ok' }, { n: '리스크명', p: 'RISK_NM', t: 'VARCHAR2(100)', s: 'ok' }, { n: '리스크등급코드', p: 'RISK_GRD_CD', t: 'CHAR(1)', s: 'ok' }] },
+      { id: 'rsp', n: '리스크대응내역', p: 'RISK_RSPNS_D', c: 'A', x: 420, y: 60, px: 460, py: 60, a: [{ n: '리스크ID', p: 'RISK_ID', t: 'VARCHAR2(10)', pk: 1, fk: 1, nn: 1, s: 'ok' }, { n: '대응순번', p: 'RSPNS_SN', t: 'NUMBER(5)', pk: 1, nn: 1, s: 'ok' }, { n: '대응내용', p: 'RSPNS_CN', t: 'VARCHAR2(1000)', s: 'ok' }] }], R: [{ f: 'risk', t: 'rsp', k: 'id', name: '대응한다' }], M: [] }
+  };
+  window.modelSeed = area => clone(MODEL_SEED[area] || (J('dbm-area-seed-' + area, null)) || { E: [], R: [], M: [] });
+  /* the structure of an area+version as the screens should see it: saved working data → seed */
+  window.modelOf = (area, ver) => { const d = getModelData(area, ver); return d ? clone(d) : modelSeed(area); };
   window.getComp = area => J('dbm-comp-' + area, null);
   window.setComp = (area, c) => S('dbm-comp-' + area, c);
 
@@ -155,6 +201,9 @@
     { id: 'W-0003', k: 'word', kn: '단어', src: '공통', st: '사용', name: '산출내역', abbr: 'CALC_DTLS', dom: '—', eng: 'calculation details', ver: 1, cha: 3, dt: '2025-11-30', use: 0, syn: [], forbid: [], old: [], hist: [] },
     { id: 'C-0005', k: 'code', kn: '코드', src: '기관', st: '사용', name: '산출물유형', abbr: 'DLVRBL_TYPE', dom: '코드C2', dg: '코드', eng: '문서·코드·모델·기타', ver: 1, cha: 12, dt: '2026-11-17', use: 1, syn: [], forbid: [], old: [], hist: [] },
     { id: 'W-0210', k: 'word', kn: '단어', src: '공통', st: '사용', name: '수신자', abbr: 'RCVR', dom: '—', eng: 'receiver', ver: 1, cha: 3, dt: '2025-11-30', use: 3, syn: ['수취인'], forbid: ['수령인'], old: [], hist: [] },
+    // V0 (삭제 보관) samples: one still referenced (permanent delete blocked), one free to purge
+    { id: 'W-0097', k: 'word', kn: '단어', src: '기관', st: '삭제 보관', name: '산출근거문서', abbr: 'CALC_BSDC', dom: '—', eng: '산출근거로 통합', ver: 3, cha: 12, dt: '2026-11-05', use: 0, syn: [], forbid: [], old: [], delDoc: 'REQ-2026-0001', hist: [{ v: 'V0', at: '2026-11-05 10:00', act: '삭제 보관', doc: 'REQ-2026-0001', by: '이데이터', why: '산출근거로 통합', diff: [] }] },
+    { id: 'W-0096', k: 'word', kn: '단어', src: '기관', st: '삭제 보관', name: '결과물품', abbr: 'RSLT_GDS', dom: '—', eng: '결과물로 통합', ver: 2, cha: 12, dt: '2026-11-05', use: 1, syn: [], forbid: [], old: [], delDoc: 'REQ-2026-0001', hist: [{ v: 'V0', at: '2026-11-05 10:00', act: '삭제 보관', doc: 'REQ-2026-0001', by: '이데이터', why: '결과물로 통합', diff: [] }] },
     { id: 'W-0211', k: 'word', kn: '단어', src: '공통', st: '사용', name: '검사', abbr: 'INSP', dom: '—', eng: 'inspection', ver: 1, cha: 3, dt: '2025-11-30', use: 6, syn: [], forbid: [], old: [], hist: [] }
   ];
   window.getDict = () => J('dbm-dict', clone(DICT0));
@@ -178,8 +227,17 @@
       const op = opOf(it), k = kindOf(it), name = (it.name || '').trim();
       const res = { name: name || '(이름 없음)', op, problems: [] };
       if (!name) res.problems.push('이름이 비어 있음');
+      // shared business rules — the same set the excel validation and the dictionary form use (CL12-26)
+      const forbid = dict.find(x => x.k === 'word' && (x.forbid || []).some(f => f && name.includes(f)));
+      if (forbid && op !== '미사용') res.problems.push(`금칙어 '${forbid.forbid.find(f => name.includes(f))}' 포함 — '${forbid.name}' 사용`);
+      if (op === '추가' && k === 'term') {
+        if (it.dom && !knownDomains().has(it.dom)) res.problems.push(`도메인 '${it.dom}'이 사전에 없음`);
+        if ((it.abbr || '').length > 30) res.problems.push(`영문약어명 ${it.abbr.length}자 — 30자 초과(대상 DBMS 기준)`);
+        if (it.dom !== '엔터티' && it.dom !== '엔터티 용어') { const dc = decompose(name); const pend = dc.pending.filter(p => !(doc.items || []).some(o => o.k === 'word' && o.name === p.w)); if (pend.length) res.problems.push(`구성 단어 미승인: ${pend.map(p => p.w + (p.doc ? `(${p.doc} 진행 중)` : '')).join(', ')}`); }
+      }
       if (op === '추가') {
         if (k === 'word' && !(it.abbr || '').trim()) res.problems.push('영문약어명이 비어 있음');
+        { const lim = (window.getPolicy ? getPolicy().wordAbbr : 0) || 6; if (k === 'word' && (it.abbr || '').length > lim) res.problems.push(`단어 영문약어명 ${lim}자 초과(검수 기준)`); }
         const same = dict.find(x => x.name === name && (!k || x.k === k) && x.ver > 0);
         if (same) res.problems.push(`같은 이름의 ${same.kn}이 이미 있음(${same.id} · ${same.src}) — 변경 신청으로`);
         const o = open.find(x => x.it.name === name && (!x.it.k || !k || x.it.k === k) && opOf(x.it) === '추가');
@@ -220,7 +278,7 @@
         const clash = dict.find(x => x.name === it.name && x.k === k && x.ver > 0);
         if (clash) { failed.push([it.name, `같은 이름 ${clash.id} 이미 있음`]); return; }
         if (ph) { d = ph; d.ver = 1; d.st = '사용'; }
-        else { d = { id: (k === 'word' ? 'W-' : k === 'domain' ? 'D-' : k === 'code' ? 'C-' : 'T-') + String(500 + dict.length).padStart(4, '0'), k, kn: KIND_NAME[k] || '용어', src: '기관', st: '사용', name: it.name, abbr: it.abbr || '—', dom: it.dom || '—', eng: it.eng || '', desc: it.desc || '', ver: 1, cha: null, dt: today(), use: 0, syn: [], forbid: [], old: [], hist: [] }; dict.push(d); }
+        else { d = { id: (() => { const pre = k === 'word' ? 'W-' : k === 'domain' ? 'D-' : k === 'code' ? 'C-' : 'T-'; const seq = Math.max(+store.get('dbm-idseq', '500'), ...dict.map(x => +String(x.id).slice(2) || 0)) + 1; store.set('dbm-idseq', String(seq)); return pre + String(seq).padStart(4, '0'); })(), k, kn: KIND_NAME[k] || '용어', src: '기관', st: '사용', name: it.name, abbr: it.abbr || '—', dom: it.dom || '—', eng: it.eng || '', desc: it.desc || '', ver: 1, cha: null, dt: today(), use: 0, syn: [], forbid: [], old: [], hist: [] }; dict.push(d); }
       }
       d.dt = today(); if (d.pending === doc.id) delete d.pending;
       d.hist = d.hist || []; d.hist.unshift({ v: 'V' + d.ver, at, act, doc: doc.id, by: ME.name, why: it.why || doc.reason, diff });
@@ -237,7 +295,7 @@
     saveDict(dict); return n;
   };
   /* the role that is CURRENTLY selected (another tab may have switched it after this page loaded) */
-  window.liveRoleChanged = () => !qs.get('as') && store.get('dbm-role', 'kim') !== ME.id;
+  window.liveRoleChanged = () => store.get('dbm-role', 'kim') !== ME.id;
   window.staleRoleToast = () => toast(`다른 탭에서 사용자가 바뀌었습니다(지금 ${USERS[store.get('dbm-role', 'kim')] ? USERS[store.get('dbm-role', 'kim')].name : ''}) — 새로고침한 뒤 다시 처리하세요`, 'danger', { label: '새로고침', fn: () => location.reload() });
   /* one batch-state function for every screen (upload history, excel step 1) */
   window.batchState = b => {
@@ -248,6 +306,71 @@
     return b.status;
   };
   window.batchStateLabel = s => s === '보완' ? '반려·회수 — 보완 필요' : s;
+  /* one classification for "my requests" everywhere (user menu, mypage, approvals): live · fix (rejected/withdrawn) · done */
+  window.docGroup = d => ['da', 'final'].includes(d.step) ? 'live' : ['rejected', 'withdrawn'].includes(d.step) ? 'fix' : 'done';
+  window.DOC_GROUP_NAME = { live: '진행 중', fix: '보완 필요', done: '완료' };
+
+  /* ---- organisation settings (SC-40/41): approval line — the final (기관 담당자) step is a setting, snapshotted into each document ---- */
+  window.getOrg = () => J('dbm-org', { finalDict: true, finalModel: { rq: true, risk: true }, mail: '결재 요청은 지금 차례인 결재자에게, 결과는 신청자에게 앱 알림 · 메일은 결재선 담당자에게만' });
+  window.saveOrg = o => S('dbm-org', o);
+  window.lineFor = (type, area) => { const o = getOrg(); const fin = type === 'model' ? (o.finalModel[area] !== false) : o.finalDict; return fin ? ['da', 'final'] : ['da']; };
+  window.hasFinal = d => (d.line || ['da', 'final']).includes('final');
+
+  /* ---- audit events: one append-only source written by actions (settings, publish, purge, role change); audit screen merges it with document history ---- */
+  window.pushAudit = e => { const all = J('dbm-audit', []); all.unshift(Object.assign({ id: 'au' + Date.now() + Math.random().toString(36).slice(2, 5), at: today() + ' ' + now().split(' ')[1], who: ME.name, whoId: ME.id }, e)); S('dbm-audit', all.slice(0, 300)); };
+  window.getAudit = () => J('dbm-audit', []);
+
+  /* ---- validation policy (검수 기준) with a version number — documents and upload validations remember the version they were checked with ---- */
+  window.getPolicy = () => J('dbm-policy', { ver: 3, at: '2026-11-10 09:00', by: '이데이터', hist: [{ ver: 3, at: '2026-11-10 09:00', by: '이데이터', what: '용어 영문약어명 상한 30자(Oracle 기준)' }, { ver: 2, at: '2026-10-20 14:00', by: '이데이터', what: '단어 영문약어명 6자 이내' }] });
+  window.savePolicy = p => S('dbm-policy', p);
+  window.dictRev = () => getChanges().length;   // a cheap "dictionary changed" marker for validation tokens
+
+  /* ---- word decomposition for analysis (term names → standard words). Common words are seeded here for the mockup ---- */
+  const COMMON_WORDS = { 요구사항: 'DEMND_MATER', 프로젝트: 'PRJ', 제출: 'SBMT', 일자: 'YMD', 명: 'NM', ID: 'ID', 코드: 'CD', 결과: 'RSLT', 내용: 'CN', 이력: 'HIST', 순번: 'SN', 상태: 'STTS', 우선순위: 'PRIOR', 부서: 'DEPT', 요청: 'REQ', 고객: 'CUST', 금액: 'AMT', 수주: 'WINCON', 기본: 'M', 승인: 'APRV', 완료: 'CMPTN', 리스크: 'RISK', 등급: 'GRD', 대응: 'RSPNS', 발주처: 'ORDR_OFC', 종료: 'END', 유형: 'TYPE', 구분: 'SE', 번호: 'NO', 여부: 'YN', 일시: 'DT', 등록: 'REG', 수정: 'MDFCN', 자: 'R', 물품: 'GOODS', 사원: 'EMP', 팀원: 'TMBR', 투입: 'INPT', 시작: 'BEGIN', 역할: 'ROLE', 구성: 'CMPS', 내역: 'D', 날짜: 'DATE' };
+  window.decompose = name => {
+    const dict = getDict(); const open = openItems();
+    const words = {};
+    Object.entries(COMMON_WORDS).forEach(([w, ab]) => { words[w] = { w, abbr: ab, src: '공통', ok: true }; });
+    dict.filter(x => x.k === 'word').forEach(x => { words[x.name] = { w: x.name, abbr: x.abbr, src: x.src, ok: x.ver > 0 && x.st === '사용', id: x.id }; });
+    open.filter(o => o.it.k === 'word' && (o.it.act || '추가') === '추가').forEach(o => { if (!words[o.it.name]) words[o.it.name] = { w: o.it.name, abbr: o.it.abbr, src: '신청 중', ok: false, doc: o.doc }; else if (!words[o.it.name].ok) words[o.it.name].doc = o.doc; });
+    const keys = Object.keys(words).sort((a, b) => b.length - a.length);
+    const parts = []; let i = 0, unknown = '';
+    while (i < name.length) { const k = keys.find(w => name.startsWith(w, i)); if (k) { if (unknown) { parts.push({ w: unknown, unknown: true }); unknown = ''; } parts.push(words[k]); i += k.length; } else { unknown += name[i]; i++; } }
+    if (unknown) parts.push({ w: unknown, unknown: true });
+    const unk = parts.filter(p => p.unknown), pend = parts.filter(p => !p.unknown && !p.ok);
+    return { parts, unknown: unk, pending: pend, abbr: parts.map(p => p.abbr || '?').join('_'), ok: !unk.length && !pend.length, sus: parts.some(p => !p.unknown && p.w.length === 1 && !['명', '자'].includes(p.w)) };
+  };
+  window.knownDomains = () => new Set(getDict().filter(x => x.k === 'domain').map(x => x.name).concat(['연월일C8', '명V100', 'ID V10', '코드C1', '코드C2', '여부C1', '내용V1000', '금액N15', '일련번호N10', '일시T', '엔터티 용어', '엔터티']));
+
+  /* ---- candidate queue lives in the state layer: model / standardize register, candidate queue / home / nav read (CX13-03) ---- */
+  const CANDS0 = [
+    { id: 'c1', t: '단어', name: '수령자', abbr: 'RCPNT', sim: ['수신자', 'RCVR', '공통'], doc: 'REQ-2026-0012', loc: [{ area: 'rq', e: 'dlv', ent: '산출물기본', attr: '산출물수령자명', by: 'kim' }, { area: 'rq', e: 'hist', ent: '산출물이력', attr: '수령자ID', by: 'kim' }, { area: 'hr', ent: '교재배부', attr: '수령자명', by: 'park', sys: '인사시스템' }, { area: 'hr', ent: '교재배부', attr: '수령일자', by: 'park', sys: '인사시스템' }] },
+    { id: 'c2', t: '단어', name: '검수', abbr: 'INSPCT', sim: ['검사', 'INSP', '공통'], loc: [{ area: 'rq', e: 'dlv', ent: '산출물기본', attr: '산출물검수결과코드', by: 'park' }, { area: 'rq', e: 'hist', ent: '산출물이력', attr: '검수일자', by: 'park' }] },
+    { id: 'c3', t: '용어', name: '요구사항변경사유내용', abbr: 'DEMND_MATER_CHG_RSN_CN', sim: null, loc: [{ area: 'rq', e: 'rqrm', ent: '요구사항내역', attr: '변경사유', by: 'kim' }] }
+  ];
+  /* linked term request state — model, standardize and approvals read the same rule (CX14-02/03) */
+  window.linkState = docId => { const d = docId && getDocs().find(x => x.id === docId); if (!d) return { s: 'none', d: null }; return { s: d.step === 'done' ? 'done' : ['rejected', 'withdrawn'].includes(d.step) ? 'ended' : 'live', d }; };
+  window.getCands = () => J('dbm-cand-list', clone(CANDS0));
+  window.saveCands = c => S('dbm-cand-list', c);
+  /* state follows the linked document: 대기 → 신청 전환(진행 중) → 등록 완료 / 반려(DA) / 기존 표준 안내; a rejected/withdrawn conversion re-opens */
+  window.candState = c => {
+    if (c.closed) return c.closed;   // 반려 · 기존 표준어 안내 (DA decision on the candidate itself)
+    const d = c.doc && getDocs().find(x => x.id === c.doc);
+    if (!d) return '대기';
+    if (['da', 'final'].includes(d.step)) return '신청 전환';
+    if (d.step === 'done') return '등록 완료';
+    return '대기';   // conversion rejected/withdrawn → open again
+  };
+  window.candOpenCount = () => getCands().filter(c => candState(c) === '대기').length;
+  window.addCandidate = (o, loc) => {
+    const all = getCands(); let c = all.find(x => x.name === o.name && x.t === o.t);
+    if (!c) { c = Object.assign({ id: 'c' + (Date.now() % 100000), loc: [] }, o); all.push(c); }
+    if (loc && !c.loc.some(l => l.area === loc.area && l.ent === loc.ent && l.attr === loc.attr)) c.loc.push(Object.assign({ by: ME.id }, loc));
+    if (c.closed && loc) delete c.closed;
+    saveCands(all);
+    pushNotif({ to: Object.values(USERS).filter(u => u.roles.includes('da') && u.id !== ME.id).map(u => u.id), k: 'cand', t: `후보 '${c.name}' 등록 — 발생 위치 ${c.loc.length}곳`, m: `${ME.name} · ${loc ? loc.ent + '.' + loc.attr : ''}`, href: `candidates.html?c=${c.id}` });
+    return c;
+  };
   /* one visibility rule for lists, deep links and file actions */
   window.canSeeDoc = d => !!d && (ME.has('da') || ME.has('owner') || d.req === ME.id || (d.cc || []).includes(ME.id));
   window.canSeeBatch = b => !!b && (b.by === ME.id || ME.has('da'));
@@ -265,7 +388,10 @@
   };
   /* compliance counted from a stored structure (so approval re-checks the SUBMITTED model, not the shared cache) */
   /* attributes counted as "term requested" whose request has since been rejected / withdrawn — they are NOT compliant (CX11-07) */
-  window.reqEnded = m => { if (!m) return []; const docs = getDocs(); const out = []; m.E.forEach(e => e.a.forEach(a => { if (a.s !== 'req' || !a.reqDoc) return; const d = docs.find(x => x.id === a.reqDoc); if (d && ['rejected', 'withdrawn'].includes(d.step)) out.push(`${e.n}.${a.n}(${d.id} ${STEP_NAME[d.step]})`); })); return out; };
+  window.reqEnded = m => { if (!m) return []; const docs = getDocs(); const out = []; m.E.forEach(e => e.a.forEach(a => { if (a.s !== 'req' || !a.reqDoc) return; const d = docs.find(x => x.id === a.reqDoc); if (d && ['rejected', 'withdrawn'].includes(d.step)) out.push(`${e.n}.${a.n}(${d.id} ${STEP_NAME[d.step]})`); }));
+    m.E.forEach(e => { if (!e.st || !e.reqDoc) return; const d = docs.find(x => x.id === e.reqDoc); if (d && ['rejected', 'withdrawn'].includes(d.step)) out.push(`${e.n} 엔터티 용어(${d.id} ${STEP_NAME[d.step]})`); }); return out; };
+  /* compliance of a model copy — the model screen, system ERD and outputs use this one formula (CX15-04/05) */
+  window.compOf = m => { let tot = 0, ok = 0, bad = 0, ex = 0, na = 0, req = 0; (m ? m.E : []).forEach(e => { if (e.ref) return; tot++; if (e.p === '—') bad++; else ok++; e.a.forEach(a => { if (a.edit) return; if (a.s === 'na') { na++; return; } tot++; if (a.s === 'ok') ok++; else if (a.s === 'ex') { ok++; ex++; } else if (a.s === 'req') { ok++; req++; } else bad++; }); }); return { rate: tot ? Math.floor(ok / tot * 100) : 0, bad, ex, na, req, tot }; };
   window.modelBad = m => m ? m.E.reduce((n, e) => n + (e.ref ? 0 : (e.p === '—' ? 1 : 0) + e.a.filter(a => !a.edit && (a.s === 'comb' || a.s === 'unreg')).length), 0) : null;
   /* baselines: every editable download is recorded (range, item ids, versions) — round-trip judgement uses this, not the file alone */
   window.recordBaseline = (scope, ids) => { const all = J('dbm-baselines', []); const t = new Date(); const id = `BL-${today().replace(/-/g, '')}-${String(t.getHours()).padStart(2, '0')}${String(t.getMinutes()).padStart(2, '0')}`; all.unshift({ id, at: now(), by: ME.id, scope, n: ids.length, ids }); S('dbm-baselines', all.slice(0, 20)); return id; };
@@ -275,7 +401,10 @@
   window.setModelData = (area, ver, data) => S(`dbm-mdata-${area}-v${ver}`, data);
 
   /* ---- notifications: addressed to people, created by events ---- */
-  window.pushNotif = n => { const all = J('dbm-notifs', []); all.unshift(Object.assign({ id: 'd' + Date.now() + Math.random().toString(36).slice(2, 5), at: now() }, n)); S('dbm-notifs', all.slice(0, 50)); };
+  window.NOTIFY_KINDS = [['appr', '결재 요청 (내 차례)', 'must'], ['res', '내 신청 결과 (승인·반려·회수)', 'opt'], ['cc', '참조', ''], ['cand', '후보 등록·처리 결과', ''], ['job', '긴 작업 완료 (엑셀 검증·산출물)', ''], ['rev', '표준 재검토 가능 · 공동 편집 충돌', '']];
+  window.getNotifyPref = uid => J('dbm-notify-' + uid, {});
+  window.saveNotifyPref = (uid, p) => S('dbm-notify-' + uid, p);
+  window.pushNotif = n => { if (n.to && n.k !== 'sys') { n = Object.assign({}, n, { to: n.to.filter(u => { const p = getNotifyPref(u)[n.k]; return !p || p.app !== false; }) }); if (!n.to.length) return; } const all = J('dbm-notifs', []); all.unshift(Object.assign({ id: 'd' + Date.now() + Math.random().toString(36).slice(2, 5), at: now() }, n)); S('dbm-notifs', all.slice(0, 50)); };
 
   /* ---- notifications ---- */
   const NOTIFS0 = [
@@ -316,31 +445,24 @@
     { file: 'candidates.html', ids: 'SC-14', name: '후보 큐', menu: '사전', docs: [['02 §3.4', D.flows], ['30 MD-42·43', D.meta]], states: [['DA로 보기', 'candidates.html?as=lee'], ['모델러로 보기', 'candidates.html?as=park']] },
     { file: 'approvals.html', ids: 'SC-20 · PN-21 · MO-22 · MO-23', name: '결재함 · 문서 상세 · 자기 승인 · 반려', menu: '결재', docs: [['02 §4 결재 흐름', D.flows], ['30 MD-20~27', D.meta]], states: [['대기함(김모델)', 'approvals.html'], ['엑셀 문서', 'approvals.html?doc=REQ-2026-0016'], ['모델 확정(리스크 v2)', 'approvals.html?doc=REQ-2026-0011'], ['최종 승인 차례(이현업)', 'approvals.html?doc=REQ-2026-0010&as=hyun'], ['완료 문서', 'approvals.html?doc=REQ-2026-0007']] },
     { file: 'system.html', ids: 'SC-30', name: '시스템 홈', menu: '시스템', docs: [['02 §1', D.flows]], states: [['요구사항관리', 'system.html']] },
-    { file: 'model.html', ids: 'SC-31 · PN-32 · PN-33 · PN-31G · PN-39 · PN-35 · PN-38 · PN-37', name: '모델(ERD 캔버스 · 사전 패널 · 엔터티 패널 · 표 보기 · 모델 검토 · 게이트 A · 확정 신청 · DBMS 비교)', menu: '시스템', docs: [['03 ERD 편집기', D.erd], ['02 §5.1~5.4·5.7', D.flows], ['22 §6 SWS 비교 결정', D.sws], ['23 §6-2·5·6 캔버스 숫자', D.perf]], states: [['요구사항·프로젝트(편집)', 'model.html'], ['리스크(검토 중)', 'model.html?area=risk'], ['v4 확정본 사본', 'model.html?area=rq&snap=REQ-2026-0003'], ['예시: 미준수 해결 후(조회 전용)', 'model.html?state=resolved']] },
+    { file: 'model.html', ids: 'SC-31 · PN-32 · PN-33 · PN-31G · PN-39 · PN-35 · PN-38', name: '모델(ERD 캔버스 · 사전 패널 · 엔터티 패널 · 표 보기 · 모델 검토 · 게이트 A · 확정 신청)', menu: '시스템', docs: [['03 ERD 편집기', D.erd], ['02 §5.1~5.4·5.7', D.flows], ['22 §6 SWS 비교 결정', D.sws], ['23 §6-2·5·6 캔버스 숫자', D.perf]], states: [['요구사항·프로젝트(편집)', 'model.html'], ['리스크(검토 중)', 'model.html?area=risk'], ['v4 확정본 사본', 'model.html?area=rq&snap=REQ-2026-0003'], ['예시: 미준수 해결 후(조회 전용)', 'model.html?state=resolved']] },
     { file: 'standardize.html', ids: 'SC-34', name: '표준 맞추기', menu: '시스템', docs: [['02 §5.3', D.flows], ['30 MD-42·50~55', D.meta]], states: [['요구사항·프로젝트', 'standardize.html'], ['예외만', 'standardize.html?f=ex'], ['DDL 가져오기 직후', 'standardize.html?from=import'], ['리스크(대상 없음)', 'standardize.html?area=risk']] },
     { file: 'import.html', ids: 'SC-36', name: '가져오기(엑셀·DDL → 모델)', menu: '시스템', docs: [['02 §5.6', D.flows]], states: [['기본', 'import.html']] },
-    { file: 'ddl.html', ids: 'SC-37', name: 'DDL 출력 · 게이트 B', menu: '시스템', docs: [['02 §5.5', D.flows]], states: [['기본', 'ddl.html']] },
+    { file: 'ddl.html', ids: 'SC-37 · PN-37', name: 'DDL 출력 · 게이트 B · DBMS 비교', menu: '시스템', docs: [['02 §5.5', D.flows]], states: [['기본', 'ddl.html']] },
     { file: 'outputs.html', ids: 'SC-38', name: '산출물', menu: '시스템', docs: [['05 §8 DA# 비교', D.da]], states: [['테이블 정의서', 'outputs.html?k=tbl']] },
     { file: 'settings.html', ids: 'SC-40 · SC-41 · SC-42 · SC-43', name: '설정(기관 · 시스템 · 사용자·역할 · 검수 기준)', menu: '관리', docs: [['02 §6 설정 흐름', D.flows], ['30 §4 검수 기준', D.meta]], states: [['기관(이데이터 Admin)', 'settings.html?as=lee'], ['시스템', 'settings.html?as=lee#sys'], ['검수 기준', 'settings.html?as=lee#rules'], ['Admin 아님 → 403', 'settings.html?as=kim']] },
     { file: 'audit.html', ids: 'SC-58', name: '감사 로그', menu: '관리', docs: [['06 §3', D.plan]], states: [['DA로 보기', 'audit.html?as=lee']] },
     { file: 'mypage.html', ids: 'SC-51 · PN-50', name: '마이페이지 · 사용자 메뉴', menu: '사용자', docs: [['06 §3', D.plan]], states: [['프로필', 'mypage.html'], ['내 신청', 'mypage.html#mine'], ['알림 설정', 'mypage.html#notify']] },
-    { file: 'error.html', ids: 'SC-57', name: '오류·안내', menu: '공통', docs: [['06 §3', D.plan]], states: [['403', 'error.html?code=403&need=Admin&what=설정'], ['404', 'error.html?code=404'], ['500', 'error.html?code=500'], ['점검', 'error.html?code=maint'], ['로그아웃', 'error.html?code=logout'], ['세션 만료', 'error.html?code=expired&from=model.html']] }
+    { file: 'login.html', ids: 'SC-56', name: '로그인', menu: '공통', docs: [['06 §3', D.plan]], states: [['처음 로그인', 'login.html'], ['세션 만료 후 복귀', 'login.html?from=model.html%3Farea%3Drq&expired=1'], ['SSO 실패', 'login.html?fail=1']] },
+    { file: 'error.html', ids: 'SC-57', name: '오류·안내', menu: '공통', docs: [['06 §3', D.plan]], states: [['403', 'error.html?code=403&need=Admin&what=설정'], ['404', 'error.html?code=404'], ['500', 'error.html?code=500'], ['점검', 'error.html?code=maint'], ['로그아웃', 'error.html?code=logout'], ['세션 만료', 'error.html?code=expired&from=model.html%3Farea%3Drq'], ['500 오류 ID 복사', 'error.html?code=500']] }
   ];
   /* decisions made after the v7.1 freeze that the screens do not show yet (22 §6 · 23 §6 · 03 §13.1 · 06 남은 범위) */
   const TODO = {
-    'home.html': [['전역 검색 Ctrl+K(사전·모델·결재) — 셸 공통, 아직 표시만', '06 남은 범위'], ['로그인 화면 SC-56 없음', '06 남은 범위']],
-    'dictionary.html': [['2글자 이하 검색은 앞부분 일치, 부분 일치 총건수는 1,000건까지만 세고 "1,000건 이상 — 더 입력하세요" 표시', '23 §6-1'], ['사전 목록 가상화(행 40개만 그림)', '23 §6-3'], ['목록 필터 보강: 길이 범위·도메인 연결 여부·원본 폐기', '22 §6-10'], ['영구 삭제 절차(V0 보관 → 대상 이름 입력 확인·사유·삭제 로그, 참조 시 차단) 화면 없음', '30 v1.2 ⑦'], ['상세 패널 재검토 사유를 진단 코드 목록으로', '30 v1.2 ⑥']],
-    'dict-history.html': [['영구 삭제 수행 로그 보기(DA·Admin)', '30 v1.2 ⑦']],
-    'excel-import.html': [['업로드 상한 20MB·10만 행 안내와 초과 시 차단', '23 §6-4'], ['검증 토큰: 검수 기준(정책 버전)·사전이 바뀌면 "다시 검증" 안내', '30 v1.2 ⑤'], ['오류 행 파일의 \'오류 및 수정 가이드\' 시트 안내', '07 §4'], ['결과 표 가상화', '23 §6-3']],
-    'uploads.html': [['검증 토큰 만료(정책·사전 변경) 표시', '30 v1.2 ⑤']],
-    'approvals.html': [['결재 문서에 신청·승인 시점의 정책 버전과 경고 표시', '30 v1.2 ⑤'], ['모델 확정: 서버가 고정한 시점·내용 해시 표시', '03 §13.1-2']],
-    'system.html': [['시스템 전체 ERD 진입 — 영역 묶음 보기가 기본', '23 §6-2']],
-    'model.html': [['카드 안 편집은 속성 추가·이름 바꾸기만, 나머지는 오른쪽 패널', '03 §0'], ['관계선을 FK 속성 행에 붙이기(컬럼 단위)', '22 §6-5'], ['부모 PK를 자식에 끌어다 놓아 키 전달', '22 §6-5'], ['복합 FK 묶음 관리(식별 전환 시 묶음 전체 PK, 삭제 시 유지/삭제 선택)', '22 §6-5'], ['자동 배치 진행 표시·취소(Worker)', '23 §6-5'], ['상세도 전환 0.35배 요약 · 0.2배 영역 묶음, 확대가 멈춘 뒤 전환', '23 §6-6'], ['업무 영역 300 엔터티 초과 경고', '23 §6-2'], ['조회자 화면 읽기 전용(서버 차단과 같이)', '23 §5 · 03 §13.1-1'], ['ERD 편집 완결(남은 범위)', '06 남은 범위']],
-    'standardize.html': [['재검토 사유를 진단 코드 목록으로(용어·단어·도메인 연결, 기준 서명 변경 등)', '30 v1.2 ⑥']],
+    'dictionary.html': [['사전 목록 가상화(행 40개만 그림) — 목업은 일부만 표시, 구현 단계', '23 §6-3'], ['상세 패널 재검토 사유를 진단 코드 목록으로', '30 v1.2 ⑥']],
+    'excel-import.html': [['결과 표 가상화 — 구현 단계', '23 §6-3']],
+    'model.html': [['카드 안 편집은 속성 추가·이름 바꾸기만, 나머지는 오른쪽 패널', '03 §0'], ['관계선을 FK 속성 행에 붙이기(컬럼 단위)', '22 §6-5'], ['부모 PK를 자식에 끌어다 놓아 키 전달', '22 §6-5'], ['ERD 편집 완결(남은 범위)', '06 남은 범위']],
     'import.html': [['엑셀 테이블 정의서 → ERD 초안(가져올 때 중복만, 표준 검사는 표준 맞추기)', '20 · W2 후보']],
-    'outputs.html': [['공식 산출물 ERD는 서버 캡처로(화면과 동일), 사용자 내보내기는 그대로', '03 ERD-Q2 보강']],
-    'settings.html': [['검수 기준에 정책 버전 번호·변경 이력', '30 v1.2 ⑤'], ['T11 가져오기·출력 결과물 / T12 운영·관리 테마', '06 남은 범위']],
-    'audit.html': [['영구 삭제 로그를 감사 로그에 포함', '30 v1.2 ⑦']]
+    'settings.html': [['T11 가져오기·출력 결과물 / T12 운영·관리 테마', '06 남은 범위']]
   };
   SCREENS.forEach(s => { s.todo = TODO[s.file] || []; });
   window.SCREENS = SCREENS; window.SCREEN_DOCS = D;
@@ -370,10 +492,10 @@
       </div>
       <div class="scr-f"><a href="${prev.file}">← ${prev.ids.split(' · ')[0]} ${prev.name.split('(')[0]}</a><a href="index.html">목업 지도</a><a href="${next.file}">${next.ids.split(' · ')[0]} ${next.name.split('(')[0]} →</a></div>`;
     p.querySelector('#scr-x').onclick = () => toggleScreenPanel(false);
-    const add = () => { const v = p.querySelector('#scr-text').value.trim(); if (!v) return; const n = getNotes(); (n[f] = n[f] || []).push({ text: v, at: now(), by: ME.name, done: false }); saveNotes(n); screenPanel(); toast('메모를 추가했습니다', 'info'); };
+    const add = () => { const v = p.querySelector('#scr-text').value.trim(); if (!v) return; const n = getNotes(); (n[f] = n[f] || []).push({ text: v, at: now(), by: ME.name, done: false }); saveNotes(n); screenPanel(); const t2 = document.getElementById('scr-text'); if (t2) t2.focus(); toast('메모를 추가했습니다', 'info'); };
     p.querySelector('#scr-add').onclick = add;
     p.querySelector('#scr-text').onkeydown = e => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); add(); } };
-    p.querySelectorAll('[data-nd]').forEach(c => c.onchange = () => { const n = getNotes(); n[f][+c.dataset.nd].done = c.checked; saveNotes(n); screenPanel(); });
+    p.querySelectorAll('[data-nd]').forEach(c => c.onchange = () => { const n = getNotes(); n[f][+c.dataset.nd].done = c.checked; saveNotes(n); const k = c.dataset.nd; screenPanel(); const back = document.querySelector(`#scr-panel [data-nd="${k}"]`); if (back) back.focus(); });
     p.querySelectorAll('[data-nx]').forEach(b => b.onclick = () => { const n = getNotes(); n[f].splice(+b.dataset.nx, 1); saveNotes(n); screenPanel(); });
     p.querySelector('#scr-export').onclick = () => { const md = notesMarkdown(); (navigator.clipboard ? navigator.clipboard.writeText(md) : Promise.reject()).then(() => toast('전체 화면의 메모를 마크다운 표로 복사했습니다', 'success'), () => { window.prompt('복사해서 쓰세요', md); }); };
   }
@@ -382,9 +504,44 @@
     const open = on == null ? !p.classList.contains('open') : on;
     p.classList.toggle('open', open); store.set('dbm-scr-open', open ? '1' : '0');
     const b = document.getElementById('mk-scr'); if (b) b.setAttribute('aria-expanded', open ? 'true' : 'false');
-    if (open) screenPanel();
+    // focus moves into the panel and back to the trigger (CX12-03)
+    if (open) { screenPanel(); const t = p.querySelector('#scr-text'); if (t && on !== true) t.focus(); } else if (b && p.contains(document.activeElement)) b.focus();
   }
   window.toggleScreenPanel = toggleScreenPanel;
+
+  /* global search (Ctrl+K): dictionary items, approval documents, entities/attributes of every area, screens — one overlay in the shell */
+  function gsearchOpen() {
+    let ov = document.getElementById('gs-ov');
+    if (!ov) {
+      ov = document.createElement('div'); ov.id = 'gs-ov'; ov.className = 'overlay'; ov.setAttribute('role', 'dialog'); ov.setAttribute('aria-modal', 'true'); ov.setAttribute('aria-label', '전체 검색');
+      ov.innerHTML = `<div class="modal gs-modal"><div class="gs-in">${ICON.search}<input id="gs-q" class="input" placeholder="단어·용어·도메인, 신청번호, 엔터티·속성, 화면 이름" aria-label="검색어" aria-controls="gs-list" autocomplete="off"><kbd>Esc</kbd></div><div id="gs-list" class="gs-list" role="listbox"></div><div class="gs-foot caption muted">↑↓ 이동 · Enter 열기 · 사전은 2글자 이하면 앞부분 일치(23 §6-1)</div></div>`;
+      document.body.appendChild(ov);
+      const q = ov.querySelector('#gs-q'), list = ov.querySelector('#gs-list'); let sel = 0, items = [];
+      const close = () => { ov.classList.remove('open'); const b = document.getElementById('gsearch'); if (b) b.focus(); };
+      const esc = s => String(s).replace(/</g, '&lt;');
+      const draw = () => {
+        const v = q.value.trim(); items = [];
+        if (v) {
+          const m = x => !x ? false : v.length <= 2 ? String(x).startsWith(v) || String(x).toUpperCase().startsWith(v.toUpperCase()) : String(x).toUpperCase().includes(v.toUpperCase());
+          const KN = { word: '단어', term: '용어', domain: '도메인', code: '코드' };
+          getDict().filter(x => m(x.name) || m(x.abbr)).slice(0, 6).forEach(x => items.push({ g: '표준 사전', t: `${x.name} <span class="mono caption">${x.abbr || ''}</span>`, s: `${KN[x.k] || x.k} · ${x.id}${x.st === '미사용' ? ' · 미사용' : ''}`, href: `dictionary.html?q=${encodeURIComponent(x.name)}&sel=${x.id}` }));
+          getDocs().filter(d => canSeeDoc(d) && (m(d.id) || m(d.title))).slice(0, 5).forEach(d => items.push({ g: '결재 문서', t: `<span class="mono">${d.id}</span> ${esc(d.title)}`, s: STEP_NAME[d.step] || d.step, href: `approvals.html?doc=${d.id}` }));
+          Object.entries(getModels()).forEach(([id, md]) => { const mo = modelOf(id, md.ver); (mo.E || []).filter(e => !e.ref).forEach(e => { if (m(e.n) || m(e.p)) items.push({ g: '모델', t: esc(e.n) + ` <span class="mono caption">${e.p || ''}</span>`, s: md.name + ' · 엔터티', href: `model.html?area=${id}&focus=${e.id}` }); (e.a || []).forEach(a => { if (m(a.n) || m(a.p)) items.push({ g: '모델', t: `${esc(e.n)}.${esc(a.n)}`, s: md.name + ' · 속성', href: `model.html?area=${id}&focus=${e.id}` }); }); }); });
+          items = items.filter((x, i) => x.g !== '모델' || items.filter(y => y.g === '모델').indexOf(x) < 8);
+          SCREENS.filter(s => m(s.name) || m(s.ids)).slice(0, 4).forEach(s => items.push({ g: '화면', t: esc(s.name), s: s.ids, href: s.file }));
+        }
+        sel = Math.min(sel, Math.max(items.length - 1, 0));
+        let g0 = ''; list.innerHTML = !v ? '<div class="caption muted gs-empty">검색어를 입력하세요. 최근 연 화면·문서는 여기에 보입니다(실제 제품).</div>' : items.length ? items.map((x, i) => { const h = x.g !== g0 ? `<div class="gs-g">${x.g}</div>` : ''; g0 = x.g; return h + `<a class="gs-it${i === sel ? ' on' : ''}" role="option" aria-selected="${i === sel}" href="${x.href}" data-i="${i}"><span>${x.t}</span><span class="caption muted">${x.s}</span></a>`; }).join('') : `<div class="caption muted gs-empty">‘${esc(v)}’ 결과가 없습니다. 사전에 없는 단어면 모델에서 <b>후보 등록</b>을 하세요.</div>`;
+      };
+      q.oninput = () => { sel = 0; draw(); };
+      q.onkeydown = e => { if (e.key === 'ArrowDown') { sel = Math.min(sel + 1, items.length - 1); draw(); e.preventDefault(); } else if (e.key === 'ArrowUp') { sel = Math.max(sel - 1, 0); draw(); e.preventDefault(); } else if (e.key === 'Enter' && items[sel]) { location.href = items[sel].href; } else if (e.key === 'Escape') close(); };
+      ov.addEventListener('click', e => { if (e.target === ov) close(); });
+    }
+    ov.classList.add('open'); const q = ov.querySelector('#gs-q'); q.value = ''; q.dispatchEvent(new Event('input')); q.focus();
+  }
+  window.gsearchOpen = gsearchOpen;
+  document.addEventListener('keydown', e => { if ((e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'K') && document.getElementById('gsearch')) { e.preventDefault(); gsearchOpen(); } });
+  document.addEventListener('click', e => { if (e.target.closest && e.target.closest('#gsearch')) gsearchOpen(); });
 
   function navLink(href, label, key, extra) {
     const page = document.body.dataset.page;
@@ -398,7 +555,7 @@
     const content = document.getElementById('content');
     if (!app || !content) return;
     // signed-out pages show no product shell (CL3: logout page still showed the logged-in shell)
-    if (document.body.dataset.page === 'error' && ['logout', 'expired'].includes(qs.get('code'))) {
+    if (document.body.dataset.page === 'login' || (document.body.dataset.page === 'error' && ['logout', 'expired'].includes(qs.get('code')))) {
       app.classList.add('bare');
       const t = document.createElement('div'); t.className = 'toasts'; t.id = 'toasts'; t.setAttribute('role', 'status'); app.appendChild(t);
       return;
@@ -408,7 +565,7 @@
     const nUnread = unread();
     top.innerHTML = `
       <a class="brand" href="home.html" title="홈"><span class="brand-mark">DB</span>DBModeler <span class="org">· 한국데이터진흥원</span></a>
-      <div class="gsearch">${ICON.search}<span>사전·모델·결재 검색</span><kbd>Ctrl K</kbd></div>
+      <button class="gsearch" id="gsearch" type="button" aria-haspopup="dialog" aria-label="전체 검색 (Ctrl+K)">${ICON.search}<span>사전·모델·결재 검색</span><kbd>Ctrl K</kbd></button>
       <div class="spacer"></div>
       <div class="mock-tools" title="목업 검토용 도구 — 실제 제품에는 없음">목업
         <select id="mk-role" aria-label="역할 보기 전환">${Object.values(USERS).map(u => `<option value="${u.id}" ${u.id === ME.id ? 'selected' : ''}>${u.name} · ${u.roles.map(r => ROLE_NAME[r]).join('·')}</option>`).join('')}</select>
@@ -431,7 +588,7 @@
         <div class="nav-title">사전</div>
         ${navLink('dictionary.html', ICON.book + '통합 검색', 'dictionary')}
         ${navLink('excel-import.html', '<span style="width:16px"></span>엑셀 가져오기', 'excel', '')}
-        ${navLink('candidates.html', '<span style="width:16px"></span>후보 큐<span class="count">3</span>', 'candidates', '')}
+        ${navLink('candidates.html', '<span style="width:16px"></span>후보 큐' + (candOpenCount() ? `<span class="count">${candOpenCount()}</span>` : ''), 'candidates', '')}
       </div>
       <div class="nav-group">
         <div class="nav-title">결재</div>
@@ -440,8 +597,7 @@
       <div class="nav-group">
         <div class="nav-title">시스템</div>
         ${navLink('system.html', ICON.db + '요구사항관리<span class="tag">Oracle</span>', 'system')}
-        ${navLink('model.html', '요구사항 · 프로젝트', 'model', 'sub2')}
-        ${navLink('model.html?area=risk', '리스크', '', 'sub2')}
+        ${Object.entries(getModels()).map(([id, m]) => { const cur = document.body.dataset.page === 'model' && (new URLSearchParams(location.search).get('area') || 'rq') === id; return `<a class="sub2${cur ? ' on' : ''}" href="model.html${id === 'rq' ? '' : '?area=' + id}">${m.name}</a>`; }).join('')}
         ${navLink('error.html?code=404&what=인사시스템', ICON.db + '인사시스템<span class="tag">Tibero</span>', '')}
         ${navLink('error.html?code=404&what=회계시스템', ICON.db + '회계시스템<span class="tag">PostgreSQL</span>', '')}
       </div>
@@ -505,7 +661,7 @@
     const pn = top.querySelector('#pn-notif'), pu = top.querySelector('#pn-user');
     let nf = 'all';
     const drawNotif = () => {
-      const list = myNotifs().filter(n => nf === 'all' || n.k === nf);
+      const list = myNotifs().filter(n => nf === 'all' || n.k === nf || (nf === 'appr' && n.k === 'res'));
       pn.innerHTML = `<div class="nh"><b>알림</b><span class="badge">${unread()} 안 읽음</span><span class="grow"></span><button class="btn ghost sm" id="n-allread">모두 읽음</button></div>
         <div class="nf">${[['all', '전체'], ['appr', '결재'], ['cand', '후보'], ['job', '작업'], ['cc', '참조'], ['sys', '공지']].map(([k, l]) => `<button class="chip ${nf === k ? 'on' : ''}" data-nf="${k}" style="height:24px;font-size:12px">${l}</button>`).join('')}</div>
         <div class="nlist">${list.length ? list.map(n => `<a class="ni ${readSet.has(n.id) ? '' : 'unread'}" href="${n.href}" data-nid="${n.id}"><span class="ud" aria-hidden="true"></span><span><div class="t">${n.t}</div><div class="m">${n.m} · ${n.at}</div></span></a>`).join('') : '<div class="caption muted" style="padding:24px;text-align:center">이 종류의 알림이 없습니다</div>'}</div>
@@ -523,7 +679,7 @@
     const drawUser = () => {
       pu.innerHTML = `<div class="who"><b>${ME.name}</b><div class="caption muted">${ME.org} · ${ME.mail}</div><div class="role-tag" style="margin-top:6px">${roleBadges(ME)}</div></div>
         <a class="mi" role="menuitem" href="mypage.html">마이페이지</a>
-        <a class="mi" role="menuitem" href="mypage.html#mine">내 신청 <span class="caption muted" style="margin-left:auto">${getDocs().filter(d => d.req === ME.id && !['done', 'withdrawn'].includes(d.step)).length}건 진행 중</span></a>
+        <a class="mi" role="menuitem" href="mypage.html#mine">내 신청 <span class="caption muted" style="margin-left:auto">${(() => { const m = getDocs().filter(d => d.req === ME.id); const l = m.filter(d => docGroup(d) === 'live').length, x = m.filter(d => docGroup(d) === 'fix').length; return `진행 중 ${l}` + (x ? ` · 보완 필요 ${x}` : ''); })()}</span></a>
         <a class="mi" role="menuitem" href="mypage.html#notify">알림 설정</a>
         <div class="sep"></div>
         <div class="mi" style="cursor:default">테마<span class="seg" id="um-theme" style="margin-left:auto">${['light:라이트', 'dark:다크', 'system:시스템'].map(x => { const [k, l] = x.split(':'); return `<button data-v="${k}" class="${(store.get('dbm-theme', 'light')) === k ? 'on' : ''}">${l}</button>`; }).join('')}</span></div>

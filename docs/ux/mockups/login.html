@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>로그인 · DBModeler 목업</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="assets/app.css">
+<script src="assets/app.js"></script>
+<style>
+  .lg { max-width:400px; margin:96px auto; padding:32px; background:var(--surface); border:1px solid var(--border); border-radius:12px; }
+  .lg h1 { font-size:22px; margin:16px 0 4px; }
+  .lg .sub { color:var(--fg-2); margin-bottom:20px; }
+  .lg .btn { width:100%; justify-content:center; height:40px; }
+  .lg .foot { margin-top:24px; font:400 11px var(--font-mono); color:var(--fg-2); text-align:center; }
+</style>
+</head>
+<body data-page="login">
+<div id="app">
+<div id="content" class="page"><div class="scroll">
+  <main class="lg" aria-labelledby="lg-t">
+    <div class="brand" style="font-size:16px"><span class="brand-mark">DB</span> DBModeler <span class="caption muted">· 한국데이터진흥원</span></div>
+    <h1 id="lg-t">로그인</h1>
+    <div class="sub">기관 통합 인증(사내 SSO)으로 로그인합니다.</div>
+    <div id="lg-banner"></div>
+    <div class="field"><label for="lg-who">사용자 (목업 — 실제로는 SSO 화면에서 고릅니다)</label><select class="input" id="lg-who"></select></div>
+    <button class="btn primary" id="lg-go" style="margin-top:8px">사내 SSO로 로그인</button>
+    <div class="caption muted" style="margin-top:12px">SSO 미연동 기관은 이 자리에 아이디·비밀번호 입력란이 나옵니다. 5회 실패하면 10분간 잠깁니다.</div>
+    <div class="foot" id="lg-foot"></div>
+  </main>
+</div></div>
+</div>
+<script>
+window.pageInit = function () {
+  // SC-56: session expiry → login → back to the original address with the draft kept (CX13-17)
+  const $ = id => document.getElementById(id), q = new URLSearchParams(location.search);
+  const from = q.get('from') || '';
+  const safe = /^[a-z-]+\.html(\?[^#]*)?(#.*)?$/i.test(from) ? from : '';
+  $('lg-who').innerHTML = Object.values(USERS).map(u => `<option value="${u.id}" ${u.id === ME.id ? 'selected' : ''}>${u.name} · ${u.roles.map(r => ROLE_NAME[r]).join('·')}</option>`).join('');
+  $('lg-banner').innerHTML = q.get('fail') ? '<div class="banner danger" style="margin-bottom:12px"><span>!</span><div>SSO 인증에 실패했습니다. 다시 시도하거나 기관 IT 지원(내선 1234)에 문의하세요. <span class="mono caption">오류 ID E-20261118-SSO1</span></div></div>'
+    : q.get('expired') ? `<div class="banner info" style="margin-bottom:12px"><span>ℹ</span><div>세션이 만료됐습니다. 편집 중이던 내용은 이 브라우저에 보관돼 있고, 로그인하면 <b>${safe ? ((SCREENS.find(s => s.file === safe.split(/[?#]/)[0]) || {}).name || safe.split('?')[0]).split('(')[0].trim() : '홈'}</b> 화면으로 돌아가 이어서 작업합니다.</div></div>` : '';
+  $('lg-foot').textContent = `${PRODUCT.name} ${PRODUCT.version} · build ${PRODUCT.build} · ${PRODUCT.env}`;
+  $('lg-go').onclick = () => { const u = $('lg-who').value; dbmStore.set('dbm-role', u); const start = { '결재함': 'approvals.html' }[dbmStore.get('dbm-start', '')] || 'home.html'; location.href = safe || start; };
+};
+</script>
+</body>
+</html>

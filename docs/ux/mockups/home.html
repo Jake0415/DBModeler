@@ -35,10 +35,7 @@
         <section class="hcard"><div class="hh"><h2>최근 업무 영역</h2></div><div class="hb" id="areas"></div></section>
       </div>
       <div style="display:flex;flex-direction:column;gap:16px">
-        <section class="hcard"><div class="hh"><h2>내 후보 처리 결과</h2></div><div class="hb">
-          <a class="row" href="candidates.html"><span class="badge b-violet">단어</span>수령자<span class="grow"></span><span class="caption">신청 전환 · REQ-0012</span></a>
-          <a class="row" href="candidates.html"><span class="badge b-violet">단어</span>검수<span class="grow"></span><span class="caption muted">DA 처리 대기</span></a>
-        </div></section>
+        <section class="hcard" id="cand-card"><div class="hh"><h2>내 후보 처리 결과</h2></div><div class="hb" id="cand-list"></div></section>
         <section class="hcard"><div class="hh"><h2>새 기능</h2><span class="badge b-info" id="vtag"></span></div><div class="hb caption" style="line-height:22px">
           산출물 화면 · 표 보기(일괄편집·찾기/바꾸기) · 모델 검토 · 제약·인덱스 · 서브타입·배타 관계<br><button class="btn sm" style="margin-top:8px" onclick="openAbout()">릴리스 노트</button>
         </div></section>
@@ -53,14 +50,19 @@ window.pageInit = function () {
   const docs = getDocs();
   document.getElementById('hello').textContent = `${ME.name}님, 안녕하세요`;
   document.getElementById('roles').innerHTML = roleBadges(ME);
-  document.getElementById('dictver').textContent = '사전 기준 · ' + PRODUCT.dict;
+  // dictionary basis: common-standard version + the organisation's published revision (from the publication record — CX12-02)
+  document.getElementById('dictver').textContent = `사전 기준 · 공통표준 2025.11 · 기관 사전 제정 ${getPub().cha}차(${getPub().at.slice(5, 10).replace('-', '/')} 공표)`;
+  // my candidates — the same store and state as the candidate queue (CX12-01 · CL12-04)
+  const myC = getCands().filter(c => c.loc.some(l => l.by === ME.id));
+  if (!ME.has('modeler')) document.getElementById('cand-card').style.display = 'none';
+  else document.getElementById('cand-list').innerHTML = myC.map(c => { const s = candState(c); return `<a class="row" href="candidates.html?c=${c.id}"><span class="badge b-violet">${c.t}</span>${c.name}<span class="grow"></span><span class="caption${s === '대기' ? ' muted' : ''}">${s === '대기' ? 'DA 처리 대기' : s}${c.doc && s !== '대기' ? ' · ' + c.doc : ''}</span></a>`; }).join('') || '<div class="caption muted" style="padding:16px 0">등록한 후보가 없습니다.</div>';
   document.getElementById('vtag').textContent = PRODUCT.version;
   const q = myQueue(docs);
   document.getElementById('q-n').textContent = q.length;
   const row = d => `<a class="row" href="approvals.html?doc=${d.id}"><span class="mono">${d.id}</span><span class="badge ${d.type === 'model' ? 'b-violet' : ''}">${d.type === 'model' ? '모델 확정' : '사전 신청'}</span>${d.title}<span class="grow"></span><span class="caption muted">${USERS[d.req].name}${d.req === ME.id ? ' (나)' : ''}</span><span class="badge b-info">● ${STEP_NAME[d.step]}</span></a>`;
   document.getElementById('q-list').innerHTML = q.length ? q.map(row).join('') : `<div class="caption muted" style="padding:16px 0">${ME.has('da') || ME.has('owner') ? '지금 처리할 결재가 없습니다.' : '결재 권한이 없는 역할입니다 — 내 신청에서 진행 상황을 보세요.'}</div>`;
   // area badges from the same lock judgement as the model screen
-  document.getElementById('areas').innerHTML = ['rq', 'risk'].map(a => { const L = modelLock(a); const b = L.state === 'review' ? `<span class="badge b-info">● v${L.model.ver} 검토 중 · ${L.doc.id}</span>` : L.state === 'confirmed' ? `<span class="badge b-success">v${L.model.ver} 확정본</span>` : `<span class="badge mono">v${L.model.ver} 작업 중</span>`; return `<a class="row" href="model.html?area=${a}"><b>${L.model.name}</b><span class="caption muted">요구사항관리 · Oracle</span><span class="grow"></span>${b}</a>`; }).join('');
+  document.getElementById('areas').innerHTML = Object.keys(getModels()).map(a => { const L = modelLock(a); const b = L.state === 'review' ? `<span class="badge b-info">● v${L.model.ver} 검토 중 · ${L.doc.id}</span>` : L.state === 'confirmed' ? `<span class="badge b-success">v${L.model.ver} 확정본</span>` : `<span class="badge mono">v${L.model.ver} 작업 중</span>`; return `<a class="row" href="model.html?area=${a}"><b>${L.model.name}</b><span class="caption muted">요구사항관리 · Oracle</span><span class="grow"></span>${b}</a>`; }).join('');
   const mine = docs.filter(d => d.req === ME.id);
   document.getElementById('m-list').innerHTML = mine.length ? mine.map(row).join('') : '<div class="caption muted" style="padding:16px 0">신청한 문서가 없습니다.</div>';
 };

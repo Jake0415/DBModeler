@@ -20,7 +20,7 @@
 <div id="content" class="page" data-tabscope>
   <div class="page-header" style="border-bottom:0">
     <h1>설정</h1>
-    <div class="actions"><button class="btn primary" data-toast="설정을 저장했습니다">저장</button></div>
+    <div class="actions"><button class="btn primary" id="save">저장</button></div>
   </div>
   <div class="tabs" style="margin:0;padding:0 20px;background:var(--surface)">
     <button class="on" data-tab="org">기관</button>
@@ -33,7 +33,7 @@
   <!-- SC-40 org -->
   <div class="pane on set-wrap" data-pane="org">
     <div class="set-row"><div class="l"><b>기관</b><span>상단 바와 산출물에 표시</span></div><div class="field-row"><div class="field"><label>기관명</label><input class="input" value="한국데이터진흥원"></div><div class="field"><label>기관 사전 이름</label><input class="input" value="KDA 표준사전"></div></div></div>
-    <div class="set-row"><div class="l"><b>사전 신청 최종 승인</b><span>켜면 DA 승인 뒤 기관 담당자 승인을 거쳐 반영</span></div><div class="flex"><span class="toggle on"></span><span>사용 · 기관 담당자 역할 2명</span></div></div>
+    <div class="set-row"><div class="l"><b>사전 신청 최종 승인</b><span>켜면 DA 승인 뒤 기관 담당자 승인을 거쳐 반영</span></div><div class="flex"><label class="flex"><input type="checkbox" id="fin-dict"> <span id="fin-dict-t"></span></label></div></div>
     <div class="set-row"><div class="l"><b>결재선 템플릿</b><span>신청자는 단계를 지울 수 없고 참조자만 추가</span></div>
       <div>
         <div class="card" style="margin-bottom:12px">
@@ -98,7 +98,7 @@
         </tbody></table>
         <div class="flex" style="margin-top:8px"><button class="btn sm" data-toast="사전에서 표준 용어를 골라 시스템 컬럼을 추가합니다(목업)" data-toast-type="info">+ 용어로 추가</button><label class="flex caption"><input type="checkbox" checked> 논리 모델에는 표시하지 않음</label><label class="flex caption"><input type="checkbox" checked> 코드성 테이블(_R)은 등록 컬럼만</label></div>
       </div></div>
-    <div class="set-row"><div class="l"><b>모델 확정 최종 승인</b><span>이 시스템의 모델 확정에 기관 담당자 승인 추가</span></div><div class="flex"><span class="toggle on"></span>사용</div></div>
+    <div class="set-row"><div class="l"><b>모델 확정 최종 승인</b><span>이 시스템의 업무 영역별 모델 확정에 기관 담당자 승인 추가</span></div><div id="fin-model"></div></div>
     <div class="set-row"><div class="l"><b>업무 영역</b></div><div><span class="badge">요구사항 · 프로젝트</span> <span class="badge">리스크</span> <button class="btn ghost sm">+ 추가</button></div></div>
     <div class="banner warning" style="margin-top:16px"><span>!</span><div class="grow">DBMS나 명명 템플릿을 바꾸면 컬럼 <b class="mono">74</b>개의 타입·이름을 다시 점검해야 합니다. 저장 전에 영향 목록을 확인하세요.</div><button class="btn sm">영향 미리보기</button></div>
   </div>
@@ -116,14 +116,16 @@
 
   <!-- SC-43 rules -->
   <div class="pane set-wrap" data-pane="rules">
+    <div class="banner" style="margin-bottom:12px"><span>ℹ</span><div class="grow" id="pol-head"></div></div>
     <div class="flex" style="margin-bottom:12px"><span class="chip on" data-group="rk">단어</span><span class="chip" data-group="rk">도메인</span><span class="chip" data-group="rk">용어</span><span class="chip" data-group="rk">코드</span></div>
     <table class="tbl" style="border:1px solid var(--border)"><thead><tr><th>필드</th><th>필수</th><th>최대 길이</th><th>허용 문자</th><th>위반 시</th></tr></thead><tbody>
       <tr><td>단어명</td><td>✓</td><td class="mono">—</td><td>한글·영문·숫자</td><td><span class="badge b-danger">차단</span></td></tr>
-      <tr><td>단어 영문약어명</td><td>✓</td><td class="mono">6자</td><td>영문 대문자·숫자</td><td><span class="badge b-danger">차단</span></td></tr>
+      <tr><td>단어 영문약어명</td><td>✓</td><td class="mono"><input class="input mono" id="pol-wd" style="width:60px;height:26px" value="6">자</td><td>영문 대문자·숫자</td><td><span class="badge b-danger">차단</span></td></tr>
       <tr><td>영문명</td><td></td><td class="mono">100자</td><td>영문·공백</td><td><span class="badge b-warning">경고</span></td></tr>
       <tr><td>설명</td><td></td><td class="mono">1000자</td><td>제한 없음</td><td><span class="badge b-warning">경고</span></td></tr>
     </tbody></table>
-    <div class="banner info" style="margin-top:12px"><span>ℹ</span><div>저장하면 이전 기준으로 검증한 엑셀은 다시 검증해야 합니다. 이름 길이 경고는 각 시스템의 DBMS 기준을 따릅니다.</div></div>
+    <div class="banner info" style="margin-top:12px"><span>ℹ</span><div>저장하면 <b>정책 버전이 하나 올라가고</b>, 이전 기준으로 검증한 엑셀 묶음은 업로드 이력에 ‘재검증 필요’로 표시됩니다. 진행 중인 신청은 승인 때 현재 기준으로 다시 검사합니다.</div></div>
+    <div class="section-t">검수 기준 변경 이력</div><table class="tbl"><thead><tr><th>버전</th><th>시각</th><th>변경자</th><th>내용</th></tr></thead><tbody id="pol-hist"></tbody></table>
 
     <h3 style="font-size:15px;margin:28px 0 4px">표준 제외 규칙</h3>
     <div class="caption muted" style="margin-bottom:12px">여기에 해당하면 자동으로 <b>비대상</b>이 되어 준수율 계산에서 빠집니다. 모델에서 직접 비대상으로 바꾼 항목은 사유가 남고 확정 결재에서 DA가 확인합니다.</div>
@@ -146,9 +148,27 @@ window.pageInit = function () {
   if (!ME.has('admin')) { location.replace('error.html?code=403&need=Admin&what=설정'); return; }
   if (location.hash === '#system') document.querySelector('.tabs button[data-tab="sys"]').click();
   const $ = id => document.getElementById(id);
-  const list = Object.values(USERS).concat([{ id: 'choi', name: '최담당', mail: 'choi@kda.go.kr', roles: ['owner', 'modeler'], systems: ['회계시스템'] }]);
+  // approval-line settings and the validation policy are saved to the state layer and read by new documents / validations (CX12-34)
+  const org = getOrg(); const areas = getModels();
+  $('fin-dict').checked = org.finalDict; const fdT = () => { $('fin-dict-t').textContent = $('fin-dict').checked ? `사용 · 기관 담당자 역할 ${Object.values(USERS).filter(u => u.roles.includes('owner')).length}명` : '사용 안 함 — DA 승인으로 반영'; }; fdT(); $('fin-dict').onchange = fdT;
+  $('fin-model').innerHTML = Object.entries(areas).map(([id, m]) => `<label class="flex" style="margin-bottom:4px"><input type="checkbox" data-fm="${id}" ${org.finalModel[id] !== false ? 'checked' : ''}> ${m.name}</label>`).join('');
+  const pol = getPolicy();
+  const drawPol = () => { const p = getPolicy(); $('pol-head').innerHTML = `<b>검수 기준 v${p.ver}</b> · 적용 ${p.at} · ${p.by}`; $('pol-hist').innerHTML = p.hist.map(h => `<tr><td class="mono">v${h.ver}</td><td class="mono">${h.at}</td><td>${h.by}</td><td class="caption">${h.what}</td></tr>`).join(''); };
+  drawPol(); $('pol-wd').value = pol.wordAbbr || 6;
+  $('save').onclick = () => {
+    if (liveRoleChanged()) { staleRoleToast(); return; }
+    const o = getOrg(); const before = JSON.stringify(o); o.finalDict = $('fin-dict').checked; document.querySelectorAll('[data-fm]').forEach(c => { o.finalModel[c.dataset.fm] = c.checked; }); saveOrg(o);
+    const changes = []; if (before !== JSON.stringify(o)) { changes.push(`결재선: 사전 최종 승인 ${o.finalDict ? '켬' : '끔'} · 모델 최종 승인 ${Object.entries(o.finalModel).map(([a, v]) => (areas[a] ? areas[a].name : a) + ' ' + (v ? '켬' : '끔')).join(', ')}`); pushAudit({ act: '설정 변경 — 결재선', target: '기관·시스템 설정', why: changes[0] }); }
+    const p = getPolicy(); const wd = +$('pol-wd').value || 6;
+    if (wd !== (p.wordAbbr || 6)) { const nv = { ver: p.ver + 1, at: today2(), by: ME.name, wordAbbr: wd, hist: [{ ver: p.ver + 1, at: today2(), by: ME.name, what: `단어 영문약어명 ${p.wordAbbr || 6}자 → ${wd}자` }].concat(p.hist) }; savePolicy(nv); pushAudit({ act: `검수 기준 v${nv.ver}`, target: '검수 기준', why: nv.hist[0].what }); changes.push(`검수 기준 v${nv.ver}`); drawPol(); }
+    toast(changes.length ? `저장했습니다 — ${changes.join(' · ')}. 새 신청부터 적용되고 감사 로그에 남았습니다` : '바뀐 설정이 없습니다', changes.length ? 'success' : 'info');
+  };
+  function today2() { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; }
+  const list = Object.values(USERS);
   const last = { kim: '방금', park: '11/17 18:20', lee: '11/18 08:40', hyun: '11/17 09:10', choi: '11/12 14:02' };
-  let selU = list.find(u => u.id !== ME.id).id;
+  const qU = new URLSearchParams(location.search).get('user'); let selU = qU && USERS[qU] ? qU : list.find(u => u.id !== ME.id).id;
+  if (qU && USERS[qU]) setTimeout(() => { const tb = document.querySelector('[data-tab="users"]'); if (tb) tb.click(); }, 0);
+  const reqOf = id => { try { return JSON.parse(dbmStore.get('dbm-rolereq-' + id, 'null')); } catch (e) { return null; } };
   const RD = { modeler: '모델 편집·사전 신청', da: '1단계 승인·후보 큐', owner: '최종 승인', admin: '설정·사용자' };
   function draw() {
     $('u-rows').innerHTML = list.map(u => `<tr class="click ${u.id === selU ? 'sel' : ''}" data-u="${u.id}" tabindex="0"><td>${u.name}${u.id === ME.id ? ' <span class="badge">나</span>' : ''}</td><td class="mono">${u.mail}</td><td>${u.roles.map(r => `<span class="badge">${ROLE_NAME[r]}</span>`).join(' ')}</td><td>${u.systems.join(', ')}</td><td class="mono caption">${last[u.id]}</td><td><span class="badge b-success">사용</span></td></tr>`).join('');
@@ -156,15 +176,24 @@ window.pageInit = function () {
     $('pn-user').innerHTML = `<div class="rp-head"><h2>${u.name}${self ? ' <span class="badge">나</span>' : ''}</h2><div class="rp-sub">${u.mail}</div></div>
       <div class="rp-body">
         ${self ? '<div class="banner warning" style="margin-bottom:12px"><span>!</span><div><b>자기 역할은 스스로 바꿀 수 없습니다.</b> 다른 Admin에게 요청하세요. 시도하면 감사 로그에 남습니다.</div></div>' : ''}
+        ${reqOf(u.id) ? `<div class="banner info" style="margin-bottom:12px"><span>●</span><div class="grow"><b>역할 변경 요청</b> — ${reqOf(u.id).role} · ${reqOf(u.id).at}<br><span class="caption">${reqOf(u.id).why}</span></div><button class="btn sm" id="rq-deny">거절</button></div>` : ''}
         <div class="section-t">역할 <span class="caption muted">여러 개 선택 가능</span></div>
-        ${Object.keys(ROLE_NAME).map(r => `<label class="flex" style="margin-bottom:6px"><input type="checkbox" ${u.roles.includes(r) ? 'checked' : ''} ${self ? 'disabled' : ''}> ${ROLE_NAME[r]} <span class="caption faint">${RD[r]}</span></label>`).join('')}
+        ${Object.keys(ROLE_NAME).map(r => `<label class="flex" style="margin-bottom:6px"><input type="checkbox" data-role="${r}" ${u.roles.includes(r) ? 'checked' : ''} ${self ? 'disabled' : ''}> ${ROLE_NAME[r]} <span class="caption faint">${RD[r]}</span></label>`).join('')}
         <div class="section-t">담당 시스템</div>
         <div>${u.systems.map(s => `<span class="badge">${s}${self ? '' : ' ×'}</span>`).join(' ')} ${self ? '' : '<button class="btn ghost sm">+ 추가</button>'}</div>
         <div class="section-t">계정</div>
         <div class="flex">${self ? '<span class="caption muted">본인 계정은 중지할 수 없습니다</span>' : '<button class="btn sm" data-toast="계정을 중지했습니다 — 진행 중 결재는 다른 담당자에게 넘어갑니다" data-toast-type="info">사용 중지</button>'}</div>
       </div>
-      <div class="rp-foot"><span class="grow"></span>${self ? '<button class="btn primary sm" disabled>저장</button>' : '<button class="btn primary sm" data-toast="역할을 저장했습니다 — 감사 로그에 기록됩니다">저장</button>'}</div>`;
+      <div class="rp-foot"><span class="grow"></span>${self ? '<button class="btn primary sm" disabled>저장</button>' : '<button class="btn primary sm" id="role-save">저장</button>'}</div>`;
+    // role change is stored and applied on next screen load; the audit log records before → after (CX12-35)
+    const rs = $('role-save'); if (rs) rs.onclick = () => { if (liveRoleChanged()) { staleRoleToast(); return; } const nr = [...document.querySelectorAll('#pn-user [data-role]:checked')].map(c => c.dataset.role); if (!nr.length) { toast('역할을 하나 이상 고르세요', 'danger'); return; } const prev = u.roles.slice(); if (prev.join() === nr.join()) { toast('바뀐 역할이 없습니다', 'info'); return; }
+      const ov = JSON.parse(dbmStore.get('dbm-user-roles', '{}')); ov[u.id] = nr; dbmStore.set('dbm-user-roles', JSON.stringify(ov)); u.roles = nr; if (USERS[u.id]) USERS[u.id].roles = nr;
+      pushAudit({ act: '역할 변경', target: u.name, why: `${prev.map(r => ROLE_NAME[r]).join('·')} → ${nr.map(r => ROLE_NAME[r]).join('·')}` });
+      // a pending role request is closed by this change and the requester is told (CX14-09)
+      const rq = reqOf(u.id); const met = rq && (rq.key === 'off' ? nr.length < prev.length : rq.key ? nr.includes(rq.key) && !prev.includes(rq.key) : false); if (rq && !met) setTimeout(() => toast(`${u.name}의 역할 요청(${rq.role})은 아직 열려 있습니다 — 요청한 역할을 주거나 [거절]하세요`, 'info'), 400); if (met) { dbmStore.set('dbm-rolereq-' + u.id, 'null'); pushNotif({ to: [u.id], k: 'res', t: `역할 변경 요청 처리됨 — ${nr.map(r => ROLE_NAME[r]).join('·')}`, m: `${ME.name} · 요청: ${rq.role}`, href: 'mypage.html' }); }
+      draw(); toast(`${u.name}의 역할을 저장했습니다 — ${nr.map(r => ROLE_NAME[r]).join('·')} · 감사 로그에 기록`, 'success'); };
   }
+  document.addEventListener('click', e => { if (!e.target.closest || !e.target.closest('#rq-deny')) return; if (liveRoleChanged()) { staleRoleToast(); return; } if (!ME.has('admin')) { toast('Admin만 처리할 수 있습니다', 'danger'); return; } const u = USERS[selU]; const rq = reqOf(selU); if (!rq) return; dbmStore.set('dbm-rolereq-' + selU, 'null'); pushNotif({ to: [selU], k: 'res', t: `역할 변경 요청 거절 — ${rq.role}`, m: ME.name, href: 'mypage.html' }); pushAudit({ act: '역할 요청 거절', target: u.name, why: rq.role }); draw(); toast(`${u.name}의 요청을 거절했습니다 — 알림을 보냈습니다`, 'info'); });
   $('u-rows').addEventListener('click', e => { const r = e.target.closest('[data-u]'); if (r) { selU = r.dataset.u; draw(); } });
   draw();
 };

@@ -17,15 +17,15 @@
     <span class="badge mono">Oracle 19c</span><span class="badge mono">스키마 RQMS</span>
     <div class="actions">
       <a class="btn" href="settings.html#sys">시스템 설정</a>
-      <button class="btn primary" data-toast="새 업무 영역을 만들었습니다">+ 업무 영역</button>
+      <a class="btn" href="model.html?sys=1">시스템 전체 ERD</a><button class="btn primary" id="add-area">+ 업무 영역</button>
     </div>
   </div>
   <div class="scroll"><div class="pad">
     <div class="grid3" style="grid-template-columns:repeat(4,1fr);margin-bottom:20px">
-      <div class="card"><div class="caption muted">업무 영역</div><div class="mono" style="font-size:20px">2</div></div>
-      <div class="card"><div class="caption muted">테이블 · 컬럼</div><div class="mono" style="font-size:20px">11 · 74</div></div>
+      <div class="card"><div class="caption muted">업무 영역</div><div class="mono" style="font-size:20px" id="k-areas">—</div></div>
+      <div class="card"><div class="caption muted">테이블 · 컬럼 <span class="faint">(작업본 기준)</span></div><div class="mono" style="font-size:20px" id="k-tc">—</div></div>
       <div class="card"><div class="caption muted">명명 템플릿</div><div class="mono" style="font-size:14px;margin-top:4px">%(EntityStdName)%(ClassSuffix)</div></div>
-      <div class="card"><div class="caption muted">모델 확정 최종 승인</div><div style="margin-top:4px"><span class="badge b-success">사용</span></div></div>
+      <div class="card"><div class="caption muted">모델 확정 최종 승인</div><div style="margin-top:4px" id="k-final"></div></div>
     </div>
     <div class="section-t">업무 영역</div>
     <table class="tbl" style="border:1px solid var(--border);border-radius:8px;overflow:hidden">
@@ -33,15 +33,29 @@
       <tbody id="areas"></tbody>
     </table>
     <div class="caption muted" style="margin-top:8px">상태·버전·준수율은 결재 문서와 모델 판정에서 계산합니다(모델 화면과 같은 값). 준수율이 ‘—’이면 아직 그 영역을 열지 않은 것입니다.</div>
+    <div class="overlay" id="mo-area" role="dialog" aria-modal="true" aria-labelledby="ma-t"><div class="modal"><div class="m-head"><h3 id="ma-t">새 업무 영역</h3></div>
+      <div class="m-body"><div class="field"><label for="ma-name">이름 *</label><input class="input" id="ma-name" placeholder="예: 산출물 관리"></div><div class="caption muted">빈 영역(v1 작업 버전)을 만들고 모델 화면으로 엽니다. 기존 DB가 있으면 [가져오기]로 DDL에서 만드세요.</div></div>
+      <div class="m-foot"><button class="btn" data-close="mo-area">취소</button><a class="btn" href="import.html">DDL로 만들기</a><button class="btn primary" id="ma-go" data-needs="ma-name">만들기</button></div></div></div>
   </div></div>
 </div>
 </div>
 <script>
 window.pageInit = function () {
-  document.getElementById('areas').innerHTML = ['rq', 'risk'].map(a => {
+  const $ = id => document.getElementById(id);
+  const ids = Object.keys(getModels()); let T = 0, Cc = 0;
+  // counts from each area's working structure (or its submitted copy when locked) — CX12-19 · CL12-31
+  const sizeOf = a => { const L = modelLock(a); const m = (L.doc && L.state !== 'edit' && L.doc.model) || modelOf(a, L.model.ver); const ents = m.E.filter(x => !x.ref); return [ents.length, ents.reduce((n, x) => n + x.a.length, 0)]; };
+  ids.forEach(a => { const [t2, c2] = sizeOf(a); T += t2; Cc += c2; });
+  $('k-areas').textContent = ids.length; $('k-tc').textContent = `${T} · ${Cc}`;
+  $('k-final').innerHTML = ids.map(a => `<span class="badge ${getOrg().finalModel[a] !== false ? 'b-success' : ''}">${getModels()[a].name}: ${getOrg().finalModel[a] !== false ? '사용' : '안 함'}</span>`).join(' ');
+  // creating an area is for modelers / admin; others only browse (CX12-20)
+  if (!(ME.has('modeler') || ME.has('admin'))) { $('add-area').disabled = true; $('add-area').title = '업무 영역은 모델러·Admin만 만들 수 있습니다'; }
+  $('add-area').onclick = () => { if ($('add-area').disabled) return; $('mo-area').classList.add('open'); $('ma-name').focus(); };
+  $('ma-go').onclick = () => { const nm = $('ma-name').value.trim(); if (!nm) return; if (liveRoleChanged()) { staleRoleToast(); return; } const id = addArea(nm, { E: [], R: [], M: [] }); flash(`업무 영역 ‘${nm}’을 만들었습니다 — v1 작업 버전`, 'success'); location.href = `model.html?area=${id}`; };
+  document.getElementById('areas').innerHTML = ids.map(a => {
     const L = modelLock(a), c = getComp(a);
     const st = L.state === 'review' ? `<span class="badge b-info">● 검토 중 · ${L.doc.id}</span>` : L.state === 'confirmed' ? '<span class="badge b-success">확정본</span>' : '<span class="badge">작업 중</span>';
-    return `<tr class="click" tabindex="0" onclick="location.href='model.html?area=${a}'"><td><b>${L.model.name}</b></td><td>${st}</td><td class="mono">v${L.model.ver} <span class="faint">(v${L.model.base} 확정 기준)</span></td><td class="num">${a === 'rq' ? 7 : 2}</td><td class="mono">${c ? c.rate + '%' : '—'}</td><td class="num">${c ? c.bad : '—'}</td><td class="num">${c ? c.exList.length : '—'}</td><td>${a === 'rq' ? '김모델' : '박설계'}</td><td class="mono">${L.doc ? L.doc.date : '—'}</td></tr>`;
+    return `<tr class="click" tabindex="0" onclick="location.href='model.html?area=${a}'"><td><b>${L.model.name}</b></td><td>${st}</td><td class="mono">v${L.model.ver} <span class="faint">${L.model.base ? `(v${L.model.base} 확정 기준)` : '(확정본 없음)'}</span></td><td class="num">${sizeOf(a)[0]}</td><td class="mono">${c ? c.rate + '%' : '—'}</td><td class="num">${c ? c.bad : '—'}</td><td class="num">${c ? c.exList.length : '—'}</td><td>${a === 'rq' ? '김모델' : a === 'risk' ? '박설계' : '—'}</td><td class="mono">${L.doc ? L.doc.date : '—'}</td></tr>`;
   }).join('');
 };
 </script>

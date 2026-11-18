@@ -19,39 +19,22 @@
   </div>
   <div class="page-body">
     <div class="main">
-      <div class="toolbar">
-        <span class="chip on" data-group="c">대기 <span class="n">3</span></span>
-        <span class="chip" data-group="c">신청 전환 <span class="n">12</span></span>
-        <span class="chip" data-group="c">반려 <span class="n">4</span></span>
-        <span class="grow"></span>
-        <span class="chip" data-group="t" data-multi="1">단어</span><span class="chip" data-group="t" data-multi="1">용어</span>
-      </div>
-      <div class="listhead"><b style="color:var(--fg)">3건</b> · 같은 이름은 한 행으로 묶어 발생 건수를 표시합니다</div>
+      <div class="toolbar" id="cfilt"></div>
+      <div class="listhead" id="clh"></div>
       <div class="scroll">
         <table class="tbl">
-          <thead><tr><th>유형</th><th>이름</th><th>제안 약어</th><th>발생</th><th>최초 요청</th><th>유사 표준어</th></tr></thead>
-          <tbody>
-            <tr class="click sel" data-panel="pn-cand" data-c="0"><td><span class="badge b-violet">단어</span></td><td><b>수령자</b></td><td class="mono">RCPNT</td><td class="num">4</td><td>김모델 · 11/17</td><td><span class="badge b-common">공통</span> 수신자 <span class="mono faint">RCVR</span></td></tr>
-            <tr class="click" data-panel="pn-cand" data-c="1"><td><span class="badge b-violet">단어</span></td><td>검수</td><td class="mono">INSPCT</td><td class="num">2</td><td>박설계 · 11/16</td><td><span class="badge b-common">공통</span> 검사 <span class="mono faint">INSP</span></td></tr>
-            <tr class="click" data-panel="pn-cand" data-c="2"><td><span class="badge b-violet">용어</span></td><td>요구사항변경사유내용</td><td class="mono">DEMND_MATER_CHG_RSN_CN</td><td class="num">1</td><td>김모델 · 11/15</td><td class="faint">없음</td></tr>
-          </tbody>
+          <thead><tr><th>유형</th><th>이름</th><th>제안 약어</th><th class="num">발생</th><th>최초 요청</th><th>상태</th><th>유사 표준어</th></tr></thead>
+          <tbody id="crows"></tbody>
         </table>
       </div>
     </div>
     <aside class="rpanel open" id="pn-cand">
       <div class="rp-head">
-        <div class="t"><span class="badge b-violet" id="cd-type">단어 후보</span><span class="badge">대기</span><button class="iconbtn close" data-close="pn-cand" aria-label="닫기" style="width:28px;height:28px">×</button></div>
-        <h2 style="margin-top:8px" id="cd-name">수령자</h2><div class="rp-sub" id="cd-abbr">제안 약어 RCPNT</div>
+        <div class="t"><span class="badge b-violet" id="cd-type">단어 후보</span><span class="badge" id="cd-st">대기</span><button class="iconbtn close" data-close="pn-cand" aria-label="닫기" style="width:28px;height:28px">×</button></div>
+        <h2 style="margin-top:8px" id="cd-name"></h2><div class="rp-sub" id="cd-abbr"></div>
       </div>
-      <div class="rp-body" id="cd-body">
-        <div class="section-t">처리 결과는 요청자에게 앱 알림으로 갑니다</div>
-      </div>
-      <div class="rp-foot" id="cd-foot">
-        <button class="btn danger sm" data-open="mo-crej">반려</button>
-        <button class="btn sm" data-open="mo-cstd">기존 표준어 사용 안내</button>
-        <span class="grow"></span>
-        <a class="btn primary sm" href="dictionary.html">단어 신청으로 전환</a>
-      </div>
+      <div class="rp-body" id="cd-body"></div>
+      <div class="rp-foot" id="cd-foot"></div>
     </aside>
   </div>
   <div class="overlay" id="mo-crej" role="dialog" aria-modal="true" aria-labelledby="crej-t"><div class="modal"><div class="m-head"><h3 id="crej-t">후보 반려 · 수령자</h3></div>
@@ -68,52 +51,52 @@
 <script>
 window.pageInit = function () {
   const $ = id => document.getElementById(id);
-  // candidate data — the panel and every action follow the SELECTED row (CL3)
-  const C = [
-    { t: '단어', name: '수령자', abbr: 'RCPNT', sim: ['수신자', 'RCVR', '공통'], loc: [['요구사항관리 › 요구사항·프로젝트 › 산출물기본', '산출물수령자명', 'kim'], ['요구사항관리 › 요구사항·프로젝트 › 산출물이력', '수령자ID', 'kim'], ['인사시스템 › 교육 › 교재배부', '수령자명', 'park'], ['인사시스템 › 교육 › 교재배부', '수령일자', 'park']] },
-    { t: '단어', name: '검수', abbr: 'INSPCT', sim: ['검사', 'INSP', '공통'], loc: [['요구사항관리 › 요구사항·프로젝트 › 산출물기본', '산출물검수결과코드', 'park'], ['요구사항관리 › 요구사항·프로젝트 › 산출물이력', '검수일자', 'park']] },
-    { t: '용어', name: '요구사항변경사유내용', abbr: 'DEMND_MATER_CHG_RSN_CN', sim: null, loc: [['요구사항관리 › 요구사항·프로젝트 › 요구사항내역', '변경사유', 'kim']] }
-  ];
-  let sel = 0;
-  const loadDone = () => { try { return JSON.parse(dbmStore.get('dbm-cands', 'null')) || { 0: '신청 전환 · REQ-2026-0012' }; } catch (e) { return { 0: '신청 전환 · REQ-2026-0012' }; } };
-  const done = loadDone();   // candidate state persists and matches the documents (수령자 → REQ-0012)
-  // a conversion follows its document: rejected / withdrawn → the candidate is open again (CX9-25)
-  const docsNow = getDocs(); const reopened = [];
-  Object.keys(done).forEach(i => { const m = done[i].match(/REQ-\d{4}-\d{4}/); const d = m && docsNow.find(x => x.id === m[0]); if (d && ['rejected', 'withdrawn'].includes(d.step)) { reopened.push(`${C[i].name}(${d.id} ${STEP_NAME[d.step]})`); delete done[i]; } else if (d) done[i] = `${d.step === 'done' ? '등록 완료' : '신청 전환'} · ${d.id}`; });
-  if (reopened.length) { dbmStore.set('dbm-cands', JSON.stringify(done)); setTimeout(() => toast(`연결 신청이 반려·회수돼 다시 처리할 후보: ${reopened.join(', ')}`, 'info'), 200); }
-  Object.keys(done).forEach(i => { const row = document.querySelector(`tbody tr[data-c="${i}"]`); if (row) { row.lastElementChild.innerHTML = `<span class="badge">${done[i].split(' · ')[0]}</span>`; row.style.opacity = '.55'; } });
-  const reqs = c => [...new Set(c.loc.map(l => l[2]))];
+  const q = new URLSearchParams(location.search);
+  // candidates come from the shared store: model/standardize register them, this queue processes them (CX13-03)
+  let C = getCands(); let f = q.get('f') || '대기', sel = q.get('c') || null;
+  const reqs = c => [...new Set(c.loc.map(l => l.by))];
+  const ST_BADGE = { 대기: '', '신청 전환': 'b-info', '등록 완료': 'b-success', 반려: 'b-danger', '기존 표준어 안내': '' };
+  const locHref = l => l.area && getModels()[l.area] ? `model.html?area=${l.area}${l.e ? '&focus=' + l.e : ''}` : null;
+  function draw() {
+    C = getCands();
+    const counts = {}; C.forEach(c => { const s = candState(c); counts[s] = (counts[s] || 0) + 1; });
+    $('cfilt').innerHTML = ['대기', '신청 전환', '등록 완료', '반려', '기존 표준어 안내', '전체'].map(k => `<button class="chip ${f === k ? 'on' : ''}" data-cf="${k}">${k} <span class="n">${k === '전체' ? C.length : counts[k] || 0}</span></button>`).join('') + '<span class="grow"></span><span class="caption muted">상태는 연결된 결재 문서를 따릅니다</span>';
+    const L = C.filter(c => f === '전체' || candState(c) === f);
+    $('clh').innerHTML = `<b style="color:var(--fg)">${L.length}건</b> · 같은 이름은 한 행으로 묶어 발생 위치를 표시합니다`;
+    if (!sel || !L.some(c => c.id === sel)) sel = (L[0] || {}).id || null;
+    $('crows').innerHTML = L.map(c => `<tr class="click ${sel === c.id ? 'sel' : ''}" data-c="${c.id}" tabindex="0"><td><span class="badge b-violet">${c.t}</span></td><td><b>${c.name}</b></td><td class="mono">${c.abbr || '—'}</td><td class="num">${c.loc.length}</td><td>${USERS[(c.loc[0] || {}).by] ? USERS[c.loc[0].by].name : '—'}</td><td><span class="badge ${ST_BADGE[candState(c)]}">${candState(c)}</span>${c.doc ? ` <a class="mono caption" href="approvals.html?doc=${c.doc}">${c.doc}</a>` : ''}</td><td>${c.sim ? `<span class="badge b-common">${c.sim[2]}</span> ${c.sim[0]} <span class="mono faint">${c.sim[1]}</span>` : '<span class="faint">없음</span>'}</td></tr>`).join('') || `<tr><td colspan="7" class="caption muted" style="text-align:center;padding:30px">‘${f}’ 후보가 없습니다</td></tr>`;
+    panel();
+  }
   function panel() {
-    const c = C[sel];
-    $('cd-type').textContent = c.t + ' 후보'; $('cd-name').textContent = c.name; $('cd-abbr').textContent = '제안 약어 ' + c.abbr;
-    $('cd-body').innerHTML = `${c.sim ? `<div class="banner warning"><span>!</span><div class="grow">비슷한 표준어가 있습니다: <b>${c.sim[0]}</b> <span class="mono">${c.sim[1]}</span> (${c.sim[2]}). 같은 뜻이면 기존 단어를 쓰도록 안내하세요.</div></div>` : ''}
+    const c = C.find(x => x.id === sel); if (!c) { $('cd-name').textContent = '후보를 고르세요'; $('cd-body').innerHTML = ''; $('cd-foot').innerHTML = ''; return; }
+    const st = candState(c);
+    $('cd-type').textContent = c.t + ' 후보'; $('cd-st').textContent = st; $('cd-st').className = 'badge ' + ST_BADGE[st];
+    $('cd-name').textContent = c.name; $('cd-abbr').textContent = c.abbr ? '제안 약어 ' + c.abbr : '제안 약어 없음 — 전환할 때 정합니다';
+    // an open request that already covers this name is shown up front (CL12-24)
+    const op = openItems().find(o => o.it.name === c.name && (o.it.act || '추가') === '추가' && o.doc !== c.doc);
+    $('cd-body').innerHTML = `${op ? `<div class="banner info"><span>●</span><div class="grow">이미 <b>${op.doc}</b>에서 같은 이름을 신청 중입니다. 새 신청 대신 이 신청에 연결하세요.</div><a class="btn sm" href="approvals.html?doc=${op.doc}">결재 보기</a></div>` : ''}
+      ${c.sim ? `<div class="banner warning" style="margin-top:8px"><span>!</span><div class="grow">비슷한 표준어가 있습니다: <b>${c.sim[0]}</b> <span class="mono">${c.sim[1]}</span> (${c.sim[2]}). 같은 뜻이면 기존 단어를 쓰도록 안내하세요.</div></div>` : ''}
+      ${c.closed ? `<div class="banner" style="margin-top:8px"><span>ℹ</span><div>${c.closed} — ${c.closedWhy || ''}</div></div>` : ''}
       <div class="section-t">발생 위치 <span class="badge">${c.loc.length}</span></div>
-      <table class="tbl"><thead><tr><th>위치</th><th>속성</th><th>요청</th></tr></thead><tbody>${c.loc.map(l => `<tr><td class="wrap"><a href="model.html">${l[0]}</a></td><td>${l[1]}</td><td>${USERS[l[2]].name}</td></tr>`).join('')}</tbody></table>
-      <div class="section-t">처리 결과는 요청자 ${reqs(c).map(u => USERS[u].name).join(' · ')}에게 앱 알림으로 갑니다</div>`;
+      <table class="tbl"><thead><tr><th>위치</th><th>속성</th><th>등록</th></tr></thead><tbody>${c.loc.map(l => `<tr><td class="wrap">${locHref(l) ? `<a href="${locHref(l)}">${(getModels()[l.area] || {}).name} › ${l.ent}</a>` : `${l.sys || '다른 시스템'} › ${l.ent}`}</td><td>${l.attr}</td><td>${USERS[l.by] ? USERS[l.by].name : l.by}</td></tr>`).join('')}</tbody></table>
+      <div class="section-t">처리 결과는 요청자 ${reqs(c).map(u => USERS[u] ? USERS[u].name : u).join(' · ')}에게 앱 알림으로 갑니다</div>`;
     if (!ME.has('da')) { $('cd-foot').innerHTML = '<span class="caption muted">후보 처리는 DA만 할 수 있습니다 — 내가 등록한 후보의 처리 결과는 알림으로 받습니다.</span>'; return; }
-    const dm = done[sel] && done[sel].match(/REQ-\d{4}-\d{4}/);
-    $('cd-foot').innerHTML = done[sel] ? `<span class="badge b-success">✓ ${done[sel]}</span>${dm ? ` <a class="btn sm" href="approvals.html?doc=${dm[0]}">결재 보기</a>` : ''}<span class="grow"></span>` : `<button class="btn danger sm" data-open="mo-crej">반려</button>${c.sim ? '<button class="btn sm" data-open="mo-cstd">기존 표준어 사용 안내</button>' : ''}<span class="grow"></span><button class="btn primary sm" id="cv-go">${c.t} 신청으로 전환</button>`;
-    const cv = $('cv-go'); if (cv) cv.onclick = () => {
-      if (liveRoleChanged()) { staleRoleToast(); return; }
-      // same candidate converted from two tabs → one document (key), and the dictionary/open requests are checked at write time
-      const r = createDoc({ type: 'dict', title: `${c.t} '${c.name}' 등록 (후보 전환)`, n: 1, reason: `후보 큐 ${c.loc.length}건 발생`, cc: reqs(c), key: `cand:${c.name}`, items: [{ k: c.t === '단어' ? 'word' : 'term', name: c.name, abbr: c.abbr, act: '추가', from: `후보 · 발생 위치 ${c.loc.length}곳` }] });
-      if (r.conflict) { toast(`이미 진행 중인 신청이 있습니다 — ${r.conflict.join(', ')}`, 'danger'); return; }
-      closeCand(`신청 전환 · ${r.doc.id}`, r.dup ? `이미 ${r.doc.id}로 전환돼 있습니다` : `${r.doc.id}로 ${c.t} 신청을 만들었습니다 — 승인되면 사용처에 재검토 알림`, 'success');
-    };
+    if (st !== '대기') { $('cd-foot').innerHTML = `<span class="badge ${ST_BADGE[st]}">${st}</span>${c.doc ? ` <a class="btn sm" href="approvals.html?doc=${c.doc}">결재 보기</a>` : ''}<span class="grow"></span>${c.closed ? '<button class="btn sm" id="c-reopen">다시 열기</button>' : ''}`; const ro = $('c-reopen'); if (ro) ro.onclick = () => { const all = getCands(); const x = all.find(y => y.id === c.id); delete x.closed; delete x.closedWhy; saveCands(all); draw(); }; return; }
+    // conversion opens the registration form (PN-12) filled with the candidate — domain / description are checked there (CL12-25)
+    $('cd-foot').innerHTML = `<button class="btn danger sm" data-open="mo-crej">반려</button>${c.sim ? '<button class="btn sm" data-open="mo-cstd">기존 표준어 사용 안내</button>' : ''}<span class="grow"></span>${op ? `<button class="btn sm" id="c-link">${op.doc}에 연결</button>` : ''}<a class="btn primary sm" href="dictionary.html?cand=${c.id}">${c.t} 신청으로 전환</a>`;
+    const lk = $('c-link'); if (lk) lk.onclick = () => { if (liveRoleChanged()) { staleRoleToast(); return; } const all = getCands(); all.find(y => y.id === c.id).doc = op.doc; saveCands(all); notify(c, `${op.doc}에 연결`); toast(`${c.name} 후보를 ${op.doc}에 연결했습니다`, 'success'); draw(); };
     $('crej-t').textContent = `후보 반려 · ${c.name}`;
-    document.querySelector('#mo-crej .m-body .caption').innerHTML = `발생 위치 ${c.loc.length}곳의 요청자 <b>${reqs(c).map(u => USERS[u].name).join(' · ')}</b>에게 앱 알림이 갑니다. 해당 속성은 미준수로 남습니다.`;
+    document.querySelector('#mo-crej .m-body .caption').innerHTML = `발생 위치 ${c.loc.length}곳의 요청자 <b>${reqs(c).map(u => USERS[u] ? USERS[u].name : u).join(' · ')}</b>에게 앱 알림이 갑니다. 해당 속성은 미준수로 남습니다.`;
     if (c.sim) { $('cstd-to').innerHTML = `<option>${c.sim[0]} ${c.sim[1]} (${c.sim[2]} 단어)</option>`; $('cstd-msg').value = `‘${c.name}’ 대신 같은 뜻의 ${c.sim[2]} 표준 ‘${c.sim[0]}(${c.sim[1]})’를 쓰세요. 표준 맞추기에서 바로 바꿀 수 있습니다.`; }
   }
-  document.querySelector('tbody').addEventListener('click', e => { const r = e.target.closest('tr[data-c]'); if (r) { sel = +r.dataset.c; panel(); } });
-  const closeCand = (label, msg, type) => {
-    const c = C[sel]; done[sel] = label; dbmStore.set('dbm-cands', JSON.stringify(done));
-    const row = document.querySelector(`tbody tr[data-c="${sel}"]`); row.lastElementChild.innerHTML = `<span class="badge">${label.split(' · ')[0]}</span>`; row.style.opacity = '.55';
-    pushNotif({ to: reqs(c), k: 'cand', t: `후보 ‘${c.name}’ — ${label}`, m: msg, href: 'candidates.html' });
-    panel(); toast(`${c.name}: ${msg} — 요청자 ${reqs(c).length}명에게 알림`, type);
-  };
-  $('crej-go').onclick = () => { $('mo-crej').classList.remove('open'); closeCand('반려', `사유: ${$('crej-why').value.trim()}`, 'danger'); $('crej-why').value = ''; };
-  $('cstd-go').onclick = () => { $('mo-cstd').classList.remove('open'); closeCand('기존 표준어 안내', `‘${C[sel].sim[0]}’ 사용 안내`, 'info'); };
-  panel();
+  const notify = (c, label) => pushNotif({ to: reqs(c), k: 'cand', t: `후보 ‘${c.name}’ — ${label}`, m: `${ME.name} 처리`, href: `candidates.html?c=${c.id}` });
+  const close = (label, why) => { if (liveRoleChanged()) { staleRoleToast(); return; } const all = getCands(); const c = all.find(y => y.id === sel); c.closed = label; c.closedWhy = why; saveCands(all); notify(c, label); pushAudit({ act: `후보 ${label}`, target: c.name, why }); toast(`${c.name}: ${label} — 요청자 ${reqs(c).length}명에게 알림`, label === '반려' ? 'danger' : 'info'); draw(); };
+  $('crej-go').onclick = () => { $('mo-crej').classList.remove('open'); close('반려', $('crej-why').value.trim()); $('crej-why').value = ''; };
+  $('cstd-go').onclick = () => { $('mo-cstd').classList.remove('open'); close('기존 표준어 안내', $('cstd-msg').value.trim()); };
+  $('cfilt').addEventListener('click', e => { const b = e.target.closest('[data-cf]'); if (!b) return; f = b.dataset.cf; sel = null; draw(); });
+  $('crows').addEventListener('click', e => { const r = e.target.closest('tr[data-c]'); if (!r || e.target.closest('a')) return; sel = r.dataset.c; draw(); });
+  if (q.get('c')) { const c = C.find(x => x.id === q.get('c')); if (c) f = candState(c); }
+  draw();
 };
 </script>
 </body>

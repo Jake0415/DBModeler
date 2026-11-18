@@ -37,8 +37,8 @@
       <div class="set-row"><div class="l"><b>표시 이름</b><span>결재·공동 편집 커서에 보이는 이름</span></div><div class="field"><label for="p-disp">표시 이름</label><input class="input" id="p-disp"></div></div>
       <div class="set-row"><div class="l"><b>내 역할 · 담당 시스템</b><span>조회 전용 — 바꾸려면 Admin에게 요청합니다</span></div>
         <div><div id="p-roles" style="margin-bottom:8px"></div><div class="caption" id="p-sys"></div>
-          <button class="btn sm" style="margin-top:8px" data-open="mo-rolereq">역할 변경 요청</button></div></div>
-      <div class="flex" style="margin-top:16px"><span class="grow"></span><button class="btn primary" data-toast="표시 이름을 저장했습니다">저장</button></div>
+          <button class="btn sm" style="margin-top:8px" data-open="mo-rolereq" id="rr-open">역할 변경 요청</button><div class="caption" id="rr-state" style="margin-top:6px"></div></div></div>
+      <div class="flex" style="margin-top:16px"><span class="grow"></span><button class="btn primary" id="p-save">저장</button></div>
     </div>
 
     <div class="pane" data-pane="mine">
@@ -47,24 +47,14 @@
     </div>
 
     <div class="pane" data-pane="work">
-      <table class="tbl" style="border:1px solid var(--border)"><thead><tr><th>일시</th><th>업무 영역</th><th>작업</th><th></th></tr></thead><tbody>
-        <tr><td class="mono">11/17 16:20</td><td>요구사항 · 프로젝트</td><td>엔터티 2 · 속성 6 편집</td><td><a href="model.html">열기</a></td></tr>
-        <tr><td class="mono">11/17 15:02</td><td>사전</td><td>용어 1 · 단어 1 신청 (REQ-2026-0014)</td><td><a href="approvals.html?doc=REQ-2026-0014">열기</a></td></tr>
-        <tr><td class="mono">11/17 14:40</td><td>요구사항 · 프로젝트</td><td>후보 2건 등록 (수령자 · 검수)</td><td><a href="candidates.html">열기</a></td></tr>
-      </tbody></table>
+      <div class="caption muted" style="margin-bottom:8px">내가 만든 결재 문서·엑셀 묶음·후보 등록·설정 변경을 시간순으로 모았습니다. 지금 내 차례인 결재는 <a href="approvals.html">결재함</a>에 있습니다.</div>
+      <table class="tbl" style="border:1px solid var(--border)"><thead><tr><th>일시</th><th>구분</th><th>작업</th><th>상태</th><th></th></tr></thead><tbody id="work-body"></tbody></table>
     </div>
 
     <div class="pane set-wrap" data-pane="notify">
       <div class="caption muted" style="margin-bottom:12px">메일은 기관 정책상 <b>결재선 담당자</b>에게만 갑니다. 정책 범위 안에서만 끌 수 있습니다.</div>
-      <table class="tbl ntbl" style="border:1px solid var(--border)"><thead><tr><th>종류</th><th>앱 알림</th><th>메일</th></tr></thead><tbody>
-        <tr><td>결재 요청 (내 차례)</td><td><input type="checkbox" checked aria-label="결재 요청 앱 알림"></td><td><input type="checkbox" checked disabled aria-label="결재 요청 메일(정책상 필수)"> <span class="caption faint">필수</span></td></tr>
-        <tr><td>내 신청 결과 (승인·반려·회수)</td><td><input type="checkbox" checked aria-label="결과 앱 알림"></td><td><input type="checkbox" checked aria-label="결과 메일"></td></tr>
-        <tr><td>참조</td><td><input type="checkbox" checked aria-label="참조 앱 알림"></td><td><span class="caption faint">—</span></td></tr>
-        <tr><td>후보 처리 결과</td><td><input type="checkbox" checked aria-label="후보 앱 알림"></td><td><span class="caption faint">—</span></td></tr>
-        <tr><td>긴 작업 완료 (엑셀 검증·산출물)</td><td><input type="checkbox" checked aria-label="작업 앱 알림"></td><td><span class="caption faint">—</span></td></tr>
-        <tr><td>표준 재검토 가능 · 공동 편집 충돌</td><td><input type="checkbox" checked aria-label="재검토 앱 알림"></td><td><span class="caption faint">—</span></td></tr>
-      </tbody></table>
-      <div class="flex" style="margin-top:12px"><span class="grow"></span><button class="btn primary" data-toast="알림 설정을 저장했습니다">저장</button></div>
+      <table class="tbl ntbl" style="border:1px solid var(--border)"><thead><tr><th>종류</th><th>앱 알림</th><th>메일</th></tr></thead><tbody id="nt-body"></tbody></table>
+      <div class="flex" style="margin-top:12px"><span class="caption muted" id="nt-state"></span><span class="grow"></span><button class="btn primary" id="nt-save">저장</button></div>
     </div>
 
     <div class="pane set-wrap" data-pane="security">
@@ -89,9 +79,9 @@
   <div class="overlay" id="mo-rolereq" role="dialog" aria-modal="true" aria-labelledby="rr-t"><div class="modal">
     <div class="m-head"><h3 id="rr-t">역할 변경 요청</h3></div>
     <div class="m-body"><div class="caption muted" style="margin-bottom:8px">Admin(이데이터)에게 요청합니다. 자기 역할은 스스로 바꿀 수 없습니다.</div>
-      <div class="field"><label for="rr-role">요청 역할</label><select class="input" id="rr-role"><option>기관 담당자 추가</option><option>DA 추가</option><option>모델러 추가</option><option>역할 해제</option></select></div>
+      <div class="field"><label for="rr-role">요청 역할</label><select class="input" id="rr-role"></select></div>
       <div class="field"><label for="rr-why">사유 *</label><textarea class="input" id="rr-why" rows="2"></textarea></div></div>
-    <div class="m-foot"><button class="btn" data-close="mo-rolereq">취소</button><button class="btn primary" data-needs="rr-why" data-close="mo-rolereq" data-toast="역할 변경을 Admin에게 요청했습니다" data-toast-type="info">요청</button></div></div></div>
+    <div class="m-foot"><button class="btn" data-close="mo-rolereq">취소</button><button class="btn primary" data-needs="rr-why" id="rr-go">요청</button></div></div></div>
 </div>
 </div>
 <script>
@@ -102,8 +92,33 @@ window.pageInit = function () {
   $('p-roles').innerHTML = ME.roles.map(r => `<span class="badge">${ROLE_NAME[r]}</span>`).join(' ');
   $('p-sys').textContent = '담당 시스템: ' + ME.systems.join(', ');
   const docs = getDocs().filter(d => d.req === ME.id);
-  const f = d => d.step === 'rejected' ? 'fix' : ['done', 'withdrawn'].includes(d.step) ? 'end' : 'ing';
+  const f = d => ({ live: 'ing', fix: 'fix', done: 'end' })[docGroup(d)];   // same rule as the user menu (CL14-03)
   $('mine-body').innerHTML = docs.length ? docs.map(d => `<tr data-f="${f(d)}"><td class="mono">${d.id}</td><td><span class="badge ${d.type === 'model' ? 'b-violet' : ''}">${d.type === 'model' ? '모델 확정' : '사전 신청'}</span></td><td>${d.title}</td><td><span class="badge ${f(d) === 'fix' ? 'b-danger' : 'b-info'}">● ${STEP_NAME[d.step]}</span></td><td class="mono">${d.date}</td><td><a href="approvals.html?box=mine&doc=${d.id}">열기</a></td></tr>`).join('') : '<tr><td colspan="6" class="caption muted" style="text-align:center;padding:24px">신청한 문서가 없습니다</td></tr>';
+  // 내 작업 (CX13-15): computed from documents, batches, candidates and audit entries made by me
+  const w = [];
+  getDocs().filter(d => d.req === ME.id).forEach(d => w.push({ at: d.date, g: d.type === 'model' ? '모델 확정' : '사전 신청', t: `${d.title} <span class="mono caption">${d.id}</span>`, st: STEP_NAME[d.step] || d.step, href: `approvals.html?box=mine&doc=${d.id}` }));
+  getBatches().filter(b => b.by === ME.id).forEach(b => w.push({ at: b.at, g: '엑셀 묶음', t: `${b.file} · ${b.kind} ${b.rows}행 <span class="mono caption">${b.id}</span>`, st: batchStateLabel(batchState(b)), href: `uploads.html?b=${b.id}` }));
+  getCands().forEach(c => (c.loc || []).filter(l => l.by === ME.id).forEach(l => w.push({ at: '', g: '후보 등록', t: `${c.t} '${c.name}' · ${l.ent}.${l.attr}`, st: candState(c), href: `candidates.html?c=${c.id}` })));
+  getAudit().filter(a => a.whoId === ME.id).forEach(a => w.push({ at: a.at, g: '설정·관리', t: `${a.act} · ${a.target || ''}`, st: '기록됨', href: 'audit.html' }));
+  const wk = at => /^\d\d\//.test(at) ? '2026-' + at.replace('/', '-') : at || '0';
+  w.sort((a, b) => wk(b.at).localeCompare(wk(a.at)));
+  $('work-body').innerHTML = w.length ? w.map(x => `<tr><td class="mono">${x.at || '—'}</td><td><span class="badge">${x.g}</span></td><td>${x.t}</td><td class="caption">${x.st}</td><td><a href="${x.href}">열기</a></td></tr>`).join('') : '<tr><td colspan="5" class="caption muted" style="text-align:center;padding:24px">아직 작업이 없습니다</td></tr>';
+  // 알림 설정: saved per user and honoured by pushNotif (app channel); mail follows the organisation policy
+  const pref = getNotifyPref(ME.id);
+  $('nt-body').innerHTML = NOTIFY_KINDS.map(([k, n, mail]) => { const p = pref[k] || {}; return `<tr><td>${n}</td><td><input type="checkbox" data-nk="${k}" data-ch="app" ${p.app !== false ? 'checked' : ''} ${mail === 'must' ? 'disabled' : ''} aria-label="${n} 앱 알림">${mail === 'must' ? ' <span class="caption faint">필수</span>' : ''}</td><td>${mail === 'must' ? `<input type="checkbox" checked disabled aria-label="${n} 메일(정책상 필수)"> <span class="caption faint">필수</span>` : mail === 'opt' ? `<input type="checkbox" data-nk="${k}" data-ch="mail" ${p.mail !== false ? 'checked' : ''} aria-label="${n} 메일">` : '<span class="caption faint">—</span>'}</td></tr>`; }).join('');
+  $('nt-save').onclick = () => { const np = {}; document.querySelectorAll('[data-nk]').forEach(c => { (np[c.dataset.nk] = np[c.dataset.nk] || {})[c.dataset.ch] = c.checked; }); saveNotifyPref(ME.id, np); const off = NOTIFY_KINDS.filter(([k]) => np[k] && np[k].app === false).map(x => x[1].split(' (')[0]); $('nt-state').textContent = off.length ? `앱 알림 끔: ${off.join(', ')}` : '모든 앱 알림 받음'; toast('알림 설정을 저장했습니다 — 끈 종류는 앞으로 알림 목록에 오지 않습니다', 'success'); };
+  { const off = NOTIFY_KINDS.filter(([k]) => pref[k] && pref[k].app === false).map(x => x[1].split(' (')[0]); $('nt-state').textContent = off.length ? `앱 알림 끔: ${off.join(', ')}` : ''; }
+  // 표시 이름
+  const dn = dbmStore.get('dbm-disp-' + ME.id, ''); if (dn) $('p-disp').value = dn;
+  $('p-save').onclick = () => { const v = $('p-disp').value.trim(); if (!v) { toast('표시 이름을 입력하세요', 'danger'); return; } dbmStore.set('dbm-disp-' + ME.id, v); toast(`표시 이름을 ‘${v}’(으)로 저장했습니다 — 결재·공동 편집 커서에 보입니다`, 'success'); };
+  // 역할 변경 요청 (from 403 too): ?req=da&what=… pre-fills; request goes to Admin as a notification and is kept on this page
+  const RQ = [['owner', '기관 담당자 추가'], ['da', 'DA 추가'], ['modeler', '모델러 추가'], ['admin', 'Admin 추가'], ['off', '역할 해제']].filter(([r]) => r === 'off' || !ME.roles.includes(r));
+  $('rr-role').innerHTML = RQ.map(([r, n]) => `<option value="${r}">${n}</option>`).join('');
+  const q = new URLSearchParams(location.search);
+  const drawRR = () => { const r = JSON.parse(dbmStore.get('dbm-rolereq-' + ME.id, 'null')); $('rr-state').innerHTML = r ? `<span class="badge b-info">● 요청 중</span> ${r.role} · ${r.at} · Admin 확인 대기 <a href="#" id="rr-cancel">요청 취소</a>` : ''; const c = $('rr-cancel'); if (c) c.onclick = e => { e.preventDefault(); dbmStore.set('dbm-rolereq-' + ME.id, 'null'); drawRR(); toast('역할 변경 요청을 취소했습니다', 'info'); }; };
+  drawRR();
+  if (q.get('req')) { const need = q.get('req'); const m = RQ.find(([r]) => need.toLowerCase().includes(r) || (need.includes('DA') && r === 'da') || (need.includes('Admin') && r === 'admin') || (need.includes('기관') && r === 'owner')); if (m) $('rr-role').value = m[0]; $('rr-why').value = q.get('what') ? `${q.get('what')} 화면 사용 필요` : ''; $('rr-why').dispatchEvent(new Event('input', { bubbles: true })); setTimeout(() => document.querySelector('[data-open="mo-rolereq"]').click(), 0); }
+  $('rr-go').onclick = () => { const why = $('rr-why').value.trim(); if (!why) return; const role = $('rr-role').selectedOptions[0].textContent; dbmStore.set('dbm-rolereq-' + ME.id, JSON.stringify({ role, key: $('rr-role').value, why, at: nowStr() })); pushNotif({ to: Object.values(USERS).filter(u => u.roles.includes('admin')).map(u => u.id), k: 'sys', t: `역할 변경 요청 — ${ME.name}: ${role}`, m: why, href: `settings.html?user=${ME.id}` }); document.getElementById('mo-rolereq').classList.remove('open'); drawRR(); toast(`${role}을(를) Admin에게 요청했습니다 — 처리되면 알림으로 알려 드립니다`, 'success'); };
   const t = dbmStore.get('dbm-theme', 'light');
   document.querySelectorAll('#env-theme button').forEach(b => { b.classList.toggle('on', b.dataset.v === t); b.onclick = () => { dbmStore.set('dbm-theme', b.dataset.v); location.reload(); }; });
   const k = $('kb-single2'); k.checked = dbmStore.get('dbm-single-keys', '1') === '1'; k.onchange = () => dbmStore.set('dbm-single-keys', k.checked ? '1' : '0');

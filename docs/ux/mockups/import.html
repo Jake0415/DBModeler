@@ -22,60 +22,105 @@
   </div>
   <div class="page-body">
     <div class="main" style="flex:0 0 46%;border-right:1px solid var(--border)">
-      <div class="toolbar"><b style="font-size:13px">DDL 붙여넣기 또는 파일</b><span class="grow"></span><button class="btn sm">.sql 파일 선택</button></div>
-      <div class="scroll pad">
-        <div class="codeblock">
-<div class="ln"><i>1</i><span class="kw">CREATE TABLE</span> RQMS.RQRM_D (</div>
-<div class="ln"><i>2</i>  DEMND_MATER_ID   VARCHAR2(10) <span class="kw">NOT NULL</span>,</div>
-<div class="ln"><i>3</i>  RQRM_NM          VARCHAR2(100),</div>
-<div class="ln"><i>4</i>  REQ_CUST_NM      VARCHAR2(100),</div>
-<div class="ln"><i>5</i>  PRJ_ID           VARCHAR2(10),</div>
-<div class="ln"><i>6</i>  <span class="kw">CONSTRAINT</span> RQRM_D_PK <span class="kw">PRIMARY KEY</span> (DEMND_MATER_ID)</div>
-<div class="ln"><i>7</i>);</div>
-<div class="ln"><i>8</i></div>
-<div class="ln"><i>9</i><span class="kw">CREATE TABLE</span> RQMS.PRJ_M (</div>
-<div class="ln"><i>10</i>  PRJ_ID           VARCHAR2(10) <span class="kw">NOT NULL</span>,</div>
-<div class="ln"><i>11</i>  PRJ_NM           VARCHAR2(100),</div>
-<div class="ln"><i>12</i>  WINCON_AMOUNT    NUMBER(18),</div>
-<div class="ln"><i>13</i>  PRJ_ENDDD        CHAR(8)</div>
-<div class="ln"><i>14</i>);</div>
-<div class="ln"><i>15</i></div>
-<div class="ln warn"><i>16</i><span class="kw">CREATE TABLE</span> RQMS.TMP_LOG (</div>
-<div class="ln warn"><i>17</i>  LOG_TEXT         CLOB</div>
-<div class="ln warn"><i>18</i>);                         <span class="cm">-- PK 없음</span></div>
-<div class="ln"><i>19</i></div>
-<div class="ln"><i>20</i><span class="kw">ALTER TABLE</span> RQMS.RQRM_D <span class="kw">ADD CONSTRAINT</span> RQRM_D_FK1</div>
-<div class="ln"><i>21</i>  <span class="kw">FOREIGN KEY</span> (PRJ_ID) <span class="kw">REFERENCES</span> RQMS.PRJ_M (PRJ_ID);</div>
-<div class="ln"><i>…</i><span class="cm">  (182줄)</span></div>
-        </div>
-      </div>
+      <div class="toolbar"><b style="font-size:13px">DDL 붙여넣기 또는 파일</b><span class="grow"></span><button class="btn sm" id="ex-file">예시 .sql 파일 불러오기</button><button class="btn sm" id="ex-bad">잘못된 예시</button><button class="btn sm primary" id="parse">파싱</button></div>
+      <div class="pad" style="flex:1;display:flex;flex-direction:column"><textarea class="input mono" id="ddl" style="flex:1;min-height:420px;font-size:12px;line-height:18px" placeholder="CREATE TABLE … 를 붙여넣으세요. 컬럼 뒤 주석(-- 한글명)을 논리명으로 씁니다." aria-label="DDL"></textarea>
+        <div class="caption muted" style="margin-top:6px">컬럼 뒤 <span class="mono">-- 한글명</span> 주석을 논리명으로 읽습니다(없으면 물리명 그대로). PK·FK 제약을 함께 읽습니다.</div></div>
     </div>
     <div class="main">
-      <div class="toolbar"><b style="font-size:13px">파싱 미리보기</b><span class="badge b-success">✓ 파싱 완료</span><span class="grow"></span><span class="caption muted">테이블 7 · 컬럼 52 · PK 6 · FK 5</span></div>
+      <div class="toolbar"><b style="font-size:13px">파싱 미리보기</b><span id="pstate"></span><span class="grow"></span><span class="caption muted" id="psum"></span></div>
       <div class="scroll">
-        <table class="tbl">
-          <thead><tr><th>테이블</th><th>컬럼</th><th>PK</th><th>FK</th><th>점검</th></tr></thead>
-          <tbody>
-            <tr><td class="mono">RQRM_D</td><td class="num">12</td><td>✓</td><td class="num">1</td><td><span class="badge b-success">정상</span></td></tr>
-            <tr><td class="mono">PRJ_M</td><td class="num">8</td><td>✓</td><td class="num">0</td><td><span class="badge b-success">정상</span></td></tr>
-            <tr><td class="mono">PRJ_MBR_D</td><td class="num">6</td><td>✓</td><td class="num">2</td><td><span class="badge b-success">정상</span></td></tr>
-            <tr><td class="mono">EMP_M</td><td class="num">2</td><td>✓</td><td class="num">0</td><td><span class="badge b-success">정상</span></td></tr>
-            <tr><td class="mono">RISK_M</td><td class="num">10</td><td>✓</td><td class="num">1</td><td><span class="badge b-success">정상</span></td></tr>
-            <tr><td class="mono">RQRM_RISK_R</td><td class="num">2</td><td>✓</td><td class="num">2</td><td><span class="badge b-success">정상</span></td></tr>
-            <tr class="row-warning"><td class="mono">TMP_LOG</td><td class="num">1</td><td>—</td><td class="num">0</td><td><span class="badge b-warning">PK 없음 · 16행</span></td></tr>
-          </tbody>
-        </table>
+        <table class="tbl"><thead><tr><th>테이블</th><th>논리명</th><th class="num">컬럼</th><th>PK</th><th class="num">FK</th><th>점검</th></tr></thead><tbody id="prev"><tr><td colspan="6" class="caption muted" style="text-align:center;padding:30px">왼쪽에 DDL을 넣고 [파싱]을 누르세요</td></tr></tbody></table>
         <div class="pad">
           <div class="field"><label>가져올 위치</label>
-            <div class="flex"><span class="chip on" data-group="dst">새 업무 영역</span><span class="chip" data-group="dst">현재 업무 영역(요구사항 · 프로젝트)</span></div></div>
-          <div class="field" style="max-width:360px"><label>새 업무 영역 이름</label><input class="input" value="현행 요구사항 DB"></div>
-          <div class="banner"><span>ℹ</span><div>가져온 뒤 자동 배치하고, <b>표준 맞추기</b> 화면을 바로 엽니다. 이름·타입은 표준 맞추기에서 확인한 뒤에만 바뀝니다.</div></div>
+            <div class="flex"><label class="flex caption"><input type="radio" name="dst" value="new" checked> 새 업무 영역</label><label class="flex caption"><input type="radio" name="dst" value="cur"> 기존 업무 영역에 추가</label><select class="input" id="dst-area" style="width:220px;height:28px" aria-label="기존 업무 영역"></select></div></div>
+          <div class="field" style="max-width:360px" id="newname-f"><label for="newname">새 업무 영역 이름 *</label><input class="input" id="newname" value="현행 요구사항 DB"></div>
+          <div class="banner"><span>ℹ</span><div>가져온 구조로 업무 영역(v1 작업 버전)을 만들고 <b>표준 맞추기</b>를 그 영역으로 엽니다. 이름·타입은 표준 맞추기에서 확인한 뒤에만 바뀝니다.</div></div>
         </div>
       </div>
-      <div class="rp-foot" style="background:var(--surface)"><span class="caption muted">PK 없는 테이블 1개는 경고와 함께 가져옵니다</span><span class="grow"></span><a class="btn" href="model.html">취소</a><a class="btn primary" href="standardize.html?from=import">7개 테이블 가져오기</a></div>
+      <div class="rp-foot" style="background:var(--surface)"><span class="caption muted" id="foot-note"></span><span class="grow"></span><a class="btn" id="cancel" href="model.html">취소</a><button class="btn primary" id="go" disabled>가져오기</button></div>
     </div>
   </div>
 </div>
 </div>
+<script>
+window.pageInit = function () {
+  const $ = id => document.getElementById(id);
+  const SAMPLE = `CREATE TABLE RQMS.RQRM_D ( -- 요구사항내역
+  DEMND_MATER_ID   VARCHAR2(10) NOT NULL, -- 요구사항ID
+  RQRM_NM          VARCHAR2(100), -- 요구사항명
+  REQ_CUST_NM      VARCHAR2(100), -- 요청고객명
+  PRJ_ID           VARCHAR2(10), -- 프로젝트ID
+  CONSTRAINT RQRM_D_PK PRIMARY KEY (DEMND_MATER_ID)
+);
+CREATE TABLE RQMS.PRJ_M ( -- 프로젝트기본
+  PRJ_ID           VARCHAR2(10) NOT NULL, -- 프로젝트ID
+  PRJ_NM           VARCHAR2(100), -- 프로젝트명
+  WINCON_AMOUNT    NUMBER(18), -- 수주금액
+  PRJ_ENDDD        CHAR(8), -- 프로젝트종료일
+  CONSTRAINT PRJ_M_PK PRIMARY KEY (PRJ_ID)
+);
+CREATE TABLE RQMS.TMP_LOG ( -- 임시로그
+  LOG_TEXT         CLOB -- 로그내용
+);
+ALTER TABLE RQMS.RQRM_D ADD CONSTRAINT RQRM_D_FK1 FOREIGN KEY (PRJ_ID) REFERENCES RQMS.PRJ_M (PRJ_ID);`;
+  // permission: only modelers import (CX12-28)
+  const canImport = ME.has('modeler');
+  if (!canImport) document.querySelector('.page-header').insertAdjacentHTML('afterend', '<div class="pad" style="padding-bottom:0"><div class="banner info"><span>ℹ</span><div class="grow"><b>조회 전용</b> — 가져오기는 모델러 역할만 할 수 있습니다.</div></div></div>');
+  const models = getModels();
+  $('dst-area').innerHTML = Object.entries(models).map(([id, m]) => { const L = modelLock(id); return `<option value="${id}" ${L.state !== 'edit' ? 'disabled' : ''}>${m.name} · v${m.ver}${L.state !== 'edit' ? ' (편집 불가)' : ''}</option>`; }).join('');
+  let parsed = null;
+  // a deliberately small parser: CREATE TABLE blocks, column lines with "-- 논리명", PRIMARY KEY, ALTER … FOREIGN KEY
+  function parse(src) {
+    const tables = [], errs = [];
+    const re = /CREATE\s+TABLE\s+(?:\w+\.)?(\w+)\s*\((?:\s*--\s*([^\n]*))?([\s\S]*?)\n\s*\);/gi; let m;
+    while ((m = re.exec(src))) {
+      const tb = { phys: m[1], name: (m[2] || '').trim() || m[1], cols: [], pk: [] };
+      m[3].split('\n').forEach(line => { const l = line.trim(); if (!l) return;
+        const pk = l.match(/PRIMARY\s+KEY\s*\(([^)]*)\)/i); if (pk) { tb.pk = pk[1].split(',').map(x => x.trim()); return; }
+        if (/^CONSTRAINT/i.test(l)) return;
+        const c = l.match(/^(\w+)\s+([A-Z0-9_]+(?:\([^)]*\))?)(.*?)(?:--\s*(.*))?$/i); if (!c) { errs.push(`${tb.phys}: 읽을 수 없는 줄 — ${l.slice(0, 40)}`); return; }
+        tb.cols.push({ p: c[1], t: c[2].toUpperCase(), nn: /NOT\s+NULL/i.test(c[3]), n: (c[4] || '').trim() || c[1] }); });
+      tables.push(tb);
+    }
+    const fks = []; const fre = /ALTER\s+TABLE\s+(?:\w+\.)?(\w+)\s+ADD\s+CONSTRAINT\s+\w+\s+FOREIGN\s+KEY\s*\(([^)]*)\)\s*REFERENCES\s+(?:\w+\.)?(\w+)/gi; while ((m = fre.exec(src))) fks.push({ child: m[1], cols: m[2].split(',').map(x => x.trim()), parent: m[3] });
+    if (!tables.length) errs.unshift('CREATE TABLE 문을 찾지 못했습니다');
+    return { tables, fks, errs };
+  }
+  const termNames = new Set(getDict().filter(x => x.k === 'term' && x.ver > 0).map(x => x.name));
+  function preview() {
+    parsed = parse($('ddl').value);
+    const { tables, fks, errs } = parsed;
+    $('pstate').innerHTML = errs.length && !tables.length ? '<span class="badge b-danger">파싱 실패</span>' : errs.length ? '<span class="badge b-warning">일부 경고</span>' : '<span class="badge b-success">✓ 파싱 완료</span>';
+    const cols = tables.reduce((n, x) => n + x.cols.length, 0);
+    $('psum').textContent = tables.length ? `테이블 ${tables.length} · 컬럼 ${cols} · PK ${tables.filter(x => x.pk.length).length} · FK ${fks.length}` : '';
+    $('prev').innerHTML = tables.map(tb => `<tr class="${tb.pk.length ? '' : 'row-warning'}"><td class="mono">${tb.phys}</td><td>${tb.name}</td><td class="num">${tb.cols.length}</td><td>${tb.pk.length ? '✓' : '—'}</td><td class="num">${fks.filter(f => f.child === tb.phys).length}</td><td>${tb.pk.length ? '<span class="badge b-success">정상</span>' : '<span class="badge b-warning">PK 없음</span>'}</td></tr>`).join('') + errs.map(x => `<tr class="row-danger"><td colspan="6" class="caption">${x}</td></tr>`).join('') || '<tr><td colspan="6" class="caption muted" style="text-align:center;padding:30px">결과 없음</td></tr>';
+    $('go').disabled = !tables.length || !canImport; $('go').textContent = tables.length ? `${tables.length}개 테이블 가져오기` : '가져오기';
+    $('foot-note').textContent = tables.filter(x => !x.pk.length).length ? `PK 없는 테이블 ${tables.filter(x => !x.pk.length).length}개는 경고와 함께 가져옵니다` : '';
+  }
+  // structure for the model: attribute status from the dictionary as it is now
+  function toModel() {
+    const E = [], R = []; const idOf = {};
+    parsed.tables.forEach((tb, i) => { const id = 'i' + i; idOf[tb.phys] = id;
+      E.push({ id, n: tb.name, p: tb.phys, c: tb.phys.endsWith('_M') ? 'M' : tb.phys.endsWith('_D') ? 'A' : 'K', x: 60 + (i % 3) * 380, y: 60 + Math.floor(i / 3) * 300, px: 60 + (i % 3) * 400, py: 60 + Math.floor(i / 3) * 320,
+        a: tb.cols.map(c => ({ n: c.n, p: c.p, t: c.t, pk: tb.pk.includes(c.p) ? 1 : 0, nn: c.nn ? 1 : 0, s: termNames.has(c.n) ? 'ok' : decompose(c.n).ok ? 'comb' : 'unreg' })) }); });
+    parsed.fks.forEach(f => { const c = E.find(x => x.id === idOf[f.child]); if (!c || !idOf[f.parent]) return; R.push({ f: idOf[f.parent], t: idOf[f.child], k: 'nonid', name: '' }); c.a.forEach(a => { if (f.cols.includes(a.p)) a.fk = 1; }); });
+    return { E, R, M: [] };
+  }
+  $('ex-file').onclick = () => { $('ddl').value = SAMPLE; preview(); };
+  $('ex-bad').onclick = () => { $('ddl').value = 'SELECT * FROM RQMS.RQRM_D;'; preview(); };
+  $('parse').onclick = preview;
+  document.querySelectorAll('[name=dst]').forEach(r => r.onchange = () => { $('newname-f').style.display = r.value === 'new' && r.checked ? '' : 'none'; });
+  $('go').onclick = () => {
+    if (!parsed || !parsed.tables.length || !canImport) return;
+    if (liveRoleChanged()) { staleRoleToast(); return; }
+    const dst = document.querySelector('[name=dst]:checked').value; const st = toModel(); let area;
+    if (dst === 'new') { const nm = $('newname').value.trim(); if (!nm) { toast('새 업무 영역 이름을 입력하세요', 'danger'); $('newname').focus(); return; } area = addArea(nm, st); }
+    else { area = $('dst-area').value; const L = modelLock(area); if (L.state !== 'edit') { toast('그 업무 영역은 지금 편집할 수 없습니다', 'danger'); return; } const cur = modelOf(area, L.model.ver); const base = cur.E.length; st.E.forEach((x, i) => { x.id = 'imp' + Date.now() % 10000 + i; x.x += 900; x.px += 900; }); const map = {}; parsed.tables.forEach((tb, i) => { map['i' + i] = st.E[i].id; }); st.R.forEach(r => { r.f = map[r.f]; r.t = map[r.t]; }); const old = getModelData(area, L.model.ver); setModelData(area, L.model.ver, Object.assign({}, cur, { E: cur.E.concat(st.E), R: cur.R.concat(st.R), rev: ((old && old.rev) || 0) + 1 })); }
+    dbmStore.set('dbm-import-last', JSON.stringify({ area, tables: parsed.tables.length, cols: parsed.tables.reduce((n, x) => n + x.cols.length, 0) }));
+    location.href = `standardize.html?area=${area}&from=import`;
+  };
+  $('ddl').value = SAMPLE; preview();
+};
+</script>
 </body>
 </html>
