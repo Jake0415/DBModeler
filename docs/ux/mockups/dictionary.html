@@ -94,34 +94,30 @@
             <div class="field"><label>보안 속성</label><select class="input"><option>없음</option><option>개인정보</option><option>개인정보 · 암호화(양방향)</option><option>개인정보 · 암호화(단방향)</option></select><span class="help">이 도메인을 쓰는 속성이 상속합니다</span></div>
           </div>
           <div class="field"><label>설명</label><textarea class="input" rows="2">3자리 영숫자 코드</textarea></div>
-          <div class="flex"><span class="grow"></span><button class="btn" data-toast="대기 목록에 추가했습니다">목록에 추가</button></div>
+          <div class="flex"><span class="grow"></span><button class="btn" id="add-domain">목록에 추가</button></div>
         </div>
         <div class="rq-form" data-rq="word" hidden>
-          <div class="field-row"><div class="field"><label>단어명 *</label><input class="input" value="수령자"></div><div class="field"><label>영문약어명 * <span class="faint">6자 이내</span></label><input class="input mono" value="RCPNT"></div></div>
-          <div class="field-row"><div class="field"><label>영문명</label><input class="input" value="recipient"></div><div class="field"><label>형식단어</label><select class="input"><option>아니오</option><option>예</option></select></div></div>
+          <div class="field-row"><div class="field"><label for="wd-name">단어명 *</label><input class="input" id="wd-name" value="검수"></div><div class="field"><label for="wd-abbr">영문약어명 * <span class="faint">6자 이내</span></label><input class="input mono" id="wd-abbr" value="INSPCT"></div></div>
+          <div class="field-row"><div class="field"><label for="wd-eng">영문명</label><input class="input" id="wd-eng" value="inspection"></div><div class="field"><label>형식단어</label><select class="input"><option>아니오</option><option>예</option></select></div></div>
           <div class="field"><label>동의어 · 금칙어</label><input class="input" value="수취인, 수신자" placeholder="쉼표로 구분"></div>
           <div class="banner warning"><span>!</span><div>비슷한 표준이 있습니다: <b>수신자 RCVR</b>(공통). 같은 뜻이면 기존 단어를 쓰세요.</div></div>
-          <div class="flex" style="margin-top:8px"><span class="grow"></span><button class="btn" data-toast="대기 목록에 추가했습니다">목록에 추가</button></div>
+          <div class="flex" style="margin-top:8px"><span class="grow"></span><button class="btn" id="add-word">목록에 추가</button></div>
         </div>
         <div class="rq-form" data-rq="term">
-        <div class="field"><label>용어명 *</label><input class="input" value="산출물제출일자"><span class="help">입력을 멈추면 자동으로 분석합니다</span></div>
+        <div class="field"><label for="tm-name">용어명 *</label><input class="input" id="tm-name" value="산출물제출일자"><span class="help">입력을 멈추면 자동으로 분석합니다</span></div>
         <div class="section-t">분석 결과 <span class="badge">후보 2</span></div>
         <div class="cand on"><input type="radio" checked aria-label="후보 1"><div class="grow">산출물 + 제출 + 일자</div><span class="mono">DLVRBL_SBMT_DATE</span><span class="badge b-success">✓</span></div>
         <div class="cand"><input type="radio" aria-label="후보 2"><div class="grow">산출 + 물 + 제출 + 일자</div><span class="mono">PRDC_WTR_SBMT_DATE</span><span class="badge b-warning">? 의심 · 1음절 ‘물’</span></div>
         <div class="field-row" style="margin-top:12px">
-          <div class="field"><label>용어 영문약어명</label><input class="input mono" value="DLVRBL_SBMT_DATE" readonly><span class="help">구성 단어 약어를 _로 결합 · 16/30자</span></div>
-          <div class="field"><label>도메인 * <span class="faint">마지막 형식단어 ‘일자’ 기준 추천</span></label><select class="input mono"><option>연월일C8</option><option>일자D</option></select></div>
+          <div class="field"><label for="tm-abbr">용어 영문약어명</label><input class="input mono" id="tm-abbr" value="DLVRBL_SBMT_DATE" readonly><span class="help">구성 단어 약어를 _로 결합 · 16/30자</span></div>
+          <div class="field"><label for="tm-dom">도메인 * <span class="faint">마지막 형식단어 ‘일자’ 기준 추천</span></label><select class="input mono" id="tm-dom"><option>연월일C8</option><option>일자D</option></select></div>
         </div>
-        <div class="field"><label>설명</label><textarea class="input" rows="2">산출물을 발주처에 제출한 날짜</textarea></div>
-        <div class="flex"><span class="grow"></span><button class="btn" data-toast="대기 목록에 추가했습니다">목록에 추가</button></div>
+        <div class="field"><label for="tm-desc">설명</label><textarea class="input" id="tm-desc" rows="2">산출물을 발주처에 제출한 날짜</textarea></div>
+        <div class="flex"><span class="grow"></span><button class="btn" id="add-term">목록에 추가</button></div>
         </div>
         <div class="hr"></div>
-        <div class="section-t">대기 목록 <span class="badge">2</span></div>
-        <table class="tbl"><thead><tr><th>종류</th><th>이름</th><th>약어</th><th>검사</th><th></th></tr></thead><tbody>
-          <tr><td>용어</td><td>산출물제출일자</td><td class="mono">DLVRBL_SBMT_DATE</td><td><span class="badge b-success">통과</span></td><td><button class="btn ghost sm">수정</button></td></tr>
-          <tr><td>단어</td><td>검수</td><td class="mono">INSPCT</td><td><span class="badge b-warning">📝 약어 중복 사유 필요</span></td><td><button class="btn ghost sm">수정</button></td></tr>
-          <tr><td colspan="5"><label for="dup-why" class="caption">‘검수’ 중복 허용 사유 * <span class="faint">‘검사(INSP)’와 비슷한 약어</span></label><textarea class="input" id="dup-why" rows="2" placeholder="예: 업무상 검수와 검사를 구분해야 함"></textarea></td></tr>
-        </tbody></table>
+        <div class="section-t">대기 목록 <span class="badge" id="q-n">0</span> <span class="caption muted">신청하면 이 목록 그대로 결재 문서가 됩니다</span></div>
+        <table class="tbl"><thead><tr><th>종류</th><th>이름</th><th>약어 · 내용</th><th>검사</th><th></th></tr></thead><tbody id="q-body"></tbody></table>
         <div class="field" style="margin-top:12px"><label for="rq-why">신청 사유 * <span class="faint">1~1,000자</span></label><textarea class="input" id="rq-why" rows="2">요구사항관리 산출물 제출 관리 기능 추가</textarea></div>
         <div class="section-t">결재선</div>
         <div class="approval-line">
@@ -132,7 +128,7 @@
       <div class="rp-foot">
         <span class="grow"></span>
         <button class="btn" data-close="pn-request">취소</button>
-        <button class="btn primary" id="rq-go" data-needs="dup-why" data-needs-msg="‘검수’ 행의 중복 사유를 입력해야 제출할 수 있습니다">2건 신청</button>
+        <button class="btn primary" id="rq-go" data-needs="rq-why" data-needs-msg="신청 사유·중복 사유를 입력해야 제출할 수 있습니다">신청</button>
       </div>
     </aside>
   </div>
@@ -152,7 +148,8 @@ window.pageInit = function () {
   const $ = id => document.getElementById(id);
   const q0 = new URLSearchParams(location.search);
   // dictionary items (mock): versions, history, synonyms, forbidden words, past names
-  const I = [
+  const I = getDict();   // v6: items come from the shared state layer (approvals update versions/pending) — the literal below is only the old seed
+  const I_SEED_UNUSED = [
     { id: 'W-0102', k: 'word', kn: '단어', src: '기관', st: '사용', name: '산출물', abbr: 'DLVRBL', dom: '—', eng: 'deliverable', desc: '사업 수행 결과로 제출하는 문서·코드·모델 등', ver: 2, cha: 12, dt: '2026-11-14', use: 5, syn: ['납품물', '결과물'], forbid: ['산출서'], old: ['산출물품'],
       hist: [{ v: 'V2', at: '2026-11-14 18:00', act: '변경', doc: 'REQ-2026-0005', by: '김모델 → 이데이터(DA) → 이현업', why: '영문명 정비', diff: [['영문명', 'output', 'deliverable'], ['단어명', '산출물품', '산출물']] }, { v: 'V1', at: '2026-11-03 10:00', act: '초기 적재', doc: '—', by: '이데이터', why: '기관 단어 초기 적재', diff: [] }] },
     { id: 'W-0001', k: 'word', kn: '단어', src: '공통', st: '사용', name: '산출', abbr: 'PRDC', dom: '—', eng: 'produce', desc: '', ver: 1, cha: 3, dt: '2025-11-30', use: 2, syn: [], forbid: [], old: [], hist: [{ v: 'V1', at: '2025-11-30', act: '공통표준 적재', doc: '—', by: '시스템', why: '공통표준 2025.11', diff: [] }] },
@@ -249,24 +246,29 @@ window.pageInit = function () {
     const b = e.target.closest('[data-dl]'); if (!b) return; $('dl-menu').classList.remove('open');
     const t = new Date(), stamp = `${t.getFullYear()}${String(t.getMonth() + 1).padStart(2, '0')}${String(t.getDate()).padStart(2, '0')}-${String(t.getHours()).padStart(2, '0')}${String(t.getMinutes()).padStart(2, '0')}`;
     if (b.dataset.dl === 'blank') { toast('빈양식_표준사전_양식v2.xlsx — 안내·단어·도메인·용어·코드·목록 시트', 'info'); return; }
-    const n = b.dataset.dl === 'all' ? I.filter(i => i.src === '기관').length : list().filter(x => x.it.src === '기관').length;
-    toast(`KDA표준사전_${b.dataset.dl === 'all' ? '전체' : '검색결과'}_${stamp}_기준.xlsx — 기관 ${n}건 · 기준본 BL-${stamp} 기록(빠짐·충돌 판정 기준)`, 'success');
+    const ids = (b.dataset.dl === 'all' ? I.filter(i => i.src === '기관') : list().map(x => x.it).filter(i => i.src === '기관')).map(i => i.id + ':V' + i.ver);
+    const bl = recordBaseline(b.dataset.dl === 'all' ? '기관 사전 전체' : `검색 결과(${$('q').value.trim() || '최근 변경'})`, ids);   // server-side baseline record
+    toast(`KDA표준사전_${b.dataset.dl === 'all' ? '전체' : '검색결과'}_${stamp}_기준.xlsx — 기관 ${ids.length}건 · 기준본 ${bl} 기록(빠짐·충돌 판정 기준)`, 'success');
   });
   if (location.hash === '#download') setTimeout(() => $('b-dl').click(), 200);
   // publish (DA, W1 minimal)
   if (ME.has('da')) $('b-pub').hidden = false;
   $('b-pub').onclick = () => {
-    const ch = getChanges().filter(c => !c.pub);
-    const by = { 추가: 0, 변경: 0, 미사용: 0 }; ch.forEach(c => { const k = c.act.includes('미사용') ? '미사용' : c.act.includes('변경') ? '변경' : '추가'; by[k]++; });
+    // count ITEMS (an item changed twice counts once), never the publication rows themselves (CL8-02)
+    const ch = getChanges().filter(c => !c.pub && c.act !== '공표');
+    const last = {}; ch.forEach(c => { const key = c.itemId || c.item; if (!last[key]) last[key] = c; });
+    const by = { 추가: 0, 변경: 0, 미사용: 0 }; Object.values(last).forEach(c => { const k = c.act.includes('미사용') ? '미사용' : c.act.includes('변경') ? '변경' : '추가'; by[k]++; });
     $('pub-t').textContent = `제정 ${pub.cha + 1}차 공표`;
     $('pub-sum').innerHTML = `<div class="grid3"><div class="card"><div class="caption muted">추가</div><div class="mono" style="font-size:20px">${by.추가}</div></div><div class="card"><div class="caption muted">변경</div><div class="mono" style="font-size:20px">${by.변경}</div></div><div class="card"><div class="caption muted">미사용</div><div class="mono" style="font-size:20px">${by.미사용}</div></div></div>
-      <div class="caption muted" style="margin-top:8px">직전 공표: 제정 ${pub.cha}차 · ${pub.at} · ${pub.by} — 그 뒤 승인된 변경 ${ch.length}건이 대상입니다. 진행 중 신청은 포함하지 않습니다. <a href="dict-history.html?unpub=1">대상 목록 보기</a></div>`;
-    $('pub-why').value = ''; $('mo-pub').classList.add('open'); updateNeeds();
-    if (!ch.length) toast('직전 공표 이후 승인된 변경이 없습니다 — 공표할 내용이 없습니다', 'info');
+      <div class="caption muted" style="margin-top:8px">직전 공표: 제정 ${pub.cha}차 · ${pub.at} · ${pub.by} — 그 뒤 승인된 <b>항목 ${Object.keys(last).length}개</b>(변경 기록 ${ch.length}건)가 대상입니다. 진행 중 신청은 포함하지 않습니다. <a href="dict-history.html?unpub=1">대상 목록 보기</a></div>`;
+    $('pub-why').value = ''; $('mo-pub').classList.add('open');
+    setBlock($('pub-go'), Object.keys(last).length ? '' : '직전 공표 이후 승인된 변경이 없어 공표할 수 없습니다');
   };
   $('pub-go').onclick = () => {
+    if ($('pub-go').disabled) return;
+    if (getPub().cha !== pub.cha) { toast('그사이 다른 DA가 공표했습니다 — 새로고침 후 다시 확인하세요', 'danger'); return; }   // race on the revision number
     const ch = getChanges(); const np = { cha: pub.cha + 1, at: '2026-' + nowStr().replace('/', '-'), by: ME.name, why: $('pub-why').value.trim() };
-    ch.forEach(c => { if (!c.pub) c.pub = np.cha; }); ch.unshift({ at: np.at, item: `제정 ${np.cha}차 공표`, kind: '사전', act: '공표', ver: '—', doc: '—', by: ME.name, diff: np.why, pub: np.cha });
+    const dict = getDict(); ch.forEach(c => { if (!c.pub && c.act !== '공표') { c.pub = np.cha; const d = dict.find(x => x.id === c.itemId); if (d) d.cha = np.cha; } }); saveDict(dict); ch.unshift({ at: np.at, item: `제정 ${np.cha}차 공표`, kind: '사전', act: '공표', ver: '—', doc: '—', by: ME.name, diff: np.why, pub: np.cha });
     saveChanges(ch); savePub(np); $('mo-pub').classList.remove('open');
     pushNotif({ to: Object.keys(USERS).filter(u => u !== ME.id), k: 'sys', t: `기관 사전 제정 ${np.cha}차 공표`, m: np.why, href: 'dict-history.html' });
     flash(`제정 ${np.cha}차를 공표했습니다 — 기준 시각 ${np.at} · 감사 로그와 변경 내역에 기록`, 'success'); location.reload();
@@ -274,11 +276,35 @@ window.pageInit = function () {
   // request → a real approval document
   const da = Object.values(USERS).filter(u => u.roles.includes('da')).length, ow = Object.values(USERS).filter(u => u.roles.includes('owner')).length;
   $('da-cnt').textContent = `DA 역할 ${da}명 중 먼저 처리`; $('ow-cnt').textContent = `기관 담당자 역할 ${ow}명`;
+  // request queue: what the user adds is exactly what the document will contain (S2)
+  const queue = []; let dupWhy = '';
+  const similar = it => it.k === 'word' && I.some(x => x.k === 'word' && x.abbr !== it.abbr && (x.abbr.startsWith(it.abbr.slice(0, 4)) || it.abbr.startsWith(x.abbr.slice(0, 4))));
+  function drawQueue() {
+    $('q-n').textContent = queue.length;
+    const needDup = queue.some(similar);
+    $('q-body').innerHTML = queue.length ? queue.map((it, i) => `<tr><td>${{ word: '단어', term: '용어', domain: '도메인' }[it.k] || '변경'}${it.act === '변경' ? ' · 변경' : ''}</td><td>${it.name}</td><td class="mono">${it.act === '변경' ? `<input class="input" data-chg="${i}" aria-label="${it.name} 새 설명" value="${it.chg ? it.chg['설명'][1] : ''}" placeholder="새 설명">` : (it.abbr || '')}</td><td>${similar(it) ? '<span class="badge b-warning">📝 약어 중복 사유 필요</span>' : '<span class="badge b-success">통과</span>'}</td><td><button class="btn ghost sm" data-del="${i}" aria-label="${it.name} 목록에서 빼기">빼기</button></td></tr>`).join('')
+      + (needDup ? `<tr><td colspan="5"><label for="dup-why" class="caption">약어 중복 허용 사유 * <span class="faint">비슷한 기존 약어가 있습니다</span></label><textarea class="input" id="dup-why" rows="2">${dupWhy}</textarea></td></tr>` : '')
+      : '<tr><td colspan="5" class="caption muted" style="text-align:center;padding:16px">위에서 입력하고 [목록에 추가]를 누르세요</td></tr>';
+    const go = $('rq-go'); go.textContent = queue.length ? `${queue.length}건 신청` : '신청';
+    go.dataset.needs = 'rq-why' + (needDup ? ' dup-why' : '');
+    setBlock(go, queue.length ? (queue.some(it => it.act === '변경' && !(it.chg && it.chg['설명'][1].trim())) ? '변경 행의 새 값을 입력하세요' : '') : '대기 목록이 비어 있습니다');
+  }
+  const add = it => { if (queue.some(q => q.name === it.name && q.k === it.k)) { toast(`‘${it.name}’은 이미 목록에 있습니다`, 'info'); return; } if (it.k !== 'chg' && I.some(x => x.name === it.name && x.src === '기관' && it.act !== '변경')) { toast(`‘${it.name}’은 이미 기관 사전에 있습니다 — 변경 신청을 쓰세요`, 'danger'); return; } queue.push(it); drawQueue(); toast(`‘${it.name}’을 대기 목록에 추가했습니다`); };
+  $('add-term').onclick = () => add({ k: 'term', name: $('tm-name').value.trim(), abbr: $('tm-abbr').value, dom: $('tm-dom').value, desc: $('tm-desc').value });
+  $('add-word').onclick = () => add({ k: 'word', name: $('wd-name').value.trim(), abbr: $('wd-abbr').value.trim(), eng: $('wd-eng').value });
+  $('add-domain').onclick = () => add({ k: 'domain', name: $('dm-name').textContent, abbr: '', dom: $('dm-phys').textContent });
+  $('q-body').addEventListener('click', e => { const d = e.target.closest('[data-del]'); if (d) { queue.splice(+d.dataset.del, 1); drawQueue(); } });
+  $('q-body').addEventListener('input', e => { if (e.target.id === 'dup-why') { dupWhy = e.target.value; updateNeeds(); } const c = e.target.dataset.chg; if (c !== undefined) { const it = queue[+c]; it.chg['설명'][1] = e.target.value; setBlock($('rq-go'), queue.some(x => x.act === '변경' && !x.chg['설명'][1].trim()) ? '변경 행의 새 값을 입력하세요' : ''); } });
+  // [변경 신청] from the detail panel puts the selected item into the queue as a change
+  document.addEventListener('click', e => { const b = e.target.closest('#pn-detail [data-open="pn-request"]'); if (!b) return; const it = I.find(x => x.id === sel); if (it && !queue.some(q => q.id === it.id)) { queue.push({ k: 'chg', id: it.id, name: it.name, act: '변경', chg: { 설명: [it.desc || it.eng || '', ''] } }); drawQueue(); } });
   $('rq-go').onclick = () => {
-    if (!$('rq-why').value.trim()) { toast('신청 사유를 입력해야 합니다', 'danger'); $('rq-why').focus(); return; }
-    const r = createDoc({ type: 'dict', title: '산출물제출일자 외 1건 등록', n: 2, reason: $('rq-why').value.trim(), cc: ['hyun'] });
+    if ($('rq-go').disabled) return;
+    const items = queue.map(it => it.act === '변경' ? { id: it.id, name: it.name, act: '변경', chg: it.chg, set: { desc: it.chg['설명'][1] } } : it);
+    const title = `${queue[0].name}${queue.length > 1 ? ` 외 ${queue.length - 1}건` : ''} ${queue.every(q => q.act === '변경') ? '변경' : '등록'}`;
+    const r = createDoc({ type: 'dict', title, n: queue.length, reason: $('rq-why').value.trim() + (dupWhy ? ` · 중복 사유: ${dupWhy}` : ''), cc: ['hyun'], items });
     location.href = `approvals.html?new=1&doc=${r.doc.id}`;
   };
+  drawQueue();
   const panel = $('pn-request');
   const show = k => panel.querySelectorAll('.rq-form').forEach(f => f.hidden = f.dataset.rq !== k);
   panel.addEventListener('click', e => { const c = e.target.closest('[data-rq].chip'); if (c) show(c.dataset.rq); });

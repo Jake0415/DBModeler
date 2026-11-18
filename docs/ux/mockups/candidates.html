@@ -74,7 +74,10 @@ window.pageInit = function () {
     { t: '단어', name: '검수', abbr: 'INSPCT', sim: ['검사', 'INSP', '공통'], loc: [['요구사항관리 › 요구사항·프로젝트 › 산출물기본', '산출물검수결과코드', 'park'], ['요구사항관리 › 요구사항·프로젝트 › 산출물이력', '검수일자', 'park']] },
     { t: '용어', name: '요구사항변경사유내용', abbr: 'DEMND_MATER_CHG_RSN_CN', sim: null, loc: [['요구사항관리 › 요구사항·프로젝트 › 요구사항내역', '변경사유', 'kim']] }
   ];
-  let sel = 0; const done = {};
+  let sel = 0;
+  const loadDone = () => { try { return JSON.parse(dbmStore.get('dbm-cands', 'null')) || { 0: '신청 전환 · REQ-2026-0012' }; } catch (e) { return { 0: '신청 전환 · REQ-2026-0012' }; } };
+  const done = loadDone();   // candidate state persists and matches the documents (수령자 → REQ-0012)
+  Object.keys(done).forEach(i => { const row = document.querySelector(`tbody tr[data-c="${i}"]`); if (row) { row.lastElementChild.innerHTML = `<span class="badge">${done[i].split(' · ')[0]}</span>`; row.style.opacity = '.55'; } });
   const reqs = c => [...new Set(c.loc.map(l => l[2]))];
   function panel() {
     const c = C[sel];
@@ -84,15 +87,20 @@ window.pageInit = function () {
       <table class="tbl"><thead><tr><th>위치</th><th>속성</th><th>요청</th></tr></thead><tbody>${c.loc.map(l => `<tr><td class="wrap"><a href="model.html">${l[0]}</a></td><td>${l[1]}</td><td>${USERS[l[2]].name}</td></tr>`).join('')}</tbody></table>
       <div class="section-t">처리 결과는 요청자 ${reqs(c).map(u => USERS[u].name).join(' · ')}에게 앱 알림으로 갑니다</div>`;
     if (!ME.has('da')) { $('cd-foot').innerHTML = '<span class="caption muted">후보 처리는 DA만 할 수 있습니다 — 내가 등록한 후보의 처리 결과는 알림으로 받습니다.</span>'; return; }
-    $('cd-foot').innerHTML = done[sel] ? `<span class="badge b-success">✓ ${done[sel]}</span><span class="grow"></span>` : `<button class="btn danger sm" data-open="mo-crej">반려</button>${c.sim ? '<button class="btn sm" data-open="mo-cstd">기존 표준어 사용 안내</button>' : ''}<span class="grow"></span><a class="btn primary sm" href="dictionary.html?q=${encodeURIComponent(c.name)}">${c.t} 신청으로 전환</a>`;
+    const dm = done[sel] && done[sel].match(/REQ-\d{4}-\d{4}/);
+    $('cd-foot').innerHTML = done[sel] ? `<span class="badge b-success">✓ ${done[sel]}</span>${dm ? ` <a class="btn sm" href="approvals.html?doc=${dm[0]}">결재 보기</a>` : ''}<span class="grow"></span>` : `<button class="btn danger sm" data-open="mo-crej">반려</button>${c.sim ? '<button class="btn sm" data-open="mo-cstd">기존 표준어 사용 안내</button>' : ''}<span class="grow"></span><button class="btn primary sm" id="cv-go">${c.t} 신청으로 전환</button>`;
+    const cv = $('cv-go'); if (cv) cv.onclick = () => {
+      const r = createDoc({ type: 'dict', title: `${c.t} '${c.name}' 등록 (후보 전환)`, n: 1, reason: `후보 큐 ${c.loc.length}건 발생`, cc: reqs(c), items: [{ k: c.t === '단어' ? 'word' : 'term', name: c.name, abbr: c.abbr }] });
+      closeCand(`신청 전환 · ${r.doc.id}`, `${r.doc.id}로 ${c.t} 신청을 만들었습니다 — 승인되면 사용처에 재검토 알림`, 'success');
+    };
     $('crej-t').textContent = `후보 반려 · ${c.name}`;
     document.querySelector('#mo-crej .m-body .caption').innerHTML = `발생 위치 ${c.loc.length}곳의 요청자 <b>${reqs(c).map(u => USERS[u].name).join(' · ')}</b>에게 앱 알림이 갑니다. 해당 속성은 미준수로 남습니다.`;
     if (c.sim) { $('cstd-to').innerHTML = `<option>${c.sim[0]} ${c.sim[1]} (${c.sim[2]} 단어)</option>`; $('cstd-msg').value = `‘${c.name}’ 대신 같은 뜻의 ${c.sim[2]} 표준 ‘${c.sim[0]}(${c.sim[1]})’를 쓰세요. 표준 맞추기에서 바로 바꿀 수 있습니다.`; }
   }
   document.querySelector('tbody').addEventListener('click', e => { const r = e.target.closest('tr[data-c]'); if (r) { sel = +r.dataset.c; panel(); } });
   const closeCand = (label, msg, type) => {
-    const c = C[sel]; done[sel] = label;
-    const row = document.querySelector(`tbody tr[data-c="${sel}"]`); row.lastElementChild.innerHTML = `<span class="badge">${label}</span>`; row.style.opacity = '.55';
+    const c = C[sel]; done[sel] = label; dbmStore.set('dbm-cands', JSON.stringify(done));
+    const row = document.querySelector(`tbody tr[data-c="${sel}"]`); row.lastElementChild.innerHTML = `<span class="badge">${label.split(' · ')[0]}</span>`; row.style.opacity = '.55';
     pushNotif({ to: reqs(c), k: 'cand', t: `후보 ‘${c.name}’ — ${label}`, m: msg, href: 'candidates.html' });
     panel(); toast(`${c.name}: ${msg} — 요청자 ${reqs(c).length}명에게 알림`, type);
   };

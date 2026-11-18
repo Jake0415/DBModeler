@@ -60,7 +60,7 @@ window.pageInit = function () {
       <div class="rp-foot">${canResume ? `<a class="btn primary" href="excel-import.html?resume=${b.id}">이어서 작업</a>` : ''}<span class="grow"></span>
         <button class="btn sm" data-toast="원본_${b.file} 내려받기 — 열람 기록이 감사 로그에 남습니다" data-toast-type="info">원본</button>
         ${b.counts ? `<button class="btn sm" data-toast="보정본_${b.id}.xlsx — 화면에서 고친 값 + ‘변경점’ 시트" data-toast-type="info">보정본</button>` : ''}
-        ${st === '반영됨' ? `<button class="btn sm primary" data-toast="반영본_${b.id}.xlsx — 새 버전·ID 반영. 다시 올리면 모두 ‘동일’로 나옵니다" data-toast-type="success">반영본</button>` : ''}</div>`;
+        ${st === '반영됨' ? `<button class="btn sm primary" data-toast="반영본_${b.id}.xlsx — 새 버전·ID 반영. 다시 올리면 모두 ‘동일’로 나옵니다" data-toast-type="success">반영본</button><a class="btn sm" href="excel-import.html?verify=${b.id}">반영본 다시 올려 확인</a>` : ''}</div>`;
   }
   $('ub').addEventListener('click', e => { const r = e.target.closest('[data-b]'); if (r) { sel = r.dataset.b; draw(); } });
   document.querySelector('.toolbar').addEventListener('click', e => { const c = e.target.closest('[data-uf]'); if (!c) return; document.querySelectorAll('[data-uf]').forEach(x => x.classList.toggle('on', x === c)); f = c.dataset.uf; sel = null; draw(); });

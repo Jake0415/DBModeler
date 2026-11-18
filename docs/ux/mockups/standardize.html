@@ -121,8 +121,10 @@ window.pageInit = function () {
     $('sd-all').checked = all.length && all.every(c => c.checked); $('sd-all').indeterminate = !$('sd-all').checked && all.some(c => c.checked);
     const hc = hiddenChecked();
     $('sd-prev').innerHTML = `<b>선택 ${s.C.length}행</b>${hc ? ` <span class="caption muted">(필터로 숨긴 선택 ${hc}행은 제외)</span>` : ''} · 이름 적용 <b class="mono">${s.ren}</b> (물리명 변경 ${s.phys}) · 용어 신청 묶음 <b class="mono">${s.req}</b> · 후보 등록 <b class="mono">${s.cand}</b>${s.sus ? ` · 의심 확인 <b class="mono">${s.sus}</b>` : ''} · 남는 미준수 <b class="mono">${s.left}</b>`;
-    ['sd-apply', 'sd-ex', 'sd-na'].forEach(id => $(id).disabled = !s.C.length || readOnly);
-    $('sd-apply').textContent = s.C.length ? `${s.C.length}건 적용` : '적용';
+    ['sd-ex', 'sd-na'].forEach(id => $(id).disabled = !s.C.length || readOnly);
+    const ho = (typeof handoff !== 'undefined') ? handoff.ex.length + handoff.na.length : 0;
+    $('sd-apply').disabled = (!s.C.length && !ho) || readOnly;
+    $('sd-apply').textContent = s.C.length || ho ? `${s.C.length + ho}건 적용` : '적용';
   }
   document.querySelector('tbody').addEventListener('change', draw);
   document.querySelector('.toolbar').addEventListener('click', () => setTimeout(draw, 0));   // filter chip → recount
@@ -141,17 +143,19 @@ window.pageInit = function () {
   });
   const done = (before, msg) => {
     before.forEach(([r]) => { r.querySelector('input').checked = false; }); draw();
-    toast(msg, 'violet', { label: '실행 취소', fn: () => { before.forEach(([r, html]) => { r.outerHTML = html; }); draw(); toast('되돌렸습니다', 'info'); } });
+    const n = before.length;
+    toast(msg + ' — [적용]을 누르면 사유와 함께 모델에 반영됩니다', 'violet', { label: '실행 취소', fn: () => { before.forEach(([r, html]) => { const k = nameOf(r); handoff.ex = handoff.ex.filter(x => x.key !== k); handoff.na = handoff.na.filter(x => x.key !== k); r.outerHTML = html; }); draw(); toast(`${n}건을 되돌렸습니다`, 'info'); } });
   };
-  $('sx-go').onclick = () => { const C = summary().C; const before = C.map(r => [r, r.outerHTML]); $('mo-ex').classList.remove('open'); C.forEach(r => { r.dataset.f = 'ex'; r.children[1].innerHTML = '<span class="badge b-violet">◆ 예외</span>'; r.children[9].innerHTML = `<span class="caption">사유: ${$('sx-why').value.trim()}</span>`; r.querySelector('input').disabled = true; }); $('sx-why').value = ''; done(before, `${C.length}건을 예외로 기록했습니다`); };
-  $('na-go').onclick = () => { const C = summary().C; const before = C.map(r => [r, r.outerHTML]); $('mo-na').classList.remove('open'); C.forEach(r => { r.dataset.f = 'na'; r.className = 'row-mute'; r.children[1].innerHTML = '<span class="badge">– 비대상</span>'; r.children[9].innerHTML = `<span class="caption">사유: ${$('na-why').value.trim()}</span>`; r.querySelector('input').disabled = true; }); $('na-why').value = ''; done(before, `${C.length}건을 비대상으로 지정했습니다 — 준수율 계산에서 빠집니다`); };
+  const handoff = { ex: [], na: [] };   // decisions made on this screen travel to the model with their reasons (S5)
+  $('sx-go').onclick = () => { const C = summary().C; C.forEach(r => handoff.ex.push({ key: nameOf(r), why: $('sx-why').value.trim() })); const before = C.map(r => [r, r.outerHTML]); $('mo-ex').classList.remove('open'); C.forEach(r => { r.dataset.f = 'ex'; r.children[1].innerHTML = '<span class="badge b-violet">◆ 예외</span>'; r.children[9].innerHTML = `<span class="caption">사유: ${$('sx-why').value.trim()}</span>`; r.querySelector('input').disabled = true; }); $('sx-why').value = ''; done(before, `${C.length}건을 예외로 기록했습니다`); };
+  $('na-go').onclick = () => { const C = summary().C; C.forEach(r => handoff.na.push({ key: nameOf(r), why: $('na-why').value.trim() })); const before = C.map(r => [r, r.outerHTML]); $('mo-na').classList.remove('open'); C.forEach(r => { r.dataset.f = 'na'; r.className = 'row-mute'; r.children[1].innerHTML = '<span class="badge">– 비대상</span>'; r.children[9].innerHTML = `<span class="caption">사유: ${$('na-why').value.trim()}</span>`; r.querySelector('input').disabled = true; }); $('na-why').value = ''; done(before, `${C.length}건을 비대상으로 지정했습니다 — 준수율 계산에서 빠집니다`); };
   $('ap-go').onclick = () => {
     const s = summary();
     // the term bundle becomes a REAL approval document (fresh ID, requester = me)
     let docId = null;
     if (s.req) docId = createDoc({ type: 'dict', title: `표준 맞추기 용어 신청 ${s.req}건 (요구사항·프로젝트)`, n: s.req, reason: $('ap-why').value.trim(), cc: [] }).doc.id;
     // hand exactly the selected rows to the model screen
-    try { sessionStorage.setItem('dbm-apply', JSON.stringify({ area: 'rq', keys: s.C.map(nameOf), doc: docId, req: s.req, cand: s.cand })); } catch (e) {}
+    try { sessionStorage.setItem('dbm-apply', JSON.stringify({ area: 'rq', keys: s.C.map(nameOf), ex: handoff.ex, na: handoff.na, doc: docId, req: s.req, cand: s.cand })); } catch (e) {}
     location.href = 'model.html';
   };
   draw();

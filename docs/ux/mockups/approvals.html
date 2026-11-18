@@ -134,7 +134,7 @@ window.pageInit = function () {
   function items(d) {
     if (d.kind === 'r14') return `<div class="card" style="margin-bottom:8px"><div class="flex"><span class="badge">용어 · 등록</span><b>산출물제출일자</b><span class="grow"></span><span class="mono">DLVRBL_SBMT_DATE</span></div><dl class="kv" style="margin:8px 0 0"><dt>구성 단어</dt><dd>산출물 · 제출 · 일자</dd><dt>도메인</dt><dd class="mono">연월일C8</dd><dt>설명</dt><dd>산출물을 발주처에 제출한 날짜</dd></dl></div>
       <div class="card"><div class="flex"><span class="badge">단어 · 등록</span><b>검수</b><span class="grow"></span><span class="mono">INSPCT</span></div><dl class="kv" style="margin:8px 0 0"><dt>영문명</dt><dd>inspection</dd><dt>중복 허용 사유</dt><dd>약어 INSPCT가 ‘검사(INSP)’와 다르지만 업무상 ‘검수’를 구분해야 함</dd></dl></div>`;
-    if (d.kind === 'excel') { const b = batchOf(d.batch) || { counts: {}, file: '—', id: '—' }; const c = b.counts || {}; const s = b.sub || { new: c.new || 0, chg: c.chg || 0, pick: c.pick || 0, conflict: 0, unuse: 0, hold: (c.waitDiff || 0) + (c.pre || 0), ex: (c.err || 0) + (c.same || 0) }; return `<div class="grid3" style="margin-bottom:8px;grid-template-columns:repeat(4,1fr)"><div class="card"><div class="caption muted">신규</div><div class="mono" style="font-size:20px">${s.new}</div></div><div class="card"><div class="caption muted">변경 <span class="faint">(충돌 해결 포함)</span></div><div class="mono" style="font-size:20px">${s.chg + s.conflict}</div></div><div class="card"><div class="caption muted">후보 확정</div><div class="mono" style="font-size:20px">${s.pick}</div></div><div class="card"><div class="caption muted">미사용</div><div class="mono" style="font-size:20px">${s.unuse}</div></div></div>
+    if (d.kind === 'excel') { const b = batchOf(d.batch) || { counts: {}, file: '—', id: '—' }; const c = b.counts || {}; const s = d.sub || {   /* frozen in the document at submit (S1) */ new: c.new || 0, chg: c.chg || 0, pick: c.pick || 0, conflict: 0, unuse: 0, hold: (c.waitDiff || 0) + (c.pre || 0), ex: (c.err || 0) + (c.same || 0) }; return `<div class="grid3" style="margin-bottom:8px;grid-template-columns:repeat(4,1fr)"><div class="card"><div class="caption muted">신규</div><div class="mono" style="font-size:20px">${s.new}</div></div><div class="card"><div class="caption muted">변경 <span class="faint">(충돌 해결 포함)</span></div><div class="mono" style="font-size:20px">${s.chg + s.conflict}</div></div><div class="card"><div class="caption muted">후보 확정</div><div class="mono" style="font-size:20px">${s.pick}</div></div><div class="card"><div class="caption muted">미사용</div><div class="mono" style="font-size:20px">${s.unuse}</div></div></div>
       <div class="caption muted" style="margin-bottom:6px">합계 ${s.new + s.chg + s.conflict + s.pick + s.unuse}건 = 이 문서 ${d.n}건 · 업로드 <a href="uploads.html?b=${b.id}">${b.id}</a> · ${b.file} · 기준본 ${b.baseline || '—'} · 보류 ${s.hold} · 제외 ${s.ex}</div>`
       + `<table class="tbl"><thead><tr><th>용어</th><th>약어</th><th>도메인</th><th>구분</th></tr></thead><tbody><tr><td>요구사항상태코드</td><td class="mono">DEMND_MATER_STTS_CD</td><td class="mono">코드C2</td><td>신규</td></tr><tr><td>요구사항우선순위</td><td class="mono">DEMND_MATER_PRIOR</td><td class="mono">순위N3</td><td>신규</td></tr><tr><td>요청부서명</td><td class="mono">REQ_DEPT_NM</td><td class="mono">명V100</td><td>변경 <span class="caption faint">설명</span></td></tr><tr><td colspan="4" class="caption muted">… ${Math.max(0, d.n - 3)}건 더 · <a href="#" data-toast="전체 항목을 엑셀로 내려받았습니다" data-toast-type="info">엑셀로 보기</a></td></tr></tbody></table>`; }
     if (d.type === 'model') {
@@ -146,7 +146,7 @@ window.pageInit = function () {
       <div class="section-t">표준 예외 목록 <span class="badge b-violet">◆ ${(snap.exList || []).length}</span> <span class="caption muted">확정 결재에서 반드시 검토</span></div>
       <table class="tbl"><thead><tr><th>위치</th><th>항목</th><th>사유</th></tr></thead><tbody>${(snap.exList || []).map(x => `<tr><td>${x[0]}</td><td class="mono">${x[1]}</td><td class="wrap">${x[2]}</td></tr>`).join('') || '<tr><td colspan="3" class="caption muted">예외 없음</td></tr>'}</tbody></table>`;
     }
-    return `<div class="card"><div class="flex"><span class="badge">사전 · 신청</span><b>${d.title}</b></div><div class="caption muted" style="margin-top:6px">항목 ${d.n}건 · 상세는 목업에서 생략</div></div>`;
+    return (d.items || []).map(it => `<div class="card" style="margin-bottom:6px"><div class="flex"><span class="badge">${{ word: '단어', term: '용어', domain: '도메인', code: '코드' }[it.k] || '항목'} · ${it.act || '등록'}</span><b>${it.name}</b><span class="grow"></span><span class="mono">${it.abbr || ''}</span></div>${it.chg ? `<div class="caption" style="margin-top:4px">${Object.entries(it.chg).map(([k, v]) => `${k}: <span class="diff-old">${v[0]}</span> → <span class="diff-new">${v[1]}</span>`).join(' · ')}</div>` : ''}</div>`).join('') || `<div class="card"><b>${d.title}</b><div class="caption muted">항목 ${d.n}건</div></div>`;
   }
   function panel() {
     const p = $('pn-doc'); const d = docs.find(x => x.id === sel);
@@ -193,7 +193,10 @@ window.pageInit = function () {
     const d = docs.find(x => x.id === (pending && pending.id));
     if (!d || d.step !== pending.step) { toast(`${pending ? pending.id : ''}의 상태가 바뀌어 처리하지 않았습니다 — 최신 상태를 다시 확인하세요`, 'danger'); drawBoxes(); drawRows(); panel(); return; }
     sel = d.id;
-    const notifyReq = (t, m) => { if (d.req !== ME.id) pushNotif({ to: [d.req], k: 'appr', t, m, href: `approvals.html?box=mine&doc=${d.id}` }); };
+    // permission re-checked at execution time with the CURRENT role (S4)
+    if ((kind === 'approve' || kind === 'reject') && !inQueue(d)) { toast(`지금 역할(${ME.roles.map(r => ROLE_NAME[r]).join('·')})로는 ${d.id}의 ${stepRole(d.step)} 단계를 처리할 수 없습니다`, 'danger'); pending = null; drawBoxes(); drawRows(); panel(); return; }
+    if (kind === 'withdraw' && d.req !== ME.id) { toast('신청자만 회수할 수 있습니다', 'danger'); pending = null; panel(); return; }
+    const notifyReq =(t, m) => { if (d.req !== ME.id) pushNotif({ to: [d.req], k: 'appr', t, m, href: `approvals.html?box=mine&doc=${d.id}` }); };
     if (kind === 'approve') {
       // re-check against the current model judgement before approving a model confirmation (MD-20)
       if (d.type === 'model') { const c = getComp(d.area); if (c && c.bad > 0) { addHist(d, { act: '재검사 실패 — 승인 취소', why: `미준수 ${c.bad}건`, step: d.step }); saveDocs(docs); toast(`재검사 실패 — 현재 미준수 ${c.bad}건이라 승인하지 않았습니다. 이력에 남겼습니다`, 'danger'); drawRows(); panel(); return; } }
@@ -208,10 +211,9 @@ window.pageInit = function () {
         notifyReq(`${d.id} 최종 승인 — v${d.ver} 확정본`, d.title);
         toast(`최종 승인 — v${d.ver}이 확정본이 됐습니다`, 'success', { label: '확정본 보기', fn: () => location.href = `model.html?area=${d.area}` });
       } else {
-        const ch = getChanges();
-        if (d.kind === 'r14') ch.unshift({ at: '2026-' + nowStr().replace(' ', ' ').replace('/', '-'), item: '산출물제출일자', kind: '용어', act: '추가', ver: 'V1', doc: d.id, by: ME.name, diff: '' }, { at: '2026-' + nowStr().replace('/', '-'), item: '검수', kind: '단어', act: '추가', ver: 'V1', doc: d.id, by: ME.name, diff: '중복 허용 사유 있음' });
-        else ch.unshift({ at: '2026-' + nowStr().replace('/', '-'), item: d.title, kind: '사전', act: d.batch ? '추가·변경' : '추가', ver: 'V+1', doc: d.id, by: ME.name, diff: d.batch ? `업로드 ${d.batch}` : '' });
-        saveChanges(ch);
+        // each submitted item is applied to the dictionary (new V1 / version +1, pending cleared, one change row per item)
+        const nItems = applyDictDoc(d);
+        pushNotif({ to: Object.values(USERS).filter(u => u.roles.includes('modeler')).map(u => u.id), k: 'sys', t: `${d.id} 사전 반영 — 모델 재검토 가능`, m: `항목 ${d.n}건(상세 ${nItems}) · 사용 중인 모델은 [표준 맞추기]에서 한 번에 확인`, href: 'standardize.html' });   // one grouped notice per document
         if (d.batch) { const bs = getBatches(); const b = bs.find(x => x.id === d.batch); if (b) { b.status = '반영됨'; saveBatches(bs); } }
         notifyReq(`${d.id} 반영됨 — ${d.batch ? '반영본 내려받기' : '사전에 반영'}`, d.title + (d.batch ? ' · 엑셀 원본을 반영본으로 맞추세요' : ''));
         toast(`최종 승인 — 사전에 반영했습니다 · 항목 버전이 올라갔습니다(제정차수는 DA 공표 때만)`, 'success', d.batch ? { label: '반영본 내려받기', fn: () => toast(`반영본_${d.batch}.xlsx — 새 버전·ID가 들어간 편집용 엑셀`, 'info') } : null);
@@ -225,6 +227,7 @@ window.pageInit = function () {
       toast(d.type === 'model' ? '회수했습니다 — 업무 영역 잠금이 풀려 다시 편집할 수 있습니다' : '회수했습니다', 'info', d.type === 'model' ? { label: '모델 열기', fn: () => location.href = `model.html?area=${d.area}` } : null);
     }
     pending = null; drawBoxes(); drawRows(); panel();
+    const row = $('rows').querySelector(`tr[data-id="${sel}"]`); if (row) row.focus(); else { const pb = document.querySelector('#pn-doc .rp-head h2'); if (pb) { pb.tabIndex = -1; pb.focus(); } }   // focus returns after the dialog
   }
   $('do-self').onclick = () => { $('mo-self').classList.remove('open'); act('approve', $('self-why').value.trim(), true); };
   $('do-apr').onclick = () => { $('mo-apr').classList.remove('open'); act('approve', $('apr-note').value.trim(), false); };

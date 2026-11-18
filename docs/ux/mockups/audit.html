@@ -29,7 +29,7 @@
     <input class="input" id="aq" style="width:200px;height:28px" placeholder="사용자·문서 번호" aria-label="사용자·문서 번호 검색">
   </div>
   <div class="listhead" id="alh"></div>
-  <div class="scroll" data-filter-target="ak">
+  <div class="scroll">
     <table class="tbl"><thead><tr><th>일시</th><th>사용자</th><th>종류</th><th>대상</th><th>내용 (전 → 후)</th><th>사유</th><th>IP</th></tr></thead><tbody id="ab">
       <tr data-f="appr self"><td class="mono">11/17 15:06</td><td>김모델 <span class="badge">DA</span></td><td><span class="badge b-violet">자기 승인</span></td><td class="mono">REQ-2026-0014</td><td>DA 승인 → 최종 승인 대기</td><td class="caption">DA 1인 운영 기간 · 최종 승인에서 재검토</td><td class="mono">10.12.3.41</td></tr>
       <tr data-f="set"><td class="mono">11/17 11:20</td><td>이데이터 <span class="badge">Admin</span></td><td><span class="badge">설정</span></td><td>사전 신청 최종 승인</td><td>끔 → <b>켬</b> (진행 중 3건은 기존 결재선 유지)</td><td class="caption">기관 담당자 지정 완료</td><td class="mono">10.12.3.12</td></tr>
@@ -50,11 +50,12 @@ window.pageInit = function () {
   getChanges().filter(c => c.act === '공표').forEach(c => live.push({ at: c.at.slice(5).replace('-', '/'), who: c.by, f: 'dict', kind: '<span class="badge b-violet">공표</span>', tgt: c.item, what: '기관 사전 제정차수 +1', why: c.diff }));
   live.sort((a, b) => b.at.localeCompare(a.at));
   ab.insertAdjacentHTML('afterbegin', live.map(r => `<tr data-f="${r.f}"><td class="mono">${r.at}</td><td>${r.who}</td><td>${r.kind}</td><td class="mono">${r.tgt}</td><td>${r.what}</td><td class="caption">${r.why}</td><td class="mono">—</td></tr>`).join(''));
-  const aq = document.getElementById('aq');
-  const count = () => { document.getElementById('alh').innerHTML = `<b style="color:var(--fg)">${[...ab.rows].filter(r => r.style.display !== 'none').length}건</b> · 결재 이력·공표는 실시간 반영`; };
-  aq.oninput = () => { const v = aq.value.trim(); [...ab.rows].forEach(r => { r.style.display = !v || r.innerText.includes(v) ? '' : 'none'; }); count(); };
-  document.querySelector('.toolbar').addEventListener('click', () => setTimeout(count, 0));
-  count();
+  // chip filter AND text search combined in one pass (S6)
+  const aq = document.getElementById('aq'); let kind = '';
+  const apply = () => { const v = aq.value.trim(); let n = 0; [...ab.rows].forEach(r => { const okK = !kind || (r.dataset.f || '').split(' ').includes(kind); const okQ = !v || r.innerText.includes(v); const show = okK && okQ; r.style.display = show ? '' : 'none'; if (show) n++; }); document.getElementById('alh').innerHTML = `<b style="color:var(--fg)">${n}건</b>${kind || v ? ' · 필터 적용' : ''} · 결재 이력·공표는 실시간 반영`; };
+  aq.oninput = apply;
+  document.querySelector('.toolbar').addEventListener('click', e => { const c = e.target.closest('.chip[data-filter]'); if (!c) return; kind = c.dataset.filter; setTimeout(apply, 0); });
+  apply();
 };
 </script>
 </body>

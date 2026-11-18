@@ -32,10 +32,7 @@
       <div style="display:flex;flex-direction:column;gap:16px">
         <section class="hcard"><div class="hh"><h2>내 차례 결재</h2><span class="badge" id="q-n">0</span><span class="grow"></span><a class="caption" href="approvals.html">결재함 →</a></div><div class="hb" id="q-list"></div></section>
         <section class="hcard"><div class="hh"><h2>내 신청</h2><span class="grow"></span><a class="caption" href="approvals.html?box=mine">전체 →</a></div><div class="hb" id="m-list"></div></section>
-        <section class="hcard"><div class="hh"><h2>최근 업무 영역</h2></div><div class="hb">
-          <a class="row" href="model.html"><b>요구사항 · 프로젝트</b><span class="caption muted">요구사항관리 · Oracle</span><span class="grow"></span><span class="badge mono">v5 작업 중</span><span class="caption faint">11/17 16:20</span></a>
-          <a class="row" href="model.html?area=risk"><b>리스크</b><span class="caption muted">요구사항관리 · Oracle</span><span class="grow"></span><span class="badge b-info">● 검토 중</span><span class="caption faint">11/16 18:02</span></a>
-        </div></section>
+        <section class="hcard"><div class="hh"><h2>최근 업무 영역</h2></div><div class="hb" id="areas"></div></section>
       </div>
       <div style="display:flex;flex-direction:column;gap:16px">
         <section class="hcard"><div class="hh"><h2>내 후보 처리 결과</h2></div><div class="hb">
@@ -62,6 +59,8 @@ window.pageInit = function () {
   document.getElementById('q-n').textContent = q.length;
   const row = d => `<a class="row" href="approvals.html?doc=${d.id}"><span class="mono">${d.id}</span><span class="badge ${d.type === 'model' ? 'b-violet' : ''}">${d.type === 'model' ? '모델 확정' : '사전 신청'}</span>${d.title}<span class="grow"></span><span class="caption muted">${USERS[d.req].name}${d.req === ME.id ? ' (나)' : ''}</span><span class="badge b-info">● ${STEP_NAME[d.step]}</span></a>`;
   document.getElementById('q-list').innerHTML = q.length ? q.map(row).join('') : `<div class="caption muted" style="padding:16px 0">${ME.has('da') || ME.has('owner') ? '지금 처리할 결재가 없습니다.' : '결재 권한이 없는 역할입니다 — 내 신청에서 진행 상황을 보세요.'}</div>`;
+  // area badges from the same lock judgement as the model screen
+  document.getElementById('areas').innerHTML = ['rq', 'risk'].map(a => { const L = modelLock(a); const b = L.state === 'review' ? `<span class="badge b-info">● v${L.model.ver} 검토 중 · ${L.doc.id}</span>` : L.state === 'confirmed' ? `<span class="badge b-success">v${L.model.ver} 확정본</span>` : `<span class="badge mono">v${L.model.ver} 작업 중</span>`; return `<a class="row" href="model.html?area=${a}"><b>${L.model.name}</b><span class="caption muted">요구사항관리 · Oracle</span><span class="grow"></span>${b}</a>`; }).join('');
   const mine = docs.filter(d => d.req === ME.id);
   document.getElementById('m-list').innerHTML = mine.length ? mine.map(row).join('') : '<div class="caption muted" style="padding:16px 0">신청한 문서가 없습니다.</div>';
 };

@@ -41,13 +41,13 @@
 
   /* ---- approval documents: new ID per request, history is append-only ---- */
   const DOCS0 = [
-    { id: 'REQ-2026-0016', type: 'dict', title: '엑셀 일괄 — 용어 120건 (요구사항_용어_1차.xlsx)', req: 'kim', step: 'da', n: 120, date: '11/16 09:20', cc: [], reason: '요구사항관리 용어 1차 적재(엑셀 가져오기)', kind: 'excel', batch: 'UP-2026-0007', key: 'batch:UP-2026-0007', hist: [] },
-    { id: 'REQ-2026-0014', type: 'dict', title: '산출물제출일자 외 1건 등록', req: 'kim', step: 'da', n: 2, date: '11/17 15:02', cc: ['hyun'], reason: '요구사항관리 산출물 제출 관리 기능 추가', kind: 'r14', hist: [] },
-    { id: 'REQ-2026-0013', type: 'dict', title: "엔터티 용어 '산출물기본' 등록", req: 'kim', step: 'da', n: 1, date: '11/17 14:20', cc: [], reason: '산출물 관리 엔터티 추가', hist: [] },
-    { id: 'REQ-2026-0012', type: 'dict', title: "단어 '수령자' 등록 (후보 전환)", req: 'lee', step: 'da', n: 1, date: '11/17 11:05', cc: ['kim'], reason: '후보 큐 4건 발생 — 수령자 RCPNT', hist: [] },
+    { id: 'REQ-2026-0016', type: 'dict', title: '엑셀 일괄 — 용어 120건 (요구사항_용어_1차.xlsx)', req: 'kim', step: 'da', n: 120, date: '11/16 09:20', cc: [], reason: '요구사항관리 용어 1차 적재(엑셀 가져오기)', kind: 'excel', batch: 'UP-2026-0007', key: 'batch:UP-2026-0007', hist: [], sub: { new: 112, chg: 4, pick: 4, conflict: 0, unuse: 0, hold: 0, ex: 8 }, items: [{ k: 'term', name: '요구사항상태코드', abbr: 'DEMND_MATER_STTS_CD', dom: '코드C2' }, { k: 'term', name: '요구사항우선순위', abbr: 'DEMND_MATER_PRIOR', dom: '순위N3' }, { k: 'term', name: '요청부서명', abbr: 'REQ_DEPT_NM', dom: '명V100' }] },
+    { id: 'REQ-2026-0014', type: 'dict', title: '산출물제출일자 외 1건 등록', req: 'kim', step: 'da', n: 2, date: '11/17 15:02', cc: ['hyun'], reason: '요구사항관리 산출물 제출 관리 기능 추가', kind: 'r14', hist: [], items: [{ k: 'term', name: '산출물제출일자', abbr: 'DLVRBL_SBMT_DATE', dom: '연월일C8', eng: '산출물을 발주처에 제출한 날짜' }, { k: 'word', name: '검수', abbr: 'INSPCT', eng: 'inspection' }] },
+    { id: 'REQ-2026-0013', type: 'dict', title: "엔터티 용어 '산출물기본' 등록", req: 'kim', step: 'da', n: 1, date: '11/17 14:20', cc: [], reason: '산출물 관리 엔터티 추가', hist: [], items: [{ id: 'T-0430', name: '산출물기본', act: '추가' }] },
+    { id: 'REQ-2026-0012', type: 'dict', title: "단어 '수령자' 등록 (후보 전환)", req: 'lee', step: 'da', n: 1, date: '11/17 11:05', cc: ['kim'], reason: '후보 큐 4건 발생 — 수령자 RCPNT', hist: [], items: [{ k: 'word', name: '수령자', abbr: 'RCPNT', eng: 'recipient' }] },
     { id: 'REQ-2026-0011', type: 'model', area: 'risk', ver: 2, title: '요구사항관리 › 리스크 v2 확정', req: 'park', step: 'da', n: 2, date: '11/16 18:02', cc: ['hyun'], reason: '리스크 등급 코드 추가', hist: [] },
-    { id: 'REQ-2026-0010', type: 'dict', title: "도메인 '코드C2' 규격 변경", req: 'lee', step: 'final', n: 1, date: '11/16 17:05', cc: [], reason: '2자리 코드 허용 문자 확대', hist: [{ at: '11/16 17:40', who: '김모델', act: 'DA 승인', why: '', step: 'da' }] },
-    { id: 'REQ-2026-0009', type: 'dict', title: '단어 3건 등록', req: 'park', step: 'da', n: 3, date: '11/16 09:12', cc: ['kim'], reason: '인사시스템 신규 화면', hist: [] },
+    { id: 'REQ-2026-0010', type: 'dict', title: "도메인 '코드C2' 규격 변경", req: 'lee', step: 'final', n: 1, date: '11/16 17:05', cc: [], reason: '2자리 코드 허용 문자 확대', hist: [{ at: '11/16 17:40', who: '김모델', act: 'DA 승인', why: '', step: 'da' }], items: [{ id: 'D-0031', name: '코드C2', act: '변경', chg: { '허용 값': ['[A-Z]{2}', '[A-Z0-9]{2}'] } }] },
+    { id: 'REQ-2026-0009', type: 'dict', title: '단어 3건 등록', req: 'park', step: 'da', n: 3, date: '11/16 09:12', cc: ['kim'], reason: '인사시스템 신규 화면', hist: [], items: [{ k: 'word', name: '교재', abbr: 'TXTBK' }, { k: 'word', name: '배부', abbr: 'DSTRB' }, { k: 'word', name: '수강', abbr: 'ATND' }] },
     { id: 'REQ-2026-0005', type: 'dict', title: '엑셀 일괄 — 단어 86건 (기관단어_초기.xlsx)', req: 'kim', step: 'done', n: 86, date: '11/14 17:45', cc: [], reason: '기관 단어 초기 적재', kind: 'excel', batch: 'UP-2026-0006', hist: [{ at: '11/14 18:00', who: '이데이터', act: 'DA 승인', step: 'da' }, { at: '11/15 09:10', who: '이현업', act: '최종 승인', step: 'final' }] },
     { id: 'REQ-2026-0003', type: 'model', area: 'rq', ver: 4, title: '요구사항관리 › 요구사항·프로젝트 v4 확정', req: 'park', step: 'done', n: 7, date: '11/03 10:00', cc: [], reason: 'v4 확정', hist: [{ at: '11/03 10:05', who: '이데이터', act: 'DA 승인', step: 'da' }, { at: '11/03 10:20', who: '최관리', act: '최종 승인', step: 'final' }] }
   ];
@@ -62,6 +62,8 @@
     if (o.key) { const ex = docs.find(d => d.key === o.key && ['da', 'final'].includes(d.step)); if (ex) return { doc: ex, dup: true }; }
     const doc = Object.assign({ id: nextDocId(docs), req: ME.id, step: 'da', date: now(), cc: [], hist: [], n: 1 }, o);
     docs.unshift(doc); saveDocs(docs);
+    // items with an existing id become "pending" in the dictionary (MD-10: one open request per item)
+    if (doc.items) { const dict = getDict(); doc.items.forEach(it => { const d = it.id && dict.find(x => x.id === it.id); if (d) d.pending = doc.id; }); saveDict(dict); }
     pushNotif({ to: Object.values(USERS).filter(u => u.roles.includes('da') && u.id !== ME.id).map(u => u.id), k: 'appr', t: `${doc.id} ${doc.type === 'model' ? '모델 확정' : '사전 신청'} — DA 승인 차례`, m: `${ME.name} · ${doc.title}`, href: `approvals.html?doc=${doc.id}` });
     return { doc, dup: false };
   };
@@ -78,7 +80,13 @@
     if (d && d.step === 'done') return { state: 'confirmed', doc: d, model: m };
     return { state: 'edit', doc: d || null, model: m };
   };
-  window.startNextVersion = area => { const m = getModel(area); setModel(area, Object.assign({}, m, { ver: m.ver + 1, base: m.ver })); };
+  window.startNextVersion = area => {
+    const m = getModel(area);
+    // the next working version starts from the confirmed version's structure
+    const lk = modelLock(area); const base = (lk.doc && lk.doc.model) || getModelData(area, m.ver);
+    if (base) setModelData(area, m.ver + 1, base);
+    setModel(area, Object.assign({}, m, { ver: m.ver + 1, base: m.ver }));
+  };
   window.getComp = area => J('dbm-comp-' + area, null);
   window.setComp = (area, c) => S('dbm-comp-' + area, c);
 
@@ -103,6 +111,53 @@
   window.saveChanges = c => S('dbm-changes', c);
   window.getPub = () => J('dbm-pub', { cha: 12, at: '2026-11-03 10:00', by: '이데이터', why: '공통표준 2025.11 반영' });
   window.savePub = p => S('dbm-pub', p);
+
+  /* ---- v6: dictionary items live in the state layer (S2) ---- */
+  const DICT0 = [
+    { id: 'W-0102', k: 'word', kn: '단어', src: '기관', st: '사용', name: '산출물', abbr: 'DLVRBL', dom: '—', eng: 'deliverable', desc: '사업 수행 결과로 제출하는 문서·코드·모델 등', ver: 2, cha: 12, dt: '2026-11-14', use: 5, syn: ['납품물', '결과물'], forbid: ['산출서'], old: ['산출물품'],
+      hist: [{ v: 'V2', at: '2026-11-14 18:00', act: '변경', doc: 'REQ-2026-0005', by: '김모델 → 이데이터(DA) → 이현업', why: '영문명 정비', diff: [['영문명', 'output', 'deliverable'], ['단어명', '산출물품', '산출물']] }, { v: 'V1', at: '2026-11-03 10:00', act: '초기 적재', doc: '—', by: '이데이터', why: '기관 단어 초기 적재', diff: [] }] },
+    { id: 'W-0001', k: 'word', kn: '단어', src: '공통', st: '사용', name: '산출', abbr: 'PRDC', dom: '—', eng: 'produce', desc: '', ver: 1, cha: 3, dt: '2025-11-30', use: 2, syn: [], forbid: [], old: [], hist: [{ v: 'V1', at: '2025-11-30', act: '공통표준 적재', doc: '—', by: '시스템', why: '공통표준 2025.11', diff: [] }] },
+    { id: 'W-0002', k: 'word', kn: '단어', src: '공통', st: '사용', name: '산출근거', abbr: 'CALC_BASIS', dom: '—', eng: 'calculation basis', desc: '', ver: 1, cha: 3, dt: '2025-11-30', use: 0, syn: [], forbid: [], old: [], hist: [] },
+    { id: 'T-0410', k: 'term', kn: '용어', src: '기관', st: '사용', name: '산출물ID', abbr: 'DLVRBL_ID', dom: 'ID V10', dg: '번호', eng: '산출물 식별자', ver: 1, cha: 12, dt: '2026-11-17', use: 2, syn: [], forbid: [], old: [], hist: [{ v: 'V1', at: '2026-11-17 11:58', act: '추가', doc: 'REQ-2026-0007', by: '김모델(자기 승인)', why: '산출물 테이블 표준화', diff: [] }] },
+    { id: 'T-0411', k: 'term', kn: '용어', src: '기관', st: '사용', name: '산출물명', abbr: 'DLVRBL_NM', dom: '명V100', dg: '명칭', eng: '산출물의 이름', ver: 1, cha: 12, dt: '2026-11-17', use: 1, syn: [], forbid: [], old: [], hist: [] },
+    { id: 'T-0415', k: 'term', kn: '용어', src: '기관', st: '사용', name: '산출물유형코드', abbr: 'DLVRBL_TYPE_CD', dom: '코드C2', dg: '코드', eng: '산출물 유형 구분', ver: 2, cha: 12, dt: '2026-11-15', use: 1, syn: [], forbid: [], old: ['산출물구분코드'],
+      hist: [{ v: 'V2', at: '2026-11-15 09:10', act: '변경', doc: 'REQ-2026-0005', by: '김모델 → 이현업', why: '구분 → 유형으로 통일', diff: [['용어명', '산출물구분코드', '산출물유형코드'], ['영문약어명', 'DLVRBL_SE_CD', 'DLVRBL_TYPE_CD']] }, { v: 'V1', at: '2026-11-03 10:00', act: '초기 적재', doc: '—', by: '이데이터', why: '', diff: [] }] },
+    { id: 'T-0430', k: 'term', kn: '엔터티 용어', src: '기관', st: '신청 중', name: '산출물기본', abbr: 'DLVRBL_M', dom: '엔터티 용어', eng: '산출물 기본 정보 테이블', ver: 0, cha: null, dt: '2026-11-17', use: 1, syn: [], forbid: [], old: [], pending: 'REQ-2026-0013', hist: [] },
+    { id: 'T-0021', k: 'term', kn: '용어', src: '공통', st: '사용', name: '산출근거내용', abbr: 'CALC_BASIS_CN', dom: '내용V1000', dg: '명칭', eng: '산출 근거 설명', ver: 1, cha: 3, dt: '2025-11-30', use: 0, syn: [], forbid: [], old: [], hist: [] },
+    { id: 'T-0022', k: 'term', kn: '용어', src: '공통', st: '사용', name: '산출일자', abbr: 'PRDC_YMD', dom: '연월일C8', dg: '날짜', eng: '산출한 날짜', ver: 1, cha: 3, dt: '2025-11-30', use: 0, syn: [], forbid: [], old: [], hist: [] },
+    { id: 'D-0031', k: 'domain', kn: '도메인', src: '기관', st: '사용', name: '코드C2', abbr: 'CD_C2', dom: '코드 · CHAR(2)', dg: '코드', eng: '2자리 코드', ver: 1, cha: 12, dt: '2026-11-17', use: 9, syn: [], forbid: [], old: [], pending: 'REQ-2026-0010', hist: [] },
+    { id: 'D-0002', k: 'domain', kn: '도메인', src: '공통', st: '사용', name: '금액N15', abbr: 'AMT_N15', dom: '금액 · NUMERIC(15)', dg: '금액·수량', eng: '금액', ver: 1, cha: 3, dt: '2025-11-30', use: 4, syn: [], forbid: [], old: [], hist: [] },
+    { id: 'W-0099', k: 'word', kn: '단어', src: '기관', st: '미사용', name: '산출서', abbr: 'CALC_DOC', dom: '—', eng: '산출물로 통합', ver: 2, cha: 12, dt: '2026-10-02', use: 0, syn: [], forbid: [], old: [], hist: [{ v: 'V2', at: '2026-10-02 14:20', act: '미사용', doc: 'REQ-2026-0001', by: '이데이터', why: '산출물로 통합', diff: [['사용상태', '사용', '미사용']] }] },
+    { id: 'W-0003', k: 'word', kn: '단어', src: '공통', st: '사용', name: '산출내역', abbr: 'CALC_DTLS', dom: '—', eng: 'calculation details', ver: 1, cha: 3, dt: '2025-11-30', use: 0, syn: [], forbid: [], old: [], hist: [] },
+    { id: 'C-0005', k: 'code', kn: '코드', src: '기관', st: '사용', name: '산출물유형', abbr: 'DLVRBL_TYPE', dom: '코드C2', dg: '코드', eng: '문서·코드·모델·기타', ver: 1, cha: 12, dt: '2026-11-17', use: 1, syn: [], forbid: [], old: [], hist: [] },
+    { id: 'W-0210', k: 'word', kn: '단어', src: '공통', st: '사용', name: '수신자', abbr: 'RCVR', dom: '—', eng: 'receiver', ver: 1, cha: 3, dt: '2025-11-30', use: 3, syn: ['수취인'], forbid: ['수령인'], old: [], hist: [] },
+    { id: 'W-0211', k: 'word', kn: '단어', src: '공통', st: '사용', name: '검사', abbr: 'INSP', dom: '—', eng: 'inspection', ver: 1, cha: 3, dt: '2025-11-30', use: 6, syn: [], forbid: [], old: [], hist: [] }
+  ];
+  window.getDict = () => J('dbm-dict', clone(DICT0));
+  window.saveDict = d => S('dbm-dict', d);
+  const today = () => { const t = new Date(); return `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, '0')}-${String(t.getDate()).padStart(2, '0')}`; };
+  /* applyDictDoc: on final approval, each submitted item becomes a new item (V1) or bumps its version; pending is cleared; one change-log row per item */
+  window.applyDictDoc = doc => {
+    const dict = getDict(), ch = getChanges(), at = today() + ' ' + now().split(' ')[1];
+    const items = doc.items || [];
+    items.forEach(it => {
+      let d = it.id ? dict.find(x => x.id === it.id) : dict.find(x => x.name === it.name && x.src === '기관');
+      if (it.act === '미사용' && d) { d.st = '미사용'; d.ver += 1; d.hist.unshift({ v: 'V' + d.ver, at, act: '미사용', doc: doc.id, by: ME.name, why: doc.reason, diff: [['사용상태', '사용', '미사용']] }); }
+      else if (d && d.ver) { const diff = Object.entries(it.chg || {}).map(([k, v]) => [k, v[0], v[1]]); d.ver += 1; Object.assign(d, it.set || {}); d.hist.unshift({ v: 'V' + d.ver, at, act: '변경', doc: doc.id, by: ME.name, why: doc.reason, diff }); }
+      else if (d) { d.ver = 1; d.st = '사용'; d.hist.unshift({ v: 'V1', at, act: '추가', doc: doc.id, by: ME.name, why: doc.reason, diff: [] }); }
+      else { d = { id: (it.k === 'word' ? 'W-' : it.k === 'domain' ? 'D-' : 'T-') + String(500 + dict.length), k: it.k, kn: { word: '단어', term: '용어', domain: '도메인', code: '코드' }[it.k] || '용어', src: '기관', st: '사용', name: it.name, abbr: it.abbr || '—', dom: it.dom || '—', eng: it.eng || '', desc: it.desc || '', ver: 1, cha: null, dt: today(), use: 0, syn: [], forbid: [], old: [], hist: [{ v: 'V1', at, act: '추가', doc: doc.id, by: ME.name, why: doc.reason, diff: [] }] }; dict.push(d); }
+      d.dt = today(); if (d.pending === doc.id) delete d.pending;
+      ch.unshift({ at, item: d.name, kind: d.kn, act: it.act || '추가', ver: 'V' + d.ver, doc: doc.id, by: ME.name, diff: (it.chg ? Object.keys(it.chg).join('·') + ' 변경' : '') + (doc.batch ? ` · 업로드 ${doc.batch}` : ''), itemId: d.id });
+    });
+    saveDict(dict); saveChanges(ch);
+    return items.length;
+  };
+  /* baselines: every editable download is recorded (range, item ids, versions) — round-trip judgement uses this, not the file alone */
+  window.recordBaseline = (scope, ids) => { const all = J('dbm-baselines', []); const t = new Date(); const id = `BL-${today().replace(/-/g, '')}-${String(t.getHours()).padStart(2, '0')}${String(t.getMinutes()).padStart(2, '0')}`; all.unshift({ id, at: now(), by: ME.id, scope, n: ids.length, ids }); S('dbm-baselines', all.slice(0, 20)); return id; };
+  window.latestBaseline = () => (J('dbm-baselines', [])).find(b => b.by === ME.id) || { id: 'BL-20261116-0905', at: '11/16 09:05', by: 'kim', scope: '용어 · 필터: 요구사항', n: 13 };
+  /* per-version model data (S5): edits persist per area+version; a confirmation stores its own snapshot */
+  window.getModelData = (area, ver) => J(`dbm-mdata-${area}-v${ver}`, null);
+  window.setModelData = (area, ver, data) => S(`dbm-mdata-${area}-v${ver}`, data);
 
   /* ---- notifications: addressed to people, created by events ---- */
   window.pushNotif = n => { const all = J('dbm-notifs', []); all.unshift(Object.assign({ id: 'd' + Date.now() + Math.random().toString(36).slice(2, 5), at: now() }, n)); S('dbm-notifs', all.slice(0, 50)); };
@@ -242,7 +297,7 @@
     sf.addEventListener('click', e => { const v = e.target.dataset.v; if (!v) return; store.set('dbm-frame', v); const p = new URLSearchParams(location.search); p.set('w', v); location.search = p.toString(); });
     st.addEventListener('click', e => { const v = e.target.dataset.v; if (!v) return; store.set('dbm-theme', v); applyTheme(v); st.querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.v === v)); });
     top.querySelector('#mk-role').addEventListener('change', e => { store.set('dbm-role', e.target.value); const p = new URLSearchParams(location.search); p.delete('as'); location.search = p.toString(); location.reload(); });
-    top.querySelector('#mk-reset').addEventListener('click', () => { ['dbm-docs', 'dbm-seen-ver', 'dbm-model', 'dbm-batches', 'dbm-changes', 'dbm-pub', 'dbm-notifs', 'dbm-comp-rq', 'dbm-comp-risk', 'dbm-apply'].forEach(k => store.del(k)); Object.keys(USERS).forEach(u => store.del('dbm-read-' + u)); flash('목업 데이터를 초기화했습니다', 'info'); location.reload(); });
+    top.querySelector('#mk-reset').addEventListener('click', () => { const keep = ['dbm-frame', 'dbm-theme', 'dbm-role', 'dbm-single-keys']; try { Object.keys(localStorage).filter(k => k.startsWith('dbm-') && !keep.includes(k)).forEach(k => store.del(k)); } catch (e) {} Object.keys(USERS).forEach(u => store.del('dbm-read-' + u)); flash('목업 데이터를 초기화했습니다', 'info'); location.reload(); });
 
     // notifications
     const pn = top.querySelector('#pn-notif'), pu = top.querySelector('#pn-user');
@@ -288,7 +343,9 @@
     document.addEventListener('keydown', e => { if (e.key === 'Escape') closePops(); });
     nav.querySelector('#nav-ver').addEventListener('click', openAbout);
   }
-  function openAbout() { document.getElementById('mo-about').classList.add('open'); store.set('dbm-seen-ver', PRODUCT.version); const d = document.querySelector('#btn-user .newdot'); if (d) d.remove(); }
+  function openAbout() {
+    const p = getPub(); const kv = document.querySelector('#mo-about .kv'); if (kv) kv.innerHTML = kv.innerHTML.replace(/기관 사전 제정 \d+차/, `기관 사전 제정 ${p.cha}차`);
+    document.getElementById('mo-about').classList.add('open'); store.set('dbm-seen-ver', PRODUCT.version); const d = document.querySelector('#btn-user .newdot'); if (d) d.remove(); }
   function openKeys() { document.getElementById('mo-keys').classList.add('open'); }
   window.openAbout = openAbout; window.openKeys = openKeys;
 
@@ -307,18 +364,28 @@
   };
   window.flash = (msg, type) => { try { sessionStorage.setItem('dbm-flash', JSON.stringify([msg, type])); } catch (e) {} };
 
-  /* ---- required reasons: <button data-needs="textareaId"> stays disabled while empty ---- */
+  /* ---- one submit-condition function (S3):
+     <button data-needs="id1 id2"> stays disabled while any field is empty (whitespace = empty);
+     a page-level block reason in data-block also keeps it disabled — reasons never override blocks ---- */
   function updateNeeds() {
     document.querySelectorAll('[data-needs]').forEach(b => {
-      const t = document.getElementById(b.dataset.needs); if (!t) return;
-      const ok = t.value.trim().length > 0;
-      b.disabled = !ok;
-      let m = b.parentElement.querySelector(`.needs-msg[data-for="${b.dataset.needs}"]`);
-      if (!ok && !m) { m = document.createElement('span'); m.className = 'needs-msg'; m.dataset.for = b.dataset.needs; m.textContent = b.dataset.needsMsg || '사유를 입력해야 합니다'; b.parentElement.insertBefore(m, b.parentElement.firstChild); }
-      if (ok && m) m.remove();
-      t.setAttribute('aria-invalid', ok ? 'false' : 'true');
+      const ids = b.dataset.needs.split(/\s+/).filter(Boolean);
+      const fields = ids.map(id => document.getElementById(id)).filter(Boolean);
+      const empty = fields.filter(t => !t.value.trim());
+      const block = b.dataset.block || '';
+      b.disabled = empty.length > 0 || !!block;
+      b.setAttribute('aria-disabled', b.disabled ? 'true' : 'false');
+      fields.forEach(t => t.setAttribute('aria-invalid', empty.includes(t) ? 'true' : 'false'));
+      const key = ids.join('_');
+      let m = b.parentElement.querySelector(`.needs-msg[data-for="${key}"]`);
+      const msg = block || (empty.length ? (b.dataset.needsMsg || '사유를 입력해야 합니다') : '');
+      if (msg && !m) { m = document.createElement('span'); m.className = 'needs-msg'; m.dataset.for = key; m.setAttribute('role', 'status'); b.parentElement.insertBefore(m, b.parentElement.firstChild); }
+      if (m) { if (msg) m.textContent = msg; else m.remove(); }
     });
   }
+  window.setBlock = (btn, reason) => { if (!btn) return; btn.dataset.block = reason || ''; if (!btn.dataset.needs) btn.dataset.needs = ''; updateNeeds(); };
+  // another tab changed shared state → say so instead of silently acting on stale data (S4)
+  window.addEventListener('storage', e => { if (['dbm-docs', 'dbm-model', 'dbm-dict', 'dbm-batches'].includes(e.key)) toast('다른 탭에서 상태가 바뀌었습니다 — 최신 상태로 다시 불러오세요', 'info', { label: '새로고침', fn: () => location.reload() }); });
   window.updateNeeds = updateNeeds;
 
   function wire() {

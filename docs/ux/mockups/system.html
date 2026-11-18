@@ -30,14 +30,20 @@
     <div class="section-t">업무 영역</div>
     <table class="tbl" style="border:1px solid var(--border);border-radius:8px;overflow:hidden">
       <thead><tr><th>업무 영역</th><th>상태</th><th>작업 버전</th><th>테이블</th><th>준수율</th><th>미준수</th><th>예외</th><th>담당</th><th>수정</th></tr></thead>
-      <tbody>
-        <tr class="click" onclick="location.href='model.html'"><td><b>요구사항 · 프로젝트</b></td><td><span class="badge">작업 중</span></td><td class="mono">v5 <span class="faint">(v4 확정 기준)</span></td><td class="num">9</td><td class="mono">92%</td><td class="num">6</td><td class="num">2</td><td>김모델</td><td class="mono">11/17 15:10</td></tr>
-        <tr class="click" onclick="location.href='model.html?area=risk'"><td><b>리스크</b></td><td><span class="badge b-info">● 검토 중</span></td><td class="mono">v2</td><td class="num">2</td><td class="mono">100%</td><td class="num">0</td><td class="num">0</td><td>박설계</td><td class="mono">11/16 18:02</td></tr>
-      </tbody>
+      <tbody id="areas"></tbody>
     </table>
-    <div class="caption muted" style="margin-top:8px">업무 영역을 열면 모델 화면으로 이동합니다. 준수율은 모델 화면 상단에서도 확인합니다.</div>
+    <div class="caption muted" style="margin-top:8px">상태·버전·준수율은 결재 문서와 모델 판정에서 계산합니다(모델 화면과 같은 값). 준수율이 ‘—’이면 아직 그 영역을 열지 않은 것입니다.</div>
   </div></div>
 </div>
 </div>
+<script>
+window.pageInit = function () {
+  document.getElementById('areas').innerHTML = ['rq', 'risk'].map(a => {
+    const L = modelLock(a), c = getComp(a);
+    const st = L.state === 'review' ? `<span class="badge b-info">● 검토 중 · ${L.doc.id}</span>` : L.state === 'confirmed' ? '<span class="badge b-success">확정본</span>' : '<span class="badge">작업 중</span>';
+    return `<tr class="click" tabindex="0" onclick="location.href='model.html?area=${a}'"><td><b>${L.model.name}</b></td><td>${st}</td><td class="mono">v${L.model.ver} <span class="faint">(v${L.model.base} 확정 기준)</span></td><td class="num">${a === 'rq' ? 7 : 2}</td><td class="mono">${c ? c.rate + '%' : '—'}</td><td class="num">${c ? c.bad : '—'}</td><td class="num">${c ? c.exList.length : '—'}</td><td>${a === 'rq' ? '김모델' : '박설계'}</td><td class="mono">${L.doc ? L.doc.date : '—'}</td></tr>`;
+  }).join('');
+};
+</script>
 </body>
 </html>

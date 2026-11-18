@@ -255,9 +255,9 @@
       <div class="rp-head"><div class="t"><h2>모델 확정 신청</h2><button class="iconbtn close" data-close="pn-confirm" style="width:28px;height:28px">×</button></div><div class="rp-sub">요구사항관리 › 요구사항 · v5</div></div>
       <div class="rp-body">
         <div class="grid3" style="margin-bottom:12px">
-          <div class="card"><div class="caption muted">준수율</div><div class="mono" style="font-size:20px">100%</div></div>
-          <div class="card"><div class="caption muted">예외</div><div class="mono" style="font-size:20px;color:var(--violet)">3</div></div>
-          <div class="card"><div class="caption muted">v4 대비</div><div class="mono" style="font-size:20px">+2 ~5</div></div>
+          <div class="card"><div class="caption muted">준수율</div><div class="mono" style="font-size:20px" id="cf-rate">—</div></div>
+          <div class="card"><div class="caption muted">예외</div><div class="mono" style="font-size:20px;color:var(--violet)" id="cf-exc">—</div></div>
+          <div class="card"><div class="caption muted" id="cf-base">확정본 대비</div><div class="mono" style="font-size:20px" id="cf-diff">—</div></div>
         </div>
         <div class="section-t">표준 예외 <span class="badge b-violet" id="cf-exn">◆ 0</span> <span class="caption muted">신청 중 용어는 결재에서 함께 확인</span></div>
         <table class="tbl"><thead><tr><th>항목</th><th>사유</th></tr></thead><tbody id="cf-ex"></tbody></table>
@@ -352,13 +352,16 @@ window.pageInit = function () {
   const ent = id => E.find(x => x.id === id);
   const bad = e => e.a.filter(a => a.s === 'comb' || a.s === 'unreg').length;
   const guard = () => {
+    // execution-time re-check (S4): another tab may have submitted/approved, or the viewer switched role
+    if (!SNAP) { const fresh = modelLock(AREA); if (fresh.state !== LOCK.state || (fresh.doc && LOCK.doc && fresh.doc.step !== LOCK.doc.step)) { toast(`이 업무 영역의 상태가 바뀌었습니다(${fresh.doc ? fresh.doc.id + ' ' + STEP_NAME[fresh.doc.step] : '편집 가능'}) — 최신 상태로 다시 여세요`, 'danger', { label: '새로고침', fn: () => location.reload() }); return true; } }
+    if ((dbmStore.get('dbm-role', 'kim')) !== ME.id && !new URLSearchParams(location.search).get('as')) { toast('다른 탭에서 역할이 바뀌었습니다 — 새로고침 후 다시 시도하세요', 'danger', { label: '새로고침', fn: () => location.reload() }); return true; }
     if (confirmed) { toast('확정본은 고칠 수 없습니다 — [v6 작업 시작]으로 다음 작업 버전을 여세요', 'info'); return true; }
     if (review) { toast('검토 중이라 편집할 수 없습니다 — 회수하거나 결재가 끝난 뒤 다음 작업 버전에서 편집하세요', 'info'); return true; }
     if (viewOnly) { toast('모델 편집은 모델러 역할만 할 수 있습니다', 'info'); return true; }
     if (cv.dataset.sys === '1') { toast('시스템 전체 ERD는 조회 전용입니다 — 업무 영역으로 돌아가 편집하세요', 'info'); return true; }
     return false;
   };
-  const canEdit = () => !(confirmed || review || viewOnly || cv.dataset.sys === '1');   // silent check for drag/memo (R5)
+  const canEdit = () => !(confirmed || review || viewOnly || cv.dataset.sys === '1') && modelLock(AREA).state === LOCK.state;   // silent check for drag/memo (R5)
   // undo bound to one action: if something else happened after it, say so instead of undoing the wrong thing (R6)
   const undoAction = () => { const t = hist.length; return { label: '실행 취소', fn: () => { if (hist.length !== t) { toast('이후에 다른 편집이 있어 이 작업만 따로 되돌릴 수 없습니다 — Ctrl+Z로 차례대로 되돌리세요', 'info'); return; } undo(); } }; };
   // standard-matching results applied item by item (not a blanket conversion)
@@ -401,6 +404,11 @@ window.pageInit = function () {
   function fillConfirm() {
     const ex = []; E.forEach(e => e.a.forEach(a => { if (a.s === 'ex') ex.push([e, a]); }));
     $('cf-exn').textContent = '◆ ' + ex.length;
+    // panel cards from the same judgement (no fixed numbers)
+    const base = (BASE && getModelData(AREA, BASE)) || null;
+    $('cf-rate').textContent = (lastComp ? lastComp.rate : 0) + '%'; $('cf-exc').textContent = ex.length;
+    $('cf-base').textContent = `v${BASE} 확정본 대비`;
+    $('cf-diff').textContent = base ? `엔터티 ${E.length - base.E.length >= 0 ? '+' : ''}${E.length - base.E.length}` : `엔터티 ${E.length}`;
     $('cf-ex').innerHTML = ex.map(([e, a]) => `<tr><td>${e.n}.${a.n} <span class="mono faint">${a.p}</span></td><td class="wrap">${a.exReason || '—'}</td></tr>`).join('');
   }
   const refGuard = e => { if (e && e.ref) { toast(`‘${e.n}’은(는) 공통 영역의 참조 엔터티입니다 — 원본(공통)에서만 수정할 수 있습니다`, 'info'); return true; } return false; };
@@ -458,6 +466,7 @@ window.pageInit = function () {
       nodes.appendChild(d);
     });
     renderMemos(); drawEdges(); mini(); panel(); updateComp();
+    if (!locked && !viewOnly && dataReady && !STATE) setModelData(AREA, VER, { E, R, M });   // edits persist per area+version (S5)
     const inp = nodes.querySelector('.attr-in'); if (inp) { inp.focus(); inp.select(); showAC(inp); }
     const ren = nodes.querySelector('.ren-in'); if (ren) { ren.focus(); ren.select(); }
     if ($('grid').classList.contains('open')) renderGrid();
@@ -619,7 +628,7 @@ window.pageInit = function () {
     updateComp();
     if (lastComp.bad > 0) { toast(`제출 직전 재검사: 미준수 ${lastComp.bad}건 — 확정 신청할 수 없습니다`, 'danger'); return; }   // re-check at submit (R4)
     // always a NEW document (requester = current user); same area+version in progress → no duplicate (R2)
-    const r = createDoc({ type: 'model', area: AREA, ver: VER, title: `요구사항관리 › ${LOCK.model.name} v${VER} 확정`, n: E.length, reason: $('cf-why').value.trim(), cc: ['hyun'], key: `model:${AREA}:v${VER}`, snap: lastComp });
+    const r = createDoc({ type: 'model', area: AREA, ver: VER, title: `요구사항관리 › ${LOCK.model.name} v${VER} 확정`, n: E.length, reason: $('cf-why').value.trim(), cc: ['hyun'], key: `model:${AREA}:v${VER}`, snap: lastComp, model: JSON.parse(JSON.stringify({ E, R, M })) });   // the document keeps the model as submitted
     flash(r.dup ? `이미 진행 중인 확정 신청 ${r.doc.id}이 있습니다` : `확정 신청 ${r.doc.id} — DA에게 보냈습니다. 결재가 끝날 때까지 이 업무 영역은 조회 전용입니다`, 'info');
     location.href = `model.html?area=${AREA}`;
   };
@@ -1027,14 +1036,23 @@ window.pageInit = function () {
 
   // ---- states
   const RECIP_WHY = '‘수령자’ 단어 후보(REQ-2026-0012) 승인 전까지 임시 유지';
-  // data presets: a submitted / later version is by definition the resolved model (mock has no model persistence)
+  // data source (S5): ?state= preset (demo, not saved) → document snapshot (review/confirmed/snap) → saved working data → seed
+  const loadData = d => { if (!d) return false; E.splice(0, E.length, ...JSON.parse(JSON.stringify(d.E))); R.splice(0, R.length, ...JSON.parse(JSON.stringify(d.R))); M.splice(0, M.length, ...JSON.parse(JSON.stringify(d.M || []))); return true; };
+  const snapDoc = SNAP ? getDocs().find(x => x.id === SNAP) : (locked ? LOCK.doc : null);
   if (STATE === 'applied') { applyStd(); }
-  if (STATE === 'resolved' || locked || (AREA === 'rq' && VER > 5)) { applyStd(); keepRecipientAsEx(RECIP_WHY); }
+  else if (STATE === 'resolved') { applyStd(); keepRecipientAsEx(RECIP_WHY); }
+  else if (snapDoc && snapDoc.model) loadData(snapDoc.model);
+  else if (!loadData(getModelData(AREA, VER)) && (locked || (AREA === 'rq' && VER > 5))) { applyStd(); keepRecipientAsEx(RECIP_WHY); }
+  var dataReady = true;
   // standardize → model hand-off: apply exactly the rows the user selected (R3)
   let applied = null;
   try { applied = JSON.parse(sessionStorage.getItem('dbm-apply') || 'null'); sessionStorage.removeItem('dbm-apply'); } catch (e) {}
   if (applied && applied.area === AREA && !locked) {
     snap(); const done = applyRows(applied.keys || []);
+    // exceptions / exclusions chosen in standardize arrive with their reasons (S5)
+    const findAttr = key => { const [en, an] = key.split('.'); const e = E.find(x => x.n === en); return e ? e.a.find(a => a.n === an) : null; };
+    (applied.ex || []).forEach(x => { const a = findAttr(x.key); if (a) { a.s = 'ex'; a.exReason = x.why; delete a.cand; done.push(x.key); } });
+    (applied.na || []).forEach(x => { const a = findAttr(x.key); if (a) { a.s = 'na'; a.naReason = x.why; done.push(x.key); } });
     setTimeout(() => toast(`표준 맞추기 ${applied.keys.length}건 반영 — 모델 변경 ${done.length}건${applied.doc ? ` · 용어 신청 ${applied.doc}(${applied.req}건)` : ''}${applied.cand ? ` · 후보 ${applied.cand}건` : ''}`, 'success', undoAction()), 300);
   }
   $('ver').textContent = `v${VER} 작업 중`;
@@ -1061,7 +1079,10 @@ window.pageInit = function () {
       b.onclick = () => { if (viewOnly) { guard(); return; } startNextVersion(AREA); flash(`v${VER + 1} 작업 버전을 시작했습니다 — v${VER} 확정본을 기준으로 변경을 기록합니다`, 'success'); location.href = `model.html?area=${AREA}`; };
     }
   }
-  if (document.documentElement.classList.contains('frame-1600') && !q.get('side')) $('side').classList.add('closed');   // 1600: give the canvas room; [사전 ▸] reopens
+  // dictionary panel: the user's choice is remembered; at 1600 it starts closed by default
+  const sidePref = dbmStore.get('dbm-side', '');
+  if (sidePref === 'closed' || (!sidePref && document.documentElement.classList.contains('frame-1600'))) $('side').classList.add('closed');
+  new MutationObserver(() => dbmStore.set('dbm-side', $('side').classList.contains('closed') ? 'closed' : 'open')).observe($('side'), { attributes: true, attributeFilter: ['class'] });
   if (viewOnly && !locked) {
     document.body.classList.add('viewonly'); $('ban-view').style.display = 'flex';
     $('ban-view-r').textContent = ME.roles.map(r => ROLE_NAME[r]).join(', ');
