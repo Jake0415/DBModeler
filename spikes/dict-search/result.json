@@ -1,0 +1,398 @@
+[
+ {
+  "N": 16589,
+  "variant": "none",
+  "kind": "name %2자%",
+  "p50": 6.7,
+  "p95": 10.8,
+  "max": 12.3,
+  "avgHits": 16.7
+ },
+ {
+  "N": 16589,
+  "variant": "none",
+  "kind": "name %3자%",
+  "p50": 6.5,
+  "p95": 10.1,
+  "max": 16.1,
+  "avgHits": 4.7
+ },
+ {
+  "N": 16589,
+  "variant": "none",
+  "kind": "초성 2자",
+  "p50": 4,
+  "p95": 7.1,
+  "max": 12.7,
+  "avgHits": 29.6
+ },
+ {
+  "N": 16589,
+  "variant": "none",
+  "kind": "초성 3자",
+  "p50": 4.6,
+  "p95": 8.4,
+  "max": 14.2,
+  "avgHits": 24.9
+ },
+ {
+  "N": 16589,
+  "variant": "none",
+  "kind": "약어 3자",
+  "p50": 8,
+  "p95": 12.5,
+  "max": 19.3,
+  "avgHits": 23
+ },
+ {
+  "N": 16589,
+  "variant": "none",
+  "kind": "통합(이름|약어|초성) 3자",
+  "p50": 12.4,
+  "p95": 16.3,
+  "max": 23.9,
+  "avgHits": 4.7
+ },
+ {
+  "N": 16589,
+  "variant": "trgm",
+  "kind": "index_build_ms",
+  "p50": 19435
+ },
+ {
+  "N": 16589,
+  "variant": "trgm",
+  "kind": "name %2자%",
+  "p50": 6.4,
+  "p95": 9.8,
+  "max": 11.4,
+  "avgHits": 16.7
+ },
+ {
+  "N": 16589,
+  "variant": "trgm",
+  "kind": "name %3자%",
+  "p50": 0.5,
+  "p95": 2.2,
+  "max": 5.2,
+  "avgHits": 4.7
+ },
+ {
+  "N": 16589,
+  "variant": "trgm",
+  "kind": "초성 2자",
+  "p50": 3.3,
+  "p95": 4.4,
+  "max": 7.3,
+  "avgHits": 29.6
+ },
+ {
+  "N": 16589,
+  "variant": "trgm",
+  "kind": "초성 3자",
+  "p50": 1.3,
+  "p95": 3.4,
+  "max": 4.1,
+  "avgHits": 24.9
+ },
+ {
+  "N": 16589,
+  "variant": "trgm",
+  "kind": "약어 3자",
+  "p50": 1.1,
+  "p95": 2.3,
+  "max": 7.5,
+  "avgHits": 23
+ },
+ {
+  "N": 16589,
+  "variant": "trgm",
+  "kind": "통합(이름|약어|초성) 3자",
+  "p50": 0.6,
+  "p95": 2.2,
+  "max": 5.3,
+  "avgHits": 4.7
+ },
+ {
+  "N": 16589,
+  "variant": "-",
+  "kind": "paging OFFSET 13271",
+  "p50": 3.8
+ },
+ {
+  "N": 16589,
+  "variant": "-",
+  "kind": "paging keyset",
+  "p50": 2.6
+ },
+ {
+  "N": 16589,
+  "variant": "-",
+  "kind": "table+index size",
+  "p50": "6832 kB"
+ },
+ {
+  "N": 50000,
+  "variant": "none",
+  "kind": "name %2자%",
+  "p50": 22.1,
+  "p95": 40,
+  "max": 47.6,
+  "avgHits": 25.9
+ },
+ {
+  "N": 50000,
+  "variant": "none",
+  "kind": "name %3자%",
+  "p50": 21.4,
+  "p95": 31,
+  "max": 36.7,
+  "avgHits": 8.2
+ },
+ {
+  "N": 50000,
+  "variant": "none",
+  "kind": "초성 2자",
+  "p50": 9.9,
+  "p95": 13.9,
+  "max": 21.7,
+  "avgHits": 29.9
+ },
+ {
+  "N": 50000,
+  "variant": "none",
+  "kind": "초성 3자",
+  "p50": 8.8,
+  "p95": 13.3,
+  "max": 16.5,
+  "avgHits": 29.5
+ },
+ {
+  "N": 50000,
+  "variant": "none",
+  "kind": "약어 3자",
+  "p50": 20.2,
+  "p95": 27.6,
+  "max": 32.6,
+  "avgHits": 28.4
+ },
+ {
+  "N": 50000,
+  "variant": "none",
+  "kind": "통합(이름|약어|초성) 3자",
+  "p50": 41.4,
+  "p95": 60.2,
+  "max": 84.1,
+  "avgHits": 8.3
+ },
+ {
+  "N": 50000,
+  "variant": "trgm",
+  "kind": "index_build_ms",
+  "p50": 12471
+ },
+ {
+  "N": 50000,
+  "variant": "trgm",
+  "kind": "name %2자%",
+  "p50": 21.7,
+  "p95": 26.6,
+  "max": 29.9,
+  "avgHits": 25.9
+ },
+ {
+  "N": 50000,
+  "variant": "trgm",
+  "kind": "name %3자%",
+  "p50": 0.5,
+  "p95": 2.1,
+  "max": 5.6,
+  "avgHits": 8.2
+ },
+ {
+  "N": 50000,
+  "variant": "trgm",
+  "kind": "초성 2자",
+  "p50": 10.3,
+  "p95": 17.2,
+  "max": 22.2,
+  "avgHits": 29.9
+ },
+ {
+  "N": 50000,
+  "variant": "trgm",
+  "kind": "초성 3자",
+  "p50": 1.5,
+  "p95": 4.3,
+  "max": 5.6,
+  "avgHits": 29.5
+ },
+ {
+  "N": 50000,
+  "variant": "trgm",
+  "kind": "약어 3자",
+  "p50": 1.4,
+  "p95": 3,
+  "max": 26.2,
+  "avgHits": 28.4
+ },
+ {
+  "N": 50000,
+  "variant": "trgm",
+  "kind": "통합(이름|약어|초성) 3자",
+  "p50": 0.6,
+  "p95": 2.3,
+  "max": 5.9,
+  "avgHits": 8.3
+ },
+ {
+  "N": 50000,
+  "variant": "-",
+  "kind": "paging OFFSET 40000",
+  "p50": 6.4
+ },
+ {
+  "N": 50000,
+  "variant": "-",
+  "kind": "paging keyset",
+  "p50": 0.6
+ },
+ {
+  "N": 50000,
+  "variant": "-",
+  "kind": "table+index size",
+  "p50": "21 MB"
+ },
+ {
+  "N": 200000,
+  "variant": "none",
+  "kind": "name %2자%",
+  "p50": 41.4,
+  "p95": 54.7,
+  "max": 79.1,
+  "avgHits": 27.1
+ },
+ {
+  "N": 200000,
+  "variant": "none",
+  "kind": "name %3자%",
+  "p50": 41.6,
+  "p95": 57.2,
+  "max": 68.8,
+  "avgHits": 8.8
+ },
+ {
+  "N": 200000,
+  "variant": "none",
+  "kind": "초성 2자",
+  "p50": 110.3,
+  "p95": 396.4,
+  "max": 490.2,
+  "avgHits": 30
+ },
+ {
+  "N": 200000,
+  "variant": "none",
+  "kind": "초성 3자",
+  "p50": 25,
+  "p95": 57.4,
+  "max": 98.8,
+  "avgHits": 29.9
+ },
+ {
+  "N": 200000,
+  "variant": "none",
+  "kind": "약어 3자",
+  "p50": 36.6,
+  "p95": 53.7,
+  "max": 79.8,
+  "avgHits": 28.9
+ },
+ {
+  "N": 200000,
+  "variant": "none",
+  "kind": "통합(이름|약어|초성) 3자",
+  "p50": 71.1,
+  "p95": 106.7,
+  "max": 130.7,
+  "avgHits": 8.8
+ },
+ {
+  "N": 200000,
+  "variant": "trgm",
+  "kind": "index_build_ms",
+  "p50": 7635
+ },
+ {
+  "N": 200000,
+  "variant": "trgm",
+  "kind": "name %2자%",
+  "p50": 45,
+  "p95": 69.5,
+  "max": 98.3,
+  "avgHits": 27.1
+ },
+ {
+  "N": 200000,
+  "variant": "trgm",
+  "kind": "name %3자%",
+  "p50": 0.6,
+  "p95": 2.2,
+  "max": 7.8,
+  "avgHits": 8.8
+ },
+ {
+  "N": 200000,
+  "variant": "trgm",
+  "kind": "초성 2자",
+  "p50": 111.9,
+  "p95": 432.5,
+  "max": 653.7,
+  "avgHits": 30
+ },
+ {
+  "N": 200000,
+  "variant": "trgm",
+  "kind": "초성 3자",
+  "p50": 3.4,
+  "p95": 9.3,
+  "max": 14.8,
+  "avgHits": 29.9
+ },
+ {
+  "N": 200000,
+  "variant": "trgm",
+  "kind": "약어 3자",
+  "p50": 2.7,
+  "p95": 8.7,
+  "max": 98.4,
+  "avgHits": 28.9
+ },
+ {
+  "N": 200000,
+  "variant": "trgm",
+  "kind": "통합(이름|약어|초성) 3자",
+  "p50": 0.9,
+  "p95": 3.9,
+  "max": 10.9,
+  "avgHits": 8.8
+ },
+ {
+  "N": 200000,
+  "variant": "-",
+  "kind": "paging OFFSET 160000",
+  "p50": 23.9
+ },
+ {
+  "N": 200000,
+  "variant": "-",
+  "kind": "paging keyset",
+  "p50": 0.9
+ },
+ {
+  "N": 200000,
+  "variant": "-",
+  "kind": "table+index size",
+  "p50": "76 MB"
+ }
+]

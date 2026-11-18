@@ -1,0 +1,45 @@
+{
+ "node": "v26.13.1",
+ "out": [
+  {
+   "rows": 20000,
+   "fileMB": 0.8,
+   "writeMs": 293,
+   "streamReadMs": 543,
+   "streamPeakMB": 101.7,
+   "fullReadMs": 500,
+   "fullPeakMB": 91.4,
+   "errRows": 400
+  },
+  {
+   "rows": 50000,
+   "fileMB": 2,
+   "writeMs": 453,
+   "streamReadMs": 757,
+   "streamPeakMB": 0,
+   "fullReadMs": 1236,
+   "fullPeakMB": 102.1,
+   "errRows": 1002
+  },
+  {
+   "rows": 100000,
+   "fileMB": 4.1,
+   "writeMs": 902,
+   "streamReadMs": 1444,
+   "streamPeakMB": 0,
+   "fullReadMs": 2064,
+   "fullPeakMB": 242.8,
+   "errRows": 2005
+  },
+  {
+   "rows": 200000,
+   "fileMB": 8.1,
+   "writeMs": 2013,
+   "streamReadMs": 3283,
+   "streamPeakMB": 10.7,
+   "fullReadMs": 5454,
+   "fullPeakMB": 777.5,
+   "errRows": 4011
+  }
+ ]
+}

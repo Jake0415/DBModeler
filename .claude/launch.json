@@ -6,6 +6,12 @@
       "runtimeExecutable": "powershell",
       "runtimeArgs": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "docs/ux/mockups/serve.ps1", "-Port", "5178"],
       "port": 5178
+    },
+    {
+      "name": "spike-erd",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "spikes/erd-canvas", "exec", "vite", "--", "spikes/erd-canvas"],
+      "port": 5190
     }
   ]
 }

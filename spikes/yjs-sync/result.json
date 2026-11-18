@@ -1,0 +1,32 @@
+{
+ "node": "v26.13.1",
+ "yjs": "13.6.20",
+ "hocuspocus": "2.15.0",
+ "out": {
+  "buildMs": 25,
+  "attrs": 3600,
+  "docBytes": 448580,
+  "freshSyncMs": 64,
+  "freshSyncEntities": 300,
+  "latencyMs": {
+   "p50": 0.4,
+   "p95": 0.8,
+   "max": 6.6
+  },
+  "concurrentSameField": {
+   "converged": true,
+   "finalValue": "A99"
+  },
+  "perUserUndo": {
+   "aField": "속성3명",
+   "bFieldKept": true
+  },
+  "bulkUndoOneStep": true,
+  "readOnlyBlocked": true,
+  "offlineMergeMs": 99,
+  "offlineMergeConverged": true,
+  "afterRestartSyncMs": 174,
+  "afterRestartIntact": true,
+  "storedBytes": 455738
+ }
+}

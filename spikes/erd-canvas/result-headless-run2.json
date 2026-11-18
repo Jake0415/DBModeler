@@ -1,0 +1,175 @@
+{
+ "chrome": "Chrome/157.0.8103.78",
+ "out": [
+  {
+   "page": "erd",
+   "n": 300,
+   "rels": 499,
+   "cols": 3499,
+   "vis": 1,
+   "lod": 1,
+   "mountMs": 567,
+   "pan100": {
+    "fps": 39.5,
+    "long50": 0,
+    "worstMs": 35.4
+   },
+   "pan30": {
+    "fps": 41.2,
+    "long50": 3,
+    "worstMs": 146.3
+   },
+   "zoomSweep": {
+    "fps": 16.3,
+    "long50": 74,
+    "worstMs": 270.6
+   },
+   "fitZoom": 0.182,
+   "panFit": {
+    "fps": 25.9,
+    "long50": 5,
+    "worstMs": 52.6
+   },
+   "domNodesAtFit": 240,
+   "layout": {
+    "elkMs": 1171,
+    "wallMs": 1171,
+    "mainThreadBlockedPct": 0,
+    "applyMs": 54
+   },
+   "case": "#erd?n=300&vis=1&lod=1",
+   "wall": 20284
+  },
+  {
+   "page": "erd",
+   "n": 300,
+   "rels": 499,
+   "cols": 3499,
+   "vis": 1,
+   "lod": 2,
+   "mountMs": 519,
+   "pan100": {
+    "fps": 45,
+    "long50": 1,
+    "worstMs": 59.6
+   },
+   "pan30": {
+    "fps": 37.8,
+    "long50": 4,
+    "worstMs": 165
+   },
+   "zoomSweep": {
+    "fps": 15.9,
+    "long50": 72,
+    "worstMs": 323.5
+   },
+   "fitZoom": 0.182,
+   "panFit": {
+    "fps": 60.4,
+    "long50": 0,
+    "worstMs": 16.9
+   },
+   "domNodesAtFit": 4,
+   "layout": {
+    "elkMs": 919,
+    "wallMs": 919,
+    "mainThreadBlockedPct": 1,
+    "applyMs": 15
+   },
+   "case": "#erd?n=300&vis=1&lod=2",
+   "wall": 17738
+  },
+  {
+   "page": "erd",
+   "n": 1000,
+   "rels": 1667,
+   "cols": 11667,
+   "vis": 1,
+   "lod": 2,
+   "mountMs": 1274,
+   "pan100": {
+    "fps": 20.9,
+    "long50": 52,
+    "worstMs": 80.4
+   },
+   "pan30": {
+    "fps": 15.2,
+    "long50": 60,
+    "worstMs": 197.4
+   },
+   "zoomSweep": {
+    "fps": 6.9,
+    "long50": 105,
+    "worstMs": 572
+   },
+   "fitZoom": 0.055,
+   "panFit": {
+    "fps": 60.4,
+    "long50": 0,
+    "worstMs": 16.9
+   },
+   "domNodesAtFit": 11,
+   "layout": {
+    "elkMs": 3511,
+    "wallMs": 3511,
+    "mainThreadBlockedPct": 1,
+    "applyMs": 25
+   },
+   "case": "#erd?n=1000&vis=1&lod=2",
+   "wall": 39020
+  },
+  {
+   "page": "erd",
+   "n": 1000,
+   "rels": 1667,
+   "cols": 11667,
+   "vis": 1,
+   "lod": 2,
+   "mountMs": 1660,
+   "pan100": {
+    "fps": 21.4,
+    "long50": 58,
+    "worstMs": 75.7
+   },
+   "pan30": {
+    "fps": 14.6,
+    "long50": 62,
+    "worstMs": 203.8
+   },
+   "zoomSweep": {
+    "fps": 6.2,
+    "long50": 105,
+    "worstMs": 669.7
+   },
+   "fitZoom": 0.055,
+   "panFit": {
+    "fps": 60.2,
+    "long50": 0,
+    "worstMs": 18.2
+   },
+   "domNodesAtFit": 11,
+   "layout": {
+    "elkMs": 3964,
+    "wallMs": 3965,
+    "mainThreadBlockedPct": 0,
+    "applyMs": 22
+   },
+   "case": "#erd?n=1000&vis=1&lod=2&mm=0",
+   "wall": 41884
+  },
+  {
+   "page": "table",
+   "rows": 2000,
+   "virt": 0,
+   "mountMs": 856,
+   "domRows": 2000,
+   "scroll": {
+    "fps": 1.8,
+    "long50": 179,
+    "worstMs": 973.7
+   },
+   "case": "#table?rows=2000&virt=0",
+   "wall": 99138
+  }
+ ]
+}

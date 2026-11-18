@@ -1,2 +1,7 @@
 # REA skill — copied from npm rea-agents, kept local only
 .claude/skills/reverse-engineer-anything/
+
+# spikes: dependencies and local runtime data (results JSON are committed)
+spikes/**/node_modules/
+spikes/yjs-sync/store/
+
