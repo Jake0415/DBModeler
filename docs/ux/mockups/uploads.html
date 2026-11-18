@@ -35,8 +35,8 @@ window.pageInit = function () {
   let f = '', sel = new URLSearchParams(location.search).get('b');
   const docs = getDocs();
   const docOf = id => docs.find(d => d.id === id);
-  const stateOf = b => { const d = (b.docs || []).map(docOf).filter(Boolean).slice(-1)[0]; if (d && ['rejected', 'withdrawn'].includes(d.step)) return '보완'; if (d && d.step === 'done') return '반영됨'; return b.status; };
-  const vis = b => b.by === ME.id || ME.has('da');
+  const stateOf = batchState;            // one state function shared with the excel screen (CL10-02)
+  const vis = canSeeBatch;               // same visibility for the list, the ?b= deep link and file actions (CX9-09)
   function draw() {
     const L = getBatches().filter(vis).filter(b => !f || stateOf(b) === f);
     if (!sel && L[0]) sel = L[0].id;
@@ -45,7 +45,9 @@ window.pageInit = function () {
     panel();
   }
   function panel() {
-    const b = getBatches().find(x => x.id === sel); const p = $('pn-up'); if (!b) { p.innerHTML = ''; return; }
+    const b = getBatches().find(x => x.id === sel); const p = $('pn-up');
+    if (b && !vis(b)) { p.innerHTML = `<div class="rp-head"><h2>${b.id}</h2></div><div class="rp-body"><div class="banner"><span>ℹ</span><div>다른 사람이 올린 업로드입니다 — 올린 사람과 DA만 볼 수 있습니다.</div></div></div>`; return; }
+    if (!b) { p.innerHTML = sel ? `<div class="rp-body"><div class="banner danger"><span>!</span><div><b>${sel}</b> 업로드를 찾을 수 없습니다.</div></div></div>` : ''; return; }
     const st = stateOf(b), c = b.counts || {}, s = b.sub;
     const ds = (b.docs || []).map(docOf).filter(Boolean);
     const canResume = b.by === ME.id && ['임시 저장', '보완'].includes(st);
@@ -55,13 +57,37 @@ window.pageInit = function () {
         ${s ? `<div class="section-t">신청한 내용</div><div class="caption">신규 ${s.new} · 변경 ${s.chg + s.conflict} · 후보 ${s.pick} · 미사용 ${s.unuse} — 보류 ${s.hold} · 제외 ${s.ex}</div>` : ''}
         <div class="section-t">연결 신청</div>${ds.map(d => `<div class="flex" style="margin-bottom:4px"><a class="mono" href="approvals.html?doc=${d.id}">${d.id}</a><span class="badge ${d.step === 'done' ? 'b-success' : ['rejected', 'withdrawn'].includes(d.step) ? 'b-danger' : 'b-info'}">${STEP_NAME[d.step]}</span><span class="caption muted">${d.n}건</span></div>`).join('') || '<div class="caption muted">아직 신청하지 않았습니다</div>'}
         ${st === '보완' ? '<div class="banner warning" style="margin-top:8px"><span>!</span><div>반려·회수됐습니다. 이어서 보정한 뒤 다시 신청하면 <b>새 신청번호</b>가 만들어지고 이 묶음에 연결됩니다.</div></div>' : ''}
-        ${(c.waitDiff || c.pre) && st !== '임시 저장' ? `<div class="banner" style="margin-top:8px"><span>●</span><div class="grow">보류 ${(c.waitDiff || 0) + (c.pre || 0)}행 — 앞선 신청이 끝나면 다시 검증할 수 있습니다.</div><button class="btn sm" data-toast="보류 행을 현재 사전 기준으로 다시 검증했습니다 — 신청 가능 1 · 아직 대기 1(목업)" data-toast-type="info">보류 행 다시 검증</button></div>` : ''}
+        ${(c.waitDiff || c.pre) && st !== '임시 저장' && !b.holdNext ? `<div class="banner" style="margin-top:8px"><span>●</span><div class="grow">보류 ${(c.waitDiff || 0) + (c.pre || 0)}행 — 앞선 신청이 끝나면 다시 검증해 <b>새 업로드 묶음</b>으로 이어서 신청합니다.</div>${b.by === ME.id ? '<button class="btn sm" id="hold-re">보류 행 다시 검증</button>' : ''}</div>` : ''}
+        ${b.holdNext ? `<div class="caption" style="margin-top:8px">보류 행은 <a href="uploads.html?b=${b.holdNext}">${b.holdNext}</a>로 이어졌습니다.</div>` : ''}
+        ${b.holdOf ? `<div class="caption" style="margin-top:8px">원 묶음 <a href="uploads.html?b=${b.holdOf}">${b.holdOf}</a>의 보류 행입니다.</div>` : ''}
+        ${b.roundTrip ? `<div class="caption" style="margin-top:8px;color:var(--success-deep)">✓ 왕복 완료 — 반영본 재업로드 ${b.roundTrip.rows}행 모두 동일 (${b.roundTrip.at})</div>` : ''}
       </div>
       <div class="rp-foot">${canResume ? `<a class="btn primary" href="excel-import.html?resume=${b.id}">이어서 작업</a>` : ''}<span class="grow"></span>
         <button class="btn sm" data-toast="원본_${b.file} 내려받기 — 열람 기록이 감사 로그에 남습니다" data-toast-type="info">원본</button>
         ${b.counts ? `<button class="btn sm" data-toast="보정본_${b.id}.xlsx — 화면에서 고친 값 + ‘변경점’ 시트" data-toast-type="info">보정본</button>` : ''}
         ${st === '반영됨' ? `<button class="btn sm primary" data-toast="반영본_${b.id}.xlsx — 새 버전·ID 반영. 다시 올리면 모두 ‘동일’로 나옵니다" data-toast-type="success">반영본</button><a class="btn sm" href="excel-import.html?verify=${b.id}">반영본 다시 올려 확인</a>` : ''}</div>`;
   }
+  // hold rows are re-validated against the CURRENT state: rows whose blocker ended move on into a new batch to resume and submit (CX9-20)
+  $('pn-up').addEventListener('click', e => {
+    if (!e.target.closest('#hold-re')) return;
+    if (liveRoleChanged()) { staleRoleToast(); return; }
+    const bs = getBatches(), b = bs.find(x => x.id === sel); if (!b || b.holdNext) return;
+    const all = getDocs(), dict = getDict();
+    const rows = (b.draft || []).filter(r => ['waitDiff', 'pre'].includes(r.st)).map(r => Object.assign({}, r));
+    let ready = 0;
+    rows.forEach(r => {
+      if (r.st === 'waitDiff') { const d = all.find(x => x.id === r.doc); if (!d || !['da', 'final'].includes(d.step)) { r.st = 'chg'; r.why = `${r.doc} ${d ? STEP_NAME[d.step] : '종료'} — 다시 검증: 변경 신청 가능`; ready++; } }
+      else if (r.st === 'pre') { if (dict.some(x => x.name === '수령자' && x.ver > 0)) { r.st = 'new'; r.why = "단어 '수령자' 승인됨 — 다시 검증: 등록 신청 가능"; ready++; } }
+    });
+    if (!rows.length) { toast('이 묶음에는 다시 검증할 보류 행이 없습니다(목업 시드는 행 상세가 없음)', 'info'); return; }
+    if (!ready) { toast(`보류 ${rows.length}행 모두 아직 앞선 신청이 진행 중입니다 — 끝나면 다시 검증하세요`, 'info'); return; }
+    const id = 'UP-2026-' + String(Math.max(...bs.map(x => +x.id.slice(-4))) + 1).padStart(4, '0');
+    const nb = { id, file: `${b.file} (보류 행)`, kind: b.kind, by: ME.id, at: nowStr(), baseline: b.baseline, rows: rows.length, docs: [], status: '임시 저장', holdOf: b.id, draft: rows, counts: null };
+    const c = { new: 0, chg: 0, same: 0, waitSame: 0, waitDiff: 0, conflict: 0, dup: 0, pre: 0, err: 0, missing: 0, pick: 0 }; rows.forEach(r => c[r.st]++); nb.counts = c;
+    b.holdNext = id; bs.unshift(nb); saveBatches(bs);
+    toast(`보류 ${rows.length}행 다시 검증 — 신청 가능 ${ready} · 아직 대기 ${rows.length - ready}. 새 묶음 ${id}에서 이어서 신청하세요`, 'success', { label: '이어서 작업', fn: () => location.href = `excel-import.html?resume=${id}` });
+    sel = id; draw();
+  });
   $('ub').addEventListener('click', e => { const r = e.target.closest('[data-b]'); if (r) { sel = r.dataset.b; draw(); } });
   document.querySelector('.toolbar').addEventListener('click', e => { const c = e.target.closest('[data-uf]'); if (!c) return; document.querySelectorAll('[data-uf]').forEach(x => x.classList.toggle('on', x === c)); f = c.dataset.uf; sel = null; draw(); });
   draw();

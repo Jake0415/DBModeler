@@ -115,6 +115,7 @@
     <h2 style="font-size:16px;margin-bottom:12px">신청</h2>
     <table class="tbl" id="sum6" style="border:1px solid var(--border)"></table>
     <div class="banner violet" style="margin-top:12px" id="selfnote" hidden><span>◆</span><div>DA 역할도 있어 이 문서를 직접 승인하면 <b>자기 승인</b>입니다. 건수가 많으면 기관 담당자 최종 승인을 권장합니다.</div></div>
+    <label class="flex caption" id="ack6-w" style="margin-top:12px" hidden><input type="checkbox" id="ack6"> <span id="ack6-t"></span></label>
     <div class="field" style="margin-top:16px"><label for="why6">신청 사유 * <span class="faint">1~1,000자</span></label><textarea class="input" id="why6" rows="3"></textarea></div>
     <div class="section-t">결재선</div>
     <div class="approval-line">
@@ -144,7 +145,7 @@ window.pageInit = function () {
     err: ['오류', 'b-danger', 'row-danger', '보정'], missing: ['파일에서 빠짐', '', 'row-mute', '무시']
   };
   const ROWS0 = [
-    { r: 2, st: 'new', name: '산출물제출일자', abbr: 'DLVRBL_SBMT_DATE', dom: '연월일C8', desc: '산출물을 발주처에 제출한 날짜', why: '신규' },
+    { r: 2, st: 'new', name: '산출물승인일자', abbr: 'DLVRBL_APRV_YMD', dom: '연월일C8', desc: '발주처가 산출물을 승인한 날짜', why: '신규' },
     { r: 3, st: 'new', name: '산출물검수결과코드', abbr: 'DLVRBL_INSPCT_RSLT_CD', dom: '코드C2', desc: '검수 결과 구분', why: '신규' },
     { r: 4, st: 'chg', id: 'T-0412', name: '요청부서명', abbr: 'REQ_DEPT_NM', dom: '명V100', desc: '요청한 부서의 공식 명칭', old: { desc: '요청 부서명' }, why: '설명 1칸 변경 · V2 → V3' },
     { r: 5, st: 'chg', id: 'T-0388', name: '요구사항상태코드', abbr: 'DEMND_MATER_STTS_CD', dom: '코드C2', desc: '요구사항 진행 상태', old: { dom: '코드C1' }, why: '도메인 1칸 변경 · 모델 사용처 3', warn: '도메인 변경 — 사용 중 컬럼 3개 재검토 알림(MD-11)' },
@@ -158,51 +159,67 @@ window.pageInit = function () {
     { r: 13, st: 'err', name: '산출물 검수 일자', abbr: '—', dom: '연월일C8', desc: '검수한 날짜', rule: 'T-SPACE', bad: 'name', why: '용어명에 공백', fix: { name: '산출물검수일자', abbr: 'DLVRBL_INSPCT_YMD' }, auto: 1 },
     { r: 14, st: 'err', name: '요구사항순번', abbr: 'DEMND_MATER_SN', dom: '일련번호N10', desc: '0012 형식 순번', rule: 'X-ZERO', bad: 'desc', shown: '12 형식 순번', why: "엑셀이 '0012'를 숫자 12로 바꾼 흔적", fix: { desc: '0012 형식 순번' } },
     { r: 15, st: 'err', id: 'T-0233', name: '요청고객명', abbr: 'REQ_CUST_NM', dom: '명V100', desc: '요청 고객 이름', rule: 'X-DUPID', bad: 'id', why: '같은 항목 ID(T-0233)가 16행에도 있음 — 행 복사?' },
-    { r: '—', st: 'missing', id: 'T-0150', name: '산출근거내용', abbr: 'CALC_BASIS_CN', dom: '내용V1000', desc: '산출 근거 설명', why: '기준본에 있었는데 파일에 없음' }
+    { r: '—', st: 'missing', id: 'T-0410', name: '산출물ID', abbr: 'DLVRBL_ID', dom: 'ID V10', desc: '산출물 식별자', why: '기준본에 있었는데 파일에 없음' }
   ];
   const RULES = { 'D-NOTFOUND': '도메인 없음', 'T-SPACE': '용어명 공백', 'X-ZERO': '자동 형 변환', 'X-DUPID': '항목 ID 중복' };
   // ---- batch (upload) — one source of counts
   let batches = getBatches();
   const resumeId = q.get('resume'), verifyId = q.get('verify');
-  let B = resumeId ? batches.find(b => b.id === resumeId) : null;
+  const lookupId = resumeId || verifyId;
+  let B = lookupId ? batches.find(b => b.id === lookupId) : null;
+  // a missing / foreign batch id stops here: nothing is created or saved under it (CL9-13 · CX9-09)
+  const missingB = !!lookupId && (!B || !canSeeBatch(B));
+  if (missingB) B = null;
   let ROWS = B && B.draft ? B.draft : JSON.parse(JSON.stringify(ROWS0));
-  // re-uploading the reflected copy: everything must come back "same" (round-trip completion check)
-  if (verifyId) ROWS = ROWS0.filter(r => ['new', 'chg', 'same'].includes(r.st)).map(r => Object.assign({}, r, { st: 'same', why: '반영본과 같음', old: undefined }));
-  let cur = (resumeId || verifyId) ? 5 : parseInt(q.get('step') || '1', 10), file = !!(resumeId || verifyId), timer = null, sel = null, kind = '용어';
+  // re-uploading the reflected copy: only a batch whose request was APPROVED can be verified; rows come from what was applied
+  const vDoc = verifyId && B ? (B.docs || []).map(id => getDocs().find(x => x.id === id)).filter(Boolean).slice(-1)[0] : null;
+  const verifyOk = !!(vDoc && vDoc.step === 'done' && (vDoc.items || []).length);   // nothing to compare → no "round trip complete"
+  if (verifyId && verifyOk) { const src = (vDoc.items || []).filter(it => it.act !== '미사용'); ROWS = src.map((it, i) => ({ r: it.row || i + 2, st: 'same', id: it.id || '(새 ID)', name: it.name, abbr: it.abbr || '', dom: it.dom || '', desc: (it.chg && Object.values(it.chg)[0] ? Object.values(it.chg)[0][1] : it.desc) || '', why: `반영본과 같음 · ${vDoc.id}` })); }
+  else if (verifyId) ROWS = [];
+  let cur = missingB ? 1 : (resumeId || verifyId) ? 5 : parseInt(q.get('step') || '1', 10), file = !missingB && !!(resumeId || verifyId), timer = null, sel = null, kind = '용어';
   let undoStack = [];
   // write rules (S1/S4): submitted batches are read-only; deep-link demos never write; only the uploader resumes
   const lastDoc = B ? (B.docs || []).map(id => getDocs().find(x => x.id === id)).filter(Boolean).slice(-1)[0] : null;
   const frozen = !!(lastDoc && ['da', 'final', 'done'].includes(lastDoc.step));
   const demo = !!verifyId || (q.has('step') && !resumeId);
   const notMine = B && B.by !== ME.id;
-  const canWrite = !demo && !frozen && !notMine;
-  if (resumeId && !B) { $('resume-banner').hidden = false; $('resume-banner').innerHTML = `<div class="banner danger"><span>!</span><div class="grow"><b>${resumeId}</b> 업로드를 찾을 수 없습니다.</div><a class="btn sm" href="uploads.html">업로드 이력</a></div>`; }
+  const canWrite = !demo && !frozen && !notMine && !missingB;
+  if (missingB) { $('resume-banner').hidden = false; $('resume-banner').innerHTML = `<div class="banner danger"><span>!</span><div class="grow"><b>${lookupId}</b> 업로드를 찾을 수 없거나 열람 권한이 없습니다. 새 업로드는 1단계부터 시작하세요 — 이 화면은 아무것도 저장하지 않습니다.</div><a class="btn sm" href="uploads.html">업로드 이력</a><a class="btn sm" href="excel-import.html">새 업로드</a></div>`; }
   if (B || demo) {
     $('resume-banner').hidden = false;
-    const msg = verifyId ? `<b>반영본 재업로드 확인</b> — ${verifyId}의 반영본을 다시 올리면 모든 행이 ‘동일’이어야 합니다. <b>${ROWS.length}행 모두 동일 → 왕복 완료.</b>`
+    const msg = verifyId ? (verifyOk ? `<b>반영본 재업로드 확인</b> — ${verifyId}의 반영본(${vDoc.id} 반영 ${ROWS.length}행)을 현재 사전과 비교했습니다. <b>${ROWS.length}행 모두 동일 → 왕복 완료.</b>${B.sample ? ' (목업 시드는 대표 행만)' : ''}` : vDoc && vDoc.step === 'done' ? `<b>${verifyId}</b> — 연결 신청 ${vDoc.id}에 제출 행 상세가 없어(목업 시드) 행 단위로 비교할 수 없습니다. 왕복 완료로 기록하지 않습니다.` : `<b>${verifyId}</b>는 아직 반영 완료된 묶음이 아닙니다(${vDoc ? STEP_NAME[vDoc.step] : '신청 없음'}) — 반영본 확인은 최종 승인 뒤에 할 수 있습니다.`)
       : demo ? '<b>예시 화면</b> — 주소로 바로 연 결과 화면이라 저장하지 않습니다. 실제 작업은 1단계부터 하세요.'
       : frozen ? `<b>${B.id} · ${B.file}</b> — ${lastDoc.id} ${STEP_NAME[lastDoc.step]}. <b>신청된 묶음은 열람 전용</b>입니다(결재 문서 내용을 바꾸지 않음). 보완하려면 반려·회수 뒤에 다시 여세요.`
       : notMine ? `<b>${B.id}</b> — ${USERS[B.by] ? USERS[B.by].name : B.by}이 올린 묶음이라 열람만 할 수 있습니다.`
       : `<b>${B.id} · ${B.file}</b> 이어서 작업${lastDoc ? ` — ${lastDoc.id} ${STEP_NAME[lastDoc.step]}: 보완해서 다시 신청하면 <b>새 신청번호</b>가 만들어집니다` : ''}`;
-    $('resume-banner').innerHTML = `<div class="banner ${verifyId ? 'success' : frozen || notMine || demo ? 'info' : lastDoc ? 'warning' : 'info'}"><span>ℹ</span><div class="grow">${msg}</div></div>`;
+    $('resume-banner').innerHTML = `<div class="banner ${verifyId ? (verifyOk ? 'success' : 'danger') : frozen || notMine || demo ? 'info' : lastDoc ? 'warning' : 'info'}"><span>ℹ</span><div class="grow">${msg}</div></div>`;
+    if (verifyId && verifyOk && B) { const bs = getBatches(); const bb = bs.find(x => x.id === B.id); if (bb && !bb.roundTrip) { bb.roundTrip = { at: nowStr(), by: ME.id, rows: ROWS.length }; saveBatches(bs); } }   // round-trip completion is recorded
   }
   const counts = () => { const c = { new: 0, chg: 0, same: 0, waitSame: 0, waitDiff: 0, conflict: 0, dup: 0, pre: 0, err: 0, missing: 0, pick: 0 }; ROWS.forEach(r => { c[r.st === 'pick' ? 'pick' : r.st]++; }); return c; };
   function persist() {
     if (!canWrite) { $('saved').textContent = demo ? '예시 · 저장 안 함' : '열람 전용'; return; }
     batches = getBatches();
+    // another tab may have submitted this batch meanwhile — never overwrite its links/status with this tab's older copy (CX9-08)
+    if (B) { const st = batches.find(b => b.id === B.id); if (st && ((st.docs || []).length !== (B.docs || []).length || st.status !== B.status)) { toast(`${B.id}가 다른 탭에서 바뀌었습니다(${batchStateLabel(batchState(st))}) — 이 탭의 내용은 저장하지 않았습니다. 새로고침하세요`, 'danger', { label: '새로고침', fn: () => location.reload() }); $('saved').textContent = '저장 안 함 · 다른 탭 변경'; return false; } }
     if (!B) { const id = 'UP-2026-' + String(Math.max(...batches.map(b => +b.id.slice(-4))) + 1).padStart(4, '0'); B = { id, file: '요구사항관리_용어_2차.xlsx', kind, by: ME.id, at: nowStr(), baseline: 'BL-20261116-0905', rows: 15, docs: [], status: '임시 저장' }; batches.unshift(B); }
     const i = batches.findIndex(b => b.id === B.id); B.counts = counts(); B.draft = ROWS; batches[i] = B; saveBatches(batches);
     $('saved').textContent = `${B.id} · 임시 저장 ${nowStr().split(' ')[1]}`;
     $('crumb').textContent = `기관 사전 · 표준${kind} · ${B.id}`;
+    return true;
   }
   // ---- step 1
-  const recent = getBatches().slice(0, 4);
-  $('recent').innerHTML = recent.map(b => `<tr><td class="mono">${b.id}<div class="caption faint">${b.at}</div></td><td>${b.file}<div class="caption faint">${b.kind} · ${b.rows}행</div></td><td><span class="badge ${b.status === '반영됨' ? 'b-success' : b.status === '취소' ? '' : 'b-info'}">${b.status}</span>${b.docs && b.docs[0] ? ` <a href="approvals.html?doc=${b.docs[0]}" class="caption">${b.docs[0]}</a>` : ''}</td><td>${b.status === '임시 저장' ? `<a class="btn sm" href="excel-import.html?resume=${b.id}">이어서 작업</a>` : `<a class="caption" href="uploads.html?b=${b.id}">보기</a>`}</td></tr>`).join('');
+  // same visibility and the same state function as the upload history (CX9-09 · CL10-02)
+  const recent = getBatches().filter(canSeeBatch).slice(0, 4);
+  $('recent').innerHTML = recent.map(b => { const s = batchState(b); const ld = (b.docs || []).slice(-1)[0]; return `<tr><td class="mono">${b.id}<div class="caption faint">${b.at}</div></td><td>${b.file}<div class="caption faint">${b.kind} · ${b.rows}행</div></td><td><span class="badge ${s === '반영됨' ? 'b-success' : s === '보완' ? 'b-danger' : s === '취소' ? '' : 'b-info'}">${batchStateLabel(s)}</span>${ld ? ` <a href="approvals.html?doc=${ld}" class="caption">${ld}</a>` : ''}</td><td>${['임시 저장', '보완'].includes(s) && b.by === ME.id ? `<a class="btn sm" href="excel-import.html?resume=${b.id}">이어서 작업</a>` : `<a class="caption" href="uploads.html?b=${b.id}">보기</a>`}</td></tr>`; }).join('') || '<tr><td colspan="4" class="caption muted" style="text-align:center;padding:16px">최근 업로드가 없습니다</td></tr>';
   document.querySelectorAll('.modecard').forEach(m => m.onclick = () => { document.querySelectorAll('.modecard').forEach(x => { x.classList.toggle('on', x === m); x.querySelector('input').checked = x === m; }); });
   $('kinds').addEventListener('click', e => { const k = e.target.closest('.kindcard'); if (!k) return; document.querySelectorAll('.kindcard').forEach(x => x.classList.toggle('on', x === k)); kind = k.dataset.k; if (kind !== '용어') toast(`목업은 용어 예시로 진행합니다 — 실제로는 ${kind} 양식 열이 바뀝니다`, 'info'); });
   // ---- step 2
   $('pick').onclick = () => { file = true; $('filecard').hidden = false; render(); };
-  $('repick').onclick = () => { file = false; $('filecard').hidden = true; render(); };
+  // choosing another file starts a NEW batch — the previous batch's corrections, choices and reasons stay with it (CX10-01)
+  $('repick').onclick = () => {
+    if (B && canWrite && (B.draft || []).some(r => r.fixed || r.choice !== undefined || r.why2)) { toast(`새 파일은 새 업로드 묶음으로 검증합니다 — ${B.id}의 보정·선택은 그 묶음에 그대로 남습니다(업로드 이력에서 이어서 작업)`, 'info'); B = null; ROWS = JSON.parse(JSON.stringify(ROWS0)); undoStack = []; $('crumb').textContent = `기관 사전 · 표준${kind}`; $('saved').textContent = ''; }
+    file = false; $('filecard').hidden = true; render();
+  };
   $('cancel-val').onclick = () => { clearTimeout(timer); timer = null; cur = 3; render(); toast('검증을 취소했습니다', 'info'); };
   // ---- step 5 grid
   const cellV = (r, f) => {
@@ -218,7 +235,7 @@ window.pageInit = function () {
     const chips = [['', '전체', ROWS.length], ['new', '신규', c.new], ['chg', '변경', c.chg], ['same', '동일', c.same], ['waitSame', '동일 내용 대기', c.waitSame], ['waitDiff', '다른 내용 대기', c.waitDiff], ['conflict', '충돌', c.conflict], ['pick', '후보 선택', c.pick], ['pre', '선행 승인', c.pre], ['err', '오류', c.err], ['missing', '빠짐', c.missing]];
     $('chips').innerHTML = chips.map(([k, l, n]) => `<button class="chip ${filt === k ? 'on' : ''}" data-f="${k}">${l} <span class="n">${n}</span></button>`).join('') + `<span class="grow"></span><button class="btn sm" id="dl-err">오류 행 내려받기</button><button class="btn sm" id="dl-fix">보정본 내려받기</button>`;
     const errs = ROWS.filter(r => r.st === 'err'); const by = {}; errs.forEach(r => { by[r.rule] = (by[r.rule] || 0) + 1; });
-    const autos = errs.filter(r => r.auto);
+    const autos = errs.filter(r => r.auto && (!filt || r.st === filt) && (!ruleF || r.rule === ruleF));
     $('errbar').innerHTML = errs.length ? `<b style="color:var(--danger-deep)">오류 ${errs.length}</b>${Object.entries(by).map(([k, n]) => `<button data-rule="${k}" class="${ruleF === k ? 'on' : ''}"><span class="rule">${k}</span> ${RULES[k]} ${n}</button>`).join('')}<span class="grow"></span>${autos.length ? `<button id="auto-all">자동 수정 제안 ${autos.length}건 미리보기</button>` : ''}<button id="next-err">다음 오류 <kbd>F8</kbd></button>` : `<b style="color:var(--success-deep)">✓ 오류 없음</b> <span class="caption muted">보류·선택 행만 남았습니다</span>`;
     const L = ROWS.filter(r => (!filt || r.st === filt) && (!ruleF || r.rule === ruleF));
     $('grid-body').innerHTML = L.map(r => { const s = ST[r.st]; return `<tr class="click ${s[2]} ${sel === r.r ? 'sel' : ''}" data-r="${r.r}" tabindex="0"><td class="num">${r.r}</td><td><span class="st"><span class="badge ${s[1]}">${s[0]}</span>${r.warn ? '<span title="⚠ 경고 — 신청 시 확인 기록" aria-label="경고">⚠</span>' : ''}</span></td>${cellV(r, 'name')}${cellV(r, 'abbr')}${cellV(r, 'dom')}${cellV(r, 'desc')}<td class="wrap caption">${r.rule ? `<span class="rule">${r.rule}</span> ` : ''}${r.why}</td></tr>`; }).join('') || '<tr><td colspan="7" class="caption muted" style="text-align:center;padding:30px">이 조건의 행이 없습니다</td></tr>';
@@ -251,17 +268,23 @@ window.pageInit = function () {
     const mw = $('ms-why'); if (mw) mw.oninput = () => { r.why2 = mw.value; persist(); };
   }
   function pushUndo() { undoStack.push(JSON.stringify(ROWS)); }
-  function afterEdit(msg) { persist(); drawGrid(); const t = undoStack.length; toast(msg, 'success', { label: '실행 취소', fn: () => { if (undoStack.length !== t) { toast('이후 다른 보정이 있어 이 작업만 되돌릴 수 없습니다', 'info'); return; } ROWS = JSON.parse(undoStack.pop()); persist(); drawGrid(); toast('되돌렸습니다', 'info'); } }); }
+  // after a fix the keyboard user stays on the row they were working on (CL10 #10)
+  const focusSel = () => { const tr = document.querySelector(`#grid-body tr[data-r="${sel}"]`) || document.querySelector('#grid-body tr[data-r]'); if (tr) tr.focus(); };
+  function afterEdit(msg) { persist(); drawGrid(); focusSel(); const t = undoStack.length; toast(msg, 'success', { label: '실행 취소', fn: () => { if (undoStack.length !== t) { toast('이후 다른 보정이 있어 이 작업만 되돌릴 수 없습니다', 'info'); return; }
+    // undo restores the fix only — reasons typed afterwards (unuse reason) are kept (CX9-19)
+    const keep = Object.fromEntries(ROWS.filter(r => r.why2).map(r => [r.r, r.why2]));
+    ROWS = JSON.parse(undoStack.pop()); ROWS.forEach(r => { if (keep[r.r] !== undefined) r.why2 = keep[r.r]; }); persist(); drawGrid(); focusSel(); toast('되돌렸습니다', 'info'); } }); }
   function fixRow(r) {
     pushUndo(); r.fixed = {}; Object.entries(r.fix).forEach(([k, v]) => { r.fixed[k] = r.shown && k === 'desc' ? r.shown : r[k]; r[k] = v; });
     r.st = r.id ? 'chg' : 'new'; r.why = `보정됨(${r.rule}) — 파일 값과 다름`; r.rule = null; delete r.shown;
     afterEdit(`${r.r}행을 보정했습니다 — 다시 검증 통과`);
   }
   function revalidate(r, f, val) {
-    pushUndo(); r.fixed = r.fixed || {}; r.fixed[f] = r.shown && f === 'desc' ? r.shown : r[f]; r[f] = val; delete r.shown;
     const ok = f === 'dom' ? DOMS.includes(val) : f === 'name' ? !/\s/.test(val) : f === 'desc' ? (r.fix && val === r.fix.desc) || /^0\d+\b/.test(val) : true;
-    if (ok) { r.st = r.id ? 'chg' : 'new'; r.why = `보정됨(${r.rule}) — 다시 검증 통과`; r.rule = null; if (f === 'name' && r.fix && r.fix.abbr) r.abbr = r.fix.abbr; afterEdit(`${r.r}행 다시 검증 — 통과`); }
-    else { undoStack.pop(); toast(`${r.r}행: 아직 ${RULES[r.rule]} — ${f === 'dom' ? '사전에 있는 도메인을 쓰세요(예: 연월일C8)' : '규칙을 확인하세요'}`, 'danger'); drawGrid(); }
+    // a failed value is NOT kept in memory (it would ride along with the next good save — CX9-18); the cell shows the file value again
+    if (!ok) { toast(`${r.r}행: ‘${val}’은 아직 ${RULES[r.rule]} — ${f === 'dom' ? '사전에 있는 도메인을 쓰세요(예: 연월일C8)' : '규칙을 확인하세요'}. 파일 값으로 되돌렸습니다`, 'danger'); drawGrid(); focusSel(); return; }
+    pushUndo(); r.fixed = r.fixed || {}; r.fixed[f] = r.shown && f === 'desc' ? r.shown : r[f]; r[f] = val; delete r.shown;
+    r.st = r.id ? 'chg' : 'new'; r.why = `보정됨(${r.rule}) — 다시 검증 통과`; r.rule = null; if (f === 'name' && r.fix && r.fix.abbr) r.abbr = r.fix.abbr; afterEdit(`${r.r}행 다시 검증 — 통과`);
   }
   $('grid-body').addEventListener('click', e => { const tr = e.target.closest('tr[data-r]'); if (!tr || e.target.isContentEditable) return; sel = isNaN(+tr.dataset.r) ? tr.dataset.r : +tr.dataset.r; drawGrid(); });
   $('grid-body').addEventListener('focusout', e => { const td = e.target.closest('td[contenteditable]'); if (!td) return; const r = ROWS.find(x => String(x.r) === td.dataset.r); const v = td.textContent.trim(); const before = r.shown && td.dataset.f === 'desc' ? r.shown : r[td.dataset.f]; if (v && v !== before) revalidate(r, td.dataset.f, v); });
@@ -278,7 +301,8 @@ window.pageInit = function () {
     const rb = e.target.closest('#errbar [data-rule]'); if (rb) { ruleF = ruleF === rb.dataset.rule ? '' : rb.dataset.rule; filt = ''; drawGrid(); return; }
     if (e.target.closest('#next-err')) { nextErr(); return; }
     if (e.target.closest('#auto-all') && !canWrite) { toast('열람 전용이라 고칠 수 없습니다', 'info'); return; }
-    if (e.target.closest('#auto-all')) { const autos = ROWS.filter(r => r.st === 'err' && r.auto); if (!confirmAuto(autos)) return; pushUndo(); autos.forEach(r => { r.fixed = {}; Object.entries(r.fix).forEach(([k, v]) => { r.fixed[k] = r[k]; r[k] = v; }); r.st = 'new'; r.why = `자동 수정(${r.rule})`; r.rule = null; }); afterEdit(`자동 수정 ${autos.length}건 적용`); return; }
+    // "visible targets only" means exactly that: the same filter as the grid (CL9-15)
+    if (e.target.closest('#auto-all')) { const autos = ROWS.filter(r => r.st === 'err' && r.auto && (!filt || r.st === filt) && (!ruleF || r.rule === ruleF)); if (!autos.length) { toast('지금 보이는 행에는 자동 수정 대상이 없습니다 — 필터를 바꿔 보세요', 'info'); return; } if (!confirmAuto(autos)) return; pushUndo(); autos.forEach(r => { r.fixed = {}; Object.entries(r.fix).forEach(([k, v]) => { r.fixed[k] = r[k]; r[k] = v; }); r.st = 'new'; r.why = `자동 수정(${r.rule})`; r.rule = null; }); afterEdit(`자동 수정 ${autos.length}건 적용`); return; }
     if (e.target.closest('#dl-err')) { const n = ROWS.filter(r => r.st === 'err').length; toast(`오류행_${B ? B.id : ''}.xlsx — ${n}행, 칸 메모에 규칙·고치는 법`, 'info'); return; }
     if (e.target.closest('#dl-fix')) { const n = ROWS.filter(r => r.fixed).length; toast(`보정본_${B ? B.id : ''}.xlsx — 화면에서 고친 ${n}행 반영 + ‘변경점’ 시트(파일 값 → 보정 값). 엑셀 원본을 이것으로 맞추세요`, 'info'); return; }
   });
@@ -298,6 +322,10 @@ window.pageInit = function () {
       <tr><td>보류 (다른 신청 끝난 뒤 다시 검증)</td><td class="num mono">${p.hold.length}</td><td class="caption">${p.hold.map(r => r.name).join(', ') || '—'}</td></tr>
       <tr><td>제외 (동일·같은 내용 대기·현재 값 유지·빠짐 무시·남은 오류)</td><td class="num mono">${p.ex.length}</td><td class="caption">남은 오류 ${p.err} · 후보 미선택 ${p.pickLeft}</td></tr></tbody>`;
     $('selfnote').hidden = !ME.has('da');
+    // warnings are submittable but must be acknowledged; the acknowledgement travels with the row (CL9-16)
+    const w = p.sub.filter(r => r.warn);
+    $('ack6-w').hidden = !w.length;
+    $('ack6-t').innerHTML = w.length ? `경고 ${w.length}건을 확인했습니다 — ${w.map(r => `${r.r}행 ${r.name}: ${r.warn}`).join(' · ')}` : '';
   }
   // ---- wizard
   const names = ['방식·종류', '업로드', '열 매핑', '검증·비교', '결과 검토·보정', '신청'];
@@ -317,19 +345,32 @@ window.pageInit = function () {
       drawSubmit();
       // one submit-condition function: reason field + page blocks (never overridden by the reason rule — S3)
       nx.setAttribute('data-needs', 'why6');
-      setBlock(nx, p.unuseNoWhy ? '미사용 신청 행의 사유를 입력하세요(결과 검토 단계)' : (p.sub.length + p.unuse.length) === 0 ? '신청할 행이 없습니다' : '');
-    }
+      const blk = () => p.unuseNoWhy ? '미사용 신청 행의 사유를 입력하세요(결과 검토 단계)' : (p.sub.length + p.unuse.length) === 0 ? '신청할 행이 없습니다' : (p.sub.some(r => r.warn) && !$('ack6').checked) ? '경고 행을 확인했다고 표시하세요' : '';
+      setBlock(nx, blk());
+      $('ack6').onchange = () => setBlock(nx, blk());
+    } else { $('ack6-w').hidden = true; }
     updateNeeds();
   }
   $('prev').onclick = () => { if (cur > 1 && cur !== 4) { cur = cur === 5 ? 3 : cur - 1; render(); } };
   $('next').onclick = () => {
     if (cur === 6) {
       if (!canWrite || $('next').disabled) return;
-      const p = plan(); const n = p.sub.length + p.unuse.length; persist();
+      if (liveRoleChanged()) { staleRoleToast(); return; }
+      const p = plan(); const n = p.sub.length + p.unuse.length;
+      if (persist() === false) return;   // another tab changed the batch — do not submit from a stale copy
       // the document carries its own frozen copy of what was submitted (S1)
       const sub = { new: p.sub.filter(x => x.st === 'new').length, chg: p.sub.filter(x => x.st === 'chg').length, pick: p.sub.filter(x => x.st === 'pick').length, conflict: p.sub.filter(x => x.st === 'conflict').length, unuse: p.unuse.length, hold: p.hold.length, ex: p.ex.length };
-      const items = p.sub.map(x => ({ k: 'term', id: x.st === 'chg' || x.st === 'conflict' ? x.id : undefined, name: x.name, abbr: x.abbr, dom: x.dom, desc: x.desc, act: x.id && x.st !== 'new' ? '변경' : '추가', chg: x.old ? Object.fromEntries(Object.entries(x.old).map(([k, v]) => [k, [v, x[k]]])) : x.three && x.choice === 'file' ? { 설명: [x.three.cur, x.three.file] } : undefined })).concat(p.unuse.map(x => ({ id: x.id, name: x.name, act: '미사용' })));
-      const r = createDoc({ type: 'dict', kind: 'excel', batch: B.id, key: 'batch:' + B.id + ':' + (B.docs || []).length, n, title: `엑셀 일괄 — 용어 ${n}건 (${B.file})`, reason: $('why6').value.trim(), sub, items });
+      // every submitted row keeps its own decision: changed fields, chosen decomposition, unuse reason, acknowledged warning (S1)
+      const LBL = { name: '용어명', abbr: '영문약어명', dom: '도메인', desc: '설명' };
+      const items = p.sub.map(x => {
+        const pk = x.st === 'pick' ? x.cands[x.choice] : null;
+        const abbr = pk ? pk.split(' · ')[1] : x.abbr;
+        const isChg = x.id && x.st !== 'new';
+        const chg = x.old ? Object.fromEntries(Object.entries(x.old).map(([k, v]) => [LBL[k] || k, [v, x[k]]])) : x.three && x.choice === 'file' ? { 설명: [x.three.cur, x.three.file] } : undefined;
+        return { k: 'term', row: x.r, id: isChg ? x.id : undefined, name: x.name, abbr, dom: x.dom, desc: x.desc, act: isChg ? '변경' : '추가', chg, pick: pk ? pk.split(' · ')[0] + (x.choice === 1 ? ' (1음절 의심 — 확인 후 선택)' : '') : undefined, warn: x.warn, from: x.fixed ? `화면에서 보정: ${Object.keys(x.fixed).map(k => LBL[k] || k).join('·')}` : undefined };
+      }).concat(p.unuse.map(x => ({ k: 'term', row: x.r, id: x.id, name: x.name, act: '미사용', why: x.why2 })));
+      const r = createDoc({ type: 'dict', kind: 'excel', batch: B.id, baseline: B.baseline, key: 'batch:' + B.id + ':' + (B.docs || []).length, n, title: `엑셀 일괄 — 용어 ${n}건 (${B.file})`, reason: $('why6').value.trim(), sub, items });
+      if (r.conflict) { toast(`진행 중인 다른 신청과 겹치는 행이 있습니다 — ${r.conflict.join(', ')}. 결과 검토에서 그 행을 다시 확인하세요`, 'danger'); return; }
       batches = getBatches(); const b = batches.find(x => x.id === B.id); b.status = '신청됨'; b.docs = (b.docs || []).concat(r.dup ? [] : [r.doc.id]); b.counts = counts();
       // what was actually submitted — the approval document reads exactly this (single source)
       b.sub = { new: p.sub.filter(x => x.st === 'new').length, chg: p.sub.filter(x => x.st === 'chg').length, pick: p.sub.filter(x => x.st === 'pick').length, conflict: p.sub.filter(x => x.st === 'conflict').length, unuse: p.unuse.length, hold: p.hold.length, ex: p.ex.length };

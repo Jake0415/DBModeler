@@ -77,6 +77,10 @@ window.pageInit = function () {
   let sel = 0;
   const loadDone = () => { try { return JSON.parse(dbmStore.get('dbm-cands', 'null')) || { 0: '신청 전환 · REQ-2026-0012' }; } catch (e) { return { 0: '신청 전환 · REQ-2026-0012' }; } };
   const done = loadDone();   // candidate state persists and matches the documents (수령자 → REQ-0012)
+  // a conversion follows its document: rejected / withdrawn → the candidate is open again (CX9-25)
+  const docsNow = getDocs(); const reopened = [];
+  Object.keys(done).forEach(i => { const m = done[i].match(/REQ-\d{4}-\d{4}/); const d = m && docsNow.find(x => x.id === m[0]); if (d && ['rejected', 'withdrawn'].includes(d.step)) { reopened.push(`${C[i].name}(${d.id} ${STEP_NAME[d.step]})`); delete done[i]; } else if (d) done[i] = `${d.step === 'done' ? '등록 완료' : '신청 전환'} · ${d.id}`; });
+  if (reopened.length) { dbmStore.set('dbm-cands', JSON.stringify(done)); setTimeout(() => toast(`연결 신청이 반려·회수돼 다시 처리할 후보: ${reopened.join(', ')}`, 'info'), 200); }
   Object.keys(done).forEach(i => { const row = document.querySelector(`tbody tr[data-c="${i}"]`); if (row) { row.lastElementChild.innerHTML = `<span class="badge">${done[i].split(' · ')[0]}</span>`; row.style.opacity = '.55'; } });
   const reqs = c => [...new Set(c.loc.map(l => l[2]))];
   function panel() {
@@ -90,8 +94,11 @@ window.pageInit = function () {
     const dm = done[sel] && done[sel].match(/REQ-\d{4}-\d{4}/);
     $('cd-foot').innerHTML = done[sel] ? `<span class="badge b-success">✓ ${done[sel]}</span>${dm ? ` <a class="btn sm" href="approvals.html?doc=${dm[0]}">결재 보기</a>` : ''}<span class="grow"></span>` : `<button class="btn danger sm" data-open="mo-crej">반려</button>${c.sim ? '<button class="btn sm" data-open="mo-cstd">기존 표준어 사용 안내</button>' : ''}<span class="grow"></span><button class="btn primary sm" id="cv-go">${c.t} 신청으로 전환</button>`;
     const cv = $('cv-go'); if (cv) cv.onclick = () => {
-      const r = createDoc({ type: 'dict', title: `${c.t} '${c.name}' 등록 (후보 전환)`, n: 1, reason: `후보 큐 ${c.loc.length}건 발생`, cc: reqs(c), items: [{ k: c.t === '단어' ? 'word' : 'term', name: c.name, abbr: c.abbr }] });
-      closeCand(`신청 전환 · ${r.doc.id}`, `${r.doc.id}로 ${c.t} 신청을 만들었습니다 — 승인되면 사용처에 재검토 알림`, 'success');
+      if (liveRoleChanged()) { staleRoleToast(); return; }
+      // same candidate converted from two tabs → one document (key), and the dictionary/open requests are checked at write time
+      const r = createDoc({ type: 'dict', title: `${c.t} '${c.name}' 등록 (후보 전환)`, n: 1, reason: `후보 큐 ${c.loc.length}건 발생`, cc: reqs(c), key: `cand:${c.name}`, items: [{ k: c.t === '단어' ? 'word' : 'term', name: c.name, abbr: c.abbr, act: '추가', from: `후보 · 발생 위치 ${c.loc.length}곳` }] });
+      if (r.conflict) { toast(`이미 진행 중인 신청이 있습니다 — ${r.conflict.join(', ')}`, 'danger'); return; }
+      closeCand(`신청 전환 · ${r.doc.id}`, r.dup ? `이미 ${r.doc.id}로 전환돼 있습니다` : `${r.doc.id}로 ${c.t} 신청을 만들었습니다 — 승인되면 사용처에 재검토 알림`, 'success');
     };
     $('crej-t').textContent = `후보 반려 · ${c.name}`;
     document.querySelector('#mo-crej .m-body .caption').innerHTML = `발생 위치 ${c.loc.length}곳의 요청자 <b>${reqs(c).map(u => USERS[u].name).join(' · ')}</b>에게 앱 알림이 갑니다. 해당 속성은 미준수로 남습니다.`;

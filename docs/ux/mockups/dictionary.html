@@ -118,7 +118,7 @@
         <div class="hr"></div>
         <div class="section-t">대기 목록 <span class="badge" id="q-n">0</span> <span class="caption muted">신청하면 이 목록 그대로 결재 문서가 됩니다</span></div>
         <table class="tbl"><thead><tr><th>종류</th><th>이름</th><th>약어 · 내용</th><th>검사</th><th></th></tr></thead><tbody id="q-body"></tbody></table>
-        <div class="field" style="margin-top:12px"><label for="rq-why">신청 사유 * <span class="faint">1~1,000자</span></label><textarea class="input" id="rq-why" rows="2">요구사항관리 산출물 제출 관리 기능 추가</textarea></div>
+        <div class="field" style="margin-top:12px"><label for="rq-why">신청 사유 * <span class="faint">1~1,000자</span></label><textarea class="input" id="rq-why" rows="2" placeholder="예: 요구사항관리 산출물 제출 관리 기능 추가"></textarea></div>
         <div class="section-t">결재선</div>
         <div class="approval-line">
           <div class="al-step"><span class="pt"></span><div><b>DA 승인</b> <span class="caption faint">필수 · 템플릿</span><div class="caption muted" id="da-cnt"></div></div></div>
@@ -149,25 +149,6 @@ window.pageInit = function () {
   const q0 = new URLSearchParams(location.search);
   // dictionary items (mock): versions, history, synonyms, forbidden words, past names
   const I = getDict();   // v6: items come from the shared state layer (approvals update versions/pending) — the literal below is only the old seed
-  const I_SEED_UNUSED = [
-    { id: 'W-0102', k: 'word', kn: '단어', src: '기관', st: '사용', name: '산출물', abbr: 'DLVRBL', dom: '—', eng: 'deliverable', desc: '사업 수행 결과로 제출하는 문서·코드·모델 등', ver: 2, cha: 12, dt: '2026-11-14', use: 5, syn: ['납품물', '결과물'], forbid: ['산출서'], old: ['산출물품'],
-      hist: [{ v: 'V2', at: '2026-11-14 18:00', act: '변경', doc: 'REQ-2026-0005', by: '김모델 → 이데이터(DA) → 이현업', why: '영문명 정비', diff: [['영문명', 'output', 'deliverable'], ['단어명', '산출물품', '산출물']] }, { v: 'V1', at: '2026-11-03 10:00', act: '초기 적재', doc: '—', by: '이데이터', why: '기관 단어 초기 적재', diff: [] }] },
-    { id: 'W-0001', k: 'word', kn: '단어', src: '공통', st: '사용', name: '산출', abbr: 'PRDC', dom: '—', eng: 'produce', desc: '', ver: 1, cha: 3, dt: '2025-11-30', use: 2, syn: [], forbid: [], old: [], hist: [{ v: 'V1', at: '2025-11-30', act: '공통표준 적재', doc: '—', by: '시스템', why: '공통표준 2025.11', diff: [] }] },
-    { id: 'W-0002', k: 'word', kn: '단어', src: '공통', st: '사용', name: '산출근거', abbr: 'CALC_BASIS', dom: '—', eng: 'calculation basis', desc: '', ver: 1, cha: 3, dt: '2025-11-30', use: 0, syn: [], forbid: [], old: [], hist: [] },
-    { id: 'T-0410', k: 'term', kn: '용어', src: '기관', st: '사용', name: '산출물ID', abbr: 'DLVRBL_ID', dom: 'ID V10', dg: '번호', eng: '산출물 식별자', ver: 1, cha: 12, dt: '2026-11-17', use: 2, syn: [], forbid: [], old: [], hist: [{ v: 'V1', at: '2026-11-17 11:58', act: '추가', doc: 'REQ-2026-0007', by: '김모델(자기 승인)', why: '산출물 테이블 표준화', diff: [] }] },
-    { id: 'T-0411', k: 'term', kn: '용어', src: '기관', st: '사용', name: '산출물명', abbr: 'DLVRBL_NM', dom: '명V100', dg: '명칭', eng: '산출물의 이름', ver: 1, cha: 12, dt: '2026-11-17', use: 1, syn: [], forbid: [], old: [], hist: [] },
-    { id: 'T-0415', k: 'term', kn: '용어', src: '기관', st: '사용', name: '산출물유형코드', abbr: 'DLVRBL_TYPE_CD', dom: '코드C2', dg: '코드', eng: '산출물 유형 구분', ver: 2, cha: 12, dt: '2026-11-15', use: 1, syn: [], forbid: [], old: ['산출물구분코드'],
-      hist: [{ v: 'V2', at: '2026-11-15 09:10', act: '변경', doc: 'REQ-2026-0005', by: '김모델 → 이현업', why: '구분 → 유형으로 통일', diff: [['용어명', '산출물구분코드', '산출물유형코드'], ['영문약어명', 'DLVRBL_SE_CD', 'DLVRBL_TYPE_CD']] }, { v: 'V1', at: '2026-11-03 10:00', act: '초기 적재', doc: '—', by: '이데이터', why: '', diff: [] }] },
-    { id: 'T-0430', k: 'term', kn: '엔터티 용어', src: '기관', st: '신청 중', name: '산출물기본', abbr: 'DLVRBL_M', dom: '엔터티 용어', eng: '산출물 기본 정보 테이블', ver: 0, cha: null, dt: '2026-11-17', use: 1, syn: [], forbid: [], old: [], pending: 'REQ-2026-0013', hist: [] },
-    { id: 'T-0021', k: 'term', kn: '용어', src: '공통', st: '사용', name: '산출근거내용', abbr: 'CALC_BASIS_CN', dom: '내용V1000', dg: '명칭', eng: '산출 근거 설명', ver: 1, cha: 3, dt: '2025-11-30', use: 0, syn: [], forbid: [], old: [], hist: [] },
-    { id: 'T-0022', k: 'term', kn: '용어', src: '공통', st: '사용', name: '산출일자', abbr: 'PRDC_YMD', dom: '연월일C8', dg: '날짜', eng: '산출한 날짜', ver: 1, cha: 3, dt: '2025-11-30', use: 0, syn: [], forbid: [], old: [], hist: [] },
-    { id: 'D-0031', k: 'domain', kn: '도메인', src: '기관', st: '사용', name: '코드C2', abbr: 'CD_C2', dom: '코드 · CHAR(2)', dg: '코드', eng: '2자리 코드', ver: 1, cha: 12, dt: '2026-11-17', use: 9, syn: [], forbid: [], old: [], pending: 'REQ-2026-0010', hist: [] },
-    { id: 'D-0002', k: 'domain', kn: '도메인', src: '공통', st: '사용', name: '금액N15', abbr: 'AMT_N15', dom: '금액 · NUMERIC(15)', dg: '금액·수량', eng: '금액', ver: 1, cha: 3, dt: '2025-11-30', use: 4, syn: [], forbid: [], old: [], hist: [] },
-    { id: 'W-0099', k: 'word', kn: '단어', src: '기관', st: '미사용', name: '산출서', abbr: 'CALC_DOC', dom: '—', eng: '산출물로 통합', ver: 2, cha: 12, dt: '2026-10-02', use: 0, syn: [], forbid: [], old: [], hist: [{ v: 'V2', at: '2026-10-02 14:20', act: '미사용', doc: 'REQ-2026-0001', by: '이데이터', why: '산출물로 통합', diff: [['사용상태', '사용', '미사용']] }] },
-    { id: 'W-0003', k: 'word', kn: '단어', src: '공통', st: '사용', name: '산출내역', abbr: 'CALC_DTLS', dom: '—', eng: 'calculation details', ver: 1, cha: 3, dt: '2025-11-30', use: 0, syn: [], forbid: [], old: [], hist: [] },
-    { id: 'C-0005', k: 'code', kn: '코드', src: '기관', st: '사용', name: '산출물유형', abbr: 'DLVRBL_TYPE', dom: '코드C2', dg: '코드', eng: '문서·코드·모델·기타', ver: 1, cha: 12, dt: '2026-11-17', use: 1, syn: [], forbid: [], old: [], hist: [] },
-    { id: 'W-0210', k: 'word', kn: '단어', src: '공통', st: '사용', name: '수신자', abbr: 'RCVR', dom: '—', eng: 'receiver', ver: 1, cha: 3, dt: '2025-11-30', use: 3, syn: ['수취인'], forbid: ['수령인'], old: [], hist: [] }
-  ];
   const pub = getPub();
   $('dictver').textContent = `공통표준 2025.11 · 기관 사전 제정 ${pub.cha}차 (${pub.at.slice(5, 10).replace('-', '/')} 공표)`;
   // Korean initial-consonant search
@@ -219,7 +200,7 @@ window.pageInit = function () {
         <h2 style="margin-top:8px">${it.name}</h2><div class="rp-sub">${it.abbr} · ${it.eng || ''} · <span class="mono">${it.id}</span></div></div>
       <div class="rp-body">
         ${common ? '<div class="banner" style="margin-bottom:10px"><span>ℹ</span><div><b>공통 표준</b> — 읽기 전용입니다. 기관에서 바꿀 수 없습니다.</div></div>' : ''}
-        <dl class="kv"><dt>영문약어명</dt><dd class="mono">${it.abbr}</dd><dt>도메인 / 형식</dt><dd class="mono">${it.dom}</dd><dt>이음동의어</dt><dd>${it.syn.join(', ') || '—'}</dd><dt>금칙어</dt><dd>${it.forbid.join(', ') || '—'}</dd>${it.old.length ? `<dt>과거 이름</dt><dd>${it.old.join(', ')}</dd>` : ''}<dt>설명</dt><dd>${it.desc || it.eng || '—'}</dd>
+        <dl class="kv"><dt>영문약어명</dt><dd class="mono">${it.abbr}</dd><dt>도메인 / 형식</dt><dd class="mono">${it.dom}</dd>${it.allow ? `<dt>허용 값</dt><dd class="mono">${it.allow}</dd>` : ''}<dt>이음동의어</dt><dd>${it.syn.join(', ') || '—'}</dd><dt>금칙어</dt><dd>${it.forbid.join(', ') || '—'}</dd>${it.old.length ? `<dt>과거 이름</dt><dd>${it.old.join(', ')}</dd>` : ''}<dt>설명</dt><dd>${it.desc || it.eng || '—'}</dd>
           <dt>항목 버전</dt><dd class="mono">${it.ver ? 'V' + it.ver : '— (미승인)'}</dd><dt>제정차수</dt><dd class="mono">${it.cha ? it.cha + '차' + (common ? ' (공통 원문)' : '') : '—'}</dd><dt>변경일</dt><dd class="mono">${it.dt}</dd></dl>
         <div class="tabs"><button class="on" data-tab="hist">이력 <span class="n">${it.hist.length}</span></button><button data-tab="use">사용처 <span class="n">${it.use}</span></button><button data-tab="req">진행 중 신청 <span class="n">${it.pending ? 1 : 0}</span></button></div>
         <div class="pane on" data-pane="hist">${hist}</div>
@@ -253,20 +234,28 @@ window.pageInit = function () {
   if (location.hash === '#download') setTimeout(() => $('b-dl').click(), 200);
   // publish (DA, W1 minimal)
   if (ME.has('da')) $('b-pub').hidden = false;
+  let pubTarget = '';
   $('b-pub').onclick = () => {
     // count ITEMS (an item changed twice counts once), never the publication rows themselves (CL8-02)
     const ch = getChanges().filter(c => !c.pub && c.act !== '공표');
-    const last = {}; ch.forEach(c => { const key = c.itemId || c.item; if (!last[key]) last[key] = c; });
-    const by = { 추가: 0, 변경: 0, 미사용: 0 }; Object.values(last).forEach(c => { const k = c.act.includes('미사용') ? '미사용' : c.act.includes('변경') ? '변경' : '추가'; by[k]++; });
+    // classify against the LAST publication: an item first added since then is '추가' even if it was changed again afterwards (CX9-23)
+    const per = {}; ch.forEach(c => { const key = c.itemId || c.item; (per[key] = per[key] || []).push(c); });
+    const last = {}; Object.entries(per).forEach(([k, L]) => { last[k] = L[0]; });
+    const by = { 추가: 0, 변경: 0, 미사용: 0 }; Object.values(per).forEach(L => { const k = L[0].act.includes('미사용') ? '미사용' : L.some(c => c.firstVer || c.act === '추가') ? '추가' : '변경'; by[k]++; });
+    const noId = ch.filter(c => !c.itemId).length;
+    pubTarget = ch.map(c => c.at + '|' + c.item + '|' + c.doc).join('\n');   // the set the DA confirmed — publishing checks it is unchanged
     $('pub-t').textContent = `제정 ${pub.cha + 1}차 공표`;
     $('pub-sum').innerHTML = `<div class="grid3"><div class="card"><div class="caption muted">추가</div><div class="mono" style="font-size:20px">${by.추가}</div></div><div class="card"><div class="caption muted">변경</div><div class="mono" style="font-size:20px">${by.변경}</div></div><div class="card"><div class="caption muted">미사용</div><div class="mono" style="font-size:20px">${by.미사용}</div></div></div>
-      <div class="caption muted" style="margin-top:8px">직전 공표: 제정 ${pub.cha}차 · ${pub.at} · ${pub.by} — 그 뒤 승인된 <b>항목 ${Object.keys(last).length}개</b>(변경 기록 ${ch.length}건)가 대상입니다. 진행 중 신청은 포함하지 않습니다. <a href="dict-history.html?unpub=1">대상 목록 보기</a></div>`;
+      <div class="caption muted" style="margin-top:8px">직전 공표: 제정 ${pub.cha}차 · ${pub.at} · ${pub.by} — 그 뒤 승인된 <b>항목 ${Object.keys(last).length}개</b>(변경 기록 ${ch.length}건${noId ? ` · 그중 항목 ID 없는 집계 기록 ${noId}건은 차수만 기록` : ''})가 대상입니다. 진행 중 신청은 포함하지 않습니다. <a href="dict-history.html?unpub=1">대상 목록 보기</a></div>`;
     $('pub-why').value = ''; $('mo-pub').classList.add('open');
     setBlock($('pub-go'), Object.keys(last).length ? '' : '직전 공표 이후 승인된 변경이 없어 공표할 수 없습니다');
   };
   $('pub-go').onclick = () => {
     if ($('pub-go').disabled) return;
+    if (liveRoleChanged()) { staleRoleToast(); return; }
     if (getPub().cha !== pub.cha) { toast('그사이 다른 DA가 공표했습니다 — 새로고침 후 다시 확인하세요', 'danger'); return; }   // race on the revision number
+    const nowSet = getChanges().filter(c => !c.pub && c.act !== '공표').map(c => c.at + '|' + c.item + '|' + c.doc).join('\n');
+    if (nowSet !== pubTarget) { toast('확인한 뒤에 공표 대상이 바뀌었습니다(새 승인 반영) — 요약을 다시 보여 드립니다', 'danger'); $('b-pub').click(); return; }
     const ch = getChanges(); const np = { cha: pub.cha + 1, at: '2026-' + nowStr().replace('/', '-'), by: ME.name, why: $('pub-why').value.trim() };
     const dict = getDict(); ch.forEach(c => { if (!c.pub && c.act !== '공표') { c.pub = np.cha; const d = dict.find(x => x.id === c.itemId); if (d) d.cha = np.cha; } }); saveDict(dict); ch.unshift({ at: np.at, item: `제정 ${np.cha}차 공표`, kind: '사전', act: '공표', ver: '—', doc: '—', by: ME.name, diff: np.why, pub: np.cha });
     saveChanges(ch); savePub(np); $('mo-pub').classList.remove('open');
@@ -278,31 +267,53 @@ window.pageInit = function () {
   $('da-cnt').textContent = `DA 역할 ${da}명 중 먼저 처리`; $('ow-cnt').textContent = `기관 담당자 역할 ${ow}명`;
   // request queue: what the user adds is exactly what the document will contain (S2)
   const queue = []; let dupWhy = '';
+  const chgOf = it => (it.chg && Object.values(it.chg)[0]) || ['', ''];   // the single changed field of a change row
   const similar = it => it.k === 'word' && I.some(x => x.k === 'word' && x.abbr !== it.abbr && (x.abbr.startsWith(it.abbr.slice(0, 4)) || it.abbr.startsWith(x.abbr.slice(0, 4))));
   function drawQueue() {
     $('q-n').textContent = queue.length;
     const needDup = queue.some(similar);
-    $('q-body').innerHTML = queue.length ? queue.map((it, i) => `<tr><td>${{ word: '단어', term: '용어', domain: '도메인' }[it.k] || '변경'}${it.act === '변경' ? ' · 변경' : ''}</td><td>${it.name}</td><td class="mono">${it.act === '변경' ? `<input class="input" data-chg="${i}" aria-label="${it.name} 새 설명" value="${it.chg ? it.chg['설명'][1] : ''}" placeholder="새 설명">` : (it.abbr || '')}</td><td>${similar(it) ? '<span class="badge b-warning">📝 약어 중복 사유 필요</span>' : '<span class="badge b-success">통과</span>'}</td><td><button class="btn ghost sm" data-del="${i}" aria-label="${it.name} 목록에서 빼기">빼기</button></td></tr>`).join('')
+    $('q-body').innerHTML = queue.length ? queue.map((it, i) => `<tr><td>${it.act === '변경' ? '변경' : ({ word: '단어', term: '용어', domain: '도메인' }[it.k] || '항목')}</td><td>${it.name}</td><td class="mono">${it.act === '변경' ? `<input class="input" data-chg="${i}" aria-label="${it.name} 새 설명" value="${it.chg ? chgOf(it)[1] : ''}" placeholder="새 설명">` : (it.abbr || '')}</td><td>${similar(it) ? '<span class="badge b-warning">📝 약어 중복 사유 필요</span>' : '<span class="badge b-success">통과</span>'}</td><td><button class="btn ghost sm" data-del="${i}" aria-label="${it.name} 목록에서 빼기">빼기</button></td></tr>`).join('')
       + (needDup ? `<tr><td colspan="5"><label for="dup-why" class="caption">약어 중복 허용 사유 * <span class="faint">비슷한 기존 약어가 있습니다</span></label><textarea class="input" id="dup-why" rows="2">${dupWhy}</textarea></td></tr>` : '')
       : '<tr><td colspan="5" class="caption muted" style="text-align:center;padding:16px">위에서 입력하고 [목록에 추가]를 누르세요</td></tr>';
     const go = $('rq-go'); go.textContent = queue.length ? `${queue.length}건 신청` : '신청';
     go.dataset.needs = 'rq-why' + (needDup ? ' dup-why' : '');
-    setBlock(go, queue.length ? (queue.some(it => it.act === '변경' && !(it.chg && it.chg['설명'][1].trim())) ? '변경 행의 새 값을 입력하세요' : '') : '대기 목록이 비어 있습니다');
+    setBlock(go, queue.length ? (queue.some(it => it.act === '변경' && !(it.chg && chgOf(it)[1].trim())) ? '변경 행의 새 값을 입력하세요' : '') : '대기 목록이 비어 있습니다');
   }
-  const add = it => { if (queue.some(q => q.name === it.name && q.k === it.k)) { toast(`‘${it.name}’은 이미 목록에 있습니다`, 'info'); return; } if (it.k !== 'chg' && I.some(x => x.name === it.name && x.src === '기관' && it.act !== '변경')) { toast(`‘${it.name}’은 이미 기관 사전에 있습니다 — 변경 신청을 쓰세요`, 'danger'); return; } queue.push(it); drawQueue(); toast(`‘${it.name}’을 대기 목록에 추가했습니다`); };
-  $('add-term').onclick = () => add({ k: 'term', name: $('tm-name').value.trim(), abbr: $('tm-abbr').value, dom: $('tm-dom').value, desc: $('tm-desc').value });
-  $('add-word').onclick = () => add({ k: 'word', name: $('wd-name').value.trim(), abbr: $('wd-abbr').value.trim(), eng: $('wd-eng').value });
-  $('add-domain').onclick = () => add({ k: 'domain', name: $('dm-name').textContent, abbr: '', dom: $('dm-phys').textContent });
+  // the form's own validation also gates [목록에 추가] (CX9-14 · CX10-03): no empty name/abbr, no invalid domain, no name already in the dictionary or in an open request
+  const add = it => {
+    const fail = (msg, fid) => { toast(msg, 'danger'); if (fid && $(fid)) { $(fid).setAttribute('aria-invalid', 'true'); $(fid).focus(); } };
+    if (!it.name || it.name === '—') return fail(it.k === 'domain' ? '도메인 규격이 올바르지 않습니다 — 길이는 1 이상 정수' : `${{ term: '용어명', word: '단어명' }[it.k]}을 입력하세요`, { term: 'tm-name', word: 'wd-name', domain: 'dm-len' }[it.k]);
+    if (it.k === 'word' && !it.abbr) return fail('영문약어명을 입력하세요', 'wd-abbr');
+    if (it.k === 'word' && it.abbr.length > 6) return fail('영문약어명은 6자 이내입니다', 'wd-abbr');
+    if (it.k === 'term' && (!it.abbr || it.abbr === '—')) return fail('분해 후보를 골라 약어를 정하세요', 'tm-name');
+    if (queue.some(q => q.name === it.name && q.k === it.k)) { toast(`‘${it.name}’은 이미 목록에 있습니다`, 'info'); return; }
+    const ex = getDict().find(x => x.name === it.name && x.k === it.k && x.ver > 0);
+    if (ex) return fail(`‘${it.name}’은 이미 ${ex.src} 사전에 있습니다(${ex.id}) — ${ex.src === '기관' ? '변경 신청을 쓰세요' : '공통 표준을 쓰세요'}`);
+    const op = openItems().find(x => x.it.name === it.name && x.it.act !== '미사용');
+    if (op) return fail(`‘${it.name}’은 ${op.doc}에서 신청 중입니다 — 그 결재가 끝난 뒤 신청하세요`);
+    [ 'tm-name', 'wd-name', 'wd-abbr', 'dm-len' ].forEach(id => $(id) && $(id).setAttribute('aria-invalid', 'false'));
+    queue.push(it); drawQueue(); toast(`‘${it.name}’을 대기 목록에 추가했습니다`);
+  };
+  // the chosen decomposition decides the abbreviation (CL9-17)
+  const pickAbbr = () => { const c = document.querySelector('#pn-request [data-rq="term"] .cand.on .mono'); return c ? c.textContent.trim() : $('tm-abbr').value; };
+  document.querySelector('#pn-request [data-rq="term"]').addEventListener('click', e => { if (e.target.closest('.cand')) setTimeout(() => { $('tm-abbr').value = pickAbbr(); }, 0); });
+  $('add-term').onclick = () => add({ k: 'term', name: $('tm-name').value.trim(), abbr: pickAbbr(), dom: $('tm-dom').value, desc: $('tm-desc').value.trim(), from: '분해: ' + ((document.querySelector('#pn-request [data-rq="term"] .cand.on .grow') || {}).textContent || '') });
+  $('add-word').onclick = () => add({ k: 'word', name: $('wd-name').value.trim(), abbr: $('wd-abbr').value.trim().toUpperCase(), eng: $('wd-eng').value.trim() });
+  $('add-domain').onclick = () => add({ k: 'domain', name: $('dm-name').textContent, abbr: '', dom: $('dm-phys').textContent, dupOk: $('dm-dup').classList.contains('b-success') });
   $('q-body').addEventListener('click', e => { const d = e.target.closest('[data-del]'); if (d) { queue.splice(+d.dataset.del, 1); drawQueue(); } });
-  $('q-body').addEventListener('input', e => { if (e.target.id === 'dup-why') { dupWhy = e.target.value; updateNeeds(); } const c = e.target.dataset.chg; if (c !== undefined) { const it = queue[+c]; it.chg['설명'][1] = e.target.value; setBlock($('rq-go'), queue.some(x => x.act === '변경' && !x.chg['설명'][1].trim()) ? '변경 행의 새 값을 입력하세요' : ''); } });
+  $('q-body').addEventListener('input', e => { if (e.target.id === 'dup-why') { dupWhy = e.target.value; updateNeeds(); } const c = e.target.dataset.chg; if (c !== undefined) { const it = queue[+c]; chgOf(it)[1] = e.target.value; setBlock($('rq-go'), queue.some(x => x.act === '변경' && !chgOf(x)[1].trim()) ? '변경 행의 새 값을 입력하세요' : ''); } });
   // [변경 신청] from the detail panel puts the selected item into the queue as a change
   document.addEventListener('click', e => { const b = e.target.closest('#pn-detail [data-open="pn-request"]'); if (!b) return; const it = I.find(x => x.id === sel); if (it && !queue.some(q => q.id === it.id)) { queue.push({ k: 'chg', id: it.id, name: it.name, act: '변경', chg: { 설명: [it.desc || it.eng || '', ''] } }); drawQueue(); } });
   $('rq-go').onclick = () => {
     if ($('rq-go').disabled) return;
-    const items = queue.map(it => it.act === '변경' ? { id: it.id, name: it.name, act: '변경', chg: it.chg, set: { desc: it.chg['설명'][1] } } : it);
+    if (liveRoleChanged()) { staleRoleToast(); return; }
+    // the duplicate reason belongs to the rows that need it — only serialised while such a row is still in the queue (CX9-15)
+    const needDup = queue.some(similar);
+    const items = queue.map(it => it.act === '변경' ? { k: getDict().find(x => x.id === it.id)?.k, id: it.id, name: it.name, act: '변경', chg: it.chg } : Object.assign({ act: '추가' }, it, needDup && similar(it) ? { why: `약어 중복 허용 — ${dupWhy}` } : {}));
     const title = `${queue[0].name}${queue.length > 1 ? ` 외 ${queue.length - 1}건` : ''} ${queue.every(q => q.act === '변경') ? '변경' : '등록'}`;
-    const r = createDoc({ type: 'dict', title, n: queue.length, reason: $('rq-why').value.trim() + (dupWhy ? ` · 중복 사유: ${dupWhy}` : ''), cc: ['hyun'], items });
-    location.href = `approvals.html?new=1&doc=${r.doc.id}`;
+    const r = createDoc({ type: 'dict', title, n: queue.length, reason: $('rq-why').value.trim(), cc: ['hyun'], items });
+    if (r.conflict) { toast(`다른 신청이 먼저 들어왔습니다 — ${r.conflict.join(', ')}. 그 항목을 목록에서 빼고 다시 신청하세요`, 'danger'); return; }
+    location.href = `approvals.html?new=1&doc=${r.doc.id}${r.dup ? '&dup=1' : ''}`;
   };
   drawQueue();
   const panel = $('pn-request');
@@ -321,6 +332,17 @@ window.pageInit = function () {
   };
   ['dm-fw', 'dm-type', 'dm-len'].forEach(id => { const el = $(id); el.addEventListener('input', upd); el.addEventListener('change', upd); });
   if (q0.get('req') === 'domain') { $('pn-detail').classList.remove('open'); panel.classList.add('open'); panel.querySelector('[data-rq="domain"].chip').click(); }
+  // ?redo=REQ-… : re-request after rejection/withdrawal starts from the submitted items and reason (CL10-03)
+  if (q0.get('redo')) {
+    const d = getDocs().find(x => x.id === q0.get('redo'));
+    if (d && d.req === ME.id && ['rejected', 'withdrawn'].includes(d.step)) {
+      (d.items || []).forEach(it => queue.push(it.act === '변경' ? { k: 'chg', id: it.id, name: it.name, act: '변경', chg: JSON.parse(JSON.stringify(it.chg || { 설명: ['', ''] })) } : Object.assign({}, it)));
+      $('rq-why').value = d.reason || ''; drawQueue();
+      const last = (d.hist || []).slice(-1)[0];
+      $('pn-detail').classList.remove('open'); panel.classList.add('open');
+      panel.querySelector('.rp-body').insertAdjacentHTML('afterbegin', `<div class="banner warning" style="margin-bottom:10px"><span>!</span><div><b>${d.id} 보완해서 다시 신청</b> — ${STEP_NAME[d.step]}${last && last.why ? ` · 의견: ${last.why}` : ''}. 아래 대기 목록은 그 문서의 항목입니다. 고친 뒤 신청하면 <b>새 신청번호</b>가 만들어집니다.</div></div>`);
+    } else if (d) toast(`${d.id}는 내가 보완할 수 있는 상태가 아닙니다(${STEP_NAME[d.step]})`, 'info');
+  }
   if (q0.get('q')) $('q').value = q0.get('q');
   draw();
 };

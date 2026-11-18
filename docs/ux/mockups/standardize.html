@@ -40,12 +40,12 @@
         <table class="tbl">
           <thead><tr><th><input type="checkbox" id="sd-all" aria-label="처리 가능한 행 모두 선택"></th><th>상태</th><th>테이블</th><th>현재 이름</th><th>현재 물리명</th><th></th><th>제안 용어</th><th>제안 물리명</th><th>도메인</th><th>처리</th></tr></thead>
           <tbody>
-            <tr class="row-info" data-f="comb"><td><input type="checkbox" checked></td><td><span class="badge b-info">＋ 조합 가능</span></td><td>산출물기본</td><td>산출물제출일</td><td class="mono faint">—</td><td class="arrow">→</td><td>산출물제출일자</td><td class="mono chg">DLVRBL_SBMT_DATE</td><td class="mono">연월일C8</td><td><select class="input" style="height:26px;width:150px"><option>용어 신청 묶음</option><option>예외로 유지</option></select></td></tr>
+            <tr class="row-info" data-f="comb" data-term="산출물제출일자"><td><input type="checkbox" checked></td><td><span class="badge b-info">＋ 조합 가능</span></td><td>산출물기본</td><td>산출물제출일</td><td class="mono faint">—</td><td class="arrow">→</td><td>산출물제출일자</td><td class="mono chg">DLVRBL_SBMT_DATE</td><td class="mono">연월일C8</td><td><select class="input" style="height:26px;width:150px"><option>용어 신청 묶음</option><option>예외로 유지</option></select></td></tr>
             <tr class="row-info" data-f="comb"><td><input type="checkbox" checked></td><td><span class="badge b-info">＋ 조합 가능</span></td><td>산출물기본 <span class="badge">테이블명</span></td><td>산출물기본</td><td class="mono faint">—</td><td class="arrow">→</td><td>산출물기본 <span class="badge b-info" style="height:16px">신청 중</span></td><td class="mono chg">DLVRBL_M</td><td class="faint">엔터티</td><td class="caption muted">결재 대기</td></tr>
-            <tr class="row-info" data-f="comb"><td><input type="checkbox" checked></td><td><span class="badge b-info">＋ 조합 가능</span></td><td>산출물이력 <span class="badge">테이블명</span></td><td>산출물이력</td><td class="mono faint">—</td><td class="arrow">→</td><td>산출물이력</td><td class="mono chg">DLVRBL_HIST_D</td><td class="faint">엔터티</td><td><select class="input" style="height:26px;width:150px"><option>용어 신청 묶음</option></select></td></tr>
+            <tr class="row-info" data-f="comb" data-term="산출물이력"><td><input type="checkbox" checked></td><td><span class="badge b-info">＋ 조합 가능</span></td><td>산출물이력 <span class="badge">테이블명</span></td><td>산출물이력</td><td class="mono faint">—</td><td class="arrow">→</td><td>산출물이력</td><td class="mono chg">DLVRBL_HIST_D</td><td class="faint">엔터티</td><td><select class="input" style="height:26px;width:150px"><option>용어 신청 묶음</option></select></td></tr>
             <tr class="row-warning" data-f="unreg"><td><input type="checkbox" checked></td><td><span class="badge b-warning">! 미등록 단어</span></td><td>산출물기본</td><td>산출물수령자명</td><td class="mono faint">—</td><td class="arrow">→</td><td class="faint">‘수령자’ 미등록</td><td class="mono faint">—</td><td class="faint">—</td><td><select class="input" style="height:26px;width:150px"><option>후보 등록</option><option>예외로 유지</option></select></td></tr>
             <tr class="row-warning" data-f="unreg"><td><input type="checkbox" checked></td><td><span class="badge b-warning">! 미등록 단어</span></td><td>산출물이력</td><td>수령자ID</td><td class="mono faint">—</td><td class="arrow">→</td><td class="faint">‘수령자’ 미등록</td><td class="mono faint">—</td><td class="faint">—</td><td><select class="input" style="height:26px;width:150px"><option>후보 등록</option></select></td></tr>
-            <tr class="row-warning" data-f="unreg"><td><input type="checkbox" checked></td><td><span class="badge b-warning">! 미등록 단어</span></td><td>산출물이력</td><td>이력순번</td><td class="mono faint">—</td><td class="arrow">→</td><td>이력 + 순번 <span class="caption faint">(이력순번 용어 없음)</span></td><td class="mono chg">HIST_SN</td><td class="mono">일련번호N10</td><td><select class="input" style="height:26px;width:150px"><option>용어 신청 묶음</option></select></td></tr>
+            <tr class="row-warning" data-f="unreg" data-term="이력순번"><td><input type="checkbox" checked></td><td><span class="badge b-warning">! 미등록 단어</span></td><td>산출물이력</td><td>이력순번</td><td class="mono faint">—</td><td class="arrow">→</td><td>이력 + 순번 <span class="caption faint">(이력순번 용어 없음)</span></td><td class="mono chg">HIST_SN</td><td class="mono">일련번호N10</td><td><select class="input" style="height:26px;width:150px"><option>용어 신청 묶음</option></select></td></tr>
             <tr data-f="sus"><td><input type="checkbox"></td><td><span class="badge b-warning">? 의심</span></td><td>요구사항내역</td><td>요구사항물품명</td><td class="mono">RQ_GOODS_NM</td><td class="arrow">→</td><td><select class="input mono" style="height:26px;width:220px"><option>요구사항 + 물품 + 명</option><option>요구사항 + 물 + 품명 (1음절)</option></select></td><td class="mono chg">DEMND_MATER_GOODS_NM</td><td class="mono">명V100</td><td class="caption muted">분해 확인 필요</td></tr>
             <tr class="row-success" data-f="ok"><td><input type="checkbox" checked></td><td><span class="badge b-success">✓ 표준</span></td><td>요구사항내역</td><td>요구사항명</td><td class="mono">RQRM_NM</td><td class="arrow">→</td><td>요구사항명</td><td class="mono chg">DEMND_MATER_NM</td><td class="mono">명V100</td><td class="caption muted">제안대로 적용</td></tr>
             <tr class="row-success" data-f="ok"><td><input type="checkbox" checked></td><td><span class="badge b-success">✓ 표준</span></td><td>프로젝트기본</td><td>수주금액</td><td class="mono">WINCON_AMOUNT</td><td class="arrow">→</td><td>수주금액</td><td class="mono chg">WINCON_AMT</td><td class="mono">금액N15</td><td class="caption muted">제안대로 적용</td></tr>
@@ -83,6 +83,7 @@
       <table class="tbl" id="ap-sum"></table>
       <div class="banner warning" id="ap-phys" style="margin-top:12px"><span>!</span><div><b>물리명 변경은 운영 DB에 영향</b>이 있습니다. 모델에는 바로 반영되고, 운영 DB는 다음 DDL 출력에서 <b>변경분(ALTER)</b>으로 바뀝니다.</div></div>
       <div class="field" style="margin-top:12px" id="ap-reqf"><label for="ap-why">용어 신청 사유 * <span class="faint">신청 묶음이 새 결재 문서 1건으로 만들어집니다(번호는 제출할 때 부여) · 결재선 DA → 기관 담당자</span></label><textarea class="input" id="ap-why" rows="2"></textarea></div>
+      <div class="field" id="ap-exf"><label for="ap-exwhy">‘예외로 유지’ 행의 사유 * <span class="faint" id="ap-exlist"></span></label><textarea class="input" id="ap-exwhy" rows="2"></textarea></div>
       <div class="caption muted">적용 후 토스트의 [실행 취소]로 한 번에 되돌릴 수 있습니다. 선택하지 않은 행은 그대로 남습니다.</div>
     </div>
     <div class="m-foot"><button class="btn" data-close="mo-apply">취소</button><button class="btn primary" id="ap-go" data-needs="ap-why" data-needs-msg="용어 신청 사유를 입력해야 합니다">적용</button></div></div></div>
@@ -92,21 +93,37 @@
 window.pageInit = function () {
   const q = new URLSearchParams(location.search), $ = id => document.getElementById(id);
   if (q.get('from') === 'import') $('from-import').hidden = false;
-  const rows = () => [...document.querySelectorAll('tbody tr')];
+  const rows = () => [...document.querySelectorAll('.scroll tbody tr')];   // the analysis table only (not the summary table in the dialog)
   const boxes = () => rows().map(r => r.querySelector('input[type=checkbox]')).filter(c => c && !c.disabled);
   // selection = visible checked rows only (rows hidden by a filter never get executed — R3)
   const visible = r => r.style.display !== 'none';
   const checked = () => rows().filter(r => { const c = r.querySelector('input[type=checkbox]'); return c && c.checked && !c.disabled && visible(r); });
   const hiddenChecked = () => rows().filter(r => { const c = r.querySelector('input[type=checkbox]'); return c && c.checked && !c.disabled && !visible(r); }).length;
+  // business area travels with the screen (entry, judgement, hand-off and return use the same area — CL9-12)
+  const AREA = q.get('area') === 'risk' ? 'risk' : 'rq';
+  const LK = modelLock(AREA);
+  document.querySelector('.crumb b').textContent = LK.model.name + ` · v${LK.model.ver}`;
+  document.querySelector('.page-header a.btn').href = `model.html?area=${AREA}`;
+  if (AREA !== 'rq') document.querySelector('tbody').innerHTML = `<tr><td colspan="10" class="caption muted" style="text-align:center;padding:40px">${LK.model.name} 영역은 미준수 항목이 없습니다 — 맞출 것이 없습니다.</td></tr>`;
   // permission & lock: same judgement as the model screen (R5)
-  const LK = modelLock('rq');
   const readOnly = !ME.has('modeler') || LK.state !== 'edit';
   if (readOnly) {
-    document.querySelector('.page-header').insertAdjacentHTML('afterend', `<div class="pad" style="padding-bottom:0"><div class="banner info"><span>ℹ</span><div class="grow"><b>조회 전용</b> — ${!ME.has('modeler') ? '표준 맞추기는 모델러 역할만 할 수 있습니다.' : `${LK.doc ? LK.doc.id : ''} ${LK.state === 'review' ? '확정 결재 중' : '확정본'}이라 고칠 수 없습니다.`}</div><a class="btn sm" href="model.html">모델로</a></div></div>`);
+    document.querySelector('.page-header').insertAdjacentHTML('afterend', `<div class="pad" style="padding-bottom:0"><div class="banner info"><span>ℹ</span><div class="grow"><b>조회 전용</b> — ${!ME.has('modeler') ? '표준 맞추기는 모델러 역할만 할 수 있습니다.' : `${LK.doc ? LK.doc.id : ''} ${LK.state === 'review' ? '확정 결재 중' : '확정본'}이라 고칠 수 없습니다.`}</div><a class="btn sm" href="model.html?area=${AREA}">모델로</a></div></div>`);
     rows().forEach(r => { const c = r.querySelector('input[type=checkbox]'); if (c) c.disabled = true; r.querySelectorAll('select').forEach(s => s.disabled = true); });
   }
   const kind = r => r.dataset.f;
   const nameOf = r => r.children[2].textContent.trim().split(' ')[0] + '.' + r.children[3].textContent.trim();
+  const ENT = { 산출물기본: 'dlv', 산출물이력: 'hist', 요구사항내역: 'rqrm', 프로젝트기본: 'prj' };
+  // a proposed term that is already in an open request (or already approved) is not requested again — the row waits for / uses it
+  const open = openItems(); const dictNow = getDict();
+  rows().filter(r => r.dataset.term).forEach(r => {
+    const o = open.find(x => x.it.name === r.dataset.term && x.it.act !== '미사용');
+    const has = dictNow.find(x => x.name === r.dataset.term && x.ver > 0 && x.st === '사용');
+    if (o) { r.dataset.wait = o.doc; r.children[9].innerHTML = `<span class="caption muted">결재 대기 · <a href="approvals.html?doc=${o.doc}">${o.doc}</a></span>`; r.children[6].insertAdjacentHTML('beforeend', ' <span class="badge b-info" style="height:16px">신청 중</span>'); }
+    else if (has) { r.children[9].innerHTML = `<span class="caption muted">사전에 있음 · ${has.id} — 제안대로 적용</span>`; r.dataset.f = 'ok'; r.className = 'row-success'; r.children[1].innerHTML = '<span class="badge b-success">✓ 표준</span>'; }
+  });
+  // row identity handed to the model: entity id + attribute name at analysis time (+ the display key)
+  const idOf = r => { const t = r.children[2].textContent.trim().split(' ')[0]; return { key: nameOf(r), e: ENT[t], a: r.children[3].textContent.trim() }; };
   const physChange = r => { const a = r.children[4].textContent.trim(), b = r.children[7].textContent.trim(); return a !== '—' && b !== '—' && a !== b; };
   const procOf = r => { const s = r.querySelector('td:last-child select'); return s ? s.value : (kind(r) === 'ok' ? '제안대로 적용' : r.children[9].textContent.trim()); };
   function summary() {
@@ -137,8 +154,13 @@ window.pageInit = function () {
     const s = summary();
     $('ap-sum').innerHTML = `<tbody><tr><td>이름 적용 (표준 용어로 변경)</td><td class="num mono">${s.ren}</td></tr><tr><td>　└ 물리명 변경 (운영 DB 영향)</td><td class="num mono">${s.phys}</td></tr><tr><td>용어 신청 묶음 → 결재 문서 1건</td><td class="num mono">${s.req}</td></tr><tr><td>후보 큐 등록</td><td class="num mono">${s.cand}</td></tr><tr><td>예외로 유지</td><td class="num mono">${s.keepEx}</td></tr><tr><td><b>남는 미준수</b> (선택 안 함 · 의심 확인 포함)</td><td class="num mono"><b>${s.left + s.sus}</b></td></tr></tbody>`;
     $('ap-phys').style.display = s.phys ? 'flex' : 'none';
+    // only the reasons this application actually needs are required — hidden fields are never auto-filled (CL9-10)
     $('ap-reqf').style.display = s.req ? '' : 'none';
-    if (!s.req) $('ap-why').value = '—';
+    const exRows = s.C.filter(r => procOf(r) === '예외로 유지');
+    $('ap-exf').style.display = exRows.length ? '' : 'none';
+    $('ap-exlist').textContent = exRows.map(nameOf).join(', ');
+    $('ap-go').dataset.needs = [s.req ? 'ap-why' : '', exRows.length ? 'ap-exwhy' : ''].filter(Boolean).join(' ');
+    $('ap-go').dataset.needsMsg = s.req && exRows.length ? '용어 신청 사유와 예외 사유를 입력해야 합니다' : s.req ? '용어 신청 사유를 입력해야 합니다' : '예외 사유를 입력해야 합니다';
     updateNeeds();
   });
   const done = (before, msg) => {
@@ -147,16 +169,29 @@ window.pageInit = function () {
     toast(msg + ' — [적용]을 누르면 사유와 함께 모델에 반영됩니다', 'violet', { label: '실행 취소', fn: () => { before.forEach(([r, html]) => { const k = nameOf(r); handoff.ex = handoff.ex.filter(x => x.key !== k); handoff.na = handoff.na.filter(x => x.key !== k); r.outerHTML = html; }); draw(); toast(`${n}건을 되돌렸습니다`, 'info'); } });
   };
   const handoff = { ex: [], na: [] };   // decisions made on this screen travel to the model with their reasons (S5)
-  $('sx-go').onclick = () => { const C = summary().C; C.forEach(r => handoff.ex.push({ key: nameOf(r), why: $('sx-why').value.trim() })); const before = C.map(r => [r, r.outerHTML]); $('mo-ex').classList.remove('open'); C.forEach(r => { r.dataset.f = 'ex'; r.children[1].innerHTML = '<span class="badge b-violet">◆ 예외</span>'; r.children[9].innerHTML = `<span class="caption">사유: ${$('sx-why').value.trim()}</span>`; r.querySelector('input').disabled = true; }); $('sx-why').value = ''; done(before, `${C.length}건을 예외로 기록했습니다`); };
-  $('na-go').onclick = () => { const C = summary().C; C.forEach(r => handoff.na.push({ key: nameOf(r), why: $('na-why').value.trim() })); const before = C.map(r => [r, r.outerHTML]); $('mo-na').classList.remove('open'); C.forEach(r => { r.dataset.f = 'na'; r.className = 'row-mute'; r.children[1].innerHTML = '<span class="badge">– 비대상</span>'; r.children[9].innerHTML = `<span class="caption">사유: ${$('na-why').value.trim()}</span>`; r.querySelector('input').disabled = true; }); $('na-why').value = ''; done(before, `${C.length}건을 비대상으로 지정했습니다 — 준수율 계산에서 빠집니다`); };
+  $('sx-go').onclick = () => { const C = summary().C; C.forEach(r => handoff.ex.push(Object.assign(idOf(r), { why: $('sx-why').value.trim() }))); const before = C.map(r => [r, r.outerHTML]); $('mo-ex').classList.remove('open'); C.forEach(r => { r.dataset.f = 'ex'; r.children[1].innerHTML = '<span class="badge b-violet">◆ 예외</span>'; r.children[9].innerHTML = `<span class="caption">사유: ${$('sx-why').value.trim()}</span>`; r.querySelector('input').disabled = true; }); $('sx-why').value = ''; done(before, `${C.length}건을 예외로 기록했습니다`); };
+  $('na-go').onclick = () => { const C = summary().C; C.forEach(r => handoff.na.push(Object.assign(idOf(r), { why: $('na-why').value.trim() }))); const before = C.map(r => [r, r.outerHTML]); $('mo-na').classList.remove('open'); C.forEach(r => { r.dataset.f = 'na'; r.className = 'row-mute'; r.children[1].innerHTML = '<span class="badge">– 비대상</span>'; r.children[9].innerHTML = `<span class="caption">사유: ${$('na-why').value.trim()}</span>`; r.querySelector('input').disabled = true; }); $('na-why').value = ''; done(before, `${C.length}건을 비대상으로 지정했습니다 — 준수율 계산에서 빠집니다`); };
   $('ap-go').onclick = () => {
+    if ($('ap-go').disabled) return;
+    // execution-time re-check BEFORE anything is created: the area may have been submitted/locked or the user switched (CL9-11)
+    if (liveRoleChanged()) { staleRoleToast(); return; }
+    const now = modelLock(AREA);
+    if (now.state !== 'edit' || now.model.ver !== LK.model.ver || !ME.has('modeler')) { $('mo-apply').classList.remove('open'); toast(`지금은 적용할 수 없습니다 — ${now.doc && now.state !== 'edit' ? `${now.doc.id} ${STEP_NAME[now.doc.step]}` : `작업 버전이 v${now.model.ver}로 바뀜`}. 선택은 그대로 두었습니다`, 'danger', { label: '새로고침', fn: () => location.reload() }); return; }
     const s = summary();
-    // the term bundle becomes a REAL approval document (fresh ID, requester = me)
+    const exWhy = $('ap-exwhy').value.trim();
+    const rowsOut = s.C.map(r => Object.assign(idOf(r), { proc: procOf(r), why: procOf(r) === '예외로 유지' ? exWhy : undefined, wait: r.dataset.wait }));
+    // the term bundle becomes a REAL approval document whose items are the selected rows (CL9-09)
     let docId = null;
-    if (s.req) docId = createDoc({ type: 'dict', title: `표준 맞추기 용어 신청 ${s.req}건 (요구사항·프로젝트)`, n: s.req, reason: $('ap-why').value.trim(), cc: [] }).doc.id;
-    // hand exactly the selected rows to the model screen
-    try { sessionStorage.setItem('dbm-apply', JSON.stringify({ area: 'rq', keys: s.C.map(nameOf), ex: handoff.ex, na: handoff.na, doc: docId, req: s.req, cand: s.cand })); } catch (e) {}
-    location.href = 'model.html';
+    if (s.req) {
+      const reqRows = s.C.filter(r => procOf(r) === '용어 신청 묶음');
+      const items = reqRows.map(r => ({ k: 'term', name: r.dataset.term, abbr: r.children[7].textContent.trim(), dom: r.children[8].textContent.trim(), act: '추가', from: `${LK.model.name} v${LK.model.ver} · ${nameOf(r)}` }));
+      const res = createDoc({ type: 'dict', kind: 'std', area: AREA, ver: LK.model.ver, title: `표준 맞추기 용어 신청 ${items.length}건 (${LK.model.name})`, n: items.length, reason: $('ap-why').value.trim(), cc: [], items, key: `std:${AREA}:v${LK.model.ver}:${items.map(i => i.name).join(',')}` });
+      if (res.conflict) { $('mo-apply').classList.remove('open'); toast(`이미 진행 중인 신청과 겹칩니다 — ${res.conflict.join(', ')}. 그 행은 선택에서 빼고 다시 적용하세요`, 'danger'); return; }
+      docId = res.doc.id;
+    }
+    // hand exactly the selected rows (with each row's handling and reason) to the model screen of the same area+version
+    try { sessionStorage.setItem('dbm-apply', JSON.stringify({ area: AREA, ver: LK.model.ver, rows: rowsOut, ex: handoff.ex, na: handoff.na, doc: docId, req: s.req, cand: s.cand })); } catch (e) {}
+    location.href = `model.html?area=${AREA}`;
   };
   draw();
 };

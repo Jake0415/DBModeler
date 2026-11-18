@@ -261,7 +261,7 @@
         </div>
         <div class="section-t">표준 예외 <span class="badge b-violet" id="cf-exn">◆ 0</span> <span class="caption muted">신청 중 용어는 결재에서 함께 확인</span></div>
         <table class="tbl"><thead><tr><th>항목</th><th>사유</th></tr></thead><tbody id="cf-ex"></tbody></table>
-        <div class="field" style="margin-top:12px"><label for="cf-why">신청 사유 *</label><textarea class="input" id="cf-why" rows="2">산출물 관리 테이블 추가에 따른 v5 확정</textarea></div>
+        <div class="field" style="margin-top:12px"><label for="cf-why">신청 사유 *</label><textarea class="input" id="cf-why" rows="2" placeholder="예: 산출물 관리 테이블 추가에 따른 확정"></textarea></div>
         <div class="section-t">결재선</div>
         <div class="approval-line">
           <div class="al-step"><span class="pt"></span><div><b>DA 승인</b> <span class="caption faint">필수</span></div></div>
@@ -276,7 +276,7 @@
 
   <div class="overlay" id="mo-ex" role="dialog" aria-modal="true" aria-labelledby="ex-t"><div class="modal"><div class="m-head"><h3 id="ex-t">표준 예외로 유지</h3></div>
     <div class="m-body"><div class="caption muted" style="margin-bottom:8px">산출물기본.산출물수령자명</div><div class="field"><label for="ex-why">사유 *</label><textarea class="input" id="ex-why" rows="3"></textarea></div></div>
-    <div class="m-foot"><button class="btn" data-close="mo-ex">취소</button><button class="btn primary" id="ex-go" data-needs="ex-why">예외 기록</button></div></div></div>
+    <div class="m-foot"><button class="btn" data-close="mo-ex">취소</button><button class="btn primary" id="exr-go" data-needs="ex-why">예외 기록</button></div></div></div>
   <div class="overlay" id="mo-ex2" role="dialog" aria-modal="true" aria-labelledby="ex2-t"><div class="modal"><div class="m-head"><h3 id="ex2-t">예외로 유지 (2건)</h3></div>
     <div class="m-body"><div class="caption muted" style="margin-bottom:8px">산출물기본.산출물수령자명 · 산출물이력.수령자ID — 미등록 단어 ‘수령자’</div><div class="field"><label for="ex2-why">사유 * <span class="faint">확정 결재에서 DA가 검토합니다</span></label><textarea class="input" id="ex2-why" rows="3"></textarea></div></div>
     <div class="m-foot"><button class="btn" data-close="mo-ex2">취소</button><button class="btn primary" id="ex2-go" data-needs="ex2-why">2건 예외 기록</button></div></div></div>
@@ -342,6 +342,12 @@ window.pageInit = function () {
   const STATE = q.get('state') || '';          // only a data preset now (applied / resolved) — never the lock
   const LOCK = modelLock(AREA);                  // lock & version come from the approval documents (R1)
   const SNAP = q.get('snap');
+  // ?snap= must name a model document of THIS area; otherwise say it can't be opened (never fall back to the working copy — CX9-03)
+  const SNAPDOC = SNAP ? getDocs().find(x => x.id === SNAP && x.type === 'model') : null;
+  if (SNAPDOC && SNAPDOC.area !== AREA) { location.replace(`model.html?area=${SNAPDOC.area}&snap=${SNAPDOC.id}`); return; }
+  const SNAP_BAD = !!SNAP && !SNAPDOC;
+  // ?state= presets are read-only samples: never saved, never submitted, never written to the shared judgement (CX9-01)
+  const DEMO = !!STATE && !SNAP;
   const confirmed = LOCK.state === 'confirmed' && !SNAP, review = LOCK.state === 'review' || !!SNAP;
   const locked = review || confirmed;
   const VER = LOCK.model.ver, BASE = LOCK.model.base;
@@ -354,14 +360,24 @@ window.pageInit = function () {
   const guard = () => {
     // execution-time re-check (S4): another tab may have submitted/approved, or the viewer switched role
     if (!SNAP) { const fresh = modelLock(AREA); if (fresh.state !== LOCK.state || (fresh.doc && LOCK.doc && fresh.doc.step !== LOCK.doc.step)) { toast(`이 업무 영역의 상태가 바뀌었습니다(${fresh.doc ? fresh.doc.id + ' ' + STEP_NAME[fresh.doc.step] : '편집 가능'}) — 최신 상태로 다시 여세요`, 'danger', { label: '새로고침', fn: () => location.reload() }); return true; } }
-    if ((dbmStore.get('dbm-role', 'kim')) !== ME.id && !new URLSearchParams(location.search).get('as')) { toast('다른 탭에서 역할이 바뀌었습니다 — 새로고침 후 다시 시도하세요', 'danger', { label: '새로고침', fn: () => location.reload() }); return true; }
+    if (liveRoleChanged()) { staleRoleToast(); return true; }
+    if (DEMO) { toast('예시 화면은 조회 전용입니다 — 저장·확정 신청이 되지 않습니다. 실제 작업은 메뉴의 업무 영역에서 하세요', 'info'); return true; }
+    if (revConflict) { toast('다른 탭에서 이 버전을 먼저 저장했습니다 — 덮어쓰지 않도록 편집을 막았습니다. 새로고침하세요', 'danger', { label: '새로고침', fn: () => location.reload() }); return true; }
     if (confirmed) { toast('확정본은 고칠 수 없습니다 — [v6 작업 시작]으로 다음 작업 버전을 여세요', 'info'); return true; }
     if (review) { toast('검토 중이라 편집할 수 없습니다 — 회수하거나 결재가 끝난 뒤 다음 작업 버전에서 편집하세요', 'info'); return true; }
     if (viewOnly) { toast('모델 편집은 모델러 역할만 할 수 있습니다', 'info'); return true; }
     if (cv.dataset.sys === '1') { toast('시스템 전체 ERD는 조회 전용입니다 — 업무 영역으로 돌아가 편집하세요', 'info'); return true; }
     return false;
   };
-  const canEdit = () => !(confirmed || review || viewOnly || cv.dataset.sys === '1') && modelLock(AREA).state === LOCK.state;   // silent check for drag/memo (R5)
+  const canEdit = () => !(confirmed || review || viewOnly || DEMO || revConflict || cv.dataset.sys === '1') && modelLock(AREA).state === LOCK.state && !liveRoleChanged();   // silent check for drag/memo (R5)
+  // optimistic revision per area+version: a tab that loaded an older revision may not overwrite a newer save (CL9-03)
+  let myRev = 0, revConflict = false;
+  function saveData() {
+    if (locked || viewOnly || DEMO || !dataReady || revConflict) return;
+    const cur = getModelData(AREA, VER);
+    if (cur && (cur.rev || 0) !== myRev) { revConflict = true; toast('다른 탭에서 이 버전을 먼저 저장했습니다 — 이 탭의 편집은 저장하지 않았습니다. 새로고침해서 최신 내용으로 이어가세요', 'danger', { label: '새로고침', fn: () => location.reload() }); return; }
+    myRev++; setModelData(AREA, VER, { E, R, M, rev: myRev });
+  }
   // undo bound to one action: if something else happened after it, say so instead of undoing the wrong thing (R6)
   const undoAction = () => { const t = hist.length; return { label: '실행 취소', fn: () => { if (hist.length !== t) { toast('이후에 다른 편집이 있어 이 작업만 따로 되돌릴 수 없습니다 — Ctrl+Z로 차례대로 되돌리세요', 'info'); return; } undo(); } }; };
   // standard-matching results applied item by item (not a blanket conversion)
@@ -371,7 +387,9 @@ window.pageInit = function () {
     '산출물이력.산출물이력': () => { ent('hist').p = 'DLVRBL_HIST_D'; },
     '산출물이력.이력순번': () => Object.assign(ent('hist').a[1], { p: 'HIST_SN', t: 'NUMBER(10)', s: 'req' }),
     '산출물기본.산출물수령자명': () => { ent('dlv').a[3].cand = 1; },
-    '산출물이력.수령자ID': () => { ent('hist').a[2].cand = 1; }
+    '산출물이력.수령자ID': () => { ent('hist').a[2].cand = 1; },
+    // rows that are already standard in the model, or waiting on another request: nothing to change, but not "missing"
+    '요구사항내역.요구사항명': () => {}, '프로젝트기본.수주금액': () => {}, '산출물기본.산출물기본': () => {}
   };
   function applyRows(keys) { if (AREA !== 'rq') return []; const done = []; keys.forEach(k => { if (STD_MAP[k]) { STD_MAP[k](); done.push(k); } }); return done; }
   function applyStd() { applyRows(Object.keys(STD_MAP)); }
@@ -389,9 +407,10 @@ window.pageInit = function () {
     $('rate').textContent = rate + '%'; $('c-bad').textContent = bad; $('c-ex').textContent = exc; $('c-na').textContent = nac;
     const exList = []; E.forEach(e => e.a.forEach(a => { if (a.s === 'ex') exList.push([e.p !== '—' ? e.p : e.n, a.p !== '—' ? a.p : a.n, a.exReason || '—']); }));
     lastComp = { rate, bad, req: reqc, na: nac, exList };
-    if (!locked) setComp(AREA, lastComp);          // single judgement shared with approvals (R4)
+    if (!locked && !DEMO && !viewOnly) setComp(AREA, lastComp);          // home / system badges read this; approvals re-check the submitted copy
     const b = $('confirm-btn');
     if (locked) return;
+    if (DEMO) { b.classList.add('disabled', 'has-tip'); b.classList.remove('primary'); b.dataset.tip = '예시 화면에서는 확정 신청할 수 없습니다'; b.setAttribute('aria-disabled', 'true'); b.onclick = () => toast(b.dataset.tip, 'info'); return; }
     const can = bad === 0 && !viewOnly;
     b.classList.toggle('disabled', !can); b.classList.toggle('has-tip', !can); b.classList.toggle('primary', can);
     b.setAttribute('aria-disabled', can ? 'false' : 'true');
@@ -418,19 +437,20 @@ window.pageInit = function () {
   const hist = [], redo = [];
   const state = () => JSON.stringify({ E, R, M });
   const restore = s => { E.splice(0, E.length, ...s.E); R.splice(0, R.length, ...s.R); M.splice(0, M.length, ...s.M); };
-  const snap = () => { hist.push(state()); if (hist.length > 50) hist.shift(); redo.length = 0; };
+  let dirty = false;
+  const snap = () => { hist.push(state()); if (hist.length > 50) hist.shift(); redo.length = 0; dirty = true; };
   function undo() {
     if (guard()) return;
     if (!hist.length) { toast('되돌릴 내 편집이 없습니다', 'info'); return; }
-    redo.push(state()); restore(JSON.parse(hist.pop())); sel = null; render(); toast('내 편집 1건을 되돌렸습니다 · 다른 사람의 편집은 그대로입니다', 'info');
+    redo.push(state()); restore(JSON.parse(hist.pop())); sel = null; dirty = true; render(); toast('내 편집 1건을 되돌렸습니다 · 다른 사람의 편집은 그대로입니다', 'info');
   }
   function redoFn() {
     if (guard()) return;
     if (!redo.length) { toast('다시 실행할 편집이 없습니다', 'info'); return; }
-    hist.push(state()); restore(JSON.parse(redo.pop())); sel = null; render(); toast('되돌린 편집을 다시 실행했습니다', 'info');
+    hist.push(state()); restore(JSON.parse(redo.pop())); sel = null; dirty = true; render(); toast('되돌린 편집을 다시 실행했습니다', 'info');
   }
   function remoteApply(fn) {
-    fn(E);
+    fn(E); dirty = true;
     [hist, redo].forEach(st => { for (let i = 0; i < st.length; i++) { const s = JSON.parse(st[i]); fn(s.E); st[i] = JSON.stringify(s); } });
   }
 
@@ -466,7 +486,7 @@ window.pageInit = function () {
       nodes.appendChild(d);
     });
     renderMemos(); drawEdges(); mini(); panel(); updateComp();
-    if (!locked && !viewOnly && dataReady && !STATE) setModelData(AREA, VER, { E, R, M });   // edits persist per area+version (S5)
+    if (dirty) { dirty = false; saveData(); }   // edits persist per area+version (S5) — only when something changed
     const inp = nodes.querySelector('.attr-in'); if (inp) { inp.focus(); inp.select(); showAC(inp); }
     const ren = nodes.querySelector('.ren-in'); if (ren) { ren.focus(); ren.select(); }
     if ($('grid').classList.contains('open')) renderGrid();
@@ -613,7 +633,7 @@ window.pageInit = function () {
   }
   $('b-review').onclick = ev => { ev.preventDefault(); renderReview(); openPanel('pn-review'); };
   $('rev-x').onclick = showRP;
-  $('ex-go').onclick = () => {
+  $('exr-go').onclick = () => {   // was 'ex-go' — collided with the export button's id, so this dialog did nothing
     if (guard()) return; snap(); const a = ent('dlv').a[3]; a.s = 'ex'; a.exReason = $('ex-why').value.trim(); delete a.cand;
     $('mo-ex').classList.remove('open'); $('ex-why').value = ''; render();
     toast('예외로 기록했습니다 — 확정 결재에서 DA가 검토합니다', 'violet', undoAction());
@@ -633,6 +653,7 @@ window.pageInit = function () {
     location.href = `model.html?area=${AREA}`;
   };
   $('wd-go').onclick = () => {
+    if (liveRoleChanged()) { staleRoleToast(); return; }
     const docs = getDocs(); const d = docs.find(x => x.id === (LOCK.doc && LOCK.doc.id));
     if (!d || !['da', 'final'].includes(d.step) || d.req !== ME.id) { toast('회수할 수 있는 신청이 아닙니다 — 상태가 바뀌었을 수 있습니다', 'danger'); return; }
     addHist(d, { act: '회수', why: $('wd-why').value.trim() }); d.step = 'withdrawn'; saveDocs(docs);   // history is appended, never removed
@@ -767,14 +788,14 @@ window.pageInit = function () {
     toast('홍설계가 같은 칸(‘산출물기본’ 이름)을 동시에 고쳐 ‘산출물관리기본’이 남았습니다 · 내 값: 산출물기본', 'violet');
   }
   function moveCursors() {
-    if (offline) return;
+    if (offline || !E.length) return;
     const rb = remoteSel && $('n-' + remoteSel) ? box(remoteSel) : { x: 100, y: 300, w: 200, h: 120 };
     const ch = $('cur-hong'); ch.style.left = (rb.x + 20 + Math.random() * (rb.w - 40)) + 'px'; ch.style.top = (rb.y + 10 + Math.random() * (rb.h - 20)) + 'px';
     const pb = $('n-emp') ? box('emp') : box(E[0].id); const cp = $('cur-park'); cp.style.left = (pb.x + 40 + Math.random() * 160) + 'px'; cp.style.top = (pb.y + pb.h + 10 + Math.random() * 40) + 'px';
   }
   setInterval(moveCursors, 1400);
-  if (!locked) setTimeout(() => {
-    if (offline) return;
+  if (!locked && !DEMO) setTimeout(() => {
+    if (offline || !canEdit()) return;   // the simulated co-editor stops if the area got locked meanwhile
     remoteApply(es => { const r = es.find(x => x.id === 'rqrm'); if (r && !r.a.some(a => a.n === '요구사항상태코드')) r.a.push({ n: '요구사항상태코드', p: 'DEMND_MATER_STTS_CD', t: 'CHAR(2)', s: 'ok', remote: 1 }); });
     render(); toast('홍설계가 ‘요구사항내역’에 ‘요구사항상태코드’를 추가했습니다', 'info');
   }, 7000);
@@ -841,7 +862,8 @@ window.pageInit = function () {
     if (pan) { panX = ev.clientX - pan.x; panY = ev.clientY - pan.y; applyView(); }
     if (tool === 'rel' && relSrc) { const a = box(relSrc), w = toWorld(ev); preview.setAttribute('d', `M${a.x + a.w / 2},${a.y + a.h / 2} L${w.x},${w.y}`); }
   });
-  window.addEventListener('mouseup', () => { drag = null; pan = null; cv.classList.remove('panning'); });
+  // a finished move is an edit boundary: positions are saved like any other change (CX9-05)
+  window.addEventListener('mouseup', () => { const moved = drag && drag.moved; drag = null; pan = null; cv.classList.remove('panning'); if (moved) render(); });
   cv.addEventListener('click', ev => {
     const del = ev.target.closest('[data-mdel]');
     if (del) { if (guard()) return; snap(); M.splice(M.findIndex(m => m.id === del.dataset.mdel), 1); render(); toast('메모를 삭제했습니다 · Ctrl+Z', 'info'); return; }
@@ -1038,25 +1060,56 @@ window.pageInit = function () {
   const RECIP_WHY = '‘수령자’ 단어 후보(REQ-2026-0012) 승인 전까지 임시 유지';
   // data source (S5): ?state= preset (demo, not saved) → document snapshot (review/confirmed/snap) → saved working data → seed
   const loadData = d => { if (!d) return false; E.splice(0, E.length, ...JSON.parse(JSON.stringify(d.E))); R.splice(0, R.length, ...JSON.parse(JSON.stringify(d.R))); M.splice(0, M.length, ...JSON.parse(JSON.stringify(d.M || []))); return true; };
-  const snapDoc = SNAP ? getDocs().find(x => x.id === SNAP) : (locked ? LOCK.doc : null);
-  if (STATE === 'applied') { applyStd(); }
+  const snapDoc = SNAP ? SNAPDOC : (locked ? LOCK.doc : null);
+  if (SNAP_BAD) { E.splice(0, E.length); R.splice(0, R.length); M.splice(0, M.length); }   // nothing to show rather than the wrong model
+  else if (STATE === 'applied') { applyStd(); }
   else if (STATE === 'resolved') { applyStd(); keepRecipientAsEx(RECIP_WHY); }
   else if (snapDoc && snapDoc.model) loadData(snapDoc.model);
-  else if (!loadData(getModelData(AREA, VER)) && (locked || (AREA === 'rq' && VER > 5))) { applyStd(); keepRecipientAsEx(RECIP_WHY); }
+  else if (snapDoc && SNAP) { /* seed document without a stored copy: the seed structure of that area is shown, labelled below */ }
+  else { const saved = getModelData(AREA, VER); if (loadData(saved)) myRev = saved.rev || 0; else if (locked || (AREA === 'rq' && VER > 5)) { applyStd(); keepRecipientAsEx(RECIP_WHY); } }
   var dataReady = true;
-  // standardize → model hand-off: apply exactly the rows the user selected (R3)
+  // term requests made from standardize: once the document ends, the attribute follows it (approved → standard, rejected → back to unresolved)
+  if (!locked && !DEMO) {
+    const docsNow = getDocs(); let fin = 0, back = 0;
+    E.forEach(e => e.a.forEach(a => { if (a.s !== 'req' || !a.reqDoc) return; const d = docsNow.find(x => x.id === a.reqDoc); if (!d) return;
+      if (d.step === 'done') { a.s = 'ok'; delete a.reqDoc; fin++; } else if (['rejected', 'withdrawn'].includes(d.step)) { a.s = 'comb'; a.reqNote = `${d.id} ${STEP_NAME[d.step]}`; delete a.reqDoc; back++; } }));
+    // a candidate word that has since been approved makes its attributes combinable again (re-judged in standardize)
+    const dictNow = getDict(); const rc = dictNow.find(x => x.name === '수령자' && x.k === 'word' && x.ver > 0 && x.st === '사용');
+    let cnd = 0; if (rc) E.forEach(e => e.a.forEach(a => { if (a.cand && a.s === 'unreg') { a.s = 'comb'; delete a.cand; cnd++; } }));
+    if (fin || back || cnd) { dirty = true; setTimeout(() => toast([fin ? `용어 신청 승인 — 속성 ${fin}건이 표준이 됐습니다` : '', back ? `용어 신청 반려·회수 — 속성 ${back}건을 다시 맞춰야 합니다` : '', cnd ? `후보 ‘수령자’ 승인 — 속성 ${cnd}건을 표준 맞추기에서 다시 판정하세요` : ''].filter(Boolean).join(' · '), back ? 'info' : 'success'), 200); }
+  }
+  // standardize → model hand-off: apply exactly the rows the user selected, with each row's chosen handling (R3 · CL7-08)
   let applied = null;
-  try { applied = JSON.parse(sessionStorage.getItem('dbm-apply') || 'null'); sessionStorage.removeItem('dbm-apply'); } catch (e) {}
-  if (applied && applied.area === AREA && !locked) {
-    snap(); const done = applyRows(applied.keys || []);
-    // exceptions / exclusions chosen in standardize arrive with their reasons (S5)
-    const findAttr = key => { const [en, an] = key.split('.'); const e = E.find(x => x.n === en); return e ? e.a.find(a => a.n === an) : null; };
-    (applied.ex || []).forEach(x => { const a = findAttr(x.key); if (a) { a.s = 'ex'; a.exReason = x.why; delete a.cand; done.push(x.key); } });
-    (applied.na || []).forEach(x => { const a = findAttr(x.key); if (a) { a.s = 'na'; a.naReason = x.why; done.push(x.key); } });
-    setTimeout(() => toast(`표준 맞추기 ${applied.keys.length}건 반영 — 모델 변경 ${done.length}건${applied.doc ? ` · 용어 신청 ${applied.doc}(${applied.req}건)` : ''}${applied.cand ? ` · 후보 ${applied.cand}건` : ''}`, 'success', undoAction()), 300);
+  try { applied = JSON.parse(sessionStorage.getItem('dbm-apply') || 'null'); } catch (e) {}
+  if (applied && applied.area === AREA && applied.ver === VER && !locked && !DEMO && !viewOnly) {
+    sessionStorage.removeItem('dbm-apply');
+    snap(); const done = [], miss = [];
+    // attribute identity = entity id + attribute logical name at analysis time (a renamed attribute is reported, not silently skipped)
+    const findAttr = x => { const e = E.find(y => y.id === x.e); return e ? e.a.find(a => a.n === x.a || a.orig === x.a) : null; };
+    (applied.rows || []).forEach(x => {
+      if (x.proc === '예외로 유지') { const a = findAttr(x); if (a) { a.s = 'ex'; a.exReason = x.why; delete a.cand; done.push(x.key); } else miss.push(x.key); return; }
+      if (!STD_MAP[x.key]) { miss.push(x.key); return; }
+      const a = findAttr(x);   // resolve before the rename
+      STD_MAP[x.key](); done.push(x.key);
+      if (a && x.proc === '용어 신청 묶음' && applied.doc) { a.s = 'req'; a.reqDoc = applied.doc; }
+      else if (a && x.wait) { a.s = 'req'; a.reqDoc = x.wait; }   // waits on the request that already covers this term
+    });
+    (applied.ex || []).forEach(x => { const a = findAttr(x); if (a) { a.s = 'ex'; a.exReason = x.why; delete a.cand; done.push(x.key); } else miss.push(x.key); });
+    (applied.na || []).forEach(x => { const a = findAttr(x); if (a) { a.s = 'na'; a.naReason = x.why; done.push(x.key); } else miss.push(x.key); });
+    setTimeout(() => toast(`표준 맞추기 반영 — 모델 변경 ${done.length}건${miss.length ? ` · <b>찾지 못해 적용 못 함 ${miss.length}건</b>(${miss.join(', ')})` : ''}${applied.doc ? ` · 용어 신청 ${applied.doc}(${applied.req}건)` : ''}${applied.cand ? ` · 후보 ‘수령자’ 발생 위치 ${applied.cand}건 연결` : ''}`, miss.length ? 'danger' : 'success', undoAction()), 300);
+  } else if (applied) {
+    // the area changed state (locked / other version) between standardize and here: keep the hand-off, say why
+    setTimeout(() => toast(`표준 맞추기 결과를 반영하지 않았습니다 — ${applied.area !== AREA ? '다른 업무 영역' : applied.ver !== VER ? `v${applied.ver}용 결과(지금 v${VER})` : '이 영역은 지금 편집할 수 없음'}. 선택은 보존돼 있으니 표준 맞추기에서 다시 적용하세요`, 'danger'), 300);
   }
   $('ver').textContent = `v${VER} 작업 중`;
-  document.querySelector('.page-header .caption.faint').innerHTML = `v${BASE} 확정본 기준 · <a href="#" data-toast="v${BASE} 확정본 대비: 엔터티 +2, 속성 +6, 변경 5" data-toast-type="info">확정본과 비교</a>`;
+  const bdoc = getDocs().find(x => x.type === 'model' && x.area === AREA && x.ver === BASE && x.step === 'done');
+  document.querySelector('.page-header .caption.faint').innerHTML = `v${BASE} 확정본 기준${bdoc ? ` · <a href="model.html?area=${AREA}&snap=${bdoc.id}">v${BASE} 확정본 보기</a>` : ''}`;
+  document.querySelectorAll('a[href^="standardize.html"]').forEach(a => { const u = new URL(a.getAttribute('href'), location.href); u.searchParams.set('area', AREA); a.setAttribute('href', 'standardize.html' + u.search); });
+  if (DEMO) {
+    $('ver').textContent = '예시 · 저장 안 함';
+    document.body.classList.add('viewonly'); $('ban-view').style.display = 'flex';
+    $('ban-view').querySelector('.grow').innerHTML = `<b>예시 화면</b> (${STATE === 'resolved' ? '미준수 해결 후' : '표준 맞추기 적용 후'}) — 조회 전용입니다. 저장·확정 신청·판정 기록이 되지 않습니다. <a href="model.html?area=${AREA}">실제 작업 화면으로</a>`;
+  }
   document.querySelector('.crumb b').textContent = LOCK.model.name;
   if (locked) {
     document.body.classList.add('locked'); $('ban-lock').style.display = 'flex';
@@ -1065,9 +1118,14 @@ window.pageInit = function () {
     const D = SNAP ? getDocs().find(x => x.id === SNAP) : LOCK.doc;
     const did = D ? D.id : '';
     $('ban-lock-a').href = `approvals.html?doc=${did}`;
-    if (review) {
-      $('ver').textContent = SNAP ? `v${D ? D.ver : VER} 스냅숏` : `v${VER} 검토 중`;
-      $('ban-lock-t').innerHTML = SNAP ? `<b>결재 문서 ${did}의 v${D ? D.ver : VER} 스냅숏</b> — 신청 시점 그대로의 조회 전용 화면입니다. 표·제약·보안 탭과 변경 비교로 내용을 확인하세요.`
+    if (SNAP_BAD) {
+      $('ver').textContent = '열 수 없음'; b.style.display = 'none';
+      $('ban-lock').className = 'banner danger'; $('ban-lock-t').innerHTML = `<b>${SNAP}</b> — 이 업무 영역의 모델 확정 문서가 아니거나 없는 문서입니다. 작업본을 대신 보여 주지 않습니다.`;
+      $('ban-lock-a').href = 'approvals.html'; $('ban-lock-a').textContent = '결재함';
+    } else if (review) {
+      const isDone = SNAP && D && D.step === 'done';
+      $('ver').textContent = SNAP ? `v${D.ver} ${isDone ? '확정본' : '제출 사본'}` : `v${VER} 검토 중`;
+      $('ban-lock-t').innerHTML = SNAP ? `<b>${did} · v${D.ver} ${isDone ? '확정본' : `제출 사본 (${STEP_NAME[D.step]})`}</b> — ${D.model ? '신청 시점에 저장된 사본 그대로' : '제출 사본이 없는 목업 시드 문서라 이 영역의 기본 구조를'} 조회 전용으로 보여 줍니다.${D.ver !== VER ? ` 지금 작업 버전은 v${VER}입니다.` : ''}`
         : `<b>검토 중 · ${did}</b> (${D ? STEP_NAME[D.step] : ''}) — 확정 신청으로 이 업무 영역은 모든 접속자에게 조회 전용입니다.`;
       if (!SNAP && D && D.req === ME.id) { b.textContent = '회수'; b.onclick = () => { $('wd-t').textContent = `확정 신청 회수 · ${did}`; $('mo-wd').classList.add('open'); }; }
       else b.style.display = 'none';
@@ -1076,7 +1134,14 @@ window.pageInit = function () {
       $('ban-lock-t').innerHTML = `<b>v${VER} 확정본 · ${did}</b> — 확정된 모델은 고칠 수 없습니다. 이어서 작업하려면 다음 작업 버전을 여세요.`;
       $('ban-lock-a').textContent = '결재 이력';
       b.textContent = `v${VER + 1} 작업 시작`; b.classList.add('primary');
-      b.onclick = () => { if (viewOnly) { guard(); return; } startNextVersion(AREA); flash(`v${VER + 1} 작업 버전을 시작했습니다 — v${VER} 확정본을 기준으로 변경을 기록합니다`, 'success'); location.href = `model.html?area=${AREA}`; };
+      b.onclick = () => {
+        if (viewOnly) { guard(); return; }
+        if (liveRoleChanged()) { staleRoleToast(); return; }
+        // expected version: a second tab / double click must not start yet another version (CX9-04)
+        const r = startNextVersion(AREA, VER);
+        flash(r.ok ? `v${r.ver} 작업 버전을 시작했습니다 — v${VER} 확정본을 기준으로 변경을 기록합니다` : `이미 v${r.ver} 작업 버전이 시작돼 있습니다 — 그 버전을 엽니다`, r.ok ? 'success' : 'info');
+        location.href = `model.html?area=${AREA}`;
+      };
     }
   }
   // dictionary panel: the user's choice is remembered; at 1600 it starts closed by default
