@@ -34,6 +34,7 @@
   <div class="pane on set-wrap" data-pane="org">
     <div class="set-row"><div class="l"><b>기관</b><span>상단 바와 산출물에 표시</span></div><div class="field-row"><div class="field"><label>기관명</label><input class="input" value="한국데이터진흥원"></div><div class="field"><label>기관 사전 이름</label><input class="input" value="KDA 표준사전"></div></div></div>
     <div class="set-row"><div class="l"><b>사전 신청 최종 승인</b><span>켜면 DA 승인 뒤 기관 담당자 승인을 거쳐 반영</span></div><div class="flex"><label class="flex"><input type="checkbox" id="fin-dict"> <span id="fin-dict-t"></span></label></div></div>
+    <div class="set-row"><div class="l"><b>운영 목표</b><span>홈 현황·통계의 목표선과 ‘기한 넘김’ 기준</span></div><div class="flex" style="gap:16px"><label class="flex">목표 준수율 <input class="input mono" id="org-goal" type="number" min="50" max="100" style="width:70px;height:28px">%</label><label class="flex">결재 기한 <input class="input mono" id="org-sla" type="number" min="1" max="30" style="width:60px;height:28px">일</label></div></div>
     <div class="set-row"><div class="l"><b>결재선 템플릿</b><span>신청자는 단계를 지울 수 없고 참조자만 추가</span></div>
       <div>
         <div class="card" style="margin-bottom:12px">
@@ -150,6 +151,7 @@ window.pageInit = function () {
   const $ = id => document.getElementById(id);
   // approval-line settings and the validation policy are saved to the state layer and read by new documents / validations (CX12-34)
   const org = getOrg(); const areas = getModels();
+  $('org-goal').value = org.goal || 90; $('org-sla').value = org.sla || 3;
   $('fin-dict').checked = org.finalDict; const fdT = () => { $('fin-dict-t').textContent = $('fin-dict').checked ? `사용 · 기관 담당자 역할 ${Object.values(USERS).filter(u => u.roles.includes('owner')).length}명` : '사용 안 함 — DA 승인으로 반영'; }; fdT(); $('fin-dict').onchange = fdT;
   $('fin-model').innerHTML = Object.entries(areas).map(([id, m]) => `<label class="flex" style="margin-bottom:4px"><input type="checkbox" data-fm="${id}" ${org.finalModel[id] !== false ? 'checked' : ''}> ${m.name}</label>`).join('');
   const pol = getPolicy();
@@ -157,8 +159,13 @@ window.pageInit = function () {
   drawPol(); $('pol-wd').value = pol.wordAbbr || 6;
   $('save').onclick = () => {
     if (liveRoleChanged()) { staleRoleToast(); return; }
-    const o = getOrg(); const before = JSON.stringify(o); o.finalDict = $('fin-dict').checked; document.querySelectorAll('[data-fm]').forEach(c => { o.finalModel[c.dataset.fm] = c.checked; }); saveOrg(o);
-    const changes = []; if (before !== JSON.stringify(o)) { changes.push(`결재선: 사전 최종 승인 ${o.finalDict ? '켬' : '끔'} · 모델 최종 승인 ${Object.entries(o.finalModel).map(([a, v]) => (areas[a] ? areas[a].name : a) + ' ' + (v ? '켬' : '끔')).join(', ')}`); pushAudit({ act: '설정 변경 — 결재선', target: '기관·시스템 설정', why: changes[0] }); }
+    const o = getOrg(); const before = JSON.stringify(o); o.finalDict = $('fin-dict').checked; document.querySelectorAll('[data-fm]').forEach(c => { o.finalModel[c.dataset.fm] = c.checked; });
+    const g0 = o.goal || 90, s0 = o.sla || 3, g1 = Math.min(100, Math.max(50, +$('org-goal').value || 90)), s1 = Math.min(30, Math.max(1, +$('org-sla').value || 3));
+    const goalChg = g0 !== g1 || s0 !== s1; o.goal = g1; o.sla = s1; $('org-goal').value = g1; $('org-sla').value = s1;
+    const lineChg = JSON.stringify(Object.assign({}, JSON.parse(before), { goal: 0, sla: 0 })) !== JSON.stringify(Object.assign({}, o, { goal: 0, sla: 0 }));
+    saveOrg(o);
+    const changes = []; if (goalChg) { changes.push(`운영 목표: 준수율 ${g0}% → ${g1}% · 결재 기한 ${s0}일 → ${s1}일`); pushAudit({ act: '설정 변경 — 운영 목표', target: '기관·시스템 설정', why: changes[changes.length - 1] }); }
+    if (lineChg) { changes.push(`결재선: 사전 최종 승인 ${o.finalDict ? '켬' : '끔'} · 모델 최종 승인 ${Object.entries(o.finalModel).map(([a, v]) => (areas[a] ? areas[a].name : a) + ' ' + (v ? '켬' : '끔')).join(', ')}`); pushAudit({ act: '설정 변경 — 결재선', target: '기관·시스템 설정', why: changes[changes.length - 1] }); }
     const p = getPolicy(); const wd = +$('pol-wd').value || 6;
     if (wd !== (p.wordAbbr || 6)) { const nv = { ver: p.ver + 1, at: today2(), by: ME.name, wordAbbr: wd, hist: [{ ver: p.ver + 1, at: today2(), by: ME.name, what: `단어 영문약어명 ${p.wordAbbr || 6}자 → ${wd}자` }].concat(p.hist) }; savePolicy(nv); pushAudit({ act: `검수 기준 v${nv.ver}`, target: '검수 기준', why: nv.hist[0].what }); changes.push(`검수 기준 v${nv.ver}`); drawPol(); }
     toast(changes.length ? `저장했습니다 — ${changes.join(' · ')}. 새 신청부터 적용되고 감사 로그에 남았습니다` : '바뀐 설정이 없습니다', changes.length ? 'success' : 'info');
