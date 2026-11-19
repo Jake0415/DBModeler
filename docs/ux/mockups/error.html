@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>안내 · DBModeler 목업</title>
+<title>안내 · NeoDB 목업</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&display=swap">
 <link rel="stylesheet" href="assets/app.css">
@@ -36,7 +36,7 @@ window.pageInit = function () {
     'expired': ['세션 만료', '30분 동안 입력이 없어 세션이 만료됐습니다', '편집 중이던 내용은 이 브라우저에 보관했습니다. 다시 로그인하면 원래 화면으로 돌아가 이어서 작업합니다.', `<a class="btn primary" href="login.html?expired=1&from=${encodeURIComponent(from || 'home.html')}">다시 로그인하고 이어서 작업</a>`]
   };
   const p = P[code] || P['404'];
-  document.title = p[0] + ' · DBModeler 목업';
+  document.title = p[0] + ' · NeoDB 목업';
   document.getElementById('err').innerHTML = `<div class="code">${p[0]}</div><h1>${p[1]}</h1><p>${p[2]}</p><div class="acts">${p[3]}</div><div class="foot">${PRODUCT.name} ${PRODUCT.version} · build ${PRODUCT.build} · ${PRODUCT.env}</div>`;
   // 404 → the shell's global search, prefilled with what was missing
   const gs = document.getElementById('go-search'); if (gs) gs.onclick = () => { if (!window.gsearchOpen) { location.href = 'home.html'; return; } window.gsearchOpen(); const i = document.getElementById('gs-q'); if (i && what) { i.value = what; i.dispatchEvent(new Event('input')); } };

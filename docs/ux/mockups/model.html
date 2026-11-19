@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>모델 · 요구사항 · DBModeler 목업</title>
+<title>모델 · 요구사항 · NeoDB 목업</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&display=swap">
 <link rel="stylesheet" href="assets/app.css">
@@ -584,7 +584,7 @@ window.pageInit = function () {
   $('rp-tab').onclick = () => openPanel('rp');
   $('rp-wide').onclick = () => { $('rp').classList.toggle('wide2'); applyView(); };
   new MutationObserver(syncTab).observe($('pn-confirm'), { attributes: true, attributeFilter: ['class'] });
-  const showRP = () => openPanel('rp');
+  const showRP = () => { openPanel('rp'); const e = sel && typeof sel === 'string' && ent(sel); if (e && !e.ref && window.noteRecent && !SNAP) noteRecent(AREA, e.id, e.n); };
   const stBadge = s => ({ ok: '<i data-ic=check></i><span class="sr-only">표준</span>', comb: '<span class="badge b-info">조합 가능</span>', unreg: '<span class="badge b-warning">미등록</span>', ex: '<span class="tag ex"><i data-ic=flag data-s=12></i>예외</span>', na: '<span class="faint">—</span>', req: '<span class="badge b-info" title="용어 신청 중 · 결재에서 함께 확인">신청</span>' })[s];
   function consRows(e) {
     if (e.p === '—') return '<div class="banner warning"><i data-ic=warn></i><div>테이블 물리명이 정해지지 않아 제약조건 이름을 만들 수 없습니다 — 게이트 A 경고</div></div>';

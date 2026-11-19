@@ -1,4 +1,4 @@
-/* DBModeler mockup shell & interactions (static, no backend) — v4 */
+/* NeoDB mockup shell & interactions (static, no backend) — v4 */
 (function () {
   window.__errs = []; window.addEventListener('error', e => window.__errs.push(e.message));   // mockup self-check (review scripts read this)
   const store = {
@@ -19,7 +19,7 @@
   applyTheme(themePref);
 
   /* ---- product / users / roles ---- */
-  const PRODUCT = { name: 'DBModeler', version: '1.0.0', build: '20261117.a1b2c3', env: '운영', released: '2026-11-17', dict: '공통표준 2025.11 (적재 11/03) · 기관 사전 제정 12차' };
+  const PRODUCT = { name: 'NeoDB', version: '1.0.0', build: '20261117.a1b2c3', env: '운영', released: '2026-11-17', dict: '공통표준 2025.11 (적재 11/03) · 기관 사전 제정 12차' };
   window.PRODUCT = PRODUCT;
   const USERS = {
     kim: { id: 'kim', name: '김모델', org: '데이터정책팀', mail: 'kim@kda.go.kr', roles: ['modeler', 'da'], systems: ['요구사항관리', '인사시스템'] },
@@ -66,7 +66,7 @@
     { id: 'REQ-2026-0001', type: 'dict', title: "단어 '산출서' 미사용", req: 'lee', step: 'done', n: 1, date: '10/02 13:50', cc: [], reason: '산출물로 통합', applied: { applied: 1, failed: [] }, hist: [{ at: '10/02 14:00', who: '이데이터', act: 'DA 승인', step: 'da', self: true, why: '통합 결정 회의(10/01) 반영' }, { at: '10/02 14:20', who: '이현업', act: '최종 승인', step: 'final' }], items: [{ k: 'word', id: 'W-0099', name: '산출서', act: '미사용', why: '산출물로 통합' }] }
   ];
   window.getDocs = () => J('dbm-docs', clone(DOCS0));
-  window.saveDocs = d => S('dbm-docs', d);
+  window.saveDocs = d => { S('dbm-docs', d); if (window.refreshTop) window.refreshTop(); };
   window.myQueue = (docs) => docs.filter(d => (d.step === 'da' && ME.has('da')) || (d.step === 'final' && ME.has('owner')));
   window.STEP_NAME = { da: 'DA 승인', final: '최종 승인', done: '완료', withdrawn: '회수됨', rejected: '반려됨' };
   window.nextDocId = docs => 'REQ-2026-' + String(Math.max(...docs.map(d => +d.id.slice(-4))) + 1).padStart(4, '0');
@@ -416,7 +416,7 @@
     { id: 'n3', k: 'cand', t: "후보 '수령자'가 단어 신청으로 전환됐습니다", m: 'REQ-2026-0012 · 내가 등록한 후보 2건', href: 'approvals.html?doc=REQ-2026-0012', at: '11/17 11:05', to: ['kim', 'park'] },
     { id: 'n4', k: 'cc', t: '참조: REQ-2026-0009 단어 3건 등록', m: '박설계 신청 · DA 승인 대기', href: 'approvals.html?box=cc&doc=REQ-2026-0009', at: '11/16 09:12', to: ['kim'] },
     { id: 'n5', k: 'appr', t: "REQ-2026-0010 도메인 '코드C2' — 최종 승인 차례", m: '이데이터 신청 · DA 승인 완료', href: 'approvals.html?doc=REQ-2026-0010', at: '11/16 17:40', to: ['hyun'] },
-    { id: 'n6', k: 'sys', t: `DBModeler ${PRODUCT.version} 새 기능`, m: '산출물 화면 · 표 보기 · 모델 검토 — 릴리스 노트', href: '#about', at: '11/17 09:00', to: ['kim', 'park', 'lee', 'hyun'] }
+    { id: 'n6', k: 'sys', t: `NeoDB ${PRODUCT.version} 새 기능`, m: '산출물 화면 · 표 보기 · 모델 검토 — 릴리스 노트', href: '#about', at: '11/17 09:00', to: ['kim', 'park', 'lee', 'hyun'] }
   ];
   const readSet = new Set((store.get('dbm-read-' + ME.id, '') || '').split(',').filter(Boolean));
   const myNotifs = () => J('dbm-notifs', []).concat(NOTIFS0).filter(n => (n.to || []).includes(ME.id));
@@ -563,7 +563,7 @@
     p.classList.toggle('open', open); store.set('dbm-scr-open', open ? '1' : '0');
     const b = document.getElementById('mk-scr'); if (b) b.setAttribute('aria-expanded', open ? 'true' : 'false');
     // focus moves into the panel and back to the trigger (CX12-03)
-    if (open) { screenPanel(); const t = p.querySelector('#scr-text'); if (t && on !== true) t.focus(); } else if (b && p.contains(document.activeElement)) b.focus();
+    if (open) { screenPanel(); const t = p.querySelector('#scr-text'); if (t && on !== true) t.focus(); } else if (p.contains(document.activeElement)) { const v = b && b.offsetParent ? b : document.getElementById('mk-fab'); if (v) v.focus(); }
   }
   window.toggleScreenPanel = toggleScreenPanel;
 
@@ -601,6 +601,102 @@
   document.addEventListener('keydown', e => { if ((e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'K') && document.getElementById('gsearch')) { e.preventDefault(); gsearchOpen(); } });
   document.addEventListener('click', e => { if (e.target.closest && e.target.closest('#gsearch')) gsearchOpen(); });
 
+  /* ---- NeoDB brand (11 §3, BI A "연결된 N"): ink square, two nodes joined by a relation line ---- */
+  const MARK = (s = 20) => `<svg class="nmark" width="${s}" height="${s}" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="${s <= 16 ? 5 : 6}" fill="currentColor"/><path d="M10 22V10l12 12V10" fill="none" stroke="var(--on-ink)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/><circle cx="10" cy="10" r="3" fill="var(--on-ink)"/><circle cx="22" cy="22" r="3" fill="var(--on-ink)"/></svg>`;
+  window.MARK = MARK;
+  if (!document.querySelector('link[rel="icon"]')) { const l = document.createElement('link'); l.rel = 'icon'; l.type = 'image/svg+xml'; l.href = 'assets/neodb-mark.svg'; document.head.appendChild(l); }
+  /* recently opened entities (model tree) — model.html records one whenever an entity's panel opens */
+  const recKey = () => 'dbm-recent-ent-' + ME.id;
+  window.noteRecent = (area, id, n) => { const r0 = J(recKey(), []); if (r0[0] && r0[0].area === area && r0[0].id === id) return; const r = r0.filter(x => !(x.area === area && x.id === id)); r.unshift({ area, id, n }); S(recKey(), r.slice(0, 3)); window.dispatchEvent(new Event('dbm-recent')); };
+  /* top menus: arrow keys move between items of an open menu */
+  document.addEventListener('keydown', e => { const tb = e.key === 'ArrowDown' && e.target.closest && e.target.closest('[data-menu-btn]'); if (tb && tb.getAttribute('aria-expanded') !== 'true') { e.preventDefault(); tb.click(); return; } });
+  document.addEventListener('focusout', e => { const w = e.target.closest && e.target.closest('.tmw'); const to = e.relatedTarget; if (!w || !to || w.contains(to)) return; const m = w.querySelector('.menu[data-auto].open'); if (!m) return; m.classList.remove('open'); const b = w.querySelector('[data-menu-btn]'); if (b) b.setAttribute('aria-expanded', 'false'); });
+  document.addEventListener('keydown', e => { if (!['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(e.key)) return; const m = e.target.closest && e.target.closest('.menu[data-auto].open'); if (!m) return; const it = [...m.querySelectorAll('.mi')]; if (!it.length) return; e.preventDefault(); let i = it.indexOf(document.activeElement); i = e.key === 'Home' ? 0 : e.key === 'End' ? it.length - 1 : (i + (e.key === 'ArrowDown' ? 1 : -1) + it.length) % it.length; it[i].focus(); });
+
+  /* ---- model tree (11 §2.2): system · find · business areas (current one open) · system tools · recent entities · collapse ---- */
+  const SYSTEMS = [{ name: '요구사항관리', db: 'Oracle 19c', code: 'RQMS', href: 'system.html', cur: true }, { name: '인사시스템', db: 'Tibero 7', href: 'error.html?code=404&what=인사시스템', none: true }, { name: '회계시스템', db: 'PostgreSQL 15', href: 'error.html?code=404&what=회계시스템', none: true }];
+  function drawTree(nav) {
+    const page = document.body.dataset.page, file = curFile(), qp = new URLSearchParams(location.search), models = getModels();
+    const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;');
+    const fam = ['model.html', 'standardize.html', 'ddl.html', 'outputs.html'].includes(file) && !qp.get('sys');
+    const famArea = fam ? (models[qp.get('area')] ? qp.get('area') : 'rq') : null;
+    if (famArea) store.set('dbm-last-area', famArea);
+    const cur = famArea || (models[store.get('dbm-last-area', '')] ? store.get('dbm-last-area', '') : 'rq');
+    const openSt = J('dbm-tree-open2', {});
+    const isOpen = id => id in openSt ? !!openSt[id] : id === cur;
+    const href = id => 'model.html' + (id === 'rq' ? '' : '?area=' + id);
+    const state = id => { const L = modelLock(id); return L.state === 'review' ? '<span class="tbadge">검토</span>' : L.state === 'confirmed' ? '<span class="tbadge">확정</span>' : `<span class="tver" title="작업 중 v${models[id].ver}">v${models[id].ver}</span>`; };
+    const subs = id => {
+      const bad = compOf(modelOf(id, models[id].ver)).bad;
+      const on = f => famArea === id && file === f ? ' on" aria-current="page' : '';
+      return `<a class="tl sub${on('model.html')}" href="${href(id)}">모델</a>
+        <a class="tl sub${on('standardize.html')}" href="standardize.html?area=${id}">표준 맞추기${bad ? `<span class="tn" title="미준수 ${bad}">${bad}</span>` : ''}</a>
+        <a class="tl sub${on('ddl.html')}" href="ddl.html?area=${id}">DDL</a>
+        <a class="tl sub${on('outputs.html')}" href="outputs.html?area=${id}">산출물</a>`;
+    };
+    const areasHtml = q => {
+      q = (q || '').trim().toUpperCase();
+      let found = 0;
+      const html = Object.entries(models).map(([id, m]) => {
+        let ents = [], nameHit = false;
+        if (q) {
+          ents = (modelOf(id, m.ver).E || []).filter(e => !e.ref && (String(e.n).toUpperCase().includes(q) || String(e.p || '').toUpperCase().includes(q)));
+          nameHit = String(m.name).toUpperCase().includes(q);
+          if (!nameHit && !ents.length) return '';
+          found += ents.length + (nameHit ? 1 : 0);
+        }
+        const open = !!q || isOpen(id);
+        const more = ents.length > 12 ? `<div class="tempty">외 ${ents.length - 12}개 · 모델에서 찾기</div>` : '';
+        return `<div class="tarea${id === cur ? ' cur' : ''}">
+          <div class="trow"><button class="tx" type="button" data-tx="${id}" aria-expanded="${open}" aria-controls="ts-${id}" aria-label="${esc(m.name)} 하위 메뉴"${q ? ' disabled' : ''}><i data-ic=${open ? 'down' : 'right'} data-s=12></i></button><a class="tname" href="${href(id)}" title="${esc(m.name)}">${esc(m.name)}</a>${state(id)}</div>
+          ${open ? `<div class="tsubs" id="ts-${id}">${(!q || nameHit) ? subs(id) : ''}${ents.slice(0, 12).map(e => `<a class="tl sub" href="model.html?area=${id}&focus=${e.id}">${esc(e.n)}${e.p && e.p !== '—' ? `<span class="tn mono">${esc(e.p)}</span>` : ''}</a>`).join('')}${more}</div>` : ''}
+        </div>`;
+      }).join('');
+      const live = nav.querySelector('#tr-live'); if (live) live.textContent = q ? (found ? `${found}건 찾음` : '맞는 영역·엔터티가 없습니다') : '';
+      return html || '<div class="tempty">맞는 영역·엔터티가 없습니다</div>';
+    };
+    const recHtml = () => { const rec = J(recKey(), []).filter(r => models[r.area] && (modelOf(r.area, models[r.area].ver).E || []).some(e => e.id === r.id));
+      return rec.length ? rec.map(r => `<a class="tl" href="model.html?area=${r.area}&focus=${r.id}"><i data-ic=history></i><span class="tt">${esc(r.n)}</span><span class="tn">${esc(models[r.area].name)}</span></a>`).join('') : '<div class="tempty">모델에서 엔터티를 열면 여기에 남습니다</div>'; };
+    const min = () => document.getElementById('app').classList.contains('treemin');
+    const canNew = ME.has('modeler') || ME.has('admin');
+    const sys = SYSTEMS[0];
+    nav.innerHTML = `
+      <div class="tfull" id="tr-full">
+        <div class="tsys">
+          <a class="tsys-a${page === 'system' ? ' on' : ''}" href="system.html"${page === 'system' ? ' aria-current="page"' : ''} title="시스템 홈"><b>${sys.name}</b><span>${sys.db} · ${sys.code}</span></a>
+          <span class="tmw"><button class="tsw" type="button" data-menu-btn aria-expanded="false" aria-controls="mn-sys" aria-label="시스템 바꾸기"><i data-ic=down data-s=14></i></button><div class="menu" data-auto id="mn-sys">${SYSTEMS.map(s => `<a class="mi${s.cur ? ' on' : ''}" href="${s.href}"${s.cur ? ' aria-current="true"' : ''}><span>${s.name}</span><span class="caption muted" style="margin-left:auto">${s.none ? '목업 화면 없음' : s.db}</span></a>`).join('')}</div></span>
+        </div>
+        <label class="tfind"><i data-ic=search data-s=14></i><input id="tr-q" type="search" placeholder="영역·엔터티 찾기" aria-label="업무 영역·엔터티 찾기" autocomplete="off"></label><div class="sr-only" id="tr-live" aria-live="polite"></div>
+        <div class="tsec"><span>업무 영역</span>${canNew ? '<a class="tadd" href="system.html#new" aria-label="새 업무 영역" title="새 업무 영역"><i data-ic=plus data-s=14></i></a>' : ''}</div>
+        <div class="tareas" id="tr-areas">${areasHtml('')}</div>
+        <div class="tsep"></div>
+        <a class="tl${file === 'model.html' && qp.get('sys') ? ' on" aria-current="page' : ''}" href="model.html?sys=1"><i data-ic=compare></i>시스템 전체 ERD</a>
+        <a class="tl${file === 'import.html' ? ' on" aria-current="page' : ''}" href="import.html"><i data-ic=upload></i>DDL 가져오기</a>
+        <div class="tsec"><span>최근 연 엔터티</span></div>
+        <div id="tr-rec">${recHtml()}</div>
+      </div>
+      <div class="tmini" aria-label="접힌 모델 트리">
+        <a class="tm-i${page === 'system' ? ' on" aria-current="page' : ''}" href="system.html" title="시스템 홈 · ${sys.name}" aria-label="시스템 홈"><i data-ic=table></i></a>
+        ${Object.entries(models).map(([id, m]) => `<a class="tm-i tm-a${id === famArea ? ' on" aria-current="true' : ''}" href="${href(id)}" title="${esc(m.name)}" aria-label="${esc(m.name)}">${esc(String(m.name).trim()[0])}</a>`).join('')}
+        <a class="tm-i${file === 'model.html' && qp.get('sys') ? ' on" aria-current="page' : ''}" href="model.html?sys=1" title="시스템 전체 ERD" aria-label="시스템 전체 ERD"><i data-ic=compare></i></a>
+        <a class="tm-i${file === 'import.html' ? ' on" aria-current="page' : ''}" href="import.html" title="DDL 가져오기" aria-label="DDL 가져오기"><i data-ic=upload></i></a>
+      </div>
+      <button class="tcollapse" id="tr-min" type="button"></button>`;
+    const btn = nav.querySelector('#tr-min');
+    const syncMin = () => { const m = min(); btn.innerHTML = `<i data-ic=${m ? 'right' : 'left'}></i><span>접기</span>`; btn.setAttribute('aria-label', m ? '모델 트리 펼치기' : '모델 트리 접기'); btn.setAttribute('aria-expanded', String(!m)); btn.setAttribute('aria-controls', 'tr-full'); btn.title = m ? '펼치기' : '접기'; };
+    syncMin();
+    btn.addEventListener('click', () => { const app = document.getElementById('app'); app.classList.toggle('treemin'); store.set('dbm-tree-min', min() ? '1' : '0'); syncMin(); window.dispatchEvent(new Event('resize')); });
+    const areas = nav.querySelector('#tr-areas'), q = nav.querySelector('#tr-q');
+    q.addEventListener('input', () => { areas.innerHTML = areasHtml(q.value); });
+    q.addEventListener('keydown', e => { if (e.key === 'Escape' && q.value) { e.stopPropagation(); q.value = ''; areas.innerHTML = areasHtml(''); } });
+    areas.addEventListener('click', e => {
+      const t = e.target.closest('[data-tx]'); if (!t) return;
+      const id = t.dataset.tx; openSt[id] = !isOpen(id); S('dbm-tree-open2', openSt);
+      areas.innerHTML = areasHtml(q.value); const nb = areas.querySelector(`[data-tx="${id}"]`); if (nb) nb.focus();
+    });
+    window.addEventListener('dbm-recent', () => { const r = nav.querySelector('#tr-rec'); if (r) r.innerHTML = recHtml(); });
+  }
+
   function navLink(href, label, key, extra) {
     const page = document.body.dataset.page;
     const on = key && page === key ? ' on' : '';
@@ -621,53 +717,47 @@
     const top = document.createElement('header');
     top.className = 'topbar';
     const nUnread = unread();
+    const page = document.body.dataset.page;
+    // v17 (11 §2.1): top menu = global moves; the active tab follows the screen family
+    const TAB = { system: 'model', model: 'model', dictionary: 'dict', excel: 'dict', candidates: 'dict', approvals: 'appr', settings: 'admin', audit: 'admin' }[page] || '';
+    const here = f => curFile() === f ? ' on" aria-current="page' : '';
+    const cur = (on, f) => on ? (curFile() === f ? ' aria-current="page"' : ' aria-current="true"') : '';
+    const qn0 = queueCount(), late = myQueue(getDocs()).some(d => docLate(d)), cq = candOpenCount();
+    const canAdmin = ME.has('admin'), canAudit = ME.has('da') || ME.has('admin');
     top.innerHTML = `
-      <a class="brand" href="home.html" title="홈"><span class="brand-mark">DB</span>DBModeler <span class="org">· 한국데이터진흥원</span></a>
-      <button class="gsearch" id="gsearch" type="button" aria-haspopup="dialog" aria-label="전체 검색 (Ctrl+K)">${ICON.search}<span>사전·모델·결재 검색</span><kbd>Ctrl K</kbd></button>
+      <a class="brand" href="home.html" aria-label="NeoDB 홈"${page === 'home' ? ' aria-current="page"' : ''}>${MARK(20)}<span class="wm">NeoDB</span></a>
+      <span class="org">한국데이터진흥원</span>
+      <nav class="tmenu" aria-label="주 메뉴">
+        <a class="tm${TAB === 'model' ? ' on' : ''}" href="system.html"${cur(TAB === 'model', 'system.html')}>모델</a>
+        <span class="tmw"><button class="tm${TAB === 'dict' ? ' on' : ''}" type="button" data-menu-btn aria-expanded="false" aria-controls="mn-dict"${TAB === 'dict' ? ' aria-current="true"' : ''}>사전<i data-ic=down data-s=12></i></button><div class="menu" data-auto id="mn-dict">
+          <a class="mi${here('dictionary.html')}" href="dictionary.html">통합 검색</a>
+          <a class="mi${here('excel-import.html')}" href="excel-import.html">엑셀 가져오기</a>
+          <a class="mi${here('uploads.html')}" href="uploads.html">업로드 이력</a>
+          <a class="mi${here('candidates.html')}" href="candidates.html">후보 큐${cq ? `<span class="mcount">${cq}</span>` : ''}</a>
+          <div class="sep"></div>
+          <a class="mi${here('dict-history.html')}" href="dict-history.html">변경 내역</a></div></span>
+        <a class="tm${TAB === 'appr' ? ' on' : ''}" href="approvals.html" id="tm-appr"${cur(TAB === 'appr', 'approvals.html')} aria-label="결재함${qn0 ? ` 내 차례 ${qn0}건` : ''}${late ? ', 기한 넘김 있음' : ''}">결재함${qn0 ? `<span class="tcount">${qn0}</span>` : ''}${late ? '<span class="tlate" title="기한을 넘긴 결재가 있습니다"></span>' : ''}</a>
+        ${canAdmin ? `<span class="tmw"><button class="tm${TAB === 'admin' ? ' on' : ''}" type="button" data-menu-btn aria-expanded="false" aria-controls="mn-admin"${TAB === 'admin' ? ' aria-current="true"' : ''}>관리<i data-ic=down data-s=12></i></button><div class="menu" data-auto id="mn-admin">
+          <a class="mi${here('settings.html')}" href="settings.html">설정</a>
+          <a class="mi${here('audit.html')}" href="audit.html">감사 로그</a></div></span>` : canAudit ? `<a class="tm${TAB === 'admin' ? ' on' : ''}" href="audit.html"${cur(TAB === 'admin', 'audit.html')}>감사 로그</a>` : ''}
+      </nav>
       <div class="spacer"></div>
-      <div class="mock-tools" title="목업 검토용 도구 — 실제 제품에는 없음">목업
-        <select id="mk-role" aria-label="역할 보기 전환">${Object.values(USERS).map(u => `<option value="${u.id}" ${u.id === ME.id ? 'selected' : ''}>${u.name} · ${u.roles.map(r => ROLE_NAME[r]).join('·')}</option>`).join('')}</select>
-        <span class="seg" id="seg-frame" title="화면 크기: 맞춤 = 창 폭 전체(최소 1600px) · 1920/1600 = 고정 미리보기"><button data-v="fit">맞춤</button><button data-v="1920">1920</button><button data-v="1600">1600</button></span>
-        <span class="seg" id="seg-theme"><button data-v="light">라이트</button><button data-v="dark">다크</button></span>
-        <button class="reset" id="mk-reset" title="목업 데이터 초기화(결재 진행 상태·알림 읽음) — 검토 메모는 유지">↺</button>
-        <button class="reset scr-btn" id="mk-scr" title="화면 정보 · 상태별 바로가기 · 설계 문서 · 검토 메모" aria-expanded="false">화면${(() => { const n = (J('dbm-notes', {})[curFile()] || []).filter(x => !x.done).length; return n ? ` <span class="scr-n">${n}</span>` : ''; })()}</button>
-        <a class="reset" href="index.html" title="목업 지도(전체 화면·교차 시나리오)">지도</a>
-      </div>
+      <button class="gsearch" id="gsearch" type="button" aria-haspopup="dialog" aria-label="전체 검색 (Ctrl+K)">${ICON.search}<span>검색</span><kbd>Ctrl K</kbd></button>
       <button class="iconbtn" id="btn-bell" aria-label="알림 ${nUnread}건" aria-haspopup="true" aria-expanded="false">${ICON.bell}${nUnread ? `<span class="dot">${nUnread}</span>` : ''}</button>
       <button class="avatar btnlike" id="btn-user" aria-label="사용자 메뉴 · ${ME.name}" aria-haspopup="true" aria-expanded="false">${ME.name[0]}${store.get('dbm-seen-ver', '') !== PRODUCT.version ? '<span class="newdot" title="새 기능"></span>' : ''}</button>
       <div class="pop-menu npanel" id="pn-notif" role="dialog" aria-label="알림"></div>
       <div class="pop-menu umenu" id="pn-user" role="menu" aria-label="사용자 메뉴"></div>`;
+    // v17 (11 §2.2): the left side is the model tree only — shown on home and model-family screens,
+    // hidden on top-menu screens (사전 · 결재함 · 관리 · 마이페이지), which then use the full width (decision #2)
     const nav = document.createElement('nav');
-    nav.className = 'nav';
-    const qn = queueCount();
-    nav.innerHTML = `
-      <div class="nav-group">${navLink('home.html', ICON.home + '홈', 'home')}</div>
-      <div class="nav-group">
-        <div class="nav-title">사전</div>
-        ${navLink('dictionary.html', ICON.book + '통합 검색', 'dictionary')}
-        ${navLink('excel-import.html', '<span style="width:16px"></span>엑셀 가져오기', 'excel', '')}
-        ${navLink('candidates.html', '<span style="width:16px"></span>후보 큐' + (candOpenCount() ? `<span class="count">${candOpenCount()}</span>` : ''), 'candidates', '')}
-      </div>
-      <div class="nav-group">
-        <div class="nav-title">결재</div>
-        ${navLink('approvals.html', ICON.check + '결재함' + (qn ? `<span class="count">${qn}</span>` : ''), 'approvals')}
-      </div>
-      <div class="nav-group">
-        <div class="nav-title">시스템</div>
-        ${navLink('system.html', ICON.db + '요구사항관리<span class="tag">Oracle</span>', 'system')}
-        ${Object.entries(getModels()).map(([id, m]) => { const cur = document.body.dataset.page === 'model' && (new URLSearchParams(location.search).get('area') || 'rq') === id; return `<a class="sub2${cur ? ' on' : ''}" href="model.html${id === 'rq' ? '' : '?area=' + id}">${m.name}</a>`; }).join('')}
-        ${navLink('error.html?code=404&what=인사시스템', ICON.db + '인사시스템<span class="tag">Tibero</span>', '')}
-        ${navLink('error.html?code=404&what=회계시스템', ICON.db + '회계시스템<span class="tag">PostgreSQL</span>', '')}
-      </div>
-      <div class="nav-group">
-        <div class="nav-title">관리</div>
-        ${ME.has('admin') ? navLink('settings.html', ICON.gear + '설정', 'settings') : ''}
-        ${ME.has('da') || ME.has('admin') ? navLink('audit.html', ICON.log + '감사 로그', 'audit') : ''}
-        ${!ME.has('admin') && !ME.has('da') ? '<div class="caption faint" style="padding:4px 8px">관리 메뉴는 DA·Admin만</div>' : ''}
-      </div>
-      <button class="nav-ver" id="nav-ver" title="제품 정보">${PRODUCT.name} ${PRODUCT.version} · build ${PRODUCT.build}</button>`;
+    nav.className = 'mtree'; nav.setAttribute('aria-label', '모델 트리');
+    const showTree = ['home', 'system', 'model'].includes(page);
+    if (!showTree) app.classList.add('notree');
+    const tmin = store.get('dbm-tree-min', '');
+    if (tmin === '1' || (tmin === '' && curFile() === 'model.html' && window.innerWidth < 1920)) app.classList.add('treemin');
     app.insertBefore(nav, content);
     app.insertBefore(top, nav);
+    drawTree(nav);
     const toasts = document.createElement('div');
     toasts.className = 'toasts'; toasts.id = 'toasts';
     toasts.setAttribute('role', 'status'); toasts.setAttribute('aria-live', 'polite');
@@ -675,7 +765,7 @@
     const ov = document.createElement('div');
     ov.innerHTML = `
       <div class="overlay" id="mo-about" role="dialog" aria-modal="true" aria-labelledby="about-t"><div class="modal" style="width:520px">
-        <div class="m-head"><div class="flex"><span class="brand-mark" style="width:28px;height:28px;font-size:13px">DB</span><h3 id="about-t">제품 정보</h3><span class="grow"></span><button class="iconbtn" data-close="mo-about" aria-label="닫기" style="width:28px;height:28px">${ICON.x}</button></div></div>
+        <div class="m-head"><div class="flex">${MARK(28)}<h3 id="about-t">제품 정보</h3><span class="grow"></span><button class="iconbtn" data-close="mo-about" aria-label="닫기" style="width:28px;height:28px">${ICON.x}</button></div></div>
         <div class="m-body">
           <dl class="kv"><dt>제품</dt><dd><b>${PRODUCT.name}</b> — 웹 데이터 모델러 · 데이터 표준 사전</dd><dt>버전</dt><dd class="mono">${PRODUCT.version}</dd><dt>빌드</dt><dd class="mono">${PRODUCT.build} · ${PRODUCT.released}</dd><dt>배포 환경</dt><dd>${PRODUCT.env} <span class="badge b-success">최신 버전</span></dd><dt>사전 기준</dt><dd>${PRODUCT.dict}</dd><dt>기관</dt><dd>한국데이터진흥원</dd></dl>
           <div class="section-t">릴리스 노트 · ${PRODUCT.version}</div>
@@ -683,7 +773,7 @@
           <div class="section-t">오픈소스 라이선스</div>
           <div class="caption" style="line-height:20px">React Flow (MIT) · Yjs (MIT) · elkjs (EPL-2.0) · Pretendard (OFL-1.1) · Geist Mono (OFL-1.1) <a href="#" data-toast="라이선스 전문을 엽니다(목업)" data-toast-type="info">전문 보기</a></div>
           <div class="section-t">지원</div>
-          <div class="caption">데이터정책팀 · 내선 1234 · dbmodeler@kda.go.kr</div>
+          <div class="caption">데이터정책팀 · 내선 1234 · neodb@kda.go.kr</div>
         </div>
         <div class="m-foot"><button class="btn" data-toast="버전 정보를 복사했습니다" data-toast-type="info">버전 정보 복사</button><button class="btn primary" data-close="mo-about">닫기</button></div></div></div>
       <div class="overlay" id="mo-keys" role="dialog" aria-modal="true" aria-labelledby="keys-t"><div class="modal" style="width:560px">
@@ -703,17 +793,34 @@
         <div class="m-foot"><button class="btn primary" data-close="mo-keys">닫기</button></div></div></div>`;
     while (ov.firstElementChild) app.appendChild(ov.firstElementChild);
 
+    // mock-only tools: one dashed chip at the right of the top bar (11 §2.3, d8) — a floating button covered page actions wherever it sat
+    const mk = document.createElement('div'); mk.className = 'mockfab';
+    mk.innerHTML = `<button class="mf-btn" id="mk-fab" type="button" aria-haspopup="dialog" aria-expanded="false" title="목업 검토용 도구 · 실제 제품에는 없음">목업${(() => { const n = (J('dbm-notes', {})[curFile()] || []).filter(x => !x.done).length; return n ? ` <span class="scr-n">${n}</span>` : ''; })()}</button>
+      <div class="mock-tools" id="mk-pop" role="dialog" aria-label="목업 도구">
+        <div class="mt-h">목업 도구 <span class="caption muted">실제 제품에는 없음</span></div>
+        <label class="mt-row"><span>역할</span><select id="mk-role" aria-label="역할 보기 전환">${Object.values(USERS).map(u => `<option value="${u.id}" ${u.id === ME.id ? 'selected' : ''}>${u.name} · ${u.roles.map(r => ROLE_NAME[r]).join('·')}</option>`).join('')}</select></label>
+        <div class="mt-row"><span>화면 크기</span><span class="seg" id="seg-frame" title="맞춤 = 창 폭 전체(최소 1600px) · 1920/1600 = 고정 미리보기"><button data-v="fit">맞춤</button><button data-v="1920">1920</button><button data-v="1600">1600</button></span></div>
+        <div class="mt-row"><span>테마</span><span class="seg" id="seg-theme"><button data-v="light">라이트</button><button data-v="dark">다크</button></span></div>
+        <div class="mt-row mt-acts"><button class="btn sm" id="mk-scr" aria-expanded="false" title="화면 정보 · 상태별 바로가기 · 설계 문서 · 검토 메모">화면 정보</button><a class="btn sm" href="index.html" title="전체 화면·교차 시나리오">목업 지도</a><button class="btn sm ghost" id="mk-reset" title="결재 진행 상태·알림 읽음을 처음으로 · 검토 메모는 유지">데이터 초기화</button></div>
+      </div>`;
+    top.insertBefore(mk, top.querySelector('#gsearch'));
+    const fab = mk.querySelector('#mk-fab'), mpop = mk.querySelector('#mk-pop');
+    const mkOpen = on => { mpop.classList.toggle('open', on); fab.setAttribute('aria-expanded', on); };
+    fab.addEventListener('click', e => { e.stopPropagation(); const on = !mpop.classList.contains('open'); mkOpen(on); if (on) mpop.querySelector('select').focus(); });
+    mpop.addEventListener('click', e => e.stopPropagation());
+    document.addEventListener('click', () => mkOpen(false));
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && mpop.classList.contains('open')) { mkOpen(false); fab.focus(); } });
     // frame/theme/role tools — keep other query params (CL2-07)
-    const sf = top.querySelector('#seg-frame'), st = top.querySelector('#seg-theme');
+    const sf = mk.querySelector('#seg-frame'), st = mk.querySelector('#seg-theme');
     sf.querySelector(`[data-v="${frame}"]`).classList.add('on');
     const tsel = st.querySelector(`[data-v="${themePref === 'dark' ? 'dark' : 'light'}"]`); if (tsel) tsel.classList.add('on');
     sf.addEventListener('click', e => { const v = e.target.dataset.v; if (!v) return; store.set('dbm-frame', v); const p = new URLSearchParams(location.search); p.set('w', v); location.search = p.toString(); });
     st.addEventListener('click', e => { const v = e.target.dataset.v; if (!v) return; store.set('dbm-theme', v); applyTheme(v); st.querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.v === v)); });
-    top.querySelector('#mk-role').addEventListener('change', e => { store.set('dbm-role', e.target.value); const p = new URLSearchParams(location.search); p.delete('as'); location.search = p.toString(); location.reload(); });
-    top.querySelector('#mk-scr').addEventListener('click', e => { e.stopPropagation(); toggleScreenPanel(); });
+    mk.querySelector('#mk-role').addEventListener('change', e => { store.set('dbm-role', e.target.value); const p = new URLSearchParams(location.search); p.delete('as'); location.search = p.toString(); location.reload(); });
+    mk.querySelector('#mk-scr').addEventListener('click', e => { e.stopPropagation(); mkOpen(false); toggleScreenPanel(); });
     const sp = document.createElement('aside'); sp.className = 'scr-panel'; sp.id = 'scr-panel'; sp.setAttribute('aria-label', '화면 정보'); sp.addEventListener('click', e => e.stopPropagation()); app.appendChild(sp);
     if (store.get('dbm-scr-open', '0') === '1') toggleScreenPanel(true);
-    top.querySelector('#mk-reset').addEventListener('click', () => { const keep = ['dbm-frame', 'dbm-frame-v2', 'dbm-theme', 'dbm-role', 'dbm-single-keys', 'dbm-notes', 'dbm-scr-open']; try { Object.keys(localStorage).filter(k => k.startsWith('dbm-') && !keep.includes(k)).forEach(k => store.del(k)); } catch (e) {} Object.keys(USERS).forEach(u => store.del('dbm-read-' + u)); flash('목업 데이터를 초기화했습니다', 'info'); location.reload(); });
+    mk.querySelector('#mk-reset').addEventListener('click', () => { const keep = ['dbm-frame', 'dbm-frame-v2', 'dbm-theme', 'dbm-role', 'dbm-single-keys', 'dbm-notes', 'dbm-scr-open']; try { Object.keys(localStorage).filter(k => k.startsWith('dbm-') && !keep.includes(k)).forEach(k => store.del(k)); } catch (e) {} Object.keys(USERS).forEach(u => store.del('dbm-read-' + u)); flash('목업 데이터를 초기화했습니다', 'info'); location.reload(); });
 
     // notifications
     const pn = top.querySelector('#pn-notif'), pu = top.querySelector('#pn-user');
@@ -725,7 +832,8 @@
         <div class="nlist">${list.length ? list.map(n => `<a class="ni ${readSet.has(n.id) ? '' : 'unread'}" href="${n.href}" data-nid="${n.id}"><span class="ud" aria-hidden="true"></span><span><div class="t">${n.t}</div><div class="m">${n.m} · ${n.at}</div></span></a>`).join('') : '<div class="caption muted" style="padding:24px;text-align:center">이 종류의 알림이 없습니다</div>'}</div>
         <div class="nfoot"><span class="caption muted">30일 보관 · 메일 알림은 결재선 담당자만</span><a href="mypage.html#notify">알림 설정</a></div>`;
     };
-    const closePops = () => { [pn, pu].forEach(p => p.classList.remove('open')); top.querySelectorAll('[aria-expanded]').forEach(b => b.setAttribute('aria-expanded', 'false')); };
+    const closePops = () => { [pn, pu].forEach(p => p.classList.remove('open')); top.querySelectorAll('#btn-bell, #btn-user').forEach(b => b.setAttribute('aria-expanded', 'false')); };   // top menus keep their own state
+    window.refreshTop = () => { const a = top.querySelector('#tm-appr'); if (!a) return; const n = queueCount(), lt = myQueue(getDocs()).some(d => docLate(d)); a.innerHTML = '결재함' + (n ? `<span class="tcount">${n}</span>` : '') + (lt ? '<span class="tlate" title="기한을 넘긴 결재가 있습니다"></span>' : ''); a.setAttribute('aria-label', '결재함' + (n ? ` 내 차례 ${n}건` : '') + (lt ? ', 기한 넘김 있음' : '')); };
     top.querySelector('#btn-bell').addEventListener('click', e => { e.stopPropagation(); const o = !pn.classList.contains('open'); closePops(); if (o) { drawNotif(); pn.classList.add('open'); e.currentTarget.setAttribute('aria-expanded', 'true'); } });
     pn.addEventListener('click', e => {
       e.stopPropagation();
@@ -757,7 +865,6 @@
     });
     document.addEventListener('click', closePops);
     document.addEventListener('keydown', e => { if (e.key === 'Escape') closePops(); });
-    nav.querySelector('#nav-ver').addEventListener('click', openAbout);
   }
   function openAbout() {
     const p = getPub(); const kv = document.querySelector('#mo-about .kv'); if (kv) kv.innerHTML = kv.innerHTML.replace(/기관 사전 제정 \d+차/, `기관 사전 제정 ${p.cha}차`);

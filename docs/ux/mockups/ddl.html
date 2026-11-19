@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>DDL 출력 · DBModeler 목업</title>
+<title>DDL 출력 · NeoDB 목업</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&display=swap">
 <link rel="stylesheet" href="assets/app.css">
@@ -97,7 +97,7 @@ window.pageInit = function () {
     if (scope === 'sys') block.push('시스템 전체는 조회용입니다 — 업무 영역별로 출력하세요');
     if (!target.length && scope !== 'sys') block.push('출력할 테이블이 없습니다 — 범위를 고르세요');
     const lines = [];
-    lines.push(`<span class="cm">-- DBModeler · 요구사항관리 / ${L.model.name} · ${label} · ${alter ? `변경분(ALTER) — v${baseVer} 확정본 대비` : '신규 생성(CREATE)'}</span>`);
+    lines.push(`<span class="cm">-- NeoDB · 요구사항관리 / ${L.model.name} · ${label} · ${alter ? `변경분(ALTER) — v${baseVer} 확정본 대비` : '신규 생성(CREATE)'}</span>`);
     if (alter && !prevDoc) lines.push(`<span class="cm">-- 비교할 v${baseVer} 확정본 사본이 없어 전체를 CREATE로 냅니다</span>`);
     target.forEach(e => {
       const base = alter && prevDoc ? prevDoc.model.E.find(x => x.id === e.id) : null;

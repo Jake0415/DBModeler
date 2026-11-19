@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>디자인 견본 · DBModeler 목업</title>
+<title>디자인 견본 · NeoDB 목업</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&display=swap">
 <link rel="stylesheet" href="assets/app.css">
@@ -31,6 +31,13 @@
 window.pageInit = function () {
   const SW = (name, v) => `<div><i style="background:var(${v})"></i>${name}<code>${v}</code></div>`;
   document.getElementById('sg').innerHTML = `<div class="sg"><div>
+    <section class="sec"><div class="sec-h"><h2>브랜드 · 틀</h2></div>
+      <div style="padding:16px;display:flex;flex-direction:column;gap:16px">
+        <div class="flex" style="gap:24px;align-items:flex-end">${[16, 20, 32].map(s => `<div style="display:flex;flex-direction:column;align-items:center;gap:6px">${MARK(s)}<span class="caption mono muted">${s}</span></div>`).join('')}
+          <div class="brand" style="margin-left:16px">${MARK(20)}<span class="wm">NeoDB</span></div>
+          <span class="caption muted">BI A 연결된 N · 잉크와 흰색만 · 파비콘 assets/neodb-mark.svg</span></div>
+        <div class="caption" style="line-height:20px">상단 바: 로고(홈) · 기관명 │ 모델 · 사전 ▾ · 결재함 n · 관리 ▾(DA는 감사 로그 링크 하나) │ 목업(점선, 목업 전용) · 검색 · 알림 · 사용자<br>왼쪽 모델 트리 240px(접으면 56px): 홈과 모델 계열 화면에만. 사전 · 결재함 · 관리 · 마이페이지는 전체 폭 → <a href="../11-navigation-brand-plan.md">11 문서</a></div>
+      </div></section>
     <section class="sec"><div class="sec-h"><h2>색</h2></div>
       <div class="sw">${[['background-100','--ds-background-100'],['background-200','--ds-background-200'],['gray-100','--ds-gray-100'],['gray-200','--ds-gray-200'],['gray-400 선','--ds-gray-400'],['gray-500','--ds-gray-500'],['gray-900 보조 글자','--ds-gray-900'],['gray-1000 글자','--ds-gray-1000'],['blue-700','--ds-blue-700'],['blue-900 링크','--ds-blue-900'],['blue-200','--ds-blue-200'],['green-700','--ds-green-700'],['green-900','--ds-green-900'],['amber-700','--ds-amber-700'],['amber-900','--ds-amber-900'],['red-700','--ds-red-700'],['red-900','--ds-red-900'],['red-200','--ds-red-200']].map(([n, v]) => SW(n, v)).join('')}</div></section>
 
