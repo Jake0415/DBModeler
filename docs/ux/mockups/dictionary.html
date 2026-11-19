@@ -13,6 +13,14 @@
   .mt { font-size:11px; padding:0 6px; border-radius:9999px; background:var(--ds-gray-100); color:var(--fg-2); margin-left:4px; }
   .menu { position:absolute; right:0; top:40px; background:var(--surface); border-radius:var(--r-xl); box-shadow:var(--menu-shadow); padding:6px; width:340px; display:none; z-index:40; }
   .menu.open { display:block; }
+  .fpop { left:0; right:auto; width:340px; padding:12px 12px 8px; }
+  .fpop .frow { display:grid; grid-template-columns:88px 1fr; align-items:center; gap:8px; min-height:40px; font-size:14px; }
+  .fpop .fl { color:var(--fg-2); } .fpop .fv { display:flex; gap:6px; flex-wrap:wrap; }
+  .fpop .ffoot { display:flex; align-items:center; gap:8px; border-top:1px solid var(--ds-gray-400); margin:8px -12px 0; padding:8px 12px 0; }
+  .fcount { margin-left:2px; min-width:18px; height:18px; padding:0 5px; border-radius:9999px; background:var(--ds-gray-1000); color:var(--on-ink); font:500 11px/18px var(--font-sans); }
+  .fchips { display:flex; flex-wrap:wrap; gap:6px; align-items:center; }
+  .fchips .fchip { height:24px; padding:0 8px 0 10px; font-size:12px; border-style:solid; gap:4px; }
+  .fchips .fchip .ic { width:12px; height:12px; }
   .menu .mi { display:flex; align-items:center; min-height:36px; width:100%; text-align:left; border:0; background:none; padding:0 8px; border-radius:6px; cursor:pointer; font:14px var(--font-sans); color:var(--fg); }
   .menu .mi:hover { background:var(--ds-gray-100); } .menu .mi:focus-visible { background:var(--ds-gray-100); outline:none; box-shadow:0 0 0 2px var(--focus); }
   .tl { border-left:2px solid var(--border); margin-left:6px; padding-left:14px; }
@@ -45,18 +53,26 @@
   <div class="page-body">
     <div class="main">
       <div class="toolbar">
-        <div class="search" style="flex-basis:340px">
+        <div class="search" style="flex-basis:320px">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-          <input class="input" id="q" placeholder="이름·약어·영문·동의어·금칙어·과거 이름·초성(ㅅㅊㅁ)" aria-label="사전 검색">
+          <input class="input" id="q" placeholder="이름·약어·초성 검색" aria-label="사전 검색" aria-describedby="q-help">
         </div>
-        <span id="kind-chips"></span>
-        <span style="width:1px;height:20px;background:var(--border)"></span>
-        <button class="chip on" data-src="공통">공통</button><button class="chip on" data-src="기관">기관</button><button class="chip" data-st="신청 중">신청 중</button><button class="chip" data-st="보완 필요">보완 필요</button>
-        <select class="input" id="dg" style="width:150px;font-size:13px" aria-label="도메인그룹"><option value="">도메인그룹: 전체</option><option>날짜</option><option>번호</option><option>명칭</option><option>코드</option><option>금액·수량</option></select>
-        <select class="input" id="since" style="width:130px;font-size:13px" aria-label="변경일"><option value="">변경일: 전체</option><option value="7">최근 7일</option><option value="30">최근 30일</option></select>
-        <select class="input" id="flen" style="width:130px;font-size:13px" aria-label="길이 범위"><option value="">길이: 전체</option><option value="0-10">길이 10 이하</option><option value="11-100">길이 11~100</option><option value="101-99999">길이 101 이상</option></select>
-        <select class="input" id="fdom" style="width:150px;font-size:13px" aria-label="도메인 연결"><option value="">도메인 연결: 전체</option><option value="y">연결됨</option><option value="n">연결 없음·사전에 없음</option></select>
-        <label class="flex caption" style="gap:4px"><input type="checkbox" id="fdisc"> 원본 폐기 포함</label>
+        <button class="btn ghost sm" id="q-help-b" aria-label="검색 도움말" title="이름 · 영문약어 · 영문명 · 이음동의어 · 금칙어 · 과거 이름 · 초성(ㅅㅊㅁ)으로 찾습니다. 2글자 이하는 앞부분 일치." style="width:28px;padding:0"><i data-ic=info></i></button>
+        <span class="sr-only" id="q-help">이름, 영문약어, 영문명, 이음동의어, 금칙어, 과거 이름, 초성으로 찾습니다</span>
+        <span class="seg" id="kind-chips" role="group" aria-label="종류"></span>
+        <span style="position:relative">
+          <button class="btn" id="f-btn" aria-haspopup="true" aria-expanded="false" aria-controls="f-pop"><i data-ic=filter></i>필터<span class="fcount" id="f-n" hidden></span></button>
+          <div class="menu fpop" id="f-pop" role="dialog" aria-label="상세 필터">
+            <div class="frow"><span class="fl">출처</span><span class="fv"><button class="chip on" data-src="공통">공통</button><button class="chip on" data-src="기관">기관</button></span></div>
+            <div class="frow"><span class="fl">상태</span><span class="fv"><button class="chip" data-st="신청 중">신청 중</button><button class="chip" data-st="보완 필요">보완 필요</button></span></div>
+            <div class="frow"><label class="fl" for="dg">도메인그룹</label><select class="input" id="dg"><option value="">전체</option><option>날짜</option><option>번호</option><option>명칭</option><option>코드</option><option>금액·수량</option></select></div>
+            <div class="frow"><label class="fl" for="since">변경일</label><select class="input" id="since"><option value="">전체</option><option value="7">최근 7일</option><option value="30">최근 30일</option></select></div>
+            <div class="frow"><label class="fl" for="flen">길이</label><select class="input" id="flen"><option value="">전체</option><option value="0-10">10 이하</option><option value="11-100">11~100</option><option value="101-99999">101 이상</option></select></div>
+            <div class="frow"><label class="fl" for="fdom">도메인 연결</label><select class="input" id="fdom"><option value="">전체</option><option value="y">연결됨</option><option value="n">연결 없음·사전에 없음</option></select></div>
+            <div class="frow"><span class="fl"></span><label class="flex" style="gap:8px"><input type="checkbox" id="fdisc"> 원본 폐기 포함</label></div>
+            <div class="ffoot"><button class="btn ghost sm" id="f-reset">초기화</button><span class="grow"></span><button class="btn primary sm" id="f-done">닫기</button></div>
+          </div>
+        </span>
       </div>
       <div class="listhead" id="lh" aria-live="polite"></div>
       <div class="scroll">
@@ -67,7 +83,7 @@
       </div>
     </div>
 
-    <aside class="rpanel open" id="pn-detail" data-tabscope aria-label="항목 상세"></aside>
+    <aside class="rpanel" id="pn-detail" data-tabscope aria-label="항목 상세"></aside>
 
     <!-- PN-12 request -->
     <aside class="rpanel wide" id="pn-request">
@@ -191,9 +207,18 @@ window.pageInit = function () {
   function draw() {
     const qs = $('q').value.trim(); const L = list();
     const kc = { '': I.length, word: 0, term: 0, domain: 0, code: 0 }; I.forEach(i => kc[i.k]++);
-    $('kind-chips').innerHTML = [['', '전체'], ['word', '단어'], ['term', '용어'], ['domain', '도메인'], ['code', '코드']].map(([k, l]) => `<button class="chip ${kind === k ? 'on' : ''}" data-kind="${k}">${l} <span class="n">${kc[k]}</span></button>`).join(' ');
+    $('kind-chips').innerHTML = [['', '전체'], ['word', '단어'], ['term', '용어'], ['domain', '도메인'], ['code', '코드']].map(([k, l]) => `<button class="${kind === k ? 'on' : ''}" data-kind="${k}" aria-pressed="${kind === k}">${l} <span class="num muted">${kc[k]}</span></button>`).join('');
+    // applied conditions: count on the filter button + removable chips in the result line
+    const LBL = { dg: '도메인그룹', since: '변경일', flen: '길이', fdom: '도메인 연결' };
+    const act = [];
+    if (srcs.size < 2) act.push(['src', '출처: ' + [...srcs][0]]);
+    if (stFilter) act.push(['st', '상태: ' + stFilter]);
+    ['dg', 'since', 'flen', 'fdom'].forEach(id => { const el = $(id); if (el.value) act.push([id, LBL[id] + ': ' + el.options[el.selectedIndex].text]); });
+    if ($('fdisc').checked) act.push(['fdisc', '원본 폐기 포함']);
+    $('f-n').hidden = !act.length; $('f-n').textContent = act.length;
+    const chipsHtml = act.length ? `<span class="fchips">${act.map(([k, l]) => `<button class="fchip" data-clear="${k}" aria-label="${l} 조건 지우기">${l}<i data-ic=x data-s=12></i></button>`).join('')}<button class="btn ghost sm" data-clear="all">모두 지우기</button></span>` : '';
     const recent = !qs && !showAll && !kind && !$('dg').value && !$('since').value && !stFilter && !$('flen').value && !$('fdom').value;
-    $('lh').innerHTML = `<b style="color:var(--fg)">${L.length}건</b> · ${recent ? (EMPTY ? '기관 사전이 비어 있어 공통표준만 보입니다' : '검색어가 없어 <b>기관 사전 최근 변경</b>을 보여 줍니다 <button class="btn ghost sm" id="show-all">전체 보기</button>') : qs ? `‘${qs}’ 검색${isCho(qs) ? ' (초성)' : isShort(qs) ? ' — <b>2글자 이하는 앞부분 일치</b>로 찾습니다' : ''}${L.length >= 1000 ? ' · <b>1,000건 이상 — 검색어를 더 입력하세요</b>' : ''}` : '필터 결과'} <span class="grow"></span> <kbd>↑</kbd><kbd>↓</kbd> 이동 <kbd>Enter</kbd> 열기`;
+    $('lh').innerHTML = `<b style="color:var(--fg)">${L.length}건</b> · ${recent ? (EMPTY ? '기관 사전이 비어 있어 공통표준만 보입니다' : '검색어가 없어 <b>기관 사전 최근 변경</b>을 보여 줍니다 <button class="btn ghost sm" id="show-all">전체 보기</button>') : qs ? `‘${qs}’ 검색${isCho(qs) ? ' (초성)' : isShort(qs) ? ' — <b>2글자 이하는 앞부분 일치</b>로 찾습니다' : ''}${L.length >= 1000 ? ' · <b>1,000건 이상 — 검색어를 더 입력하세요</b>' : ''}` : '필터 결과'} ${chipsHtml} <span class="grow"></span> <kbd>↑</kbd><kbd>↓</kbd> 이동 <kbd>Enter</kbd> 열기`;
     const orgN = L.filter(x => x.it.src === '기관').length;   // only organisation items go into the editable file (CX12-05)
     $('dl-n').textContent = orgN ? `기관 ${orgN}건(공통 ${L.length - orgN}건은 참고 시트) · 숨김 열(항목 ID·버전·기준본)` : '이 검색 결과에는 편집할 기관 항목이 없습니다 — 공통표준은 기관에서 편집할 수 없습니다';
     $('dl-menu').querySelector('[data-dl="filter"]').disabled = !orgN;
@@ -201,8 +226,7 @@ window.pageInit = function () {
       : `<tr class="er"><td colspan="10" style="text-align:center;padding:40px"><div class="caption muted" style="margin-bottom:8px">‘${qs}’에 맞는 표준이 없습니다.</div><button class="btn sm primary" id="req-q">‘${qs}’ 등록 신청</button> <button class="btn sm ghost" id="clr">필터 지우기</button></td></tr>`;
     const sa = $('show-all'); if (sa) sa.onclick = () => { showAll = true; draw(); };
     const rq = $('req-q'); if (rq) rq.onclick = () => { $('pn-detail').classList.remove('open'); $('pn-request').classList.add('open'); document.querySelector('#pn-request [data-rq="term"] input').value = qs; };
-    const cl = $('clr'); if (cl) cl.onclick = () => { $('q').value = ''; kind = ''; $('dg').value = ''; $('since').value = ''; pendingOnly = false; showAll = true; draw(); };
-    if (!sel && L[0]) sel = L[0].it.id;
+    const cl = $('clr'); if (cl) cl.onclick = () => { clearAll(); $('q').value = ''; kind = ''; showAll = true; draw(); };
     detail();
   }
   // usage = attributes of saved working models that carry this item's name/abbr (mock index); otherwise the count is shown as a sample
@@ -212,7 +236,7 @@ window.pageInit = function () {
     return it.use ? `<div class="caption muted">사용처 ${it.use}곳(목업: 시드 숫자 — 작업 중인 모델에서는 찾지 못했습니다)</div>` : '<div class="caption muted">모델에서 쓰지 않습니다.</div>';
   }
   function detail() {
-    const it = I.find(x => x.id === sel); const p = $('pn-detail'); if (!it) { p.innerHTML = ''; return; }
+    const it = I.find(x => x.id === sel); const p = $('pn-detail'); if (!it) { p.innerHTML = ''; p.classList.remove('open'); return; }
     const common = it.src === '공통';
     const hist = it.hist.length ? `<div class="tl">${it.hist.map(h => `<div class="ev"><div class="flex"><b>${h.v}</b><span class="badge">${h.act}</span><span class="grow"></span><span class="caption mono">${h.at}</span></div><div class="caption muted">${h.by}${h.doc !== '—' ? ` · <a href="approvals.html?doc=${h.doc}">${h.doc}</a>` : ''}${h.why ? ' · 사유: ' + h.why : ''}</div>${h.diff.length ? `<table class="tbl" style="margin-top:4px"><thead><tr><th>칸</th><th>이전</th><th>이후</th></tr></thead><tbody>${h.diff.map(d => `<tr><td>${d[0]}</td><td><span class="old-v">${d[1] === '' ? '(빈 문자열)' : d[1] == null ? '(NULL)' : d[1]}</span></td><td>${d[2]}</td></tr>`).join('')}</tbody></table>` : ''}<button class="btn ghost sm" data-toast="${it.name}_${h.v}.xlsx — 그 버전의 값" data-toast-type="info">이 버전 엑셀</button></div>`).join('')}</div>` : '<div class="caption muted">이력이 없습니다.</div>';
     p.innerHTML = `<div class="rp-head"><div class="t"><span class="badge ${common ? 'b-common' : 'b-org'}">${it.src}</span><span class="badge">${it.kn}</span><span class="badge ${it.st === '사용' ? 'b-success' : it.st === '신청 중' ? 'b-info' : ''}">${it.st}</span><button class="iconbtn close" data-close="pn-detail" aria-label="닫기" style="width:28px;height:28px"><i data-ic=x></i></button></div>
@@ -233,6 +257,17 @@ window.pageInit = function () {
     const pg = $('purge'); if (pg) pg.onclick = () => purge(it);
     p.classList.add('open');
   }
+  const clearAll = () => { srcs = new Set(['공통', '기관']); document.querySelectorAll('[data-src]').forEach(x => x.classList.add('on')); stFilter = ''; document.querySelectorAll('[data-st]').forEach(x => x.classList.remove('on')); ['dg', 'since', 'flen', 'fdom'].forEach(id => $(id).value = ''); $('fdisc').checked = false; };
+  const fpop = $('f-pop'), fbtn = $('f-btn');
+  const setPop = on => { fpop.classList.toggle('open', on); fbtn.setAttribute('aria-expanded', on); if (on) { const f = fpop.querySelector('button, select, input'); f && f.focus(); } };
+  fbtn.onclick = () => setPop(!fpop.classList.contains('open'));
+  $('f-done').onclick = () => { setPop(false); fbtn.focus(); };
+  $('f-reset').onclick = () => { clearAll(); sel = null; draw(); };
+  document.addEventListener('click', e => { if (!e.target.closest('#f-pop, #f-btn')) setPop(false); });
+  fpop.addEventListener('keydown', e => { if (e.key === 'Escape') { setPop(false); fbtn.focus(); } });
+  $('lh').addEventListener('click', e => { const c = e.target.closest('[data-clear]'); if (!c) return; const k = c.dataset.clear;
+    if (k === 'all') clearAll(); else if (k === 'src') { srcs = new Set(['공통', '기관']); document.querySelectorAll('[data-src]').forEach(x => x.classList.add('on')); } else if (k === 'st') { stFilter = ''; document.querySelectorAll('[data-st]').forEach(x => x.classList.remove('on')); } else if (k === 'fdisc') $('fdisc').checked = false; else $(k).value = '';
+    sel = null; draw(); });
   $('q').addEventListener('input', () => { showAll = false; sel = null; draw(); });
   ['dg', 'since', 'flen', 'fdom', 'fdisc'].forEach(id => $(id).onchange = () => { sel = null; draw(); });
   document.querySelector('.toolbar').addEventListener('click', e => {
@@ -395,7 +430,7 @@ window.pageInit = function () {
   if ($('wd-lim')) $('wd-lim').textContent = `${getPolicy().wordAbbr || 6}자 이내`;
   if (q0.get('q')) $('q').value = q0.get('q');
   // global search (Ctrl+K) opens the item's detail directly
-  if (q0.get('sel')) setTimeout(() => { const r = $('rows').querySelector(`tr[data-id="${q0.get('sel')}"]`); if (r) r.click(); }, 60);
+  if (q0.get('sel')) setTimeout(() => { sel = q0.get('sel'); draw(); const r = $('rows').querySelector(`tr[data-id="${sel}"]`); if (r) r.focus(); }, 60);   // the detail opens even when the item is outside the current list
   $('rq-final').style.display = lineFor('dict').includes('final') ? '' : 'none';
   let candId = null;
   if (q0.get('cand')) { const c = getCands().find(x => x.id === q0.get('cand')); if (c) { candId = c.id; $('pn-detail').classList.remove('open'); panel.classList.add('open'); if (c.t === '단어') { panel.querySelector('[data-rq="word"].chip').click(); $('wd-name').value = c.name; $('wd-abbr').value = c.abbr || ''; } else { $('tm-name').value = c.name; analyse(); }
