@@ -689,3 +689,7 @@ select.input { padding-right:36px; }
 :root.frame-fit #app { width:100%; min-width:1600px; height:100%; min-height:720px; margin:0; }   /* % of the scrolling body, so a horizontal scrollbar never adds a vertical one */
 :root.frame-fit #app.bare { height:auto; min-height:100%; }
 @media (max-width:1919px) { :root.frame-fit { --panel:380px; --dictpanel:240px; } :root.frame-fit .rpanel.wide { width:480px; flex-basis:480px; } }
+
+/* ---- scrollbars: Geist (read from vercel.com stylesheets) — thin bar, gray thumb, transparent track; hover/drag goes one step darker ---- */
+html, body, * { scrollbar-width:thin; scrollbar-color:var(--ds-gray-500) transparent; }
+*:hover { scrollbar-color:var(--ds-gray-600) transparent; }
