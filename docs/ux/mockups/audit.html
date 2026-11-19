@@ -37,7 +37,7 @@
 </div>
 <script>
 window.pageInit = function () {
-  if (!ME.has('da') && !ME.has('admin')) { location.replace('error.html?code=403&need=DA 또는 Admin&what=감사 로그'); return; }
+  if (!can('audit.view')) { location.replace('error.html?code=403&need=DA 또는 Admin&what=감사 로그'); return; }
   // single source (CX13-14): approval history of every document + dictionary publications + settings/role/candidate audit entries + permanent deletions.
   // nothing is typed into the page; every row comes from the shared state, sorted by time
   const key = at => { at = String(at || ''); if (/^\d\d\/\d\d/.test(at)) return '2026-' + at.slice(0, 2) + '-' + at.slice(3); return at.replace('T', ' ').slice(0, 16); };

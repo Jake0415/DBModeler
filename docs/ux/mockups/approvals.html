@@ -96,7 +96,7 @@ window.pageInit = function () {
   const q = new URLSearchParams(location.search);
   let docs = getDocs();
   const nameOf = id => USERS[id] ? USERS[id].name : id;
-  const inQueue = d => (d.step === 'da' && ME.has('da')) || (d.step === 'final' && ME.has('owner'));
+  const inQueue = d => canActOn(d);   // role for the step + (model documents) the system in charge — RBAC (15)
   const BOX = {
     queue: ['대기함', d => inQueue(d)],
     mine: ['내 신청', d => d.req === ME.id],

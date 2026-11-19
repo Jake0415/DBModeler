@@ -52,7 +52,7 @@ window.pageInit = function () {
   // plain text, not a badge per area (one badge per row)
   $('k-final').innerHTML = ids.map(a => `${getModels()[a].name} <span class="${getOrg().finalModel[a] !== false ? '' : 'muted'}">${getOrg().finalModel[a] !== false ? '사용' : '안 함'}</span>`).join('<span class="faint">, </span>');
   // creating an area is for modelers / admin; others only browse (CX12-20)
-  if (!(ME.has('modeler') || ME.has('admin'))) { $('add-area').disabled = true; $('add-area').title = '업무 영역은 모델러·Admin만 만들 수 있습니다'; }
+  if (!can('area.create', { system: curSys().name })) { $('add-area').disabled = true; $('add-area').title = ME.has('modeler') ? `${curSys().name}은(는) 내 담당 시스템이 아니라 업무 영역을 만들 수 없습니다` : '업무 영역은 모델러 · Admin만 만들 수 있습니다'; }
   $('add-area').onclick = () => { if ($('add-area').disabled) return; $('mo-area').classList.add('open'); $('ma-name').focus(); };
   // model tree [+] → system.html#new (also when already here); the hash is cleared so a reload doesn't reopen it
   const openNew = () => { if (location.hash !== '#new') return; history.replaceState(null, '', location.pathname + location.search); setTimeout(() => $('add-area').click(), 0); };

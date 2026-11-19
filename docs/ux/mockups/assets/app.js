@@ -22,11 +22,11 @@
   const PRODUCT = { name: 'NeoDB', version: '1.0.0', build: '20261117.a1b2c3', env: '운영', released: '2026-11-17', dict: '공통표준 2025.11 (적재 11/03) · 기관 사전 제정 12차' };
   window.PRODUCT = PRODUCT;
   const USERS = {
-    kim: { id: 'kim', name: '김모델', company: '한국데이터진흥원', org: '데이터정책팀', phone: '010-2345-1101', mail: 'kim@kda.go.kr', roles: ['modeler', 'da'], systems: ['요구사항관리', '인사시스템', '통합ERP'] },
+    kim: { id: 'kim', name: '김모델', company: '한국데이터진흥원', org: '데이터정책팀', phone: '010-2345-1101', mail: 'kim@kda.go.kr', roles: ['modeler', 'da'], systems: ['요구사항관리', '통합ERP'] },
     park: { id: 'park', name: '박설계', company: '(주)한빛정보', org: '정보화사업팀', phone: '010-3456-2202', mail: 'park@hanbit.co.kr', roles: ['modeler'], systems: ['요구사항관리', '통합ERP'] },
     lee: { id: 'lee', name: '이데이터', company: '한국데이터진흥원', org: '데이터정책팀', phone: '010-4567-3303', mail: 'lee@kda.go.kr', roles: ['da', 'admin'], systems: ['전체'] },
     hyun: { id: 'hyun', name: '이현업', company: '한국데이터진흥원', org: '기획조정실', phone: '010-5678-4404', mail: 'hyun@kda.go.kr', roles: ['owner'], systems: ['전체'] },
-    choi: { id: 'choi', name: '최담당', company: '한국데이터진흥원', org: '재무회계팀', phone: '010-6789-5505', mail: 'choi@kda.go.kr', roles: ['owner', 'modeler'], systems: ['회계시스템', '통합ERP'] }
+    choi: { id: 'choi', name: '최담당', company: '한국데이터진흥원', org: '재무회계팀', phone: '010-6789-5505', mail: 'choi@kda.go.kr', roles: ['owner', 'modeler'], systems: ['통합ERP'] }
   };
   /* accounts (14): the intranet runs its own ID/PW accounts; SSO is an option. Passwords are never kept as text —
      the mock keeps a salted hash only (a real server uses a slow password hash such as bcrypt/argon2). */
@@ -59,6 +59,42 @@
   window.ME = ME;
   { const pg = (document.body && document.body.dataset.page) || location.pathname; const signedOut = /login|error/.test(pg) || /login\.html|error\.html/.test(location.pathname); const sessAt = +store.get('dbm-sess-at', '0'); const me0 = USERS[meId];
     if (!signedOut && me0 && (me0.status === 'stopped' || (me0.sessRev && sessAt && me0.sessRev > sessAt))) { location.replace('login.html?revoked=1'); } }
+  /* RBAC (15): role × permission × scope. scope 'sys' = only the systems the user is in charge of (담당 시스템, '전체' = all),
+     'org' = the whole agency (기관 사전 · 설정), 'own' = what the user made. Viewers (no role) only read. */
+  const PERMS = [
+    { id: 'model.view', g: '모델', n: '모델 · DDL · 산출물 보기', roles: ['*'], scope: 'org', note: '모든 시스템을 읽을 수 있다 (표준 준수 확인용)' },
+    { id: 'model.edit', g: '모델', n: '모델 편집 · 표준 맞추기 · DDL 가져오기', roles: ['modeler'], scope: 'sys' },
+    { id: 'area.create', g: '모델', n: '업무 영역 만들기', roles: ['modeler', 'admin'], scope: 'sys', adminAll: true },
+    { id: 'model.submit', g: '모델', n: '모델 확정 신청 · 회수', roles: ['modeler'], scope: 'sys' },
+    { id: 'dict.view', g: '사전', n: '표준 사전 · 변경 내역 보기', roles: ['*'], scope: 'org' },
+    { id: 'dict.request', g: '사전', n: '사전 신청 · 엑셀 가져오기 · 후보 등록', roles: ['modeler', 'da'], scope: 'org' },
+    { id: 'cand.decide', g: '사전', n: '후보 큐 판단', roles: ['da'], scope: 'org' },
+    { id: 'dict.publish', g: '사전', n: '사전 공표 · 삭제 보관 영구 삭제', roles: ['da'], scope: 'org', note: '영구 삭제는 Admin도 할 수 있다', extra: ['admin'] },
+    { id: 'appr.da', g: '결재', n: '1단계(DA) 승인 · 반려', roles: ['da'], scope: 'sys', note: '사전 신청은 기관 전체, 모델 확정은 담당 시스템만' },
+    { id: 'appr.final', g: '결재', n: '최종 승인 · 반려', roles: ['owner'], scope: 'sys', note: '사전 신청은 기관 전체, 모델 확정은 담당 시스템만' },
+    { id: 'appr.viewall', g: '결재', n: '모든 결재 문서 보기', roles: ['da', 'owner'], scope: 'org', note: '나머지 사용자는 자기 신청 · 참조 문서만' },
+    { id: 'audit.view', g: '관리', n: '감사 로그 보기', roles: ['da', 'admin'], scope: 'org' },
+    { id: 'settings', g: '관리', n: '기관 · 시스템 · 검수 기준 설정', roles: ['admin'], scope: 'org' },
+    { id: 'users', g: '관리', n: '사용자 · 역할 · 인증 관리', roles: ['admin'], scope: 'org', note: '자기 역할 · 상태는 바꿀 수 없다' }
+  ];
+  window.PERMS = PERMS;
+  window.sysOfArea = area => { const m = getAllModels()[area]; return m ? (m.sys || '요구사항관리') : curSys().name; };
+  window.inScope = (u, sysName) => { const s = u.systems || []; return s.includes('전체') || s.includes(sysName); };
+  // can(user, permission, { system | area | doc }) — the only question every screen asks
+  window.canUser = (u, pid, ctx) => {
+    const p = PERMS.find(x => x.id === pid); if (!p || !u || u.status === 'stopped') return false;
+    const roles = u.roles || [];
+    const roleOk = p.roles.includes('*') || p.roles.some(r => roles.includes(r)) || (p.extra || []).some(r => roles.includes(r));
+    if (!roleOk) return false;
+    if (p.scope !== 'sys' || !ctx) return true;
+    if (p.adminAll && roles.includes('admin')) return true;
+    const d = ctx.doc; if (d && d.type !== 'model') return true;   // dictionary requests are agency-wide
+    const sysName = ctx.system || (ctx.area ? sysOfArea(ctx.area) : d ? sysOfArea(d.area) : null);
+    return !sysName || inScope(u, sysName);
+  };
+  window.can = (pid, ctx) => canUser(USERS[ME.id] || ME, pid, ctx);
+  // whose turn: the document's step, the role for that step, and (model documents) the system in charge
+  window.canActOn = d => !!d && ((d.step === 'da' && can('appr.da', { doc: d })) || (d.step === 'final' && can('appr.final', { doc: d })));
   window.roleBadges = u => u.roles.map(r => `<span class="badge">${ROLE_NAME[r]}</span>`).join(' ');
 
   /* ================= v5 shared state layer =================
@@ -89,7 +125,7 @@
   ];
   window.getDocs = () => J('dbm-docs', clone(DOCS0));
   window.saveDocs = d => { S('dbm-docs', d); if (window.refreshTop) window.refreshTop(); };
-  window.myQueue = (docs) => docs.filter(d => (d.step === 'da' && ME.has('da')) || (d.step === 'final' && ME.has('owner')));
+  window.myQueue = (docs) => docs.filter(d => canActOn(d));
   window.STEP_NAME = { da: 'DA 승인', final: '최종 승인', done: '완료', withdrawn: '회수됨', rejected: '반려됨' };
   window.nextDocId = docs => 'REQ-2026-' + String(Math.max(...docs.map(d => +d.id.slice(-4))) + 1).padStart(4, '0');
   /* createDoc: requester = current user, fresh ID; same `key` while still in progress returns the existing doc (idempotent submit) */
@@ -599,7 +635,7 @@
     return c;
   };
   /* one visibility rule for lists, deep links and file actions */
-  window.canSeeDoc = d => !!d && (ME.has('da') || ME.has('owner') || d.req === ME.id || (d.cc || []).includes(ME.id));
+  window.canSeeDoc = d => !!d && (can('appr.viewall') || d.req === ME.id || (d.cc || []).includes(ME.id));
   window.canSeeBatch = b => !!b && (b.by === ME.id || ME.has('da'));
   /* model diff between two stored structures (by entity id / attribute logical name) */
   window.modelDiff = (a, b) => {
@@ -709,7 +745,7 @@
     const t = toDay(from) || MOCK_TODAY; return Math.max(0, Math.round((MOCK_TODAY - t) / 864e5)); };
   window.docLate = d => ['da', 'final'].includes(d.step) && docAge(d) >= ((getOrg && getOrg().sla) || 3);
   /* document state as a tag: in progress = outline (accent when it is my turn), late = error, rejected = error, done = ok, withdrawn = faint */
-  window.docTag = d => { const mineTurn = (d.step === 'da' && ME.has('da')) || (d.step === 'final' && ME.has('owner'));
+  window.docTag = d => { const mineTurn = canActOn(d);
     if (d.step === 'rejected') return tag('err', STEP_NAME[d.step]);
     if (d.step === 'withdrawn') return tag('end', STEP_NAME[d.step]);
     if (d.step === 'done') return tag('ok', '완료');
@@ -851,7 +887,7 @@
     const famArea = fam ? (models0[qp.get('area')] ? qp.get('area') : defArea()) : null;
     if (famArea) store.set('dbm-last-area', famArea);
     const cur = famArea || (models0[store.get('dbm-last-area', '')] ? store.get('dbm-last-area', '') : defArea());
-    const canNew = ME.has('modeler') || ME.has('admin');
+    const canNew = can('area.create', { system: curSys().name });
     const SYSTEMS = SYSTEMS_OF(); const sys = SYSTEMS.find(s => s.cur);
     const ST = Object.assign({ tog: {}, w: 0, manual: false, tab: 'm' }, J(treeKey(), {}));
     const save = () => S(treeKey(), ST);

@@ -250,7 +250,7 @@ window.pageInit = function () {
         <div class="pane" data-pane="req">${it.pending ? `<div class="banner info"><i data-ic=info></i><div class="grow"><b>${it.pending}</b> 진행 중 — 같은 항목의 새 신청은 막힙니다(MD-10).</div><a class="btn sm" href="approvals.html?doc=${it.pending}">결재 보기</a></div>` : '<div class="caption muted">진행 중 신청이 없습니다.</div>'}</div>
       </div>
       <div class="rp-foot">${common ? '<span class="caption muted">공통 표준은 신청할 수 없습니다</span><span class="grow"></span><a class="btn sm" href="#" data-toast="공통 표준 의견은 데이터정책팀에 보냅니다(목업)" data-toast-type="info">의견 보내기</a>'
-        : it.st === '삭제 보관' ? ((ME.has('da') || ME.has('admin')) ? `<span class="caption muted">V0 삭제 보관 — 복원 없음</span><span class="grow"></span><button class="btn sm danger" id="purge">영구 삭제</button>` : '<span class="caption muted">V0 삭제 보관 — 영구 삭제는 DA·Admin</span>')
+        : it.st === '삭제 보관' ? (can('dict.publish') ? `<span class="caption muted">V0 삭제 보관 — 복원 없음</span><span class="grow"></span><button class="btn sm danger" id="purge">영구 삭제</button>` : '<span class="caption muted">V0 삭제 보관 — 영구 삭제는 DA·Admin</span>')
         : it.pending ? `<span class="caption muted">${it.pending} 진행 중이라 새 신청 불가</span>` : `<button class="btn sm" disabled title="삭제(V0 보관) 신청은 W2">삭제 신청</button><span class="grow"></span>${it.st === '사용' ? '<button class="btn sm" id="unuse-req">미사용 신청</button>' : ''}<button class="btn primary sm" data-open="pn-request" data-close-others="pn-detail">변경 신청</button>`}</div>`;
     const ur = $('unuse-req'); if (ur) ur.onclick = () => { if (queue.some(x => x.id === it.id)) { toast('이미 대기 목록에 있습니다', 'info'); return; } queue.push({ k: 'chg', id: it.id, name: it.name, act: '미사용', why: '' }); drawQueue(); $('pn-detail').classList.remove('open'); $('pn-request').classList.add('open'); toast(`‘${it.name}’ 미사용 신청을 대기 목록에 넣었습니다 — 사용처 ${it.use}곳 영향 · 사유를 적으세요`, 'info'); };
     const pg = $('purge'); if (pg) pg.onclick = () => purge(it);
@@ -293,7 +293,7 @@ window.pageInit = function () {
   if (location.hash === '#download') setTimeout(() => $('b-dl').click(), 200);
   if (location.hash === '#publish' && ME.has('da')) setTimeout(() => $('b-pub').click(), 200);   // from the change history's [공표]
   // publish (DA, W1 minimal)
-  if (ME.has('da')) $('b-pub').hidden = false;
+  if (can('dict.publish') && ME.has('da')) $('b-pub').hidden = false;
   let pubTarget = '';
   $('b-pub').onclick = () => {
     // count ITEMS (an item changed twice counts once), never the publication rows themselves (CL8-02)
