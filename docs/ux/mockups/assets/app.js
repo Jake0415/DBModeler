@@ -768,6 +768,8 @@
     x: '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
     search: '<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>',
     right: '<path d="m9 18 6-6-6-6"/>', down: '<path d="m6 9 6 6 6-6"/>', up: '<path d="m18 15-6-6-6 6"/>',
+    pointer: '<path d="M4.04 4.65a.5.5 0 0 1 .61-.61l15.95 5.58a.5.5 0 0 1 .02.94l-6.2 2.48a2 2 0 0 0-1.1 1.1l-2.49 6.2a.5.5 0 0 1-.94-.02z"/>',
+    moveh: '<path d="m18 8 4 4-4 4"/><path d="M2 12h20"/><path d="m6 8-4 4 4 4"/>',
     trash: '<path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>',
     ext: '<path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>',
     compare: '<circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><path d="M13 6h3a2 2 0 0 1 2 2v7"/><path d="M11 18H8a2 2 0 0 1-2-2V9"/>',
@@ -807,9 +809,14 @@
   document.addEventListener('keydown', e => { if (e.key !== 'Escape') return; const m = document.querySelector('.menu[data-auto].open'); if (m) { m.classList.remove('open'); const b = m.previousElementSibling; if (b) { b.setAttribute('aria-expanded', 'false'); b.focus(); } } });
   /* buttons that start work show a short "in progress" state ([data-busy]) — the action itself runs as before */
   document.addEventListener('click', e => { const b = e.target.closest('[data-busy]'); if (!b || b.disabled || b.classList.contains('loading')) return; b.classList.add('loading'); b.setAttribute('aria-busy', 'true'); setTimeout(() => { b.disabled = true; }, 0); setTimeout(() => { b.classList.remove('loading'); b.removeAttribute('aria-busy'); b.disabled = false; }, +b.dataset.busy || 600); }, true);
-  /* status tag: ok · run · mine · warn · err · ex · end — one per row */
+  /* status: one badge for every screen (01 v2 §2.3) — ok · run · mine · warn · err · ex · end map onto .badge variants */
   const TAG_IC = { ex: 'flag' };   // Geist: no check / X icons inside status badges — colour + words
-  window.tag = (kind, label) => `<span class="tag ${kind}">${TAG_IC[kind] ? icon(TAG_IC[kind], 12) : ''}${label}</span>`;
+  const TAG_CLS = { ok: 'b-success', run: 'b-info', mine: 'b-mine', warn: 'b-warning', err: 'b-danger', ex: 'b-ex', end: 'b-end' };
+  window.tag = (kind, label) => `<span class="badge ${TAG_CLS[kind] || ''}">${TAG_IC[kind] ? icon(TAG_IC[kind], 12) : ''}${label}</span>`;
+  /* display density (01 v2 §6.4): 촘촘 32 · 기본 36 · 넓게 44 — a personal setting (마이페이지) */
+  window.DENSITY = { compact: '촘촘 32px', default: '기본 36px', comfy: '넓게 44px' };
+  window.setDensity = v => { store.set('dbm-density', v); document.documentElement.dataset.density = v; };
+  document.documentElement.dataset.density = store.get('dbm-density', 'default');
   /* the mock's reference day and the age of a document in its current step (home · approvals use the same count) */
   window.MOCK_TODAY = new Date(2026, 10, 19);
   const toDay = s => { if (!s) return null; let m = /(\d{4})-(\d{2})-(\d{2})/.exec(s); if (m) return new Date(+m[1], m[2] - 1, +m[3]); m = /(\d{1,2})\/(\d{1,2})/.exec(s); return m ? new Date(2026, m[1] - 1, +m[2]) : null; };

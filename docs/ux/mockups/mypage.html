@@ -77,6 +77,7 @@
 
     <div class="pane set-wrap" data-pane="env">
       <div class="set-row"><div class="l"><b>테마</b></div><div class="seg" id="env-theme"><button data-v="light">라이트</button><button data-v="dark">다크</button><button data-v="system">시스템</button></div></div>
+      <div class="set-row"><div class="l"><b>표 밀도</b><span>목록 · 표의 한 줄 높이. 바로 적용됩니다</span></div><div class="seg" id="env-density" role="group" aria-label="표 밀도"><button data-v="compact">촘촘 32</button><button data-v="default">기본 36</button><button data-v="comfy">넓게 44</button></div></div>
       <div class="set-row"><div class="l"><b>시작 화면</b></div><div class="field"><label for="env-start">로그인 후 첫 화면</label><select class="input" id="env-start" style="width:240px"><option>홈</option><option>결재함</option><option>최근 업무 영역</option></select></div></div>
       <div class="set-row"><div class="l"><b>단축키</b><span>화면 낭독기·음성 입력을 쓰면 끄세요</span></div><label class="flex"><input type="checkbox" id="kb-single2"> 한 글자 단축키(V·E·R·M) 사용</label></div>
       <div class="flex" style="margin-top:12px"><span class="grow"></span><button class="btn primary" data-toast="환경 설정을 저장했습니다">저장</button></div>
@@ -153,6 +154,8 @@ window.pageInit = function () {
   else if (q.get('req')) { const need = q.get('req'); const m = RQ.find(([r]) => need.toLowerCase().includes(r) || (need.includes('DA') && r === 'da') || (need.includes('Admin') && r === 'admin') || (need.includes('기관') && r === 'owner')); if (m) $('rr-role').value = m[0]; $('rr-why').value = q.get('what') ? `${q.get('what')} 화면 사용 필요` : ''; $('rr-why').dispatchEvent(new Event('input', { bubbles: true })); setTimeout(() => document.querySelector('[data-open="mo-rolereq"]').click(), 0); }
   $('rr-go').onclick = () => { const why = $('rr-why').value.trim(); if (!why) return; const role = $('rr-role').selectedOptions[0].textContent; dbmStore.set('dbm-rolereq-' + ME.id, JSON.stringify({ role, key: $('rr-role').value, why, at: nowStr() })); pushNotif({ to: Object.values(USERS).filter(u => u.status !== 'stopped' && canUser(u, 'users')).map(u => u.id), k: 'sys', t: `역할 · 담당 변경 요청 — ${ME.name}: ${role}`, m: why, href: `settings.html?user=${ME.id}` }); document.getElementById('mo-rolereq').classList.remove('open'); drawRR(); toast(`${role}을(를) Admin에게 요청했습니다 — 처리되면 알림으로 알려 드립니다`, 'success'); };
   const t = dbmStore.get('dbm-theme', 'light');
+  { const syncD = () => { const v = document.documentElement.dataset.density || 'default'; document.querySelectorAll('#env-density button').forEach(b => { b.classList.toggle('on', b.dataset.v === v); b.setAttribute('aria-pressed', b.dataset.v === v); }); };
+    document.querySelectorAll('#env-density button').forEach(b => { b.onclick = () => { setDensity(b.dataset.v); syncD(); toast(`표 밀도를 ${DENSITY[b.dataset.v]}(으)로 바꿨습니다 — 모든 표에 적용됩니다`, 'info'); }; }); syncD(); }
   document.querySelectorAll('#env-theme button').forEach(b => { b.classList.toggle('on', b.dataset.v === t); b.setAttribute('aria-pressed', b.dataset.v === t); b.onclick = () => { dbmStore.set('dbm-theme', b.dataset.v); location.reload(); }; });
   const k = $('kb-single2'); k.checked = dbmStore.get('dbm-single-keys', '1') === '1'; k.onchange = () => dbmStore.set('dbm-single-keys', k.checked ? '1' : '0');
 };

@@ -126,7 +126,7 @@ window.pageInit = function () {
   });
   // local decisions made on this screen (예외·비대상) before [적용] — undoable, then handed to the model
   const local = {}; const handoff = { ex: [], na: [] };
-  const ST = { ok: ['b-success', '표준', 'ok', 'row-success'], okapply: ['b-success', '사전에 있음', 'comb', 'row-success'], comb: ['b-info', '조합 가능', 'comb', 'row-info'], req: ['b-info', '신청 중', 'req', 'row-info'], unreg: ['b-warning', '미등록 단어', 'unreg', 'row-warning'], ex: [ 'tag ex', '<i data-ic=flag data-s=12></i>예외', 'ex', ''], na: ['', '비대상', 'na', 'row-mute'] };
+  const ST = { ok: ['b-success', '표준', 'ok', 'row-success'], okapply: ['b-success', '사전에 있음', 'comb', 'row-success'], comb: ['b-info', '조합 가능', 'comb', 'row-info'], req: ['b-info', '신청 중', 'req', 'row-info'], unreg: ['b-warning', '미등록 단어', 'unreg', 'row-warning'], ex: ['b-ex', '<i data-ic=flag data-s=12></i>예외', 'ex', ''], na: ['', '비대상', 'na', 'row-mute'] };
   const effective = r => local[r.key] ? Object.assign({}, r, local[r.key]) : r;
   const procOpts = r => r.st === 'comb' ? (r.sus ? ['분해 확인 후 용어 신청', '예외로 유지'] : ['용어 신청 묶음', '예외로 유지']) : r.st === 'okapply' ? ['용어 적용'] : r.st === 'unreg' ? (r.dx[0] === 'W-PEND' ? ['선행 승인 대기', '예외로 유지'] : ['후보 등록', '예외로 유지']) : r.st === 'req' ? (r.toWait ? ['신청 중 용어로 맞춤', '예외로 유지'] : []) : [];
   const selectable = r => ['comb', 'okapply', 'unreg'].includes(r.st) || (r.st === 'req' && r.toWait);

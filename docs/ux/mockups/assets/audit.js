@@ -33,7 +33,7 @@
         const texts = [...d.body.querySelectorAll('*')].filter(el => !skip(el) && [...el.childNodes].some(n => n.nodeType === 3 && n.textContent.trim()) && vis(w, el));
         R.small = texts.filter(el => parseFloat(w.getComputedStyle(el).fontSize) < 12 && !el.closest('#world')).length;   // the model canvas zooms — not counted
         R.bold700 = texts.filter(el => w.getComputedStyle(el).fontWeight === '700').length;
-        const btns = [...d.querySelectorAll('button, .btn')].filter(el => vis(w, el) && !skip(el));
+        const btns = [...d.querySelectorAll('.btn, .iconbtn, .cv-toolbar .tb, .chip')].filter(el => vis(w, el) && !skip(el));   // the button components (tabs, links and tree rows are not buttons here)
         R.btnH = [...new Set(btns.map(b => Math.round(b.getBoundingClientRect().height)))].sort((p, q) => p - q).join(' · ');
         R.noName = btns.filter(b => !(b.getAttribute('aria-label') || b.textContent.trim() || b.title)).length;
         R.noLabel = [...d.querySelectorAll('input:not([type=hidden]):not([type=checkbox]):not([type=radio]), select, textarea')].filter(i => vis(w, i) && !(i.getAttribute('aria-label') || (i.id && d.querySelector(`label[for="${i.id}"]`)) || i.closest('label') || i.title)).length;
