@@ -13,6 +13,9 @@
   .lg h1 { font-size:24px; font-weight:600; letter-spacing:-.4px; margin:16px 0 4px; }
   .lg .sub { color:var(--fg-2); margin-bottom:20px; }
   .lg .btn { width:100%; justify-content:center; height:40px; padding:0 14px; font-size:16px; border-radius:var(--r-lg); }   /* Geist large button */
+  .lg-err { min-height:20px; font-size:14px; color:var(--danger-deep); margin-top:4px; }
+  .lg-sep { display:flex; align-items:center; gap:8px; margin:16px 0 12px; font-size:12px; color:var(--fg-3); } .lg-sep::before, .lg-sep::after { content:''; flex:1; height:1px; background:var(--ds-gray-400); }
+  .lg-mock { margin-top:16px; } .lg-mock summary { font-size:12px; color:var(--fg-2); cursor:pointer; }
   .lg .foot { margin-top:24px; font:400 11px var(--font-mono); color:var(--fg-2); text-align:center; }
 </style>
 </head>
@@ -22,11 +25,25 @@
   <main class="lg" aria-labelledby="lg-t">
     <div class="brand" style="font-size:16px"><svg class="nmark" width="24" height="24" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="6" fill="currentColor"/><path d="M10 22V10l12 12V10" fill="none" stroke="var(--on-ink)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/><circle cx="10" cy="10" r="3" fill="var(--on-ink)"/><circle cx="22" cy="22" r="3" fill="var(--on-ink)"/></svg><span class="wm">NeoDB</span> <span class="caption muted">한국데이터진흥원</span></div>
     <h1 id="lg-t">로그인</h1>
-    <div class="sub">기관 통합 인증(사내 SSO)으로 로그인합니다.</div>
+    <div class="sub" id="lg-sub">ID와 비밀번호를 입력하세요.</div>
     <div id="lg-banner"></div>
-    <div class="field"><label for="lg-who">사용자 (목업 — 실제로는 SSO 화면에서 고릅니다)</label><select class="input" id="lg-who"></select></div>
-    <button class="btn primary" id="lg-go" style="margin-top:8px">사내 SSO로 로그인</button>
-    <div class="caption muted" style="margin-top:12px">SSO 미연동 기관은 이 자리에 아이디·비밀번호 입력란이 나옵니다. 5회 실패하면 10분간 잠깁니다.</div>
+    <form id="lg-form" novalidate>
+      <div class="field"><label for="lg-id">ID</label><input class="input mono" id="lg-id" autocomplete="username" autocapitalize="off" spellcheck="false"></div>
+      <div class="field"><label for="lg-pw">비밀번호</label><input class="input mono" id="lg-pw" type="password" autocomplete="current-password"></div>
+      <div class="lg-err" id="lg-err" role="alert"></div>
+      <button class="btn primary" id="lg-go" type="submit" style="margin-top:8px">로그인</button>
+    </form>
+    <form id="lg-change" novalidate hidden>
+      <div class="banner warning" style="margin-bottom:12px"><i data-ic=warn></i><div id="lg-change-why">임시 비밀번호로 로그인했습니다. 새 비밀번호를 정해야 계속할 수 있습니다.</div></div>
+      <div class="field"><label for="lg-n1">새 비밀번호</label><input class="input mono" id="lg-n1" type="password" autocomplete="new-password"></div>
+      <div class="field"><label for="lg-n2">새 비밀번호 확인</label><input class="input mono" id="lg-n2" type="password" autocomplete="new-password"></div>
+      <div class="caption muted" id="lg-rule"></div>
+      <div class="lg-err" id="lg-cerr" role="alert"></div>
+      <button class="btn primary" type="submit" style="margin-top:8px">비밀번호 바꾸고 계속</button>
+    </form>
+    <div id="lg-sso"></div>
+    <div class="caption muted" style="margin-top:16px" id="lg-help"></div>
+    <details class="lg-mock"><summary>목업 안내</summary><div class="caption">기본 계정 ID: kim · park · lee · hyun · choi — 비밀번호 <span class="mono">Neodb!2026</span>. 설정 → 사용자 · 역할에서 등록한 계정으로도 로그인됩니다. 비밀번호는 해시로만 저장합니다(목업 해시, 실제 서버는 bcrypt · argon2).</div></details>
     <div class="foot" id="lg-foot"></div>
   </main>
 </div></div>
@@ -37,11 +54,48 @@ window.pageInit = function () {
   const $ = id => document.getElementById(id), q = new URLSearchParams(location.search);
   const from = q.get('from') || '';
   const safe = /^[a-z-]+\.html(\?[^#]*)?(#.*)?$/i.test(from) ? from : '';
-  $('lg-who').innerHTML = Object.values(USERS).map(u => `<option value="${u.id}" ${u.id === ME.id ? 'selected' : ''}>${u.name} · ${u.roles.map(r => ROLE_NAME[r]).join('·')}</option>`).join('');
   $('lg-banner').innerHTML = q.get('fail') ? '<div class="banner danger" style="margin-bottom:12px"><i data-ic=warn></i><div>SSO 인증에 실패했습니다. 다시 시도하거나 기관 IT 지원(내선 1234)에 문의하세요. <span class="mono caption">오류 ID E-20261118-SSO1</span></div></div>'
     : q.get('expired') ? `<div class="banner info" style="margin-bottom:12px"><i data-ic=info></i><div>세션이 만료됐습니다. 편집 중이던 내용은 이 브라우저에 보관돼 있고, 로그인하면 <b>${safe ? ((SCREENS.find(s => s.file === safe.split(/[?#]/)[0]) || {}).name || safe.split('?')[0]).split('(')[0].trim() : '홈'}</b> 화면으로 돌아가 이어서 작업합니다.</div></div>` : '';
+  const A = getAuth();
+  const go = id => { const u = USERS[id]; u.fails = 0; u.last = new Date().toTimeString().slice(0, 5); delete u.lockUntil; if (u.status === 'locked') u.status = 'active'; saveUsers(); dbmStore.set('dbm-role', id); const start = { '결재함': 'approvals.html' }[dbmStore.get('dbm-start', '')] || 'home.html'; location.href = safe || start; };
+  const err = (m, el) => { $('lg-err').textContent = m; if (el) { el.setAttribute('aria-invalid', 'true'); el.focus(); } };
+  // the screen follows the agency's authentication mode (settings → 사용자 · 역할)
+  const ssoOnly = A.mode === 'sso', ssoBtn = A.mode !== 'local';
+  if (ssoOnly) { $('lg-sub').textContent = '기관 통합 인증(SSO)으로 로그인합니다.'; $('lg-form').hidden = true; }
+  $('lg-sso').innerHTML = ssoBtn ? `${ssoOnly ? '' : '<div class="lg-sep">또는</div>'}<button class="btn${ssoOnly ? ' primary' : ''}" id="lg-sso-go" type="button">사내 SSO로 로그인 <span class="caption muted" style="margin-left:6px">${A.ssoProto}</span></button>${ssoOnly ? '<button class="btn ghost sm" id="lg-break" type="button" style="margin-top:12px;height:28px;font-size:13px">SSO 장애 · 관리자 비상 로그인</button>' : ''}` : '';
+  $('lg-help').innerHTML = ssoOnly ? 'SSO에 문제가 있으면 기관 IT 지원(내선 1234)에 문의하세요.' : `비밀번호를 ${A.lockFails}번 틀리면 ${A.lockMin}분 동안 잠깁니다. 비밀번호를 잊었으면 관리자에게 초기화를 요청하세요(내선 1234).`;
+  const sg = $('lg-sso-go'); if (sg) sg.onclick = () => { const u = Object.values(USERS).find(x => x.id === ME.id && x.status !== 'stopped') || Object.values(USERS).find(x => x.status !== 'stopped'); toast(`SSO 인증 화면으로 이동합니다(목업) — ${u.name}(으)로 로그인`, 'info'); setTimeout(() => go(u.id), 600); };
+  const br = $('lg-break'); if (br) br.onclick = () => { $('lg-form').hidden = false; br.hidden = true; $('lg-sub').textContent = 'SSO 장애 때 관리자(Admin)만 ID · 비밀번호로 로그인할 수 있습니다.'; $('lg-id').focus(); };
+  let pending = null;
+  $('lg-form').onsubmit = e => {
+    e.preventDefault(); $('lg-err').textContent = ''; ['lg-id', 'lg-pw'].forEach(x => $(x).removeAttribute('aria-invalid'));
+    const id = $('lg-id').value.trim().toLowerCase(), pw = $('lg-pw').value;
+    if (!id) return err('ID를 입력하세요', $('lg-id')); if (!pw) return err('비밀번호를 입력하세요', $('lg-pw'));
+    const u = USERS[id];
+    // the same message for an unknown ID and a wrong password (no account guessing)
+    if (!u) return err('ID 또는 비밀번호가 맞지 않습니다', $('lg-pw'));
+    if (u.status === 'stopped') return err('사용이 중지된 계정입니다. 관리자에게 문의하세요');
+    if (u.status === 'locked' && u.lockUntil && Date.now() < u.lockUntil) return err(`비밀번호를 ${A.lockFails}번 틀려 계정이 잠겼습니다. ${Math.ceil((u.lockUntil - Date.now()) / 60000)}분 뒤 다시 시도하거나 관리자에게 잠금 해제를 요청하세요`);
+    if (ssoOnly && !(u.roles || []).includes('admin')) return err('지금은 SSO 로그인만 허용됩니다. 비상 로그인은 관리자만 할 수 있습니다');
+    if (u.auth === 'sso' && !ssoOnly) return err('SSO 연동 계정입니다. [사내 SSO로 로그인]을 누르세요');
+    if (u.pwHash !== pwHash(u.id, pw)) {
+      u.fails = (u.fails || 0) + 1;
+      if (u.fails >= A.lockFails) { u.status = 'locked'; u.lockUntil = Date.now() + A.lockMin * 60000; saveUsers(); pushAudit({ act: '계정 잠김', target: `${u.name} (${u.id})`, why: `비밀번호 ${A.lockFails}회 실패` }); return err(`비밀번호를 ${A.lockFails}번 틀려 계정이 ${A.lockMin}분 동안 잠겼습니다`); }
+      saveUsers(); return err(`ID 또는 비밀번호가 맞지 않습니다 (${u.fails}/${A.lockFails})`, $('lg-pw'));
+    }
+    const old = u.pwAt && (Date.now() - new Date(u.pwAt.slice(0, 10)).getTime()) / 86400000 > A.pwDays;
+    if (u.pwTemp || old) { pending = u.id; $('lg-form').hidden = true; $('lg-sso').hidden = true; $('lg-change').hidden = false; $('lg-change-why').textContent = u.pwTemp ? '임시 비밀번호로 로그인했습니다. 새 비밀번호를 정해야 계속할 수 있습니다.' : `비밀번호를 바꾼 지 ${A.pwDays}일이 지났습니다. 새 비밀번호를 정하세요.`; $('lg-rule').textContent = `${A.pwMin}자 이상 · 영문 · 숫자 · 특수문자 · ID 미포함 · 같은 문자 3번 연속 금지 · 이전 비밀번호와 달라야 합니다`; $('lg-n1').focus(); return; }
+    go(u.id);
+  };
+  $('lg-change').onsubmit = e => {
+    e.preventDefault(); const u = USERS[pending]; if (!u) return; const n1 = $('lg-n1').value, n2 = $('lg-n2').value; $('lg-cerr').textContent = '';
+    const p = pwProblems(u.id, n1); if (p.length) { $('lg-cerr').textContent = '비밀번호 규칙: ' + p.join(' · '); $('lg-n1').focus(); return; }
+    if (pwHash(u.id, n1) === u.pwHash) { $('lg-cerr').textContent = '이전 비밀번호와 같습니다'; $('lg-n1').focus(); return; }
+    if (n1 !== n2) { $('lg-cerr').textContent = '비밀번호가 서로 다릅니다'; $('lg-n2').focus(); return; }
+    u.pwHash = pwHash(u.id, n1); u.pwTemp = false; u.pwAt = new Date().toISOString().slice(0, 10); saveUsers(); pushAudit({ act: '비밀번호 변경', target: `${u.name} (${u.id})`, why: '로그인 때 변경' }); flash('비밀번호를 바꿨습니다', 'success'); go(u.id);
+  };
+  if (!ssoOnly) setTimeout(() => $('lg-id').focus(), 0);
   $('lg-foot').textContent = `${PRODUCT.name} ${PRODUCT.version} · build ${PRODUCT.build} · ${PRODUCT.env}`;
-  $('lg-go').onclick = () => { const u = $('lg-who').value; dbmStore.set('dbm-role', u); const start = { '결재함': 'approvals.html' }[dbmStore.get('dbm-start', '')] || 'home.html'; location.href = safe || start; };
 };
 </script>
 </body>

@@ -22,20 +22,36 @@
   const PRODUCT = { name: 'NeoDB', version: '1.0.0', build: '20261117.a1b2c3', env: '운영', released: '2026-11-17', dict: '공통표준 2025.11 (적재 11/03) · 기관 사전 제정 12차' };
   window.PRODUCT = PRODUCT;
   const USERS = {
-    kim: { id: 'kim', name: '김모델', org: '데이터정책팀', mail: 'kim@kda.go.kr', roles: ['modeler', 'da'], systems: ['요구사항관리', '인사시스템', '통합ERP'] },
-    park: { id: 'park', name: '박설계', org: '정보화사업팀', mail: 'park@kda.go.kr', roles: ['modeler'], systems: ['요구사항관리', '통합ERP'] },
-    lee: { id: 'lee', name: '이데이터', org: '데이터정책팀', mail: 'lee@kda.go.kr', roles: ['da', 'admin'], systems: ['전체'] },
-    hyun: { id: 'hyun', name: '이현업', org: '기획조정실', mail: 'hyun@kda.go.kr', roles: ['owner'], systems: ['전체'] },
-    choi: { id: 'choi', name: '최담당', org: '재무회계팀', mail: 'choi@kda.go.kr', roles: ['owner', 'modeler'], systems: ['회계시스템', '통합ERP'] }
+    kim: { id: 'kim', name: '김모델', company: '한국데이터진흥원', org: '데이터정책팀', phone: '010-2345-1101', mail: 'kim@kda.go.kr', roles: ['modeler', 'da'], systems: ['요구사항관리', '인사시스템', '통합ERP'] },
+    park: { id: 'park', name: '박설계', company: '(주)한빛정보', org: '정보화사업팀', phone: '010-3456-2202', mail: 'park@hanbit.co.kr', roles: ['modeler'], systems: ['요구사항관리', '통합ERP'] },
+    lee: { id: 'lee', name: '이데이터', company: '한국데이터진흥원', org: '데이터정책팀', phone: '010-4567-3303', mail: 'lee@kda.go.kr', roles: ['da', 'admin'], systems: ['전체'] },
+    hyun: { id: 'hyun', name: '이현업', company: '한국데이터진흥원', org: '기획조정실', phone: '010-5678-4404', mail: 'hyun@kda.go.kr', roles: ['owner'], systems: ['전체'] },
+    choi: { id: 'choi', name: '최담당', company: '한국데이터진흥원', org: '재무회계팀', phone: '010-6789-5505', mail: 'choi@kda.go.kr', roles: ['owner', 'modeler'], systems: ['회계시스템', '통합ERP'] }
   };
+  /* accounts (14): the intranet runs its own ID/PW accounts; SSO is an option. Passwords are never kept as text —
+     the mock keeps a salted hash only (a real server uses a slow password hash such as bcrypt/argon2). */
+  window.pwHash = (id, pw) => { let h = 2166136261; const s = String(id).toLowerCase() + ':' + pw + ':neodb-mock-salt'; for (let i = 0; i < s.length; i++) h = Math.imul(h ^ s.charCodeAt(i), 16777619); return 'm1$' + (h >>> 0).toString(16); };
+  const SEED_PW = 'Neodb!2026';   // mock only — every seeded account uses it; new accounts get the password the admin types
+  Object.values(USERS).forEach(u => Object.assign(u, { status: 'active', auth: 'local', pwHash: pwHash(u.id, SEED_PW), pwAt: '2026-10-01', pwTemp: false, fails: 0, created: '2026-09-01', last: '' }));
   const ROLE_NAME = { modeler: '모델러', da: 'DA', owner: '기관 담당자', admin: 'Admin' };
   window.USERS = USERS; window.ROLE_NAME = ROLE_NAME;
   // roles changed in settings (SC-42) apply to everyone — the mock "server" copy of user roles
   try { const ov = JSON.parse(store.get('dbm-user-roles', 'null')); if (ov) Object.entries(ov).forEach(([id, r]) => { if (USERS[id]) USERS[id].roles = r; }); } catch (e) {}
+  // the user directory saved by the admin screen (registered · edited · stopped · deleted accounts) is the source once it exists
+  try { const db = JSON.parse(store.get('dbm-users', 'null')); if (db) { Object.keys(USERS).forEach(k => { if (!db[k]) delete USERS[k]; }); Object.entries(db).forEach(([k, u]) => { USERS[k] = Object.assign(USERS[k] || {}, u); }); } } catch (e) {}
+  window.saveUsers = () => { store.set('dbm-users', JSON.stringify(USERS)); };
+  const AUTH0 = { mode: 'local', ssoProto: 'SAML 2.0', ssoUrl: '', ssoAuto: false, pwMin: 9, pwDays: 90, lockFails: 5, lockMin: 10, idle: 30 };
+  window.getAuth = () => { try { return Object.assign({}, AUTH0, JSON.parse(store.get('dbm-auth', '{}'))); } catch (e) { return Object.assign({}, AUTH0); } };
+  window.saveAuth = a => store.set('dbm-auth', JSON.stringify(a));
+  window.AUTH_MODE = { local: 'ID · 비밀번호', both: 'ID · 비밀번호 + SSO(선택)', sso: 'SSO만 (관리자 비상 로그인 허용)' };
+  // password rules — one function for registration, reset and self-change
+  window.pwProblems = (id, pw, name) => { const a = getAuth(), p = []; if ((pw || '').length < a.pwMin) p.push(`${a.pwMin}자 이상`); if (!/[A-Za-z]/.test(pw)) p.push('영문 포함'); if (!/[0-9]/.test(pw)) p.push('숫자 포함'); if (!/[^A-Za-z0-9]/.test(pw)) p.push('특수문자 포함'); if (id && pw && pw.toLowerCase().includes(String(id).toLowerCase())) p.push('ID를 포함하면 안 됨'); if (/(.)\1\1/.test(pw || '')) p.push('같은 문자 3번 연속 금지'); return p; };
+  window.tempPassword = () => { const A = 'ABCDEFGHJKLMNPQRSTUVWXYZ', a = 'abcdefghijkmnpqrstuvwxyz', d = '23456789', s = '!@#$%*?'; const pick = x => x[Math.floor(Math.random() * x.length)]; let out = pick(A) + pick(a) + pick(d) + pick(s); while (out.length < 12) out += pick(A + a + d + s); return out.split('').sort(() => Math.random() - 0.5).join(''); };
+  window.USER_STATUS = { active: '사용', stopped: '사용 중지', locked: '잠김' };
   // ?as=role from a scenario/shortcut link becomes the selected demo user (kept while moving between screens — CL12-01)
   if (qs.get('as') && USERS[qs.get('as')] && store.get('dbm-role', 'kim') !== qs.get('as')) store.set('dbm-role', qs.get('as'));
   const meId = store.get('dbm-role', 'kim');
-  const ME = Object.assign({}, USERS[meId] || USERS.kim, { has(r) { return this.roles.includes(r); } });
+  const ME = Object.assign({}, USERS[meId] || USERS.kim || Object.values(USERS)[0], { has(r) { return (this.roles || []).includes(r); } });
   window.ME = ME;
   window.roleBadges = u => u.roles.map(r => `<span class="badge">${ROLE_NAME[r]}</span>`).join(' ');
 

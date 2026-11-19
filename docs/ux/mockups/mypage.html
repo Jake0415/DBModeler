@@ -32,8 +32,10 @@
   </div>
   <div class="scroll"><div class="pad">
     <div class="pane on set-wrap" data-pane="profile">
-      <div class="set-row"><div class="l"><b>기본 정보</b><span>사내 SSO 디렉터리에서 가져옵니다</span></div>
-        <div class="field-row"><div class="field"><label for="p-name">이름</label><input class="input" id="p-name" readonly></div><div class="field"><label for="p-org">소속</label><input class="input" id="p-org" readonly></div><div class="field"><label for="p-mail">메일</label><input class="input mono" id="p-mail" readonly></div></div></div>
+      <div class="set-row"><div class="l"><b>기본 정보</b><span>회사 · 부서 · 이름은 관리자가 바꿉니다</span></div>
+        <div class="field-row"><div class="field"><label for="p-company">회사명</label><input class="input" id="p-company" readonly></div><div class="field"><label for="p-org">부서명</label><input class="input" id="p-org" readonly></div><div class="field"><label for="p-name">이름</label><input class="input" id="p-name" readonly></div><div class="field"><label for="p-id">ID</label><input class="input mono" id="p-id" readonly></div></div></div>
+      <div class="set-row"><div class="l"><b>연락처</b><span>결재 알림 메일이 이 주소로 갑니다</span></div>
+        <div class="field-row"><div class="field"><label for="p-phone">전화번호</label><input class="input mono" id="p-phone" inputmode="tel" placeholder="010-1234-5678"></div><div class="field"><label for="p-mail">이메일</label><input class="input mono" id="p-mail" type="email"></div></div><div class="caption" id="p-cerr" role="alert" style="color:var(--danger-deep)"></div></div>
       <div class="set-row"><div class="l"><b>표시 이름</b><span>결재·공동 편집 커서에 보이는 이름</span></div><div class="field"><label for="p-disp">표시 이름</label><input class="input" id="p-disp"></div></div>
       <div class="set-row"><div class="l"><b>내 역할 · 담당 시스템</b><span>조회 전용 — 바꾸려면 Admin에게 요청합니다</span></div>
         <div><div id="p-roles" style="margin-bottom:8px"></div><div class="caption" id="p-sys"></div>
@@ -58,8 +60,13 @@
     </div>
 
     <div class="pane set-wrap" data-pane="security">
-      <div class="set-row"><div class="l"><b>인증 방식</b></div><div><span class="badge b-success">사내 SSO</span> <span class="caption muted">비밀번호는 기관 통합 인증에서 바꿉니다</span> <a href="#" data-toast="기관 통합 인증 페이지를 엽니다(목업)" data-toast-type="info">비밀번호 변경</a>
-        <div class="caption faint" style="margin-top:6px">SSO 미연동 기관은 여기서 비밀번호를 바꿉니다(자체 계정).</div></div></div>
+      <div class="set-row"><div class="l"><b>인증 방식</b></div><div id="sec-auth"></div></div>
+      <div class="set-row" id="sec-pwrow"><div class="l"><b>비밀번호 변경</b><span id="sec-pwat"></span></div>
+        <form id="sec-pw" novalidate style="max-width:360px"><div class="field"><label for="s-cur">지금 비밀번호</label><input class="input mono" id="s-cur" type="password" autocomplete="current-password"></div>
+          <div class="field"><label for="s-n1">새 비밀번호</label><input class="input mono" id="s-n1" type="password" autocomplete="new-password"></div>
+          <div class="field"><label for="s-n2">새 비밀번호 확인</label><input class="input mono" id="s-n2" type="password" autocomplete="new-password"></div>
+          <div class="caption muted" id="s-rule"></div><div class="caption" id="s-err" role="alert" style="color:var(--danger-deep);min-height:16px;margin-top:4px"></div>
+          <button class="btn primary" type="submit" style="margin-top:8px">비밀번호 변경</button></form></div>
       <div class="set-row"><div class="l"><b>접속 중인 세션</b><span>세션은 30분 동안 입력이 없으면 만료되고, 5분 전에 알립니다</span></div>
         <div><table class="tbl"><thead><tr><th>기기 · 브라우저</th><th>IP</th><th>마지막 활동</th><th></th></tr></thead><tbody>
           <tr><td>Windows · Chrome <span class="badge b-success">이 기기</span></td><td class="mono">10.12.3.41</td><td class="mono">방금</td><td></td></tr>
@@ -88,7 +95,23 @@
 window.pageInit = function () {
   const $ = id => document.getElementById(id);
   $('av').textContent = ME.name[0]; $('nm').textContent = ME.name; $('rb').innerHTML = roleBadges(ME);
-  $('p-name').value = ME.name; $('p-org').value = ME.org; $('p-mail').value = ME.mail; $('p-disp').value = ME.name;
+  const U = USERS[ME.id] || ME;
+  $('p-company').value = U.company || ''; $('p-org').value = U.org || ''; $('p-name').value = U.name; $('p-id').value = U.id; $('p-phone').value = U.phone || ''; $('p-mail').value = U.mail || ''; $('p-disp').value = ME.name;
+  // security: local accounts change the password here; SSO accounts change it at the agency's IdP
+  { const A = getAuth(), sso = U.auth === 'sso';
+    $('sec-auth').innerHTML = sso ? `<span class="badge b-success">사내 SSO</span> <span class="caption muted">비밀번호는 기관 통합 인증(${A.ssoProto})에서 바꿉니다</span>` : `<span class="badge">ID · 비밀번호</span> <span class="caption muted">이 시스템의 자체 계정입니다${A.mode !== 'local' ? ' · 로그인 화면에서 SSO도 쓸 수 있습니다' : ''}</span>`;
+    $('sec-pwrow').hidden = sso; $('sec-pwat').textContent = `마지막 변경 ${U.pwAt || '—'} · ${A.pwDays}일마다 바꿉니다`;
+    $('s-rule').textContent = `${A.pwMin}자 이상 · 영문 · 숫자 · 특수문자 · ID 미포함 · 같은 문자 3번 연속 금지`;
+    $('sec-pw').onsubmit = e => { e.preventDefault(); const er = m => { $('s-err').textContent = m; };
+      if (U.pwHash !== pwHash(U.id, $('s-cur').value)) { er('지금 비밀번호가 맞지 않습니다'); $('s-cur').focus(); return; }
+      const n1 = $('s-n1').value, n2 = $('s-n2').value, p = pwProblems(U.id, n1);
+      if (p.length) { er('비밀번호 규칙: ' + p.join(' · ')); $('s-n1').focus(); return; }
+      if (pwHash(U.id, n1) === U.pwHash) { er('지금 비밀번호와 같습니다'); $('s-n1').focus(); return; }
+      if (n1 !== n2) { er('새 비밀번호가 서로 다릅니다'); $('s-n2').focus(); return; }
+      U.pwHash = pwHash(U.id, n1); U.pwAt = new Date().toISOString().slice(0, 10); U.pwTemp = false; saveUsers(); pushAudit({ act: '비밀번호 변경', target: `${U.name} (${U.id})`, why: '마이페이지' });
+      ['s-cur', 's-n1', 's-n2'].forEach(x => $(x).value = ''); er(''); $('sec-pwat').textContent = `마지막 변경 ${U.pwAt} · ${A.pwDays}일마다 바꿉니다`; toast('비밀번호를 바꿨습니다 · 다른 기기의 세션은 다시 로그인해야 합니다', 'success'); };
+  }
+  $('p-phone').addEventListener('input', () => { const d = $('p-phone').value.replace(/\D/g, '').slice(0, 11); $('p-phone').value = d.length < 4 ? d : d.length < 8 ? d.slice(0, 3) + '-' + d.slice(3) : d.slice(0, 3) + '-' + d.slice(3, d.length - 4) + '-' + d.slice(-4); });
   $('p-roles').innerHTML = ME.roles.map(r => `<span class="badge">${ROLE_NAME[r]}</span>`).join(' ');
   $('p-sys').textContent = '담당 시스템: ' + ME.systems.join(', ');
   const docs = getDocs().filter(d => d.req === ME.id);
@@ -110,7 +133,15 @@ window.pageInit = function () {
   { const off = NOTIFY_KINDS.filter(([k]) => pref[k] && pref[k].app === false).map(x => x[1].split(' (')[0]); $('nt-state').textContent = off.length ? `앱 알림 끔: ${off.join(', ')}` : ''; }
   // 표시 이름
   const dn = dbmStore.get('dbm-disp-' + ME.id, ''); if (dn) $('p-disp').value = dn;
-  $('p-save').onclick = () => { const v = $('p-disp').value.trim(); if (!v) { toast('표시 이름을 입력하세요', 'danger'); return; } dbmStore.set('dbm-disp-' + ME.id, v); toast(`표시 이름을 ‘${v}’(으)로 저장했습니다 — 결재·공동 편집 커서에 보입니다`, 'success'); };
+  $('p-save').onclick = () => {
+    const v = $('p-disp').value.trim(); if (!v) { toast('표시 이름을 입력하세요', 'danger'); return; }
+    const ph = $('p-phone').value.trim(), ml = $('p-mail').value.trim(); $('p-cerr').textContent = '';
+    if (!/^0\d{1,2}-\d{3,4}-\d{4}$/.test(ph)) { $('p-cerr').textContent = '전화번호 형식이 맞지 않습니다 (예: 010-1234-5678)'; $('p-phone').focus(); return; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(ml)) { $('p-cerr').textContent = '이메일 형식이 맞지 않습니다'; $('p-mail').focus(); return; }
+    if (Object.values(USERS).some(x => x.id !== ME.id && (x.mail || '').toLowerCase() === ml.toLowerCase())) { $('p-cerr').textContent = '다른 사용자가 쓰는 이메일입니다'; $('p-mail').focus(); return; }
+    dbmStore.set('dbm-disp-' + ME.id, v);
+    const U2 = USERS[ME.id]; if (U2 && (U2.phone !== ph || U2.mail !== ml)) { U2.phone = ph; U2.mail = ml; saveUsers(); pushAudit({ act: '내 연락처 수정', target: `${U2.name} (${U2.id})` }); }
+    toast(`저장했습니다 — 표시 이름 ‘${v}’ · 연락처`, 'success'); };
   // 역할 변경 요청 (from 403 too): ?req=da&what=… pre-fills; request goes to Admin as a notification and is kept on this page
   const RQ = [['owner', '기관 담당자 추가'], ['da', 'DA 추가'], ['modeler', '모델러 추가'], ['admin', 'Admin 추가'], ['off', '역할 해제']].filter(([r]) => r === 'off' || !ME.roles.includes(r));
   $('rr-role').innerHTML = RQ.map(([r, n]) => `<option value="${r}">${n}</option>`).join('');
