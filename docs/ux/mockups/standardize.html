@@ -79,7 +79,7 @@
 window.pageInit = function () {
   const q = new URLSearchParams(location.search), $ = id => document.getElementById(id);
   // the area and version this screen works on travel with it (entry, judgement, hand-off and return)
-  const AREA = getModels()[q.get('area')] ? q.get('area') : 'rq';
+  const AREA = getModels()[q.get('area')] ? q.get('area') : defArea();
   const LK = modelLock(AREA), VER = LK.model.ver;
   $('crumb-area').textContent = `${LK.model.name} · v${VER}`;
   $('back').href = `model.html?area=${AREA}`;

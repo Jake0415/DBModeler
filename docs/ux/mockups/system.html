@@ -13,8 +13,8 @@
 <div id="app">
 <div id="content" class="page">
   <div class="page-header">
-    <h1>요구사항관리</h1>
-    <span class="badge">Oracle 19c · RQMS</span>
+    <h1 id="sys-name">요구사항관리</h1>
+    <span class="badge" id="sys-badge">Oracle 19c · RQMS</span>
     <div class="actions">
       <a class="btn" href="settings.html#sys">시스템 설정</a>
       <a class="btn" href="model.html?sys=1">시스템 전체 ERD</a><button class="btn primary" id="add-area"><i data-ic=plus></i>업무 영역</button>
@@ -43,6 +43,8 @@
 window.pageInit = function () {
   const $ = id => document.getElementById(id);
   const ids = Object.keys(getModels()); let T = 0, Cc = 0;
+  { const s = curSys(); $('sys-name').textContent = s.name; $('sys-badge').textContent = `${s.db} · ${s.schema}`; document.title = s.name + ' · 시스템 홈 · NeoDB 목업'; }
+  const OWN = { e_sd: '정영업', e_mm: '한구매', e_wm: '김모델', e_pp: '오생산', e_fi: '최회계', e_hr: '박설계' };
   // counts from each area's working structure (or its submitted copy when locked) — CX12-19 · CL12-31
   const sizeOf = a => { const L = modelLock(a); const m = (L.doc && L.state !== 'edit' && L.doc.model) || modelOf(a, L.model.ver); const ents = m.E.filter(x => !x.ref); return [ents.length, ents.reduce((n, x) => n + x.a.length, 0)]; };
   ids.forEach(a => { const [t2, c2] = sizeOf(a); T += t2; Cc += c2; });
@@ -59,7 +61,7 @@ window.pageInit = function () {
   document.getElementById('areas').innerHTML = ids.map(a => {
     const L = modelLock(a), c = getComp(a);
     const st = L.state === 'review' ? `<span class="badge b-info">검토 중 · ${L.doc.id}</span>` : L.state === 'confirmed' ? '<span class="badge b-success">확정본</span>' : '<span class="badge">작업 중</span>';
-    return `<tr class="click" tabindex="0" onclick="location.href='model.html?area=${a}'"><td><b>${L.model.name}</b></td><td>${st}</td><td class="mono">v${L.model.ver} <span class="faint">${L.model.base ? `(v${L.model.base} 확정 기준)` : '(확정본 없음)'}</span></td><td class="num">${sizeOf(a)[0]}</td><td class="mono">${c ? c.rate + '%' : '—'}</td><td class="num">${c ? c.bad : '—'}</td><td class="num">${c ? c.exList.length : '—'}</td><td>${a === 'rq' ? '김모델' : a === 'risk' ? '박설계' : '—'}</td><td class="mono">${L.doc ? L.doc.date : '—'}</td></tr>`;
+    return `<tr class="click" tabindex="0" onclick="location.href='model.html?area=${a}'"><td><b>${L.model.name}</b></td><td>${st}</td><td class="mono">v${L.model.ver} <span class="faint">${L.model.base ? `(v${L.model.base} 확정 기준)` : '(확정본 없음)'}</span></td><td class="num">${sizeOf(a)[0]}</td><td class="mono">${c ? c.rate + '%' : '—'}</td><td class="num">${c ? c.bad : '—'}</td><td class="num">${c ? c.exList.length : '—'}</td><td>${a === 'rq' ? '김모델' : a === 'risk' ? '박설계' : OWN[a] || '—'}</td><td class="mono">${L.doc ? L.doc.date : '—'}</td></tr>`;
   }).join('');
 };
 </script>

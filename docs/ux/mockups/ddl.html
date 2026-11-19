@@ -72,7 +72,7 @@
 window.pageInit = function () {
   const $ = id => document.getElementById(id), q = new URLSearchParams(location.search);
   // area + version (or a submitted copy) come from where the user started (CX12-30 · CL12-42)
-  const AREA = getModels()[q.get('area')] ? q.get('area') : 'rq';
+  const AREA = getModels()[q.get('area')] ? q.get('area') : defArea();
   const L = modelLock(AREA); const snapDoc = q.get('snap') ? getDocs().find(x => x.id === q.get('snap') && x.type === 'model' && x.area === AREA) : null;
   const src = snapDoc ? (snapDoc.model || modelSeed(AREA)) : (L.state !== 'edit' && L.doc && L.doc.model) ? L.doc.model : modelOf(AREA, L.model.ver);
   const label = snapDoc ? `v${snapDoc.ver} ${snapDoc.step === 'done' ? '확정본' : '제출 사본'} · ${snapDoc.id}` : L.state === 'confirmed' ? `v${L.model.ver} 확정본` : L.state === 'review' ? `v${L.model.ver} 검토 중 사본` : `v${L.model.ver} 작업본(미확정)`;
@@ -90,6 +90,7 @@ window.pageInit = function () {
   const esc = s => String(s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c]);
   const ascii = s => /^[A-Z][A-Z0-9_]*$/.test(s);
   const nm = x => x.p === '—' ? x.n : x.p;
+  const SCH = curSys().schema;
   function draw() {
     chips();
     const target = scope === 'pick' ? ents.filter(e => picked.has(e.id)) : scope === 'sys' ? [] : ents;
@@ -100,20 +101,20 @@ window.pageInit = function () {
     if (scope === 'sys') block.push('시스템 전체는 조회용입니다 — 업무 영역별로 출력하세요');
     if (!target.length && scope !== 'sys') block.push('출력할 테이블이 없습니다 — 범위를 고르세요');
     const lines = [];
-    lines.push(`<span class="cm">-- NeoDB · 요구사항관리 / ${L.model.name} · ${label} · ${alter ? `변경분(ALTER) — v${baseVer} 확정본 대비` : '신규 생성(CREATE)'}</span>`);
+    lines.push(`<span class="cm">-- NeoDB · ${curSys().name} / ${L.model.name} · ${label} · ${alter ? `변경분(ALTER) — v${baseVer} 확정본 대비` : '신규 생성(CREATE)'}</span>`);
     if (alter && !prevDoc) lines.push(`<span class="cm">-- 비교할 v${baseVer} 확정본 사본이 없어 전체를 CREATE로 냅니다</span>`);
     target.forEach(e => {
       const base = alter && prevDoc ? prevDoc.model.E.find(x => x.id === e.id) : null;
       lines.push(`<span data-e="${e.id}" hidden></span><span class="cm">-- ${esc(e.p)} ${esc(e.n)}</span>`);
-      if (alter && base) { e.a.forEach(a => { const o = base.a.find(x => x.n === a.n || x.n === a.orig); if (!o) lines.push(`<span class="kw">ALTER TABLE</span> RQMS.${esc(e.p)} <span class="kw">ADD</span> (${esc(a.p)} ${esc(a.t)});`); else if (o.p !== a.p) lines.push(`<span class="kw">ALTER TABLE</span> RQMS.${esc(e.p)} <span class="kw">RENAME COLUMN</span> ${esc(o.p)} <span class="kw">TO</span> ${esc(a.p)};`); else if (o.t !== a.t) lines.push(`<span class="kw">ALTER TABLE</span> RQMS.${esc(e.p)} <span class="kw">MODIFY</span> (${esc(a.p)} ${esc(a.t)});`); }); return; }
-      lines.push(`<span class="kw">CREATE TABLE</span> RQMS.${esc(e.p)} (`);
+      if (alter && base) { e.a.forEach(a => { const o = base.a.find(x => x.n === a.n || x.n === a.orig); if (!o) lines.push(`<span class="kw">ALTER TABLE</span> ${SCH}.${esc(e.p)} <span class="kw">ADD</span> (${esc(a.p)} ${esc(a.t)});`); else if (o.p !== a.p) lines.push(`<span class="kw">ALTER TABLE</span> ${SCH}.${esc(e.p)} <span class="kw">RENAME COLUMN</span> ${esc(o.p)} <span class="kw">TO</span> ${esc(a.p)};`); else if (o.t !== a.t) lines.push(`<span class="kw">ALTER TABLE</span> ${SCH}.${esc(e.p)} <span class="kw">MODIFY</span> (${esc(a.p)} ${esc(a.t)});`); }); return; }
+      lines.push(`<span class="kw">CREATE TABLE</span> ${SCH}.${esc(e.p)} (`);
       e.a.filter(a => !a.edit).forEach(a => { const bad = a.p === '—' || !ascii(a.p); lines.push(`<span class="${bad ? 'warn' : ''}">  ${esc(a.p)}${' '.repeat(Math.max(1, 20 - a.p.length))}${esc(a.t)}${a.nn || a.pk ? ' <span class="kw">NOT NULL</span>' : ''},${bad ? ' <span class="cm">-- 오류: 물리명 없음·무효</span>' : a.s === 'ex' ? ' <span class="cm">-- <i data-ic=warn data-s=12></i> 예외: ' + esc(a.exReason || '') + '</span>' : ''}</span>`); });
       const pk = e.a.filter(a => a.pk).map(a => a.p); lines.push(pk.length ? `  <span class="kw">CONSTRAINT</span> ${esc(e.p)}_PK <span class="kw">PRIMARY KEY</span> (${pk.join(', ')})` : '  <span class="cm">-- <i data-ic=warn data-s=12></i> PK 없음</span>'); lines.push(');');
-      if (cm) { lines.push(`<span class="kw">COMMENT ON TABLE</span> RQMS.${esc(e.p)} <span class="kw">IS</span> <span class="str">'${esc(e.n)}'</span>;`); }
+      if (cm) { lines.push(`<span class="kw">COMMENT ON TABLE</span> ${SCH}.${esc(e.p)} <span class="kw">IS</span> <span class="str">'${esc(e.n)}'</span>;`); }
     });
     // FK from the same rule as the model tree and the right panel (12 §4.1): ok → constraint, ex → reason, miss → warning
     if (fk && !alter) src.R.forEach(r => { const p = src.E.find(x => x.id === r.f), c = ents.find(x => x.id === r.t); if (!p || !c || !target.includes(c)) return; const f = fkOf(r, src.E);
-      if (f.st === 'ok') lines.push(`<span class="kw">ALTER TABLE</span> RQMS.${esc(c.p)} <span class="kw">ADD CONSTRAINT</span> ${esc(f.name)} <span class="kw">FOREIGN KEY</span> (${f.cols.join(', ')}) <span class="kw">REFERENCES</span> RQMS.${esc(p.p)} (${f.pcols.join(', ')});`);
+      if (f.st === 'ok') lines.push(`<span class="kw">ALTER TABLE</span> ${SCH}.${esc(c.p)} <span class="kw">ADD CONSTRAINT</span> ${esc(f.name)} <span class="kw">FOREIGN KEY</span> (${f.cols.join(', ')}) <span class="kw">REFERENCES</span> ${SCH}.${esc(p.p)} (${f.pcols.join(', ')});`);
       else if (f.st === 'ex') lines.push(`<span class="cm">-- FK 제외: ${esc(nm(c))} → ${esc(nm(p))} · ${esc(f.why)}</span>`);
       else if (f.st === 'miss') { lines.push(`<span class="cm">-- <i data-ic=warn data-s=12></i> FK 누락: ${esc(nm(c))} → ${esc(nm(p))} · ${esc(f.why)}</span>`); warn.push(`${c.n} → ${p.n}: FK 누락 · ${f.why}`); } });
     $('sql').innerHTML = lines.map((l, i) => `<div class="ln ${l.includes('-- 오류:') ? 'warn' : ''}"><i>${i + 1}</i>${l}</div>`).join('');
@@ -127,7 +128,7 @@ window.pageInit = function () {
   $('scope-chips').addEventListener('click', e => { const c = e.target.closest('[data-sc]'); if (!c) return; scope = c.dataset.sc; draw(); });
   ['preset', 'o-cm', 'o-fk'].forEach(id => $(id).onchange = draw);
   $('copy').onclick = () => { const txt = [...$('sql').querySelectorAll('.ln')].map(l => { const c = l.cloneNode(true); const i = c.querySelector('i'); if (i) i.remove(); return c.textContent; }).join('\n'); (navigator.clipboard ? navigator.clipboard.writeText(txt) : Promise.reject()).then(() => toast(`SQL ${txt.split('\n').length}줄을 클립보드에 복사했습니다`, 'success'), () => window.prompt('복사해서 쓰세요', txt)); };
-  $('dl').onclick = () => toast(`RQMS_${AREA}_${label.split(' ')[0]}.sql 내려받기 (UTF-8)`, 'success');
+  $('dl').onclick = () => toast(`${SCH}_${AREA}_${label.split(' ')[0]}.sql 내려받기 (UTF-8)`, 'success');
   draw();
   window.addEventListener('dbm-tree-select', ev => {
     const d = ev.detail; if (d.area !== AREA || !d.id) return; const e = src.E.find(x => x.id === d.id); if (!e) return; ev.preventDefault();

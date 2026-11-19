@@ -334,7 +334,7 @@ window.pageInit = function () {
   };
 
   // ---- business area: seed structure comes from the shared state layer (app.js modelSeed)
-  const AREA = getModels()[q.get('area')] ? q.get('area') : 'rq';
+  const AREA = getModels()[q.get('area')] ? q.get('area') : defArea();
   const _seed = modelSeed(AREA);
   const E = _seed.E, R = _seed.R, M = _seed.M;
   const cv = $('cv'), world = $('world'), nodes = $('nodes'), eg = $('eg'), preview = $('preview');
@@ -449,7 +449,7 @@ window.pageInit = function () {
   }
   let lastComp = null;
   function fillConfirm() {
-    $('cf-sub').textContent = `요구사항관리 › ${LOCK.model.name} · v${VER}`;
+    $('cf-sub').textContent = `${curSys().name} › ${LOCK.model.name} · v${VER}`;
     const reqs = []; const docsNow = getDocs(); E.forEach(e => e.a.forEach(a => { if (a.s === 'req') { const d = a.reqDoc && docsNow.find(x => x.id === a.reqDoc); reqs.push([e, a, d]); } }));
     $('cf-reqn').textContent = reqs.length;
     $('cf-req').innerHTML = reqs.length ? `<table class="tbl"><thead><tr><th>속성</th><th>용어 신청</th><th>단계</th></tr></thead><tbody>${reqs.map(([e, a, d]) => `<tr><td>${e.n}.${a.n}</td><td>${d ? `<a class="mono" href="approvals.html?doc=${d.id}">${d.id}</a>` : '<span class="faint">연결 문서 없음(시드)</span>'}</td><td>${d ? STEP_NAME[d.step] : '—'}</td></tr>`).join('')}</tbody></table><div class="caption muted" style="margin-top:4px">진행 중인 용어 신청은 결재 상세에 함께 표시되고, 승인자가 확인해야 승인됩니다. 반려·회수된 신청이 있으면 확정할 수 없습니다.</div>` : '<div class="caption muted">없음</div>';
@@ -622,7 +622,7 @@ window.pageInit = function () {
     const t = $('rp-title'), sub = $('rp-sub'), body = $('rp-body');
     $('sel-info').textContent = sel ? `선택: ${ent(sel).n}` : '선택 없음';
     if (!sel) {
-      t.textContent = '업무 영역 요약'; sub.textContent = mode === 'L' ? '요구사항 · 프로젝트 · 논리' : '요구사항 · 프로젝트 · 물리(Oracle)';
+      t.textContent = '업무 영역 요약'; sub.textContent = mode === 'L' ? `${LOCK.model.name} · 논리` : `${LOCK.model.name} · 물리(Oracle)`;
       body.innerHTML = `<div class="mline"><span><b>${E.length}</b>엔터티</span><span><b>${R.length}</b>관계</span></div>
         <div class="section-t">미준수 엔터티</div>
         ${E.filter(bad).map(e => `<div class="cand" data-goto="${e.id}"><span class="grow">${e.n}</span><span class="badge b-warning">${bad(e)}</span></div>`).join('')}
@@ -704,7 +704,7 @@ window.pageInit = function () {
     const ended = reqEnded({ E });
     if (ended.length) { toast(`용어 신청이 반려·회수된 속성 ${ended.length}건이 있습니다(${ended.join(', ')}) — 표준 맞추기에서 다시 맞춘 뒤 신청하세요`, 'danger'); return; }
     // always a NEW document (requester = current user); same area+version in progress → no duplicate (R2)
-    const r = createDoc({ type: 'model', area: AREA, ver: VER, title: `요구사항관리 › ${LOCK.model.name} v${VER} 확정`, n: E.length, reason: $('cf-why').value.trim(), cc: ['hyun'], key: `model:${AREA}:v${VER}`, snap: lastComp, model: JSON.parse(JSON.stringify({ E, R, M })) });   // the document keeps the model as submitted
+    const r = createDoc({ type: 'model', area: AREA, ver: VER, title: `${curSys().name} › ${LOCK.model.name} v${VER} 확정`, n: E.length, reason: $('cf-why').value.trim(), cc: ['hyun'], key: `model:${AREA}:v${VER}`, snap: lastComp, model: JSON.parse(JSON.stringify({ E, R, M })) });   // the document keeps the model as submitted
     flash(r.dup ? `이미 진행 중인 확정 신청 ${r.doc.id}이 있습니다` : `확정 신청 ${r.doc.id} — DA에게 보냈습니다. 결재가 끝날 때까지 이 업무 영역은 조회 전용입니다`, 'info');
     location.href = `model.html?area=${AREA}`;
   };
@@ -855,7 +855,7 @@ window.pageInit = function () {
   }
   function demoConflict() {
     remoteApply(es => { const d = es.find(x => x.id === 'dlv'); if (d) d.n = '산출물관리기본'; });
-    remoteSel = 'dlv'; render();
+    remoteSel = ent('dlv') ? 'dlv' : remoteSel; render();
     toast('홍설계가 같은 칸(‘산출물기본’ 이름)을 동시에 고쳐 ‘산출물관리기본’이 남았습니다 · 내 값: 산출물기본', 'violet');
   }
   function moveCursors() {
@@ -1107,6 +1107,7 @@ window.pageInit = function () {
     }, 1200);
   };
   if (AREA === 'risk') remoteSel = 'rsp';
+  if (remoteSel && !ent(remoteSel)) { const o = E.find(e => !e.ref && e.c === 'A') || E.find(e => !e.ref); remoteSel = o ? o.id : null; }   // other areas (ERP): the co-editor works on one of this area's entities
   $('jump-bad').onclick = ev => { ev.preventDefault(); const t = E.find(bad); if (!t) { toast('미준수 항목이 없습니다', 'info'); return; } focusEnt(t.id); toast(`미준수 속성이 있는 ‘${t.n}’으로 이동했습니다`, 'info'); };
   function setMode(v) {
     mode = v; document.querySelectorAll('#lp button').forEach(b => b.classList.toggle('on', b.dataset.v === v));
@@ -1152,7 +1153,7 @@ window.pageInit = function () {
     new MutationObserver(arrange).observe(box, { attributes: true, subtree: true, attributeFilter: ['style'] }); arrange(); }
   $('expmenu').addEventListener('click', ev => { ev.stopPropagation(); const b = ev.target.closest('.seg button'); if (b) b.parentElement.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); });
   (() => { const bd = getDocs().find(x => x.type === 'model' && x.area === AREA && x.ver === BASE && x.step === 'done');
-    $('ex-title-1').textContent = `요구사항관리 › ${LOCK.model.name} · ${mode === 'L' ? '논리' : '물리'} ERD`;
+    $('ex-title-1').textContent = `${curSys().name} › ${LOCK.model.name} · ${mode === 'L' ? '논리' : '물리'} ERD`;
     if (bd) { const who = (bd.hist || []).filter(h => /승인/.test(h.act)).map(h => h.who).join(', '); $('ex-title-2').textContent = `v${bd.ver} · 확정 ${bd.date} · 승인 ${who || '—'} · ${bd.id}`; $('ex-official-t').textContent = `확정본(v${bd.ver}) 배치 기준 · 표제란에 버전·확정일·승인자`; }
     else { $('ex-official').disabled = true; $('ex-official-t').textContent = '이 업무 영역에는 아직 확정본이 없어 공식 산출물을 만들 수 없습니다'; } })();
   $('ex-official').onchange = ev => { $('ex-title').style.display = ev.target.checked ? 'block' : 'none'; if (ev.target.checked) $('ex-scope').children[1].click(); };
@@ -1169,7 +1170,7 @@ window.pageInit = function () {
     $('b-sys').classList.toggle('on', on); cv.dataset.sys = on ? '1' : '';
     if (on) { sel = null; relSrc = null; setTool('select'); closeGrid(); }
     const has = id => !!ent(id);
-    if (on) sv.innerHTML = `<div class="banner info" style="position:absolute;left:12px;top:60px;z-index:5;max-width:560px"><i data-ic=info></i><div class="grow"><b>시스템 전체 ERD · 조회 전용</b> — 요구사항관리의 모든 업무 영역. 공통 영역의 엔터티는 <b>참조로 가져와</b> 관계를 맺을 수 있습니다.</div></div>
+    if (on) sv.innerHTML = `<div class="banner info" style="position:absolute;left:12px;top:60px;z-index:5;max-width:560px"><i data-ic=info></i><div class="grow"><b>시스템 전체 ERD · 조회 전용</b> — ${curSys().name}의 모든 업무 영역. 공통 영역의 엔터티는 <b>참조로 가져와</b> 관계를 맺을 수 있습니다.</div></div>
       ${Object.entries(getModels()).map(([id, m], i) => { const mo = id === AREA && VER === m.ver && !snapDoc ? { E } : modelOf(id, m.ver); const es = mo.E.filter(x => !x.ref); const bad = compOf(mo).bad; const lk = modelLock(id); const st = lk.state === 'review' ? '검토 중' : lk.state === 'confirmed' ? '확정' : `v${m.ver} 작업 중`; const col = i % 3, row = Math.floor(i / 3); return `<div class="grp" style="left:${60 + col * 300}px;top:${130 + row * 200}px;width:270px;min-height:120px;cursor:pointer" ondblclick="location.href='model.html?area=${id}'" title="더블클릭하면 이 업무 영역을 엽니다"><h4>${m.name}${id === AREA ? ' <span class="badge">지금 영역</span>' : ''}</h4><div class="caption muted">엔터티 ${es.length} · 미준수 ${bad} · ${st}</div><div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:10px">${'<span style="width:34px;height:18px;border-radius:4px;background:var(--surface-2);border:1px solid var(--border)"></span>'.repeat(Math.min(es.length, 18))}</div><div class="caption faint" style="margin-top:8px"><a href="model.html?area=${id}">열기</a> · 더블클릭해도 열립니다</div></div>`; }).join('')}
       <div class="grp" style="left:${60 + 300 * Math.min(2, Object.keys(getModels()).length % 3)}px;top:${130 + 200 * Math.ceil(Object.keys(getModels()).length / 3)}px;width:340px"><h4>공통</h4><div class="caption muted" style="margin-bottom:6px">여러 업무 영역이 함께 쓰는 엔터티</div>
         <div class="refrow"><b class="grow">사원기본</b><span class="mono faint">EMP_M</span><span class="badge">사용 중</span></div>
@@ -1242,7 +1243,7 @@ window.pageInit = function () {
     document.body.classList.add('viewonly'); $('ban-view').style.display = 'flex'; if (!document.body.classList.contains('locked')) setSave('run', '조회 전용');
     $('ban-view').querySelector('.grow').innerHTML = `<b>예시 화면</b> (${STATE === 'resolved' ? '미준수 해결 후' : '표준 맞추기 적용 후'}) — 조회 전용입니다. 저장·확정 신청·판정 기록이 되지 않습니다. <a href="model.html?area=${AREA}">실제 작업 화면으로</a>`;
   }
-  document.querySelector('.crumb b').textContent = LOCK.model.name;
+  document.querySelector('.crumb b').textContent = LOCK.model.name; document.title = `모델 · ${LOCK.model.name} · NeoDB 목업`;
   if (locked) {
     document.body.classList.add('locked'); $('ban-lock').style.display = 'flex'; setSave('run', LOCK.state === 'confirmed' && !SNAP ? `v${VER} 확정본 · 조회 전용` : '검토 중 · 조회 전용');
     remoteSel = null; $('avcap').textContent = '3명 접속 · 모두 조회 전용';

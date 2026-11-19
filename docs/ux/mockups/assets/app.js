@@ -94,16 +94,22 @@
 
   /* ---- model versions & locks: computed from documents, never from the URL ---- */
   const MODEL0 = { rq: { ver: 5, base: 4, name: '요구사항 · 프로젝트' }, risk: { ver: 2, base: 1, name: '리스크' } };
-  window.getModels = () => J('dbm-model', clone(MODEL0));
-  window.getModel = area => getModels()[area] || MODEL0.rq;
+  /* systems (13): 요구사항관리 (original sample) and 통합ERP (business sample). Areas carry system; screens see the selected system's areas. */
+  const SYSLIST = [{ code: 'RQMS', name: '요구사항관리', db: 'Oracle 19c', schema: 'RQMS', desc: '요구사항 · 프로젝트 관리 시스템' }, { code: 'ERP', name: '통합ERP', db: 'Oracle 19c', schema: 'ERP', desc: '영업 · 구매 · 재고 · 생산 · 회계 · 인사 통합 시스템' }];
+  window.SYSLIST = SYSLIST;
+  window.curSys = () => { const c = store.get('dbm-sys', 'RQMS'); return SYSLIST.find(s => s.code === c) || SYSLIST[0]; };
+  window.getAllModels = () => { const all = J('dbm-model', clone(MODEL0)); Object.keys(MODEL0).forEach(k => { if (!all[k]) all[k] = clone(MODEL0[k]); }); return all; };
+  window.getModels = () => { const c = curSys().code; return Object.fromEntries(Object.entries(getAllModels()).filter(([, m]) => (m.system || 'RQMS') === c)); };
+  window.defArea = () => Object.keys(getModels())[0] || 'rq';
+  window.getModel = area => getAllModels()[area] || MODEL0.rq;
   /* new business area (system home [+ 업무 영역], DDL import): id, name, v1 working version, optional imported structure */
   window.addArea = (name, structure, meta) => {
-    const all = getModels(); let n = 1; while (all['a' + n]) n++; const id = 'a' + n;
-    all[id] = Object.assign({ ver: 1, base: 0, name }, meta || {}); S('dbm-model', all);
+    const all = getAllModels(); let n = 1; while (all['a' + n]) n++; const id = 'a' + n;
+    all[id] = Object.assign({ ver: 1, base: 0, name, system: curSys().code }, meta || {}); S('dbm-model', all);
     if (structure) { S('dbm-area-seed-' + id, structure); setModelData(id, 1, Object.assign({}, structure, { rev: 0 })); }
     return id;
   };
-  window.setModel = (area, m) => { const all = J('dbm-model', clone(MODEL0)); all[area] = m; S('dbm-model', all); };
+  window.setModel = (area, m) => { const all = getAllModels(); all[area] = m; S('dbm-model', all); };
   window.modelLock = area => {
     const m = getModel(area);
     const d = getDocs().filter(x => x.type === 'model' && x.area === area && x.ver === m.ver).sort((a, b) => b.id.localeCompare(a.id))[0];
@@ -180,6 +186,146 @@
   };
   /* diagram views of a business area (12 §3.1): placement only, "전체" always first */
   const VIEWS0 = { rq: [{ id: 'all', n: '전체' }, { id: 'dlv', n: '산출물 흐름', ents: ['rqrm', 'dlv', 'hist'] }] };
+  /* ---- 통합ERP sample system (13): six business modules, generated from a word list so physical names, types and FK columns stay consistent.
+     Attribute marks: * PK · ! 조합 가능(용어 미등록) · ? 미등록 단어 · # 예외(사유) — FK columns are added from the relations. ---- */
+  const ERP_WORDS = { 고객: 'CUST', 거래처: 'BCNC', 공급사: 'SPLR', 담당자: 'PIC', 견적: 'QUOT', 주문: 'ORD', 출하: 'SHIP', 매출: 'SLS', 반품: 'RTGD', 매입: 'PRCH', 구매: 'PUR', 발주: 'PO', 요청: 'REQ', 입고: 'WRHS', 출고: 'RLS', 이동: 'MVMT', 실사: 'ACTL', 수불: 'RCDS', 품목: 'ITEM', 분류: 'CL', 창고: 'WH', 위치: 'LOC', 재고: 'STCK', 로트: 'LOT', 제품: 'PRDT', 구성: 'CMPS', 공정: 'PRCS', 설비: 'EQP', 생산: 'PRDCT', 계획: 'PLAN', 작업지시: 'WORDR', 작업: 'WORK', 실적: 'PRFMNC', 투입: 'INPT', 검사: 'INSP', 품질: 'QLTY', 가동: 'OPRT', 비가동: 'NOPRT', 계정: 'ACNT', 원가센터: 'CCTR', 전표: 'SLIP', 세금계산서: 'TXINV', 채권: 'BOND', 채무: 'DEBT', 은행: 'BANK', 계좌번호: 'ACTNO', 예금주: 'DPSTR', 예산: 'BDGT', 집행: 'EXCN', 마감: 'CLSG', 차변: 'DBT', 대변: 'CRDT', 차대: 'DC', 적요: 'SMRY', 사원: 'EMP', 부서: 'DEPT', 직급: 'JBGD', 발령: 'APNT', 근태: 'DCLZ', 근무: 'WRK', 출근: 'ATDN', 퇴근: 'LVWK', 초과근무: 'OVTM', 휴가: 'VCTN', 급여: 'SLRY', 기본급: 'BSSLRY', 수당: 'ALWNC', 공제: 'DDCT', 실지급: 'RLPAY', 가족: 'FMLY', 부양: 'SPRT', 교육: 'EDU', 과정: 'CRS', 이수: 'CMPTN', 자격증: 'CRTFCT', 자격: 'QLFC', 발급: 'ISSU', 기관: 'INST', 취득: 'ACQS', 입사: 'JNCMP', 퇴사: 'RSGN', 재직: 'HFFC', 성별: 'SEX', 생년월일: 'BRDT', 영문: 'ENG', 상위: 'UP', 레벨: 'LVL', 사업자등록번호: 'BRNO', 대표자: 'RPRSV', 업종: 'TPBIZ', 등급: 'GRD', 여신한도: 'CRLMT', 거래: 'DLNG', 시작: 'BGNG', 종료: 'END', 유효: 'VLD', 사용: 'USE', 대표: 'RPRS', 판매: 'SALE', 단가: 'UPRC', 가격: 'PRC', 할인: 'DSCNT', 공급: 'SPLY', 가액: 'VAL', 부가세: 'VAT', 총: 'TOT', 결제: 'STLM', 조건: 'CND', 납기: 'DUDT', 배송: 'DLVY', 운송장: 'WAYBL', 업체: 'ENT', 완료: 'CMPTN', 사유: 'RSN', 변경: 'CHG', 이전: 'BFR', 전: 'BFR', 값: 'VAL', 항목: 'ARTCL', 적용: 'APLY', 통화: 'CRNCY', 희망: 'HOPE', 승인: 'APRV', 합격: 'PASS', 불량: 'DFCT', 양품: 'GDS', 결과: 'RSLT', 지급: 'PAY', 예정: 'PRNMNT', 최소: 'MIN', 규격: 'STD', 단위: 'UNIT', 안전: 'SAFE', 표준: 'STD', 관리: 'MNG', 적재: 'LDNG', 가능: 'PSBLTY', 할당: 'ALOC', 가용: 'AVL', 최종: 'LAST', 제조: 'MNFCT', 출발: 'DPRT', 도착: 'ARVL', 장부: 'BOOK', 차이: 'DIFF', 조정: 'ADJ', 기말: 'TRMEND', 소요: 'RQRD', 손실: 'LOSS', 시간: 'HR', 도입: 'INTRCN', 년월: 'YM', 년도: 'YR', 발행: 'PBLCN', 발생: 'OCRN', 만기: 'MTRY', 입금: 'RCPT', 잔액: 'BLNC', 용도: 'PRPS', 관계: 'REL', 양: 'QTY', 소수: 'DCML', 일수: 'DCNT', 메모: 'MEMO', 저장: 'STRG', 자재: 'MTRL', 계좌: 'BACNT', 신청: 'APLCN', 지시: 'INST',
+    번호: 'NO', 코드: 'CD', 명: 'NM', 일자: 'YMD', 일시: 'DT', 금액: 'AMT', 액: 'AMT', 수량: 'QTY', 율: 'RT', 여부: 'YN', 구분: 'SE', 상태: 'STTS', 유형: 'TYPE', 순번: 'SN', 내용: 'CN', 주소: 'ADDR', 전화번호: 'TELNO', 이메일: 'EML', 기본: 'M', 내역: 'D', 이력: 'H', 상세: 'DTL' };
+  const ERP_TYPE = { NO: 'VARCHAR2(20)', CD: 'VARCHAR2(10)', NM: 'VARCHAR2(100)', YMD: 'CHAR(8)', DT: 'DATE', AMT: 'NUMBER(18,2)', UPRC: 'NUMBER(18,2)', QTY: 'NUMBER(15,3)', RT: 'NUMBER(5,2)', YN: 'CHAR(1)', SE: 'VARCHAR2(2)', STTS: 'VARCHAR2(2)', TYPE: 'VARCHAR2(2)', SN: 'NUMBER(5)', CN: 'VARCHAR2(4000)', ADDR: 'VARCHAR2(200)', TELNO: 'VARCHAR2(20)', EML: 'VARCHAR2(100)', BRNO: 'VARCHAR2(10)', ACTNO: 'VARCHAR2(30)', BRDT: 'CHAR(8)', HR: 'NUMBER(7,2)', YM: 'CHAR(6)', YR: 'CHAR(4)', DCNT: 'NUMBER(5,1)', MEMO: 'VARCHAR2(1000)' };
+  const ERP_DOM = { NO: '번호V20', CD: '코드V10', NM: '명V100', YMD: '연월일C8', DT: '일시T', AMT: '금액N18', UPRC: '금액N18', QTY: '수량N15', RT: '율N5', YN: '여부C1', SE: '구분V2', STTS: '상태V2', TYPE: '유형V2', SN: '순번N5', CN: '내용V4000', ADDR: '주소V200', TELNO: '전화번호V20', EML: '이메일V100', BRNO: '사업자번호C10', ACTNO: '계좌번호V30', BRDT: '연월일C8', HR: '시간N7', YM: '연월C6', YR: '연도C4', DCNT: '일수N5' };
+  const ERP_SECRET = { 전화번호: '양방향(ARIA)', 이메일: '없음', 주소: '없음', 생년월일: '양방향(ARIA)', 계좌번호: '양방향(ARIA)', 가족명: '없음', 사원명: '없음' };
+  const erpSplit = name => { const out = []; let s = name; while (s.length) { let hit = null; for (let l = Math.min(7, s.length); l >= 1; l--) { const w = s.slice(0, l); if (ERP_WORDS[w]) { hit = w; break; } } if (!hit) return null; out.push(ERP_WORDS[hit]); s = s.slice(hit.length); } return out; };
+  const ERP = {
+    e_sd: { name: '영업관리', ver: 3, base: 2, desc: '고객 · 견적 · 주문 · 출하 · 매출 · 반품',
+      ents: [['cust', '고객기본', '고객번호*,고객명,사업자등록번호,대표자명,업종명,고객등급코드,주소,전화번호,이메일,여신한도금액,거래시작일자,사용여부'],
+        ['custpic', '고객담당자내역', '담당자순번*,담당자명,부서명,전화번호,이메일,대표여부'],
+        ['price', '판매가격기본', '적용시작일자*,판매단가,통화코드,적용종료일자'],
+        ['quot', '견적기본', '견적번호*,견적일자,유효종료일자,견적금액,견적상태코드,견적메모?'],
+        ['quotd', '견적상세내역', '견적순번*,견적수량,판매단가,할인율,견적금액'],
+        ['ord', '주문기본', '주문번호*,주문일자,납기일자,주문상태코드,결제조건코드,공급가액,부가세액,주문총금액,배송주소,배송요청사항?'],
+        ['ordd', '주문상세내역', '주문순번*,주문수량,판매단가,할인금액,공급가액,출하완료여부'],
+        ['ship', '출하기본', '출하번호*,출하일자,출하상태코드,운송장번호,배송업체명'],
+        ['shipd', '출하상세내역', '출하순번*,출하수량,로트번호'],
+        ['sls', '매출기본', '매출번호*,매출일자,공급가액,부가세액,매출총금액,세금계산서번호'],
+        ['rtn', '반품기본', '반품번호*,반품일자,반품수량,반품사유내용,반품상태코드'],
+        ['ordh', '주문상태이력', '이력순번*,변경일시,이전상태코드,변경상태코드!']],
+      refs: [['item', 'e_wm'], ['wh', 'e_wm'], ['emp', 'e_hr']],
+      rels: [['cust', 'custpic', 'id', '담당한다'], ['cust', 'quot', 'nonid', '요청한다'], ['quot', 'quotd', 'id', '포함한다'], ['item', 'quotd', 'nonid', '견적된다'], ['cust', 'ord', 'nonid', '주문한다'], ['quot', 'ord', 'nonid', '전환된다'], ['emp', 'ord', 'nonid', '영업 담당한다'], ['ord', 'ordd', 'id', '포함한다'], ['item', 'ordd', 'nonid', '주문된다'], ['item', 'price', 'id', '가격을 가진다'], ['ord', 'ship', 'nonid', '출하된다'], ['wh', 'ship', 'nonid', '출고한다'], ['ship', 'shipd', 'id', '포함한다'], ['ord', 'sls', 'nonid', '매출된다'], ['ord', 'rtn', 'nonid', '반품된다'], ['ord', 'ordh', 'id', '기록된다']],
+      views: [['flow', '주문 → 출하 → 매출', ['ord', 'ordd', 'ship', 'shipd', 'sls', 'rtn']], ['cust', '고객 · 견적', ['cust', 'custpic', 'quot', 'quotd', 'price']]] },
+    e_mm: { name: '구매관리', ver: 2, base: 1, desc: '공급사 · 구매요청 · 발주 · 입고검사 · 매입',
+      ents: [['splr', '공급사기본', '공급사번호*,공급사명,사업자등록번호,대표자명,주소,전화번호,결제조건코드,거래상태코드!'],
+        ['sprice', '공급사단가기본', '적용시작일자*,구매단가?,최소주문수량,적용종료일자'],
+        ['preq', '구매요청기본', '구매요청번호*,요청일자,요청부서코드,요청사유내용,승인상태코드'],
+        ['preqd', '구매요청상세내역', '요청순번*,요청수량,희망납기일자'],
+        ['po', '발주기본', '발주번호*,발주일자,납기일자,발주상태코드,발주총금액,통화코드'],
+        ['pod', '발주상세내역', '발주순번*,발주수량,구매단가?,발주금액,입고완료여부'],
+        ['qc', '입고검사기본', '검사번호*,검사일자,합격수량,불량수량,검사결과코드'],
+        ['pur', '매입기본', '매입번호*,매입일자,공급가액,부가세액,세금계산서번호,지급예정일자'],
+        ['poh', '발주변경이력', '이력순번*,변경일시,변경항목명,변경전값내용']],
+      refs: [['item', 'e_wm'], ['wh', 'e_wm']],
+      rels: [['splr', 'sprice', 'id', '단가를 가진다'], ['item', 'sprice', 'id', '구매단가가 있다'], ['preq', 'preqd', 'id', '포함한다'], ['item', 'preqd', 'nonid', '요청된다'], ['splr', 'po', 'nonid', '발주받는다'], ['preq', 'po', 'nonid', '전환된다'], ['po', 'pod', 'id', '포함한다'], ['item', 'pod', 'nonid', '발주된다'], ['pod', 'qc', 'nonid', '검사된다'], ['wh', 'qc', 'nonid', '입고된다'], ['splr', 'pur', 'nonid', '청구한다'], ['po', 'pur', 'nonid', '매입된다'], ['po', 'poh', 'id', '기록된다']],
+      views: [['flow', '요청 → 발주 → 입고', ['preq', 'preqd', 'po', 'pod', 'qc']]] },
+    e_wm: { name: '재고관리', ver: 6, base: 5, desc: '품목 · 창고 · 재고 · 입출고 · 이동 · 실사',
+      ents: [['icat', '품목분류기본', '분류코드*,분류명,분류레벨순번', 'K'],
+        ['item', '품목기본', '품목코드*,품목명,규격명,품목유형코드,재고단위코드,안전재고수량,표준단가,로트관리여부,사용여부'],
+        ['wh', '창고기본', '창고코드*,창고명,창고유형코드,주소,관리부서코드'],
+        ['loc', '저장위치기본', '위치코드*,위치명,적재가능수량'],
+        ['stck', '재고기본', '재고수량,할당수량,가용수량,최종입고일자'],
+        ['lot', '로트기본', '로트번호*,제조일자,유효종료일자,로트상태코드'],
+        ['wrhs', '입고기본', '입고번호*,입고일자,입고유형코드,입고수량'],
+        ['rls', '출고기본', '출고번호*,출고일자,출고유형코드,출고수량'],
+        ['mv', '재고이동내역', '이동번호*,이동일자,이동수량,출발창고코드,도착창고코드'],
+        ['cnt', '재고실사기본', '실사번호*,실사일자,장부수량,실사수량,차이수량,조정여부'],
+        ['sth', '재고수불이력', '수불순번*,수불일시,수불구분코드,수불수량,기말수량']],
+      rels: [['icat', 'icat', 'nonid', '상위 분류'], ['icat', 'item', 'nonid', '분류한다'], ['wh', 'loc', 'id', '나뉜다'], ['item', 'stck', 'id', '보관된다'], ['wh', 'stck', 'id', '보관한다'], ['item', 'lot', 'id', '생산된다'], ['item', 'wrhs', 'nonid', '입고된다'], ['wh', 'wrhs', 'nonid', '받는다'], ['lot', 'wrhs', 'nonid', '추적된다'], ['item', 'rls', 'nonid', '출고된다'], ['wh', 'rls', 'nonid', '내보낸다'], ['item', 'mv', 'nonid', '이동된다'], ['item', 'cnt', 'nonid', '실사된다'], ['wh', 'cnt', 'nonid', '실사한다'], ['stck', 'sth', 'id', '기록된다', '이력 테이블 · 대량 적재라 운영 DB에서 FK를 쓰지 않음']],
+      views: [['flow', '재고 수불', ['stck', 'wrhs', 'rls', 'mv', 'sth', 'cnt']]] },
+    e_pp: { name: '생산관리', ver: 1, base: 0, desc: '제품 구성(BOM) · 공정 · 설비 · 작업지시 · 실적 · 품질',
+      ents: [['bom', '제품구성기본', '구성순번*,소요수량,손실율!'],
+        ['prcs', '공정기본', '공정코드*,공정명,표준작업시간,공정순번'],
+        ['eqp', '설비기본', '설비코드*,설비명,설비유형코드,도입일자,가동상태코드'],
+        ['plan', '생산계획기본', '계획번호*,계획년월,계획수량,계획상태코드'],
+        ['wo', '작업지시기본', '작업지시번호*,지시일자?,작업지시수량,시작예정일자,완료예정일자,작업상태코드'],
+        ['wor', '작업실적내역', '실적순번*,실적일자,양품수량,불량수량,작업시간'],
+        ['inpt', '자재투입내역', '투입순번*,투입일자,투입수량'],
+        ['qcp', '품질검사기본', '검사번호*,검사일자,검사수량,합격여부,불량유형코드'],
+        ['eqh', '설비가동이력', '가동순번*,시작일시,종료일시,비가동사유코드']],
+      refs: [['item', 'e_wm'], ['wh', 'e_wm']],
+      rels: [['item', 'bom', 'id', '구성된다'], ['item', 'plan', 'nonid', '계획된다'], ['plan', 'wo', 'nonid', '지시된다'], ['prcs', 'wo', 'nonid', '수행한다'], ['item', 'wo', 'nonid', '생산된다'], ['wo', 'wor', 'id', '실적을 낸다'], ['eqp', 'wor', 'nonid', '가동한다'], ['wo', 'inpt', 'id', '투입한다'], ['wh', 'inpt', 'nonid', '불출한다'], ['wo', 'qcp', 'nonid', '검사된다'], ['eqp', 'eqh', 'id', '기록된다']],
+      views: [['flow', '계획 → 작업지시 → 실적', ['plan', 'wo', 'wor', 'inpt', 'qcp']]] },
+    e_fi: { name: '회계관리', ver: 4, base: 3, desc: '계정과목 · 전표 · 세금계산서 · 채권 · 채무 · 예산',
+      ents: [['acnt', '계정기본', '계정코드*,계정명,계정구분코드,상위계정코드,차대구분코드,사용여부'],
+        ['cc', '원가센터기본', '원가센터코드*,원가센터명,관리부서코드'],
+        ['bcnc', '거래처기본', '거래처코드*,거래처명,사업자등록번호#,거래처구분코드'],
+        ['bank', '은행계좌기본', '계좌번호*,은행코드,예금주명,계좌용도코드'],
+        ['slip', '전표기본', '전표번호*,전표일자,전표유형코드,적요내용,승인상태코드'],
+        ['slipd', '전표상세내역', '전표순번*,차변금액,대변금액,적요내용'],
+        ['txinv', '세금계산서기본', '세금계산서번호*,발행일자,공급가액,부가세액,발행구분코드'],
+        ['ar', '채권기본', '채권번호*,발생일자,채권금액,입금금액,잔액금액,만기일자'],
+        ['ap', '채무기본', '채무번호*,발생일자,채무금액,지급금액,잔액금액,지급예정일자'],
+        ['bdgt', '예산기본', '예산년도*,예산금액,집행금액'],
+        ['close', '월마감이력', '마감년월*,마감일시,마감상태코드']],
+      rels: [['slip', 'slipd', 'id', '포함한다'], ['acnt', 'slipd', 'nonid', '기표된다'], ['cc', 'slipd', 'nonid', '귀속된다'], ['bcnc', 'slipd', 'nonid', '거래한다'], ['bcnc', 'txinv', 'nonid', '발행받는다'], ['bcnc', 'ar', 'nonid', '받을 돈'], ['txinv', 'ar', 'nonid', '근거가 된다'], ['bcnc', 'ap', 'nonid', '줄 돈'], ['bank', 'ap', 'nonid', '지급한다'], ['acnt', 'bdgt', 'id', '편성된다'], ['cc', 'bdgt', 'id', '배정된다']],
+      views: [['slip', '전표', ['slip', 'slipd', 'acnt', 'cc', 'bcnc']], ['arap', '채권 · 채무', ['bcnc', 'txinv', 'ar', 'ap', 'bank']]] },
+    e_hr: { name: '인사관리', ver: 5, base: 4, desc: '사원 · 부서 · 발령 · 근태 · 휴가 · 급여 · 교육',
+      ents: [['dept', '부서기본', '부서코드*,부서명,사용여부'],
+        ['jbgd', '직급기본', '직급코드*,직급명,직급순번', 'K'],
+        ['emp', '사원기본', '사원번호*,사원명,영문명,생년월일,성별코드,입사일자,퇴사일자,재직상태코드,전화번호,이메일,주소'],
+        ['appt', '발령이력', '발령순번*,발령일자,발령구분코드,이전부서코드'],
+        ['dclz', '근태내역', '근무일자*,출근일시,퇴근일시,근태구분코드,초과근무시간'],
+        ['vctn', '휴가신청내역', '휴가신청번호?*,휴가구분코드,시작일자,종료일자,휴가일수,승인상태코드'],
+        ['slry', '급여기본', '급여년월*,지급일자,기본급금액,수당금액,공제금액,실지급금액,계좌번호'],
+        ['slryd', '급여상세내역', '항목순번*,급여항목코드,지급금액'],
+        ['fam', '가족내역', '가족순번*,가족명,관계코드,생년월일,부양여부'],
+        ['edu', '교육이수내역', '교육순번*,교육과정명,이수일자,이수시간'],
+        ['crtf', '자격증내역', '자격순번*,자격증명,취득일자,발급기관명']],
+      rels: [['dept', 'dept', 'nonid', '상위 부서'], ['dept', 'emp', 'nonid', '소속된다'], ['jbgd', 'emp', 'nonid', '부여된다'], ['emp', 'appt', 'id', '발령받는다'], ['dept', 'appt', 'nonid', '발령 부서'], ['emp', 'dclz', 'id', '근무한다'], ['emp', 'vctn', 'id', '신청한다'], ['emp', 'slry', 'id', '받는다'], ['slry', 'slryd', 'id', '포함한다'], ['emp', 'fam', 'id', '부양한다'], ['emp', 'edu', 'id', '이수한다'], ['emp', 'crtf', 'id', '보유한다']],
+      views: [['pay', '급여', ['emp', 'slry', 'slryd', 'dept']], ['att', '근태 · 휴가', ['emp', 'dclz', 'vctn']]] }
+  };
+  // build one attribute from "이름" + marks
+  const erpAttr = raw => {
+    const pk = raw.includes('*'), comb = raw.includes('!'), unreg = raw.includes('?'), ex = raw.includes('#');
+    const n = raw.replace(/[*!?#]/g, ''); const ws = erpSplit(n);
+    const tail = ws ? ws[ws.length - 1] : null;
+    const a = { n, p: ws && !unreg ? ws.join('_') : '—', t: ws && !unreg ? (ERP_TYPE[tail] || 'VARCHAR2(50)') : '—', dom: ws && !unreg ? (ERP_DOM[tail] || '') : '', s: unreg || !ws ? 'unreg' : comb ? 'comb' : ex ? 'ex' : 'ok' };
+    if (comb) { a.p = '—'; a.t = '—'; }
+    if (ex) { a.p = 'BIZ_NO'; a.exReason = '외부 회계 연계 컬럼명 유지(BIZ_NO)'; }
+    if (pk) { a.pk = 1; a.nn = 1; }
+    const sk = Object.keys(ERP_SECRET).find(k => n.endsWith(k)); if (sk) { a.sec = '개인정보'; a.enc = ERP_SECRET[sk]; }
+    return a;
+  };
+  const ERP_CLASS = n => n.endsWith('이력') ? 'H' : n.endsWith('내역') ? 'A' : /기본$/.test(n) && /(고객|공급사|거래처|품목|창고|위치|로트|계정|원가센터|은행|사원|부서|공정|설비|제품구성|판매가격|공급사단가)/.test(n) ? 'M' : 'A';
+  function buildErp() {
+    const seeds = {}, meta = {}, views = {};
+    const base = {};   // every entity of every module first (references copy the original's key columns)
+    Object.entries(ERP).forEach(([area, d]) => d.ents.forEach(([id, n, attrs, c]) => { const ws = erpSplit(n); base[area + ':' + id] = { id, n, p: ws ? ws.join('_') : '—', c: c || ERP_CLASS(n), a: attrs.split(',').map(erpAttr) }; }));
+    Object.entries(ERP).forEach(([area, d]) => {
+      const E = d.ents.map(([id]) => JSON.parse(JSON.stringify(base[area + ':' + id])));
+      (d.refs || []).forEach(([id, from]) => { const o = base[from + ':' + id]; E.push({ id, n: o.n, p: o.p, c: o.c, ref: 1, refArea: from, refName: ERP[from].name, a: o.a.filter(a => a.pk || /명$/.test(a.n)).slice(0, 3).map(a => Object.assign({}, a)) }); });
+      const R = [];
+      d.rels.forEach(([f, t, k, name, noFk], i) => {
+        const p = E.find(e => e.id === f), c = E.find(e => e.id === t); if (!p || !c) return;
+        const r = { f, t, k, name }; if (noFk) r.noFk = noFk; R.push(r);
+        if (f === t) { c.a.push({ n: '상위' + p.a.find(a => a.pk).n, p: 'UP_' + p.a.find(a => a.pk).p, t: p.a.find(a => a.pk).t, s: 'ok' }); return; }   // recursive: a role-named column (no FK group yet → shown as 누락 until mapped)
+        p.a.filter(a => a.pk).forEach(k0 => { const ex0 = c.a.find(a => a.p === k0.p && a.p !== '—'); if (ex0) { ex0.fk = 1; if (k === 'id') { ex0.pk = 1; ex0.nn = 1; } return; } const na = { n: k0.n, p: k0.p, t: k0.t, dom: k0.dom, s: k0.s === 'ex' ? 'ok' : k0.s, fk: 1 }; if (k === 'id') { na.pk = 1; na.nn = 1; } const at = c.a.findIndex(a => !a.pk); c.a.splice(k === 'id' ? Math.max(0, c.a.filter(a => a.pk && !a.fk).length ? 0 : 0) : (at < 0 ? c.a.length : at), 0, na); });
+      });
+      // identifying parents' keys first, own key next, then the rest
+      E.forEach(e => { if (e.ref) return; const fkpk = e.a.filter(a => a.pk && a.fk), own = e.a.filter(a => a.pk && !a.fk), rest = e.a.filter(a => !a.pk); e.a = fkpk.concat(own, rest); });
+      // layout: masters on the first row, then transactions, history last
+      const order = ['K', 'M', 'A', 'H']; const own = E.filter(e => !e.ref).sort((a, b) => order.indexOf(a.c) - order.indexOf(b.c));
+      own.forEach((e, i) => { e.x = 60 + (i % 4) * 330; e.y = 60 + Math.floor(i / 4) * 300; e.px = e.x + 20; e.py = e.y + 40; });
+      E.filter(e => e.ref).forEach((e, i) => { e.x = 60 + 4 * 330; e.y = 60 + i * 200; e.px = e.x + 40; e.py = e.y + 40; });
+      seeds[area] = { E, R, M: [] };
+      meta[area] = { ver: d.ver, base: d.base, name: d.name, desc: d.desc, system: 'ERP', sys: '통합ERP', dbms: 'Oracle' };
+      views[area] = [{ id: 'all', n: '전체' }].concat((d.views || []).map(([id, n, ents]) => ({ id, n, ents })));
+    });
+    return { seeds, meta, views };
+  }
+  const ERP_BUILT = buildErp();
+  Object.assign(MODEL_SEED, ERP_BUILT.seeds);
+  Object.assign(VIEWS0, ERP_BUILT.views);
+
+  Object.assign(MODEL0, ERP_BUILT.meta);
+  // the address decides the system: ?system=ERP, or an area / snapshot that belongs to another system
+  { const sy = qs.get('system'), ar = qs.get('area'); if (sy && SYSLIST.some(s => s.code === sy)) store.set('dbm-sys', sy); else if (ar && getAllModels()[ar]) store.set('dbm-sys', getAllModels()[ar].system || 'RQMS'); }
   window.viewsOf = area => J('dbm-views-' + area, null) || clone(VIEWS0[area] || [{ id: 'all', n: '전체' }]);
   window.modelSeed = area => clone(MODEL_SEED[area] || (J('dbm-area-seed-' + area, null)) || { E: [], R: [], M: [] });
   /* the structure of an area+version as the screens should see it: saved working data → seed */
@@ -647,7 +793,7 @@
   /* ---- model tree (12 · DA#-style object explorer, T1 read tree):
      system › business area › (shortcuts · views · objects · used standards) › object › attribute.
      The tree shows the same area · version · logical/physical mode the canvas opened — model.html supplies window.treeData(). ---- */
-  const SYSTEMS = [{ name: '요구사항관리', db: 'Oracle 19c', code: 'RQMS', href: 'system.html', cur: true }, { name: '인사시스템', db: 'Tibero 7', href: 'error.html?code=404&what=인사시스템', none: true }, { name: '회계시스템', db: 'PostgreSQL 15', href: 'error.html?code=404&what=회계시스템', none: true }];
+  const SYSTEMS_OF = () => SYSLIST.map(s => Object.assign({}, s, { href: 'system.html?system=' + s.code, cur: s.code === curSys().code }));
   const treeKey = () => 'dbm-tree3-' + ME.id;
   function drawTree(nav) {
     const page = document.body.dataset.page, file = curFile(), qp = new URLSearchParams(location.search);
@@ -655,11 +801,11 @@
     const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
     const fam = ['model.html', 'standardize.html', 'ddl.html', 'outputs.html'].includes(file) && !qp.get('sys');
     const models0 = getModels();
-    const famArea = fam ? (models0[qp.get('area')] ? qp.get('area') : 'rq') : null;
+    const famArea = fam ? (models0[qp.get('area')] ? qp.get('area') : defArea()) : null;
     if (famArea) store.set('dbm-last-area', famArea);
-    const cur = famArea || (models0[store.get('dbm-last-area', '')] ? store.get('dbm-last-area', '') : 'rq');
+    const cur = famArea || (models0[store.get('dbm-last-area', '')] ? store.get('dbm-last-area', '') : defArea());
     const canNew = ME.has('modeler') || ME.has('admin');
-    const sys = SYSTEMS[0];
+    const SYSTEMS = SYSTEMS_OF(); const sys = SYSTEMS.find(s => s.cur);
     const ST = Object.assign({ tog: {}, w: 0, manual: false, tab: 'm' }, J(treeKey(), {}));
     const save = () => S(treeKey(), ST);
     const SYS = sys.code;
@@ -707,28 +853,30 @@
           const ahNote = qq && !eh && ah.length ? `<span class="tmeta">${P ? '컬럼' : '속성'} ${ah.length}</span>` : '';
           return N('e:' + e.id, P ? 'table' : 'ent', {
             ent: e.id, selectable: true, gray: P && !e.ref && (e.px == null || e.py == null),
-            html: P ? `<span class="tn1 mono">${mark(e.p === '—' ? e.n + ' (물리명 없음)' : e.p)}</span>${e.ref ? '<span class="tmeta">참조 · 읽기 전용</span>' : ahNote}` : `${entDot(e)}<span class="tn1">${mark(e.n)}</span>${e.ref ? '<span class="tmeta">참조 · 읽기 전용</span>' : ahNote || (entBad(e) ? `<span class="tct">${entBad(e)}</span>` : '')}`,
+            html: P ? `<span class="tn1 mono">${mark(e.p === '—' ? e.n + ' (물리명 없음)' : e.p)}</span>${e.ref ? '<span class="tmeta">참조 · 읽기 전용</span>' : ahNote}` : `${entDot(e)}<span class="tn1">${mark(e.n)}</span>${e.ref ? `<span class="tmeta">${esc(e.refName || '공통')} 영역</span>` : ahNote || (entBad(e) ? `<span class="tct" title="미준수 ${entBad(e)}">${entBad(e)}</span>` : `<span class="tmeta mono">${mark(e.p === '—' ? '' : e.p)}</span>`)}`,
             aria: `${P ? e.p : e.n}, ${entState(e)}`, title: P ? e.n : (e.p !== '—' ? e.p : '물리명 없음'),
             open: kids.length && !e.ref ? (qq && ah.length ? true : isOp('e:' + e.id, false)) : null, kids: e.ref ? null : kids });
         }).filter(Boolean);
         const kidsOf = [];
-        const folder = (nid, label, kids, o = {}) => N(nid, 'folder', Object.assign({ html: `<span class="tn1">${label}</span><span class="tct">${o.count != null ? o.count : kids.length}</span>${o.warn ? '<span class="twarn" aria-hidden="true"></span>' : ''}`, aria: `${label} ${o.count != null ? o.count : kids.length}${o.warn ? ', 경고 있음' : ''}`, open: kids.length ? (qq ? true : isOp(nid, o.def || false)) : null, kids }, o));
+        const folder = (nid, label, kids, o = {}) => N(nid, 'folder', Object.assign({ title: o.title || '', html: `<span class="tn1">${label}</span><span class="tct">${o.count != null ? o.count : kids.length}</span>${o.warn ? '<span class="twarn" aria-hidden="true"></span>' : ''}`, aria: `${label} ${o.count != null ? o.count : kids.length}${o.warn ? ', 경고 있음' : ''}`, open: kids.length ? (qq ? true : isOp(nid, o.def || false)) : null, kids }, o));
         // shortcuts (always visible when the area is open — not hidden in a folder)
         if (!qq) {
           const bad = compOf(s).bad;
           const sn = s.snap ? '&snap=' + s.snap : '';
           [['model.html?area=' + area + sn, '모델'], ['standardize.html?area=' + area, '표준 맞추기', bad, '작업본'], ['ddl.html?area=' + area + sn, 'DDL'], ['outputs.html?area=' + area + sn, '산출물']].forEach((l, j) => kidsOf.push(N('l:' + j, 'link', { href: l[0], html: `${l[1]}${l[2] ? ` <b>${l[2]}</b>` : ''}`, aria: l[1] + (l[2] ? ` 미준수 ${l[2]}` : '') + (l[3] && s.snap ? ', 작업본 기준' : '') })));
           const vs = viewsOf(area);
-          kidsOf.push(folder('f:views', '보기', vs.map(v => N('v:' + v.id, 'view', { view: v.id, html: `<span class="tn1">${esc(v.n)}</span>${area === famArea && file === 'model.html' && v.id === 'all' ? '<span class="tmeta">보는 중</span>' : ''}`, aria: v.n + (v.id === 'all' ? ', 기본 보기' : '') })), { def: false }));
+          kidsOf.push(folder('f:views', '다이어그램', vs.map(v => N('v:' + v.id, 'view', { view: v.id, html: `<span class="tn1">${esc(v.n)}</span>${area === famArea && file === 'model.html' && v.id === 'all' ? '<span class="tmeta">보는 중</span>' : ''}`, aria: v.n + (v.id === 'all' ? ', 기본 보기' : '') })), { def: false }));
         }
         if (!P) {
-          if (entNodes.length || !qq) kidsOf.push(folder('f:ents', '엔터티', entNodes, { def: area === cur, count: qq ? entNodes.length : ents.length }));
+          if (entNodes.length || !qq) kidsOf.push(folder('f:ents', '엔터티', groupEnts(entNodes, area, isOp), { def: area === cur, count: qq ? entNodes.filter(n => !s.E.find(e => e.id === n.ent).ref).length : ents.filter(e => !e.ref).length }));
+          const refNodes = entNodes.filter(n => s.E.find(e => e.id === n.ent).ref);
+          if (refNodes.length) kidsOf.push(folder('f:refs', '다른 영역에서 참조', refNodes, { def: false, title: '다른 업무 영역의 엔터티를 읽기 전용으로 가져와 관계만 맺습니다' }));
           const rels = s.R.filter(r => ents.some(e => e.id === r.f) && ents.some(e => e.id === r.t)).map((r, i) => ({ r, i })).filter(({ r }) => { const a = s.E.find(e => e.id === r.f), b = s.E.find(e => e.id === r.t); return !qq || areaHit || hitFn(a.n) || hitFn(b.n) || hitFn(r.name); });
           if (rels.length || !qq) kidsOf.push(folder('f:rels', '관계', rels.map(({ r, i }) => { const a = s.E.find(e => e.id === r.f), b = s.E.find(e => e.id === r.t); return N('r:' + i, 'rel', { rel: i, ent: r.t, selectable: true, html: `<span class="tn1">${esc(a.n)} → ${esc(b.n)}</span><span class="tmeta">${esc(r.name || '')}</span>`, aria: `${a.n}에서 ${b.n}, ${({ nonid: '비식별', id: '식별', one: '1:1', mn: 'M:N' })[r.k] || ''}`, title: ({ nonid: '1:N 비식별', id: '1:N 식별', one: '1:1', mn: 'M:N' })[r.k] }); })));
           const subs = ents.filter(e => e.sub && (!qq || areaHit || hitFn(e.n)));
           if (subs.length) kidsOf.push(folder('f:subs', '서브타입', subs.map(e => N('s:' + e.id, 'ent', { ent: e.id, selectable: true, html: `<span class="tn1">${esc(e.n)}</span><span class="tmeta">${esc(e.sub.kind)} · ${e.sub.kids.length}</span>`, aria: `${e.n} 서브타입 ${e.sub.kind}`, title: e.sub.kids.join(', ') }))));
         } else {
-          if (entNodes.length || !qq) kidsOf.push(folder('f:tbls', '테이블', entNodes, { def: area === cur, count: qq ? entNodes.length : ents.length }));
+          if (entNodes.length || !qq) kidsOf.push(folder('f:tbls', '테이블', groupEnts(entNodes, area, isOp), { def: area === cur, count: qq ? entNodes.filter(n => !s.E.find(e => e.id === n.ent).ref).length : ents.filter(e => !e.ref).length }));
           const pr = s.R.map((r, i) => ({ r, i, f: fkOf(r, s.E) })).filter(x => x.f.st !== 'none' && ents.some(e => e.id === x.r.t)).filter(({ r }) => { const a = s.E.find(e => e.id === r.f), b = s.E.find(e => e.id === r.t); return !qq || areaHit || hitFn(a.p) || hitFn(b.p); });
           const FST = { ok: '반영', ex: '제외', miss: '누락', mn: '해소 필요' };
           const miss = pr.filter(x => x.f.st === 'miss').length;
@@ -743,21 +891,29 @@
         }
         // standards this area uses (the dictionary stays the source)
         const dict = getDict(); const own = ents.filter(e => !e.ref);
-        const terms = dict.filter(d => d.k === 'term' && d.ver > 0 && own.some(e => e.a.some(a => a.n === d.name)) && (!qq || hitFn(d.name) || hitFn(d.abbr)));
+        const tmap = {}; own.forEach(e => e.a.forEach(a => { if (a.s !== 'ok' || a.p === '—' || tmap[a.n]) return; const d0 = dict.find(d => d.k === 'term' && d.name === a.n); tmap[a.n] = { id: d0 ? d0.id : 'a-' + a.n, name: a.n, abbr: a.p, dom: (d0 && d0.dom) || a.dom || '' }; }));
+        const terms = Object.values(tmap).filter(d => !qq || hitFn(d.name) || hitFn(d.abbr)).sort((x, y) => x.name.localeCompare(y.name, 'ko'));
         const doms = [...new Set(terms.map(d => d.dom).filter(x => x && x !== '—'))];
         const unreg = own.reduce((n, e) => n + e.a.filter(a => a.s === 'unreg').length, 0);
         if (qq) found += terms.length;
         if (terms.length || !qq) {
           const tk = terms.map(d => N('t:' + d.id, 'term', { term: d.name, ents: own.filter(e => e.a.some(a => a.n === d.name)).map(e => e.id), selectable: true, html: `<span class="tn1">${mark(d.name)}</span><span class="tmeta mono">${esc(d.abbr)}</span>`, aria: `용어 ${d.name}, ${d.abbr}`, title: d.dom }));
           const dk = doms.map(dm => { const used = own.filter(e => e.a.some(a => terms.some(d => d.dom === dm && d.name === a.n))); return N('d:' + dm, 'dom', { dom: dm, ents: used.map(e => e.id), selectable: true, html: `<span class="tn1">${esc(dm)}</span><span class="tmeta">엔터티 ${used.length}</span>`, aria: `도메인 ${dm}, 엔터티 ${used.length}` }); });
-          kidsOf.push(N('f:std', 'folder', { html: `<span class="tn1">사용한 표준</span><span class="tct">용어 ${terms.length} · 도메인 ${doms.length}${unreg ? ` · 후보 ${unreg}` : ''}</span>`, aria: `사용한 표준, 용어 ${terms.length}, 도메인 ${doms.length}${unreg ? ', 미등록 ' + unreg : ''}`, open: qq && terms.length ? true : isOp('f:std', false),
+          kidsOf.push(N('f:std', 'folder', { html: `<span class="tn1">표준 용어 · 도메인</span><span class="tct">용어 ${terms.length} · 도메인 ${doms.length}${unreg ? ` · 미등록 ${unreg}` : ''}</span>`, aria: `표준 용어와 도메인, 용어 ${terms.length}, 도메인 ${doms.length}${unreg ? ', 미등록 ' + unreg : ''}`, open: qq && terms.length ? true : isOp('f:std', false),
             kids: [folder('f:terms', '용어', tk), folder('f:doms', '도메인', dk)].filter(f => f.kids.length || !qq) }));
         }
         if (qq && !areaHit && !kidsOf.length) return;
         if (qq && areaHit) found++;
-        out.push(N('area', 'area', { html: `<span class="tn1"><b>${mark(m.name)}</b></span>${stateBadge(area)}`, aria: `${m.name}, ${area === cur && live() && live().label ? live().label : '업무 영역'}`, open: qq ? true : isOp('area', area === cur), kids: kidsOf }));
+        out.push(N('area', 'area', { title: m.desc ? `${m.name} — ${m.desc} · 엔터티 ${s.E.filter(e => !e.ref).length}` : '', html: `<span class="tn1"><b>${mark(m.name)}</b></span>${stateBadge(area)}`, aria: `${m.name}, ${area === cur && live() && live().label ? live().label : '업무 영역'}${m.desc ? ', ' + m.desc : ''}`, open: qq ? true : isOp('area', area === cur), kids: kidsOf }));
       });
       return { nodes: out, found };
+    }
+    // entities by kind (기준 정보 · 거래 · 이력 · 코드) once an area has more than 6 — ERP areas read like their business
+    const KIND = { M: ['기준 정보', '고객 · 품목 · 사원처럼 오래 쓰는 정보'], A: ['거래', '주문 · 발주 · 전표처럼 업무가 일어날 때마다 쌓이는 정보'], H: ['이력', '변경 · 상태 기록'], K: ['코드 · 분류', '분류 체계 · 직급 같은 기준 코드'] };
+    function groupEnts(nodes, area, isOp) {
+      const s = src(area), own = nodes.filter(n => !s.E.find(e => e.id === n.ent).ref);
+      if (own.length <= 6 || q.trim()) return own;
+      return ['M', 'A', 'H', 'K'].map(c => { const k = own.filter(n => s.E.find(e => e.id === n.ent).c === c); if (!k.length) return null; const nid = 'g:' + c; return Object.assign({ id: area + '|' + nid, nid, area, key: SYS + ':' + area + '@' + s.ver, kind: 'folder', html: `<span class="tn1">${KIND[c][0]}</span><span class="tct">${k.length}</span>`, aria: `${KIND[c][0]} ${k.length}, ${KIND[c][1]}`, title: KIND[c][1], open: isOp(nid, true), kids: k }); }).filter(Boolean);
     }
     function flatten(nodes, lvl, parent, acc) {
       nodes.forEach((n, i) => { n.lvl = lvl; n.pos = i + 1; n.size = nodes.length; n.parent = parent; acc.push(n); if (n.kids && n.open) flatten(n.kids, lvl + 1, n.id, acc); });
@@ -771,7 +927,7 @@
         <div class="tfull" id="tr-full">
           <div class="tsys">
             <a class="tsys-a${page === 'system' ? ' on' : ''}" href="system.html"${page === 'system' ? ' aria-current="page"' : ''} title="시스템 홈"><b>${sys.name}</b><span>${sys.db} · ${sys.code}</span></a>
-            <span class="tmw"><button class="tsw" type="button" data-menu-btn aria-expanded="false" aria-controls="mn-sys" aria-label="시스템 바꾸기"><i data-ic=down data-s=14></i></button><div class="menu" data-auto id="mn-sys">${SYSTEMS.map(s => `<a class="mi${s.cur ? ' on' : ''}" href="${s.href}"${s.cur ? ' aria-current="true"' : ''}><span>${s.name}</span><span class="caption muted" style="margin-left:auto">${s.none ? '목업 화면 없음' : s.db}</span></a>`).join('')}</div></span>
+            <span class="tmw"><button class="tsw" type="button" data-menu-btn aria-expanded="false" aria-controls="mn-sys" aria-label="시스템 바꾸기"><i data-ic=down data-s=14></i></button><div class="menu" data-auto id="mn-sys">${SYSTEMS.map(s => `<a class="mi${s.cur ? ' on' : ''}" href="${s.href}"${s.cur ? ' aria-current="true"' : ''}><span>${s.name}</span><span class="caption muted" style="margin-left:auto">${s.db}</span></a>`).join('')}</div></span>
           </div>
           <div class="tfrow">
             <label class="tfind"><i data-ic=search data-s=14></i><input id="tr-q" type="search" placeholder="엔터티·속성·테이블·용어 찾기" aria-label="모델 객체 찾기" autocomplete="off"></label>
@@ -794,7 +950,7 @@
       ${tabs ? '<div class="tpanel" id="tp-dict" role="tabpanel" aria-labelledby="lt-d" hidden></div>' : ''}
       <div class="tmini" aria-label="접힌 모델 트리">
         <a class="tm-i${page === 'system' ? ' on" aria-current="page' : ''}" href="system.html" title="시스템 홈 · ${sys.name}" aria-label="시스템 홈"><i data-ic=table></i></a>
-        ${Object.entries(models0).map(([id, m]) => `<a class="tm-i tm-a${id === famArea ? ' on" aria-current="true' : ''}" href="model.html${id === 'rq' ? '' : '?area=' + id}" title="${esc(m.name)}" aria-label="${esc(m.name)}">${esc(String(m.name).trim()[0])}</a>`).join('')}
+        ${Object.entries(models0).map(([id, m]) => `<a class="tm-i tm-a${id === famArea ? ' on" aria-current="true' : ''}" href="model.html?area=${id}" title="${esc(m.name)}" aria-label="${esc(m.name)}">${esc(String(m.name).trim()[0])}</a>`).join('')}
         <a class="tm-i${file === 'model.html' && qp.get('sys') ? ' on" aria-current="page' : ''}" href="model.html?sys=1" title="시스템 전체 ERD" aria-label="시스템 전체 ERD"><i data-ic=compare></i></a>
         <a class="tm-i${file === 'import.html' ? ' on" aria-current="page' : ''}" href="import.html" title="DDL 가져오기" aria-label="DDL 가져오기"><i data-ic=upload></i></a>
       </div>
@@ -845,7 +1001,7 @@
       const ev = new CustomEvent(fit && (r.kind === 'term' || r.kind === 'dom') ? 'dbm-tree-highlight' : 'dbm-tree-select', { cancelable: true, detail: d });
       if (!window.dispatchEvent(ev)) return;
       if (r.kind === 'term' || r.kind === 'dom') { if (fit && r.ents && r.ents[0]) location.href = `model.html?area=${r.area}&focus=${r.ents[0]}`; else location.href = `dictionary.html?q=${encodeURIComponent(r.term || r.dom)}`; return; }
-      if (r.kind === 'view') { location.href = `model.html${r.area === 'rq' ? '' : '?area=' + r.area}`; return; }
+      if (r.kind === 'view') { location.href = `model.html?area=${r.area}`; return; }
       if (d.id) location.href = `model.html?area=${r.area}&focus=${d.id}${d.ai != null ? '&attr=' + d.ai : ''}`;
     }
     tree.addEventListener('click', e => {
@@ -902,13 +1058,13 @@
     // ---- width: follows the content, never squeezes the canvas below 760px (12 §4.6)
     const minned = () => app.classList.contains('treemin');
     const modelish = page === 'model';   // model family screens (model · standardize · DDL · outputs · import)
-    const maxW = () => { if (!modelish) return 240; const rp = modelish ? [...document.querySelectorAll('.rpanel.open')].reduce((w, p) => w + p.getBoundingClientRect().width, 0) : 0; return Math.max(240, modelish ? app.clientWidth - rp - 760 : 400); };
+    const maxW = () => { if (!modelish) return 400; const rp = modelish ? [...document.querySelectorAll('.rpanel.open')].reduce((w, p) => w + p.getBoundingClientRect().width, 0) : 0; return Math.max(240, modelish ? app.clientWidth - rp - 760 : 400); };
     let curW = 0;
     const setW = w => { if (minned()) return; curW = Math.round(Math.min(Math.max(w, 240), maxW())); app.style.setProperty('--nav', curW + 'px'); const rs = nav.querySelector('#tr-rs'); rs.setAttribute('aria-valuenow', curW); rs.setAttribute('aria-valuemin', 240); rs.setAttribute('aria-valuemax', maxW()); };
     const needW = () => { tree.classList.add('measure'); const w = [...tree.querySelectorAll('.trow2, .tlinks')].reduce((m, el) => Math.max(m, el.scrollWidth), 0); tree.classList.remove('measure'); return w + 24; };
     function fit() {
       if (minned()) return;
-      if (!modelish) { setW(240); return; }
+      if (!modelish) { setW(Math.max(curW, needW(), 240)); return; }   // home · system home: content fit up to 400px (ERP names need it)
       if (modelish && app.clientWidth - [...document.querySelectorAll('.rpanel.open')].reduce((w, p) => w + p.getBoundingClientRect().width, 0) - 760 < 240) { app.classList.add('treemin'); syncMin(); return; }   // not even 240px fits → the tree folds first (not remembered)
       if (ST.manual) { setW(curW || ST.w || 264); return; }
       setW(Math.max(curW, needW(), 240));
@@ -999,6 +1155,7 @@
     if (tmin === '1' || (tmin === '' && curFile() === 'model.html' && (document.documentElement.classList.contains('frame-1600') || Math.min(window.innerWidth, app.clientWidth || window.innerWidth) < 1920))) app.classList.add('treemin');
     app.insertBefore(nav, content);
     app.insertBefore(top, nav);
+    document.querySelectorAll('.crumbs a[href="system.html"]').forEach(a => { if (a.textContent.trim() === '요구사항관리') a.textContent = curSys().name; });
     drawTree(nav);
     const toasts = document.createElement('div');
     toasts.className = 'toasts'; toasts.id = 'toasts';
