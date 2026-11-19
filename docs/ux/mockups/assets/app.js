@@ -456,7 +456,7 @@
   };
   window.icon = (n, s = 16) => `<svg class="ic${s === 12 ? ' s12' : ''}" width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${s === 12 ? 2 : 1.5}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${LU[n] || ''}</svg>`;
   /* status tag: ok · run · mine · warn · err · ex · end — one per row */
-  const TAG_IC = { ok: 'check', mine: 'clock', warn: 'warn', err: 'err', ex: 'flag' };
+  const TAG_IC = { ex: 'flag' };   // Geist: no check / X icons inside status badges — colour + words
   window.tag = (kind, label) => `<span class="tag ${kind}">${TAG_IC[kind] ? icon(TAG_IC[kind], 12) : ''}${label}</span>`;
   /* the mock's reference day and the age of a document in its current step (home · approvals use the same count) */
   window.MOCK_TODAY = new Date(2026, 10, 19);
