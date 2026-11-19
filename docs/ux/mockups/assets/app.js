@@ -1539,7 +1539,7 @@
         <label class="mt-row"><span>역할</span><select id="mk-role" aria-label="역할 보기 전환">${Object.values(USERS).filter(u => u.status !== 'stopped').map(u => `<option value="${u.id}" ${u.id === ME.id ? 'selected' : ''}>${txt(u.name)} · ${(u.roles || []).map(r => ROLE_NAME[r]).join('·') || '조회만'}</option>`).join('')}</select></label>
         <div class="mt-row"><span>화면 크기</span><span class="seg" id="seg-frame" title="맞춤 = 창 폭 전체(최소 1600px) · 1920/1600 = 고정 미리보기"><button data-v="fit">맞춤</button><button data-v="1920">1920</button><button data-v="1600">1600</button></span></div>
         <div class="mt-row"><span>테마</span><span class="seg" id="seg-theme"><button data-v="light">라이트</button><button data-v="dark">다크</button></span></div>
-        <div class="mt-row mt-acts"><button class="btn sm" id="mk-scr" aria-expanded="false" title="화면 정보 · 상태별 바로가기 · 설계 문서 · 검토 메모">화면 정보</button><a class="btn sm" href="index.html" title="전체 화면·교차 시나리오">목업 지도</a><button class="btn sm ghost" id="mk-reset" title="결재 진행 상태·알림 읽음을 처음으로 · 검토 메모는 유지">데이터 초기화</button></div>
+        <div class="mt-row mt-acts"><button class="btn sm" id="mk-scr" aria-expanded="false" title="화면 정보 · 상태별 바로가기 · 설계 문서 · 검토 메모">화면 정보</button><a class="btn sm" href="index.html" title="전체 화면·교차 시나리오">목업 지도</a><button class="btn sm" id="mk-audit" title="디자인 가이드 v2 기준 퍼블리싱 점검 — 19개 화면 × 1920 · 1600 (17 · P4)">퍼블리싱 점검</button><button class="btn sm ghost" id="mk-reset" title="결재 진행 상태·알림 읽음을 처음으로 · 검토 메모는 유지">데이터 초기화</button></div>
       </div>`;
     top.insertBefore(mk, top.querySelector('#gsearch'));
     const fab = mk.querySelector('#mk-fab'), mpop = mk.querySelector('#mk-pop');
@@ -1558,6 +1558,19 @@
     mk.querySelector('#mk-scr').addEventListener('click', e => { e.stopPropagation(); mkOpen(false); toggleScreenPanel(); });
     const sp = document.createElement('aside'); sp.className = 'scr-panel'; sp.id = 'scr-panel'; sp.setAttribute('aria-label', '화면 정보'); sp.addEventListener('click', e => e.stopPropagation()); app.appendChild(sp);
     if (store.get('dbm-scr-open', '0') === '1') toggleScreenPanel(true);
+    // publishing audit (17 · P4): measures every screen against guide v2 and shows one table — mock tool, not part of the product
+    mk.querySelector('#mk-audit').addEventListener('click', async e => {
+      e.stopPropagation(); mkOpen(false);
+      const ov = document.createElement('div'); ov.className = 'overlay open'; ov.setAttribute('role', 'dialog'); ov.setAttribute('aria-modal', 'true'); ov.setAttribute('aria-label', '퍼블리싱 점검');
+      ov.innerHTML = `<div class="modal" style="width:960px;max-width:calc(100vw - 48px)"><div class="m-head"><h3 class="sm">퍼블리싱 점검 · 디자인 가이드 v2</h3></div><div class="m-body" id="aud-b"><span class="savest"><span class="sdot run"></span>19개 화면을 1920 · 1600으로 여는 중… (약 1분)</span></div><div class="m-foot"><button class="btn" id="aud-x">닫기</button></div></div>`;
+      document.getElementById('app').appendChild(ov); const close = () => ov.remove(); ov.querySelector('#aud-x').onclick = close; ov.addEventListener('keydown', k => { if (k.key === 'Escape') close(); }); ov.querySelector('#aud-x').focus();
+      if (!window.NeoAudit) await new Promise((ok, no) => { const s = document.createElement('script'); s.src = 'assets/audit.js'; s.onload = ok; s.onerror = no; document.head.appendChild(s); });
+      const res = await NeoAudit.measure([1920, 1600]); if (!document.contains(ov)) return;
+      const rows = Object.entries(res).map(([k, r]) => { const bad = r.small || r.bold700 || r.noName || r.noLabel || r.glyph || r.overflow || (r.primary > 1 && !/styleguide/.test(k)) ||   /* the styleguide shows every button kind on purpose */ !/^(28|32|40|44)( · (28|32|40|44))*$/.test(r.btnH || '28');
+        return `<tr><td class="mono">${k}</td><td>${r.err ? tag('err', '오류') : bad ? tag('warn', '확인') : tag('ok', '통과')}</td><td class="num">${r.small}</td><td class="num">${r.bold700}</td><td class="mono">${r.btnH}</td><td class="num">${r.noName + r.noLabel}</td><td class="num">${r.glyph}</td><td class="num">${r.primary}</td><td class="num">${r.inline}</td><td>${r.overflow ? '넘침' : ''}</td></tr>`; }).join('');
+      ov.querySelector('#aud-b').innerHTML = `<div class="caption muted mb-8">기준: 12px 미만 0 · 굵기 700 0 · 버튼 높이 28/32/40(트리 44) · 이름 없는 버튼 · 입력 0 · 문자 아이콘 0 · 주 버튼 ≤1 · 가로 넘침 없음. 인라인 스타일 수는 참고.</div>
+        <div style="max-height:60vh;overflow:auto"><table class="tbl box"><thead><tr><th>폭 · 화면</th><th>결과</th><th class="r">12px 미만</th><th class="r">700</th><th>버튼 높이</th><th class="r">이름 없음</th><th class="r">문자 아이콘</th><th class="r">주 버튼</th><th class="r">인라인</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`;
+    });
     mk.querySelector('#mk-reset').addEventListener('click', () => { const keep = ['dbm-frame', 'dbm-frame-v2', 'dbm-theme', 'dbm-role', 'dbm-single-keys', 'dbm-notes', 'dbm-scr-open']; try { Object.keys(localStorage).filter(k => k.startsWith('dbm-') && !keep.includes(k)).forEach(k => store.del(k)); } catch (e) {} Object.keys(USERS).forEach(u => store.del('dbm-read-' + u)); flash('목업 데이터를 초기화했습니다', 'info'); location.reload(); });
 
     // notifications

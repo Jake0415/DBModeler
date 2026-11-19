@@ -65,7 +65,7 @@ html,body { margin:0; }
 body { background:var(--outside); color:var(--fg); font:400 14px/22px var(--font-sans); letter-spacing:-.1px; -webkit-font-smoothing:antialiased; }
 html, body, * { scrollbar-width:thin; scrollbar-color:var(--ds-gray-500) transparent; }
 *:hover { scrollbar-color:var(--ds-gray-600) transparent; }
-h1,h2,h3 { margin:0; }
+h1,h2,h3,h4 { margin:0; font-weight:600; }
 b, strong { font-weight:600; }   /* weights are 400 · 500 · 600 only (01 v2 §3) */
 a { color:var(--accent); text-decoration:none; }
 a:hover { color:var(--accent-hover); text-decoration:underline; }
@@ -550,12 +550,6 @@ input[type=checkbox]:focus-visible, input[type=radio]:focus-visible { outline:2p
 .tabs a:hover { color:var(--fg); text-decoration:none; }
 .tabs a.on { color:var(--fg); border-bottom-color:var(--ds-gray-1000); }
 .tabs a:focus-visible { outline:2px solid var(--focus); outline-offset:-2px; }
-/* legacy pill tabs — styleguide only until P4 (screens use .seg for view switching, 01 v2 §6.3) */
-.utabs { display:flex; gap:2px; align-self:center; }
-.utabs button { height:32px; border:0; background:none; font:400 14px var(--font-sans); color:var(--fg-2); padding:0 12px; border-radius:var(--r-md); border-bottom:0; cursor:pointer; display:flex; align-items:center; gap:6px; }
-.utabs button:hover { color:var(--fg); background:var(--ds-gray-100); }
-.utabs button.on { color:var(--fg); background:var(--ds-gray-100); border-bottom:0; font-weight:500; }
-.utabs button .n { font-size:12px; font-variant-numeric:tabular-nums; color:var(--fg-3); }
 /* key–value (detail panels) and description lists */
 .kv { display:grid; grid-template-columns:128px 1fr; gap:10px 16px; font-size:14px; line-height:20px; margin-bottom:16px; }
 .kv dt { color:var(--fg-2); font-weight:400; } .kv dd { margin:0; color:var(--fg); font-weight:500; }
