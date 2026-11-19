@@ -340,7 +340,7 @@
         ['note', '어음기본', '어음번호*,어음구분코드,발행일자,만기일자,어음금액,어음상태코드'],
         ['exrt', '환율이력', '통화코드*,적용일자*,매매기준율,등록일시', 'H'],
         ['dfund', '일별자금이력', '기준일자*,총수입금액,총지출금액,기말잔액금액', 'H']],
-      refs: [['bank', 'e_fi'], ['bcnc', 'e_fi']],
+      refs: [['bank', 'e_fi', 1], ['bcnc', 'e_fi']],
       rels: [['fplan', 'fplanD', 'id', '포함한다'], ['bank', 'dpwd', 'nonid', '거래된다'], ['bank', 'trns', 'nonid', '돈이 나간다', null, ['출금', 'WDRW']], ['bank', 'trns', 'nonid', '돈이 들어온다', null, ['입금', 'RCPT']], ['brwg', 'rpmt', 'id', '상환된다'], ['bank', 'rpmt', 'nonid', '지급한다'], ['bcnc', 'note', 'nonid', '발행 · 수취한다']],
       views: [['cash', '자금 흐름', ['fplan', 'fplanD', 'dpwd', 'trns', 'dfund']], ['loan', '차입 · 투자', ['brwg', 'rpmt', 'invt', 'note']]] },
     e_fi: { name: '회계관리', ver: 4, base: 3, desc: '계정과목 · 전표 · 세금계산서 · 매출채권 · 매입채무 · 예산',
@@ -406,7 +406,7 @@
     Object.entries(ERP).forEach(([area, d]) => {
       const E = d.ents.map(([id]) => JSON.parse(JSON.stringify(base[area + ':' + id])));
       // rebuild FK columns of this module from scratch (the shared base above already holds the in-module ones)
-      (d.refs || []).forEach(([id, from]) => { const o = base[from + ':' + id]; E.push({ id, n: o.n, p: o.p, c: o.c, ref: 1, refArea: from, refName: ERP[from].name, refVer: ERP[from].base, a: o.a.filter(a => a.pk || /명$/.test(a.n)).slice(0, 4).map(a => Object.assign({}, a, { fk: undefined, fkg: undefined })) }); });
+      (d.refs || []).forEach(([id, from, behind]) => { const o = base[from + ':' + id]; E.push({ id, n: o.n, p: o.p, c: o.c, ref: 1, refId: id, refArea: from, refName: ERP[from].name, refVer: ERP[from].base - (behind || 0), /* behind: a sample reference still on an older confirmed copy (shows "갱신") */ a: o.a.filter(a => a.pk || /명$/.test(a.n)).slice(0, 4).map(a => Object.assign({}, a, { fk: undefined, fkg: undefined })) }); });
       const R = [];
       d.rels.forEach(([f, t, k, name, noFk, role], i) => {
         const inner = d.ents.some(x => x[0] === f) && d.ents.some(x => x[0] === t);
@@ -438,8 +438,12 @@
   ['e_hr', 'e_tr', 'e_fi', 'e_sd', 'e_mm', 'e_wm', 'e_pp'].forEach(k => { if (ERP_BUILT.meta[k]) MODEL0[k] = ERP_BUILT.meta[k]; });
   // the address decides the system: ?system=ERP, or an area / snapshot that belongs to another system
   { const sy = qs.get('system'), ar = qs.get('area'); if (ar && getAllModels()[ar]) store.set('dbm-sys', getAllModels()[ar].system || 'RQMS'); else if (sy && SYSLIST.some(s => s.code === sy)) store.set('dbm-sys', sy); }
-  window.viewsOf = area => J('dbm-views-' + area, null) || clone(VIEWS0[area] || [{ id: 'all', n: '전체' }]);
-  window.modelSeed = area => clone(MODEL_SEED[area] || (J('dbm-area-seed-' + area, null)) || { E: [], R: [], M: [] });
+  // views belong to the area's model data (they follow its version and approval); seed views until the area is saved
+  window.viewsOf = area => { const m = getAllModels()[area]; const d = m && getModelData(area, m.ver); return clone((d && d.V && d.V.length && d.V) || J('dbm-views-' + area, null) || VIEWS0[area] || [{ id: 'all', n: '전체' }]); };
+  // a reference is stale when its source area has a newer confirmed copy than the one it points at
+  window.relKey = r => `${r.f}>${r.t}>${r.g || r.name || ''}`;   // a relation's name in a view's hidden-line list (positions change, ends don't)
+  window.refStale = e => { if (!e || !e.ref || !e.refArea) return 0; const m = getAllModels()[e.refArea]; return m && m.base && m.base > (e.refVer || 0) ? m.base : 0; };
+  window.modelSeed = area => { const s = clone(MODEL_SEED[area] || (J('dbm-area-seed-' + area, null)) || { E: [], R: [], M: [] }); if (!s.V) s.V = clone(VIEWS0[area] || [{ id: 'all', n: '전체' }]); return s; };   // seed views travel with the seed structure (approval comparison sees them)
   /* the structure of an area+version as the screens should see it: saved working data → seed */
   window.modelOf = (area, ver) => { const d = getModelData(area, ver); return d ? clone(d) : modelSeed(area); };
   window.getComp = area => J('dbm-comp-' + area, null);
@@ -680,9 +684,28 @@
   window.modelDiff = (a, b) => {
     const out = []; if (!a || !b) return null;
     const ea = new Map(a.E.map(e => [e.id, e])), eb = new Map(b.E.map(e => [e.id, e]));
-    b.E.forEach(e => { if (!ea.has(e.id)) out.push(['추가', `${e.n} ${e.p}`, '—', `엔터티 · 속성 ${e.a.length}`]); });
-    a.E.forEach(e => { if (!eb.has(e.id)) out.push(['삭제', `${e.n} ${e.p}`, `엔터티 · 속성 ${e.a.length}`, '—']); });
-    b.E.forEach(e => { const o = ea.get(e.id); if (!o) return;
+    const refTxt = e => `${e.refName || e.refArea || '다른 영역'} v${e.refVer || '?'} 확정본`;
+    b.E.forEach(e => { if (!ea.has(e.id)) out.push(e.ref ? ['참조 추가', `${e.n} ${e.p}`, '—', refTxt(e)] : ['추가', `${e.n} ${e.p}`, '—', `엔터티 · 속성 ${e.a.length}`]); });
+    a.E.forEach(e => { if (!eb.has(e.id)) out.push(e.ref ? ['참조 해제', `${e.n} ${e.p}`, refTxt(e), '—'] : ['삭제', `${e.n} ${e.p}`, `엔터티 · 속성 ${e.a.length}`, '—']); });
+    b.E.forEach(e => { const o = ea.get(e.id); if (!o || !e.ref) return; if ((o.refVer || 0) !== (e.refVer || 0)) out.push(['참조 갱신', `${e.n} ${e.p}`, refTxt(o), refTxt(e)]); });
+    // layout only (12 §3.2): positions · views · placement · hidden lines — listed apart, flagged with a 5th field
+    const moved = b.E.filter(e => { const o = ea.get(e.id); return o && (o.x !== e.x || o.y !== e.y || o.px !== e.px || o.py !== e.py); });
+    if (moved.length) out.push(['배치', '위치 이동', '—', `${moved.length}개 · ${moved.slice(0, 4).map(e => e.n).join(', ')}${moved.length > 4 ? ' …' : ''}`, 'layout']);
+    const va = new Map((a.V || []).map(v => [v.id, v])), vb = new Map((b.V || []).map(v => [v.id, v]));
+    if (a.V && b.V) {
+      b.V.forEach(v => { const o = va.get(v.id); const nm = id => (eb.get(id) || ea.get(id) || {}).n || id;
+        if (!o) { out.push(['배치', `보기 추가 · ${v.n}`, '—', `엔터티 ${(v.ents || []).length}`, 'layout']); return; }
+        if (o.n !== v.n) out.push(['배치', '보기 이름', o.n, v.n, 'layout']);
+        const add = (v.ents || []).filter(id => !(o.ents || []).includes(id)), del = (o.ents || []).filter(id => !(v.ents || []).includes(id));
+        if (add.length) out.push(['배치', `보기 ‘${v.n}’에 배치`, '—', add.map(nm).join(', '), 'layout']);
+        if (del.length) out.push(['배치', `보기 ‘${v.n}’에서 뺌`, del.map(nm).join(', '), '—', 'layout']);
+        const pm = Object.keys(v.pos || {}).filter(id => JSON.stringify((o.pos || {})[id]) !== JSON.stringify(v.pos[id]) && (o.ents || []).includes(id));
+        if (pm.length) out.push(['배치', `보기 ‘${v.n}’ 위치 이동`, '—', `${pm.length}개`, 'layout']);
+        const ha = (v.hide || []).filter(k => !(o.hide || []).includes(k)), hd = (o.hide || []).filter(k => !(v.hide || []).includes(k));
+        if (ha.length || hd.length) out.push(['배치', `보기 ‘${v.n}’ 관계선`, hd.length ? `숨김 ${hd.length}` : '—', ha.length ? `숨김 ${ha.length}` : '다시 보임', 'layout']); });
+      a.V.forEach(v => { if (!vb.has(v.id)) out.push(['배치', `보기 삭제 · ${v.n}`, `엔터티 ${(v.ents || []).length}`, '—', 'layout']); });
+    }
+    b.E.forEach(e => { const o = ea.get(e.id); if (!o || e.ref) return;
       if (o.p !== e.p) out.push(['변경', `${e.n} (물리명)`, o.p, e.p]);
       e.a.forEach(x => { const y = o.a.find(z => z.n === x.n); if (!y) out.push(['추가', `${e.n}.${x.n}`, '—', `${x.p} ${x.t || ''}`]); else { if (y.p !== x.p || (y.t || '') !== (x.t || '')) out.push(['변경', `${e.n}.${x.n}`, `${y.p} ${y.t || ''}`, `${x.p} ${x.t || ''}`]); if (x.s === 'ex' && y.s !== 'ex') out.push(['예외', `${e.n}.${x.n}`, '—', x.exReason || '사유']); if (x.s === 'na' && y.s !== 'na') out.push(['비대상', `${e.n}.${x.n}`, '—', x.naReason || '사유']); } });
       o.a.forEach(y => { if (!e.a.find(z => z.n === y.n)) out.push(['삭제', `${e.n}.${y.n}`, `${y.p} ${y.t || ''}`, '—']); }); });
@@ -974,6 +997,9 @@
         const N = (nid, kind, o) => Object.assign({ id: area + '|' + nid, nid, area, key: k, kind, kids: null }, o);
         const ents = s.E.filter(passF);
         const areaHit = hitFn(m.name);
+        // the model screen's open view: entities not placed in it are grey, its hidden relation lines say so
+        const lv0 = live(), onM = file === 'model.html' && lv0 && lv0.area === area && lv0.V;
+        const curV = onM ? lv0.V.find(v => v.id === (lv0.view || 'all')) : null, cvV = curV && curV.id !== 'all' ? curV : null;
         // objects
         const entNodes = ents.map(e => {
           const eh = hitFn(e.n) || hitFn(e.p), ah = e.a.map((a, i) => (hitFn(a.n) || hitFn(a.p)) ? i : -1).filter(i => i >= 0);
@@ -986,9 +1012,10 @@
             aria: `${P ? a.p : a.n}${a.pk ? ', PK' : ''}${a.fk ? ', FK' : ''}${STC[a.s] ? ', ' + STC[a.s] : ''}`, title: P ? a.n : `${a.p} · ${a.t}` }));
           const ahNote = qq && !eh && ah.length ? `<span class="tmeta">${P ? '컬럼' : '속성'} ${ah.length}</span>` : '';
           return N('e:' + e.id, P ? 'table' : 'ent', {
-            ent: e.id, selectable: true, st: e.ref ? 'ref' : entBad(e) ? 'bad' : e.a.some(a => a.s === 'ex') ? 'ex' : 'ok', gray: P && !e.ref && (e.px == null || e.py == null),
-            html: P ? `<span class="tn1 mono">${mark(e.p === '—' ? e.n + ' (물리명 없음)' : e.p)}</span>${e.ref ? `<span class="tmeta">${esc(e.refName || '공통')}${e.refVer ? ' v' + e.refVer + ' 확정' : ''}</span>` : ahNote || `<span class="tmeta">${esc(e.n)}</span>`}` : `${entDot(e)}<span class="tn1">${mark(e.n)}</span>${e.ref ? `<span class="tmeta">${esc(e.refName || '공통')}${e.refVer ? ' v' + e.refVer + ' 확정' : ''}</span>` : (ahNote || (entBad(e) ? `<span class="tct tbad" title="미준수 ${entBad(e)}">${entBad(e)}</span>` : '')) + `<span class="tmeta mono">${mark(e.p === '—' ? '물리명 없음' : e.p)}</span>`}`,
-            aria: `${P ? e.p : e.n}${!P && e.p !== '—' ? ' ' + e.p : ''}, ${entState(e)}${e.ref ? ', ' + (e.refName || '공통') + ' 영역에서 참조' : ''}`, title: P ? e.n : (e.p !== '—' ? e.p : '물리명 없음'),
+            ent: e.id, selectable: true, st: e.ref ? 'ref' : entBad(e) ? 'bad' : e.a.some(a => a.s === 'ex') ? 'ex' : 'ok', gray: (P && !e.ref && (e.px == null || e.py == null)) || (!!cvV && !(cvV.ents || []).includes(e.id)), drag: true,
+            html: (() => { const stl = refStale(e), refMeta = e.ref ? `<span class="tmeta">${esc(e.refName || '공통')}${e.refVer ? ' v' + e.refVer + ' 확정' : ''}</span>${stl ? `<span class="tbadge" title="원본 v${stl} 확정본이 나왔습니다 — 메뉴의 [갱신]으로 맞춥니다">갱신</span>` : ''}` : '';
+              return P ? `<span class="tn1 mono">${mark(e.p === '—' ? e.n + ' (물리명 없음)' : e.p)}</span>${e.ref ? refMeta : ahNote || `<span class="tmeta">${esc(e.n)}</span>`}` : `${entDot(e)}<span class="tn1">${mark(e.n)}</span>${e.ref ? refMeta : (ahNote || (entBad(e) ? `<span class="tct tbad" title="미준수 ${entBad(e)}">${entBad(e)}</span>` : '')) + `<span class="tmeta mono">${mark(e.p === '—' ? '물리명 없음' : e.p)}</span>`}`; })(),
+            aria: `${P ? e.p : e.n}${!P && e.p !== '—' ? ' ' + e.p : ''}, ${entState(e)}${e.ref ? ', ' + (e.refName || '공통') + ' 영역에서 참조' + (refStale(e) ? ', 원본 새 확정본 있음' : '') : ''}${cvV && !(cvV.ents || []).includes(e.id) ? ', 이 보기에 없음' : ''}`, title: P ? e.n : (e.p !== '—' ? e.p : '물리명 없음'),
             open: kids.length && !e.ref ? (qq && ah.length ? true : isOp('e:' + e.id, false)) : null, kids: e.ref ? null : kids });
         }).filter(Boolean);
         const kidsOf = [];
@@ -999,15 +1026,16 @@
           const bad = compOf(s).bad;
           const sn = s.snap ? '&snap=' + s.snap : '';
           [['model.html?area=' + area + sn, '모델'], ['standardize.html?area=' + area, '표준 맞추기', bad, '작업본'], ['ddl.html?area=' + area + sn, 'DDL'], ['outputs.html?area=' + area + sn, '산출물']].forEach((l, j) => kidsOf.push(N('l:' + j, 'link', { href: l[0], html: `${l[1]}${l[2] ? ` <b>${l[2]}</b>` : ''}`, aria: l[1] + (l[2] ? ` 미준수 ${l[2]}` : '') + (l[3] && s.snap ? ', 작업본 기준' : '') })));
-          const vs = viewsOf(area);
-          kidsOf.push(folder('f:views', '다이어그램', vs.map(v => N('v:' + v.id, 'view', { view: v.id, html: `<span class="tn1">${esc(v.n)}</span>${area === famArea && file === 'model.html' && v.id === 'all' ? '<span class="tmeta">보는 중</span>' : ''}`, aria: v.n + (v.id === 'all' ? ', 기본 보기' : '') })), { def: false }));
+          const vs = onM ? lv0.V : viewsOf(area), seeing = onM ? (lv0.view || 'all') : null;
+          kidsOf.push(folder('f:views', '다이어그램', vs.map(v => { const n = v.id === 'all' ? s.E.length : (v.ents || []).length;
+            return N('v:' + v.id, 'view', { view: v.id, selectable: true, html: `<span class="tn1">${esc(v.n)}</span><span class="tct">${n}</span>${v.id === seeing ? '<span class="tmeta">보는 중</span>' : ''}`, aria: `${v.n}, 엔터티 ${n}${v.id === 'all' ? ', 기본 보기' : ''}${v.id === seeing ? ', 보는 중' : ''}` }); }), { def: !!onM && seeing !== 'all' }));
         }
         if (!P) {
           if (entNodes.length || !qq) kidsOf.push(folder('f:ents', '엔터티', groupEnts(entNodes, area, isOp), { def: area === cur, count: qq ? entNodes.filter(n => !s.E.find(e => e.id === n.ent).ref).length : ents.filter(e => !e.ref).length }));
           const refNodes = entNodes.filter(n => s.E.find(e => e.id === n.ent).ref);
           if (refNodes.length) kidsOf.push(folder('f:refs', '다른 영역에서 참조', refNodes, { def: false, title: '다른 업무 영역의 엔터티를 읽기 전용으로 가져와 관계만 맺습니다' }));
           const rels = s.R.filter(r => ents.some(e => e.id === r.f) && ents.some(e => e.id === r.t)).map((r, i) => ({ r, i })).filter(({ r }) => { const a = s.E.find(e => e.id === r.f), b = s.E.find(e => e.id === r.t); return !qq || areaHit || hitFn(a.n) || hitFn(b.n) || hitFn(r.name); });
-          if (rels.length || !qq) kidsOf.push(folder('f:rels', '관계', rels.map(({ r, i }) => { const a = s.E.find(e => e.id === r.f), b = s.E.find(e => e.id === r.t); return N('r:' + i, 'rel', { rel: i, ent: r.t, selectable: true, html: `<span class="tn1">${esc(a.n)} → ${esc(b.n)}</span><span class="tmeta">${esc(r.name || '')}</span>`, aria: `${a.n}에서 ${b.n}, ${({ nonid: '비식별', id: '식별', one: '1:1', mn: 'M:N' })[r.k] || ''}`, title: ({ nonid: '1:N 비식별', id: '1:N 식별', one: '1:1', mn: 'M:N' })[r.k] }); })));
+          if (rels.length || !qq) kidsOf.push(folder('f:rels', '관계', rels.map(({ r, i }) => { const a = s.E.find(e => e.id === r.f), b = s.E.find(e => e.id === r.t); return N('r:' + i, 'rel', { rel: i, ent: r.t, selectable: true, html: `<span class="tn1">${esc(a.n)} → ${esc(b.n)}</span><span class="tmeta">${esc(r.name || '')}${curV && (curV.hide || []).includes(relKey(r)) ? ' · 선 숨김' : ''}</span>`, aria: `${a.n}에서 ${b.n}, ${({ nonid: '비식별', id: '식별', one: '1:1', mn: 'M:N' })[r.k] || ''}`, title: ({ nonid: '1:N 비식별', id: '1:N 식별', one: '1:1', mn: 'M:N' })[r.k] }); })));
           const subs = ents.filter(e => e.sub && (!qq || areaHit || hitFn(e.n)));
           if (subs.length) kidsOf.push(folder('f:subs', '서브타입', subs.map(e => N('s:' + e.id, 'ent', { ent: e.id, selectable: true, html: `<span class="tn1">${esc(e.n)}</span><span class="tmeta">${esc(e.sub.kind)} · ${e.sub.kids.length}</span>`, aria: `${e.n} 서브타입 ${e.sub.kind}`, title: e.sub.kids.join(', ') }))));
         } else {
@@ -1125,7 +1153,7 @@
           return;
         }
         if (r.grp) html += `<div class="tgrp" role="none" style="--lv:${r.lvl}" title="${esc(r.grp.title)}">${r.grp.label}<span>${r.grp.n}</span></div>`;
-        html += `<div role="treeitem" aria-haspopup="menu" class="trow2 k-${r.kind}${r.id === selId ? ' sel' : ''}${r.gray ? ' gray' : ''}" data-id="${esc(r.id)}" aria-level="${r.lvl}" aria-posinset="${r.pos}" aria-setsize="${r.size}"${r.open != null ? ` aria-expanded="${r.open}"` : ''}${r.selectable ? ` aria-selected="${r.id === selId}"` : ''} tabindex="${r.id === focusId ? 0 : -1}" aria-label="${esc(r.aria || '')}"${r.title ? ` title="${esc(r.title)}"` : ''} style="--lv:${r.lvl}"><span class="ttw" data-tw aria-hidden="true">${r.open == null ? '' : `<i data-ic=${r.open ? 'down' : 'right'} data-s=12></i>`}</span>${iconOf(r) ? `<span class="tico${icoCls(r)}" aria-hidden="true"><i data-ic=${iconOf(r)} data-s=14></i></span>` : ''}${r.html.replace(/^<span class="tdot[^"]*" aria-hidden="true">(<i[^>]*><\/i>)?<\/span>/, '')}<span class="tmore" data-tmore aria-hidden="true" title="메뉴 (Shift+F10)"><i data-ic=more data-s=14></i></span></div>`;
+        html += `<div role="treeitem" aria-haspopup="menu"${r.drag ? ' draggable="true"' : ''} class="trow2 k-${r.kind}${r.id === selId ? ' sel' : ''}${r.gray ? ' gray' : ''}" data-id="${esc(r.id)}" aria-level="${r.lvl}" aria-posinset="${r.pos}" aria-setsize="${r.size}"${r.open != null ? ` aria-expanded="${r.open}"` : ''}${r.selectable ? ` aria-selected="${r.id === selId}"` : ''} tabindex="${r.id === focusId ? 0 : -1}" aria-label="${esc(r.aria || '')}"${r.title ? ` title="${esc(r.title)}"` : ''} style="--lv:${r.lvl}"><span class="ttw" data-tw aria-hidden="true">${r.open == null ? '' : `<i data-ic=${r.open ? 'down' : 'right'} data-s=12></i>`}</span>${iconOf(r) ? `<span class="tico${icoCls(r)}" aria-hidden="true"><i data-ic=${iconOf(r)} data-s=14></i></span>` : ''}${r.html.replace(/^<span class="tdot[^"]*" aria-hidden="true">(<i[^>]*><\/i>)?<\/span>/, '')}<span class="tmore" data-tmore aria-hidden="true" title="메뉴 (Shift+F10)"><i data-ic=more data-s=14></i></span></div>`;
         if (r.kind === 'area' && r.open && r.desc && !q.trim()) html += `<div class="tdesc" role="none" style="--lv:${r.lvl + 1}">${esc(r.desc)}</div>`;
       });
       tree.innerHTML = html || '<div class="tempty">맞는 객체가 없습니다</div>';
@@ -1151,7 +1179,7 @@
       const ev = new CustomEvent(fit && (r.kind === 'term' || r.kind === 'dom') ? 'dbm-tree-highlight' : 'dbm-tree-select', { cancelable: true, detail: d });
       if (!window.dispatchEvent(ev)) return;
       if (r.kind === 'term' || r.kind === 'dom') { if (fit && r.ents && r.ents[0]) location.href = `model.html?area=${r.area}&focus=${r.ents[0]}`; else location.href = `dictionary.html?q=${encodeURIComponent(r.term || r.dom)}`; return; }
-      if (r.kind === 'view') { location.href = `model.html?area=${r.area}`; return; }
+      if (r.kind === 'view') { location.href = `model.html?area=${r.area}&view=${encodeURIComponent(r.view)}`; return; }
       if (d.id) location.href = `model.html?area=${r.area}&focus=${d.id}${d.ai != null ? '&attr=' + d.ai : ''}`;
     }
     tree.addEventListener('click', e => {
@@ -1181,7 +1209,7 @@
       if (e.key === 'Enter' || e.key === ' ') { if (el.matches('a.tlink')) return; e.preventDefault(); if (r) { kbSel = true; select(r, false); kbSel = false; } return; }
       if (e.key === '*') { e.preventDefault(); if (!r) return; const sib = Object.values(rowMap).filter(x => x.parent === r.parent && x.open === false); sib.forEach(x => { const t0 = ST.tog[x.key] = ST.tog[x.key] || {}; t0[x.nid] = true; }); save(); render(); return; }
       if ((e.key === 'ContextMenu' || (e.key === 'F10' && e.shiftKey)) && !el.matches('a.tlink')) { e.preventDefault(); if (r && r.kind !== 'link') { const b = el.getBoundingClientRect(); openMenu(r, b.left + 24, b.bottom + 2, el); } return; }
-      if (e.key === 'F2' || e.key === 'Delete') { e.preventDefault(); if (!r || r.kind === 'link') return; const want = e.key === 'F2' ? ['rename'] : ['delete', 'delrel']; const it = menuOf(r).find(x => want.includes(x.id));
+      if (e.key === 'F2' || e.key === 'Delete') { e.preventDefault(); if (!r || r.kind === 'link') return; const want = e.key === 'F2' ? ['rename', 'vren'] : ['delete', 'delrel']; const it = menuOf(r).find(x => want.includes(x.id));
         if (!it) { toast(e.key === 'F2' ? '이 항목은 이름을 바꿀 수 없습니다' : '이 항목은 트리에서 지울 수 없습니다', 'info'); return; } runCmd(r, it); return; }
       if (e.key.length === 1 && /\S/.test(e.key) && !e.ctrlKey && !e.metaKey && !e.altKey) {   // type-ahead
         const ch = e.key.toUpperCase(); const order = items.slice(i + 1).concat(items.slice(0, i + 1));
@@ -1211,18 +1239,33 @@
       const I = (id, label, o = {}) => Object.assign({ id, label }, o), SEP = { sep: 1 };
       const ed = (id, label, o = {}) => I(id, label, Object.assign({ why: editWhy(r, 'ent' in o ? o.ent : e) }, o));
       const fold = [I('expand', '모두 펼치기'), I('collapse', '모두 접기')];
-      if (r.kind === 'area') return [I('open', '모델 열기'), I('std', '표준 맞추기'), I('ddl', 'DDL 만들기'), I('outputs', '산출물'), SEP, I('hist', '결재함 열기'), I('newview', '보기 추가', { mock: T3 }), I('dup', '영역 복제', { mock: '영역 복제는 목업에서 시연만 합니다 — 복제본은 새 업무 영역 v1 작업 중으로 만들어집니다' }), SEP, ...fold];
+      // T3: what the model screen has open — its view, and (for another area's entity) the area a reference would go into
+      const lv = live(), onM = file === 'model.html' && lv && lv.V && lv.area === r.area, seeing = onM ? (lv.view || 'all') : null;
+      const curV = onM ? lv.V.find(v => v.id === seeing) : null;
+      const here = file === 'model.html' && lv && lv.V && lv.area !== r.area ? lv.area : null;
+      const hereWhy = () => { if (!here) return null; const tm = getModels()[here]; const L = modelLock(here);
+        if (L.state !== 'edit' || (lv && lv.ro)) return `${(tm || {}).name || '지금 영역'}${josa((tm || {}).name || '영역', '이/가').slice(-1)} 조회 전용이라 참조를 더할 수 없습니다`;
+        if (!can('model.edit', { area: here })) return '지금 영역을 편집할 권한이 없습니다';
+        const sm = getModels()[r.area]; if (!sm || !sm.base) return `${(sm || {}).name || '원본'}에는 아직 확정본이 없어 참조할 수 없습니다 — 원본이 확정된 뒤 참조합니다`;
+        if (lv.E.some(x => x.ref && x.refArea === r.area && (x.refId || x.id) === r.ent)) return '이미 지금 영역에서 참조하고 있습니다';
+        return null; };
+      if (r.kind === 'area') return [I('open', '모델 열기'), I('std', '표준 맞추기'), I('ddl', 'DDL 만들기'), I('outputs', '산출물'), SEP, I('hist', '결재함 열기'), ed('vnew', '보기 추가', { ent: null }), I('dup', '영역 복제', { mock: '영역 복제는 목업에서 시연만 합니다 — 복제본은 새 업무 영역 v1 작업 중으로 만들어집니다' }), SEP, ...fold];
       if (r.kind === 'folder') {
         if (r.nid === 'f:ents' || r.nid === 'f:tbls') return [ed('newent', P ? '새 테이블' : '새 엔터티', { ent: null, key: 'E' }), I('grid', '표 보기 · 일괄 편집'), SEP, ...fold];
-        if (r.nid === 'f:views') return [I('newview', '새 보기', { mock: T3 }), SEP, ...fold];
+        if (r.nid === 'f:views') return [ed('vnew', '새 보기', { ent: null }), SEP, ...fold];
         if (r.nid === 'f:std' || r.nid === 'f:terms') return [I('dictopen', '사전 화면 열기'), I('cand', '후보 큐 보기'), SEP, ...fold];
         if (r.nid === 'f:rels') return [ed('newrel', '새 관계', { ent: null, key: 'R' }), SEP, ...fold];
         return fold;
       }
       if (r.kind === 'ent' || r.kind === 'table') {
         if (!e) return [];
-        if (e.ref) return [I('select', '선택'), I('fit', '위치 맞춤'), I('src', `원본 열기${e.refName ? ' · ' + e.refName : ''}`), I('used', '사용처 (관계)'), SEP, ed('delete', '참조 해제', { ent: null, key: 'Delete', danger: 1 })];
-        return [I('select', '선택'), I('fit', '위치 맞춤'), SEP, ed('rename', '이름 바꾸기', { key: 'F2' }), ed('addattr', P ? '컬럼 추가' : '속성 추가', { key: 'Insert' }), I('std', '표준 맞추기'), I('ddl', 'DDL 미리보기'), I('used', '사용처 (관계)'), SEP, I('unplace', '보기에서 빼기', { why: '전체 보기에서는 뺄 수 없습니다 — 보기 나누기는 다음 단계(T3)입니다' }), ed('delete', P ? '테이블 삭제' : '엔터티 삭제', { key: 'Delete', danger: 1 })];
+        const addRef = here && !e.ref ? [I('addref', `지금 영역(${(getModels()[here] || {}).name || ''})에 참조 추가`, { why: hereWhy() }), SEP] : [];
+        const inCur = !curV || curV.id === 'all' || (curV.ents || []).includes(e.id);
+        const unplace = ed('unplace', '보기에서 빼기', { why: !onM ? '모델 화면에서 보기를 열고 뺍니다' : seeing === 'all' ? '전체 보기에서는 뺄 수 없습니다 — 엔터티를 지우려면 [삭제]를 쓰세요' : !inCur ? '이 보기에 없습니다' : editWhy(r, e.ref ? null : e) });
+        const place = ed('place', '보기에 배치…', { ent: null });
+        if (e.ref) { const st = refStale(e);
+          return [...addRef, I('select', '선택'), I('fit', '위치 맞춤'), I('src', `원본 열기${e.refName ? ' · ' + e.refName : ''}`), ed('refresh', st ? `갱신 · 원본 v${st} 확정본으로` : '갱신', { ent: null, why: editWhy(r, null) || (st ? null : `원본 v${e.refVer || '?'} 확정본과 같습니다 — 갱신할 것이 없습니다`) }), I('used', '사용처 (관계)'), SEP, place, unplace, ed('delete', '참조 해제', { ent: null, key: 'Delete', danger: 1 })]; }
+        return [...addRef, I('select', '선택'), I('fit', '위치 맞춤'), SEP, ed('rename', '이름 바꾸기', { key: 'F2' }), ed('addattr', P ? '컬럼 추가' : '속성 추가', { key: 'Insert' }), I('std', '표준 맞추기'), I('ddl', 'DDL 미리보기'), I('used', '사용처 (관계)'), SEP, place, unplace, ed('delete', P ? '테이블 삭제' : '엔터티 삭제', { key: 'Delete', danger: 1 })];
       }
       if (r.kind === 'attr' || r.kind === 'col') {
         const a = e && e.a[r.ai]; if (!a || a.edit) return [];
@@ -1234,13 +1277,16 @@
       }
       if (r.kind === 'rel') {
         const x = s.R[r.rel]; if (!x) return [];
-        return [I('select', '선택 · 관계 정보'), I('fit', '위치 맞춤'), SEP, ...(x.k === 'mn' ? [ed('mn', 'M:N 해소', { ent: null })] : x.f !== x.t ? [ed('ident', x.k === 'id' ? '비식별로 전환' : '식별로 전환', { ent: null })] : []), I('hideline', '관계선만 숨기기', { mock: '관계선 숨기기는 보기마다 정하는 설정입니다 — ' + T3 }), SEP, ed('delrel', '관계 삭제', { ent: null, key: 'Delete', danger: 1 })];
+        const hid = curV && (curV.hide || []).includes(relKey(x));
+        return [I('select', '선택 · 관계 정보'), I('fit', '위치 맞춤'), SEP, ...(x.k === 'mn' ? [ed('mn', 'M:N 해소', { ent: null })] : x.f !== x.t ? [ed('ident', x.k === 'id' ? '비식별로 전환' : '식별로 전환', { ent: null })] : []),
+          ed('hideline', hid ? '관계선 다시 보이기' : '관계선만 숨기기', { ent: null, why: onM ? editWhy(r, null) : '모델 화면에서 보기를 열고 정합니다' }), ...(fkOf(x, s.E).st === 'miss' ? [ed('mkfk', 'FK 만들기', { ent: null })] : []), SEP, ed('delrel', '관계 삭제', { ent: null, key: 'Delete', danger: 1 })];
       }
-      if (r.kind === 'prel') { const f = fkOf(s.R[r.rel] || {}, s.E); return [I('select', '관계 선택'), I('ddl', 'DDL 미리보기'), ...(f.st === 'miss' ? [ed('mkfk', 'FK 만들기', { ent: null, mock: `FK 만들기는 게이트 A(물리 반영 전 점검)를 거치는 다음 단계(T3) 기능입니다 — 지금 원인: ${f.why}` })] : []), I('rule', '이름 규칙 다시 적용', { mock: '제약조건 이름을 명명 템플릿대로 다시 만듭니다(목업) — 시스템 설정 › 명명 템플릿' })]; }
+      if (r.kind === 'prel') { const f = fkOf(s.R[r.rel] || {}, s.E); return [I('select', '관계 선택'), I('ddl', 'DDL 미리보기'), ...(f.st === 'miss' ? [ed('mkfk', 'FK 만들기 (게이트 A)', { ent: null })] : []), I('rule', '이름 규칙 다시 적용', { mock: '제약조건 이름을 명명 템플릿대로 다시 만듭니다(목업) — 시스템 설정 › 명명 템플릿' })]; }
       if (r.kind === 'cons' || r.kind === 'ix') return [I('select', '테이블 선택'), I('ddl', 'DDL 미리보기')];
       if (r.kind === 'term') return [I('dict', '사전에서 보기'), I('hl', '사용 엔터티 강조'), I('std', '모델에 최신 표준 다시 적용'), I('dreq', '사전 변경 신청')];
       if (r.kind === 'dom') return [I('dict', '사전에서 보기'), I('hl', '사용 엔터티 강조')];
-      if (r.kind === 'view') return [I('open', '열기'), I('vren', '이름 바꾸기', { mock: T3 }), I('vdup', '복제', { mock: T3 }), I('vdel', '삭제', { why: r.view === 'all' ? '전체 보기는 지울 수 없습니다' : null, mock: T3, danger: 1 })];
+      if (r.kind === 'view') { const w = editWhy(r, null);
+        return [I('vopen', r.view === seeing ? '열기 · 보는 중' : '열기'), SEP, ed('vren', '이름 바꾸기', { ent: null, key: 'F2', why: r.view === 'all' ? '전체 보기는 이름을 바꿀 수 없습니다' : w }), ed('vdup', '복제', { ent: null }), ed('delete', '보기 삭제', { ent: null, key: 'Delete', danger: 1, why: r.view === 'all' ? '전체 보기는 지울 수 없습니다' : w })]; }
       return [];
     }
     function runCmd(r, it) {
@@ -1265,9 +1311,12 @@
       // object commands: the page with this area open runs them; otherwise the model screen opens and runs it
       // targets travel as stable keys (attribute names, relation ends) — never as array positions, which differ between versions and after a reorder
       const ea = e && r.ai != null ? e.a[r.ai] : null, rr = r.rel != null ? s.R[r.rel] : null;
-      const d = { cmd: c, area: r.area, kind: r.kind, id: r.ent || null, ai: r.ai != null ? r.ai : null, rel: r.rel != null ? r.rel : null,
-        akey: ea ? { n: ea.n, p: ea.p } : null, rkey: rr ? { f: rr.f, t: rr.t, k: rr.k, g: rr.g || '' } : null };
+      const lv = live();
+      const d = { cmd: c, area: r.area, kind: r.kind, id: r.ent || null, ai: r.ai != null ? r.ai : null, rel: r.rel != null ? r.rel : null, view: r.view || null,
+        akey: ea ? { n: ea.n, p: ea.p } : null, rkey: rr ? { f: rr.f, t: rr.t, k: rr.k, g: rr.g || '' } : null,
+        to: c === 'addref' && lv ? lv.area : null };   // a reference goes INTO the area the model screen has open
       if (!window.dispatchEvent(new CustomEvent('dbm-tree-cmd', { cancelable: true, detail: d }))) return;
+      if (c === 'vopen') { go(`model.html?area=${r.area}&view=${encodeURIComponent(r.view)}`); return; }   // opening a view changes nothing — a plain address is fine
       // another screen: a one-time token in this tab only (a link or a bookmark never edits the model), read and removed on arrival
       try { sessionStorage.setItem('dbm-tree-cmd', JSON.stringify(Object.assign({ at: Date.now(), user: ME.id }, d))); } catch (er) {}
       go(`model.html?area=${r.area}${d.id ? '&focus=' + d.id : ''}`);
@@ -1302,6 +1351,14 @@
     const closeKeep = () => closeMenu(ctx.contains(document.activeElement));   // focus inside the menu goes back to its row
     window.addEventListener('resize', closeKeep);
     nav.querySelector('#tr-full').addEventListener('scroll', closeKeep, { passive: true });
+    // T3: an entity row can be dragged onto the open canvas — same area = place it in this view, another area = reference it (12 §3.2)
+    tree.addEventListener('dragstart', e => {
+      const el = e.target.closest && e.target.closest('[role=treeitem][draggable="true"]'); const r = el && rowMap[el.dataset.id];
+      if (!r || !r.ent) { e.preventDefault(); return; }
+      e.dataTransfer.setData('application/x-dbm-ent', JSON.stringify({ area: r.area, id: r.ent, sys: SYS })); e.dataTransfer.setData('text/plain', (r.aria || '').split(',')[0]); e.dataTransfer.effectAllowed = 'copyLink';
+      window.dispatchEvent(new CustomEvent('dbm-tree-drag', { detail: { area: r.area, id: r.ent, on: true } }));
+    });
+    tree.addEventListener('dragend', () => window.dispatchEvent(new CustomEvent('dbm-tree-drag', { detail: { on: false } })));
     tree.addEventListener('contextmenu', e => {
       const el = e.target.closest('[role=treeitem]'); if (!el || el.matches('a.tlink')) return;   // shortcuts keep the browser's own menu (open in a new tab)
       const r = rowMap[el.dataset.id]; if (!r) return; e.preventDefault(); focusRow(el); openMenu(r, e.clientX, e.clientY, el);

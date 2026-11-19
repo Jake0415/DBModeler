@@ -177,6 +177,15 @@
   .ag-two select.input { height:30px; font-size:13px; }
   .ag-nn { display:flex; align-items:center; gap:6px; font-size:13px; height:30px; flex-wrap:wrap; }
   .ag-nn input { width:15px; height:15px; accent-color:var(--ink); }
+  /* T3 views · placement */
+  .cv-toolbar .vsel { display:flex; align-items:center; gap:4px; color:var(--fg-2); }
+  .cv-toolbar .vsel select { height:28px; border:1px solid var(--border-strong); border-radius:6px; background:var(--surface); color:var(--fg); font:500 13px var(--font-sans); padding:0 6px; max-width:200px; }
+  #cv[data-sys="1"] .vsel { display:none; }
+  #cv.placing { box-shadow:inset 0 0 0 2px var(--info); }
+  .vempty { position:absolute; left:50%; top:45%; transform:translate(-50%,-50%); text-align:center; color:var(--fg-2); font-size:14px; line-height:22px; z-index:4; pointer-events:none; }
+  .pop .vlist { display:flex; flex-direction:column; gap:4px; margin:8px 0; max-height:220px; overflow:auto; }
+  .pop .vlist label { display:flex; align-items:center; gap:6px; font-size:13px; }
+  .pop input.input { width:100%; height:30px; font-size:13px; margin:8px 0; }
 </style>
 </head>
 <body data-page="model">
@@ -252,6 +261,8 @@
         <button class="tb" id="b-grid" title="표 보기 · 일괄편집 · 찾기/바꾸기 (Ctrl+F)"><i data-ic=table></i>표 보기</button>
         <button class="tb" id="b-layout" data-edit>자동 배치</button>
         <button class="tb" id="b-sys">시스템 전체</button>
+        <span class="sep"></span>
+        <label class="vsel" title="다이어그램 보기 — 같은 영역을 목적별로 나눠 그린 그림"><i data-ic=flow data-s=14></i><select id="viewsel" aria-label="다이어그램 보기"></select></label>
         <span class="sep"></span>
         <button class="tb" id="b-undo" data-edit title="내 편집 되돌리기 (Ctrl+Z)"><i data-ic=undo></i></button>
         <button class="tb" id="b-redo" data-edit title="다시 실행 (Ctrl+Y)"><i data-ic=redo></i></button>
@@ -374,6 +385,12 @@ window.pageInit = function () {
   const AREA = getModels()[q.get('area')] ? q.get('area') : defArea();
   const _seed = modelSeed(AREA);
   const E = _seed.E, R = _seed.R, M = _seed.M;
+  // views (12 §3 · T3): part of the area's model data — positions per view, which entities are placed, hidden relation lines
+  const V = viewsOf(AREA);
+  let curView = q.get('view') || dbmStore.get('dbm-view-' + AREA, 'all');
+  const vCur = () => V.find(v => v.id === curView) || V[0];
+  const inView = e => curView === 'all' || ((vCur() || {}).ents || []).includes(e.id);
+  const VE = () => E.filter(inView);
   const cv = $('cv'), world = $('world'), nodes = $('nodes'), eg = $('eg'), preview = $('preview');
   let lodTimer = null, lodHinted = false;
   let mode = 'L', tool = 'select', relType = 'nonid', zoom = 1, panX = 40, panY = 50, sel = null, relSrc = null, lodForce = 'auto';
@@ -395,8 +412,11 @@ window.pageInit = function () {
   const viewOnly = !can('model.edit', { area: AREA });   // modeler AND this system is one of theirs (15)
   const outOfScope = ME.has('modeler') && viewOnly;
   const singleKeys = () => dbmStore.get('dbm-single-keys', '1') === '1';
-  const pos = e => mode === 'L' ? { x: e.x, y: e.y } : { x: e.px, y: e.py };
-  const setPos = (e, x, y) => { if (mode === 'L') { e.x = x; e.y = y; } else { e.px = x; e.py = y; } };
+  // a view other than 전체 keeps its own positions ([x, y, px, py]); without one the entity's own position is used
+  const pos = e => { const v = curView !== 'all' && vCur(), p = v && v.pos && v.pos[e.id]; if (p) return mode === 'L' ? { x: p[0], y: p[1] } : { x: p[2], y: p[3] }; return mode === 'L' ? { x: e.x, y: e.y } : { x: e.px, y: e.py }; };
+  const setPos = (e, x, y) => { const v = curView !== 'all' && vCur();
+    if (v) { v.pos = v.pos || {}; const p = v.pos[e.id] || [e.x, e.y, e.px, e.py]; if (mode === 'L') { p[0] = x; p[1] = y; } else { p[2] = x; p[3] = y; } v.pos[e.id] = p; return; }
+    if (mode === 'L') { e.x = x; e.y = y; } else { e.px = x; e.py = y; } };
   const ent = id => E.find(x => x.id === id);
   const bad = e => e.a.filter(a => a.s === 'comb' || a.s === 'unreg').length;
   const guard = () => {
@@ -423,7 +443,7 @@ window.pageInit = function () {
     const lk = modelLock(AREA); if (lk.state !== 'edit' || lk.model.ver !== VER) { revConflict = true; toast(`v${VER}은 다른 탭에서 ${lk.state === 'edit' ? `확정되고 v${lk.model.ver} 작업이 시작됐습니다` : lk.state === 'review' ? '확정 신청됐습니다' : '확정됐습니다'} — 이 탭의 편집은 저장하지 않았습니다`, 'danger', { label: '새로고침', fn: () => location.reload() }); return; }
     const cur = getModelData(AREA, VER);
     if (cur && (cur.rev || 0) !== myRev) { revConflict = true; setSave('err', '저장 안 됨 · 최신본 확인'); toast('다른 탭에서 이 버전을 먼저 저장했습니다 — 이 탭의 편집은 저장하지 않았습니다. 새로고침해서 최신 내용으로 이어가세요', 'danger', { label: '새로고침', fn: () => location.reload() }); return; }
-    myRev++; setModelData(AREA, VER, { E, R, M, rev: myRev });
+    myRev++; setModelData(AREA, VER, { E, R, M, V, rev: myRev });
     const n = new Date(); setSave('ok', `저장됨 · ${String(n.getHours()).padStart(2, '0')}:${String(n.getMinutes()).padStart(2, '0')}`);
   }
   function setSave(kind, text) { const s = $('savest'); if (!s) return; s.className = 'savest' + (kind === 'err' ? ' err' : ''); s.innerHTML = `<span class="sdot ${kind === 'err' ? 'err' : kind === 'run' ? 'run' : 'ok'}"></span>${text}`; }
@@ -511,8 +531,8 @@ window.pageInit = function () {
 
   // ---- undo / redo (my edits only)
   const hist = [], redo = [], histIds = [], redoIds = []; let histSeq = 0;
-  const state = () => JSON.stringify({ E, R, M });
-  const restore = s => { E.splice(0, E.length, ...s.E); R.splice(0, R.length, ...s.R); M.splice(0, M.length, ...s.M); };
+  const state = () => JSON.stringify({ E, R, M, V });
+  const restore = s => { E.splice(0, E.length, ...s.E); R.splice(0, R.length, ...s.R); M.splice(0, M.length, ...s.M); if (s.V) { V.splice(0, V.length, ...s.V); if (!V.some(v => v.id === curView)) curView = 'all'; } };
   let dirty = false;
   const snap = () => { hist.push(state()); histIds.push(++histSeq); if (hist.length > 50) { hist.shift(); histIds.shift(); } redo.length = 0; redoIds.length = 0; dirty = true; return histSeq; };
   // drop one entry only if it is still the last one (an input that ends with nothing changed)
@@ -542,7 +562,8 @@ window.pageInit = function () {
     };
     const b = bad(e);
     const title = renaming === e.id ? `<input class="ren-in" data-e="${e.id}" value="${e.n}">` : `<span class="title" data-e="${e.id}">${mode === 'L' ? e.n : e.p}</span>`;
-    const tag = e.ref ? '<span class="rtag reft">공통 · 참조</span>' : remoteSel === e.id && !offline ? '<span class="rtag">홍설계 편집 중</span>' : '';
+    const stl = refStale(e);
+    const tag = e.ref ? `<span class="rtag reft" title="${hx(e.refName || '다른 영역')} v${e.refVer || '?'} 확정본을 읽기 전용으로 가져온 참조">${hx(e.refName || '공통')} v${e.refVer || '?'} · 참조${stl ? ` · 원본 v${stl} 확정 — 갱신` : ''}</span>` : remoteSel === e.id && !offline ? '<span class="rtag">홍설계 편집 중</span>' : '';
     const subt = e.sub ? (mode === 'L'
       ? `<div class="subt"><div class="cap"><b>${e.sub.kind === '배타' ? 'X' : 'O'}</b>서브타입 · ${e.sub.kind} · 구분 ${e.sub.disc}</div><div class="kids">${e.sub.kids.map(k => `<span>${k}</span>`).join('')}</div></div>`
       : `<div class="subt"><div class="cap">서브타입 → 한 테이블로 통합 · 구분 컬럼 <span class="mono">DLVRBL_TYPE_CD</span></div></div>`) : '';
@@ -565,7 +586,9 @@ window.pageInit = function () {
   function render() {
     queueMicrotask(treeSync);
     nodes.innerHTML = '';
-    E.forEach(e => {
+    if (!V.some(v => v.id === curView)) curView = 'all';
+    syncViewSel();
+    VE().forEach(e => {
       const d = document.createElement('div');
       d.className = 'node' + (sel === e.id ? ' sel' : '') + (relSrc === e.id ? ' relsrc' : '') + (remoteSel === e.id && !offline ? ' remote' : '') + (e.ref ? ' ref' : '');
       d.id = 'n-' + e.id; const p = pos(e);
@@ -579,7 +602,7 @@ window.pageInit = function () {
     const ren = nodes.querySelector('.ren-in'); if (ren) { ren.focus(); ren.select(); }
     if ($('grid').classList.contains('open')) renderGrid();
   }
-  function box(id) { const d = $('n-' + id); return { x: d.offsetLeft, y: d.offsetTop, w: d.offsetWidth, h: d.offsetHeight }; }
+  function box(id) { const d = $('n-' + id); if (!d) return { x: 0, y: 0, w: 0, h: 0, none: true }; return { x: d.offsetLeft, y: d.offsetTop, w: d.offsetWidth, h: d.offsetHeight }; }
   function edgePath(a, b) {
     const ac = { x: a.x + a.w / 2, y: a.y + a.h / 2 }, bc = { x: b.x + b.w / 2, y: b.y + b.h / 2 };
     if (b.y > a.y + a.h + 20 || a.y > b.y + b.h + 20) {
@@ -596,8 +619,10 @@ window.pageInit = function () {
   }
   function drawEdges() {
     let s = ''; const groups = {};
+    const hid = (vCur() || {}).hide || [];
     R.forEach((r, i) => {
       if (!$('n-' + r.f) || !$('n-' + r.t)) return;
+      if (hid.includes(relKey(r))) return;   // a line hidden in this view: the relation (and its FK) still exists
       let p;
       if (r.f === r.t) { const a = box(r.f); p = { d: `M${a.x + a.w},${a.y + 30} H${a.x + a.w + 30} V${a.y - 20} H${a.x + a.w - 30} V${a.y}`, lx: a.x + a.w + 34, ly: a.y - 8 }; }
       else p = edgePath(box(r.f), box(r.t));
@@ -629,9 +654,9 @@ window.pageInit = function () {
   function mini() {
     const m = $('mini'); if (!nodes.children.length) return;
     let minx = 1e9, miny = 1e9, maxx = -1e9, maxy = -1e9;
-    E.forEach(e => { const b = box(e.id); minx = Math.min(minx, b.x); miny = Math.min(miny, b.y); maxx = Math.max(maxx, b.x + b.w); maxy = Math.max(maxy, b.y + b.h); });
+    VE().forEach(e => { const b = box(e.id); minx = Math.min(minx, b.x); miny = Math.min(miny, b.y); maxx = Math.max(maxx, b.x + b.w); maxy = Math.max(maxy, b.y + b.h); });
     const W = maxx - minx + 200, H = maxy - miny + 200, k = Math.min(180 / W, 120 / H), ox = minx - 100, oy = miny - 100;
-    let s = E.map(e => { const b = box(e.id); const col = remoteSel === e.id && !offline ? 'var(--p-hong)' : bad(e) ? 'var(--warning)' : 'var(--border-strong)'; return `<rect x="${(b.x - ox) * k}" y="${(b.y - oy) * k}" width="${b.w * k}" height="${b.h * k}" fill="${col}" opacity=".6" rx="1"/>`; }).join('');
+    let s = VE().map(e => { const b = box(e.id); const col = remoteSel === e.id && !offline ? 'var(--p-hong)' : bad(e) ? 'var(--warning)' : 'var(--border-strong)'; return `<rect x="${(b.x - ox) * k}" y="${(b.y - oy) * k}" width="${b.w * k}" height="${b.h * k}" fill="${col}" opacity=".6" rx="1"/>`; }).join('');
     s += `<rect x="${(-panX / zoom - ox) * k}" y="${(-panY / zoom - oy) * k}" width="${cv.clientWidth / zoom * k}" height="${cv.clientHeight / zoom * k}" fill="none" stroke="var(--ink)" stroke-width="1"/>`;
     m.innerHTML = s;
   }
@@ -922,7 +947,9 @@ window.pageInit = function () {
     t.textContent = mode === 'L' ? e.n : e.p; sub.textContent = (mode === 'L' ? e.p : e.n) + ' · 분류 ' + e.c + (e.ref ? ' · 공통 참조' : '');
     const rels = R.filter(r => r.f === e.id || r.t === e.id).map(r => `${ent(r.f).n} → ${ent(r.t).n} <span class="faint">(${({ nonid: '1:N 비식별', id: '1:N 식별', one: '1:1', mn: 'M:N' })[r.k]}${r.xg ? ' · 배타' : ''})</span>`);
     const sysRows = mode === 'P' && !e.ref ? SYS_COLS.map(c => `<tr class="ag-sys"><td colspan="2"><span class="badge">시스템</span></td><td class="ag-n">${c[1]}<span class="s2">${c[0]} · ${c[2]}</span></td><td class="faint">—</td><td></td></tr>`).join('') : '';
-    body.innerHTML = `${e.ref ? '<div class="banner" style="margin-bottom:12px"><i data-ic=info></i><div><b>공통 영역의 참조 엔터티</b>입니다. 이 영역에서는 관계만 맺을 수 있고, 수정은 공통 영역에서 합니다.</div></div>' : ''}
+    const rst = refStale(e);
+    body.innerHTML = `${e.ref ? `<div class="banner${rst ? ' warning' : ''}" style="margin-bottom:12px"><i data-ic=${rst ? 'warn' : 'info'}></i><div class="grow"><b>${hx(e.refName || '공통 영역')} v${e.refVer || '?'} 확정본의 참조</b>입니다. 이 영역에서는 관계만 맺고, 수정은 원본 영역에서 합니다.${rst ? `<br><b>원본 v${rst} 확정본</b>이 나왔습니다 — 갱신하면 속성이 새 확정본으로 바뀝니다.` : ''}
+      <div class="flex" style="gap:6px;margin-top:6px">${e.refArea ? `<a class="btn sm" href="model.html?area=${e.refArea}&focus=${e.refId || e.id}">원본 열기</a>` : ''}${rst && canEdit() ? `<button class="btn sm primary" id="ref-up">원본 v${rst}로 갱신</button>` : ''}</div></div></div>` : ''}
       ${remoteSel === e.id && !offline ? '<div class="banner" style="margin-bottom:12px"><i data-ic=info></i><div><b>홍설계가 이 엔터티를 편집 중</b>입니다. 같이 고칠 수 있고, 같은 칸을 동시에 고치면 마지막 입력이 남습니다.</div></div>' : ''}
       ${e.st ? '<div class="flex" style="margin-bottom:8px;gap:6px"><span class="badge b-info">엔터티 용어 신청 중</span><span class="caption muted">분류어 ‘기본’ → _M</span></div>' : ''}
       <div class="tabs"><button class="on" data-tab="attrs">${mode === 'L' ? '속성' : '컬럼'} <span class="n">${e.a.length}</span></button>${mode === 'P' ? '<button data-tab="cons">제약·인덱스</button>' : ''}<button data-tab="sec">보안</button><button data-tab="ent">${mode === 'L' ? '엔터티' : '테이블'}</button><button data-tab="rel">관계 <span class="n">${rels.length}</span></button></div>
@@ -933,6 +960,7 @@ window.pageInit = function () {
       <div class="pane" data-pane="rel"><div class="caption" style="line-height:22px">${rels.join('<br>') || '관계 없음'}</div></div>`;
     $('rp-add').onclick = () => addAttr();
     agRestore(body);
+    const ru = $('ref-up'); if (ru) ru.onclick = () => refreshRef(e);
     const ix = $('ix-add'); if (ix) ix.onclick = () => { if (guard() || refGuard(e)) return; snap(); (e.ix = e.ix || []).push({ n: `${e.p}_IX${String(90 + (e.ix.length)).padStart(2, '0')}`, c: e.a[1] ? e.a[1].p : e.a[0].p }); render(); document.querySelector('#rp [data-tab="cons"]').click(); toast('인덱스를 추가했습니다 · 이름은 명명 템플릿을 따릅니다'); };
     const uk = $('uk-add'); if (uk) uk.onclick = () => toast('UK로 묶을 컬럼을 고르세요(목업)', 'info');
   }
@@ -986,7 +1014,7 @@ window.pageInit = function () {
     if (!can('model.submit', { area: AREA })) { toast('확정 신청 권한이 없습니다 — 담당 시스템의 모델러만 신청합니다', 'danger'); return; }
     { const gaps = lineGaps({ type: 'model', area: AREA, req: ME.id }); if (gaps.length) { toast(`${sysOfArea(AREA)} 모델을 처리할 ${gaps.map(s => STEP_NAME[s]).join(' · ')} 담당자가 없습니다 — 신청하면 결재가 멈춥니다. Admin에게 담당 지정을 요청하세요`, 'danger'); return; } }
     // always a NEW document (requester = current user); same area+version in progress → no duplicate (R2)
-    const r = createDoc({ type: 'model', area: AREA, ver: VER, title: `${curSys().name} › ${LOCK.model.name} v${VER} 확정`, n: E.length, reason: $('cf-why').value.trim(), cc: ['hyun'], key: `model:${AREA}:v${VER}`, snap: lastComp, model: JSON.parse(JSON.stringify({ E, R, M })) });   // the document keeps the model as submitted
+    const r = createDoc({ type: 'model', area: AREA, ver: VER, title: `${curSys().name} › ${LOCK.model.name} v${VER} 확정`, n: E.length, reason: $('cf-why').value.trim(), cc: ['hyun'], key: `model:${AREA}:v${VER}`, snap: lastComp, model: JSON.parse(JSON.stringify({ E, R, M, V })) });   // the document keeps the model as submitted
     flash(r.dup ? `이미 진행 중인 확정 신청 ${r.doc.id}이 있습니다` : `확정 신청 ${r.doc.id} — 1단계 담당 ${approversFor(r.doc, 'da').length}명에게 알렸습니다. 결재가 끝날 때까지 이 업무 영역은 조회 전용입니다`, 'info');
     location.href = `model.html?area=${AREA}`;
   };
@@ -1090,7 +1118,7 @@ window.pageInit = function () {
     render();
   }
   function toWorld(ev) { const r = cv.getBoundingClientRect(); return { x: (ev.clientX - r.left - panX) / zoom, y: (ev.clientY - r.top - panY) / zoom }; }
-  function focusEnt(id) { sel = id; showRP(); render(); const b = box(id); panX = cv.clientWidth / 2 - (b.x + b.w / 2) * zoom; panY = cv.clientHeight / 2 - (b.y + b.h / 2) * zoom; applyView(); }
+  function focusEnt(id) { if (ent(id) && !inView(ent(id))) { curView = 'all'; dbmStore.set('dbm-view-' + AREA, 'all'); toast('지금 보기에 없어 전체 보기로 바꿨습니다', 'info'); } sel = id; showRP(); render(); const b = box(id); panX = cv.clientWidth / 2 - (b.x + b.w / 2) * zoom; panY = cv.clientHeight / 2 - (b.y + b.h / 2) * zoom; applyView(); }
   function addAttr() {
     if (!sel || guard()) return; const e = ent(sel); if (refGuard(e)) return;
     e.a.forEach(a => delete a.edit); editHid = snap(); e.a.push({ n: '', p: '—', t: '—', s: 'na', edit: 1 }); render();
@@ -1157,7 +1185,7 @@ window.pageInit = function () {
     if (offline || !E.length) return;
     const rb = remoteSel && $('n-' + remoteSel) ? box(remoteSel) : { x: 100, y: 300, w: 200, h: 120 };
     const ch = $('cur-hong'); ch.style.left = (rb.x + 20 + Math.random() * (rb.w - 40)) + 'px'; ch.style.top = (rb.y + 10 + Math.random() * (rb.h - 20)) + 'px';
-    const pb = $('n-emp') ? box('emp') : box(E[0].id); const cp = $('cur-park'); cp.style.left = (pb.x + 40 + Math.random() * 160) + 'px'; cp.style.top = (pb.y + pb.h + 10 + Math.random() * 40) + 'px';
+    const first = VE()[0]; if (!first) return; const pb = $('n-emp') ? box('emp') : box(first.id); const cp = $('cur-park'); cp.style.left = (pb.x + 40 + Math.random() * 160) + 'px'; cp.style.top = (pb.y + pb.h + 10 + Math.random() * 40) + 'px';
   }
   setInterval(moveCursors, 1400);
   if (!locked && !DEMO) setTimeout(() => {
@@ -1200,6 +1228,7 @@ window.pageInit = function () {
       p.remove(); snap();
       fks.forEach(([k, a]) => { const i = k.a.indexOf(a); if (i < 0) return; if (opt === 'del') k.a.splice(i, 1); else delete a.fk; });
       E.splice(E.indexOf(e), 1); for (let i = R.length - 1; i >= 0; i--) if (R[i].f === id || R[i].t === id) R.splice(i, 1);
+      V.forEach(v => { if (v.ents) v.ents = v.ents.filter(x => x !== id); if (v.pos) delete v.pos[id]; });   // its placements go with it
       if (remoteSel === id) remoteSel = null; sel = null; render();
       toast(`‘${e.n}’을(를) ${e.ref ? '참조 해제' : '삭제'}했습니다 · 관계 ${rels.length}${fks.length ? ` · FK ${fks.length} ${opt === 'del' ? '삭제' : '일반 속성으로 유지'}` : ''}`, 'info', undoAction());
     };
@@ -1243,6 +1272,7 @@ window.pageInit = function () {
     if (tool === 'entity' && !node) {
       const w = toWorld(ev), id = 'e' + Date.now(); snap();
       E.push({ id, n: '새엔터티', p: '—', c: 'M', x: w.x, y: w.y, px: w.x, py: w.y, a: [{ n: '', p: '—', t: '—', s: 'na', pk: 1, edit: 1 }] });
+      if (curView !== 'all') { const v = vCur(); (v.ents = v.ents || []).push(id); }   // made in a view → placed in it (and always in 전체)
       sel = id; setTool('select'); toast('엔터티를 추가했습니다 — 식별자부터 입력하세요', 'info'); return;
     }
     if (tool === 'rel' && node) {
@@ -1321,7 +1351,11 @@ window.pageInit = function () {
   $('dict').addEventListener('dragend', () => { cv.classList.remove('dropping'); nodes.querySelectorAll('.drop').forEach(n => n.classList.remove('drop')); });
   cv.addEventListener('dragover', ev => { ev.preventDefault(); nodes.querySelectorAll('.drop').forEach(n => n.classList.remove('drop')); const n = ev.target.closest('.node'); if (n) n.classList.add('drop'); });
   cv.addEventListener('drop', ev => {
-    ev.preventDefault(); cv.classList.remove('dropping');
+    ev.preventDefault(); cv.classList.remove('dropping'); cv.classList.remove('placing');
+    const tre = ev.dataTransfer.getData('application/x-dbm-ent');
+    if (tre) { let t = null; try { t = JSON.parse(tre); } catch (er) {} if (!t) return; nodes.querySelectorAll('.drop').forEach(n => n.classList.remove('drop'));
+      if (cv.dataset.sys === '1') { toast('시스템 전체 ERD는 조회 전용입니다', 'info'); return; }
+      const w = toWorld(ev); if (t.area === AREA) placeHere(t.id, w); else addRef(t.area, t.id, w); return; }
     const n = ev.target.closest('.node'), ti = ev.dataTransfer.getData('text/plain');
     if (!n) { toast('엔터티 위에 놓으세요', 'info'); return; }
     const e = ent(n.id.slice(2)); if (guard() || refGuard(e)) return;
@@ -1338,7 +1372,7 @@ window.pageInit = function () {
   }, { passive: false });
   $('zi').onclick = () => { zoom = Math.min(2, zoom * 1.2); applyView(); };
   $('zo').onclick = () => { zoom = Math.max(0.15, zoom / 1.2); applyView(); };
-  function fit() { let maxx = 0, maxy = 0; E.forEach(e => { const b = box(e.id); maxx = Math.max(maxx, b.x + b.w); maxy = Math.max(maxy, b.y + b.h); }); zoom = Math.min(1.2, (cv.clientWidth - 80) / maxx, (cv.clientHeight - 140) / maxy); panX = 40; panY = 80; applyView(); }
+  function fit() { let maxx = 0, maxy = 0; if (!VE().length) { zoom = 1; panX = 40; panY = 80; applyView(); return; } VE().forEach(e => { const b = box(e.id); maxx = Math.max(maxx, b.x + b.w); maxy = Math.max(maxy, b.y + b.h); }); zoom = Math.min(1.2, (cv.clientWidth - 80) / maxx, (cv.clientHeight - 140) / maxy); panX = 40; panY = 80; applyView(); }
   $('zfit').onclick = fit;
   $('lodsel').onchange = ev => { lodForce = ev.target.value; applyView(); };
   $('b-undo').onclick = undo; $('b-redo').onclick = redoFn;
@@ -1390,6 +1424,7 @@ window.pageInit = function () {
       R.splice(R.indexOf(r), 1); const a = box(r.f), b = box(r.t);
       E.push({ id: 'rr', n: '요구사항리스크관계', p: 'RQRM_RISK_R', c: 'A', x: (a.x + b.x) / 2 + 300, y: (a.y + b.y) / 2, px: (a.x + b.x) / 2 + 320, py: (a.y + b.y) / 2, a: [{ n: '요구사항ID', p: 'DEMND_MATER_ID', t: 'VARCHAR2(10)', pk: 1, fk: 1, nn: 1, s: 'ok' }, { n: '리스크ID', p: 'RISK_ID', t: 'VARCHAR2(10)', pk: 1, fk: 1, nn: 1, s: 'ok' }] });
       R.push({ f: r.f, t: 'rr', k: 'id', name: '' }, { f: r.t, t: 'rr', k: 'id', name: '' });
+      if (curView !== 'all') { const v = vCur(); (v.ents = v.ents || []).push('rr'); }
       sel = 'rr'; render(); toast('M:N을 해소했습니다 — 교차 엔터티 ‘요구사항리스크관계’(식별 관계)');
     };
   });
@@ -1481,7 +1516,8 @@ window.pageInit = function () {
   // ---- states
   const RECIP_WHY = '‘수령자’ 단어 후보(REQ-2026-0012) 승인 전까지 임시 유지';
   // data source (S5): ?state= preset (demo, not saved) → document snapshot (review/confirmed/snap) → saved working data → seed
-  const loadData = d => { if (!d) return false; E.splice(0, E.length, ...JSON.parse(JSON.stringify(d.E))); R.splice(0, R.length, ...JSON.parse(JSON.stringify(d.R))); M.splice(0, M.length, ...JSON.parse(JSON.stringify(d.M || []))); return true; };
+  const loadData = d => { if (!d) return false; E.splice(0, E.length, ...JSON.parse(JSON.stringify(d.E))); R.splice(0, R.length, ...JSON.parse(JSON.stringify(d.R))); M.splice(0, M.length, ...JSON.parse(JSON.stringify(d.M || [])));
+    if (d.V && d.V.length) V.splice(0, V.length, ...JSON.parse(JSON.stringify(d.V))); return true; };   // a copy without views keeps the seed views
   const snapDoc = SNAP ? SNAPDOC : (locked ? LOCK.doc : null);
   const REVIEW_HIDDEN = !SNAP && LOCK.state === 'review' && LOCK.doc && !canSeeDoc(LOCK.doc);
   if (SNAP_HIDDEN) { E.splice(0, E.length); R.splice(0, R.length); M.splice(0, M.length); }
@@ -1605,11 +1641,14 @@ window.pageInit = function () {
   drawParticipants();
   if (q.get('focus') && ent(q.get('focus'))) setTimeout(() => { focusEnt(q.get('focus')); if (q.get('attr')) { treeOrigin = true; treeAttr = +q.get('attr'); render(); hlAttr(treeAttr); } }, 120);
   // ---- model tree (12 · T1)
-  window.treeData = () => ({ area: AREA, E, R, mode, ver: SNAP ? 'snap:' + SNAP : REVIEW_HIDDEN ? 'v' + LOCK.model.base : 'v' + VER, label: $('ver').textContent.trim(), ro: document.body.classList.contains('locked') || document.body.classList.contains('viewonly') });
+  window.treeData = () => ({ area: AREA, E, R, V, view: curView, mode, ver: SNAP ? 'snap:' + SNAP : REVIEW_HIDDEN ? 'v' + LOCK.model.base : 'v' + VER, label: $('ver').textContent.trim(), ro: document.body.classList.contains('locked') || document.body.classList.contains('viewonly') });
   function hlAttr(ai) { setTimeout(() => { const tr = document.querySelector(`#rp-body tr[data-ai="${ai}"]`); document.querySelectorAll('#rp-body tr.hl').forEach(x => x.classList.remove('hl')); if (tr) { tr.classList.add('hl'); tr.scrollIntoView({ block: 'nearest' }); } }, 0); }
   window.addEventListener('dbm-tree-select', ev => {
     const d = ev.detail; if (d.area !== AREA || SNAP_BAD) return;
-    if (d.kind === 'view') { ev.preventDefault(); toast(d.view === 'all' ? '전체 보기를 보고 있습니다' : '보기 전환은 다음 단계(T3)에서 동작합니다 · 지금은 전체 보기', 'info'); return; }
+    if (d.kind === 'view') { ev.preventDefault(); setView(d.view); return; }
+    if (d.id && ent(d.id) && !inView(ent(d.id))) {   // not placed in the open view: select it (panel) and say how to bring it here
+      ev.preventDefault(); treeOrigin = true; treeAttr = d.ai; sel = d.id; showRP(); render();
+      toast(`‘${ent(d.id).n}’은(는) 지금 보기(${(vCur() || {}).n})에 없습니다 — 트리에서 캔버스로 끌어 놓으면 배치됩니다`, 'info', { label: '전체 보기에서 열기', fn: () => { setView('all'); focusEnt(d.id); } }); return; }
     if (d.kind === 'term' || d.kind === 'dom') { ev.preventDefault(); if (window.openDictTab) openDictTab(d.term); return; }
     if (!d.id || !ent(d.id)) return;
     ev.preventDefault();
@@ -1625,8 +1664,121 @@ window.pageInit = function () {
     ids.forEach(id => { const n = document.getElementById('n-' + id); if (n) { n.classList.add('thl'); setTimeout(() => n.classList.remove('thl'), 2400); } });
     toast(d.msg ? `${d.msg} — 캔버스에 강조했습니다` : `‘${d.term}’을(를) 쓰는 엔터티 ${ids.length}개를 강조했습니다`, 'info');
   });
+  // ---- T3 views · placement · references · FK (12 §3) — FE mockup behaviour, saved with the area's model data
+  function syncViewSel() { const s = $('viewsel'); if (!s) return;
+    s.innerHTML = V.map(v => `<option value="${hx(v.id)}"${v.id === curView ? ' selected' : ''}>${hx(v.n)} · ${v.id === 'all' ? E.length : (v.ents || []).length}</option>`).join('') + (canEdit() ? '<option value="__new">＋ 새 보기…</option>' : '');
+    let em = $('vempty'); if (!em) { em = document.createElement('div'); em.id = 'vempty'; em.className = 'vempty'; cv.appendChild(em); }
+    const none = curView !== 'all' && !((vCur() || {}).ents || []).length; em.style.display = none ? 'block' : 'none';
+    if (none) em.innerHTML = `<b>‘${hx((vCur() || {}).n || '')}’ 보기가 비어 있습니다</b><br>왼쪽 트리에서 엔터티를 이 캔버스로 끌어 놓으면 배치됩니다.<br><span class="caption muted">다른 업무 영역의 엔터티를 끌어 놓으면 참조로 가져옵니다</span>`; }
+  function setView(id) { if (!V.some(v => v.id === id)) id = 'all'; curView = id; dbmStore.set('dbm-view-' + AREA, id); if (sel && typeof sel === 'string' && ent(sel) && !inView(ent(sel))) sel = null; closeGrid(); render(); setTimeout(fit, 0); agLive(`보기 ${(vCur() || {}).n} 열림`); }
+  $('viewsel').addEventListener('change', ev => { const v = ev.target.value; if (v === '__new') { syncViewSel(); vNew(); return; } setView(v); });
+  // a small form on the canvas (name a view · choose views · confirm) — Esc closes, Enter in the text field confirms
+  function askPop(html, onOk, at) {
+    document.querySelectorAll('.pop').forEach(p => p.remove());
+    const p = document.createElement('div'); p.className = 'pop'; p.setAttribute('role', 'dialog'); p.style.width = '300px'; p.style.left = (at ? at.x : 16) + 'px'; p.style.top = (at ? at.y : 52) + 'px';
+    p.innerHTML = html; cv.appendChild(p);
+    const back = document.activeElement;
+    const close = () => { p.remove(); if (back && document.contains(back)) back.focus(); };
+    p.addEventListener('keydown', ev => { ev.stopPropagation(); if (ev.key === 'Escape') close(); else if (ev.key === 'Enter' && ev.target.matches('input[type=text]')) { ev.preventDefault(); p.querySelector('[data-ok]').click(); } });
+    p.querySelector('[data-no]').onclick = close;
+    p.querySelector('[data-ok]').onclick = () => { if (onOk(p) !== false) p.remove(); };
+    const f = p.querySelector('input[type=text], input[type=checkbox], [data-no]'); if (f) { f.focus(); if (f.select) f.select(); }
+    return p;
+  }
+  const vName = (p, except) => { const n = p.querySelector('input[type=text]').value.trim(); if (!n) { toast('보기 이름을 입력하세요', 'danger'); return null; } if (V.some(v => v.n === n && v.id !== except)) { toast(`‘${n}’ 보기가 이미 있습니다`, 'danger'); return null; } return n; };
+  function vNew(copyOf) {
+    if (guard()) return; const src = copyOf && V.find(v => v.id === copyOf);
+    askPop(`<b>${src ? `‘${hx(src.n)}’ 복제` : '새 보기'}</b><div class="caption muted" style="margin-top:4px">${src ? '배치 · 위치 · 숨긴 관계선을 그대로 복사합니다' : '같은 영역의 엔터티를 목적별로 나눠 그립니다. 만든 뒤 트리에서 끌어 놓아 배치하세요'}</div>
+      <input class="input" type="text" aria-label="보기 이름" value="${hx(src ? src.n + ' 복사' : '보기 ' + V.length)}"><div class="flex"><button class="btn sm" data-no>취소</button><span class="grow"></span><button class="btn sm primary" data-ok>${src ? '복제' : '만들기'}</button></div>`, p => {
+      const n = vName(p); if (!n) return false; if (guard()) return;
+      snap(); const id = 'v' + Date.now().toString(36);
+      const ents = src ? (src.id === 'all' ? E.map(e => e.id) : [...(src.ents || [])]) : (sel && typeof sel === 'string' && ent(sel) ? [sel] : []);
+      V.push({ id, n, ents, pos: src && src.pos ? JSON.parse(JSON.stringify(src.pos)) : {}, hide: src ? [...(src.hide || [])] : [] });
+      setView(id); toast(`‘${n}’ 보기를 만들었습니다${ents.length ? ` · 엔터티 ${ents.length}개` : ' — 트리에서 엔터티를 끌어 놓아 배치하세요'}`, 'success', undoAction()); });
+  }
+  function vRen(id) { const v = V.find(x => x.id === id); if (!v || id === 'all' || guard()) return;
+    askPop(`<b>보기 이름 바꾸기</b><input class="input" type="text" aria-label="보기 이름" value="${hx(v.n)}"><div class="flex"><button class="btn sm" data-no>취소</button><span class="grow"></span><button class="btn sm primary" data-ok>바꾸기</button></div>`, p => {
+      const n = vName(p, id); if (!n) return false; if (n === v.n) return; if (guard()) return; snap(); v.n = n; render(); toast(`보기 이름을 ‘${n}’(으)로 바꿨습니다`, 'info', undoAction()); }); }
+  function vDel(id) { const v = V.find(x => x.id === id); if (!v || id === 'all' || guard()) return;
+    askPop(`<b>‘${hx(v.n)}’ 보기를 지울까요?</b><div class="caption" style="margin:6px 0">엔터티와 관계는 그대로 남고, 이 보기의 배치(엔터티 ${(v.ents || []).length}개 · 위치 · 숨긴 관계선)만 사라집니다.</div><div class="flex"><button class="btn sm" data-no>취소</button><span class="grow"></span><button class="btn sm danger" data-ok>보기 삭제</button></div>`, () => {
+      if (guard()) return; snap(); V.splice(V.indexOf(v), 1); if (curView === id) curView = 'all'; setView(curView); toast(`‘${v.n}’ 보기를 지웠습니다 · 엔터티는 그대로입니다`, 'info', undoAction()); }); }
+  // place an entity of this area in views (checkboxes), or drop it on the open view
+  function placeIn(eid) { const e = ent(eid); if (!e || guard()) return; const vs = V.filter(v => v.id !== 'all');
+    if (!vs.length) { toast('전체 보기 말고 다른 보기가 없습니다 — 먼저 [새 보기]를 만드세요', 'info'); return; }
+    askPop(`<b>‘${hx(e.n)}’ 배치할 보기</b><div class="vlist">${vs.map(v => `<label><input type="checkbox" value="${hx(v.id)}"${(v.ents || []).includes(eid) ? ' checked' : ''}> ${hx(v.n)} <span class="faint">· ${(v.ents || []).length}</span></label>`).join('')}</div><div class="caption muted">전체 보기에는 늘 있습니다. 빼도 엔터티는 지워지지 않습니다.</div><div class="flex" style="margin-top:8px"><button class="btn sm" data-no>취소</button><span class="grow"></span><button class="btn sm primary" data-ok>적용</button></div>`, p => {
+      if (guard()) return; const want = new Set([...p.querySelectorAll('input:checked')].map(c => c.value)); let add = 0, del = 0;
+      const chg = vs.some(v => want.has(v.id) !== (v.ents || []).includes(eid)); if (!chg) return; snap();
+      vs.forEach(v => { v.ents = v.ents || []; const has = v.ents.includes(eid); if (want.has(v.id) && !has) { v.ents.push(eid); add++; } else if (!want.has(v.id) && has) { v.ents.splice(v.ents.indexOf(eid), 1); if (v.pos) delete v.pos[eid]; del++; } });
+      render(); toast(`‘${e.n}’ — 보기 ${add}곳에 배치${del ? ` · ${del}곳에서 뺌` : ''}`, 'info', undoAction()); }); }
+  function placeHere(eid, at) { const e = ent(eid); if (!e) return;
+    if (curView === 'all') { sel = eid; showRP(); render(); toast('전체 보기에는 모든 엔터티가 있습니다 — 다른 보기를 열고 끌어 놓으면 그 보기에 배치됩니다', 'info'); return; }
+    const v = vCur(); if ((v.ents || []).includes(eid)) { sel = eid; showRP(); render(); toast(`‘${e.n}’은(는) 이미 이 보기에 있습니다`, 'info'); return; }
+    if (guard()) return; snap(); v.ents = v.ents || []; v.ents.push(eid); v.pos = v.pos || {}; const x = Math.round(at.x / 8) * 8, y = Math.round(at.y / 8) * 8; v.pos[eid] = [x, y, x, y];
+    sel = eid; showRP(); render(); toast(`‘${e.n}’을(를) ‘${v.n}’ 보기에 배치했습니다 · 엔터티는 하나라 어느 보기에서 고쳐도 같이 바뀝니다`, 'success', undoAction()); }
+  function unplace(eid) { const e = ent(eid); if (!e) return; if (curView === 'all') { toast('전체 보기에서는 뺄 수 없습니다 — 엔터티를 지우려면 [삭제]를 쓰세요', 'info'); return; }
+    const v = vCur(); if (!(v.ents || []).includes(eid)) { toast('이 보기에 없습니다', 'info'); return; } if (guard()) return;
+    snap(); v.ents.splice(v.ents.indexOf(eid), 1); if (v.pos) delete v.pos[eid]; if (sel === eid) sel = null; render(); toast(`‘${e.n}’을(를) ‘${v.n}’ 보기에서 뺐습니다 · 엔터티와 관계는 그대로입니다`, 'info', undoAction()); }
+  // references: another area's entity, read-only, from that area's LATEST CONFIRMED copy (12 §3.2)
+  const refFrom = (srcArea, id) => { const m = getModels()[srcArea]; if (!m || !m.base) return { why: `${(m || {}).name || '원본 영역'}에는 아직 확정본이 없어 참조할 수 없습니다 — 원본이 확정된 뒤 참조합니다` };
+    const c = confirmedCopy(srcArea); const o = c && c.E.find(x => x.id === id && !x.ref); return o ? { m, o } : { why: `${m.name} v${m.base} 확정본에 이 엔터티가 없습니다 — 작업 중에 새로 만든 엔터티는 확정된 뒤 참조할 수 있습니다` }; };
+  const refAttrs = o => o.a.filter(a => a.pk || /명$/.test(a.n)).slice(0, 6).map(a => { const x = Object.assign({}, a); delete x.fk; delete x.fkg; delete x.fkp; delete x.edit; delete x.orig; return x; });
+  function addRef(srcArea, id, at) {
+    if (srcArea === AREA) return placeHere(id, at || { x: 80, y: 80 });
+    if (guard()) return;
+    if (sysOfArea(srcArea) !== sysOfArea(AREA)) { toast('다른 시스템의 엔터티는 참조할 수 없습니다 — 같은 시스템 안에서만 참조합니다', 'info'); return; }
+    const already = E.find(x => x.ref && x.refArea === srcArea && (x.refId || x.id) === id); if (already) { if (curView !== 'all' && !inView(already)) return placeHere(already.id, at || { x: 80, y: 80 }); focusEnt(already.id); toast(`이미 참조하고 있습니다 — ‘${already.n}’`, 'info'); return; }
+    const f = refFrom(srcArea, id); if (f.why) { toast(f.why, 'info'); return; }
+    const p = at || { x: 60 + (E.length % 5) * 60, y: 60 }; const nid = ent(id) ? srcArea + '_' + id : id;
+    snap(); E.push({ id: nid, refId: id, n: f.o.n, p: f.o.p, c: f.o.c, ref: 1, refArea: srcArea, refName: f.m.name, refVer: f.m.base, x: Math.round(p.x), y: Math.round(p.y), px: Math.round(p.x), py: Math.round(p.y), a: refAttrs(f.o) });
+    if (curView !== 'all') { const v = vCur(); v.ents = v.ents || []; v.ents.push(nid); }
+    sel = nid; showRP(); render();
+    toast(`‘${f.o.n}’을(를) ${f.m.name} v${f.m.base} 확정본에서 참조로 가져왔습니다 — 관계만 맺을 수 있고, 준수율에는 세지 않습니다`, 'success', undoAction());
+  }
+  function refreshRef(e) {
+    if (!e || !e.ref || guard()) return; const f = refFrom(e.refArea, e.refId || e.id);
+    if (f.why) { toast(`${f.why} — 원본에서 지워졌다면 [참조 해제]를 검토하세요`, 'danger'); return; }
+    if ((e.refVer || 0) >= f.m.base) { toast(`이미 원본 v${f.m.base} 확정본과 같습니다`, 'info'); return; }
+    const oldPk = e.a.filter(a => a.pk).map(a => a.p).join(','), from = e.refVer; snap();
+    Object.assign(e, { n: f.o.n, p: f.o.p, c: f.o.c, refVer: f.m.base, a: refAttrs(f.o) });
+    const pkChg = e.a.filter(a => a.pk).map(a => a.p).join(',') !== oldPk, miss = R.filter(r => r.f === e.id && fkOf(r, E).st === 'miss').length;
+    render(); toast(`‘${e.n}’ 참조를 v${from} → v${f.m.base} 확정본으로 갱신했습니다${pkChg ? ` · 원본 PK가 바뀌었습니다${miss ? ` — 자식 FK ${miss}건이 누락이 됐으니 [FK 만들기]로 맞추세요` : ''}` : ''}`, pkChg && miss ? 'danger' : 'success', undoAction());
+  }
+  function hideLine(ri) { const r = R[ri]; if (!r || guard()) return; const v = vCur(); const k = relKey(r); snap(); v.hide = v.hide || [];
+    const on = !v.hide.includes(k); if (on) v.hide.push(k); else v.hide.splice(v.hide.indexOf(k), 1); render();
+    toast(`${(ent(r.f) || {}).n} → ${(ent(r.t) || {}).n} 관계선을 ‘${v.n}’ 보기에서 ${on ? '숨겼습니다 · 관계와 FK는 그대로입니다' : '다시 보입니다'}`, 'info', undoAction()); }
+  // FK 만들기 (gate A): add the missing child columns for a relation, paired to their parent columns
+  function makeFk(ri) {
+    const r = R[ri]; if (!r || guard()) return; const p = ent(r.f), c = ent(r.t), f = fkOf(r, E);
+    if (f.st !== 'miss') { toast(f.st === 'ok' ? '이미 FK가 있습니다' : f.st === 'mn' ? 'M:N 관계는 먼저 해소하세요' : 'FK를 만들지 않기로 한 관계입니다', 'info'); return; }
+    if (refGuard(c)) return;
+    if (p.p === '—' || c.p === '—') { toast(`게이트 A: ${p.p === '—' ? p.n : c.n} 테이블 물리명이 없습니다 — 표준 맞추기에서 먼저 정하세요`, 'danger'); return; }
+    const pk = p.a.filter(a => a.pk); if (!pk.length) { toast(`게이트 A: ${p.n}에 PK가 없습니다 — 부모의 식별자를 먼저 정하세요`, 'danger'); return; }
+    const self = r.f === r.t, multi = R.filter(x => x.f === r.f && x.t === r.t && x.k !== 'mn').length > 1;
+    const plan = pk.filter(k => !c.a.some(fkMatch(r, k))).map(k => { const adopt = !self && !r.g && c.a.find(x => !x.fk && x.p === k.p); const clash = !adopt && (self || c.a.some(x => x.n === k.n)); return { k, adopt, clash }; });
+    const name = `${c.p}_${p.p}_FK`;
+    askPop(`<b>FK 만들기 · 게이트 A</b><div class="caption" style="margin:6px 0">${hx(p.n)} → ${hx(c.n)} 관계의 FK <span class="mono">${hx(name)}</span>를 만듭니다. 자식 ${hx(c.n)}에:</div>
+      <ul class="caption" style="margin:0 0 8px;padding-left:16px">${plan.map(x => `<li>${x.adopt ? `기존 컬럼 <span class="mono">${hx(x.k.p)}</span>을 FK로 지정` : `컬럼 추가 <span class="mono">${hx((self ? 'UPR_' : x.clash ? 'ORG_' : '') + x.k.p)}</span> ${hx(x.k.t)}${x.clash ? ' (역할명 — 이름을 확인하세요)' : ''}`}</li>`).join('') || '<li>추가할 컬럼은 없고, 짝만 맞춥니다</li>'}</ul>
+      <div class="flex"><button class="btn sm" data-no>취소</button><span class="grow"></span><button class="btn sm primary" data-ok>FK 만들기</button></div>`, () => {
+      if (guard()) return; snap(); const idr = r.k === 'id';
+      if (!r.g && (self || multi || plan.some(x => x.clash))) ensureGroup(r, p, c, null);
+      plan.forEach(({ k, adopt, clash }) => {
+        if (adopt) { adopt.fk = 1; adopt.fkp = k.p; if (r.g) adopt.fkg = r.g; if (idr) { adopt.pk = 1; adopt.nn = 1; placeAttr(c, adopt); } return; }
+        const x = { n: (self ? '상위' : clash ? '원' : '') + k.n, p: (self ? 'UPR_' : clash ? 'ORG_' : '') + k.p, t: k.t, dom: domOf(k), fk: 1, fkp: k.p, pk: idr && !self ? 1 : 0, nn: idr && !self ? 1 : 0, s: clash || self ? 'comb' : k.s };
+        if (r.g) x.fkg = r.g; placeAttr(c, x, true); });
+      render(); const now = fkOf(r, E); toast(now.st === 'ok' ? `FK ${now.name}를 만들었습니다 · ${now.cols.join(', ')} → ${p.p}` : `FK를 아직 만들 수 없습니다 — ${now.why}`, now.st === 'ok' ? 'success' : 'danger', undoAction()); });
+  }
+  // a tree entity dropped on the canvas: same area → place in this view · another area → reference (12 §3.2)
+  window.addEventListener('dbm-tree-drag', ev => cv.classList.toggle('placing', !!(ev.detail && ev.detail.on) && cv.dataset.sys !== '1'));
+
   // ---- tree menu commands (12 §4.3 · T2): the same functions as the canvas and the attribute grid — same checks, same undo
   function runTreeCmd(d) {
+    // T3 commands that do not need an entity of this area
+    if (d.cmd === 'addref') { addRef(d.area, d.id); return; }
+    if (d.cmd === 'vopen') { setView(d.view); return; }
+    if (d.cmd === 'vnew') { vNew(); return; }
+    if (d.cmd === 'vren') { vRen(d.view); return; }
+    if (d.cmd === 'vdup') { vNew(d.view); return; }
+    if (d.cmd === 'delete' && d.kind === 'view') { vDel(d.view); return; }
     const e = d.id ? ent(d.id) : null;
     if (d.id && !e) { toast('이 객체를 찾지 못했습니다 — 이름이 바뀌었거나 삭제됐습니다', 'danger'); return; }
     // the row may be a frame behind: confirm the target by name, not just by position
@@ -1644,6 +1796,13 @@ window.pageInit = function () {
       case 'delete': if (attr) { pickEnt(); agDelAsk(e, d.ai); return; } if (guard()) return; closeGrid(); focusEnt(e.id); askDelete(e.id); return;
       case 'up': case 'down': pickEnt(); agMove(e, d.ai, d.cmd === 'up' ? -1 : 1); return;
       case 'pk': pickEnt(); agEdit(e, d.ai, 'pk', !attr.pk); return;
+      case 'place': placeIn(e.id); return;
+      case 'unplace': unplace(e.id); return;
+      case 'refresh': sel = e.id; showRP(); refreshRef(e); return;
+      case 'hideline': case 'mkfk': {
+        const ri = d.rel; if (!R[ri]) { toast('관계를 찾지 못했습니다', 'danger'); return; }
+        if (d.cmd === 'hideline') hideLine(ri); else { closeGrid(); if (curView !== 'all' && (!inView(ent(R[ri].f)) || !inView(ent(R[ri].t)))) setView('all'); makeFk(ri); }
+        return; }
       case 'ident': case 'delrel': case 'mn': {
         if (guard()) return; closeGrid(); const h = eg.querySelector(`.hit[data-r="${d.rel}"]`); if (!R[d.rel] || !h) { toast('관계를 찾지 못했습니다 — 이미 삭제됐을 수 있습니다', 'danger'); return; }
         h.dispatchEvent(new MouseEvent('click', { bubbles: true }));
@@ -1655,7 +1814,7 @@ window.pageInit = function () {
     }
     toast('이 명령은 이 화면에서 실행할 수 없습니다', 'info');
   }
-  window.addEventListener('dbm-tree-cmd', ev => { const d = ev.detail; if (d.area !== AREA || SNAP_BAD) return; ev.preventDefault(); runTreeCmd(d); });
+  window.addEventListener('dbm-tree-cmd', ev => { const d = ev.detail; if ((d.cmd === 'addref' ? d.to : d.area) !== AREA || SNAP_BAD) return; ev.preventDefault(); runTreeCmd(d); });
   // a command started from another screen's tree arrives as ?cmd= — run once, then drop it from the address
   // a command started from another screen's tree: a one-time token in this tab (never the address — a link or a bookmark does not edit),
   // fresh (15 s), same user, same area; targets are found again by name, never by position
