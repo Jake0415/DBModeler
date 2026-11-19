@@ -41,7 +41,7 @@
         <div class="ocard" data-k="erd"><b>ERD</b><div class="caption muted">논리·물리 ERD, 확정본 배치 + 표제란</div><div class="f"><span class="badge">pdf</span><span class="badge">png</span><span class="badge">svg</span></div></div>
         <div class="ocard" data-k="rev"><b>모델 검토 결과</b><div class="caption muted">명칭 중복·미입력·관계·물리 정보 점검 결과</div><div class="f"><span class="badge">xlsx</span></div></div>
         <div class="ocard" data-k="chg"><b>변경 이력</b><div class="caption muted">버전 간 엔터티·속성·관계 변경 내역 (v4 → v5)</div><div class="f"><span class="badge">xlsx</span><span class="badge">html</span></div></div>
-        <div class="ocard" data-k="ddl"><b>DDL 스크립트</b><div class="caption muted">게이트 B 통과 스크립트 — DDL 화면에서 만듭니다</div><div class="f"><a class="badge" href="ddl.html">DDL 화면 →</a></div></div>
+        <div class="ocard" data-k="ddl"><b>DDL 스크립트</b><div class="caption muted">게이트 B 통과 스크립트 — DDL 화면에서 만듭니다</div><div class="f"><a class="badge" href="ddl.html">DDL 화면</a></div></div>
       </div>
       <div class="section-t">최근 만든 산출물</div>
       <table class="tbl" style="border:1px solid var(--border);border-radius:8px;overflow:hidden"><thead><tr><th>일시</th><th>산출물</th><th>범위 · 기준</th><th>만든 사람</th><th></th></tr></thead><tbody id="recent">
@@ -63,7 +63,7 @@
         <label class="flex caption" style="margin-bottom:12px"><input type="checkbox" checked> 표지에 버전·확정일·승인자 넣기</label>
         <div class="section-t">미리보기</div>
         <div class="prev" id="o-prev"></div>
-        <div class="banner" style="margin-top:12px" id="o-note"><span>ℹ</span><div>공식 산출물은 <b>확정본</b>으로만 만듭니다. 작업 중 버전은 모든 시트에 ‘초안’ 표시가 붙습니다.</div></div>
+        <div class="banner" style="margin-top:12px" id="o-note"><i data-ic=info></i><div>공식 산출물은 <b>확정본</b>으로만 만듭니다. 작업 중 버전은 모든 시트에 ‘초안’ 표시가 붙습니다.</div></div>
       </div>
       <div class="rp-foot"><span class="caption muted" id="o-prog"></span><span class="grow"></span><button class="btn primary" id="o-go">만들기</button></div>
     </aside>
@@ -128,7 +128,7 @@ window.pageInit = function () {
       $('recent').insertAdjacentHTML('afterbegin', `<tr><td class="mono">${nowStr()}</td><td>${t}${cur === 'erd' && d ? ' (공식)' : ''}</td><td>${L.model.name} · ${d ? `v${d.ver} 확정본` : `v${L.model.ver} 초안`}</td><td>${ME.name}</td><td><a href="#" data-toast="${L.model.name}_${t}_${d ? 'v' + d.ver : '초안'}.${f} 내려받기" data-toast-type="info">내려받기</a></td></tr>`);
       toast(`${t}를 만들었습니다 — ${d ? `공식(v${d.ver} 확정본 · ${d.id})` : `초안(v${L.model.ver}, 모든 시트에 초안 표시)`} · .${f}`, 'success'); }, 1200);
   };
-  if (!done.length) $('o-note').innerHTML = '<span>ℹ</span><div>이 업무 영역에는 아직 <b>확정본</b>이 없어 공식 산출물을 만들 수 없습니다. 작업 중 버전은 모든 시트에 ‘초안’ 표시가 붙습니다.</div>';
+  if (!done.length) $('o-note').innerHTML = '<i data-ic=info></i><div>이 업무 영역에는 아직 <b>확정본</b>이 없어 공식 산출물을 만들 수 없습니다. 작업 중 버전은 모든 시트에 ‘초안’ 표시가 붙습니다.</div>';
   show(new URLSearchParams(location.search).get('k') || 'tbl');
 };
 </script>

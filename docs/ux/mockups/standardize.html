@@ -21,7 +21,7 @@
     <div class="actions"><span class="caption muted" id="analyzed"></span><button class="btn sm" id="reanalyze">다시 분석</button></div>
   </div>
   <div class="pad" style="padding-bottom:0" id="from-import" hidden>
-    <div class="banner info"><span>ℹ</span><div class="grow" id="from-import-t"></div></div>
+    <div class="banner info"><i data-ic=info></i><div class="grow" id="from-import-t"></div></div>
   </div>
   <div class="toolbar" id="chips"></div>
   <div class="page-body">
@@ -56,7 +56,7 @@
   <div class="overlay" id="mo-apply" role="dialog" aria-modal="true" aria-labelledby="ap-t"><div class="modal" style="width:620px"><div class="m-head"><h3 id="ap-t">표준 맞추기 적용</h3></div>
     <div class="m-body">
       <table class="tbl" id="ap-sum"></table>
-      <div class="banner warning" id="ap-phys" style="margin-top:12px"><span>!</span><div><b>물리명 변경은 운영 DB에 영향</b>이 있습니다. 모델에는 바로 반영되고, 운영 DB는 다음 DDL 출력에서 <b>변경분(ALTER)</b>으로 바뀝니다.</div></div>
+      <div class="banner warning" id="ap-phys" style="margin-top:12px"><i data-ic=warn></i><div><b>물리명 변경은 운영 DB에 영향</b>이 있습니다. 모델에는 바로 반영되고, 운영 DB는 다음 DDL 출력에서 <b>변경분(ALTER)</b>으로 바뀝니다.</div></div>
       <div class="field" style="margin-top:12px" id="ap-reqf"><label for="ap-why">용어 신청 사유 * <span class="faint">신청 묶음이 새 결재 문서 1건으로 만들어집니다(번호는 제출할 때 부여)</span></label><textarea class="input" id="ap-why" rows="2"></textarea></div>
       <div class="field" id="ap-exf"><label for="ap-exwhy">‘예외로 유지’ 행의 사유 * <span class="faint" id="ap-exlist"></span></label><textarea class="input" id="ap-exwhy" rows="2"></textarea></div>
       <div class="caption muted" id="ap-undo">모델 변경은 적용 뒤 토스트의 [실행 취소]로 한 번에 되돌릴 수 있습니다. <b>용어 신청 문서와 후보 등록은 되돌려도 남습니다</b>(결재함에서 회수, 후보 큐에서 반려). 선택하지 않은 행은 그대로 남습니다.</div>
@@ -115,7 +115,7 @@ window.pageInit = function () {
   });
   // local decisions made on this screen (예외·비대상) before [적용] — undoable, then handed to the model
   const local = {}; const handoff = { ex: [], na: [] };
-  const ST = { ok: ['b-success', '✓ 표준', 'ok', 'row-success'], okapply: ['b-success', '✓ 사전에 있음', 'comb', 'row-success'], comb: ['b-info', '＋ 조합 가능', 'comb', 'row-info'], req: ['b-info', '● 신청 중', 'req', 'row-info'], unreg: ['b-warning', '! 미등록 단어', 'unreg', 'row-warning'], ex: ['b-violet', '◆ 예외', 'ex', ''], na: ['', '– 비대상', 'na', 'row-mute'] };
+  const ST = { ok: ['b-success', '표준', 'ok', 'row-success'], okapply: ['b-success', '사전에 있음', 'comb', 'row-success'], comb: ['b-info', '조합 가능', 'comb', 'row-info'], req: ['b-info', '신청 중', 'req', 'row-info'], unreg: ['b-warning', '! 미등록 단어', 'unreg', 'row-warning'], ex: ['b-violet', '<i data-ic=flag data-s=12></i> 예외', 'ex', ''], na: ['', '– 비대상', 'na', 'row-mute'] };
   const effective = r => local[r.key] ? Object.assign({}, r, local[r.key]) : r;
   const procOpts = r => r.st === 'comb' ? (r.sus ? ['분해 확인 후 용어 신청', '예외로 유지'] : ['용어 신청 묶음', '예외로 유지']) : r.st === 'okapply' ? ['용어 적용'] : r.st === 'unreg' ? (r.dx[0] === 'W-PEND' ? ['선행 승인 대기', '예외로 유지'] : ['후보 등록', '예외로 유지']) : r.st === 'req' ? (r.toWait ? ['신청 중 용어로 맞춤', '예외로 유지'] : []) : [];
   const selectable = r => ['comb', 'okapply', 'unreg'].includes(r.st) || (r.st === 'req' && r.toWait);
@@ -125,17 +125,17 @@ window.pageInit = function () {
     // chip counts from the same rows (CL12-40)
     const cnt = k => rows.filter(r => ST[effective(r).st][2] === k).length;
     const cur = (document.querySelector('#chips .chip.on') || {}).dataset;
-    $('chips').innerHTML = [['', '전체', rows.length], ['ok', '✓ 표준', cnt('ok')], ['comb', '＋ 조합 가능', cnt('comb')], ['req', '● 신청 중', cnt('req')], ['unreg', '! 미등록 단어', cnt('unreg')], ['ex', '◆ 예외', cnt('ex')], ['na', '– 비대상', cnt('na')]].map(([k, l, n]) => `<span class="chip ${(cur ? cur.filter : '') === k ? 'on' : ''}" data-group="s" data-filter="${k}">${l} <span class="n">${n}</span></span>`).join('') + '<span class="grow"></span><span class="caption muted">작업본·사전·진행 중 신청으로 계산 · 상태별로 골라 한 번에 처리</span>';
+    $('chips').innerHTML = [['', '전체', rows.length], ['ok', '표준', cnt('ok')], ['comb', '조합 가능', cnt('comb')], ['req', '신청 중', cnt('req')], ['unreg', '! 미등록 단어', cnt('unreg')], ['ex', '<i data-ic=flag data-s=12></i> 예외', cnt('ex')], ['na', '– 비대상', cnt('na')]].map(([k, l, n]) => `<span class="chip ${(cur ? cur.filter : '') === k ? 'on' : ''}" data-group="s" data-filter="${k}">${l} <span class="n">${n}</span></span>`).join('') + '<span class="grow"></span><span class="caption muted">작업본·사전·진행 중 신청으로 계산 · 상태별로 골라 한 번에 처리</span>';
     if (cur && cur.filter) document.querySelectorAll('.scroll tbody tr').forEach(tr => { tr.style.display = (tr.dataset.f || '') === cur.filter ? '' : 'none'; });
     $('scope').textContent = `범위: 영역 전체 · 테이블 ${model.E.filter(e => !e.ref).length}개 · 속성 ${model.E.reduce((n, e) => n + (e.ref ? 0 : e.a.length), 0)}개`;
     sum();
   }
   // permission & lock: same judgement as the model screen
   const readOnly = !ME.has('modeler') || LK.state !== 'edit';
-  if (readOnly) document.querySelector('.page-header').insertAdjacentHTML('afterend', `<div class="pad" style="padding-bottom:0"><div class="banner info"><span>ℹ</span><div class="grow"><b>조회 전용</b> — ${!ME.has('modeler') ? '표준 맞추기는 모델러 역할만 할 수 있습니다.' : `${LK.doc ? LK.doc.id : ''} ${LK.state === 'review' ? '확정 결재 중' : '확정본'}이라 고칠 수 없습니다.`}</div><a class="btn sm" href="model.html?area=${AREA}">모델로</a></div></div>`);
+  if (readOnly) document.querySelector('.page-header').insertAdjacentHTML('afterend', `<div class="pad" style="padding-bottom:0"><div class="banner info"><i data-ic=info></i><div class="grow"><b>조회 전용</b> — ${!ME.has('modeler') ? '표준 맞추기는 모델러 역할만 할 수 있습니다.' : `${LK.doc ? LK.doc.id : ''} ${LK.state === 'review' ? '확정 결재 중' : '확정본'}이라 고칠 수 없습니다.`}</div><a class="btn sm" href="model.html?area=${AREA}">모델로</a></div></div>`);
   // redo after a rejected/withdrawn term request keeps its reason and shows the reviewer's comment
   const redoDoc = q.get('redo') ? getDocs().find(x => x.id === q.get('redo') && x.kind === 'std') : null;
-  if (redoDoc && ['rejected', 'withdrawn'].includes(redoDoc.step)) { const last = (redoDoc.hist || []).slice(-1)[0]; document.querySelector('.page-header').insertAdjacentHTML('afterend', `<div class="pad" style="padding-bottom:0"><div class="banner warning"><span>!</span><div class="grow"><b>${redoDoc.id} 보완해서 다시 적용</b> — ${STEP_NAME[redoDoc.step]}${last && last.why ? ` · 의견: ${last.why}` : ''}. 그때 신청한 용어: ${(redoDoc.items || []).map(i => i.name).join(', ')}. 다시 적용하면 <b>새 신청번호</b>가 만들어집니다.</div></div></div>`); $('ap-why').value = redoDoc.reason || ''; }
+  if (redoDoc && ['rejected', 'withdrawn'].includes(redoDoc.step)) { const last = (redoDoc.hist || []).slice(-1)[0]; document.querySelector('.page-header').insertAdjacentHTML('afterend', `<div class="pad" style="padding-bottom:0"><div class="banner warning"><i data-ic=warn></i><div class="grow"><b>${redoDoc.id} 보완해서 다시 적용</b> — ${STEP_NAME[redoDoc.step]}${last && last.why ? ` · 의견: ${last.why}` : ''}. 그때 신청한 용어: ${(redoDoc.items || []).map(i => i.name).join(', ')}. 다시 적용하면 <b>새 신청번호</b>가 만들어집니다.</div></div></div>`); $('ap-why').value = redoDoc.reason || ''; }
 
   const trs = () => [...document.querySelectorAll('#rows tr[data-i]')];
   const visible = tr => tr.style.display !== 'none';

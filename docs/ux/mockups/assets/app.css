@@ -509,3 +509,143 @@ a { color:var(--accent); } a:hover { color:var(--accent-hover); }
 .nav a.on svg { color:var(--fg); }
 .nav a.on .count { background:var(--ds-gray-100); color:var(--fg); }
 .al-step.cur .pt { border-color:var(--ds-blue-700); }
+
+/* ================= v10 Geist components (09-geist-components.md — measured on vercel.com/geist) ================= */
+:root { --ring:0 0 0 1px rgba(0,0,0,.08); --menu-shadow:0 0 0 1px rgba(0,0,0,.08),0 1px 1px rgba(0,0,0,.02),0 4px 8px -4px rgba(0,0,0,.04),0 16px 24px -8px rgba(0,0,0,.06); --modal-shadow:0 0 0 1px rgba(0,0,0,.08),0 32px 72px -12px rgba(0,0,0,.06),0 8px 32px -12px rgba(0,0,0,.08); }
+:root[data-theme="dark"] { --ring:0 0 0 1px rgba(255,255,255,.14); --menu-shadow:0 0 0 1px #2e2e2e,0 16px 24px -8px rgba(0,0,0,.5); --modal-shadow:0 0 0 1px #2e2e2e,0 32px 72px -12px rgba(0,0,0,.6); }
+/* buttons — 32 small (default here) · 36 medium · 40 large; secondary = white + 1px ring */
+.btn { height:32px; padding:0 10px; border:0; box-shadow:0 0 0 1px var(--ds-gray-400); background:var(--surface); color:var(--fg); font:500 14px/20px var(--font-sans); gap:6px; }
+.btn:hover { background:var(--ds-gray-100); border:0; }
+.btn.sm { height:28px; padding:0 8px; font-size:13px; }
+.btn.lg { height:40px; padding:0 14px; font-size:16px; border-radius:var(--r-lg); }
+.btn.primary { box-shadow:none; color:var(--on-ink); }
+.btn.ghost { box-shadow:none; background:transparent; }
+.btn.ghost:hover { background:var(--ds-gray-100); }
+.btn.danger { box-shadow:none; background:#da2f35; color:#f5f5f5; }
+.btn.danger:hover { background:#c4282e; }
+.btn[disabled], .btn.disabled { opacity:1; background:var(--ds-gray-100); color:var(--ds-gray-700); box-shadow:0 0 0 1px var(--ds-gray-400); cursor:not-allowed; }
+/* inputs & selects — ring instead of border */
+.input, select.input, textarea.input { border:0; box-shadow:var(--ring); border-radius:var(--r-md); font-size:14px; padding:0 12px; background:var(--surface); }
+select.input { padding-right:32px; }
+textarea.input { padding:8px 12px; }
+.input:hover, select.input:hover { box-shadow:0 0 0 1px var(--ds-gray-500); }
+.input:focus, select.input:focus, textarea.input:focus { outline:none; box-shadow:0 0 0 1px var(--ds-gray-1000), 0 0 0 4px rgba(0,0,0,.08); }
+.input.err { box-shadow:0 0 0 1px var(--ds-red-700); }
+.toolbar select.input { box-shadow:none; }
+.field > label { font-size:13px; color:var(--fg-2); }
+/* checkbox / radio — 16px, radius 4, 1px gray-700 border, checked = ink fill */
+input[type=checkbox], input[type=radio] { appearance:none; -webkit-appearance:none; width:16px; height:16px; margin:0; flex:0 0 16px; border:1px solid var(--ds-gray-700); border-radius:4px; background:var(--surface); display:inline-grid; place-items:center; cursor:pointer; vertical-align:-3px; }
+input[type=radio] { border-radius:50%; }
+input[type=checkbox]:checked { background:var(--ds-gray-1000) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E") center/12px no-repeat; border-color:var(--ds-gray-1000); }
+input[type=radio]:checked { border:5px solid var(--ds-gray-1000); }
+input[type=checkbox]:disabled, input[type=radio]:disabled { background-color:var(--ds-gray-100); border-color:var(--ds-gray-500); cursor:not-allowed; }
+input[type=checkbox]:focus-visible, input[type=radio]:focus-visible { outline:2px solid var(--focus); outline-offset:2px; }
+/* switch (on/off) */
+.toggle { width:32px; height:18px; border-radius:9px; background:var(--ds-gray-500); }
+.toggle.on { background:var(--ds-gray-1000); }
+/* segmented control (Geist Switch): 36px group, white + ring, 4px inset, selected item gray-100 */
+.seg { height:32px; padding:3px; gap:2px; background:var(--surface); box-shadow:var(--ring); border:0; border-radius:var(--r-md); align-items:stretch; }
+.seg button { border-radius:4px; padding:0 10px; font:500 12px var(--font-sans); color:var(--fg-2); background:transparent; box-shadow:none; }
+.seg button:hover { color:var(--fg); }
+.seg button.on { background:var(--ds-gray-100); color:var(--fg); box-shadow:none; font-weight:500; }
+/* filter / tab chips — pill, ring; selected = gray-100 (AI Gateway sub-nav) */
+.chip { height:32px; padding:0 12px; border:0; box-shadow:var(--ring); border-radius:var(--r-full); background:var(--surface); color:var(--fg-2); font:400 14px var(--font-sans); }
+.chip:hover { color:var(--fg); background:var(--ds-gray-100); }
+.chip.on { background:var(--ds-gray-100); color:var(--fg); box-shadow:none; border:0; font-weight:500; }
+.chip .n { color:var(--fg-3); opacity:1; }
+/* panel tabs — Geist underline tabs: 24 gap, 14px, active = ink + 2px */
+.tabs { gap:24px; border-bottom:0; box-shadow:inset 0 -1px 0 var(--ds-gray-400); }
+.tabs button { padding:12px 2px; font:400 14px/20px var(--font-sans); color:var(--fg-2); border-bottom:2px solid transparent; }
+.tabs button:hover { color:var(--fg); }
+.tabs button.on { color:var(--fg); border-bottom-color:var(--ds-gray-1000); font-weight:400; }
+/* badges — Geist subtle: 200 background + 900 text, pill; sm 20 / md 24 */
+.badge { height:22px; padding:0 10px; border-radius:var(--r-full); font:500 12px/16px var(--font-sans); background:var(--ds-gray-200); color:var(--fg); }
+.b-success { background:var(--ds-green-200); color:var(--ds-green-900); }
+.b-info { background:var(--ds-blue-200); color:var(--ds-blue-900); }
+.b-warning { background:var(--ds-amber-200); color:var(--ds-amber-900); }
+.b-danger { background:var(--ds-red-200); color:var(--ds-red-900); }
+.b-violet, .b-common { background:var(--ds-gray-200); color:var(--fg); }
+.b-org { background:transparent; box-shadow:inset 0 0 0 1px var(--ds-gray-500); color:var(--fg); border:0; }
+.tag { height:22px; padding:0 10px; }
+.tag.end { padding:0; }
+/* status dot */
+.sdot { display:inline-block; width:10px; height:10px; border-radius:50%; background:#eaeaea; vertical-align:0; margin-right:6px; }
+.sdot.run { background:#f5a623; } .sdot.err { background:#ee0000; } .sdot.ok { background:#50e3c2; }
+/* note (banner) — 1px border in the 400 step, text + icon in the 900 step; .fill = 200 background */
+.banner { border:1px solid var(--ds-gray-400); background:transparent; color:var(--fg-2); border-radius:var(--r-md); padding:7px 12px; gap:12px; font-size:14px; line-height:20px; align-items:flex-start; }
+.banner > .ic, .banner > i > .ic { margin-top:3px; width:14px; height:14px; }
+.banner.info { border-color:var(--ds-blue-400); color:var(--ds-blue-900); background:transparent; }
+.banner.success { border-color:var(--ds-green-400); color:var(--ds-green-900); background:transparent; }
+.banner.warning { border-color:var(--ds-amber-400); color:var(--ds-amber-900); background:transparent; }
+.banner.danger { border-color:var(--ds-red-400); color:var(--ds-red-900); background:transparent; }
+.banner.violet { border-color:var(--ds-gray-400); color:var(--fg-2); background:transparent; }
+.banner.fill.info { background:var(--ds-blue-200); } .banner.fill.danger { background:var(--ds-red-200); } .banner.fill.warning { background:var(--ds-amber-200); } .banner.fill.success { background:var(--ds-green-200); }
+.banner b { color:inherit; }
+/* menus / popovers — radius 12, 6 inset, layered shadow, 36px items */
+.pop-menu { border-radius:var(--r-xl); box-shadow:var(--menu-shadow); }
+.umenu { padding:6px; }
+.umenu .mi { min-height:36px; padding:0 8px; border-radius:var(--r-md); font-size:14px; }
+.umenu .mi:hover, .umenu .mi:focus-visible { background:var(--ds-gray-100); }
+/* modal — radius 12, large shadow, footer on background-200 with a top rule */
+.modal { width:520px; border-radius:var(--r-xl); box-shadow:var(--modal-shadow); overflow:hidden; }
+.modal .m-head { padding:24px 24px 0; } .modal h3 { font-size:20px; line-height:28px; font-weight:600; letter-spacing:-.3px; }
+.modal .m-body { padding:16px 24px 24px; }
+.modal .m-foot { padding:12px 16px; background:var(--ds-background-200); border-top:1px solid var(--ds-gray-400); }
+.overlay { background:rgba(0,0,0,.24); }
+/* toast — radius 12, menu shadow */
+.toast { border-radius:var(--r-xl); box-shadow:var(--menu-shadow); padding:12px 16px; }
+/* keyboard key */
+kbd, .gsearch kbd { height:20px; display:inline-flex; align-items:center; padding:0 6px; border:0; border-radius:4px; background:var(--surface); box-shadow:var(--ring); font:400 12px var(--font-sans); color:var(--fg-2); }
+/* empty state — bordered 8px box, centred, 54px icon tile */
+.empty { border:1px solid var(--ds-gray-400); border-radius:var(--r-lg); padding:48px 24px; gap:8px; text-align:center; align-items:center; }
+.empty .ill { width:54px; height:54px; border-radius:var(--r-lg); background:var(--surface); box-shadow:var(--ring); border:0; color:var(--fg-2); }
+.empty b, .empty h4 { font-size:16px; font-weight:500; color:var(--fg); }
+/* description list */
+.desc { display:grid; grid-template-columns:repeat(auto-fill, minmax(160px, 1fr)); gap:16px 24px; }
+.desc dt, .desc .k { font-size:14px; color:var(--fg-2); margin:0 0 4px; }
+.desc dd, .desc .v { font-size:14px; font-weight:500; color:var(--fg); margin:0; }
+/* inline icons inserted from <i data-ic> */
+i[data-ic] { font-style:normal; display:inline-flex; vertical-align:-3px; }
+.iconbtn { border-radius:var(--r-md); border:0; box-shadow:var(--ring); }
+.topbar .iconbtn { box-shadow:none; }
+
+/* ---- v10.1 fixes from cross review (review/*-d2.md) ---- */
+/* disabled: one visual (no double fade), no hover change */
+.btn[disabled], .btn.disabled, button[disabled].btn { opacity:1 !important; background:var(--ds-gray-100) !important; color:var(--ds-gray-700) !important; box-shadow:0 0 0 1px var(--ds-gray-400) !important; }
+/* selected row ≠ hover ≠ header */
+.tbl tr.sel td, .tbl tr.sel.click:hover td { background:var(--ds-blue-100); }
+:root[data-theme="dark"] .tbl tr.sel td { background:var(--ds-blue-200); }
+/* badges: Geist medium — 24px, 12px/500, 12px sides */
+.badge, .tag { height:24px; padding:0 12px; font-size:12px; line-height:16px; }
+.tag.end { padding:0; }
+/* destructive: secondary in panels (red text + ring), filled only for the final confirm inside a modal; white text = 4.7:1 */
+.btn.danger { background:var(--surface); color:var(--ds-red-900); box-shadow:0 0 0 1px var(--ds-red-400); }
+.btn.danger:hover { background:var(--ds-red-100); }
+.modal .btn.danger { background:#da2f35; color:#fff; box-shadow:none; }
+.modal .btn.danger:hover { background:#c4282e; }
+.btn.warn { background:#ff990a; color:#0a0a0a; box-shadow:none; }
+.btn.md { height:36px; padding:0 10px; }
+/* row colour stripes retired — state is the badge in the row */
+.tbl tr.row-success td:first-child, .tbl tr.row-info td:first-child, .tbl tr.row-warning td:first-child, .tbl tr.row-danger td:first-child { box-shadow:none; }
+/* checkbox: indeterminate dash; dark theme uses a dark check on the light fill; switch knob follows the theme */
+input[type=checkbox]:indeterminate { background:var(--ds-gray-1000) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round'%3E%3Cpath d='M6 12h12'/%3E%3C/svg%3E") center/12px no-repeat; border-color:var(--ds-gray-1000); }
+:root[data-theme="dark"] input[type=checkbox]:checked { background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230a0a0a' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E"); }
+:root[data-theme="dark"] input[type=checkbox]:indeterminate { background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230a0a0a' stroke-width='3' stroke-linecap='round'%3E%3Cpath d='M6 12h12'/%3E%3C/svg%3E"); }
+input[type=checkbox]:checked:disabled { background-color:var(--ds-gray-600); border-color:var(--ds-gray-600); }
+.toggle::after { background:var(--on-ink); }
+.toggle { background:var(--ds-gray-600); }
+/* focus that survives the filter-chip and menu styles */
+.toolbar select.input:focus-visible { outline:2px solid var(--focus); outline-offset:2px; }
+.umenu .mi:focus-visible, .pop-menu [role=menuitem]:focus-visible { box-shadow:0 0 0 2px var(--focus); }
+/* controls on white keep a visible edge (3:1 against the page) */
+.input, select.input, textarea.input { box-shadow:0 0 0 1px var(--ds-gray-700); } /* 3.2:1 field edge (WCAG 1.4.11) */
+.input:hover, select.input:hover { box-shadow:0 0 0 1px var(--ds-gray-900); }
+.input:focus, select.input:focus, textarea.input:focus { box-shadow:0 0 0 1px var(--ds-gray-1000), 0 0 0 4px rgba(0,0,0,.08); }
+.btn { box-shadow:0 0 0 1px var(--ds-gray-500); }
+.btn.primary, .btn.ghost, .modal .btn.danger, .btn.warn { box-shadow:none; }
+/* measured sizes: segmented 36 / 4 inset / 28 items · tabs 48 · kbd 22 · select right 36 */
+.seg { height:36px; padding:4px; } .seg button { height:28px; }
+.tabs button { padding:14px 2px; }
+kbd, .gsearch kbd { height:22px; font-size:13px; }
+select.input { padding-right:36px; }
+.sdot { background:var(--ds-gray-500); }

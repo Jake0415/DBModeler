@@ -30,7 +30,7 @@
     </div>
     <aside class="rpanel open" id="pn-cand">
       <div class="rp-head">
-        <div class="t"><span class="badge b-violet" id="cd-type">단어 후보</span><span class="badge" id="cd-st">대기</span><button class="iconbtn close" data-close="pn-cand" aria-label="닫기" style="width:28px;height:28px">×</button></div>
+        <div class="t"><span class="badge b-violet" id="cd-type">단어 후보</span><span class="badge" id="cd-st">대기</span><button class="iconbtn close" data-close="pn-cand" aria-label="닫기" style="width:28px;height:28px"><i data-ic=x></i></button></div>
         <h2 style="margin-top:8px" id="cd-name"></h2><div class="rp-sub" id="cd-abbr"></div>
       </div>
       <div class="rp-body" id="cd-body"></div>
@@ -74,9 +74,9 @@ window.pageInit = function () {
     $('cd-name').textContent = c.name; $('cd-abbr').textContent = c.abbr ? '제안 약어 ' + c.abbr : '제안 약어 없음 — 전환할 때 정합니다';
     // an open request that already covers this name is shown up front (CL12-24)
     const op = openItems().find(o => o.it.name === c.name && (o.it.act || '추가') === '추가' && o.doc !== c.doc);
-    $('cd-body').innerHTML = `${op ? `<div class="banner info"><span>●</span><div class="grow">이미 <b>${op.doc}</b>에서 같은 이름을 신청 중입니다. 새 신청 대신 이 신청에 연결하세요.</div><a class="btn sm" href="approvals.html?doc=${op.doc}">결재 보기</a></div>` : ''}
-      ${c.sim ? `<div class="banner warning" style="margin-top:8px"><span>!</span><div class="grow">비슷한 표준어가 있습니다: <b>${c.sim[0]}</b> <span class="mono">${c.sim[1]}</span> (${c.sim[2]}). 같은 뜻이면 기존 단어를 쓰도록 안내하세요.</div></div>` : ''}
-      ${c.closed ? `<div class="banner" style="margin-top:8px"><span>ℹ</span><div>${c.closed} — ${c.closedWhy || ''}</div></div>` : ''}
+    $('cd-body').innerHTML = `${op ? `<div class="banner info"><i data-ic=info></i><div class="grow">이미 <b>${op.doc}</b>에서 같은 이름을 신청 중입니다. 새 신청 대신 이 신청에 연결하세요.</div><a class="btn sm" href="approvals.html?doc=${op.doc}">결재 보기</a></div>` : ''}
+      ${c.sim ? `<div class="banner warning" style="margin-top:8px"><i data-ic=warn></i><div class="grow">비슷한 표준어가 있습니다: <b>${c.sim[0]}</b> <span class="mono">${c.sim[1]}</span> (${c.sim[2]}). 같은 뜻이면 기존 단어를 쓰도록 안내하세요.</div></div>` : ''}
+      ${c.closed ? `<div class="banner" style="margin-top:8px"><i data-ic=info></i><div>${c.closed} — ${c.closedWhy || ''}</div></div>` : ''}
       <div class="section-t">발생 위치 <span class="badge">${c.loc.length}</span></div>
       <table class="tbl"><thead><tr><th>위치</th><th>속성</th><th>등록</th></tr></thead><tbody>${c.loc.map(l => `<tr><td class="wrap">${locHref(l) ? `<a href="${locHref(l)}">${(getModels()[l.area] || {}).name} › ${l.ent}</a>` : `${l.sys || '다른 시스템'} › ${l.ent}`}</td><td>${l.attr}</td><td>${USERS[l.by] ? USERS[l.by].name : l.by}</td></tr>`).join('')}</tbody></table>
       <div class="section-t">처리 결과는 요청자 ${reqs(c).map(u => USERS[u] ? USERS[u].name : u).join(' · ')}에게 앱 알림으로 갑니다</div>`;

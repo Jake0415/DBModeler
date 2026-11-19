@@ -92,8 +92,8 @@
     <div class="set-row"><div class="l"><b>시스템 컬럼</b><span>물리 반영 때 모든 테이블에 붙는 공통 컬럼. 표준 용어로만 지정</span></div>
       <div>
         <table class="tbl" style="border:1px solid var(--border)"><thead><tr><th>#</th><th>용어</th><th>컬럼명</th><th>타입</th><th>필수</th><th>표준 검사</th></tr></thead><tbody>
-          <tr><td class="mono">1</td><td>등록일시</td><td class="mono">REG_DT</td><td class="mono">DATE</td><td>✓</td><td><span class="badge">비대상</span></td></tr>
-          <tr><td class="mono">2</td><td>등록자ID</td><td class="mono">REGR_ID</td><td class="mono">VARCHAR2(20)</td><td>✓</td><td><span class="badge">비대상</span></td></tr>
+          <tr><td class="mono">1</td><td>등록일시</td><td class="mono">REG_DT</td><td class="mono">DATE</td><td><i data-ic=check></i><span class="sr-only">필수</span></td><td><span class="badge">비대상</span></td></tr>
+          <tr><td class="mono">2</td><td>등록자ID</td><td class="mono">REGR_ID</td><td class="mono">VARCHAR2(20)</td><td><i data-ic=check></i><span class="sr-only">필수</span></td><td><span class="badge">비대상</span></td></tr>
           <tr><td class="mono">3</td><td>수정일시</td><td class="mono">MDFCN_DT</td><td class="mono">DATE</td><td></td><td><span class="badge">비대상</span></td></tr>
           <tr><td class="mono">4</td><td>수정자ID</td><td class="mono">MDFR_ID</td><td class="mono">VARCHAR2(20)</td><td></td><td><span class="badge">비대상</span></td></tr>
         </tbody></table>
@@ -101,7 +101,7 @@
       </div></div>
     <div class="set-row"><div class="l"><b>모델 확정 최종 승인</b><span>이 시스템의 업무 영역별 모델 확정에 기관 담당자 승인 추가</span></div><div id="fin-model"></div></div>
     <div class="set-row"><div class="l"><b>업무 영역</b></div><div><span class="badge">요구사항 · 프로젝트</span> <span class="badge">리스크</span> <button class="btn ghost sm">+ 추가</button></div></div>
-    <div class="banner warning" style="margin-top:16px"><span>!</span><div class="grow">DBMS나 명명 템플릿을 바꾸면 컬럼 <b class="mono">74</b>개의 타입·이름을 다시 점검해야 합니다. 저장 전에 영향 목록을 확인하세요.</div><button class="btn sm">영향 미리보기</button></div>
+    <div class="banner warning" style="margin-top:16px"><i data-ic=warn></i><div class="grow">DBMS나 명명 템플릿을 바꾸면 컬럼 <b class="mono">74</b>개의 타입·이름을 다시 점검해야 합니다. 저장 전에 영향 목록을 확인하세요.</div><button class="btn sm">영향 미리보기</button></div>
   </div>
 
   <!-- SC-42 users -->
@@ -117,15 +117,15 @@
 
   <!-- SC-43 rules -->
   <div class="pane set-wrap" data-pane="rules">
-    <div class="banner" style="margin-bottom:12px"><span>ℹ</span><div class="grow" id="pol-head"></div></div>
+    <div class="banner" style="margin-bottom:12px"><i data-ic=info></i><div class="grow" id="pol-head"></div></div>
     <div class="flex" style="margin-bottom:12px"><span class="chip on" data-group="rk">단어</span><span class="chip" data-group="rk">도메인</span><span class="chip" data-group="rk">용어</span><span class="chip" data-group="rk">코드</span></div>
     <table class="tbl" style="border:1px solid var(--border)"><thead><tr><th>필드</th><th>필수</th><th>최대 길이</th><th>허용 문자</th><th>위반 시</th></tr></thead><tbody>
-      <tr><td>단어명</td><td>✓</td><td class="mono">—</td><td>한글·영문·숫자</td><td><span class="badge b-danger">차단</span></td></tr>
-      <tr><td>단어 영문약어명</td><td>✓</td><td class="mono"><input class="input mono" id="pol-wd" style="width:60px;height:26px" value="6">자</td><td>영문 대문자·숫자</td><td><span class="badge b-danger">차단</span></td></tr>
+      <tr><td>단어명</td><td><i data-ic=check></i><span class="sr-only">필수</span></td><td class="mono">—</td><td>한글·영문·숫자</td><td><span class="badge b-danger">차단</span></td></tr>
+      <tr><td>단어 영문약어명</td><td><i data-ic=check></i><span class="sr-only">필수</span></td><td class="mono"><input class="input mono" id="pol-wd" style="width:60px;height:26px" value="6">자</td><td>영문 대문자·숫자</td><td><span class="badge b-danger">차단</span></td></tr>
       <tr><td>영문명</td><td></td><td class="mono">100자</td><td>영문·공백</td><td><span class="badge b-warning">경고</span></td></tr>
       <tr><td>설명</td><td></td><td class="mono">1000자</td><td>제한 없음</td><td><span class="badge b-warning">경고</span></td></tr>
     </tbody></table>
-    <div class="banner info" style="margin-top:12px"><span>ℹ</span><div>저장하면 <b>정책 버전이 하나 올라가고</b>, 이전 기준으로 검증한 엑셀 묶음은 업로드 이력에 ‘재검증 필요’로 표시됩니다. 진행 중인 신청은 승인 때 현재 기준으로 다시 검사합니다.</div></div>
+    <div class="banner info" style="margin-top:12px"><i data-ic=info></i><div>저장하면 <b>정책 버전이 하나 올라가고</b>, 이전 기준으로 검증한 엑셀 묶음은 업로드 이력에 ‘재검증 필요’로 표시됩니다. 진행 중인 신청은 승인 때 현재 기준으로 다시 검사합니다.</div></div>
     <div class="section-t">검수 기준 변경 이력</div><table class="tbl"><thead><tr><th>버전</th><th>시각</th><th>변경자</th><th>내용</th></tr></thead><tbody id="pol-hist"></tbody></table>
 
     <h3 style="font-size:15px;margin:28px 0 4px">표준 제외 규칙</h3>
@@ -182,12 +182,12 @@ window.pageInit = function () {
     const u = list.find(x => x.id === selU), self = u.id === ME.id;
     $('pn-user').innerHTML = `<div class="rp-head"><h2>${u.name}${self ? ' <span class="badge">나</span>' : ''}</h2><div class="rp-sub">${u.mail}</div></div>
       <div class="rp-body">
-        ${self ? '<div class="banner warning" style="margin-bottom:12px"><span>!</span><div><b>자기 역할은 스스로 바꿀 수 없습니다.</b> 다른 Admin에게 요청하세요. 시도하면 감사 로그에 남습니다.</div></div>' : ''}
-        ${reqOf(u.id) ? `<div class="banner info" style="margin-bottom:12px"><span>●</span><div class="grow"><b>역할 변경 요청</b> — ${reqOf(u.id).role} · ${reqOf(u.id).at}<br><span class="caption">${reqOf(u.id).why}</span></div><button class="btn sm" id="rq-deny">거절</button></div>` : ''}
+        ${self ? '<div class="banner warning" style="margin-bottom:12px"><i data-ic=warn></i><div><b>자기 역할은 스스로 바꿀 수 없습니다.</b> 다른 Admin에게 요청하세요. 시도하면 감사 로그에 남습니다.</div></div>' : ''}
+        ${reqOf(u.id) ? `<div class="banner info" style="margin-bottom:12px"><i data-ic=info></i><div class="grow"><b>역할 변경 요청</b> — ${reqOf(u.id).role} · ${reqOf(u.id).at}<br><span class="caption">${reqOf(u.id).why}</span></div><button class="btn sm" id="rq-deny">거절</button></div>` : ''}
         <div class="section-t">역할 <span class="caption muted">여러 개 선택 가능</span></div>
         ${Object.keys(ROLE_NAME).map(r => `<label class="flex" style="margin-bottom:6px"><input type="checkbox" data-role="${r}" ${u.roles.includes(r) ? 'checked' : ''} ${self ? 'disabled' : ''}> ${ROLE_NAME[r]} <span class="caption faint">${RD[r]}</span></label>`).join('')}
         <div class="section-t">담당 시스템</div>
-        <div>${u.systems.map(s => `<span class="badge">${s}${self ? '' : ' ×'}</span>`).join(' ')} ${self ? '' : '<button class="btn ghost sm">+ 추가</button>'}</div>
+        <div>${u.systems.map(s => `<span class="badge">${s}</span>`).join(' ')} ${self ? '' : '<button class="btn ghost sm">+ 추가</button>'}</div>
         <div class="section-t">계정</div>
         <div class="flex">${self ? '<span class="caption muted">본인 계정은 중지할 수 없습니다</span>' : '<button class="btn sm" data-toast="계정을 중지했습니다 — 진행 중 결재는 다른 담당자에게 넘어갑니다" data-toast-type="info">사용 중지</button>'}</div>
       </div>

@@ -58,7 +58,7 @@
     </div>
 
     <div class="pane set-wrap" data-pane="security">
-      <div class="set-row"><div class="l"><b>인증 방식</b></div><div><span class="badge b-success">사내 SSO</span> <span class="caption muted">비밀번호는 기관 통합 인증에서 바꿉니다</span> <a href="#" data-toast="기관 통합 인증 페이지를 엽니다(목업)" data-toast-type="info">비밀번호 변경 →</a>
+      <div class="set-row"><div class="l"><b>인증 방식</b></div><div><span class="badge b-success">사내 SSO</span> <span class="caption muted">비밀번호는 기관 통합 인증에서 바꿉니다</span> <a href="#" data-toast="기관 통합 인증 페이지를 엽니다(목업)" data-toast-type="info">비밀번호 변경</a>
         <div class="caption faint" style="margin-top:6px">SSO 미연동 기관은 여기서 비밀번호를 바꿉니다(자체 계정).</div></div></div>
       <div class="set-row"><div class="l"><b>접속 중인 세션</b><span>세션은 30분 동안 입력이 없으면 만료되고, 5분 전에 알립니다</span></div>
         <div><table class="tbl" style="border:1px solid var(--border)"><thead><tr><th>기기 · 브라우저</th><th>IP</th><th>마지막 활동</th><th></th></tr></thead><tbody>
@@ -93,7 +93,7 @@ window.pageInit = function () {
   $('p-sys').textContent = '담당 시스템: ' + ME.systems.join(', ');
   const docs = getDocs().filter(d => d.req === ME.id);
   const f = d => ({ live: 'ing', fix: 'fix', done: 'end' })[docGroup(d)];   // same rule as the user menu (CL14-03)
-  $('mine-body').innerHTML = docs.length ? docs.map(d => `<tr data-f="${f(d)}"><td class="mono">${d.id}</td><td><span class="badge ${d.type === 'model' ? 'b-violet' : ''}">${d.type === 'model' ? '모델 확정' : '사전 신청'}</span></td><td>${d.title}</td><td><span class="badge ${f(d) === 'fix' ? 'b-danger' : 'b-info'}">● ${STEP_NAME[d.step]}</span></td><td class="mono">${d.date}</td><td><a href="approvals.html?box=mine&doc=${d.id}">열기</a></td></tr>`).join('') : '<tr><td colspan="6" class="caption muted" style="text-align:center;padding:24px">신청한 문서가 없습니다</td></tr>';
+  $('mine-body').innerHTML = docs.length ? docs.map(d => `<tr data-f="${f(d)}"><td class="mono">${d.id}</td><td><span class="badge ${d.type === 'model' ? 'b-violet' : ''}">${d.type === 'model' ? '모델 확정' : '사전 신청'}</span></td><td>${d.title}</td><td><span class="badge ${f(d) === 'fix' ? 'b-danger' : 'b-info'}">${STEP_NAME[d.step]}</span></td><td class="mono">${d.date}</td><td><a href="approvals.html?box=mine&doc=${d.id}">열기</a></td></tr>`).join('') : '<tr><td colspan="6" class="caption muted" style="text-align:center;padding:24px">신청한 문서가 없습니다</td></tr>';
   // 내 작업 (CX13-15): computed from documents, batches, candidates and audit entries made by me
   const w = [];
   getDocs().filter(d => d.req === ME.id).forEach(d => w.push({ at: d.date, g: d.type === 'model' ? '모델 확정' : '사전 신청', t: `${d.title} <span class="mono caption">${d.id}</span>`, st: STEP_NAME[d.step] || d.step, href: `approvals.html?box=mine&doc=${d.id}` }));
@@ -115,7 +115,7 @@ window.pageInit = function () {
   const RQ = [['owner', '기관 담당자 추가'], ['da', 'DA 추가'], ['modeler', '모델러 추가'], ['admin', 'Admin 추가'], ['off', '역할 해제']].filter(([r]) => r === 'off' || !ME.roles.includes(r));
   $('rr-role').innerHTML = RQ.map(([r, n]) => `<option value="${r}">${n}</option>`).join('');
   const q = new URLSearchParams(location.search);
-  const drawRR = () => { const r = JSON.parse(dbmStore.get('dbm-rolereq-' + ME.id, 'null')); $('rr-state').innerHTML = r ? `<span class="badge b-info">● 요청 중</span> ${r.role} · ${r.at} · Admin 확인 대기 <a href="#" id="rr-cancel">요청 취소</a>` : ''; const c = $('rr-cancel'); if (c) c.onclick = e => { e.preventDefault(); dbmStore.set('dbm-rolereq-' + ME.id, 'null'); drawRR(); toast('역할 변경 요청을 취소했습니다', 'info'); }; };
+  const drawRR = () => { const r = JSON.parse(dbmStore.get('dbm-rolereq-' + ME.id, 'null')); $('rr-state').innerHTML = r ? `<span class="badge b-info">요청 중</span> ${r.role} · ${r.at} · Admin 확인 대기 <a href="#" id="rr-cancel">요청 취소</a>` : ''; const c = $('rr-cancel'); if (c) c.onclick = e => { e.preventDefault(); dbmStore.set('dbm-rolereq-' + ME.id, 'null'); drawRR(); toast('역할 변경 요청을 취소했습니다', 'info'); }; };
   drawRR();
   if (q.get('req')) { const need = q.get('req'); const m = RQ.find(([r]) => need.toLowerCase().includes(r) || (need.includes('DA') && r === 'da') || (need.includes('Admin') && r === 'admin') || (need.includes('기관') && r === 'owner')); if (m) $('rr-role').value = m[0]; $('rr-why').value = q.get('what') ? `${q.get('what')} 화면 사용 필요` : ''; $('rr-why').dispatchEvent(new Event('input', { bubbles: true })); setTimeout(() => document.querySelector('[data-open="mo-rolereq"]').click(), 0); }
   $('rr-go').onclick = () => { const why = $('rr-why').value.trim(); if (!why) return; const role = $('rr-role').selectedOptions[0].textContent; dbmStore.set('dbm-rolereq-' + ME.id, JSON.stringify({ role, key: $('rr-role').value, why, at: nowStr() })); pushNotif({ to: Object.values(USERS).filter(u => u.roles.includes('admin')).map(u => u.id), k: 'sys', t: `역할 변경 요청 — ${ME.name}: ${role}`, m: why, href: `settings.html?user=${ME.id}` }); document.getElementById('mo-rolereq').classList.remove('open'); drawRR(); toast(`${role}을(를) Admin에게 요청했습니다 — 처리되면 알림으로 알려 드립니다`, 'success'); };

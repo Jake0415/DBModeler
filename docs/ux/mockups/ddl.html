@@ -32,7 +32,7 @@
   <div class="page-body">
     <div class="main">
       <div class="pad" style="padding-bottom:8px">
-        <div class="banner warning" id="gb-banner"><span>!</span><div class="grow" id="gb-text"></div></div>
+        <div class="banner warning" id="gb-banner"><i data-ic=warn></i><div class="grow" id="gb-text"></div></div>
       </div>
       <div class="scroll" style="padding:0 20px 20px">
         <div class="codeblock" id="sql"></div>
@@ -40,7 +40,7 @@
       </div>
     </div>
     <aside class="rpanel wide" id="pn-cmp">
-      <div class="rp-head"><div class="t"><h2>DBMS 비교</h2><span class="badge">후속 차수 · 접속 필요</span><button class="iconbtn close" data-open="pn-gateb" data-close-others="pn-cmp" style="width:28px;height:28px">×</button></div>
+      <div class="rp-head"><div class="t"><h2>DBMS 비교</h2><span class="badge">후속 차수 · 접속 필요</span><button class="iconbtn close" data-open="pn-gateb" data-close-others="pn-cmp" style="width:28px;height:28px" aria-label="닫기"><i data-ic=x></i></button></div>
         <div class="caption muted" style="margin-top:4px">모델과 운영 DB의 실제 구조를 비교합니다(예시 값). 운영 DB 접속 정보는 시스템 설정에서 Admin이 등록합니다.</div></div>
       <div class="rp-body">
         <div class="field-row"><div class="field"><label>비교 대상</label><select class="input"><option>운영 · RQMS@prod (Oracle 19c)</option><option>개발 · RQMS@dev</option></select></div><div class="field"><label>기준 모델</label><select class="input"><option>v5 초안</option><option>v4 확정본</option></select></div></div>
@@ -107,8 +107,8 @@ window.pageInit = function () {
       const base = alter && prevDoc ? prevDoc.model.E.find(x => x.id === e.id) : null;
       if (alter && base) { e.a.forEach(a => { const o = base.a.find(x => x.n === a.n || x.n === a.orig); if (!o) lines.push(`<span class="kw">ALTER TABLE</span> RQMS.${esc(e.p)} <span class="kw">ADD</span> (${esc(a.p)} ${esc(a.t)});`); else if (o.p !== a.p) lines.push(`<span class="kw">ALTER TABLE</span> RQMS.${esc(e.p)} <span class="kw">RENAME COLUMN</span> ${esc(o.p)} <span class="kw">TO</span> ${esc(a.p)};`); else if (o.t !== a.t) lines.push(`<span class="kw">ALTER TABLE</span> RQMS.${esc(e.p)} <span class="kw">MODIFY</span> (${esc(a.p)} ${esc(a.t)});`); }); return; }
       lines.push(`<span class="kw">CREATE TABLE</span> RQMS.${esc(e.p)} (`);
-      e.a.filter(a => !a.edit).forEach(a => { const bad = a.p === '—' || !ascii(a.p); lines.push(`<span class="${bad ? 'warn' : ''}">  ${esc(a.p)}${' '.repeat(Math.max(1, 20 - a.p.length))}${esc(a.t)}${a.nn || a.pk ? ' <span class="kw">NOT NULL</span>' : ''},${bad ? ' <span class="cm">-- ⛔ 물리명 없음·무효</span>' : a.s === 'ex' ? ' <span class="cm">-- ⚠ 예외: ' + esc(a.exReason || '') + '</span>' : ''}</span>`); });
-      const pk = e.a.filter(a => a.pk).map(a => a.p); lines.push(pk.length ? `  <span class="kw">CONSTRAINT</span> ${esc(e.p)}_PK <span class="kw">PRIMARY KEY</span> (${pk.join(', ')})` : '  <span class="cm">-- ⚠ PK 없음</span>'); lines.push(');');
+      e.a.filter(a => !a.edit).forEach(a => { const bad = a.p === '—' || !ascii(a.p); lines.push(`<span class="${bad ? 'warn' : ''}">  ${esc(a.p)}${' '.repeat(Math.max(1, 20 - a.p.length))}${esc(a.t)}${a.nn || a.pk ? ' <span class="kw">NOT NULL</span>' : ''},${bad ? ' <span class="cm">-- ⛔ 물리명 없음·무효</span>' : a.s === 'ex' ? ' <span class="cm">-- <i data-ic=warn data-s=12></i> 예외: ' + esc(a.exReason || '') + '</span>' : ''}</span>`); });
+      const pk = e.a.filter(a => a.pk).map(a => a.p); lines.push(pk.length ? `  <span class="kw">CONSTRAINT</span> ${esc(e.p)}_PK <span class="kw">PRIMARY KEY</span> (${pk.join(', ')})` : '  <span class="cm">-- <i data-ic=warn data-s=12></i> PK 없음</span>'); lines.push(');');
       if (cm) { lines.push(`<span class="kw">COMMENT ON TABLE</span> RQMS.${esc(e.p)} <span class="kw">IS</span> <span class="str">'${esc(e.n)}'</span>;`); }
     });
     if (fk && !alter) src.R.forEach(r => { const p = ents.find(x => x.id === r.f), c = ents.find(x => x.id === r.t); if (!p || !c || !target.includes(c) || r.k === 'mn' || r.f === r.t) return; const cols = c.a.filter(a => a.fk && p.a.some(k => k.pk && k.p === a.p)).map(a => a.p); if (cols.length) lines.push(`<span class="kw">ALTER TABLE</span> RQMS.${esc(c.p)} <span class="kw">ADD CONSTRAINT</span> ${esc(c.p)}_${esc(p.p)}_FK <span class="kw">FOREIGN KEY</span> (${cols.join(', ')}) <span class="kw">REFERENCES</span> RQMS.${esc(p.p)} (${cols.join(', ')});`); });

@@ -455,6 +455,9 @@
     user: '<path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>'
   };
   window.icon = (n, s = 16) => `<svg class="ic${s === 12 ? ' s12' : ''}" width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${s === 12 ? 2 : 1.5}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${LU[n] || ''}</svg>`;
+  /* <i data-ic=name> placeholders (usable in any HTML or JS string) become SVG icons — also for content rendered later */
+  const fillIc = root => { if (!root || !root.querySelectorAll) return; root.querySelectorAll('i[data-ic]:not([data-done])').forEach(e => { e.innerHTML = icon(e.dataset.ic, e.dataset.s ? +e.dataset.s : 16); e.setAttribute('data-done', '1'); e.setAttribute('aria-hidden', 'true'); }); };
+  document.addEventListener('DOMContentLoaded', () => { fillIc(document); new MutationObserver(ms => ms.forEach(m => m.addedNodes.forEach(n => { if (n.nodeType === 1) fillIc(n.matches && n.matches('i[data-ic]') ? n.parentElement : n); }))).observe(document.body, { childList: true, subtree: true }); });
   /* status tag: ok · run · mine · warn · err · ex · end — one per row */
   const TAG_IC = { ex: 'flag' };   // Geist: no check / X icons inside status badges — colour + words
   window.tag = (kind, label) => `<span class="tag ${kind}">${TAG_IC[kind] ? icon(TAG_IC[kind], 12) : ''}${label}</span>`;

@@ -54,7 +54,7 @@ window.pageInit = function () {
   $('ma-go').onclick = () => { const nm = $('ma-name').value.trim(); if (!nm) return; if (liveRoleChanged()) { staleRoleToast(); return; } const id = addArea(nm, { E: [], R: [], M: [] }); flash(`업무 영역 ‘${nm}’을 만들었습니다 — v1 작업 버전`, 'success'); location.href = `model.html?area=${id}`; };
   document.getElementById('areas').innerHTML = ids.map(a => {
     const L = modelLock(a), c = getComp(a);
-    const st = L.state === 'review' ? `<span class="badge b-info">● 검토 중 · ${L.doc.id}</span>` : L.state === 'confirmed' ? '<span class="badge b-success">확정본</span>' : '<span class="badge">작업 중</span>';
+    const st = L.state === 'review' ? `<span class="badge b-info">검토 중 · ${L.doc.id}</span>` : L.state === 'confirmed' ? '<span class="badge b-success">확정본</span>' : '<span class="badge">작업 중</span>';
     return `<tr class="click" tabindex="0" onclick="location.href='model.html?area=${a}'"><td><b>${L.model.name}</b></td><td>${st}</td><td class="mono">v${L.model.ver} <span class="faint">${L.model.base ? `(v${L.model.base} 확정 기준)` : '(확정본 없음)'}</span></td><td class="num">${sizeOf(a)[0]}</td><td class="mono">${c ? c.rate + '%' : '—'}</td><td class="num">${c ? c.bad : '—'}</td><td class="num">${c ? c.exList.length : '—'}</td><td>${a === 'rq' ? '김모델' : a === 'risk' ? '박설계' : '—'}</td><td class="mono">${L.doc ? L.doc.date : '—'}</td></tr>`;
   }).join('');
 };

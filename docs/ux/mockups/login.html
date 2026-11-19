@@ -38,8 +38,8 @@ window.pageInit = function () {
   const from = q.get('from') || '';
   const safe = /^[a-z-]+\.html(\?[^#]*)?(#.*)?$/i.test(from) ? from : '';
   $('lg-who').innerHTML = Object.values(USERS).map(u => `<option value="${u.id}" ${u.id === ME.id ? 'selected' : ''}>${u.name} · ${u.roles.map(r => ROLE_NAME[r]).join('·')}</option>`).join('');
-  $('lg-banner').innerHTML = q.get('fail') ? '<div class="banner danger" style="margin-bottom:12px"><span>!</span><div>SSO 인증에 실패했습니다. 다시 시도하거나 기관 IT 지원(내선 1234)에 문의하세요. <span class="mono caption">오류 ID E-20261118-SSO1</span></div></div>'
-    : q.get('expired') ? `<div class="banner info" style="margin-bottom:12px"><span>ℹ</span><div>세션이 만료됐습니다. 편집 중이던 내용은 이 브라우저에 보관돼 있고, 로그인하면 <b>${safe ? ((SCREENS.find(s => s.file === safe.split(/[?#]/)[0]) || {}).name || safe.split('?')[0]).split('(')[0].trim() : '홈'}</b> 화면으로 돌아가 이어서 작업합니다.</div></div>` : '';
+  $('lg-banner').innerHTML = q.get('fail') ? '<div class="banner danger" style="margin-bottom:12px"><i data-ic=warn></i><div>SSO 인증에 실패했습니다. 다시 시도하거나 기관 IT 지원(내선 1234)에 문의하세요. <span class="mono caption">오류 ID E-20261118-SSO1</span></div></div>'
+    : q.get('expired') ? `<div class="banner info" style="margin-bottom:12px"><i data-ic=info></i><div>세션이 만료됐습니다. 편집 중이던 내용은 이 브라우저에 보관돼 있고, 로그인하면 <b>${safe ? ((SCREENS.find(s => s.file === safe.split(/[?#]/)[0]) || {}).name || safe.split('?')[0]).split('(')[0].trim() : '홈'}</b> 화면으로 돌아가 이어서 작업합니다.</div></div>` : '';
   $('lg-foot').textContent = `${PRODUCT.name} ${PRODUCT.version} · build ${PRODUCT.build} · ${PRODUCT.env}`;
   $('lg-go').onclick = () => { const u = $('lg-who').value; dbmStore.set('dbm-role', u); const start = { '결재함': 'approvals.html' }[dbmStore.get('dbm-start', '')] || 'home.html'; location.href = safe || start; };
 };

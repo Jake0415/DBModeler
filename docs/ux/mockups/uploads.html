@@ -47,22 +47,22 @@ window.pageInit = function () {
   }
   function panel() {
     const b = getBatches().find(x => x.id === sel); const p = $('pn-up');
-    if (b && !vis(b)) { p.innerHTML = `<div class="rp-head"><h2>${b.id}</h2></div><div class="rp-body"><div class="banner"><span>ℹ</span><div>다른 사람이 올린 업로드입니다 — 올린 사람과 DA만 볼 수 있습니다.</div></div></div>`; return; }
-    if (!b) { p.innerHTML = sel ? `<div class="rp-body"><div class="banner danger"><span>!</span><div><b>${sel}</b> 업로드를 찾을 수 없습니다.</div></div></div>` : ''; return; }
+    if (b && !vis(b)) { p.innerHTML = `<div class="rp-head"><h2>${b.id}</h2></div><div class="rp-body"><div class="banner"><i data-ic=info></i><div>다른 사람이 올린 업로드입니다 — 올린 사람과 DA만 볼 수 있습니다.</div></div></div>`; return; }
+    if (!b) { p.innerHTML = sel ? `<div class="rp-body"><div class="banner danger"><i data-ic=warn></i><div><b>${sel}</b> 업로드를 찾을 수 없습니다.</div></div></div>` : ''; return; }
     const st = stateOf(b), c = b.counts || {}, s = b.sub;
     const ds = (b.docs || []).map(docOf).filter(Boolean);
     const canResume = b.by === ME.id && ['임시 저장', '보완'].includes(st);
     p.innerHTML = `<div class="rp-head"><div class="t"><span class="mono">${b.id}</span><span class="badge">${b.kind}</span></div><h2 style="margin-top:6px">${b.file}</h2><div class="rp-sub">${USERS[b.by] ? USERS[b.by].name : ''} · ${b.at} · 기준본 ${b.baseline}</div></div>
       <div class="rp-body">
-        ${b.counts ? `<div class="section-t" style="margin-top:0">검증·비교 결과</div><table class="tbl"><tbody>${[['신규', c.new], ['변경', c.chg], ['동일', c.same], ['동일 내용 대기', c.waitSame], ['다른 내용 대기(보류)', c.waitDiff], ['버전 충돌', c.conflict], ['후보 선택', c.pick], ['선행 승인(보류)', c.pre], ['오류', c.err], ['파일에서 빠짐', c.missing]].map(([l, n]) => `<tr><td>${l}</td><td class="num mono">${n || 0}</td></tr>`).join('')}</tbody></table>` : `<div class="banner warning"><span>!</span><div>${b.note || '검증 결과 없음'}</div></div>`}
+        ${b.counts ? `<div class="section-t" style="margin-top:0">검증·비교 결과</div><table class="tbl"><tbody>${[['신규', c.new], ['변경', c.chg], ['동일', c.same], ['동일 내용 대기', c.waitSame], ['다른 내용 대기(보류)', c.waitDiff], ['버전 충돌', c.conflict], ['후보 선택', c.pick], ['선행 승인(보류)', c.pre], ['오류', c.err], ['파일에서 빠짐', c.missing]].map(([l, n]) => `<tr><td>${l}</td><td class="num mono">${n || 0}</td></tr>`).join('')}</tbody></table>` : `<div class="banner warning"><i data-ic=warn></i><div>${b.note || '검증 결과 없음'}</div></div>`}
         ${s ? `<div class="section-t">신청한 내용</div><div class="caption">신규 ${s.new} · 변경 ${s.chg + s.conflict} · 후보 ${s.pick} · 미사용 ${s.unuse} — 보류 ${s.hold} · 제외 ${s.ex}</div>` : ''}
         <div class="section-t">연결 신청</div>${ds.map(d => `<div class="flex" style="margin-bottom:4px"><a class="mono" href="approvals.html?doc=${d.id}">${d.id}</a><span class="badge ${d.step === 'done' ? 'b-success' : ['rejected', 'withdrawn'].includes(d.step) ? 'b-danger' : 'b-info'}">${STEP_NAME[d.step]}</span><span class="caption muted">${d.n}건</span></div>`).join('') || '<div class="caption muted">아직 신청하지 않았습니다</div>'}
-        ${expired(b) ? '<div class="banner warning" style="margin-top:8px"><span>!</span><div>검증 뒤 검수 기준 또는 사전이 바뀌었습니다 — [이어서 작업]에서 다시 검증해야 신청할 수 있습니다. 화면에서 고친 값은 유지됩니다.</div></div>' : ''}
-        ${st === '보완' ? '<div class="banner warning" style="margin-top:8px"><span>!</span><div>반려·회수됐습니다. 이어서 보정한 뒤 다시 신청하면 <b>새 신청번호</b>가 만들어지고 이 묶음에 연결됩니다.</div></div>' : ''}
-        ${(c.waitDiff || c.pre) && st !== '임시 저장' && !b.holdNext ? `<div class="banner" style="margin-top:8px"><span>●</span><div class="grow">보류 ${(c.waitDiff || 0) + (c.pre || 0)}행 — 앞선 신청이 끝나면 다시 검증해 <b>새 업로드 묶음</b>으로 이어서 신청합니다.</div>${b.by === ME.id ? '<button class="btn sm" id="hold-re">보류 행 다시 검증</button>' : ''}</div>` : ''}
+        ${expired(b) ? '<div class="banner warning" style="margin-top:8px"><i data-ic=warn></i><div>검증 뒤 검수 기준 또는 사전이 바뀌었습니다 — [이어서 작업]에서 다시 검증해야 신청할 수 있습니다. 화면에서 고친 값은 유지됩니다.</div></div>' : ''}
+        ${st === '보완' ? '<div class="banner warning" style="margin-top:8px"><i data-ic=warn></i><div>반려·회수됐습니다. 이어서 보정한 뒤 다시 신청하면 <b>새 신청번호</b>가 만들어지고 이 묶음에 연결됩니다.</div></div>' : ''}
+        ${(c.waitDiff || c.pre) && st !== '임시 저장' && !b.holdNext ? `<div class="banner" style="margin-top:8px"><i data-ic=info></i><div class="grow">보류 ${(c.waitDiff || 0) + (c.pre || 0)}행 — 앞선 신청이 끝나면 다시 검증해 <b>새 업로드 묶음</b>으로 이어서 신청합니다.</div>${b.by === ME.id ? '<button class="btn sm" id="hold-re">보류 행 다시 검증</button>' : ''}</div>` : ''}
         ${b.holdNext ? `<div class="caption" style="margin-top:8px">보류 행은 <a href="uploads.html?b=${b.holdNext}">${b.holdNext}</a>로 이어졌습니다.</div>` : ''}
         ${b.holdOf ? `<div class="caption" style="margin-top:8px">원 묶음 <a href="uploads.html?b=${b.holdOf}">${b.holdOf}</a>의 보류 행입니다.</div>` : ''}
-        ${b.roundTrip ? `<div class="caption" style="margin-top:8px;color:var(--success-deep)">✓ 왕복 완료 — 반영본 재업로드 ${b.roundTrip.rows}행 모두 동일 (${b.roundTrip.at})</div>` : ''}
+        ${b.roundTrip ? `<div class="caption" style="margin-top:8px;color:var(--success-deep)">왕복 완료 — 반영본 재업로드 ${b.roundTrip.rows}행 모두 동일 (${b.roundTrip.at})</div>` : ''}
       </div>
       <div class="rp-foot">${canResume ? `<a class="btn primary" href="excel-import.html?resume=${b.id}">이어서 작업</a>` : ''}<span class="grow"></span>
         <button class="btn sm" data-toast="원본_${b.file} 내려받기 — 열람 기록이 감사 로그에 남습니다" data-toast-type="info">원본</button>
