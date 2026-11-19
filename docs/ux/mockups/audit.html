@@ -27,7 +27,7 @@
     <span class="chip" data-group="ak" data-filter="purge">영구 삭제</span>
     <span class="grow"></span>
     <select class="input" id="aper" style="width:140px;" aria-label="기간"><option value="30">최근 30일</option><option value="365">최근 1년</option><option value="0" selected>전체</option></select>
-    <input class="input w-200" id="aq" placeholder="사용자·문서 번호" aria-label="사용자·문서 번호 검색">
+    <input class="input u-w-200" id="aq" placeholder="사용자·문서 번호" aria-label="사용자·문서 번호 검색">
   </div>
   <div class="listhead" id="alh"></div>
   <div class="scroll">
@@ -52,13 +52,13 @@ window.pageInit = function () {
   JSON.parse(dbmStore.get('dbm-purge', '[]')).forEach(p => rows.push({ at: key(p.at), who: p.who, f: 'purge', kind: '<span class="badge b-danger">영구 삭제</span>', tgt: `<span class="mono">${p.id}</span> ${p.name}`, what: `${p.kind || ''} 항목 영구 삭제 · 근거 ${p.doc !== '—' ? docLink(p.doc) : '—'}`, why: p.why || '' }));
   rows.push(...FIXED); rows.sort((a, b) => b.at.localeCompare(a.at));
   const ab = document.getElementById('ab');
-  ab.innerHTML = rows.map(r => `<tr data-f="${r.f}" data-at="${r.at}"><td class="mono">${r.at}</td><td>${r.who}</td><td>${r.kind}</td><td>${r.tgt}</td><td>${r.what}</td><td class="caption">${r.why}</td><td class="mono">${r.ip || '—'}</td></tr>`).join('') || '<tr class="er none"><td colspan="7" class="caption muted ta-c p-24">기록이 없습니다</td></tr>';
+  ab.innerHTML = rows.map(r => `<tr data-f="${r.f}" data-at="${r.at}"><td class="mono">${r.at}</td><td>${r.who}</td><td>${r.kind}</td><td>${r.tgt}</td><td>${r.what}</td><td class="caption">${r.why}</td><td class="mono">${r.ip || '—'}</td></tr>`).join('') || '<tr class="er none"><td colspan="7" class="caption muted u-tc u-p-24">기록이 없습니다</td></tr>';
   // chip + period + text search in one pass
   const aq = document.getElementById('aq'), per = document.getElementById('aper'); let kind = '';
   const since = () => { const n = +per.value; if (!n) return ''; const d = new Date(Date.now() - n * 864e5); return d.toISOString().slice(0, 10); };
   let shown = 0;
   const apply = () => { const v = aq.value.trim(), lo = since(); shown = 0; [...ab.rows].forEach(r => { if (!r.dataset.at) return; const ok = (!kind || (r.dataset.f || '').split(' ').includes(kind)) && (!v || r.innerText.includes(v)) && (!lo || r.dataset.at >= lo); r.style.display = ok ? '' : 'none'; if (ok) shown++; });
-    document.getElementById('alh').innerHTML = `<b class="t-fg">${shown}건</b>${kind || v || lo ? ' · 필터 적용' : ''} · 결재 이력·공표·설정·역할·영구 삭제를 한 곳에서 시간순으로`; };
+    document.getElementById('alh').innerHTML = `<b class="u-fg">${shown}건</b>${kind || v || lo ? ' · 필터 적용' : ''} · 결재 이력·공표·설정·역할·영구 삭제를 한 곳에서 시간순으로`; };
   aq.oninput = apply; per.onchange = apply;
   document.querySelector('.toolbar').addEventListener('click', e => { const c = e.target.closest('.chip[data-filter]'); if (!c) return; kind = c.dataset.filter; setTimeout(apply, 0); });
   document.getElementById('axl').onclick = () => toast(`감사 로그 ${shown}건을 엑셀로 내려받았습니다(현재 필터 기준)`, 'info');

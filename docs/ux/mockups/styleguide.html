@@ -35,23 +35,23 @@ window.pageInit = function () {
   const SW = (name, v) => `<div><i style="background:var(${v})"></i>${name}<code>${v}</code></div>`;
   document.getElementById('sg').innerHTML = `<div class="sg"><div>
     <section class="sec"><div class="sec-h"><h2>브랜드 · 틀</h2><span class="end muted">01 v2 §5</span></div>
-      <div class="p-16 d-flex col gap-16">
-        <div class="flex gap-24" style="align-items:flex-end">${[16, 20, 32].map(s => `<div class="d-flex col ai-c gap-6">${MARK(s)}<span class="caption mono muted">${s}</span></div>`).join('')}
-          <div class="brand ml-auto">${MARK(20)}<span class="wm">NeoDB</span></div></div>
-        <div class="caption lh-20">상단 바 48 · 페이지 헤더 56 · 모델 트리 264(내용 맞춤, 접으면 56, 홈 · 모델 계열만) · 우측 패널 420(1600~1919 380, 넓히기 560)</div>
+      <div class="u-p-16 u-flex u-col u-gap-16">
+        <div class="flex u-gap-24" style="align-items:flex-end">${[16, 20, 32].map(s => `<div class="u-flex u-col u-ai-c u-gap-8">${MARK(s)}<span class="caption mono muted">${s}</span></div>`).join('')}
+          <div class="brand u-ml-auto">${MARK(20)}<span class="wm">NeoDB</span></div></div>
+        <div class="caption u-lh-20">상단 바 48 · 페이지 헤더 56 · 모델 트리 264(내용 맞춤, 접으면 56, 홈 · 모델 계열만) · 우측 패널 420(1600~1919 380, 넓히기 560)</div>
       </div></section>
 
     <section class="sec"><div class="sec-h"><h2>색</h2><span class="end muted">화면에 hex 금지 — 토큰만</span></div>
       <div class="sw">${[['background-100', '--ds-background-100'], ['background-200 틀', '--ds-background-200'], ['gray-100 hover', '--ds-gray-100'], ['gray-200 배지', '--ds-gray-200'], ['gray-400 선', '--ds-gray-400'], ['gray-500 강조 선', '--ds-gray-500'], ['gray-900 보조 글자', '--ds-gray-900'], ['gray-1000 글자 · 잉크', '--ds-gray-1000'], ['blue-700 포커스', '--ds-blue-700'], ['blue-900 링크 · 정보', '--ds-blue-900'], ['blue-100 선택 행', '--ds-blue-100'], ['green-900 성공', '--ds-green-900'], ['green-200', '--ds-green-200'], ['amber-900 경고', '--ds-amber-900'], ['amber-200', '--ds-amber-200'], ['red-900 오류', '--ds-red-900'], ['red-200', '--ds-red-200'], ['red-400 위험 선', '--ds-red-400']].map(([n, v]) => SW(n, v)).join('')}</div></section>
 
     <section class="sec"><div class="sec-h"><h2>글자</h2><span class="end muted">굵기 400 · 500 · 600만 · 최소 12px</span></div>
-      ${[['화면 제목', '<span style="font:600 20px/28px var(--font-sans);letter-spacing:-.3px">표준 맞추기</span>', '20 / 600 / 28'], ['패널 · 모달 제목', '<span style="font:600 16px/24px var(--font-sans)">사원기본</span>', '16 / 600 / 24'], ['묶음 제목', '<b>결재 흐름</b>', '14 / 600 / 20'], ['본문 · 표 · 버튼', '사원번호를 기준으로 급여를 계산합니다', '14 / 400 / 20'], ['메타 · 배지', '<span class="caption muted">분석 11/20 08:03 · 사전 기준 12차</span>', '12 / 400 / 16'], ['코드 · 물리명', '<span class="mono">EMP_M.EMP_NO VARCHAR2(10)</span>', '13 Geist Mono']].map(([a, b, c]) => `<div class="type-row"><span class="caption muted">${a}</span><span>${b}</span><span class="caption mono muted">${c}</span></div>`).join('')}</section>
+      ${[['화면 제목', '<div class="page-header u-p-0" style="height:auto;border:0;background:none"><h1>표준 맞추기</h1></div>', '20 / 600 / 28 · .page-header h1'], ['패널 · 모달 제목', '<div class="rp-head u-p-0" style="border:0"><h2>사원기본</h2></div>', '16 / 600 / 24 · .rp-head h2'], ['묶음 제목', '<b>결재 흐름</b>', '14 / 600 / 20'], ['본문 · 표 · 버튼', '사원번호를 기준으로 급여를 계산합니다', '14 / 400 / 20'], ['메타 · 배지', '<span class="caption muted">분석 11/20 08:03 · 사전 기준 12차</span>', '12 / 400 / 16'], ['코드 · 물리명', '<span class="mono">EMP_M.EMP_NO VARCHAR2(10)</span>', '13 Geist Mono']].map(([a, b, c]) => `<div class="type-row"><span class="caption muted">${a}</span><span>${b}</span><span class="caption mono muted">${c}</span></div>`).join('')}</section>
 
     <section class="sec"><div class="sec-h"><h2>상태 표시</h2><span class="end muted">배지 하나 · 한 행에 하나 (01 v2 §2.3)</span></div>
       <table class="tbl box"><thead><tr><th>의미</th><th>모양</th><th>코드</th></tr></thead><tbody>
         <tr><td>표준 · 승인 · 완료</td><td>${tag('ok', '완료')} ${tag('ok', '표준')}</td><td class="mono">tag('ok') · .b-success</td></tr>
-        <tr><td>진행 중 · 정보 · 신청 중</td><td>${tag('run', 'DA 승인')} <span class="badge b-info">조합 가능</span></td><td class="mono">tag('run') · .b-info</td></tr>
-        <tr><td>내 차례</td><td>${tag('mine', 'DA 승인 · 내 차례')}</td><td class="mono">tag('mine') · .b-mine</td></tr>
+        <tr><td>진행 중 · 대기</td><td>${tag('run', 'DA 승인')} ${tag('run', '검토 중')}</td><td class="mono">tag('run') · .badge</td></tr>
+        <tr><td>내 차례 · 정보 · 조합 가능</td><td>${tag('mine', 'DA 승인 · 내 차례')} <span class="badge b-info">조합 가능</span></td><td class="mono">tag('mine') · .b-info</td></tr>
         <tr><td>경고 · 미등록 · 임박</td><td>${tag('warn', '2일 · 임박')} <span class="badge b-warning">미등록</span></td><td class="mono">tag('warn') · .b-warning</td></tr>
         <tr><td>오류 · 반려 · 기한 넘김</td><td>${tag('err', '반려됨')} ${tag('err', '4일 · 기한 넘김')}</td><td class="mono">tag('err') · .b-danger</td></tr>
         <tr><td>예외 (사유 있음)</td><td>${tag('ex', '예외 2')}</td><td class="mono">tag('ex') · .b-ex</td></tr>
@@ -65,15 +65,15 @@ window.pageInit = function () {
         <tr class="click"><td>후보 큐 <span class="sub2 mono">CAND_Q</span></td><td class="r num">2</td><td class="r num">1일</td><td></td><td class="r"><a href="candidates.html">후보 큐</a></td></tr>
         <tr class="click sel"><td>선택된 행</td><td class="r num">1</td><td class="r num">0일</td><td>${tag('mine', 'DA 승인 · 내 차례')}</td><td class="r"><a href="#">열기</a></td></tr>
       </tbody></table>
-      <div class="caption muted mt-6">스크롤 칸을 채우는 목록 표는 네모(선만), 섹션 · 카드 안 표는 8px 상자(.box). 상태는 배지로만(행 색 막대 없음).</div></section>
+      <div class="caption muted u-mt-8">스크롤 칸을 채우는 목록 표는 네모(선만), 섹션 · 카드 안 표는 8px 상자(.box). 상태는 배지로만(행 색 막대 없음).</div></section>
 
     <section class="sec"><div class="sec-h"><h2>지표</h2></div>
       <table class="tbl box ledger"><thead><tr><th>항목</th><th class="r">값</th><th>기준</th><th class="r">차이</th></tr></thead><tbody>
         <tr><td>표준 준수율</td><td class="v">88%</td><td class="muted">목표 90%</td><td class="gap bad">−2%p</td></tr>
         <tr><td>결재 평균 처리</td><td class="v">0.2일</td><td class="muted">기한 3일</td><td class="gap ok">안</td></tr>
       </tbody></table>
-      <div class="mline mt-16"><span><b>92%</b>준수율</span><span><b>3</b>미준수</span><span><b>2</b>예외</span><span><b>14</b>v3 대비 변경</span></div>
-      <div class="mw-560"><div class="hbar"><span>DA 승인 대기</span><span class="t"><i style="width:60%"></i></span><span class="v">6 · 2.5일</span></div><div class="hbar"><span>최종 승인 대기</span><span class="t"><i class="hi" style="width:20%"></i></span><span class="v">1 · 3.0일</span></div></div></section>
+      <div class="mline u-mt-16"><span><b>92%</b>준수율</span><span><b>3</b>미준수</span><span><b>2</b>예외</span><span><b>14</b>v3 대비 변경</span></div>
+      <div class="u-mw-560"><div class="hbar"><span>DA 승인 대기</span><span class="t"><i style="width:60%"></i></span><span class="v">6 · 2.5일</span></div><div class="hbar"><span>최종 승인 대기</span><span class="t"><i class="hi" style="width:20%"></i></span><span class="v">1 · 3.0일</span></div></div></section>
   </div>
   <div>
     <section class="sec"><div class="sec-h"><h2>버튼</h2><span class="end muted">32 기본 · 28 작게 · 40 크게 · 주 버튼은 화면당 1개</span></div>
@@ -88,8 +88,8 @@ window.pageInit = function () {
 
     <section class="sec"><div class="sec-h"><h2>탭 · 전환 · 거르기</h2><span class="end muted">쓰임 3종 (01 v2 §6.3)</span></div>
       <div class="caption muted">구역 전환 = 밑줄 탭</div>
-      <div class="tabs mt-4" style="margin-left:0;margin-right:0;padding:0"><button class="on">속성 <span class="n">7</span></button><button>보안</button><button>관계 <span class="n">2</span></button></div>
-      <div class="caption muted mt-12">같은 목록의 보기 전환 = 세그먼트</div>
+      <div class="tabs u-mt-4" style="margin-left:0;margin-right:0;padding:0"><button class="on">속성 <span class="n">7</span></button><button>보안</button><button>관계 <span class="n">2</span></button></div>
+      <div class="caption muted u-mt-12">같은 목록의 보기 전환 = 세그먼트</div>
       <div class="row-demo"><div class="seg"><button class="on">대기함 <span class="n">6</span></button><button>내 신청 <span class="n">3</span></button><button>참조함 <span class="n">1</span></button></div><div class="seg"><button class="on">논리</button><button>물리</button></div></div>
       <div class="caption muted">목록 거르기 = 칩 · 점선 거르기 칸</div>
       <div class="row-demo"><span class="chip on">대기 <span class="n">3</span></span><span class="chip">처리됨 <span class="n">12</span></span><span class="fchip">유형 사전 신청</span><span class="fchip">단계 DA 승인</span></div></section>
@@ -97,13 +97,13 @@ window.pageInit = function () {
     <section class="sec"><div class="sec-h"><h2>머리줄</h2></div>
       <div class="caption muted">모델 계열 — 경로 / 제목 · 상태 배지 1 · 보조 ≤2 · ⋯ · 주 행동 1</div>
       <div class="page-header demo-hdr"><nav class="crumbs" aria-label="경로"><a href="#">통합ERP</a><span class="sl">/</span><a href="#">인사관리</a><span class="sl">/</span></nav><h1>표준 맞추기</h1><span class="badge">v5</span><div class="actions"><button class="btn sm">보조</button><button class="iconbtn sm" aria-label="더 보기"><i data-ic=more></i></button><button class="btn sm primary">주 행동</button></div></div>
-      <div class="caption muted mt-12">상단 메뉴 화면 — 제목만. 사전 하위 화면은 탭 줄로 묶음</div>
+      <div class="caption muted u-mt-12">상단 메뉴 화면 — 제목만. 사전 하위 화면은 탭 줄로 묶음</div>
       <div class="demo-box"><div class="page-header demo-hdr" style="padding:0 16px"><h1>후보 큐</h1><div class="actions"><button class="btn sm primary">단어 신청으로 전환</button></div></div><nav class="tabs dtabs" aria-label="사전 화면 예"><a href="#">통합 검색</a><a href="#">엑셀 가져오기</a><a href="#">업로드 이력</a><a class="on" href="#">후보 큐</a><a href="#">변경 내역</a></nav></div></section>
 
     <section class="sec"><div class="sec-h"><h2>안내 · 결재선</h2></div>
       <div class="banner danger">${icon('err')}<div class="grow">연결 용어 신청 REQ-2026-0013이 진행 중입니다. 완료해야 확정할 수 있습니다.</div></div>
-      <div class="banner info mt-8">${icon('info')}<div class="grow">v5는 결재 중이라 확정본 v4를 조회 전용으로 보여 줍니다.</div></div>
-      <div class="approval-line mt-12"><div class="al-step done"><span class="pt">${icon('check', 12)}</span><div><b>신청</b><div class="caption muted">김모델 · 11/17</div></div></div><div class="al-step cur"><span class="pt"></span><div><b>DA 승인</b><div class="caption muted">내 차례</div></div></div><div class="al-step rej"><span class="pt">${icon('x', 12)}</span><div><b>반려 예</b><div class="caption muted">반려된 단계</div></div></div><div class="al-step skip"><span class="pt"></span><div><b>최종 승인 · 사용 안 함</b><div class="caption muted">설정으로 생략된 단계</div></div></div></div></section>
+      <div class="banner info u-mt-8">${icon('info')}<div class="grow">v5는 결재 중이라 확정본 v4를 조회 전용으로 보여 줍니다.</div></div>
+      <div class="approval-line u-mt-12"><div class="al-step done"><span class="pt">${icon('check', 12)}</span><div><b>신청</b><div class="caption muted">김모델 · 11/17</div></div></div><div class="al-step cur"><span class="pt"></span><div><b>DA 승인</b><div class="caption muted">내 차례</div></div></div><div class="al-step rej"><span class="pt">${icon('x', 12)}</span><div><b>반려 예</b><div class="caption muted">반려된 단계</div></div></div><div class="al-step skip"><span class="pt"></span><div><b>최종 승인 · 사용 안 함</b><div class="caption muted">설정으로 생략된 단계</div></div></div></div></section>
 
     <section class="sec"><div class="sec-h"><h2>아이콘</h2><span class="end muted">Lucide 한 세트 · 문자 아이콘 금지</span></div>
       <div class="icons">${['check', 'clock', 'warn', 'err', 'info', 'flag', 'x', 'search', 'right', 'down', 'up', 'ext', 'compare', 'filter', 'download', 'upload', 'history', 'lock', 'file', 'table', 'user', 'pen', 'plus', 'more', 'trash', 'pointer', 'moveh', 'db', 'col', 'key', 'link', 'flow', 'layers', 'term', 'tag', 'shield', 'list', 'help'].map(n => `<span>${icon(n)}${n}</span>`).join('')}</div></section>
@@ -111,14 +111,15 @@ window.pageInit = function () {
     <section class="sec"><div class="sec-h"><h2>진행 · 저장 · 빈 상태</h2></div>
       <div class="row-demo"><button class="btn primary loading">승인</button><button class="btn loading">다시 분석</button><span class="savest"><span class="sdot ok"></span>저장됨 · 14:32</span><span class="savest err"><span class="sdot err"></span>저장 안 됨 · 최신본 확인</span></div>
       <table class="tbl box"><tbody>${[60, 80, 45].map(w => `<tr class="skel-row"><td><span class="skel" style="width:${w}%"></span></td><td><span class="skel" style="width:${100 - w / 2}%"></span></td></tr>`).join('')}</tbody></table>
-      <table class="tbl box mt-8"><tbody><tr class="er none"><td colspan="5"><span class="et">조건에 맞는 문서가 없습니다</span>필터를 지우고 다시 찾아 보세요.</td></tr></tbody></table>
-      <table class="tbl box mt-8"><tbody><tr class="er first"><td colspan="5"><span class="et">아직 업로드가 없습니다</span>처음 할 일을 하나만 제안합니다.<br><button class="btn primary sm">엑셀 가져오기</button></td></tr></tbody></table></section>
+      <table class="tbl box u-mt-8"><tbody><tr class="er none"><td colspan="5"><span class="et">조건에 맞는 문서가 없습니다</span>필터를 지우고 다시 찾아 보세요.</td></tr></tbody></table>
+      <table class="tbl box u-mt-8"><tbody><tr class="er first"><td colspan="5"><span class="et">아직 업로드가 없습니다</span>처음 할 일을 하나만 제안합니다.<br><button class="btn primary sm">엑셀 가져오기</button></td></tr></tbody></table></section>
 
+    <section class="sec"><div class="sec-h"><h2>배너 · 토스트 · 모달</h2></div><div class="banner u-mb-8">${icon('info')}<div class="grow">회색 — 일반 안내(바탕 없음)</div></div><div class="banner info u-mb-8">${icon('info')}<div class="grow">정보 — 결재 중이라 확정본을 보여 줍니다</div></div><div class="banner success u-mb-8">${icon('check')}<div class="grow">성공 — 게이트 B 통과</div></div><div class="banner warning u-mb-8">${icon('warn')}<div class="grow">경고 — 미준수 2건이 남았습니다</div></div><div class="banner danger fill u-mb-8">${icon('err')}<div class="grow">오류(강조 .fill) — 저장 안 됨 · 최신본 확인</div></div><div class="toast" style="animation:none;max-width:none">${icon('check')}<div class="tx">토스트 — 용어를 적용했습니다</div><button class="act">실행 취소</button></div><div class="modal u-mt-12" style="width:auto"><div class="m-head"><h3 class="sm">모달 — 되돌릴 수 없는 확인만</h3></div><div class="m-body">영구 삭제 · 반려 확정 · 파일 선택에만 씁니다.</div><div class="m-foot"><button class="btn">취소</button><button class="btn danger">영구 삭제</button></div></div></section>
     <section class="sec"><div class="sec-h"><h2>쓰지 않는 것</h2></div>
       <ol class="rule-list"><li>문자 · 이모지 아이콘(↖ ▭ ⟜ ↔ ✓ ★), 보라 · 그라데이션 · 발광</li><li>v8 꼬리표(.tag) · 알약 탭(.utabs) · .tbl.plain — 배지 · 세그먼트 · .tbl로</li><li>굵기 700, 12px보다 작은 글자, 버튼 높이 32 · 28 · 40 밖의 크기</li><li>화면에 직접 쓴 색 · 인라인 여백 — 토큰과 유틸리티(.mt-8 등)로</li><li>상태 배지 안의 체크 · X, 한 행에 배지 둘 이상, 표 행 색 막대</li><li>상단 메뉴 화면의 경로, 화면당 주 버튼 둘 이상</li><li>상자 속 상자, 같은 크기 타일 격자, 장식 숫자</li></ol></section>
   </div></div>`;
   const syncD = () => { const v = document.documentElement.dataset.density || 'default'; document.querySelectorAll('#sg-density button').forEach(b => { b.classList.toggle('on', b.dataset.v === v); b.setAttribute('aria-pressed', b.dataset.v === v); }); };
-  document.querySelectorAll('#sg-density button').forEach(b => b.onclick = () => { setDensity(b.dataset.v); syncD(); });
+  document.querySelectorAll('#sg-density button').forEach(b => b.onclick = () => { document.documentElement.dataset.density = b.dataset.v; syncD(); });   // preview only — the saved setting lives in 마이페이지
   syncD();
 };
 </script>

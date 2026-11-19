@@ -26,7 +26,7 @@
     <button class="btn sm" disabled title="W2: 두 기준 시각 비교(History로 그 시점 재구성)">기준 시각 비교 (W2)</button>
   </div>
   <div class="listhead" id="lh" aria-live="polite"></div>
-  <div class="scroll flex-1">
+  <div class="scroll u-flex-1">
     <table class="tbl"><thead><tr><th>반영 시각</th><th>항목</th><th>종류</th><th>변경</th><th>반영 구분</th><th>버전</th><th>내용</th><th>신청</th><th>처리</th><th>공표</th></tr></thead><tbody id="cb"></tbody></table>
   </div>
 </div>
@@ -42,7 +42,7 @@ window.pageInit = function () {
   // DA: publish from the unpublished list (CX12-08 · CL12-14) · DA/Admin: permanent-delete log (30 v1.2 ⑦)
   const unpub = getChanges().filter(c => !c.pub && c.act !== '공표').length;
   if (can('dict.publish')) { $('b-pub').hidden = false; $('b-pub').textContent = `공표 (미공표 ${unpub}건)`; if (!unpub) { $('b-pub').classList.add('disabled'); $('b-pub').setAttribute('aria-disabled', 'true'); $('b-pub').onclick = e => { e.preventDefault(); toast('직전 공표 이후 승인된 변경이 없습니다', 'info'); }; } }
-  if (ME.has('da') || ME.has('admin')) { $('b-purge').hidden = false; $('b-purge').onclick = () => { const log = JSON.parse(dbmStore.get('dbm-purge', '[]')); $('lh').innerHTML = `<b class="t-fg">영구 삭제 로그 ${log.length}건</b> · 수행자·사유·근거 결재 — 항목과 개별 이력은 지워지고 이 기록과 결재 기록만 남습니다 <button class="btn ghost sm" id="back-list">변경 내역으로</button>`; $('cb').innerHTML = log.map(x => `<tr><td class="mono">${x.at}</td><td><b>${x.name}</b><div class="caption faint mono">${x.id}</div></td><td>${x.kind}</td><td><span class="badge b-danger">영구 삭제</span></td><td>DA·Admin</td><td class="mono">—</td><td class="caption">사유: ${x.why}</td><td>${x.doc && x.doc !== '—' ? `<a class="mono" href="approvals.html?doc=${x.doc}">${x.doc}</a>` : '—'}</td><td class="caption">${x.who}</td><td></td></tr>`).join('') || '<tr class="er none"><td colspan="10" class="caption muted ta-c p-32">영구 삭제 기록이 없습니다</td></tr>'; $('back-list').onclick = draw; }; }
+  if (ME.has('da') || ME.has('admin')) { $('b-purge').hidden = false; $('b-purge').onclick = () => { const log = JSON.parse(dbmStore.get('dbm-purge', '[]')); $('lh').innerHTML = `<b class="u-fg">영구 삭제 로그 ${log.length}건</b> · 수행자·사유·근거 결재 — 항목과 개별 이력은 지워지고 이 기록과 결재 기록만 남습니다 <button class="btn ghost sm" id="back-list">변경 내역으로</button>`; $('cb').innerHTML = log.map(x => `<tr><td class="mono">${x.at}</td><td><b>${x.name}</b><div class="caption faint mono">${x.id}</div></td><td>${x.kind}</td><td><span class="badge b-danger">영구 삭제</span></td><td>DA·Admin</td><td class="mono">—</td><td class="caption">사유: ${x.why}</td><td>${x.doc && x.doc !== '—' ? `<a class="mono" href="approvals.html?doc=${x.doc}">${x.doc}</a>` : '—'}</td><td class="caption">${x.who}</td><td></td></tr>`).join('') || '<tr class="er none"><td colspan="10" class="caption muted u-tc u-p-32">영구 삭제 기록이 없습니다</td></tr>'; $('back-list').onclick = draw; }; }
   const originOf = c => c.act === '공표' ? '공표' : /초기 적재|86건/.test(c.item + c.diff) ? '초기 적재' : c.doc && c.doc !== '—' ? '사용자 변경 승인' : '데이터 보완';
   const L = () => {
     const per = $('per').value, qq = $('qq').value.trim(), today = new Date('2026-11-18');
@@ -50,11 +50,11 @@ window.pageInit = function () {
   };
   function draw() {
     const R = L();
-    $('lh').innerHTML = `<b class="t-fg">${R.length}건</b> · 반영 구분: 초기 적재 / 데이터 보완 / 사용자 변경 승인 · 이력은 추가만 되고 지워지지 않습니다`;
+    $('lh').innerHTML = `<b class="u-fg">${R.length}건</b> · 반영 구분: 초기 적재 / 데이터 보완 / 사용자 변경 승인 · 이력은 추가만 되고 지워지지 않습니다`;
     // field-level before → after on screen, the same content the report promises (CL8-01 · CX9 Top 10)
     const fieldHtml = c => c.fields && c.fields.length ? c.fields.map(f => `${f[0]}: <span class="old-v">${f[1] === '' ? '(빈 값)' : f[1]}</span>${f[2]}`).join('<br>') + (c.diff && c.diff.includes('업로드') ? `<br><span class="faint">${c.diff.split(' · ').filter(x => x.startsWith('업로드')).join('')}</span>` : '') : (c.diff || '');
     const useOf = c => { const d = c.itemId && getDict().find(x => x.id === c.itemId); return d ? d.use : null; };
-    $('cb').innerHTML = R.map(c => `<tr><td class="mono">${c.at}</td><td><b>${c.item}</b>${c.itemId ? `<div class="caption faint mono">${c.itemId}${useOf(c) ? ` · 사용처 ${useOf(c)}` : ''}</div>` : ''}</td><td>${c.kind}</td><td><span class="badge ${c.act === '공표' ? 'b-violet' : c.act.includes('미사용') ? '' : 'b-success'}">${c.act}</span></td><td class="caption">${originOf(c)}</td><td class="mono">${c.ver}</td><td class="caption wrap">${fieldHtml(c)}</td><td>${c.doc && c.doc !== '—' ? `<a class="mono" href="approvals.html?doc=${c.doc}">${c.doc}</a>` : '—'}</td><td class="caption">${c.by}</td><td>${c.pub ? `<span class="num muted">${c.pub}차</span>` : '<span class="caption muted">미공표</span>'}</td></tr>`).join('') || '<tr class="er none"><td colspan="10" class="caption muted ta-c p-32">조건에 맞는 변경이 없습니다</td></tr>';
+    $('cb').innerHTML = R.map(c => `<tr><td class="mono">${c.at}</td><td><b>${c.item}</b>${c.itemId ? `<div class="caption faint mono">${c.itemId}${useOf(c) ? ` · 사용처 ${useOf(c)}` : ''}</div>` : ''}</td><td>${c.kind}</td><td><span class="badge ${c.act === '공표' ? 'b-violet' : c.act.includes('미사용') ? '' : 'b-success'}">${c.act}</span></td><td class="caption">${originOf(c)}</td><td class="mono">${c.ver}</td><td class="caption wrap">${fieldHtml(c)}</td><td>${c.doc && c.doc !== '—' ? `<a class="mono" href="approvals.html?doc=${c.doc}">${c.doc}</a>` : '—'}</td><td class="caption">${c.by}</td><td>${c.pub ? `<span class="num muted">${c.pub}차</span>` : '<span class="caption muted">미공표</span>'}</td></tr>`).join('') || '<tr class="er none"><td colspan="10" class="caption muted u-tc u-p-32">조건에 맞는 변경이 없습니다</td></tr>';
   }
   document.querySelector('.toolbar').addEventListener('click', e => { const c = e.target.closest('[data-a]'); if (!c) return; document.querySelectorAll('[data-a]').forEach(x => x.classList.toggle('on', x === c)); act = c.dataset.a; draw(); });
   $('per').onchange = draw; $('qq').oninput = draw;

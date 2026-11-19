@@ -23,7 +23,7 @@
 <div id="app">
 <div id="content" class="page"><div class="scroll">
   <main class="lg" aria-labelledby="lg-t">
-    <div class="brand fs-16"><svg class="nmark" width="24" height="24" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="6" fill="currentColor"/><path d="M10 22V10l12 12V10" fill="none" stroke="var(--on-ink)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/><circle cx="10" cy="10" r="3" fill="var(--on-ink)"/><circle cx="22" cy="22" r="3" fill="var(--on-ink)"/></svg><span class="wm">NeoDB</span> <span class="caption muted">한국데이터진흥원</span></div>
+    <div class="brand u-fs-16"><svg class="nmark" width="24" height="24" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="6" fill="currentColor"/><path d="M10 22V10l12 12V10" fill="none" stroke="var(--on-ink)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/><circle cx="10" cy="10" r="3" fill="var(--on-ink)"/><circle cx="22" cy="22" r="3" fill="var(--on-ink)"/></svg><span class="wm">NeoDB</span> <span class="caption muted">한국데이터진흥원</span></div>
     <h1 id="lg-t">로그인</h1>
     <div class="sub" id="lg-sub">ID와 비밀번호를 입력하세요.</div>
     <div id="lg-banner"></div>
@@ -31,18 +31,18 @@
       <div class="field"><label for="lg-id">ID</label><input class="input mono" id="lg-id" autocomplete="username" autocapitalize="off" spellcheck="false"></div>
       <div class="field"><label for="lg-pw">비밀번호</label><input class="input mono" id="lg-pw" type="password" autocomplete="current-password"></div>
       <div class="lg-err" id="lg-err" role="alert"></div>
-      <button class="btn primary mt-8" id="lg-go" type="submit">로그인</button>
+      <button class="btn primary u-mt-8" id="lg-go" type="submit">로그인</button>
     </form>
     <form id="lg-change" novalidate hidden>
-      <div class="banner warning mb-12"><i data-ic=warn></i><div id="lg-change-why">임시 비밀번호로 로그인했습니다. 새 비밀번호를 정해야 계속할 수 있습니다.</div></div>
+      <div class="banner warning u-mb-12"><i data-ic=warn></i><div id="lg-change-why">임시 비밀번호로 로그인했습니다. 새 비밀번호를 정해야 계속할 수 있습니다.</div></div>
       <div class="field"><label for="lg-n1">새 비밀번호</label><input class="input mono" id="lg-n1" type="password" autocomplete="new-password"></div>
       <div class="field"><label for="lg-n2">새 비밀번호 확인</label><input class="input mono" id="lg-n2" type="password" autocomplete="new-password"></div>
       <div class="caption muted" id="lg-rule"></div>
       <div class="lg-err" id="lg-cerr" role="alert"></div>
-      <button class="btn primary mt-8" type="submit">비밀번호 바꾸고 계속</button>
+      <button class="btn primary u-mt-8" type="submit">비밀번호 바꾸고 계속</button>
     </form>
     <div id="lg-sso"></div>
-    <div class="caption muted mt-16" id="lg-help"></div>
+    <div class="caption muted u-mt-16" id="lg-help"></div>
     <details class="lg-mock"><summary>목업 안내</summary><div class="caption">기본 계정 ID: kim · park · lee · hyun · choi — 비밀번호 <span class="mono">Neodb!2026</span>. 설정 → 사용자 · 역할에서 등록한 계정으로도 로그인됩니다. 비밀번호는 해시로만 저장합니다(목업 해시, 실제 서버는 bcrypt · argon2).</div></details>
     <div class="foot" id="lg-foot"></div>
   </main>
@@ -54,10 +54,10 @@ window.pageInit = function () {
   const $ = id => document.getElementById(id), q = new URLSearchParams(location.search);
   const from = q.get('from') || '';
   const safe = /^[a-z-]+\.html(\?[^#]*)?(#.*)?$/i.test(from) ? from : '';
-  $('lg-banner').innerHTML = q.get('fail') ? '<div class="banner danger mb-12"><i data-ic=warn></i><div>SSO 인증에 실패했습니다. 다시 시도하거나 기관 IT 지원(내선 1234)에 문의하세요. <span class="mono caption">오류 ID E-20261118-SSO1</span></div></div>'
-    : q.get('expired') ? `<div class="banner info mb-12"><i data-ic=info></i><div>세션이 만료됐습니다. 편집 중이던 내용은 이 브라우저에 보관돼 있고, 로그인하면 <b>${safe ? ((SCREENS.find(s => s.file === safe.split(/[?#]/)[0]) || {}).name || safe.split('?')[0]).split('(')[0].trim() : '홈'}</b> 화면으로 돌아가 이어서 작업합니다.</div></div>` : '';
+  $('lg-banner').innerHTML = q.get('fail') ? '<div class="banner danger u-mb-12"><i data-ic=warn></i><div>SSO 인증에 실패했습니다. 다시 시도하거나 기관 IT 지원(내선 1234)에 문의하세요. <span class="mono caption">오류 ID E-20261118-SSO1</span></div></div>'
+    : q.get('expired') ? `<div class="banner info u-mb-12"><i data-ic=info></i><div>세션이 만료됐습니다. 편집 중이던 내용은 이 브라우저에 보관돼 있고, 로그인하면 <b>${safe ? ((SCREENS.find(s => s.file === safe.split(/[?#]/)[0]) || {}).name || safe.split('?')[0]).split('(')[0].trim() : '홈'}</b> 화면으로 돌아가 이어서 작업합니다.</div></div>` : '';
   const A = getAuth();
-  if (q.get('revoked')) $('lg-banner').innerHTML = '<div class="banner info mb-12"><i data-ic=info></i><div>계정 상태나 비밀번호가 바뀌어 로그아웃됐습니다. 다시 로그인하세요.</div></div>';
+  if (q.get('revoked')) $('lg-banner').innerHTML = '<div class="banner info u-mb-12"><i data-ic=info></i><div>계정 상태나 비밀번호가 바뀌어 로그아웃됐습니다. 다시 로그인하세요.</div></div>';
   // a successful sign-in starts a new session (its time is what later revocations compare with)
   const go = id => { const u = USERS[id]; u.last = new Date().toTimeString().slice(0, 5); saveUsers(); dbmStore.set('dbm-role', id); dbmStore.set('dbm-sess-at', String(Date.now())); const start = { '결재함': 'approvals.html' }[dbmStore.get('dbm-start', '')] || 'home.html'; location.href = safe || start; };
   const err = (m, el) => { $('lg-err').textContent = m; if (el) { el.setAttribute('aria-invalid', 'true'); el.setAttribute('aria-describedby', 'lg-err'); el.focus(); } };

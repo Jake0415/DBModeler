@@ -30,15 +30,15 @@
     </div>
     <aside class="rpanel open" id="pn-cand">
       <div class="rp-head">
-        <div class="t"><span class="badge b-violet" id="cd-type">단어 후보</span><span class="badge" id="cd-st">대기</span><button class="iconbtn close w-28 h-28" data-close="pn-cand" aria-label="닫기"><i data-ic=x></i></button></div>
-        <h2 class="mt-8" id="cd-name"></h2><div class="rp-sub" id="cd-abbr"></div>
+        <div class="t"><span class="badge b-violet" id="cd-type">단어 후보</span><span class="badge" id="cd-st">대기</span><button class="iconbtn close u-w-28 u-h-28" data-close="pn-cand" aria-label="닫기"><i data-ic=x></i></button></div>
+        <h2 class="u-mt-8" id="cd-name"></h2><div class="rp-sub" id="cd-abbr"></div>
       </div>
       <div class="rp-body" id="cd-body"></div>
       <div class="rp-foot" id="cd-foot"></div>
     </aside>
   </div>
   <div class="overlay" id="mo-crej" role="dialog" aria-modal="true" aria-labelledby="crej-t"><div class="modal"><div class="m-head"><h3 id="crej-t">후보 반려 · 수령자</h3></div>
-    <div class="m-body"><div class="caption muted mb-8">발생 위치 4곳의 요청자 <b>김모델 · 박설계</b>에게 앱 알림이 갑니다. 해당 속성은 미준수로 남습니다.</div>
+    <div class="m-body"><div class="caption muted u-mb-8">발생 위치 4곳의 요청자 <b>김모델 · 박설계</b>에게 앱 알림이 갑니다. 해당 속성은 미준수로 남습니다.</div>
       <div class="field"><label for="crej-why">반려 사유 *</label><textarea class="input" id="crej-why" rows="3"></textarea></div></div>
     <div class="m-foot"><button class="btn" data-close="mo-crej">취소</button><button class="btn danger" id="crej-go" data-needs="crej-why">반려</button></div></div></div>
   <div class="overlay" id="mo-cstd" role="dialog" aria-modal="true" aria-labelledby="cstd-t"><div class="modal"><div class="m-head"><h3 id="cstd-t">기존 표준어 사용 안내</h3></div>
@@ -62,9 +62,9 @@ window.pageInit = function () {
     const counts = {}; C.forEach(c => { const s = candState(c); counts[s] = (counts[s] || 0) + 1; });
     $('cfilt').innerHTML = ['대기', '신청 전환', '등록 완료', '반려', '기존 표준어 안내', '전체'].map(k => `<button class="chip ${f === k ? 'on' : ''}" data-cf="${k}">${k} <span class="n">${k === '전체' ? C.length : counts[k] || 0}</span></button>`).join('') + '<span class="grow"></span><span class="caption muted">상태는 연결된 결재 문서를 따릅니다</span>';
     const L = C.filter(c => f === '전체' || candState(c) === f);
-    $('clh').innerHTML = `<b class="t-fg">${L.length}건</b> · 같은 이름은 한 행으로 묶어 발생 위치를 표시합니다`;
+    $('clh').innerHTML = `<b class="u-fg">${L.length}건</b> · 같은 이름은 한 행으로 묶어 발생 위치를 표시합니다`;
     if (!sel || !L.some(c => c.id === sel)) sel = (L[0] || {}).id || null;
-    $('crows').innerHTML = L.map(c => `<tr class="click ${sel === c.id ? 'sel' : ''}" data-c="${c.id}" tabindex="0"><td><span class="muted">${c.t}</span></td><td><b>${c.name}</b></td><td class="mono">${c.abbr || '—'}</td><td class="num">${c.loc.length}</td><td>${USERS[(c.loc[0] || {}).by] ? USERS[c.loc[0].by].name : '—'}</td><td><span class="badge ${ST_BADGE[candState(c)]}">${candState(c)}</span>${c.doc ? ` <a class="mono caption" href="approvals.html?doc=${c.doc}">${c.doc}</a>` : ''}</td><td>${c.sim ? `<span class="muted">${c.sim[2]}</span> ${c.sim[0]} <span class="mono faint">${c.sim[1]}</span>` : '<span class="faint">없음</span>'}</td></tr>`).join('') || `<tr class="er done"><td colspan="7" class="caption muted ta-c p-32">‘${f}’ 후보가 없습니다</td></tr>`;
+    $('crows').innerHTML = L.map(c => `<tr class="click ${sel === c.id ? 'sel' : ''}" data-c="${c.id}" tabindex="0"><td><span class="muted">${c.t}</span></td><td><b>${c.name}</b></td><td class="mono">${c.abbr || '—'}</td><td class="num">${c.loc.length}</td><td>${USERS[(c.loc[0] || {}).by] ? USERS[c.loc[0].by].name : '—'}</td><td><span class="badge ${ST_BADGE[candState(c)]}">${candState(c)}</span>${c.doc ? ` <a class="mono caption" href="approvals.html?doc=${c.doc}">${c.doc}</a>` : ''}</td><td>${c.sim ? `<span class="muted">${c.sim[2]}</span> ${c.sim[0]} <span class="mono faint">${c.sim[1]}</span>` : '<span class="faint">없음</span>'}</td></tr>`).join('') || `<tr class="er done"><td colspan="7" class="caption muted u-tc u-p-32">‘${f}’ 후보가 없습니다</td></tr>`;
     panel();
   }
   function panel() {
@@ -75,8 +75,8 @@ window.pageInit = function () {
     // an open request that already covers this name is shown up front (CL12-24)
     const op = openItems().find(o => o.it.name === c.name && (o.it.act || '추가') === '추가' && o.doc !== c.doc);
     $('cd-body').innerHTML = `${op ? `<div class="banner info"><i data-ic=info></i><div class="grow">이미 <b>${op.doc}</b>에서 같은 이름을 신청 중입니다. 새 신청 대신 이 신청에 연결하세요.</div><a class="btn sm" href="approvals.html?doc=${op.doc}">결재 보기</a></div>` : ''}
-      ${c.sim ? `<div class="banner warning mt-8"><i data-ic=warn></i><div class="grow">비슷한 표준어가 있습니다: <b>${c.sim[0]}</b> <span class="mono">${c.sim[1]}</span> (${c.sim[2]}). 같은 뜻이면 기존 단어를 쓰도록 안내하세요.</div></div>` : ''}
-      ${c.closed ? `<div class="banner mt-8"><i data-ic=info></i><div>${c.closed} — ${c.closedWhy || ''}</div></div>` : ''}
+      ${c.sim ? `<div class="banner warning u-mt-8"><i data-ic=warn></i><div class="grow">비슷한 표준어가 있습니다: <b>${c.sim[0]}</b> <span class="mono">${c.sim[1]}</span> (${c.sim[2]}). 같은 뜻이면 기존 단어를 쓰도록 안내하세요.</div></div>` : ''}
+      ${c.closed ? `<div class="banner u-mt-8"><i data-ic=info></i><div>${c.closed} — ${c.closedWhy || ''}</div></div>` : ''}
       <div class="section-t">발생 위치 <span class="badge">${c.loc.length}</span></div>
       <table class="tbl"><thead><tr><th>위치</th><th>속성</th><th>등록</th></tr></thead><tbody>${c.loc.map(l => `<tr><td class="wrap">${locHref(l) ? `<a href="${locHref(l)}">${(getModels()[l.area] || {}).name} › ${l.ent}</a>` : `${l.sys || '다른 시스템'} › ${l.ent}`}</td><td>${l.attr}</td><td>${USERS[l.by] ? USERS[l.by].name : l.by}</td></tr>`).join('')}</tbody></table>
       <div class="section-t">처리 결과는 요청자 ${reqs(c).map(u => USERS[u] ? USERS[u].name : u).join(' · ')}에게 앱 알림으로 갑니다</div>`;

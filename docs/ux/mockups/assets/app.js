@@ -53,8 +53,9 @@
   window.revokeSessions = u => { u.sessRev = Date.now(); };   // the mock "server" marks old sessions invalid
   window.USER_STATUS = { active: '사용', stopped: '사용 중지', locked: '잠김' };
   // ?as=role from a scenario/shortcut link becomes the selected demo user (kept while moving between screens — CL12-01)
-  if (qs.get('as') && USERS[qs.get('as')] && store.get('dbm-role', 'kim') !== qs.get('as')) store.set('dbm-role', qs.get('as'));
-  const meId = store.get('dbm-role', 'kim');
+  const AUDIT_RUN = qs.has('audit');   // the publishing audit's own frames: the role in the address is used, never saved
+  if (!AUDIT_RUN && qs.get('as') && USERS[qs.get('as')] && store.get('dbm-role', 'kim') !== qs.get('as')) store.set('dbm-role', qs.get('as'));
+  const meId = AUDIT_RUN && USERS[qs.get('as')] ? qs.get('as') : store.get('dbm-role', 'kim');
   const ME = Object.assign({}, USERS[meId] || USERS.kim || Object.values(USERS)[0], { has(r) { return (this.roles || []).includes(r); } });
   window.ME = ME;
   { const pg = (document.body && document.body.dataset.page) || location.pathname; const signedOut = /login|error/.test(pg) || /login\.html|error\.html/.test(location.pathname); const sessAt = +store.get('dbm-sess-at', '0'); const me0 = USERS[meId];
@@ -811,7 +812,7 @@
   document.addEventListener('click', e => { const b = e.target.closest('[data-busy]'); if (!b || b.disabled || b.classList.contains('loading')) return; b.classList.add('loading'); b.setAttribute('aria-busy', 'true'); setTimeout(() => { b.disabled = true; }, 0); setTimeout(() => { b.classList.remove('loading'); b.removeAttribute('aria-busy'); b.disabled = false; }, +b.dataset.busy || 600); }, true);
   /* status: one badge for every screen (01 v2 §2.3) — ok · run · mine · warn · err · ex · end map onto .badge variants */
   const TAG_IC = { ex: 'flag' };   // Geist: no check / X icons inside status badges — colour + words
-  const TAG_CLS = { ok: 'b-success', run: 'b-info', mine: 'b-mine', warn: 'b-warning', err: 'b-danger', ex: 'b-ex', end: 'b-end' };
+  const TAG_CLS = { ok: 'b-success', run: '', mine: 'b-info', warn: 'b-warning', err: 'b-danger', ex: 'b-ex', end: 'b-end' };   // 진행 중 = neutral, 내 차례 = blue — what you act on is the strongest (01 v2 §2.3)
   window.tag = (kind, label) => `<span class="badge ${TAG_CLS[kind] || ''}">${TAG_IC[kind] ? icon(TAG_IC[kind], 12) : ''}${label}</span>`;
   /* display density (01 v2 §6.4): 촘촘 32 · 기본 36 · 넓게 44 — a personal setting (마이페이지) */
   window.DENSITY = { compact: '촘촘 32px', default: '기본 36px', comfy: '넓게 44px' };
@@ -1564,12 +1565,13 @@
       const ov = document.createElement('div'); ov.className = 'overlay open'; ov.setAttribute('role', 'dialog'); ov.setAttribute('aria-modal', 'true'); ov.setAttribute('aria-label', '퍼블리싱 점검');
       ov.innerHTML = `<div class="modal" style="width:960px;max-width:calc(100vw - 48px)"><div class="m-head"><h3 class="sm">퍼블리싱 점검 · 디자인 가이드 v2</h3></div><div class="m-body" id="aud-b"><span class="savest"><span class="sdot run"></span>19개 화면을 1920 · 1600으로 여는 중… (약 1분)</span></div><div class="m-foot"><button class="btn" id="aud-x">닫기</button></div></div>`;
       document.getElementById('app').appendChild(ov); const close = () => ov.remove(); ov.querySelector('#aud-x').onclick = close; ov.addEventListener('keydown', k => { if (k.key === 'Escape') close(); }); ov.querySelector('#aud-x').focus();
-      if (!window.NeoAudit) await new Promise((ok, no) => { const s = document.createElement('script'); s.src = 'assets/audit.js'; s.onload = ok; s.onerror = no; document.head.appendChild(s); });
+      await new Promise((ok, no) => { const s = document.createElement('script'); s.src = 'assets/audit.js?t=' + Date.now(); s.onload = ok; s.onerror = no; document.head.appendChild(s); });   // the newest script every run
       const res = await NeoAudit.measure([1920, 1600]); if (!document.contains(ov)) return;
+      const cond = NeoAudit.conditions();
       const rows = Object.entries(res).map(([k, r]) => { const bad = r.small || r.bold700 || r.noName || r.noLabel || r.glyph || r.overflow || (r.primary > 1 && !/styleguide/.test(k)) ||   /* the styleguide shows every button kind on purpose */ !/^(28|32|40|44)( · (28|32|40|44))*$/.test(r.btnH || '28');
-        return `<tr><td class="mono">${k}</td><td>${r.err ? tag('err', '오류') : bad ? tag('warn', '확인') : tag('ok', '통과')}</td><td class="num">${r.small}</td><td class="num">${r.bold700}</td><td class="mono">${r.btnH}</td><td class="num">${r.noName + r.noLabel}</td><td class="num">${r.glyph}</td><td class="num">${r.primary}</td><td class="num">${r.inline}</td><td>${r.overflow ? '넘침' : ''}</td></tr>`; }).join('');
-      ov.querySelector('#aud-b').innerHTML = `<div class="caption muted mb-8">기준: 12px 미만 0 · 굵기 700 0 · 버튼 높이 28/32/40(트리 44) · 이름 없는 버튼 · 입력 0 · 문자 아이콘 0 · 주 버튼 ≤1 · 가로 넘침 없음. 인라인 스타일 수는 참고.</div>
-        <div style="max-height:60vh;overflow:auto"><table class="tbl box"><thead><tr><th>폭 · 화면</th><th>결과</th><th class="r">12px 미만</th><th class="r">700</th><th>버튼 높이</th><th class="r">이름 없음</th><th class="r">문자 아이콘</th><th class="r">주 버튼</th><th class="r">인라인</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`;
+        return `<tr><td class="mono">${k}</td><td>${r.err ? tag('err', '오류') : bad ? tag('warn', '확인') : tag('ok', '통과')}</td><td class="num">${r.small}</td><td class="num">${r.bold700}</td><td class="mono">${r.btnH}</td><td class="num">${r.noName + r.noLabel}</td><td class="num">${r.glyph}</td><td class="num">${r.primary}</td><td class="num">${r.inlineSrc != null ? r.inlineSrc : r.inline}</td><td>${r.overflow ? '넘침' : ''}</td></tr>`; }).join('');
+      ov.querySelector('#aud-b').innerHTML = `<div class="caption muted u-mb-8">조건: ${cond} · 대상 ${NeoAudit.PAGES.length}개 화면(목업 지도 · ERD 별칭 제외)<br>기준: 12px 미만 0 · 굵기 700 0 · 버튼 높이 28/32/40(트리 44) · 이름 없는 버튼 · 입력 0 · 문자 아이콘 0 · 주 버튼 ≤1 · 가로 넘침 없음. 인라인 스타일 수는 참고.</div>
+        <div style="max-height:60vh;overflow:auto"><table class="tbl box"><thead><tr><th>폭 · 화면</th><th>결과</th><th class="r">12px 미만</th><th class="r">700</th><th>버튼 높이</th><th class="r">이름 없음</th><th class="r">문자 아이콘</th><th class="r">주 버튼</th><th class="r">인라인(원문)</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`;
     });
     mk.querySelector('#mk-reset').addEventListener('click', () => { const keep = ['dbm-frame', 'dbm-frame-v2', 'dbm-theme', 'dbm-role', 'dbm-single-keys', 'dbm-notes', 'dbm-scr-open']; try { Object.keys(localStorage).filter(k => k.startsWith('dbm-') && !keep.includes(k)).forEach(k => store.del(k)); } catch (e) {} Object.keys(USERS).forEach(u => store.del('dbm-read-' + u)); flash('목업 데이터를 초기화했습니다', 'info'); location.reload(); });
 
