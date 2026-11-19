@@ -681,3 +681,11 @@ select.input { padding-right:36px; }
 .sec .tbl > tbody > tr:last-child > td:last-child, .tbl.box > tbody > tr:last-child > td:last-child { border-bottom-right-radius:calc(var(--r-lg) - 1px); }
 /* the model grid is already a floating panel — its table is flat (no box in a box) */
 #grid .tbl, .tbl.flat { border:0; border-radius:0; }
+
+/* ---- frame "fit" (product default, 01 §5): fill the window, never narrower than 1600px — narrower windows scroll horizontally ----
+   1920 / 1600 remain as fixed preview frames */
+:root.frame-fit, :root.frame-fit body { height:100%; }
+:root.frame-fit body { overflow:auto; background:var(--bg); }
+:root.frame-fit #app { width:100%; min-width:1600px; height:100%; min-height:720px; margin:0; }   /* % of the scrolling body, so a horizontal scrollbar never adds a vertical one */
+:root.frame-fit #app.bare { height:auto; min-height:100%; }
+@media (max-width:1919px) { :root.frame-fit { --panel:380px; --dictpanel:240px; } :root.frame-fit .rpanel.wide { width:480px; flex-basis:480px; } }

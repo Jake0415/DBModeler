@@ -9,10 +9,13 @@
   window.dbmStore = store;
   const root = document.documentElement;
   const qs = new URLSearchParams(location.search);
-  const frame = qs.get('w') || store.get('dbm-frame', '1920');
+  // frame: 'fit' (default — the product fills the window, min 1600px, narrower → horizontal scroll) · '1920' / '1600' fixed preview frames
+  if (!store.get('dbm-frame-v2', '')) { store.set('dbm-frame', 'fit'); store.set('dbm-frame-v2', '1'); }   // one-time move to the product default
+  const frame = qs.get('w') || store.get('dbm-frame', 'fit');
   const themePref = qs.get('theme') || store.get('dbm-theme', 'light');
   const applyTheme = t => root.setAttribute('data-theme', t === 'system' ? (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : t);
   if (frame === '1600') root.classList.add('frame-1600');
+  if (frame === 'fit') root.classList.add('frame-fit');
   applyTheme(themePref);
 
   /* ---- product / users / roles ---- */
@@ -613,7 +616,7 @@
       <div class="spacer"></div>
       <div class="mock-tools" title="목업 검토용 도구 — 실제 제품에는 없음">목업
         <select id="mk-role" aria-label="역할 보기 전환">${Object.values(USERS).map(u => `<option value="${u.id}" ${u.id === ME.id ? 'selected' : ''}>${u.name} · ${u.roles.map(r => ROLE_NAME[r]).join('·')}</option>`).join('')}</select>
-        <span class="seg" id="seg-frame"><button data-v="1920">1920</button><button data-v="1600">1600</button></span>
+        <span class="seg" id="seg-frame" title="화면 크기: 맞춤 = 창 폭 전체(최소 1600px) · 1920/1600 = 고정 미리보기"><button data-v="fit">맞춤</button><button data-v="1920">1920</button><button data-v="1600">1600</button></span>
         <span class="seg" id="seg-theme"><button data-v="light">라이트</button><button data-v="dark">다크</button></span>
         <button class="reset" id="mk-reset" title="목업 데이터 초기화(결재 진행 상태·알림 읽음) — 검토 메모는 유지">↺</button>
         <button class="reset scr-btn" id="mk-scr" title="화면 정보 · 상태별 바로가기 · 설계 문서 · 검토 메모" aria-expanded="false">화면${(() => { const n = (J('dbm-notes', {})[curFile()] || []).filter(x => !x.done).length; return n ? ` <span class="scr-n">${n}</span>` : ''; })()}</button>
@@ -699,7 +702,7 @@
     top.querySelector('#mk-scr').addEventListener('click', e => { e.stopPropagation(); toggleScreenPanel(); });
     const sp = document.createElement('aside'); sp.className = 'scr-panel'; sp.id = 'scr-panel'; sp.setAttribute('aria-label', '화면 정보'); sp.addEventListener('click', e => e.stopPropagation()); app.appendChild(sp);
     if (store.get('dbm-scr-open', '0') === '1') toggleScreenPanel(true);
-    top.querySelector('#mk-reset').addEventListener('click', () => { const keep = ['dbm-frame', 'dbm-theme', 'dbm-role', 'dbm-single-keys', 'dbm-notes', 'dbm-scr-open']; try { Object.keys(localStorage).filter(k => k.startsWith('dbm-') && !keep.includes(k)).forEach(k => store.del(k)); } catch (e) {} Object.keys(USERS).forEach(u => store.del('dbm-read-' + u)); flash('목업 데이터를 초기화했습니다', 'info'); location.reload(); });
+    top.querySelector('#mk-reset').addEventListener('click', () => { const keep = ['dbm-frame', 'dbm-frame-v2', 'dbm-theme', 'dbm-role', 'dbm-single-keys', 'dbm-notes', 'dbm-scr-open']; try { Object.keys(localStorage).filter(k => k.startsWith('dbm-') && !keep.includes(k)).forEach(k => store.del(k)); } catch (e) {} Object.keys(USERS).forEach(u => store.del('dbm-read-' + u)); flash('목업 데이터를 초기화했습니다', 'info'); location.reload(); });
 
     // notifications
     const pn = top.querySelector('#pn-notif'), pu = top.querySelector('#pn-user');
