@@ -943,3 +943,21 @@ body.dict-in-tree .side-tab, body.dict-in-tree #side [data-toggle="side"] { disp
 .tresize:hover, .tresize:focus-visible { background:color-mix(in srgb, var(--focus) 35%, transparent); outline:none; }
 #app.treemin .tresize { display:none; }/* tree → page: the target row/line is marked for a moment */
 .ln.thl, tr.thl > td { background:color-mix(in srgb, var(--ds-amber-700) 16%, transparent) !important; }
+/* T2 node menu (12 §4.3): ⋯ on hover/focus (not a Tab stop), one floating menu beside the row */
+.trow2 { position:relative; }
+.trow2 .tmore { position:absolute; right:4px; top:50%; transform:translateY(-50%); width:22px; height:22px; border:0; border-radius:var(--r-md); background:var(--surface); color:var(--fg-2); display:none; place-items:center; cursor:pointer; padding:0; box-shadow:var(--ring); }
+.trow2:hover .tmore, .trow2:focus .tmore, .trow2:focus-within .tmore { display:grid; }
+.trow2 .tmore:hover { background:var(--ds-gray-100); color:var(--fg); }
+.otree.measure .tmore { display:none !important; }
+.tctx { position:fixed; z-index:200; min-width:232px; max-width:320px; padding:6px; background:var(--surface); border-radius:var(--r-xl); box-shadow:var(--menu-shadow); }
+.tctx[hidden] { display:none; }
+.tctx-h { padding:4px 8px 6px; font-size:12px; color:var(--fg-3); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.tctx-i { display:flex; align-items:center; gap:8px; width:100%; min-height:32px; padding:0 8px; border:0; border-radius:var(--r-md); background:none; color:var(--fg); font:400 14px var(--font-sans); text-align:left; cursor:pointer; }
+.tctx-i > span:first-child { flex:1; white-space:nowrap; }
+.tctx-i:hover, .tctx-i:focus-visible, .tctx-i:focus { background:var(--ds-gray-100); outline:none; }
+.tctx-i.danger { color:var(--danger-deep); }
+.tctx-i[aria-disabled="true"] { color:var(--fg-3); cursor:not-allowed; }
+.tctx-i[aria-disabled="true"] .ic { color:var(--fg-3); }
+.tctx-i kbd { font-size:11px; padding:0 4px; color:var(--fg-2); }
+.tctx-m { font-size:11px; color:var(--fg-3); border:1px solid var(--border); border-radius:9999px; padding:0 6px; line-height:16px; }
+.tctx-sep { height:1px; background:var(--ds-gray-400); margin:4px -6px; }

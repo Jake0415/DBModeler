@@ -1230,7 +1230,7 @@ window.pageInit = function () {
       const e = ent(inp.dataset.e), a = e.a[+inp.dataset.i];
       if (a.orig) { const o = JSON.parse(a.orig); Object.keys(a).forEach(k => delete a[k]); Object.assign(a, o); }  // existing attribute: restore
       else e.a.splice(+inp.dataset.i, 1);                                                                           // new attribute: discard
-      hist.pop(); if (acEl) { acEl.remove(); acEl = null; } render();
+      hist.pop(); if (acEl) { acEl.remove(); acEl = null; } dirty = true; render();   // the discarded row was already saved by addAttr — save its removal too
     }
   });
   cv.addEventListener('focusout', ev => { if (ev.target.classList && ev.target.classList.contains('ren-in') && renaming) commitRename(ev.target, true); });
@@ -1425,6 +1425,8 @@ window.pageInit = function () {
   else if (snapDoc && SNAP) { /* seed document without a stored copy: the seed structure of that area is shown, labelled below */ }
   else { const saved = getModelData(AREA, VER); if (loadData(saved)) myRev = saved.rev || 0; else if (locked || (AREA === 'rq' && VER > 5)) { applyStd(); keepRecipientAsEx(RECIP_WHY); } }
   var dataReady = true;
+  // a half-typed attribute left by a closed tab is not part of the model: a new row is dropped, a renamed one gets its old value back
+  E.forEach(e => { for (let i = e.a.length - 1; i >= 0; i--) { const a = e.a[i]; if (!a.edit) continue; if (a.orig) { const o = JSON.parse(a.orig); Object.keys(a).forEach(k => delete a[k]); Object.assign(a, o); delete a.edit; delete a.orig; } else e.a.splice(i, 1); if (!locked && !DEMO && !viewOnly) dirty = true; } });
   // term requests made from standardize: once the document ends, the attribute follows it (approved → standard, rejected → back to unresolved)
   if (!locked && !DEMO) {
     const docsNow = getDocs(); let fin = 0, back = 0;
@@ -1552,8 +1554,38 @@ window.pageInit = function () {
     const d = ev.detail; if (d.area !== AREA) return; ev.preventDefault();
     const ids = (d.ents || []).filter(id => ent(id));
     ids.forEach(id => { const n = document.getElementById('n-' + id); if (n) { n.classList.add('thl'); setTimeout(() => n.classList.remove('thl'), 2400); } });
-    toast(`‘${d.term}’을(를) 쓰는 엔터티 ${ids.length}개를 강조했습니다`, 'info');
+    toast(d.msg ? `${d.msg} — 캔버스에 강조했습니다` : `‘${d.term}’을(를) 쓰는 엔터티 ${ids.length}개를 강조했습니다`, 'info');
   });
+  // ---- tree menu commands (12 §4.3 · T2): the same functions as the canvas and the attribute grid — same checks, same undo
+  function runTreeCmd(d) {
+    const e = d.id ? ent(d.id) : null;
+    if (d.id && !e) { toast('이 객체를 찾지 못했습니다 — 이름이 바뀌었거나 삭제됐습니다', 'danger'); return; }
+    const pickEnt = () => { treeOrigin = true; treeAttr = d.ai; closeGrid(); focusEnt(e.id); };
+    const attr = d.ai != null && e && e.a[d.ai];
+    if (d.ai != null && (!attr || attr.edit)) { toast('이 속성을 찾지 못했습니다', 'danger'); return; }
+    switch (d.cmd) {
+      case 'newent': if (guard()) return; closeGrid(); setTool('entity'); cv.focus(); toast('캔버스에서 엔터티를 놓을 곳을 클릭하세요 · Esc 취소', 'info'); return;
+      case 'newrel': if (guard()) return; closeGrid(); setTool('rel'); cv.focus(); return;
+      case 'grid': openGrid(false); return;
+      case 'rename': if (attr) { pickEnt(); agRename(e, d.ai); return; } if (guard() || refGuard(e)) return; closeGrid(); focusEnt(e.id); renaming = e.id; render(); return;
+      case 'addattr': if (guard() || refGuard(e)) return; closeGrid(); focusEnt(e.id); addAttr(); return;
+      case 'delete': if (attr) { pickEnt(); agDelAsk(e, d.ai); return; } if (guard()) return; closeGrid(); focusEnt(e.id); askDelete(e.id); return;
+      case 'up': case 'down': pickEnt(); agMove(e, d.ai, d.cmd === 'up' ? -1 : 1); return;
+      case 'pk': pickEnt(); agEdit(e, d.ai, 'pk', !attr.pk); return;
+      case 'ident': case 'delrel': case 'mn': {
+        if (guard()) return; closeGrid(); const h = eg.querySelector(`.hit[data-r="${d.rel}"]`); if (!R[d.rel] || !h) { toast('관계를 찾지 못했습니다 — 이미 삭제됐을 수 있습니다', 'danger'); return; }
+        h.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+        if (d.cmd === 'ident') { const b = $('rel-ident'); if (b) b.click(); }
+        else if (d.cmd === 'delrel') { const b = $('rel-del'); if (b) { b.click(); const k = $('rd-keep'); if (k) k.focus(); } }
+        else { const b = $('mn-go'); if (b) b.focus(); }
+        return;
+      }
+    }
+    toast('이 명령은 이 화면에서 실행할 수 없습니다', 'info');
+  }
+  window.addEventListener('dbm-tree-cmd', ev => { const d = ev.detail; if (d.area !== AREA || SNAP_BAD) return; ev.preventDefault(); runTreeCmd(d); });
+  // a command started from another screen's tree arrives as ?cmd= — run once, then drop it from the address
+  if (q.get('cmd')) setTimeout(() => { runTreeCmd({ cmd: q.get('cmd'), area: AREA, id: q.get('focus') || null, ai: q.has('attr') ? +q.get('attr') : null, rel: q.has('rel') ? +q.get('rel') : null }); const u = new URL(location.href); u.searchParams.delete('cmd'); history.replaceState(null, '', u.pathname.split('/').pop() + u.search); }, 260);
   window.dispatchEvent(new Event('dbm-tree-refresh'));
   if (q.get('sys')) setTimeout(() => $('b-sys').click(), 150);
   // DDL / outputs open for THIS area (and this submitted copy when viewing one) — CX12-30

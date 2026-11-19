@@ -1118,7 +1118,7 @@
           return;
         }
         if (r.grp) html += `<div class="tgrp" role="none" style="--lv:${r.lvl}" title="${esc(r.grp.title)}">${r.grp.label}<span>${r.grp.n}</span></div>`;
-        html += `<div role="treeitem" class="trow2 k-${r.kind}${r.id === selId ? ' sel' : ''}${r.gray ? ' gray' : ''}" data-id="${esc(r.id)}" aria-level="${r.lvl}" aria-posinset="${r.pos}" aria-setsize="${r.size}"${r.open != null ? ` aria-expanded="${r.open}"` : ''}${r.selectable ? ` aria-selected="${r.id === selId}"` : ''} tabindex="${r.id === focusId ? 0 : -1}" aria-label="${esc(r.aria || '')}"${r.title ? ` title="${esc(r.title)}"` : ''} style="--lv:${r.lvl}"><span class="ttw" data-tw aria-hidden="true">${r.open == null ? '' : `<i data-ic=${r.open ? 'down' : 'right'} data-s=12></i>`}</span>${iconOf(r) ? `<span class="tico${icoCls(r)}" aria-hidden="true"><i data-ic=${iconOf(r)} data-s=14></i></span>` : ''}${r.html.replace(/^<span class="tdot[^"]*" aria-hidden="true">(<i[^>]*><\/i>)?<\/span>/, '')}</div>`;
+        html += `<div role="treeitem" class="trow2 k-${r.kind}${r.id === selId ? ' sel' : ''}${r.gray ? ' gray' : ''}" data-id="${esc(r.id)}" aria-level="${r.lvl}" aria-posinset="${r.pos}" aria-setsize="${r.size}"${r.open != null ? ` aria-expanded="${r.open}"` : ''}${r.selectable ? ` aria-selected="${r.id === selId}"` : ''} tabindex="${r.id === focusId ? 0 : -1}" aria-label="${esc(r.aria || '')}"${r.title ? ` title="${esc(r.title)}"` : ''} style="--lv:${r.lvl}"><span class="ttw" data-tw aria-hidden="true">${r.open == null ? '' : `<i data-ic=${r.open ? 'down' : 'right'} data-s=12></i>`}</span>${iconOf(r) ? `<span class="tico${icoCls(r)}" aria-hidden="true"><i data-ic=${iconOf(r)} data-s=14></i></span>` : ''}${r.html.replace(/^<span class="tdot[^"]*" aria-hidden="true">(<i[^>]*><\/i>)?<\/span>/, '')}<button type="button" class="tmore" data-tmore tabindex="-1" aria-hidden="true" title="메뉴 (Shift+F10)"><i data-ic=more data-s=14></i></button></div>`;
         if (r.kind === 'area' && r.open && r.desc && !q.trim()) html += `<div class="tdesc" role="none" style="--lv:${r.lvl + 1}">${esc(r.desc)}</div>`;
       });
       tree.innerHTML = html || '<div class="tempty">맞는 객체가 없습니다</div>';
@@ -1150,6 +1150,7 @@
     tree.addEventListener('click', e => {
       const a = e.target.closest('a.tlink'); if (a) return;   // shortcuts are plain links
       const el = e.target.closest('[role=treeitem]'); if (!el) return; const r = rowMap[el.dataset.id]; if (!r) return;
+      const mb = e.target.closest('[data-tmore]'); if (mb) { e.stopPropagation(); if (!ctx.hidden && ctxRow && ctxRow.id === r.id) { closeMenu(false); return; } focusRow(el); const b = mb.getBoundingClientRect(); openMenu(r, b.left, b.bottom + 2, el); return; }
       if (e.target.closest('[data-tw]') && r.open != null) { toggle(r.id); return; }
       const now = Date.now();
       if (r.selectable && lastClick.id === r.id && now - lastClick.t < 450) { lastClick = {}; select(r, true); return; }   // double click = fit (works even if the row was redrawn)
@@ -1172,11 +1173,120 @@
       if (e.key === ' ' && el.matches('a.tlink')) { e.preventDefault(); el.click(); return; }
       if (e.key === 'Enter' || e.key === ' ') { if (el.matches('a.tlink')) return; e.preventDefault(); if (r) { kbSel = true; select(r, false); kbSel = false; } return; }
       if (e.key === '*') { e.preventDefault(); if (!r) return; const sib = Object.values(rowMap).filter(x => x.parent === r.parent && x.open === false); sib.forEach(x => { const t0 = ST.tog[x.key] = ST.tog[x.key] || {}; t0[x.nid] = true; }); save(); render(); return; }
-      if (e.key === 'F2' || e.key === 'Delete' || e.key === 'ContextMenu' || (e.key === 'F10' && e.shiftKey)) { e.preventDefault(); if (!t2Told) { t2Told = true; toast('이름 바꾸기 · 삭제 · 메뉴는 다음 단계(T2)에서 동작합니다', 'info'); } return; }
+      if (e.key === 'ContextMenu' || (e.key === 'F10' && e.shiftKey)) { e.preventDefault(); if (r && r.kind !== 'link') { const b = el.getBoundingClientRect(); openMenu(r, b.left + 24, b.bottom + 2, el); } return; }
+      if (e.key === 'F2' || e.key === 'Delete') { e.preventDefault(); if (!r || r.kind === 'link') return; const want = e.key === 'F2' ? ['rename'] : ['delete', 'delrel']; const it = menuOf(r).find(x => want.includes(x.id));
+        if (!it) { toast(e.key === 'F2' ? '이 항목은 이름을 바꿀 수 없습니다' : '이 항목은 트리에서 지울 수 없습니다', 'info'); return; } runCmd(r, it); return; }
       if (e.key.length === 1 && /\S/.test(e.key) && !e.ctrlKey && !e.metaKey && !e.altKey) {   // type-ahead
         const ch = e.key.toUpperCase(); const order = items.slice(i + 1).concat(items.slice(0, i + 1));
         const hit = order.find(x => (x.getAttribute('aria-label') || x.textContent).trim().toUpperCase().startsWith(ch)); if (hit) { e.preventDefault(); focusRow(hit); }
       }
+    });
+    // ---- T2 node menus (12 §4.3): right click · ⋯ · Shift+F10 / menu key · F2 · Delete
+    // a command goes to the page first (dbm-tree-cmd); a page that does not take it opens the model screen and runs it there (&cmd=)
+    const editWhy = (r, e) => {
+      if (e && e.ref) return '다른 영역에서 참조한 객체 — 원본 영역에서만 고칠 수 있습니다';
+      // only the model screen's own view decides "read-only here"; DDL · outputs · standardize show a copy, and their commands open the model screen
+      const l = live(), onModel = file === 'model.html' && l && l.area === r.area;
+      if (onModel && (l.snap || /^snap:/.test(l.ver || ''))) return '제출본은 조회 전용입니다';
+      const L = modelLock(r.area);
+      if (L.state === 'review') return '결재 중이라 편집할 수 없습니다 — 회수하거나 결재가 끝난 뒤 편집하세요';
+      if (L.state === 'confirmed') return '확정본은 고칠 수 없습니다 — 다음 작업 버전에서 편집하세요';
+      if (!can('model.edit', { area: r.area })) return ME.has && ME.has('modeler') ? `담당 시스템에 ${sysOfArea(r.area)} 영역이 없어 조회만 할 수 있습니다` : '모델 편집은 모델러만 할 수 있습니다';
+      if (onModel ? l.ro : areaView(r.area).hidden) return `${(onModel ? l.label : areaView(r.area).label) || '결재 중'} · 조회 전용`;
+      return null;
+    };
+    const T3 = '보기 나누기는 다음 단계(T3)에서 동작합니다 — 지금은 전체 보기 하나입니다';
+    function menuOf(r) {
+      const s = src(r.area), e = r.ent ? s.E.find(x => x.id === r.ent) : null, P = pageMode() === 'P';
+      const I = (id, label, o = {}) => Object.assign({ id, label }, o), SEP = { sep: 1 };
+      const ed = (id, label, o = {}) => I(id, label, Object.assign({ why: editWhy(r, 'ent' in o ? o.ent : e) }, o));
+      const fold = [I('expand', '모두 펼치기'), I('collapse', '모두 접기')];
+      if (r.kind === 'area') return [I('open', '모델 열기'), I('std', '표준 맞추기'), I('ddl', 'DDL 만들기'), I('outputs', '산출물'), SEP, I('hist', '결재 이력'), I('newview', '보기 추가', { mock: T3 }), I('dup', '영역 복제', { mock: '영역 복제는 목업에서 시연만 합니다 — 복제본은 새 업무 영역 v1 작업 중으로 만들어집니다' }), SEP, ...fold];
+      if (r.kind === 'folder') {
+        if (r.nid === 'f:ents' || r.nid === 'f:tbls') return [ed('newent', P ? '새 테이블' : '새 엔터티', { ent: null, key: 'E' }), I('grid', '표 보기 · 일괄 편집'), SEP, ...fold];
+        if (r.nid === 'f:views') return [I('newview', '새 보기', { mock: T3 }), SEP, ...fold];
+        if (r.nid === 'f:std' || r.nid === 'f:terms') return [I('dictopen', '사전 화면 열기'), I('cand', '후보 큐 보기'), SEP, ...fold];
+        if (r.nid === 'f:rels') return [ed('newrel', '새 관계', { ent: null, key: 'R' }), SEP, ...fold];
+        return fold;
+      }
+      if (r.kind === 'ent' || r.kind === 'table') {
+        if (!e) return [];
+        if (e.ref) return [I('select', '선택'), I('fit', '위치 맞춤'), I('src', `원본 열기${e.refName ? ' · ' + e.refName : ''}`), I('used', '사용처 (관계)'), SEP, ed('delete', '참조 해제', { ent: null, key: 'Delete', danger: 1 })];
+        return [I('select', '선택'), I('fit', '위치 맞춤'), SEP, ed('rename', '이름 바꾸기', { key: 'F2' }), ed('addattr', P ? '컬럼 추가' : '속성 추가', { key: 'Insert' }), I('std', '표준 맞추기'), I('ddl', 'DDL 미리보기'), I('used', '사용처 (관계)'), SEP, I('unplace', '보기에서 빼기', { mock: '전체 보기에서는 뺄 수 없습니다 — ' + T3 }), ed('delete', '객체 삭제', { key: 'Delete', danger: 1 })];
+      }
+      if (r.kind === 'attr' || r.kind === 'col') {
+        const a = e && e.a[r.ai]; if (!a || a.edit) return [];
+        const grp = e.a.filter(x => !!x.pk === !!a.pk), gi = grp.indexOf(a), w = editWhy(r, e);
+        return [I('select', '선택'), SEP, ed('rename', '이름 바꾸기', { key: 'F2' }),
+          ed('up', '위로', { key: 'Alt+↑', why: w || (gi <= 0 ? `이미 ${a.pk ? '식별자' : '일반 속성'} 중 맨 위입니다` : null) }), ed('down', '아래로', { key: 'Alt+↓', why: w || (gi >= grp.length - 1 ? `이미 ${a.pk ? '식별자' : '일반 속성'} 중 맨 아래입니다` : null) }),
+          ed('pk', a.pk ? '식별자(PK)에서 빼기' : '식별자(PK)로 지정', { why: w || (a.fk ? 'FK의 PK 여부는 관계 유형이 정합니다 — 관계에서 식별/비식별로 전환하세요' : null) }),
+          I('dict', '사전에서 보기'), ...(['unreg', 'comb'].includes(a.s) ? [I('std', '표준 맞추기')] : []), SEP, ed('delete', P ? '컬럼 삭제' : '속성 삭제', { key: 'Delete', danger: 1 })];
+      }
+      if (r.kind === 'rel') {
+        const x = s.R[r.rel]; if (!x) return [];
+        return [I('select', '선택 · 관계 정보'), I('fit', '위치 맞춤'), SEP, ...(x.k === 'mn' ? [ed('mn', 'M:N 해소', { ent: null })] : x.f !== x.t ? [ed('ident', x.k === 'id' ? '비식별로 전환' : '식별로 전환', { ent: null })] : []), I('hideline', '관계선만 숨기기', { mock: '관계선 숨기기는 보기마다 정하는 설정입니다 — ' + T3 }), SEP, ed('delrel', '관계 삭제', { ent: null, key: 'Delete', danger: 1 })];
+      }
+      if (r.kind === 'prel') { const f = fkOf(s.R[r.rel] || {}, s.E); return [I('select', '관계 선택'), I('ddl', 'DDL 미리보기'), ...(f.st === 'miss' ? [ed('mkfk', 'FK 만들기', { ent: null, mock: `FK 만들기는 게이트 A(물리 반영 전 점검)를 거칩니다 — ${f.why}. 목업에서는 [관계]의 FK 묶음이나 속성 그리드에서 FK 컬럼을 맞추세요` })] : []), I('rule', '이름 규칙 다시 적용', { mock: '제약조건 이름을 명명 템플릿대로 다시 만듭니다(목업) — 시스템 설정 › 명명 템플릿' })]; }
+      if (r.kind === 'cons' || r.kind === 'ix') return [I('select', '테이블 선택'), I('ddl', 'DDL 미리보기')];
+      if (r.kind === 'term') return [I('dict', '사전에서 보기'), I('hl', '사용 엔터티 강조'), I('std', '모델에 최신 표준 다시 적용'), I('dreq', '사전 변경 신청')];
+      if (r.kind === 'dom') return [I('dict', '사전에서 보기'), I('hl', '사용 엔터티 강조')];
+      if (r.kind === 'view') return [I('open', '열기'), I('vren', '이름 바꾸기', { mock: T3 }), I('vdup', '복제', { mock: T3 }), I('vdel', '삭제', { why: r.view === 'all' ? '전체 보기는 지울 수 없습니다' : null, mock: T3, danger: 1 })];
+      return [];
+    }
+    function runCmd(r, it) {
+      if (it.why) { toast(it.why, 'info'); return; }
+      if (it.mock) { toast(it.mock, 'info'); return; }
+      const c = it.id, s = src(r.area), sn = s.snap ? '&snap=' + s.snap : '', go = h => { location.href = h; };
+      const e = r.ent ? s.E.find(x => x.id === r.ent) : null, nm = id => (s.E.find(x => x.id === id) || {}).n || id;
+      if (c === 'expand' || c === 'collapse') { const t0 = ST.tog[r.key] = ST.tog[r.key] || {}; const walk = n => { if (n.open != null) t0[n.nid] = c === 'expand'; (n.kids || []).forEach(walk); }; walk(r); save(); focusId = r.id; render(); return; }
+      if (c === 'select') { select(r, false); return; }
+      if (c === 'fit' || c === 'hl') { select(r, true); return; }
+      if (c === 'used') {
+        const par = s.R.filter(x => x.t === r.ent && x.f !== r.ent), kid = s.R.filter(x => x.f === r.ent && x.t !== r.ent);
+        const msg = `‘${e.n}’ — 부모 ${par.length}: ${par.map(x => nm(x.f)).join(', ') || '없음'} · 자식 ${kid.length}: ${kid.map(x => nm(x.t)).join(', ') || '없음'}`;
+        const ev = new CustomEvent('dbm-tree-highlight', { cancelable: true, detail: { area: r.area, term: e.n, ents: [r.ent].concat(par.map(x => x.f), kid.map(x => x.t)), msg } });
+        if (window.dispatchEvent(ev)) toast(msg, 'info'); return;
+      }
+      const term = r.term || r.dom || (e && r.ai != null && e.a[r.ai] ? e.a[r.ai].n : '');
+      const NAV = { open: `model.html?area=${r.area}${sn}`, std: `standardize.html?area=${r.area}`, ddl: `ddl.html?area=${r.area}${sn}${r.ent ? '&focus=' + r.ent : ''}`, outputs: `outputs.html?area=${r.area}${sn}`, hist: 'approvals.html', cand: 'candidates.html', dictopen: 'dictionary.html',
+        dict: `dictionary.html?q=${encodeURIComponent(term)}`, dreq: `dictionary.html?q=${encodeURIComponent(term)}`, src: e && e.refArea ? `model.html?area=${e.refArea}&focus=${r.ent}` : '' };
+      if (c in NAV) { if (c === 'dict' && window.openDictTab && document.getElementById('dict-q')) { openDictTab(term, true); return; } if (NAV[c]) go(NAV[c]); else toast('원본 영역을 찾지 못했습니다', 'danger'); return; }
+      // object commands: the page with this area open runs them; otherwise the model screen opens and runs it
+      const d = { cmd: c, area: r.area, kind: r.kind, id: r.ent || null, ai: r.ai != null ? r.ai : null, rel: r.rel != null ? r.rel : null };
+      if (!window.dispatchEvent(new CustomEvent('dbm-tree-cmd', { cancelable: true, detail: d }))) return;
+      go(`model.html?area=${r.area}${d.id ? '&focus=' + d.id : ''}${d.ai != null ? '&attr=' + d.ai : ''}${d.rel != null ? '&rel=' + d.rel : ''}&cmd=${c}`);
+    }
+    const ctx = document.createElement('div'); ctx.className = 'tctx'; ctx.id = 'tr-ctx'; ctx.setAttribute('role', 'menu'); ctx.hidden = true; document.body.appendChild(ctx);
+    let ctxRow = null, ctxItems = [], ctxBack = null;
+    function openMenu(r, x, y, backEl) {
+      let items = menuOf(r).filter((it, i, A) => !(it.sep && (i === 0 || A[i - 1].sep || i === A.length - 1)));
+      if (!items.length) return;
+      ctxRow = r; ctxItems = items; ctxBack = backEl || null;
+      const name = String(r.aria || '').split(',')[0];
+      ctx.setAttribute('aria-label', `${name} 메뉴`);
+      ctx.innerHTML = `<div class="tctx-h" aria-hidden="true">${esc(name)}</div>` + items.map((it, i) => it.sep ? '<div class="tctx-sep" role="separator"></div>'
+        : `<button type="button" role="menuitem" class="tctx-i${it.danger ? ' danger' : ''}" data-i="${i}" tabindex="-1"${it.why ? ` aria-disabled="true" title="${esc(it.why)}"` : it.mock ? ` title="${esc(it.mock)}"` : ''}><span>${esc(it.label)}${it.why ? `<span class="sr-only">, 사용할 수 없음: ${esc(it.why)}</span>` : ''}</span>${it.why ? '<i data-ic=lock data-s=12></i>' : it.mock ? '<span class="tctx-m">목업</span>' : ''}${it.key ? `<kbd>${esc(it.key)}</kbd>` : ''}</button>`).join('');
+      ctx.hidden = false; ctx.style.left = '0px'; ctx.style.top = '0px';
+      const w = ctx.offsetWidth, h = ctx.offsetHeight;
+      ctx.style.left = Math.max(8, Math.min(x, innerWidth - w - 8)) + 'px'; ctx.style.top = (y + h > innerHeight - 8 ? Math.max(8, y - h - 4) : y) + 'px';
+      const first = ctx.querySelector('.tctx-i:not([aria-disabled])') || ctx.querySelector('.tctx-i'); if (first) first.focus();
+    }
+    function closeMenu(back) { if (ctx.hidden) return; ctx.hidden = true; const el = back && (ctxBack && document.contains(ctxBack) ? ctxBack : tree.querySelector(`[data-id="${CSS.escape(ctxRow ? ctxRow.id : '')}"]`)); if (el) focusRow(el.closest('[role=treeitem]') || el); }
+    ctx.addEventListener('click', e => { const b = e.target.closest('.tctx-i'); if (!b) return; const it = ctxItems[+b.dataset.i], r = ctxRow; closeMenu(true); if (it && r) runCmd(r, it); });
+    ctx.addEventListener('keydown', e => {
+      e.stopPropagation();
+      const its = [...ctx.querySelectorAll('.tctx-i')]; let i = its.indexOf(document.activeElement);
+      if (['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(e.key)) { e.preventDefault(); i = e.key === 'Home' ? 0 : e.key === 'End' ? its.length - 1 : (i + (e.key === 'ArrowDown' ? 1 : -1) + its.length) % its.length; its[i].focus(); return; }
+      if (e.key === 'Escape' || e.key === 'Tab' || e.key === 'ArrowLeft') { e.preventDefault(); closeMenu(true); return; }
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (its[i]) its[i].click(); return; }
+      if (e.key.length === 1 && /\S/.test(e.key)) { const ch = e.key; const order = its.slice(i + 1).concat(its.slice(0, i + 1)); const hit = order.find(x => x.textContent.trim().startsWith(ch)); if (hit) hit.focus(); }
+    });
+    document.addEventListener('mousedown', e => { if (!ctx.hidden && !ctx.contains(e.target) && !e.target.closest('[data-tmore]')) closeMenu(false); }, true);
+    window.addEventListener('resize', () => closeMenu(false));
+    nav.querySelector('#tr-full').addEventListener('scroll', () => closeMenu(false), { passive: true });
+    tree.addEventListener('contextmenu', e => {
+      const el = e.target.closest('[role=treeitem]'); if (!el || el.matches('a.tlink')) return;   // shortcuts keep the browser's own menu (open in a new tab)
+      const r = rowMap[el.dataset.id]; if (!r) return; e.preventDefault(); focusRow(el); openMenu(r, e.clientX, e.clientY, el);
     });
     tree.addEventListener('focusin', e => { const el = e.target.closest('[role=treeitem]'); if (el) { focusId = el.dataset.id; tree.querySelectorAll('[tabindex="0"]').forEach(x => { if (x !== el) x.tabIndex = -1; }); el.tabIndex = 0; } });
     // canvas → tree: mark and reveal the row, never take the keyboard focus (12 §4.2)

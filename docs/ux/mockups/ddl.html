@@ -138,6 +138,8 @@ window.pageInit = function () {
     if (!ln) { toast(`‘${e.n}’은(는) 지금 범위의 DDL에 없습니다`, 'info'); return; }
     $('sql').querySelectorAll('.ln.thl').forEach(x => x.classList.remove('thl')); ln.classList.add('thl'); ln.scrollIntoView({ block: 'center' });
   });
+  // tree menu [DDL 미리보기] opens this screen at that table (12 §4.3)
+  if (q.get('focus')) setTimeout(() => { const ev = new CustomEvent('dbm-tree-select', { cancelable: true, detail: { area: AREA, id: q.get('focus') } }); window.dispatchEvent(ev); }, 100);
 };
 </script>
 </body>
