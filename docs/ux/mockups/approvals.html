@@ -100,7 +100,7 @@ window.pageInit = function () {
   let sel = null;
   const stepRole = s => s === 'da' ? 'DA' : s === 'final' ? '기관 담당자' : '';
   const stBadge = d => docTag(d);
-  const ageCell = d => ['da', 'final'].includes(d.step) ? (docLate(d) ? `<span class="mono" style="color:var(--danger-deep)">${icon('err', 12)} ${docAge(d)}일<span class="sr-only"> 기한 넘김</span></span>` : `<span class="mono">${docAge(d)}일</span>`) : '';
+  const ageCell = d => ['da', 'final'].includes(d.step) ? (docLate(d) ? `<span class="num" style="color:var(--danger-deep)">${icon('err', 12)} ${docAge(d)}일<span class="sr-only"> 기한 넘김</span></span>` : `<span class="num">${docAge(d)}일</span>`) : '';
 
   function drawBoxes() {
     $('boxes').innerHTML = Object.entries(BOX).filter(([k]) => k !== 'all' && (k !== 'queue' || ME.has('da') || ME.has('owner'))).map(([k, [l, f]]) => `<button role="tab" aria-selected="${box === k}" class="${box === k ? 'on' : ''}" data-box="${k}">${l} <span class="n">${docs.filter(f).length}</span></button>`).join('');
@@ -112,7 +112,7 @@ window.pageInit = function () {
   }
   function drawRows() {
     const L = list();
-    $('rows').innerHTML = L.length ? L.map(d => `<tr aria-selected="${sel === d.id}" class="click ${sel === d.id ? 'sel' : ''} ${['done', 'withdrawn', 'rejected'].includes(d.step) ? 'dim' : ''}" data-id="${d.id}" tabindex="0"><td class="mono">${d.id}</td><td class="muted">${d.type === 'model' ? '모델 확정' : '사전 신청'}</td><td>${d.title}</td><td>${nameOf(d.req)}${d.req === ME.id ? ' <span class="muted">(나)</span>' : ''}</td><td>${box === 'queue' ? tag('run', STEP_NAME[d.step]) + '<span class="sr-only"> 내 차례</span>' : stBadge(d)}</td><td class="r">${ageCell(d)}</td><td class="num">${d.n}</td><td class="mono">${d.date}</td></tr>`).join('')
+    $('rows').innerHTML = L.length ? L.map(d => `<tr aria-selected="${sel === d.id}" class="click ${sel === d.id ? 'sel' : ''} ${['done', 'withdrawn', 'rejected'].includes(d.step) ? 'dim' : ''}" data-id="${d.id}" tabindex="0"><td class="mono">${d.id}</td><td class="muted">${d.type === 'model' ? '모델 확정' : '사전 신청'}</td><td>${d.title}</td><td>${nameOf(d.req)}${d.req === ME.id ? ' <span class="muted">(나)</span>' : ''}</td><td>${box === 'queue' ? tag('run', STEP_NAME[d.step]) + '<span class="sr-only"> 내 차례</span>' : stBadge(d)}</td><td class="r">${ageCell(d)}</td><td class="num">${d.n}</td><td class="num muted">${d.date}</td></tr>`).join('')
       : `<tr><td colspan="8" style="padding:16px 12px" class="caption muted">${box === 'queue' ? '지금 처리할 결재가 없습니다.' : '조건에 맞는 문서가 없습니다.'} ${($('f-type').value || $('f-step').value || $('f-q').value) ? '<button class="btn sm ghost" id="f-clear">필터 지우기</button>' : ''}</td></tr>`;
     const c = $('f-clear'); if (c) c.onclick = () => { $('f-type').value = ''; $('f-step').value = ''; $('f-q').value = ''; drawRows(); };
   }

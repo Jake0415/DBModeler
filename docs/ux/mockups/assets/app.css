@@ -14,7 +14,7 @@
   /* violet retired — legacy classes fall back to neutral until each screen is converted */
   --violet:#4a5360; --violet-soft:#eef0f2; --violet-deep:#4a5360;
   --r-sm:3px; --r-md:4px; --r-lg:6px; --r-xl:8px; --r-full:9999px;
-  --row:32px; --control:32px; --topbar:48px; --nav:224px; --panel:420px; --dictpanel:280px;
+  --row:36px; --control:32px; --th-bg:#f7f8fa; --topbar:48px; --nav:224px; --panel:420px; --dictpanel:280px;
   --frame-w:1920px; --frame-h:1080px;
   --shadow-4:0 2px 2px rgba(0,0,0,.04),0 8px 16px -4px rgba(0,0,0,.04),0 0 0 1px rgba(0,0,0,.08);
   --shadow-5:0 1px 1px rgba(0,0,0,.02),0 8px 16px -4px rgba(0,0,0,.04),0 24px 32px -8px rgba(0,0,0,.06),0 0 0 1px rgba(0,0,0,.08);
@@ -33,7 +33,7 @@
   --success:#4cb36b; --success-soft:#11291a; --success-deep:#6cc887;
   --warning:#d9a640; --warning-soft:#2e2410; --warning-deep:#e8bb5e;
   --danger:#ef6b6b; --danger-soft:#3a1517; --danger-deep:#f28b8b;
-  --violet:#a9b1ba; --violet-soft:#1c2228; --violet-deep:#a9b1ba;
+  --violet:#a9b1ba; --violet-soft:#1c2228; --violet-deep:#a9b1ba; --th-bg:#191e24;
   --shadow-4:0 0 0 1px #2a2a2a; --shadow-5:0 0 0 1px #454545,0 16px 32px rgba(0,0,0,.5);
   --outside:#000;
   color-scheme: dark;
@@ -42,7 +42,8 @@
 
 * { box-sizing:border-box; }
 html,body { margin:0; }
-body { background:var(--outside); color:var(--fg); font:400 14px/20px var(--font-sans); -webkit-font-smoothing:antialiased; }
+body { background:var(--outside); color:var(--fg); font:400 14px/22px var(--font-sans); letter-spacing:-.2px; -webkit-font-smoothing:antialiased; }
+.mono, .input.mono, code, pre { letter-spacing:0; }
 .mono { font-family:var(--font-mono); font-size:13px; }
 .muted { color:var(--fg-2); } .faint { color:var(--fg-3); }
 .caption { font-size:12px; line-height:16px; }
@@ -126,7 +127,7 @@ textarea.input { height:auto; padding:8px 10px; resize:vertical; }
 /* ---------- chips & badges ---------- */
 .chip { height:28px; display:inline-flex; align-items:center; gap:6px; padding:0 10px; border-radius:var(--r-full); border:1px solid var(--border); background:var(--surface); color:var(--fg-2); font:500 13px var(--font-sans); cursor:pointer; }
 .chip.on { background:var(--ink); border-color:var(--ink); color:var(--on-ink); }
-.chip .n { font-family:var(--font-mono); font-size:12px; opacity:.8; }
+.chip .n { font-size:12px; font-variant-numeric:tabular-nums; opacity:.8; }
 .badge { height:20px; display:inline-flex; align-items:center; gap:4px; padding:0 8px; border-radius:var(--r-full); font:500 12px/16px var(--font-sans); white-space:nowrap; background:var(--surface-2); color:var(--fg-2); }
 .b-success { background:var(--success-soft); color:var(--success-deep); }
 .b-info { background:var(--info-soft); color:var(--info-deep); }
@@ -145,7 +146,7 @@ textarea.input { height:auto; padding:8px 10px; resize:vertical; }
 .tbl tr.click:hover td { background:var(--surface-2); }
 .tbl tr.sel td { background:var(--surface-2); }
 .tbl tr.sel td:first-child { box-shadow:inset 2px 0 0 var(--ink); }
-.tbl .num { text-align:right; font-family:var(--font-mono); }
+.tbl .num { text-align:right; font-variant-numeric:tabular-nums; }
 .tbl td.wrap { white-space:normal; }
 .tbl tr.row-success td:first-child { box-shadow:inset 3px 0 0 var(--success); }
 .tbl tr.row-info td:first-child { box-shadow:inset 3px 0 0 var(--info); }
@@ -174,7 +175,7 @@ textarea.input { height:auto; padding:8px 10px; resize:vertical; }
 .tabs { display:flex; gap:2px; border-bottom:1px solid var(--border); margin:0 -16px 12px; padding:0 16px; }
 .tabs button { border:0; background:none; font:500 13px var(--font-sans); color:var(--fg-2); padding:8px 10px; border-bottom:2px solid transparent; cursor:pointer; }
 .tabs button.on { color:var(--fg); border-bottom-color:var(--ink); }
-.tabs button .n { font-family:var(--font-mono); font-size:11px; color:var(--fg-3); margin-left:2px; }
+.tabs button .n { font-size:12px; font-variant-numeric:tabular-nums; color:var(--fg-3); margin-left:2px; }
 .pane { display:none; } .pane.on { display:block; }
 
 /* ---------- banners, toast, modal ---------- */
@@ -341,8 +342,12 @@ button.gsearch { font:inherit; cursor:pointer; text-align:left; }
 
 /* ================= v8 components (08 §10 · styleguide.html) ================= */
 /* type & focus: no negative tracking on Korean headings; 3px focus ring in the accent */
-.page-header h1 { letter-spacing:0; }
-.rp-head h2 { letter-spacing:0; }
+/* B (soft business): Korean text −0.2px, titles −0.3px; numbers in the text face with tabular figures; mono only for IDs·physical names·code */
+.page-header h1 { letter-spacing:-.3px; }
+.rp-head h2 { letter-spacing:-.3px; }
+.sec-h h2 { letter-spacing:-.3px; }
+.tbl th { background:var(--th-bg); font-weight:500; color:var(--fg-2); height:34px; }
+.num { font-variant-numeric:tabular-nums; }
 .btn:focus-visible, .input:focus-visible, select:focus-visible, .chip:focus-visible, tr.click:focus-visible, a:focus-visible, .utabs button:focus-visible { outline:3px solid var(--focus); outline-offset:1px; }
 a { color:var(--accent); } a:hover { color:var(--accent-hover); }
 .num, .tnum { font-variant-numeric:tabular-nums; }
@@ -368,17 +373,16 @@ a { color:var(--accent); } a:hover { color:var(--accent-hover); }
 .sec-h h2 { font-size:14px; line-height:20px; font-weight:600; }
 .sec-h .end { margin-left:auto; font-size:12px; }
 /* plain table: same rhythm as .tbl, no header fill — used inside sections */
-.tbl.plain th { background:transparent; color:var(--fg-3); font-weight:500; border-bottom:1px solid var(--border); padding:0 12px; }
-.tbl.plain th:first-child, .tbl.plain td:first-child { padding-left:0; }
-.tbl.plain th:last-child, .tbl.plain td:last-child { padding-right:0; }
+/* one table for every screen: .tbl.plain is now the same as .tbl (kept as an alias) */
+.sec-h + .tbl, .sec-h + table { margin-top:8px; }
 .tbl th.r, .tbl td.r { text-align:right; }
 .tbl tr.sel td { background:var(--accent-soft); }
 .tbl tr.sel td:first-child { box-shadow:none; }
 .tbl tr.click:hover td { background:var(--surface-2); }
 .tbl tr.sel.click:hover td { background:var(--accent-soft); }
 /* ledger: label · value · basis · gap */
-.ledger td.v { font:500 14px/20px var(--font-mono); text-align:right; }
-.ledger td.gap { font:400 12px var(--font-mono); text-align:right; }
+.ledger td.v { font:600 14px/20px var(--font-sans); text-align:right; font-variant-numeric:tabular-nums; }
+.ledger td.gap { font-size:13px; text-align:right; }
 .ledger td.gap.bad { color:var(--danger-deep); } .ledger td.gap.ok { color:var(--fg-3); }
 /* thin bar with a goal tick */
 .mbar { position:relative; display:inline-block; width:64px; height:4px; background:var(--surface-2); vertical-align:middle; margin-left:8px; }
@@ -390,16 +394,16 @@ a { color:var(--accent); } a:hover { color:var(--accent-hover); }
 .hbar .t { height:8px; background:var(--surface-2); position:relative; }
 .hbar .t i { position:absolute; left:0; top:0; bottom:0; background:var(--fg-3); }
 .hbar .t i.hi { background:var(--accent); }
-.hbar .v { text-align:right; font:400 12px var(--font-mono); color:var(--fg-2); }
+.hbar .v { text-align:right; font-size:13px; font-variant-numeric:tabular-nums; color:var(--fg-2); }
 /* metric line: value │ value │ value */
 .mline { display:flex; flex-wrap:wrap; align-items:baseline; margin:4px 0 12px; font-size:12px; color:var(--fg-2); }
 .mline > span { padding:0 12px; border-left:1px solid var(--border); } .mline > span:first-child { padding-left:0; border-left:0; }
-.mline b { font:500 14px var(--font-mono); color:var(--fg); margin-right:4px; }
+.mline b { font:600 15px var(--font-sans); font-variant-numeric:tabular-nums; color:var(--fg); margin-right:4px; }
 /* underline tabs (box switch in page headers) */
 .utabs { display:flex; gap:4px; align-self:stretch; }
 .utabs button { border:0; background:none; font:500 14px var(--font-sans); color:var(--fg-2); padding:0 10px; border-bottom:2px solid transparent; cursor:pointer; display:flex; align-items:center; gap:6px; }
 .utabs button.on { color:var(--fg); border-bottom-color:var(--ink); }
-.utabs button .n { font:400 12px var(--font-mono); color:var(--fg-3); }
+.utabs button .n { font-size:12px; font-variant-numeric:tabular-nums; color:var(--fg-3); }
 /* banner: icon instead of glyph, no tinted border on neutral */
 .banner > .ic { margin-top:2px; }
 .banner.violet { border-color:var(--border); background:var(--surface-2); color:var(--fg); }
