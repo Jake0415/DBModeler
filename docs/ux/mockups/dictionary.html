@@ -36,15 +36,15 @@
     <span class="badge" id="dictver"></span>
     <div class="actions">
       <button class="btn" id="b-pub" hidden>공표</button>
-      <span style="position:relative"><button class="btn" id="b-dl" aria-haspopup="true" aria-expanded="false">내려받기<i data-ic=down></i></button>
+      <span class="rel"><button class="btn" id="b-dl" aria-haspopup="true" aria-expanded="false">내려받기<i data-ic=down></i></button>
         <div class="menu" id="dl-menu" role="menu">
           <button class="mi" role="menuitem" data-dl="filter"><b>편집용 엑셀 — 현재 검색 결과</b><div class="caption muted" id="dl-n"></div></button>
           <button class="mi" role="menuitem" data-dl="all"><b>편집용 엑셀 — 기관 사전 전체</b><div class="caption muted">종류별 시트 · 숨김 열(항목 ID·버전·기준본) · 계산 칸 잠금</div></button>
           <button class="mi" role="menuitem" data-dl="blank"><b>빈 양식</b><div class="caption muted">새 항목 등록·초기 적재용 · 안내·목록 시트</div></button>
           <div class="caption muted" style="padding:6px 10px">공통 항목은 ‘참고’ 시트(읽기 전용)로만 들어갑니다. 신청 중 항목은 승인된 값 + ‘진행 중 신청’ 표시.</div>
         </div></span>
-      <span style="position:relative"><button class="btn" data-menu-btn aria-haspopup="true" aria-expanded="false" aria-label="더 보기" style="width:32px;padding:0;justify-content:center"><i data-ic=more></i></button>
-        <div class="menu" data-auto role="menu" style="width:200px"><a class="mi" role="menuitem" href="excel-import.html"><i data-ic=upload></i>엑셀 가져오기</a><a class="mi" role="menuitem" href="dict-history.html"><i data-ic=history></i>변경 내역</a><a class="mi" role="menuitem" href="uploads.html"><i data-ic=upload></i>업로드 이력</a></div></span>
+      <span class="rel"><button class="btn w-32 p-0 jc-c" data-menu-btn aria-haspopup="true" aria-expanded="false" aria-label="더 보기"><i data-ic=more></i></button>
+        <div class="menu w-200" data-auto role="menu"><a class="mi" role="menuitem" href="excel-import.html"><i data-ic=upload></i>엑셀 가져오기</a><a class="mi" role="menuitem" href="dict-history.html"><i data-ic=history></i>변경 내역</a><a class="mi" role="menuitem" href="uploads.html"><i data-ic=upload></i>업로드 이력</a></div></span>
       <button class="btn primary" data-open="pn-request" data-close-others="pn-detail"><i data-ic=plus></i>등록 신청</button>
     </div>
   </div>
@@ -56,10 +56,10 @@
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
           <input class="input" id="q" placeholder="이름·약어·초성 검색" aria-label="사전 검색" aria-describedby="q-help">
         </div>
-        <button class="btn ghost sm" id="q-help-b" aria-label="검색 도움말" title="이름 · 영문약어 · 영문명 · 이음동의어 · 금칙어 · 과거 이름 · 초성(ㅅㅊㅁ)으로 찾습니다. 2글자 이하는 앞부분 일치." style="width:28px;padding:0"><i data-ic=info></i></button>
+        <button class="btn ghost sm w-28 p-0" id="q-help-b" aria-label="검색 도움말" title="이름 · 영문약어 · 영문명 · 이음동의어 · 금칙어 · 과거 이름 · 초성(ㅅㅊㅁ)으로 찾습니다. 2글자 이하는 앞부분 일치."><i data-ic=info></i></button>
         <span class="sr-only" id="q-help">이름, 영문약어, 영문명, 이음동의어, 금칙어, 과거 이름, 초성으로 찾습니다</span>
         <span class="seg" id="kind-chips" role="group" aria-label="종류"></span>
-        <span style="position:relative">
+        <span class="rel">
           <button class="btn" id="f-btn" aria-haspopup="dialog" aria-expanded="false" aria-controls="f-pop"><i data-ic=filter></i>필터<span class="fcount" id="f-n" hidden></span></button>
           <div class="menu fpop" id="f-pop" role="dialog" aria-label="상세 필터">
             <div class="frow"><span class="fl">출처</span><span class="fv"><button class="chip on" data-src="공통">공통</button><button class="chip on" data-src="기관">기관</button></span></div>
@@ -68,7 +68,7 @@
             <div class="frow"><label class="fl" for="since">변경일</label><select class="input" id="since"><option value="">전체</option><option value="7">최근 7일</option><option value="30">최근 30일</option></select></div>
             <div class="frow"><label class="fl" for="flen">길이</label><select class="input" id="flen"><option value="">전체</option><option value="0-10">10 이하</option><option value="11-100">11~100</option><option value="101-99999">101 이상</option></select></div>
             <div class="frow"><label class="fl" for="fdom">도메인 연결</label><select class="input" id="fdom"><option value="">전체</option><option value="y">연결됨</option><option value="n">연결 없음·사전에 없음</option></select></div>
-            <div class="frow"><span class="fl"></span><label class="flex" style="gap:8px"><input type="checkbox" id="fdisc"> 원본 폐기 포함</label></div>
+            <div class="frow"><span class="fl"></span><label class="flex gap-8"><input type="checkbox" id="fdisc"> 원본 폐기 포함</label></div>
             <div class="ffoot"><button class="btn ghost sm" id="f-reset">초기화</button><span class="grow"></span><button class="btn primary sm" id="f-done">닫기</button></div>
           </div>
         </span>
@@ -87,8 +87,8 @@
     <!-- PN-12 request -->
     <aside class="rpanel wide" id="pn-request">
       <div class="rp-head">
-        <div class="t"><h2>등록 신청</h2><button class="iconbtn close" data-close="pn-request" aria-label="닫기" style="width:28px;height:28px"><i data-ic=x></i></button></div>
-        <div style="margin-top:8px;display:flex;gap:6px">
+        <div class="t"><h2>등록 신청</h2><button class="iconbtn close w-28 h-28" data-close="pn-request" aria-label="닫기"><i data-ic=x></i></button></div>
+        <div class="mt-8 d-flex gap-6">
           <span class="chip" data-group="rk" data-rq="word">단어</span><span class="chip" data-group="rk" data-rq="domain">도메인</span><span class="chip on" data-group="rk" data-rq="term">용어</span><span class="chip" aria-disabled="true" style="opacity:.5;cursor:not-allowed" title="엔터티 용어는 표준 맞추기의 테이블명 행에서 신청합니다 — 이 폼은 W2">엔터티 용어 · W2</span><span class="chip" aria-disabled="true" style="opacity:.5;cursor:not-allowed" title="표준코드·코드값 신청 폼은 W2">코드 · W2</span>
         </div>
       </div>
@@ -103,7 +103,7 @@
             <div class="field"><label for="dm-len">길이 *</label><input class="input mono" id="dm-len" value="3"></div>
             <div class="field"><label>소수점</label><input class="input mono" value="" placeholder="—" disabled aria-label="소수점"></div>
           </div>
-          <div class="card" style="background:var(--surface-2);margin-bottom:12px">
+          <div class="card bg-surface2 mb-12">
             <div class="caption muted">자동 생성 · 형식단어 + 축약명 + 길이 (<a href="settings.html#sys">데이터타입 매핑</a>)</div>
             <div class="flex"><b class="mono" id="dm-name" style="font-size:15px">코드C3</b><span class="caption faint">· Oracle <span class="mono" id="dm-phys">CHAR(3)</span> · PostgreSQL <span class="mono" id="dm-pg">CHAR(3)</span></span><span class="grow"></span><span class="badge b-success" id="dm-dup">중복 없음</span></div>
           </div>
@@ -119,13 +119,13 @@
           <div class="field-row"><div class="field"><label for="wd-eng">영문명</label><input class="input" id="wd-eng" value=""></div><div class="field"><label>형식단어</label><select class="input"><option>아니오</option><option>예</option></select></div></div>
           <div class="field"><label for="wd-syn">동의어 · 금칙어</label><input class="input" id="wd-syn" value="" placeholder="쉼표로 구분 — 신청 문서에 함께 담깁니다"></div>
           <div class="banner warning" id="wd-sim" hidden><i data-ic=warn></i><div id="wd-sim-t"></div></div>
-          <div class="flex" style="margin-top:8px"><span class="grow"></span><button class="btn" id="add-word">목록에 추가</button></div>
+          <div class="flex mt-8"><span class="grow"></span><button class="btn" id="add-word">목록에 추가</button></div>
         </div>
         <div class="rq-form" data-rq="term">
         <div class="field"><label for="tm-name">용어명 *</label><input class="input" id="tm-name" value="산출물제출일자"><span class="help">입력을 멈추면 자동으로 분석합니다</span></div>
         <div class="section-t">분석 결과 <span class="badge" id="tm-n">—</span></div>
         <div id="tm-cands"></div>
-        <div class="field-row" style="margin-top:12px">
+        <div class="field-row mt-12">
           <div class="field"><label for="tm-abbr">용어 영문약어명</label><input class="input mono" id="tm-abbr" value="" readonly><span class="help" id="tm-abbr-h">구성 단어 약어를 _로 결합</span></div>
           <div class="field"><label for="tm-dom">도메인 * <span class="faint">마지막 형식단어 ‘일자’ 기준 추천</span></label><select class="input mono" id="tm-dom"><option>연월일C8</option><option>명V100</option><option>ID V10</option><option>코드C2</option><option>내용V1000</option><option>금액N15</option><option>일련번호N10</option><option>여부C1</option></select></div>
         </div>
@@ -135,7 +135,7 @@
         <div class="hr"></div>
         <div class="section-t">대기 목록 <span class="badge" id="q-n">0</span> <span class="caption muted">신청하면 이 목록 그대로 결재 문서가 됩니다</span></div>
         <table class="tbl"><thead><tr><th>종류</th><th>이름</th><th>약어 · 내용</th><th>검사</th><th></th></tr></thead><tbody id="q-body"></tbody></table>
-        <div class="field" style="margin-top:12px"><label for="rq-why">신청 사유 * <span class="faint">1~1,000자</span></label><textarea class="input" id="rq-why" rows="2" placeholder="예: 요구사항관리 산출물 제출 관리 기능 추가"></textarea></div>
+        <div class="field mt-12"><label for="rq-why">신청 사유 * <span class="faint">1~1,000자</span></label><textarea class="input" id="rq-why" rows="2" placeholder="예: 요구사항관리 산출물 제출 관리 기능 추가"></textarea></div>
         <div class="section-t">결재선</div>
         <div class="approval-line">
           <div class="al-step"><span class="pt"></span><div><b>DA 승인</b> <span class="caption faint">필수 · 템플릿</span><div class="caption muted" id="da-cnt"></div></div></div>
@@ -154,7 +154,7 @@
     <div class="m-head"><h3 id="pub-t">제정차수 공표</h3></div>
     <div class="m-body">
       <div id="pub-sum"></div>
-      <div class="field" style="margin-top:12px"><label for="pub-why">공표 사유 *</label><textarea class="input" id="pub-why" rows="2"></textarea></div>
+      <div class="field mt-12"><label for="pub-why">공표 사유 *</label><textarea class="input" id="pub-why" rows="2"></textarea></div>
       <div class="caption muted">결재 반영은 항목 버전만 올립니다. 공표는 기관 사전 차수를 올리고, 직전 공표 이후 승인된 항목의 제정차수를 갱신하며, 이 시각을 기준 시각으로 남깁니다. 되돌리지 않고 다음 공표로만 갱신합니다.</div>
     </div>
     <div class="m-foot"><button class="btn" data-close="mo-pub">취소</button><button class="btn primary" id="pub-go" data-needs="pub-why">공표</button></div></div></div>
@@ -168,7 +168,7 @@ window.pageInit = function () {
   // ?empty=1 — a fresh installation: only the common standard is loaded, the organisation dictionary is empty (T1 start, read-only sample)
   const EMPTY = q0.get('empty') === '1';
   const I = EMPTY ? getDict().filter(x => x.src === '공통') : getDict();
-  if (EMPTY) document.querySelector('.page-header').insertAdjacentHTML('afterend', `<div class="pad" style="padding-bottom:0"><div class="banner info"><i data-ic=info></i><div class="grow"><b>기관 사전이 비어 있습니다</b> — 설치 직후 상태(예시 · 저장 안 함). 공통표준 ${I.length}건(목업 시드)은 바로 검색해 쓸 수 있습니다. 기관 단어·용어는 엑셀 초기 적재나 등록 신청으로 시작하세요.</div><a class="btn sm primary" href="excel-import.html?mode=init">엑셀로 초기 적재</a><a class="btn sm" href="dictionary.html">실제 사전으로</a></div></div>`);   // v6: items come from the shared state layer (approvals update versions/pending) — the literal below is only the old seed
+  if (EMPTY) document.querySelector('.page-header').insertAdjacentHTML('afterend', `<div class="pad pb-0"><div class="banner info"><i data-ic=info></i><div class="grow"><b>기관 사전이 비어 있습니다</b> — 설치 직후 상태(예시 · 저장 안 함). 공통표준 ${I.length}건(목업 시드)은 바로 검색해 쓸 수 있습니다. 기관 단어·용어는 엑셀 초기 적재나 등록 신청으로 시작하세요.</div><a class="btn sm primary" href="excel-import.html?mode=init">엑셀로 초기 적재</a><a class="btn sm" href="dictionary.html">실제 사전으로</a></div></div>`);   // v6: items come from the shared state layer (approvals update versions/pending) — the literal below is only the old seed
   const pub = getPub();
   $('dictver').textContent = `공통표준 2025.11 · 기관 사전 제정 ${pub.cha}차 (${pub.at.slice(5, 10).replace('-', '/')} 공표)`;
   // Korean initial-consonant search
@@ -217,12 +217,12 @@ window.pageInit = function () {
     $('f-n').hidden = !act.length; $('f-n').textContent = act.length;
     const chipsHtml = act.length ? `<span class="fchips">${act.map(([k, l]) => `<button class="fchip" data-clear="${k}" aria-label="${l} 조건 지우기">${l}<i data-ic=x data-s=12></i></button>`).join('')}<button class="btn ghost sm" data-clear="all">모두 지우기</button></span>` : '';
     const recent = !qs && !showAll && !kind && !$('dg').value && !$('since').value && !stFilter && !$('flen').value && !$('fdom').value;
-    $('lh').innerHTML = `<b style="color:var(--fg)">${L.length}건</b> · ${recent ? (EMPTY ? '기관 사전이 비어 있어 공통표준만 보입니다' : '검색어가 없어 <b>기관 사전 최근 변경</b>을 보여 줍니다 <button class="btn ghost sm" id="show-all">전체 보기</button>') : qs ? `‘${qs}’ 검색${isCho(qs) ? ' (초성)' : isShort(qs) ? ' — <b>2글자 이하는 앞부분 일치</b>로 찾습니다' : ''}${L.length >= 1000 ? ' · <b>1,000건 이상 — 검색어를 더 입력하세요</b>' : ''}` : '필터 결과'} ${chipsHtml} <span class="grow"></span> <kbd>↑</kbd><kbd>↓</kbd> 이동 <kbd>Enter</kbd> 열기`;
+    $('lh').innerHTML = `<b class="t-fg">${L.length}건</b> · ${recent ? (EMPTY ? '기관 사전이 비어 있어 공통표준만 보입니다' : '검색어가 없어 <b>기관 사전 최근 변경</b>을 보여 줍니다 <button class="btn ghost sm" id="show-all">전체 보기</button>') : qs ? `‘${qs}’ 검색${isCho(qs) ? ' (초성)' : isShort(qs) ? ' — <b>2글자 이하는 앞부분 일치</b>로 찾습니다' : ''}${L.length >= 1000 ? ' · <b>1,000건 이상 — 검색어를 더 입력하세요</b>' : ''}` : '필터 결과'} ${chipsHtml} <span class="grow"></span> <kbd>↑</kbd><kbd>↓</kbd> 이동 <kbd>Enter</kbd> 열기`;
     const orgN = L.filter(x => x.it.src === '기관').length;   // only organisation items go into the editable file (CX12-05)
     $('dl-n').textContent = orgN ? `기관 ${orgN}건(공통 ${L.length - orgN}건은 참고 시트) · 숨김 열(항목 ID·버전·기준본)` : '이 검색 결과에는 편집할 기관 항목이 없습니다 — 공통표준은 기관에서 편집할 수 없습니다';
     $('dl-menu').querySelector('[data-dl="filter"]').disabled = !orgN;
-    $('rows').innerHTML = L.length ? L.map(({ it, m }) => `<tr class="click ${sel === it.id ? 'sel' : ''}" data-id="${it.id}" tabindex="0"><td><span class="badge ${{ 사용: 'b-success', '신청 중': 'b-info', '보완 필요': 'b-warning', '삭제 보관': 'b-danger' }[it.st] || ''}">${{ 사용: '사용', '신청 중': '신청 중', '보완 필요': '보완 필요', '삭제 보관': 'V0 삭제 보관' }[it.st] || '미사용'}</span>${it.pending && it.st !== '신청 중' ? ' <span class="caption muted">신청 중</span>' : ''}</td><td>${it.kn}</td><td><span class="muted">${it.src}</span></td><td><b>${hl(it.name, qs)}</b>${m.t && m.t !== '현재명' ? `<span class="mt">${m.t}${m.v ? ': ' + m.v : ''}</span>` : ''}${m.t === '금칙어' ? ` <span class="caption" style="color:var(--danger-deep)">‘${m.v}’ 대신 이 표준을 쓰세요</span>` : ''}</td><td class="mono">${hl(it.abbr, qs)}</td><td class="mono">${it.dom}</td><td>${it.eng || ''}</td><td class="mono">${it.ver ? 'V' + it.ver : '—'}</td><td class="mono">${it.dt}</td><td class="num">${it.use}</td></tr>`).join('')
-      : `<tr class="er none"><td colspan="10" style="text-align:center;padding:40px"><span class="et">‘${qs}’에 맞는 표준이 없습니다</span><div class="caption muted" style="margin-bottom:8px">필터를 지우고 다시 찾거나, 없으면 등록 신청하세요.</div><button class="btn sm primary" id="req-q">‘${qs}’ 등록 신청</button> <button class="btn sm ghost" id="clr">필터 지우기</button></td></tr>`;
+    $('rows').innerHTML = L.length ? L.map(({ it, m }) => `<tr class="click ${sel === it.id ? 'sel' : ''}" data-id="${it.id}" tabindex="0"><td><span class="badge ${{ 사용: 'b-success', '신청 중': 'b-info', '보완 필요': 'b-warning', '삭제 보관': 'b-danger' }[it.st] || ''}">${{ 사용: '사용', '신청 중': '신청 중', '보완 필요': '보완 필요', '삭제 보관': 'V0 삭제 보관' }[it.st] || '미사용'}</span>${it.pending && it.st !== '신청 중' ? ' <span class="caption muted">신청 중</span>' : ''}</td><td>${it.kn}</td><td><span class="muted">${it.src}</span></td><td><b>${hl(it.name, qs)}</b>${m.t && m.t !== '현재명' ? `<span class="mt">${m.t}${m.v ? ': ' + m.v : ''}</span>` : ''}${m.t === '금칙어' ? ` <span class="caption t-danger">‘${m.v}’ 대신 이 표준을 쓰세요</span>` : ''}</td><td class="mono">${hl(it.abbr, qs)}</td><td class="mono">${it.dom}</td><td>${it.eng || ''}</td><td class="mono">${it.ver ? 'V' + it.ver : '—'}</td><td class="mono">${it.dt}</td><td class="num">${it.use}</td></tr>`).join('')
+      : `<tr class="er none"><td colspan="10" style="text-align:center;padding:40px"><span class="et">‘${qs}’에 맞는 표준이 없습니다</span><div class="caption muted mb-8">필터를 지우고 다시 찾거나, 없으면 등록 신청하세요.</div><button class="btn sm primary" id="req-q">‘${qs}’ 등록 신청</button> <button class="btn sm ghost" id="clr">필터 지우기</button></td></tr>`;
     const sa = $('show-all'); if (sa) sa.onclick = () => { showAll = true; draw(); };
     const rq = $('req-q'); if (rq) rq.onclick = () => { $('pn-detail').classList.remove('open'); $('pn-request').classList.add('open'); document.querySelector('#pn-request [data-rq="term"] input').value = qs; };
     const cl = $('clr'); if (cl) cl.onclick = () => { clearAll(); $('q').value = ''; kind = ''; showAll = true; draw(); };
@@ -237,11 +237,11 @@ window.pageInit = function () {
   function detail() {
     const it = I.find(x => x.id === sel); const p = $('pn-detail'); if (!it) { p.innerHTML = ''; p.classList.remove('open'); return; }
     const common = it.src === '공통';
-    const hist = it.hist.length ? `<div class="tl">${it.hist.map(h => `<div class="ev"><div class="flex"><b>${h.v}</b><span class="badge">${h.act}</span><span class="grow"></span><span class="caption mono">${h.at}</span></div><div class="caption muted">${h.by}${h.doc !== '—' ? ` · <a href="approvals.html?doc=${h.doc}">${h.doc}</a>` : ''}${h.why ? ' · 사유: ' + h.why : ''}</div>${h.diff.length ? `<table class="tbl" style="margin-top:4px"><thead><tr><th>칸</th><th>이전</th><th>이후</th></tr></thead><tbody>${h.diff.map(d => `<tr><td>${d[0]}</td><td><span class="old-v">${d[1] === '' ? '(빈 문자열)' : d[1] == null ? '(NULL)' : d[1]}</span></td><td>${d[2]}</td></tr>`).join('')}</tbody></table>` : ''}<button class="btn ghost sm" data-toast="${it.name}_${h.v}.xlsx — 그 버전의 값" data-toast-type="info">이 버전 엑셀</button></div>`).join('')}</div>` : '<div class="caption muted">이력이 없습니다.</div>';
-    p.innerHTML = `<div class="rp-head"><div class="t"><span class="badge ${common ? 'b-common' : 'b-org'}">${it.src}</span><span class="badge">${it.kn}</span><span class="badge ${it.st === '사용' ? 'b-success' : it.st === '신청 중' ? 'b-info' : ''}">${it.st}</span><button class="iconbtn close" data-close="pn-detail" aria-label="닫기" style="width:28px;height:28px"><i data-ic=x></i></button></div>
-        <h2 style="margin-top:8px">${it.name}</h2><div class="rp-sub">${it.abbr} · ${it.eng || ''} · <span class="mono">${it.id}</span></div></div>
+    const hist = it.hist.length ? `<div class="tl">${it.hist.map(h => `<div class="ev"><div class="flex"><b>${h.v}</b><span class="badge">${h.act}</span><span class="grow"></span><span class="caption mono">${h.at}</span></div><div class="caption muted">${h.by}${h.doc !== '—' ? ` · <a href="approvals.html?doc=${h.doc}">${h.doc}</a>` : ''}${h.why ? ' · 사유: ' + h.why : ''}</div>${h.diff.length ? `<table class="tbl mt-4"><thead><tr><th>칸</th><th>이전</th><th>이후</th></tr></thead><tbody>${h.diff.map(d => `<tr><td>${d[0]}</td><td><span class="old-v">${d[1] === '' ? '(빈 문자열)' : d[1] == null ? '(NULL)' : d[1]}</span></td><td>${d[2]}</td></tr>`).join('')}</tbody></table>` : ''}<button class="btn ghost sm" data-toast="${it.name}_${h.v}.xlsx — 그 버전의 값" data-toast-type="info">이 버전 엑셀</button></div>`).join('')}</div>` : '<div class="caption muted">이력이 없습니다.</div>';
+    p.innerHTML = `<div class="rp-head"><div class="t"><span class="badge ${common ? 'b-common' : 'b-org'}">${it.src}</span><span class="badge">${it.kn}</span><span class="badge ${it.st === '사용' ? 'b-success' : it.st === '신청 중' ? 'b-info' : ''}">${it.st}</span><button class="iconbtn close w-28 h-28" data-close="pn-detail" aria-label="닫기"><i data-ic=x></i></button></div>
+        <h2 class="mt-8">${it.name}</h2><div class="rp-sub">${it.abbr} · ${it.eng || ''} · <span class="mono">${it.id}</span></div></div>
       <div class="rp-body">
-        ${common ? '<div class="banner" style="margin-bottom:10px"><i data-ic=info></i><div><b>공통 표준</b> — 읽기 전용입니다. 기관에서 바꿀 수 없습니다.</div></div>' : ''}
+        ${common ? '<div class="banner mb-10"><i data-ic=info></i><div><b>공통 표준</b> — 읽기 전용입니다. 기관에서 바꿀 수 없습니다.</div></div>' : ''}
         <dl class="kv"><dt>영문약어명</dt><dd class="mono">${it.abbr}</dd><dt>도메인 / 형식</dt><dd class="mono">${it.dom}</dd>${it.allow ? `<dt>허용 값</dt><dd class="mono">${it.allow}</dd>` : ''}<dt>이음동의어</dt><dd>${it.syn.join(', ') || '—'}</dd><dt>금칙어</dt><dd>${it.forbid.join(', ') || '—'}</dd>${it.old.length ? `<dt>과거 이름</dt><dd>${it.old.join(', ')}</dd>` : ''}<dt>설명</dt><dd>${it.desc || it.eng || '—'}</dd>
           <dt>항목 버전</dt><dd class="mono">${it.ver ? 'V' + it.ver : '— (미승인)'}</dd><dt>제정차수</dt><dd class="mono">${it.cha ? it.cha + '차' + (common ? ' (공통 원문)' : '') : '—'}</dd><dt>변경일</dt><dd class="mono">${it.dt}</dd></dl>
         <div class="tabs"><button class="on" data-tab="hist">이력 <span class="n">${it.hist.length}</span></button><button data-tab="use">사용처 <span class="n">${it.use}</span></button><button data-tab="req">진행 중 신청 <span class="n">${it.pending ? 1 : 0}</span></button></div>
@@ -306,7 +306,7 @@ window.pageInit = function () {
     pubTarget = ch.map(c => c.at + '|' + c.item + '|' + c.doc).join('\n');   // the set the DA confirmed — publishing checks it is unchanged
     $('pub-t').textContent = `제정 ${pub.cha + 1}차 공표`;
     $('pub-sum').innerHTML = `<div class="mline"><span><b>${by.추가}</b>추가</span><span><b>${by.변경}</b>변경</span><span><b>${by.미사용}</b>미사용</span></div>
-      <div class="caption muted" style="margin-top:8px">직전 공표: 제정 ${pub.cha}차 · ${pub.at} · ${pub.by} — 그 뒤 승인된 <b>항목 ${Object.keys(last).length}개</b>(변경 기록 ${ch.length}건${noId ? ` · 그중 항목 ID 없는 집계 기록 ${noId}건은 차수만 기록` : ''})가 대상입니다. 진행 중 신청은 포함하지 않습니다. <a href="dict-history.html?unpub=1">대상 목록 보기</a></div>`;
+      <div class="caption muted mt-8">직전 공표: 제정 ${pub.cha}차 · ${pub.at} · ${pub.by} — 그 뒤 승인된 <b>항목 ${Object.keys(last).length}개</b>(변경 기록 ${ch.length}건${noId ? ` · 그중 항목 ID 없는 집계 기록 ${noId}건은 차수만 기록` : ''})가 대상입니다. 진행 중 신청은 포함하지 않습니다. <a href="dict-history.html?unpub=1">대상 목록 보기</a></div>`;
     $('pub-why').value = ''; $('mo-pub').classList.add('open');
     setBlock($('pub-go'), Object.keys(last).length ? '' : '직전 공표 이후 승인된 변경이 없어 공표할 수 없습니다');
   };
@@ -334,10 +334,10 @@ window.pageInit = function () {
     const needDup = queue.some(similar);
     const FIELDS = it => { const d = I.find(x => x.id === it.id) || {}; return d.k === 'domain' ? [['허용 값', 'allow'], ['설명', 'desc']] : d.k === 'term' ? [['설명', 'desc'], ['영문명', 'eng'], ['도메인', 'dom']] : [['설명', 'desc'], ['영문명', 'eng']]; };
     $('q-body').innerHTML = queue.length ? queue.map((it, i) => it.act === '미사용' ? `<tr><td>미사용</td><td>${it.name}</td><td><input class="input" data-why="${i}" aria-label="${it.name} 미사용 사유" value="${it.why || ''}" placeholder="미사용 사유 *"></td><td><span class="badge">사용처 ${(I.find(x => x.id === it.id) || {}).use || 0}곳</span></td><td><button class="btn ghost sm" data-del="${i}" aria-label="${it.name} 목록에서 빼기">빼기</button></td></tr>`
-      : it.act === '변경' ? `<tr><td>변경</td><td>${it.name}</td><td><div class="flex" style="gap:4px"><select class="input" data-fld="${i}" aria-label="${it.name} 바꿀 칸" style="width:96px">${FIELDS(it).map(([l]) => `<option ${Object.keys(it.chg)[0] === l ? 'selected' : ''}>${l}</option>`).join('')}</select><input class="input" data-chg="${i}" aria-label="${it.name} 새 값" value="${chgOf(it)[1]}" placeholder="새 값"></div><div class="caption faint">현재: ${chgOf(it)[0] || '(빈 값)'}</div></td><td><span class="badge b-success">통과</span></td><td><button class="btn ghost sm" data-del="${i}" aria-label="${it.name} 목록에서 빼기">빼기</button></td></tr>`
+      : it.act === '변경' ? `<tr><td>변경</td><td>${it.name}</td><td><div class="flex gap-4"><select class="input" data-fld="${i}" aria-label="${it.name} 바꿀 칸" style="width:96px">${FIELDS(it).map(([l]) => `<option ${Object.keys(it.chg)[0] === l ? 'selected' : ''}>${l}</option>`).join('')}</select><input class="input" data-chg="${i}" aria-label="${it.name} 새 값" value="${chgOf(it)[1]}" placeholder="새 값"></div><div class="caption faint">현재: ${chgOf(it)[0] || '(빈 값)'}</div></td><td><span class="badge b-success">통과</span></td><td><button class="btn ghost sm" data-del="${i}" aria-label="${it.name} 목록에서 빼기">빼기</button></td></tr>`
       : `<tr><td>${it.act === '변경' ? '변경' : ({ word: '단어', term: '용어', domain: '도메인' }[it.k] || '항목')}</td><td>${it.name}</td><td class="mono">${it.act === '변경' ? `<input class="input" data-chg="${i}" aria-label="${it.name} 새 설명" value="${it.chg ? chgOf(it)[1] : ''}" placeholder="새 설명">` : (it.abbr || '')}</td><td>${similar(it) ? '<span class="badge b-warning">약어 중복 사유 필요</span>' : '<span class="muted">통과</span>'}</td><td><button class="btn ghost sm" data-del="${i}" aria-label="${it.name} 목록에서 빼기">빼기</button></td></tr>`).join('')
       + (needDup ? `<tr><td colspan="5"><label for="dup-why" class="caption">약어 중복 허용 사유 * <span class="faint">비슷한 기존 약어가 있습니다</span></label><textarea class="input" id="dup-why" rows="2">${dupWhy}</textarea></td></tr>` : '')
-      : '<tr class="er"><td colspan="5" class="caption muted" style="text-align:center;padding:16px">위에서 입력하고 [목록에 추가]를 누르세요</td></tr>';
+      : '<tr class="er"><td colspan="5" class="caption muted ta-c p-16">위에서 입력하고 [목록에 추가]를 누르세요</td></tr>';
     const go = $('rq-go'); go.textContent = queue.length ? `${queue.length}건 신청` : '신청';
     go.dataset.needs = 'rq-why' + (needDup ? ' dup-why' : '');
     setBlock(go, queueBlock());
@@ -364,9 +364,9 @@ window.pageInit = function () {
     const n = $('tm-name').value.trim(); analysed = n;
     if (!n) { $('tm-cands').innerHTML = ''; $('tm-n').textContent = '—'; $('tm-abbr').value = ''; return; }
     const dc = decompose(n);
-    const parts = dc.parts.map(p => p.unknown ? `<b style="color:var(--danger-deep)">${p.w}?</b>` : p.ok ? p.w : `<span style="color:var(--warning-deep)">${p.w}(승인 전${p.doc ? ' · ' + p.doc : ''})</span>`).join(' + ');
+    const parts = dc.parts.map(p => p.unknown ? `<b class="t-danger">${p.w}?</b>` : p.ok ? p.w : `<span class="t-warning">${p.w}(승인 전${p.doc ? ' · ' + p.doc : ''})</span>`).join(' + ');
     $('tm-n').textContent = dc.ok ? '후보 1' : '확인 필요';
-    $('tm-cands').innerHTML = `<div class="cand on"><input type="radio" checked aria-label="분해 결과"><div class="grow">${parts}</div><span class="mono">${dc.ok ? dc.abbr : '—'}</span>${dc.ok ? (dc.sus ? '<span class="badge b-warning">? 의심 · 1음절</span>' : '<i data-ic=check></i>') : dc.unknown.length ? '<span class="badge b-danger">미등록 단어</span>' : '<span class="badge b-warning">구성 단어 승인 전</span>'}</div>${!dc.ok ? `<div class="caption" style="margin-top:4px">${dc.unknown.length ? `‘${dc.unknown.map(p => p.w).join(', ')}’은 사전에 없는 단어입니다 — 단어부터 신청하세요.` : `‘${dc.pending.map(p => p.w).join(', ')}’ 단어가 아직 승인 전입니다 — 승인 뒤 다시 분석됩니다.`}</div>` : ''}`;
+    $('tm-cands').innerHTML = `<div class="cand on"><input type="radio" checked aria-label="분해 결과"><div class="grow">${parts}</div><span class="mono">${dc.ok ? dc.abbr : '—'}</span>${dc.ok ? (dc.sus ? '<span class="badge b-warning">? 의심 · 1음절</span>' : '<i data-ic=check></i>') : dc.unknown.length ? '<span class="badge b-danger">미등록 단어</span>' : '<span class="badge b-warning">구성 단어 승인 전</span>'}</div>${!dc.ok ? `<div class="caption mt-4">${dc.unknown.length ? `‘${dc.unknown.map(p => p.w).join(', ')}’은 사전에 없는 단어입니다 — 단어부터 신청하세요.` : `‘${dc.pending.map(p => p.w).join(', ')}’ 단어가 아직 승인 전입니다 — 승인 뒤 다시 분석됩니다.`}</div>` : ''}`;
     $('tm-abbr').value = dc.ok ? dc.abbr : ''; $('tm-abbr-h').textContent = dc.ok ? `구성 단어 약어를 _로 결합 · ${dc.abbr.length}/30자` : '분석이 끝나야 정해집니다';
     $('tm-dom').value = domGuess(n);
   }
@@ -424,7 +424,7 @@ window.pageInit = function () {
       $('rq-why').value = d.reason || ''; drawQueue();
       const last = (d.hist || []).slice(-1)[0];
       $('pn-detail').classList.remove('open'); panel.classList.add('open');
-      panel.querySelector('.rp-body').insertAdjacentHTML('afterbegin', `<div class="banner warning" style="margin-bottom:10px"><i data-ic=warn></i><div><b>${d.id} 보완해서 다시 신청</b> — ${STEP_NAME[d.step]}${last && last.why ? ` · 의견: ${last.why}` : ''}. 아래 대기 목록은 그 문서의 항목입니다. 고친 뒤 신청하면 <b>새 신청번호</b>가 만들어집니다.</div></div>`);
+      panel.querySelector('.rp-body').insertAdjacentHTML('afterbegin', `<div class="banner warning mb-10"><i data-ic=warn></i><div><b>${d.id} 보완해서 다시 신청</b> — ${STEP_NAME[d.step]}${last && last.why ? ` · 의견: ${last.why}` : ''}. 아래 대기 목록은 그 문서의 항목입니다. 고친 뒤 신청하면 <b>새 신청번호</b>가 만들어집니다.</div></div>`);
     } else if (d) toast(`${d.id}는 내가 보완할 수 있는 상태가 아닙니다(${STEP_NAME[d.step]})`, 'info');
   }
   if ($('wd-lim')) $('wd-lim').textContent = `${getPolicy().wordAbbr || 6}자 이내`;
@@ -434,13 +434,13 @@ window.pageInit = function () {
   $('rq-final').style.display = lineFor('dict').includes('final') ? '' : 'none';
   let candId = null;
   if (q0.get('cand')) { const c = getCands().find(x => x.id === q0.get('cand')); if (c) { candId = c.id; $('pn-detail').classList.remove('open'); panel.classList.add('open'); if (c.t === '단어') { panel.querySelector('[data-rq="word"].chip').click(); $('wd-name').value = c.name; $('wd-abbr').value = c.abbr || ''; } else { $('tm-name').value = c.name; analyse(); }
-    panel.querySelector('.rp-body').insertAdjacentHTML('afterbegin', `<div class="banner info" style="margin-bottom:10px"><i data-ic=flag></i><div><b>후보 ‘${c.name}’을 ${c.t} 신청으로 전환</b> — 발생 위치 ${c.loc.length}곳. 값을 확인하고 [목록에 추가] 후 신청하면 후보가 이 신청에 연결됩니다.</div></div>`); $('rq-why').value = `후보 큐 ${c.loc.length}곳 발생 — ${c.name}`; } }
+    panel.querySelector('.rp-body').insertAdjacentHTML('afterbegin', `<div class="banner info mb-10"><i data-ic=flag></i><div><b>후보 ‘${c.name}’을 ${c.t} 신청으로 전환</b> — 발생 위치 ${c.loc.length}곳. 값을 확인하고 [목록에 추가] 후 신청하면 후보가 이 신청에 연결됩니다.</div></div>`); $('rq-why').value = `후보 큐 ${c.loc.length}곳 발생 — ${c.name}`; } }
   // V0 permanent delete (30 v1.2 ⑦): DA·Admin, references block it, the exact name and a reason confirm it, a separate log records it
   function purge(it) {
     if (liveRoleChanged()) { staleRoleToast(); return; }
     if (it.use > 0) { toast(`‘${it.name}’은 아직 ${it.use}곳에서 참조 중이라 영구 삭제할 수 없습니다 — 참조를 먼저 정리하세요`, 'danger'); return; }
     const box = document.createElement('div'); box.className = 'banner danger'; box.style.margin = '8px 0';
-    box.innerHTML = `<i data-ic=warn></i><div class="grow"><b>영구 삭제 — 되돌릴 수 없습니다.</b> 항목과 개별 이력이 지워지고, 결재 기록과 삭제 로그만 남습니다.<div class="field" style="margin-top:6px"><label for="pg-name">확인하려면 이름 ‘${it.name}’을 그대로 입력하세요</label><input class="input" id="pg-name"></div><div class="field"><label for="pg-why">사유 *</label><input class="input" id="pg-why"></div><div class="flex"><span class="grow"></span><button class="btn sm danger" id="pg-go" disabled>영구 삭제</button></div></div>`;
+    box.innerHTML = `<i data-ic=warn></i><div class="grow"><b>영구 삭제 — 되돌릴 수 없습니다.</b> 항목과 개별 이력이 지워지고, 결재 기록과 삭제 로그만 남습니다.<div class="field mt-6"><label for="pg-name">확인하려면 이름 ‘${it.name}’을 그대로 입력하세요</label><input class="input" id="pg-name"></div><div class="field"><label for="pg-why">사유 *</label><input class="input" id="pg-why"></div><div class="flex"><span class="grow"></span><button class="btn sm danger" id="pg-go" disabled>영구 삭제</button></div></div>`;
     $('pn-detail').querySelector('.rp-body').prepend(box);
     const chk = () => { $('pg-go').disabled = !($('pg-name').value === it.name && $('pg-why').value.trim()); };
     $('pg-name').oninput = chk; $('pg-why').oninput = chk;

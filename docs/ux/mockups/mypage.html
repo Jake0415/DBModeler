@@ -35,28 +35,28 @@
       <div class="set-row"><div class="l"><b>기본 정보</b><span>회사 · 부서 · 이름은 관리자가 바꿉니다</span></div>
         <div class="field-row"><div class="field"><label for="p-company">회사명</label><input class="input" id="p-company" readonly></div><div class="field"><label for="p-org">부서명</label><input class="input" id="p-org" readonly></div><div class="field"><label for="p-name">이름</label><input class="input" id="p-name" readonly></div><div class="field"><label for="p-id">ID</label><input class="input mono" id="p-id" readonly></div></div></div>
       <div class="set-row"><div class="l"><b>연락처</b><span>결재 알림 메일이 이 주소로 갑니다</span></div>
-        <div class="field-row"><div class="field"><label for="p-phone">전화번호</label><input class="input mono" id="p-phone" inputmode="tel" placeholder="010-1234-5678"></div><div class="field"><label for="p-mail">이메일</label><input class="input mono" id="p-mail" type="email"></div></div><div class="caption" id="p-cerr" role="alert" style="color:var(--danger-deep)"></div></div>
+        <div class="field-row"><div class="field"><label for="p-phone">전화번호</label><input class="input mono" id="p-phone" inputmode="tel" placeholder="010-1234-5678"></div><div class="field"><label for="p-mail">이메일</label><input class="input mono" id="p-mail" type="email"></div></div><div class="caption t-danger" id="p-cerr" role="alert"></div></div>
       <div class="set-row"><div class="l"><b>표시 이름</b><span>결재·공동 편집 커서에 보이는 이름</span></div><div class="field"><label for="p-disp">표시 이름</label><input class="input" id="p-disp"></div></div>
       <div class="set-row"><div class="l"><b>내 역할 · 담당 시스템</b><span>조회 전용 — 바꾸려면 Admin에게 요청합니다</span></div>
-        <div><div id="p-roles" style="margin-bottom:8px"></div><div class="caption" id="p-sys"></div>
-          <button class="btn sm" style="margin-top:8px" data-open="mo-rolereq" id="rr-open">역할 변경 요청</button><div class="caption" id="rr-state" style="margin-top:6px"></div></div></div>
-      <div class="flex" style="margin-top:16px"><span class="grow"></span><button class="btn primary" id="p-save">저장</button></div>
+        <div><div class="mb-8" id="p-roles"></div><div class="caption" id="p-sys"></div>
+          <button class="btn sm mt-8" data-open="mo-rolereq" id="rr-open">역할 변경 요청</button><div class="caption mt-6" id="rr-state"></div></div></div>
+      <div class="flex mt-16"><span class="grow"></span><button class="btn primary" id="p-save">저장</button></div>
     </div>
 
     <div class="pane" data-pane="mine">
-      <div class="flex" style="margin-bottom:12px"><span class="chip on" data-group="mf" data-filter="">전체</span><span class="chip" data-group="mf" data-filter="ing">진행 중</span><span class="chip" data-group="mf" data-filter="fix">보완 필요</span><span class="chip" data-group="mf" data-filter="end">완료</span></div>
+      <div class="flex mb-12"><span class="chip on" data-group="mf" data-filter="">전체</span><span class="chip" data-group="mf" data-filter="ing">진행 중</span><span class="chip" data-group="mf" data-filter="fix">보완 필요</span><span class="chip" data-group="mf" data-filter="end">완료</span></div>
       <div data-filter-target="mf"><table class="tbl"><thead><tr><th>신청번호</th><th>유형</th><th>제목</th><th>현재 단계</th><th>신청일</th><th></th></tr></thead><tbody id="mine-body"></tbody></table></div>
     </div>
 
     <div class="pane" data-pane="work">
-      <div class="caption muted" style="margin-bottom:8px">내가 만든 결재 문서·엑셀 묶음·후보 등록·설정 변경을 시간순으로 모았습니다. 지금 내 차례인 결재는 <a href="approvals.html">결재함</a>에 있습니다.</div>
+      <div class="caption muted mb-8">내가 만든 결재 문서·엑셀 묶음·후보 등록·설정 변경을 시간순으로 모았습니다. 지금 내 차례인 결재는 <a href="approvals.html">결재함</a>에 있습니다.</div>
       <table class="tbl"><thead><tr><th>일시</th><th>구분</th><th>작업</th><th>상태</th><th></th></tr></thead><tbody id="work-body"></tbody></table>
     </div>
 
     <div class="pane set-wrap" data-pane="notify">
-      <div class="caption muted" style="margin-bottom:12px">메일은 기관 정책상 <b>결재선 담당자</b>에게만 갑니다. 정책 범위 안에서만 끌 수 있습니다.</div>
+      <div class="caption muted mb-12">메일은 기관 정책상 <b>결재선 담당자</b>에게만 갑니다. 정책 범위 안에서만 끌 수 있습니다.</div>
       <table class="tbl ntbl"><thead><tr><th>종류</th><th>앱 알림</th><th>메일</th></tr></thead><tbody id="nt-body"></tbody></table>
-      <div class="flex" style="margin-top:12px"><span class="caption muted" id="nt-state"></span><span class="grow"></span><button class="btn primary" id="nt-save">저장</button></div>
+      <div class="flex mt-12"><span class="caption muted" id="nt-state"></span><span class="grow"></span><button class="btn primary" id="nt-save">저장</button></div>
     </div>
 
     <div class="pane set-wrap" data-pane="security">
@@ -66,7 +66,7 @@
           <div class="field"><label for="s-n1">새 비밀번호</label><input class="input mono" id="s-n1" type="password" autocomplete="new-password"></div>
           <div class="field"><label for="s-n2">새 비밀번호 확인</label><input class="input mono" id="s-n2" type="password" autocomplete="new-password"></div>
           <div class="caption muted" id="s-rule"></div><div class="caption" id="s-err" role="alert" style="color:var(--danger-deep);min-height:16px;margin-top:4px"></div>
-          <button class="btn primary" type="submit" style="margin-top:8px">비밀번호 변경</button></form></div>
+          <button class="btn primary mt-8" type="submit">비밀번호 변경</button></form></div>
       <div class="set-row"><div class="l"><b>접속 중인 세션</b><span>세션은 30분 동안 입력이 없으면 만료되고, 5분 전에 알립니다</span></div>
         <div><table class="tbl"><thead><tr><th>기기 · 브라우저</th><th>IP</th><th>마지막 활동</th><th></th></tr></thead><tbody>
           <tr><td>Windows · Chrome <span class="badge b-success">이 기기</span></td><td class="mono">10.12.3.41</td><td class="mono">방금</td><td></td></tr>
@@ -78,15 +78,15 @@
     <div class="pane set-wrap" data-pane="env">
       <div class="set-row"><div class="l"><b>테마</b></div><div class="seg" id="env-theme"><button data-v="light">라이트</button><button data-v="dark">다크</button><button data-v="system">시스템</button></div></div>
       <div class="set-row"><div class="l"><b>표 밀도</b><span>목록 · 표의 한 줄 높이. 바로 적용됩니다</span></div><div class="seg" id="env-density" role="group" aria-label="표 밀도"><button data-v="compact">촘촘 32</button><button data-v="default">기본 36</button><button data-v="comfy">넓게 44</button></div></div>
-      <div class="set-row"><div class="l"><b>시작 화면</b></div><div class="field"><label for="env-start">로그인 후 첫 화면</label><select class="input" id="env-start" style="width:240px"><option>홈</option><option>결재함</option><option>최근 업무 영역</option></select></div></div>
+      <div class="set-row"><div class="l"><b>시작 화면</b></div><div class="field"><label for="env-start">로그인 후 첫 화면</label><select class="input w-240" id="env-start"><option>홈</option><option>결재함</option><option>최근 업무 영역</option></select></div></div>
       <div class="set-row"><div class="l"><b>단축키</b><span>화면 낭독기·음성 입력을 쓰면 끄세요</span></div><label class="flex"><input type="checkbox" id="kb-single2"> 한 글자 단축키(V·E·R·M) 사용</label></div>
-      <div class="flex" style="margin-top:12px"><span class="grow"></span><button class="btn primary" data-toast="환경 설정을 저장했습니다">저장</button></div>
+      <div class="flex mt-12"><span class="grow"></span><button class="btn primary" data-toast="환경 설정을 저장했습니다">저장</button></div>
     </div>
   </div></div>
 
   <div class="overlay" id="mo-rolereq" role="dialog" aria-modal="true" aria-labelledby="rr-t"><div class="modal">
     <div class="m-head"><h3 id="rr-t">역할 변경 요청</h3></div>
-    <div class="m-body"><div class="caption muted" style="margin-bottom:8px">Admin(이데이터)에게 요청합니다. 자기 역할은 스스로 바꿀 수 없습니다.</div>
+    <div class="m-body"><div class="caption muted mb-8">Admin(이데이터)에게 요청합니다. 자기 역할은 스스로 바꿀 수 없습니다.</div>
       <div class="field"><label for="rr-role">요청 역할</label><select class="input" id="rr-role"></select></div>
       <div class="field"><label for="rr-why">사유 *</label><textarea class="input" id="rr-why" rows="2"></textarea></div></div>
     <div class="m-foot"><button class="btn" data-close="mo-rolereq">취소</button><button class="btn primary" data-needs="rr-why" id="rr-go">요청</button></div></div></div>
@@ -117,7 +117,7 @@ window.pageInit = function () {
   $('p-sys').textContent = '담당 시스템: ' + ME.systems.join(', ');
   const docs = getDocs().filter(d => d.req === ME.id);
   const f = d => ({ live: 'ing', fix: 'fix', done: 'end' })[docGroup(d)];   // same rule as the user menu (CL14-03)
-  $('mine-body').innerHTML = docs.length ? docs.map(d => `<tr data-f="${f(d)}"><td class="mono">${d.id}</td><td><span class="muted">${d.type === 'model' ? '모델 확정' : '사전 신청'}</span></td><td>${d.title}</td><td><span class="badge ${f(d) === 'fix' ? 'b-danger' : 'b-info'}">${STEP_NAME[d.step]}</span></td><td class="mono">${d.date}</td><td><a href="approvals.html?box=mine&doc=${d.id}">열기</a></td></tr>`).join('') : '<tr class="er first"><td colspan="6" class="caption muted" style="text-align:center;padding:24px">신청한 문서가 없습니다</td></tr>';
+  $('mine-body').innerHTML = docs.length ? docs.map(d => `<tr data-f="${f(d)}"><td class="mono">${d.id}</td><td><span class="muted">${d.type === 'model' ? '모델 확정' : '사전 신청'}</span></td><td>${d.title}</td><td><span class="badge ${f(d) === 'fix' ? 'b-danger' : 'b-info'}">${STEP_NAME[d.step]}</span></td><td class="mono">${d.date}</td><td><a href="approvals.html?box=mine&doc=${d.id}">열기</a></td></tr>`).join('') : '<tr class="er first"><td colspan="6" class="caption muted ta-c p-24">신청한 문서가 없습니다</td></tr>';
   // 내 작업 (CX13-15): computed from documents, batches, candidates and audit entries made by me
   const w = [];
   getDocs().filter(d => d.req === ME.id).forEach(d => w.push({ at: d.date, g: d.type === 'model' ? '모델 확정' : '사전 신청', t: `${d.title} <span class="mono caption">${d.id}</span>`, st: STEP_NAME[d.step] || d.step, href: `approvals.html?box=mine&doc=${d.id}` }));
@@ -126,7 +126,7 @@ window.pageInit = function () {
   getAudit().filter(a => a.whoId === ME.id).forEach(a => w.push({ at: a.at, g: '설정·관리', t: `${a.act} · ${a.target || ''}`, st: '기록됨', href: 'audit.html' }));
   const wk = at => /^\d\d\//.test(at) ? '2026-' + at.replace('/', '-') : at || '0';
   w.sort((a, b) => wk(b.at).localeCompare(wk(a.at)));
-  $('work-body').innerHTML = w.length ? w.map(x => `<tr><td class="mono">${x.at || '—'}</td><td><span class="badge">${x.g}</span></td><td>${x.t}</td><td class="caption">${x.st}</td><td><a href="${x.href}">열기</a></td></tr>`).join('') : '<tr class="er first"><td colspan="5" class="caption muted" style="text-align:center;padding:24px">아직 작업이 없습니다</td></tr>';
+  $('work-body').innerHTML = w.length ? w.map(x => `<tr><td class="mono">${x.at || '—'}</td><td><span class="badge">${x.g}</span></td><td>${x.t}</td><td class="caption">${x.st}</td><td><a href="${x.href}">열기</a></td></tr>`).join('') : '<tr class="er first"><td colspan="5" class="caption muted ta-c p-24">아직 작업이 없습니다</td></tr>';
   // 알림 설정: saved per user and honoured by pushNotif (app channel); mail follows the organisation policy
   const pref = getNotifyPref(ME.id);
   $('nt-body').innerHTML = NOTIFY_KINDS.map(([k, n, mail]) => { const p = pref[k] || {}; return `<tr><td>${n}</td><td><input type="checkbox" data-nk="${k}" data-ch="app" ${p.app !== false ? 'checked' : ''} ${mail === 'must' ? 'disabled' : ''} aria-label="${n} 앱 알림">${mail === 'must' ? ' <span class="caption faint">필수</span>' : ''}</td><td>${mail === 'must' ? `<input type="checkbox" checked disabled aria-label="${n} 메일(정책상 필수)"> <span class="caption faint">필수</span>` : mail === 'opt' ? `<input type="checkbox" data-nk="${k}" data-ch="mail" ${p.mail !== false ? 'checked' : ''} aria-label="${n} 메일">` : '<span class="caption faint">—</span>'}</td></tr>`; }).join('');

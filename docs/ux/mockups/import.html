@@ -22,14 +22,14 @@
   </div>
   <div class="page-body">
     <div class="main" style="flex:0 0 46%;border-right:1px solid var(--border)">
-      <div class="toolbar"><b style="font-size:14px">DDL 붙여넣기 또는 파일</b><span class="grow"></span><button class="btn sm" id="ex-file">예시 .sql 파일 불러오기</button><button class="btn sm" id="ex-bad">잘못된 예시</button><button class="btn sm primary" id="parse" data-busy>파싱</button></div>
-      <div class="pad" style="flex:1;display:flex;flex-direction:column"><textarea class="input mono" id="ddl" style="flex:1;min-height:420px;font-size:12px;line-height:18px" placeholder="CREATE TABLE … 를 붙여넣으세요. 컬럼 뒤 주석(-- 한글명)을 논리명으로 씁니다." aria-label="DDL"></textarea>
-        <div class="caption muted" style="margin-top:6px">컬럼 뒤 <span class="mono">-- 한글명</span> 주석을 논리명으로 읽습니다(없으면 물리명 그대로). PK·FK 제약을 함께 읽습니다.</div></div>
+      <div class="toolbar"><b class="fs-14">DDL 붙여넣기 또는 파일</b><span class="grow"></span><button class="btn sm" id="ex-file">예시 .sql 파일 불러오기</button><button class="btn sm" id="ex-bad">잘못된 예시</button><button class="btn sm primary" id="parse" data-busy>파싱</button></div>
+      <div class="pad flex-1 d-flex col"><textarea class="input mono" id="ddl" style="flex:1;min-height:420px;font-size:12px;line-height:18px" placeholder="CREATE TABLE … 를 붙여넣으세요. 컬럼 뒤 주석(-- 한글명)을 논리명으로 씁니다." aria-label="DDL"></textarea>
+        <div class="caption muted mt-6">컬럼 뒤 <span class="mono">-- 한글명</span> 주석을 논리명으로 읽습니다(없으면 물리명 그대로). PK·FK 제약을 함께 읽습니다.</div></div>
     </div>
     <div class="main">
-      <div class="toolbar"><b style="font-size:14px">파싱 미리보기</b><span id="pstate"></span><span class="grow"></span><span class="caption muted" id="psum"></span></div>
+      <div class="toolbar"><b class="fs-14">파싱 미리보기</b><span id="pstate"></span><span class="grow"></span><span class="caption muted" id="psum"></span></div>
       <div class="scroll">
-        <table class="tbl"><thead><tr><th>테이블</th><th>논리명</th><th class="num">컬럼</th><th>PK</th><th class="num">FK</th><th>점검</th></tr></thead><tbody id="prev"><tr class="er first"><td colspan="6" class="caption muted" style="text-align:center;padding:30px">왼쪽에 DDL을 넣고 [파싱]을 누르세요</td></tr></tbody></table>
+        <table class="tbl"><thead><tr><th>테이블</th><th>논리명</th><th class="num">컬럼</th><th>PK</th><th class="num">FK</th><th>점검</th></tr></thead><tbody id="prev"><tr class="er first"><td colspan="6" class="caption muted ta-c p-32">왼쪽에 DDL을 넣고 [파싱]을 누르세요</td></tr></tbody></table>
         <div class="pad">
           <div class="field"><label>가져올 위치</label>
             <div class="flex"><label class="flex caption"><input type="radio" name="dst" value="new" checked> 새 업무 영역</label><label class="flex caption"><input type="radio" name="dst" value="cur"> 기존 업무 영역에 추가</label><select class="input" id="dst-area" style="width:220px;" aria-label="기존 업무 영역"></select></div></div>
@@ -37,7 +37,7 @@
           <div class="banner"><i data-ic=info></i><div>가져온 구조로 업무 영역(v1 작업 버전)을 만들고 <b>표준 맞추기</b>를 그 영역으로 엽니다. 이름·타입은 표준 맞추기에서 확인한 뒤에만 바뀝니다.</div></div>
         </div>
       </div>
-      <div class="rp-foot" style="background:var(--surface)"><span class="caption muted" id="foot-note"></span><span class="grow"></span><a class="btn" id="cancel" href="model.html">취소</a><button class="btn primary" id="go" data-busy disabled>가져오기</button></div>
+      <div class="rp-foot bg-surface"><span class="caption muted" id="foot-note"></span><span class="grow"></span><a class="btn" id="cancel" href="model.html">취소</a><button class="btn" id="go" data-busy disabled>가져오기</button></div>
     </div>
   </div>
 </div>
@@ -65,7 +65,7 @@ CREATE TABLE RQMS.TMP_LOG ( -- 임시로그
 ALTER TABLE RQMS.RQRM_D ADD CONSTRAINT RQRM_D_FK1 FOREIGN KEY (PRJ_ID) REFERENCES RQMS.PRJ_M (PRJ_ID);`;
   // permission: only modelers import (CX12-28)
   const canImport = can('model.edit', { system: curSys().name });
-  if (!canImport) document.querySelector('.page-header').insertAdjacentHTML('afterend', `<div class="pad" style="padding-bottom:0"><div class="banner info"><i data-ic=info></i><div class="grow"><b>조회 전용</b> — ${ME.has('modeler') ? `내 담당 시스템에 ${josa(curSys().name, '이/가')} 없어 가져오기를 할 수 없습니다. <a href="mypage.html?req=sys&sys=${encodeURIComponent(curSys().name)}">담당 시스템 추가 요청</a>` : 'DDL 가져오기는 모델러 역할만 할 수 있습니다.'}</div></div></div>`);
+  if (!canImport) document.querySelector('.page-header').insertAdjacentHTML('afterend', `<div class="pad pb-0"><div class="banner info"><i data-ic=info></i><div class="grow"><b>조회 전용</b> — ${ME.has('modeler') ? `내 담당 시스템에 ${josa(curSys().name, '이/가')} 없어 가져오기를 할 수 없습니다. <a href="mypage.html?req=sys&sys=${encodeURIComponent(curSys().name)}">담당 시스템 추가 요청</a>` : 'DDL 가져오기는 모델러 역할만 할 수 있습니다.'}</div></div></div>`);
   const models = getModels();
   $('dst-area').innerHTML = Object.entries(models).map(([id, m]) => { const L = modelLock(id); return `<option value="${id}" ${L.state !== 'edit' ? 'disabled' : ''}>${m.name} · v${m.ver}${L.state !== 'edit' ? ' (편집 불가)' : ''}</option>`; }).join('');
   let parsed = null;
@@ -93,8 +93,10 @@ ALTER TABLE RQMS.RQRM_D ADD CONSTRAINT RQRM_D_FK1 FOREIGN KEY (PRJ_ID) REFERENCE
     $('pstate').innerHTML = errs.length && !tables.length ? '<span class="badge b-danger">파싱 실패</span>' : errs.length ? '<span class="badge b-warning">일부 경고</span>' : '<span class="badge b-success">파싱 완료</span>';
     const cols = tables.reduce((n, x) => n + x.cols.length, 0);
     $('psum').textContent = tables.length ? `테이블 ${tables.length} · 컬럼 ${cols} · PK ${tables.filter(x => x.pk.length).length} · FK ${fks.length}` : '';
-    $('prev').innerHTML = tables.map(tb => `<tr class="${tb.pk.length ? '' : 'row-warning'}"><td class="mono">${tb.phys}</td><td>${tb.name}</td><td class="num">${tb.cols.length}</td><td>${tb.pk.length ? '<i data-ic=check></i><span class="sr-only">있음</span>' : '—'}</td><td class="num">${fks.filter(f => f.child === tb.phys).length}</td><td>${tb.pk.length ? '<span class="badge b-success">정상</span>' : '<span class="badge b-warning">PK 없음</span>'}</td></tr>`).join('') + errs.map(x => `<tr class="row-danger"><td colspan="6" class="caption">${x}</td></tr>`).join('') || '<tr class="er first"><td colspan="6" class="caption muted" style="text-align:center;padding:30px">결과 없음</td></tr>';
+    $('prev').innerHTML = tables.map(tb => `<tr class="${tb.pk.length ? '' : 'row-warning'}"><td class="mono">${tb.phys}</td><td>${tb.name}</td><td class="num">${tb.cols.length}</td><td>${tb.pk.length ? '<i data-ic=check></i><span class="sr-only">있음</span>' : '—'}</td><td class="num">${fks.filter(f => f.child === tb.phys).length}</td><td>${tb.pk.length ? '<span class="badge b-success">정상</span>' : '<span class="badge b-warning">PK 없음</span>'}</td></tr>`).join('') + errs.map(x => `<tr class="row-danger"><td colspan="6" class="caption">${x}</td></tr>`).join('') || '<tr class="er first"><td colspan="6" class="caption muted ta-c p-32">결과 없음</td></tr>';
     $('go').disabled = !tables.length || !canImport; $('go').textContent = tables.length ? `${tables.length}개 테이블 가져오기` : '가져오기';
+    // one primary per screen (01 v2 §1-2): the step you are on — parse first, then import
+    $('go').classList.toggle('primary', !$('go').disabled); $('parse').classList.toggle('primary', $('go').disabled);
     $('foot-note').textContent = tables.filter(x => !x.pk.length).length ? `PK 없는 테이블 ${tables.filter(x => !x.pk.length).length}개는 경고와 함께 가져옵니다` : '';
   }
   // structure for the model: attribute status from the dictionary as it is now

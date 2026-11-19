@@ -13,7 +13,7 @@
 <div id="app">
 <div id="content" class="page">
   <div class="page-header">
-    <nav class="crumbs" aria-label="경로"><a href="dictionary.html">사전</a><span class="sl" aria-hidden="true">/</span></nav>
+    
     <h1 title="엑셀 왕복 편집 묶음 · 30일 임시 보관 · 원본 열람은 올린 사람·DA">업로드 이력</h1>
     
     <div class="actions"><a class="btn primary" href="excel-import.html">엑셀 가져오기</a></div>
@@ -42,7 +42,7 @@ window.pageInit = function () {
     const L = getBatches().filter(vis).filter(b => !f || stateOf(b) === f);
     if (!sel && L[0]) sel = L[0].id;
     $('ub').innerHTML = L.map(b => { const c = b.counts; const st = stateOf(b); const d = (b.docs || []).map(docOf).filter(Boolean);
-      return `<tr class="click ${sel === b.id ? 'sel' : ''}" data-b="${b.id}" tabindex="0"><td class="mono">${b.id}<div class="caption faint">${b.at}</div></td><td>${b.file}</td><td>${b.kind}</td><td>${USERS[b.by] ? USERS[b.by].name : b.by}</td><td class="mono caption">${b.baseline}</td><td class="num">${b.rows}</td><td class="caption">${c ? `신규 ${c.new} · 변경 ${c.chg} · 후보 ${c.pick || 0} · 동일 ${c.same} · 보류 ${c.waitDiff + c.pre} · 오류 ${c.err}` : b.note || '—'}</td><td>${d.map(x => `<a class="mono" href="approvals.html?doc=${x.id}">${x.id}</a> <span class="caption">${STEP_NAME[x.step]}</span>`).join('<br>') || '—'}</td><td><span class="badge ${st === '반영됨' ? 'b-success' : st === '보완' ? 'b-danger' : st === '취소' ? '' : 'b-info'}">${st === '보완' ? '반려·회수 — 보완 필요' : st}</span>${expired(b) ? ' <span class="badge b-warning" title="검증 뒤 검수 기준·사전이 바뀜">재검증 필요</span>' : ''}</td></tr>`; }).join('') || '<tr class="er first"><td colspan="9" class="caption muted" style="text-align:center;padding:30px"><span class="et">아직 업로드가 없습니다</span>사전에서 편집용 엑셀을 내려받아 고친 뒤 올리면 여기에 묶음으로 남습니다.<br><a class="btn primary sm" href="excel-import.html">엑셀 가져오기</a></td></tr>';
+      return `<tr class="click ${sel === b.id ? 'sel' : ''}" data-b="${b.id}" tabindex="0"><td class="mono">${b.id}<div class="caption faint">${b.at}</div></td><td>${b.file}</td><td>${b.kind}</td><td>${USERS[b.by] ? USERS[b.by].name : b.by}</td><td class="mono caption">${b.baseline}</td><td class="num">${b.rows}</td><td class="caption">${c ? `신규 ${c.new} · 변경 ${c.chg} · 후보 ${c.pick || 0} · 동일 ${c.same} · 보류 ${c.waitDiff + c.pre} · 오류 ${c.err}` : b.note || '—'}</td><td>${d.map(x => `<a class="mono" href="approvals.html?doc=${x.id}">${x.id}</a> <span class="caption">${STEP_NAME[x.step]}</span>`).join('<br>') || '—'}</td><td><span class="badge ${st === '반영됨' ? 'b-success' : st === '보완' ? 'b-danger' : st === '취소' ? '' : 'b-info'}">${st === '보완' ? '반려·회수 — 보완 필요' : st}</span>${expired(b) ? ' <span class="badge b-warning" title="검증 뒤 검수 기준·사전이 바뀜">재검증 필요</span>' : ''}</td></tr>`; }).join('') || '<tr class="er first"><td colspan="9" class="caption muted ta-c p-32"><span class="et">아직 업로드가 없습니다</span>사전에서 편집용 엑셀을 내려받아 고친 뒤 올리면 여기에 묶음으로 남습니다.<br><a class="btn primary sm" href="excel-import.html">엑셀 가져오기</a></td></tr>';
     panel();
   }
   function panel() {
@@ -52,17 +52,17 @@ window.pageInit = function () {
     const st = stateOf(b), c = b.counts || {}, s = b.sub;
     const ds = (b.docs || []).map(docOf).filter(Boolean);
     const canResume = b.by === ME.id && ['임시 저장', '보완'].includes(st);
-    p.innerHTML = `<div class="rp-head"><div class="t"><span class="mono">${b.id}</span><span class="badge">${b.kind}</span></div><h2 style="margin-top:6px">${b.file}</h2><div class="rp-sub">${USERS[b.by] ? USERS[b.by].name : ''} · ${b.at} · 기준본 ${b.baseline}</div></div>
+    p.innerHTML = `<div class="rp-head"><div class="t"><span class="mono">${b.id}</span><span class="badge">${b.kind}</span></div><h2 class="mt-6">${b.file}</h2><div class="rp-sub">${USERS[b.by] ? USERS[b.by].name : ''} · ${b.at} · 기준본 ${b.baseline}</div></div>
       <div class="rp-body">
-        ${b.counts ? `<div class="section-t" style="margin-top:0">검증·비교 결과</div><dl class="kv" style="grid-template-columns:1fr auto">${[['신규', c.new], ['변경', c.chg], ['동일', c.same], ['동일 내용 대기', c.waitSame], ['다른 내용 대기(보류)', c.waitDiff], ['버전 충돌', c.conflict], ['후보 선택', c.pick], ['선행 승인(보류)', c.pre], ['오류', c.err], ['파일에서 빠짐', c.missing]].map(([l, n]) => `<dt>${l}</dt><dd class="num" style="text-align:right">${n || 0}</dd>`).join('')}</dl>` : `<div class="banner warning"><i data-ic=warn></i><div>${b.note || '검증 결과 없음'}</div></div>`}
+        ${b.counts ? `<div class="section-t mt-0">검증·비교 결과</div><dl class="kv" style="grid-template-columns:1fr auto">${[['신규', c.new], ['변경', c.chg], ['동일', c.same], ['동일 내용 대기', c.waitSame], ['다른 내용 대기(보류)', c.waitDiff], ['버전 충돌', c.conflict], ['후보 선택', c.pick], ['선행 승인(보류)', c.pre], ['오류', c.err], ['파일에서 빠짐', c.missing]].map(([l, n]) => `<dt>${l}</dt><dd class="num ta-r">${n || 0}</dd>`).join('')}</dl>` : `<div class="banner warning"><i data-ic=warn></i><div>${b.note || '검증 결과 없음'}</div></div>`}
         ${s ? `<div class="section-t">신청한 내용</div><div class="caption">신규 ${s.new} · 변경 ${s.chg + s.conflict} · 후보 ${s.pick} · 미사용 ${s.unuse} — 보류 ${s.hold} · 제외 ${s.ex}</div>` : ''}
-        <div class="section-t">연결 신청</div>${ds.map(d => `<div class="flex" style="margin-bottom:4px"><a class="mono" href="approvals.html?doc=${d.id}">${d.id}</a><span class="badge ${d.step === 'done' ? 'b-success' : ['rejected', 'withdrawn'].includes(d.step) ? 'b-danger' : 'b-info'}">${STEP_NAME[d.step]}</span><span class="caption muted">${d.n}건</span></div>`).join('') || '<div class="caption muted">아직 신청하지 않았습니다</div>'}
-        ${expired(b) ? '<div class="banner warning" style="margin-top:8px"><i data-ic=warn></i><div>검증 뒤 검수 기준 또는 사전이 바뀌었습니다 — [이어서 작업]에서 다시 검증해야 신청할 수 있습니다. 화면에서 고친 값은 유지됩니다.</div></div>' : ''}
-        ${st === '보완' ? '<div class="banner warning" style="margin-top:8px"><i data-ic=warn></i><div>반려·회수됐습니다. 이어서 보정한 뒤 다시 신청하면 <b>새 신청번호</b>가 만들어지고 이 묶음에 연결됩니다.</div></div>' : ''}
-        ${(c.waitDiff || c.pre) && st !== '임시 저장' && !b.holdNext ? `<div class="banner" style="margin-top:8px"><i data-ic=info></i><div class="grow">보류 ${(c.waitDiff || 0) + (c.pre || 0)}행 — 앞선 신청이 끝나면 다시 검증해 <b>새 업로드 묶음</b>으로 이어서 신청합니다.</div>${b.by === ME.id ? '<button class="btn sm" id="hold-re">보류 행 다시 검증</button>' : ''}</div>` : ''}
-        ${b.holdNext ? `<div class="caption" style="margin-top:8px">보류 행은 <a href="uploads.html?b=${b.holdNext}">${b.holdNext}</a>로 이어졌습니다.</div>` : ''}
-        ${b.holdOf ? `<div class="caption" style="margin-top:8px">원 묶음 <a href="uploads.html?b=${b.holdOf}">${b.holdOf}</a>의 보류 행입니다.</div>` : ''}
-        ${b.roundTrip ? `<div class="caption" style="margin-top:8px;color:var(--success-deep)">왕복 완료 — 반영본 재업로드 ${b.roundTrip.rows}행 모두 동일 (${b.roundTrip.at})</div>` : ''}
+        <div class="section-t">연결 신청</div>${ds.map(d => `<div class="flex mb-4"><a class="mono" href="approvals.html?doc=${d.id}">${d.id}</a><span class="badge ${d.step === 'done' ? 'b-success' : ['rejected', 'withdrawn'].includes(d.step) ? 'b-danger' : 'b-info'}">${STEP_NAME[d.step]}</span><span class="caption muted">${d.n}건</span></div>`).join('') || '<div class="caption muted">아직 신청하지 않았습니다</div>'}
+        ${expired(b) ? '<div class="banner warning mt-8"><i data-ic=warn></i><div>검증 뒤 검수 기준 또는 사전이 바뀌었습니다 — [이어서 작업]에서 다시 검증해야 신청할 수 있습니다. 화면에서 고친 값은 유지됩니다.</div></div>' : ''}
+        ${st === '보완' ? '<div class="banner warning mt-8"><i data-ic=warn></i><div>반려·회수됐습니다. 이어서 보정한 뒤 다시 신청하면 <b>새 신청번호</b>가 만들어지고 이 묶음에 연결됩니다.</div></div>' : ''}
+        ${(c.waitDiff || c.pre) && st !== '임시 저장' && !b.holdNext ? `<div class="banner mt-8"><i data-ic=info></i><div class="grow">보류 ${(c.waitDiff || 0) + (c.pre || 0)}행 — 앞선 신청이 끝나면 다시 검증해 <b>새 업로드 묶음</b>으로 이어서 신청합니다.</div>${b.by === ME.id ? '<button class="btn sm" id="hold-re">보류 행 다시 검증</button>' : ''}</div>` : ''}
+        ${b.holdNext ? `<div class="caption mt-8">보류 행은 <a href="uploads.html?b=${b.holdNext}">${b.holdNext}</a>로 이어졌습니다.</div>` : ''}
+        ${b.holdOf ? `<div class="caption mt-8">원 묶음 <a href="uploads.html?b=${b.holdOf}">${b.holdOf}</a>의 보류 행입니다.</div>` : ''}
+        ${b.roundTrip ? `<div class="caption mt-8 t-success">왕복 완료 — 반영본 재업로드 ${b.roundTrip.rows}행 모두 동일 (${b.roundTrip.at})</div>` : ''}
       </div>
       <div class="rp-foot">${canResume ? `<a class="btn primary" href="excel-import.html?resume=${b.id}">이어서 작업</a>` : ''}<span class="grow"></span>
         <button class="btn sm" data-toast="원본_${b.file} 내려받기 — 열람 기록이 감사 로그에 남습니다" data-toast-type="info">원본</button>

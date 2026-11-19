@@ -89,6 +89,7 @@ i[data-ic] { font-style:normal; display:inline-flex; vertical-align:-3px; }
 .hr { height:1px; background:var(--border); margin:16px 0; }
 .pad { padding:20px; }
 
+
 /* ============ 4. shell ============ */
 #app { width:var(--frame-w); height:var(--frame-h); margin:0 auto; background:var(--bg); display:grid; grid-template-rows:var(--topbar) minmax(0,1fr); grid-template-columns:var(--nav) minmax(0,1fr); overflow:hidden; position:relative; }
 #app.bare { display:block; }
@@ -543,6 +544,12 @@ input[type=checkbox]:focus-visible, input[type=radio]:focus-visible { outline:2p
 .tabs button.on { color:var(--fg); border-bottom-color:var(--ds-gray-1000); font-weight:400; }
 .tabs button .n { font-size:12px; font-variant-numeric:tabular-nums; color:var(--fg-3); margin-left:2px; }
 .pane { display:none; } .pane.on { display:block; }
+/* the dictionary screens' shared tab row (links) */
+.tabs.dtabs { margin:0; padding:0 20px; background:var(--surface); flex:none; }
+.tabs a { display:inline-flex; align-items:center; font:400 14px/20px var(--font-sans); color:var(--fg-2); padding:14px 2px; border-bottom:2px solid transparent; text-decoration:none; }
+.tabs a:hover { color:var(--fg); text-decoration:none; }
+.tabs a.on { color:var(--fg); border-bottom-color:var(--ds-gray-1000); }
+.tabs a:focus-visible { outline:2px solid var(--focus); outline-offset:-2px; }
 /* legacy pill tabs — styleguide only until P4 (screens use .seg for view switching, 01 v2 §6.3) */
 .utabs { display:flex; gap:2px; align-self:center; }
 .utabs button { height:32px; border:0; background:none; font:400 14px var(--font-sans); color:var(--fg-2); padding:0 12px; border-radius:var(--r-md); border-bottom:0; cursor:pointer; display:flex; align-items:center; gap:6px; }
@@ -717,3 +724,20 @@ td[contenteditable="true"]:focus { outline:2px solid var(--focus); background:va
 .scr-f a { color:var(--fg-2); text-decoration:none; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:34%; }
 .scr-todo { margin:0; padding-left:18px; font-size:12px; line-height:19px; }
 .scr-todo li { margin-bottom:3px; }
+
+/* ============ 15. utilities — they replace inline style, so they keep its priority (last + !important) (01 v2 §4 · §9) ============ */
+.mt-0 { margin-top:0 !important; } .mt-2 { margin-top:2px !important; } .mt-4 { margin-top:4px !important; } .mt-6 { margin-top:6px !important; } .mt-8 { margin-top:8px !important; } .mt-10 { margin-top:10px !important; } .mt-12 { margin-top:12px !important; } .mt-16 { margin-top:16px !important; } .mt-20 { margin-top:20px !important; } .mt-24 { margin-top:24px !important; }
+.mb-0 { margin-bottom:0 !important; } .mb-4 { margin-bottom:4px !important; } .mb-6 { margin-bottom:6px !important; } .mb-8 { margin-bottom:8px !important; } .mb-10 { margin-bottom:10px !important; } .mb-12 { margin-bottom:12px !important; } .mb-16 { margin-bottom:16px !important; } .mb-24 { margin-bottom:24px !important; }
+.ml-auto { margin-left:auto !important; } .mr-auto { margin-right:auto !important; } .m-0 { margin:0 !important; }
+.p-0 { padding:0 !important; } .pb-0 { padding-bottom:0 !important; } .pt-0 { padding-top:0 !important; }
+.gap-4 { gap:4px !important; } .gap-6 { gap:6px !important; } .gap-8 { gap:8px !important; } .gap-12 { gap:12px !important; } .gap-16 { gap:16px !important; }
+.rel { position:relative !important; } .nowrap { white-space:nowrap !important; } .wrap { flex-wrap:wrap !important; } .w-full { width:100% !important; } .flex-none { flex:none !important; }
+.t-fg { color:var(--fg) !important; } .t-fg2 { color:var(--fg-2) !important; } .t-fg3 { color:var(--fg-3) !important; } .t-danger { color:var(--danger-deep) !important; } .t-warning { color:var(--warning-deep) !important; } .t-success { color:var(--success-deep) !important; } .t-accent { color:var(--accent) !important; }
+.fs-12 { font-size:12px !important; } .fs-14 { font-size:14px !important; } .fw-400 { font-weight:400 !important; } .fw-500 { font-weight:500 !important; } .fw-600 { font-weight:600 !important; }
+.ta-c { text-align:center !important; } .ta-r { text-align:right !important; }
+.iconbtn.sm { width:28px !important; height:28px !important; }
+.w-28 { width:28px !important; } .h-28 { height:28px !important; } .h-24 { height:24px !important; } .w-32 { width:32px !important; } .w-130 { width:130px !important; } .w-150 { width:150px !important; } .w-200 { width:200px !important; } .w-240 { width:240px !important; } .mw-560 { max-width:560px !important; }
+.d-flex { display:flex !important; } .col { flex-direction:column !important; } .flex-1 { flex:1 !important; } .jc-c { justify-content:center !important; } .ai-c { align-items:center !important; }
+.p-16 { padding:16px !important; } .p-24 { padding:24px !important; } .p-32 { padding:32px !important; } .my-6 { margin-top:6px !important; margin-bottom:6px !important; }
+.fs-16 { font-size:16px !important; } .lh-20 { line-height:20px !important; } .lh-22 { line-height:22px !important; }
+.bg-surface { background:var(--surface) !important; } .bg-surface2 { background:var(--surface-2) !important; } .bb { border-bottom:1px solid var(--border) !important; } .r-md { border-radius:var(--r-md) !important; } .op-50 { opacity:.5 !important; }

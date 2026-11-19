@@ -40,8 +40,8 @@
       </div>
     </div>
     <aside class="rpanel wide" id="pn-cmp">
-      <div class="rp-head"><div class="t"><h2>DBMS 비교</h2><span class="badge">후속 차수 · 접속 필요</span><button class="iconbtn close" data-open="pn-gateb" data-close-others="pn-cmp" style="width:28px;height:28px" aria-label="닫기"><i data-ic=x></i></button></div>
-        <div class="caption muted" style="margin-top:4px">모델과 운영 DB의 실제 구조를 비교합니다(예시 값). 운영 DB 접속 정보는 시스템 설정에서 Admin이 등록합니다.</div></div>
+      <div class="rp-head"><div class="t"><h2>DBMS 비교</h2><span class="badge">후속 차수 · 접속 필요</span><button class="iconbtn close w-28 h-28" data-open="pn-gateb" data-close-others="pn-cmp" aria-label="닫기"><i data-ic=x></i></button></div>
+        <div class="caption muted mt-4">모델과 운영 DB의 실제 구조를 비교합니다(예시 값). 운영 DB 접속 정보는 시스템 설정에서 Admin이 등록합니다.</div></div>
       <div class="rp-body">
         <div class="field-row"><div class="field"><label>비교 대상</label><select class="input"><option>운영 · RQMS@prod (Oracle 19c)</option><option>개발 · RQMS@dev</option></select></div><div class="field"><label>기준 모델</label><select class="input"><option>v5 초안</option><option>v4 확정본</option></select></div></div>
         <div class="mline"><span><b>2</b>모델에만</span><span><b>1</b>DB에만</span><span><b>3</b>다름</span></div>
@@ -53,7 +53,7 @@
           <tr><td class="mono">PRJ_MBR_D_EMP_M_FK2</td><td class="mono">있음</td><td class="faint">없음</td><td><span class="badge b-warning">제약 다름</span></td></tr>
           <tr><td class="mono">RQRM_D_BAK</td><td class="faint">없음</td><td class="mono">있음</td><td><span class="badge">DB에만</span></td></tr>
         </tbody></table>
-        <div class="caption muted" style="margin-top:8px">차이는 <b>변경분(ALTER)</b> 프리셋으로 바로 스크립트를 만들 수 있습니다. DB에만 있는 객체는 [가져오기 › DDL]로 모델에 들일 수 있습니다.</div>
+        <div class="caption muted mt-8">차이는 <b>변경분(ALTER)</b> 프리셋으로 바로 스크립트를 만들 수 있습니다. DB에만 있는 객체는 [가져오기 › DDL]로 모델에 들일 수 있습니다.</div>
       </div>
       <div class="rp-foot"><button class="btn" data-toast="비교 결과를 엑셀로 내려받았습니다" data-toast-type="info">엑셀</button><span class="grow"></span><button class="btn primary" data-toast="차이 4건으로 ALTER 스크립트를 만들었습니다" data-toast-type="info">ALTER 스크립트 만들기</button></div>
     </aside>
@@ -61,7 +61,7 @@
       <div class="rp-head"><h2>점검 결과</h2><div class="caption muted">게이트 B · 출력 직전</div></div>
       <div class="rp-body">
         <div id="gb-body"></div>
-        <div class="caption muted" style="margin-top:8px">문법 오류는 차단, 표준 위반은 경고 + 예외 사유로 진행합니다.</div>
+        <div class="caption muted mt-8">문법 오류는 차단, 표준 위반은 경고 + 예외 사유로 진행합니다.</div>
       </div>
       <div class="rp-foot"><button class="btn" id="copy">복사</button><span class="grow"></span><button class="btn primary" id="dl" data-busy>내려받기 .sql</button></div>
     </aside>
@@ -88,7 +88,7 @@ window.pageInit = function () {
   const baseVer = snapDoc ? snapDoc.ver - 1 : L.model.base;
   const prevDoc0 = getDocs().find(x => x.type === 'model' && x.area === AREA && x.ver === baseVer && x.step === 'done');
   const prevModel = prevDoc0 ? (prevDoc0.model || getModelData(AREA, baseVer)) : null; const prevDoc = prevModel ? { model: prevModel } : null;
-  function chips() { $('scope-chips').innerHTML = [['all', `업무 영역 전체 (${ents.length})`], ['pick', `선택한 테이블 (${picked.size})`], ['sys', `시스템 전체 (${sysCount}) · 조회`]].map(([k, l]) => `<span class="chip ${scope === k ? 'on' : ''}" data-sc="${k}">${l}</span>`).join('') + (scope === 'pick' ? ` <select class="input" id="pick-t" multiple size="1" style="width:200px" aria-label="테이블 선택">${ents.map(e => `<option value="${e.id}" ${picked.has(e.id) ? 'selected' : ''}>${e.p !== '—' ? e.p : e.n}</option>`).join('')}</select>` : ''); const pt = $('pick-t'); if (pt) pt.onchange = () => { picked = new Set([...pt.selectedOptions].map(o => o.value)); draw(); }; }
+  function chips() { $('scope-chips').innerHTML = [['all', `업무 영역 전체 (${ents.length})`], ['pick', `선택한 테이블 (${picked.size})`], ['sys', `시스템 전체 (${sysCount}) · 조회`]].map(([k, l]) => `<span class="chip ${scope === k ? 'on' : ''}" data-sc="${k}">${l}</span>`).join('') + (scope === 'pick' ? ` <select class="input w-200" id="pick-t" multiple size="1" aria-label="테이블 선택">${ents.map(e => `<option value="${e.id}" ${picked.has(e.id) ? 'selected' : ''}>${e.p !== '—' ? e.p : e.n}</option>`).join('')}</select>` : ''); const pt = $('pick-t'); if (pt) pt.onchange = () => { picked = new Set([...pt.selectedOptions].map(o => o.value)); draw(); }; }
   const esc = s => String(s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c]);
   // column comment: name — definition, one SQL literal (quotes doubled for the whole text), then made safe for the page
   const colComment = (e, a) => `<span class="kw">COMMENT ON COLUMN</span> ${SCH}.${esc(e.p)}.${esc(a.p)} <span class="kw">IS</span> <span class="str">'${esc((a.n + (a.desc ? ' — ' + a.desc : '')).replace(/'/g, "''"))}'</span>;`;
@@ -133,7 +133,7 @@ window.pageInit = function () {
     $('gb-text').innerHTML = `<b>게이트 B: 차단 ${block.length} · 경고 ${warn.length}.</b> ${block.length ? '물리명·타입이 없는 컬럼이 있어 출력이 막힙니다 — 모델에서 표준 맞추기 후 다시 여세요.' : warn.length ? '표준 위반은 경고로 남고 예외 사유와 함께 출력합니다.' : '문제 없음.'}`;
     $('gb-body').innerHTML = `<div class="mline"><span><b>${target.length}</b>테이블</span><span><b>${src.R.length}</b>관계</span></div>
       <table class="tbl"><thead><tr><th>구분</th><th>항목</th></tr></thead><tbody>${block.map(x => `<tr><td><span class="badge b-danger">차단</span></td><td class="caption">${x}</td></tr>`).join('')}${warn.map(x => `<tr><td><span class="badge b-warning">경고</span></td><td class="caption">${x}</td></tr>`).join('')}${!block.length && !warn.length ? '<tr class="er"><td colspan="2" class="caption muted">문제 없음</td></tr>' : ''}</tbody></table>
-      <div class="caption muted" style="margin-top:8px">문법·물리명 누락은 차단, 표준 위반은 경고 + 예외 사유로 진행합니다.</div>`;
+      <div class="caption muted mt-8">문법·물리명 누락은 차단, 표준 위반은 경고 + 예외 사유로 진행합니다.</div>`;
     ['copy', 'dl'].forEach(id => { $(id).disabled = !!block.length; });
   }
   $('scope-chips').addEventListener('click', e => { const c = e.target.closest('[data-sc]'); if (!c) return; scope = c.dataset.sc; draw(); });

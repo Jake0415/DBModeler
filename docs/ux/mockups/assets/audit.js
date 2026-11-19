@@ -5,13 +5,14 @@
 (function () {
   const PAGES = [['home', 'kim'], ['system', 'kim'], ['model', 'kim'], ['standardize', 'kim'], ['ddl', 'kim'], ['outputs', 'kim'], ['import', 'kim'], ['dictionary', 'kim'], ['dict-history', 'kim'], ['excel-import', 'kim'], ['uploads', 'kim'], ['candidates', 'kim'], ['approvals', 'kim'], ['audit', 'lee'], ['settings', 'lee'], ['mypage', 'kim'], ['login', 'kim'], ['error', 'kim'], ['styleguide', 'kim']];
   const PROPS = ['display', 'position', 'width', 'height', 'marginTop', 'marginRight', 'marginBottom', 'marginLeft', 'paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft', 'fontSize', 'fontWeight', 'lineHeight', 'fontFamily', 'letterSpacing', 'color', 'backgroundColor', 'backgroundImage', 'borderTopWidth', 'borderTopColor', 'borderTopStyle', 'borderBottomWidth', 'borderBottomColor', 'borderLeftWidth', 'borderRightWidth', 'borderTopLeftRadius', 'borderBottomRightRadius', 'boxShadow', 'gap', 'opacity', 'textAlign', 'textDecorationLine', 'overflowX', 'overflowY', 'zIndex', 'outlineStyle', 'gridTemplateColumns', 'alignItems', 'justifyContent', 'whiteSpace', 'verticalAlign'];
-  const load = (pg, as, w) => new Promise(ok => { const f = document.createElement('iframe'); f.style.cssText = `position:fixed;left:-5000px;top:0;width:${w}px;height:1000px`; document.body.appendChild(f); f.onload = () => setTimeout(() => ok(f), 1100); f.src = `${pg}.html?as=${as}&audit=1`; });
+  // prefix: another copy of the mockups to compare against (e.g. '_base/' = an older commit extracted next to this one)
+  const load = (pg, as, w, prefix = '') => new Promise(ok => { const f = document.createElement('iframe'); f.style.cssText = `position:fixed;left:-5000px;top:0;width:${w}px;height:1000px`; document.body.appendChild(f); f.onload = () => setTimeout(() => ok(f), 1100); f.src = `${prefix}${pg}.html?as=${as}&audit=1`; });
   const vis = (w, el) => { const r = el.getBoundingClientRect(); const cs = w.getComputedStyle(el); return r.width > 0 && r.height > 0 && cs.visibility !== 'hidden'; };
   const skip = el => el.closest('.rcur, .toasts, #cur-hong, #cur-park, .mock-tools, .scr-panel');   // moving cursors, timed toasts, mock tools
-  async function snapshot(w0 = 1920) {
+  async function snapshot(w0 = 1920, prefix = '') {
     const out = {};
     for (const [pg, as] of PAGES) {
-      const f = await load(pg, as, w0); const w = f.contentWindow, d = w.document;
+      const f = await load(pg, as, w0, prefix); const w = f.contentWindow, d = w.document;
       try { out[pg] = [...d.body.querySelectorAll('*')].filter(el => !skip(el) && vis(w, el)).map(el => { const cs = w.getComputedStyle(el); return el.tagName + '.' + String(el.className && el.className.baseVal != null ? el.className.baseVal : el.className).trim().replace(/\s+/g, '.') + '|' + PROPS.map(p => p === 'width' || p === 'height' ? Math.round(parseFloat(cs[p]) || 0) : cs[p]).join('|'); }); }
       catch (e) { out[pg] = ['ERR ' + e]; }
       f.remove();

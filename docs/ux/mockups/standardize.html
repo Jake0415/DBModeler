@@ -28,7 +28,7 @@
     <span class="badge" id="scope"></span>
     <div class="actions"><span class="caption muted" id="analyzed"></span><button class="btn sm" id="reanalyze" data-busy="800">다시 분석</button></div>
   </div>
-  <div class="pad" style="padding-bottom:0" id="from-import" hidden>
+  <div class="pad pb-0" id="from-import" hidden>
     <div class="banner info"><i data-ic=info></i><div class="grow" id="from-import-t"></div></div>
   </div>
   <div class="toolbar" id="chips"></div>
@@ -46,7 +46,7 @@
         <span class="grow"></span>
         <button class="btn sm primary" id="sd-apply" data-open="mo-apply">선택 적용</button>
         <button class="btn sm" id="sd-ex" data-open="mo-ex">예외로 표시</button>
-        <span style="position:relative"><button class="btn sm" data-menu-btn aria-haspopup="true" aria-expanded="false" aria-label="더 보기" style="width:32px;padding:0;justify-content:center"><i data-ic=more></i></button>
+        <span class="rel"><button class="btn sm w-32 p-0 jc-c" data-menu-btn aria-haspopup="true" aria-expanded="false" aria-label="더 보기"><i data-ic=more></i></button>
           <div class="menu" data-auto role="menu" style="width:200px;top:auto;bottom:36px"><button class="mi" role="menuitem" id="sd-na" data-open="mo-na">비대상으로 지정</button></div></span>
         <button class="btn sm ghost" id="sd-clear">선택 해제</button>
       </div>
@@ -54,21 +54,21 @@
   </div>
   <div class="overlay" id="mo-na" role="dialog" aria-modal="true" aria-labelledby="na-t"><div class="modal"><div class="m-head"><h3 id="na-t">비대상으로 지정</h3></div>
     <div class="m-body">
-      <div class="caption muted" style="margin-bottom:8px">비대상은 표준 검사와 준수율 계산에서 빠집니다. <b>예외</b>(표준을 알지만 유지)와 달리 처음부터 표준화 대상이 아닌 항목에 씁니다.</div>
-      <div class="caption" id="na-list" style="margin-bottom:8px"></div>
+      <div class="caption muted mb-8">비대상은 표준 검사와 준수율 계산에서 빠집니다. <b>예외</b>(표준을 알지만 유지)와 달리 처음부터 표준화 대상이 아닌 항목에 씁니다.</div>
+      <div class="caption mb-8" id="na-list"></div>
       <div class="field"><label for="na-kind">구분</label><select class="input" id="na-kind"><option>연계·이관용 임시 컬럼</option><option>외부 시스템 소유 컬럼</option><option>기타</option></select></div>
       <div class="field"><label for="na-why">사유 * <span class="faint">모델 확정 결재에서 DA가 검토합니다</span></label><textarea class="input" id="na-why" rows="2"></textarea></div>
       <label class="flex caption"><input type="checkbox"> 같은 이름 패턴을 <a href="settings.html#rules">표준 제외 규칙</a>에 추가 신청</label>
     </div>
     <div class="m-foot"><button class="btn" data-close="mo-na">취소</button><button class="btn primary" id="na-go" data-needs="na-why">비대상 지정</button></div></div></div>
   <div class="overlay" id="mo-ex" role="dialog" aria-modal="true" aria-labelledby="sx-t"><div class="modal"><div class="m-head"><h3 id="sx-t">예외로 유지</h3></div>
-    <div class="m-body"><div class="caption" id="sx-list" style="margin-bottom:8px"></div><div class="field"><label for="sx-why">사유 * <span class="faint">모델 확정 결재에서 DA가 검토합니다</span></label><textarea class="input" id="sx-why" rows="3"></textarea></div></div>
+    <div class="m-body"><div class="caption mb-8" id="sx-list"></div><div class="field"><label for="sx-why">사유 * <span class="faint">모델 확정 결재에서 DA가 검토합니다</span></label><textarea class="input" id="sx-why" rows="3"></textarea></div></div>
     <div class="m-foot"><button class="btn" data-close="mo-ex">취소</button><button class="btn primary" id="sx-go" data-needs="sx-why">예외 기록</button></div></div></div>
   <div class="overlay" id="mo-apply" role="dialog" aria-modal="true" aria-labelledby="ap-t"><div class="modal" style="width:620px"><div class="m-head"><h3 id="ap-t">표준 맞추기 적용</h3></div>
     <div class="m-body">
       <table class="tbl" id="ap-sum"></table>
-      <div class="banner warning" id="ap-phys" style="margin-top:12px"><i data-ic=warn></i><div><b>물리명 변경은 운영 DB에 영향</b>이 있습니다. 모델에는 바로 반영되고, 운영 DB는 다음 DDL 출력에서 <b>변경분(ALTER)</b>으로 바뀝니다.</div></div>
-      <div class="field" style="margin-top:12px" id="ap-reqf"><label for="ap-why">용어 신청 사유 * <span class="faint">신청 묶음이 새 결재 문서 1건으로 만들어집니다(번호는 제출할 때 부여)</span></label><textarea class="input" id="ap-why" rows="2"></textarea></div>
+      <div class="banner warning mt-12" id="ap-phys"><i data-ic=warn></i><div><b>물리명 변경은 운영 DB에 영향</b>이 있습니다. 모델에는 바로 반영되고, 운영 DB는 다음 DDL 출력에서 <b>변경분(ALTER)</b>으로 바뀝니다.</div></div>
+      <div class="field mt-12" id="ap-reqf"><label for="ap-why">용어 신청 사유 * <span class="faint">신청 묶음이 새 결재 문서 1건으로 만들어집니다(번호는 제출할 때 부여)</span></label><textarea class="input" id="ap-why" rows="2"></textarea></div>
       <div class="field" id="ap-exf"><label for="ap-exwhy">‘예외로 유지’ 행의 사유 * <span class="faint" id="ap-exlist"></span></label><textarea class="input" id="ap-exwhy" rows="2"></textarea></div>
       <div class="caption muted" id="ap-undo">모델 변경은 적용 뒤 토스트의 [실행 취소]로 한 번에 되돌릴 수 있습니다. <b>용어 신청 문서와 후보 등록은 되돌려도 남습니다</b>(결재함에서 회수, 후보 큐에서 반려). 선택하지 않은 행은 그대로 남습니다.</div>
     </div>
@@ -162,10 +162,10 @@ window.pageInit = function () {
   }
   // permission & lock: same judgement as the model screen
   const canStd = can('model.edit', { area: AREA }); const readOnly = !canStd || LK.state !== 'edit';
-  if (readOnly) document.querySelector('.page-header').insertAdjacentHTML('afterend', `<div class="pad" style="padding-bottom:0"><div class="banner info"><i data-ic=info></i><div class="grow"><b>조회 전용</b> — ${!canStd ? (ME.has('modeler') ? `내 담당 시스템에 ${josa(sysOfArea(AREA), '이/가')} 없어 조회만 할 수 있습니다. <a href="mypage.html?req=sys&sys=${encodeURIComponent(sysOfArea(AREA))}">담당 시스템 추가 요청</a>` : '표준 맞추기는 모델러 역할만 할 수 있습니다.') : `${LK.doc ? LK.doc.id : ''} ${LK.state === 'review' ? '확정 결재 중' : '확정본'}이라 고칠 수 없습니다.`}</div><a class="btn sm" href="model.html?area=${AREA}">모델로</a></div></div>`);
+  if (readOnly) document.querySelector('.page-header').insertAdjacentHTML('afterend', `<div class="pad pb-0"><div class="banner info"><i data-ic=info></i><div class="grow"><b>조회 전용</b> — ${!canStd ? (ME.has('modeler') ? `내 담당 시스템에 ${josa(sysOfArea(AREA), '이/가')} 없어 조회만 할 수 있습니다. <a href="mypage.html?req=sys&sys=${encodeURIComponent(sysOfArea(AREA))}">담당 시스템 추가 요청</a>` : '표준 맞추기는 모델러 역할만 할 수 있습니다.') : `${LK.doc ? LK.doc.id : ''} ${LK.state === 'review' ? '확정 결재 중' : '확정본'}이라 고칠 수 없습니다.`}</div><a class="btn sm" href="model.html?area=${AREA}">모델로</a></div></div>`);
   // redo after a rejected/withdrawn term request keeps its reason and shows the reviewer's comment
   const redoDoc = q.get('redo') ? getDocs().find(x => x.id === q.get('redo') && x.kind === 'std') : null;
-  if (redoDoc && ['rejected', 'withdrawn'].includes(redoDoc.step)) { const last = (redoDoc.hist || []).slice(-1)[0]; document.querySelector('.page-header').insertAdjacentHTML('afterend', `<div class="pad" style="padding-bottom:0"><div class="banner warning"><i data-ic=warn></i><div class="grow"><b>${redoDoc.id} 보완해서 다시 적용</b> — ${STEP_NAME[redoDoc.step]}${last && last.why ? ` · 의견: ${last.why}` : ''}. 그때 신청한 용어: ${(redoDoc.items || []).map(i => i.name).join(', ')}. 다시 적용하면 <b>새 신청번호</b>가 만들어집니다.</div></div></div>`); $('ap-why').value = redoDoc.reason || ''; }
+  if (redoDoc && ['rejected', 'withdrawn'].includes(redoDoc.step)) { const last = (redoDoc.hist || []).slice(-1)[0]; document.querySelector('.page-header').insertAdjacentHTML('afterend', `<div class="pad pb-0"><div class="banner warning"><i data-ic=warn></i><div class="grow"><b>${redoDoc.id} 보완해서 다시 적용</b> — ${STEP_NAME[redoDoc.step]}${last && last.why ? ` · 의견: ${last.why}` : ''}. 그때 신청한 용어: ${(redoDoc.items || []).map(i => i.name).join(', ')}. 다시 적용하면 <b>새 신청번호</b>가 만들어집니다.</div></div></div>`); $('ap-why').value = redoDoc.reason || ''; }
 
   const trs = () => [...document.querySelectorAll('#rows tr[data-i]')];
   const visible = tr => tr.style.display !== 'none';

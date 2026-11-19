@@ -198,7 +198,7 @@
     <div class="actions">
       <span class="seg" id="vw" role="group" aria-label="보기"><button class="on" data-v="erd" aria-pressed="true">다이어그램</button><button data-v="grid" aria-pressed="false">표</button></span>
       <span class="seg" id="lp" role="group" aria-label="논리·물리"><button class="on" data-v="L">논리</button><button data-v="P">물리</button></span>
-      <span style="position:relative"><button class="btn" id="b-more" aria-haspopup="true" aria-expanded="false" aria-label="더 보기" style="width:32px;padding:0;justify-content:center"><i data-ic=more></i></button>
+      <span class="rel"><button class="btn w-32 p-0 jc-c" id="b-more" aria-haspopup="true" aria-expanded="false" aria-label="더 보기"><i data-ic=more></i></button>
         <div class="menu" id="moremenu" role="menu">
           <a class="mi" role="menuitem" href="import.html"><i data-ic=upload></i>가져오기 (DDL)</a>
           <a class="mi" role="menuitem" href="ddl.html"><i data-ic=file></i>DDL 만들기</a>
@@ -207,13 +207,13 @@
           <div class="msep"></div>
           <button class="mi" role="menuitem" data-toast="v4 확정본 대비: 엔터티 +2, 속성 +6, 변경 5" data-toast-type="info"><i data-ic=compare></i>v4 확정본과 비교</button>
         </div></span>
-      <span style="position:relative"><button class="btn" id="b-export">내보내기<i data-ic=down></i></button>
+      <span class="rel"><button class="btn" id="b-export">내보내기<i data-ic=down></i></button>
         <div class="menu" id="expmenu">
           <div class="row"><b>범위</b><span class="seg" id="ex-scope"><button class="on">보이는 영역</button><button>전체</button></span></div>
           <div class="row"><b>형식</b><span class="seg" id="ex-fmt"><button class="on">PNG</button><button>SVG</button><button>PDF</button></span></div>
           <label class="row" style="align-items:flex-start;cursor:pointer"><input type="checkbox" id="ex-official" style="margin-top:3px"><span><b style="width:auto;color:var(--fg)">공식 산출물</b><br><span class="caption muted" id="ex-official-t">확정본 배치 기준 · 표제란에 버전·확정일·승인자</span></span></label>
           <div class="card" id="ex-title" style="display:none;font-size:12px;margin-bottom:10px;padding:8px"><div class="caption muted">표제란 미리보기</div><div class="mono" id="ex-title-1"></div><div class="mono" id="ex-title-2"></div></div>
-          <div class="caption muted" style="margin-bottom:10px">테이블 정의서·준수검사 엑셀은 <a href="outputs.html">[산출물]</a>에서 만듭니다.</div>
+          <div class="caption muted mb-10">테이블 정의서·준수검사 엑셀은 <a href="outputs.html">[산출물]</a>에서 만듭니다.</div>
           <div class="flex"><span class="grow"></span><button class="btn sm" id="ex-cancel">취소</button><button class="btn sm primary" id="ex-go">내보내기</button></div>
         </div></span>
       <button class="btn has-tip disabled" id="confirm-btn" data-tip="미준수 6건이 남아 있습니다 — [표준 맞추기]에서 해결하거나 사유를 남겨 예외로 처리하세요">확정 신청</button>
@@ -232,9 +232,9 @@
   <div class="page-body">
     <div class="side" id="side">
       <div style="padding:10px 12px;border-bottom:1px solid var(--border)">
-        <div class="flex" style="margin-bottom:8px"><b style="font-size:13px">사전</b><span class="grow"></span><button class="btn ghost sm" data-toggle="side">접기</button></div>
+        <div class="flex mb-8"><b style="font-size:13px">사전</b><span class="grow"></span><button class="btn ghost sm" data-toggle="side">접기</button></div>
         <input class="input" id="dict-q" value="제출" placeholder="용어 검색 · 없으면 후보 등록" aria-label="사전 용어 검색">
-        <div class="flex" style="margin-top:8px;gap:4px"><span class="chip on" data-group="sk" style="height:24px;font-size:12px">용어</span><span class="chip" data-group="sk" style="height:24px;font-size:12px">단어</span><span class="chip" data-group="sk" style="height:24px;font-size:12px">도메인</span></div>
+        <div class="flex mt-8 gap-4"><span class="chip on h-24 fs-12" data-group="sk">용어</span><span class="chip h-24 fs-12" data-group="sk">단어</span><span class="chip h-24 fs-12" data-group="sk">도메인</span></div>
       </div>
       <div class="scroll" id="dict"></div>
       <div style="padding:10px 12px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:6px">
@@ -247,7 +247,7 @@
       <div class="cv-toolbar">
         <button class="tb on" data-tool="select" title="선택 (V)" aria-label="선택 도구"><i data-ic=pointer></i><kbd>V</kbd></button>
         <button class="tb" data-tool="entity" data-edit title="엔터티 (E)"><i data-ic=table></i>엔터티 <kbd>E</kbd></button>
-        <span style="position:relative"><button class="tb" data-tool="rel" data-edit id="relbtn" title="관계 (R)"><i data-ic=link></i><span id="reltype">1:N 비식별</span><i data-ic=down data-s=12></i> <kbd>R</kbd></button>
+        <span class="rel"><button class="tb" data-tool="rel" data-edit id="relbtn" title="관계 (R)"><i data-ic=link></i><span id="reltype">1:N 비식별</span><i data-ic=down data-s=12></i> <kbd>R</kbd></button>
           <div class="menu" id="relmenu">
             <div class="mi on" data-rt="nonid">1:N 비식별 <span class="faint">점선</span></div>
             <div class="mi" data-rt="id">1:N 식별 <span class="faint">실선</span></div>
@@ -298,33 +298,33 @@
     </div>
 
     <aside class="rpanel open" id="rp" data-tabscope>
-      <div class="rp-head"><div class="t"><h2 id="rp-title">업무 영역 요약</h2><span class="grow"></span><button class="iconbtn" id="rp-wide" aria-label="패널 넓히기/좁히기" title="패널 넓히기 · 좁히기" style="width:28px;height:28px"><i data-ic=moveh></i></button><button class="iconbtn" id="rp-close" aria-label="패널 닫기" style="width:28px;height:28px"><i data-ic=x></i></button></div><div class="rp-sub" id="rp-sub"></div></div>
+      <div class="rp-head"><div class="t"><h2 id="rp-title">업무 영역 요약</h2><span class="grow"></span><button class="iconbtn w-28 h-28" id="rp-wide" aria-label="패널 넓히기/좁히기" title="패널 넓히기 · 좁히기"><i data-ic=moveh></i></button><button class="iconbtn w-28 h-28" id="rp-close" aria-label="패널 닫기"><i data-ic=x></i></button></div><div class="rp-sub" id="rp-sub"></div></div>
       <div class="rp-body" id="rp-body"></div>
       <div class="sr-only" id="ag-live" aria-live="polite"></div>
     </aside>
 
     <!-- PN-39 model review -->
     <aside class="rpanel" id="pn-review">
-      <div class="rp-head"><div class="t"><h2>모델 검토</h2><span class="badge">자동 점검</span><button class="iconbtn close" id="rev-x" style="width:28px;height:28px" aria-label="닫기"><i data-ic=x></i></button></div>
-        <div class="caption muted" style="margin-top:4px">명칭 중복·미입력·관계·물리 정보를 점검합니다. 표준 준수는 상단 준수율에서 봅니다.</div></div>
+      <div class="rp-head"><div class="t"><h2>모델 검토</h2><span class="badge">자동 점검</span><button class="iconbtn close w-28 h-28" id="rev-x" aria-label="닫기"><i data-ic=x></i></button></div>
+        <div class="caption muted mt-4">명칭 중복·미입력·관계·물리 정보를 점검합니다. 표준 준수는 상단 준수율에서 봅니다.</div></div>
       <div class="rp-body" id="rev-body"></div>
       <div class="rp-foot"><button class="btn" data-toast="모델 검토 결과를 엑셀로 내려받았습니다 — 요구사항_프로젝트_검토_v5.xlsx">엑셀로 내려받기</button><span class="grow"></span><button class="btn primary" id="rev-run">다시 점검</button></div>
     </aside>
 
     <!-- PN-35 gate A -->
     <aside class="rpanel" id="pn-gate">
-      <div class="rp-head"><div class="t"><h2>물리 반영 전 점검</h2><span class="badge b-warning">게이트 A</span><button class="iconbtn close" id="gate-x" style="width:28px;height:28px" aria-label="닫기"><i data-ic=x></i></button></div>
-        <div class="caption muted" style="margin-top:4px">논리 → 물리(Oracle) 반영 직전에 확인합니다. 진행을 막지는 않습니다.</div></div>
+      <div class="rp-head"><div class="t"><h2>물리 반영 전 점검</h2><span class="badge b-warning">게이트 A</span><button class="iconbtn close w-28 h-28" id="gate-x" aria-label="닫기"><i data-ic=x></i></button></div>
+        <div class="caption muted mt-4">논리 → 물리(Oracle) 반영 직전에 확인합니다. 진행을 막지는 않습니다.</div></div>
       <div class="rp-body">
         <div id="gate-body"></div>
-        <div class="caption muted" style="margin-top:8px">물리 반영 때 시스템 컬럼 4개(<span class="mono">REG_DT · REGR_ID · MDFCN_DT · MDFR_ID</span>)가 모든 테이블에 붙습니다 — <a href="settings.html#sys">시스템 설정</a></div>
+        <div class="caption muted mt-8">물리 반영 때 시스템 컬럼 4개(<span class="mono">REG_DT · REGR_ID · MDFCN_DT · MDFR_ID</span>)가 모든 테이블에 붙습니다 — <a href="settings.html#sys">시스템 설정</a></div>
       </div>
       <div class="rp-foot"><a class="btn" href="standardize.html">표준 맞추기로 이동</a><span class="grow"></span><button class="btn primary" id="gate-go">경고 확인 후 계속</button></div>
     </aside>
 
     <!-- PN-38 confirm -->
     <aside class="rpanel wide" id="pn-confirm">
-      <div class="rp-head"><div class="t"><h2>모델 확정 신청</h2><button class="iconbtn close" data-close="pn-confirm" style="width:28px;height:28px" aria-label="닫기"><i data-ic=x></i></button></div><div class="rp-sub" id="cf-sub"></div></div>
+      <div class="rp-head"><div class="t"><h2>모델 확정 신청</h2><button class="iconbtn close w-28 h-28" data-close="pn-confirm" aria-label="닫기"><i data-ic=x></i></button></div><div class="rp-sub" id="cf-sub"></div></div>
       <div class="rp-body">
         <div class="mline">
           <span><b id="cf-rate">—</b>준수율</span>
@@ -335,27 +335,27 @@
         <table class="tbl"><thead><tr><th>항목</th><th>사유</th></tr></thead><tbody id="cf-ex"></tbody></table>
         <div class="section-t">연결된 용어 신청 <span class="badge b-info" id="cf-reqn">0</span> <span class="caption muted">신청 중 용어로 준수에 들어간 속성 — 결재자가 확인합니다</span></div>
         <div id="cf-req"></div>
-        <div class="field" style="margin-top:12px"><label for="cf-why">신청 사유 *</label><textarea class="input" id="cf-why" rows="2" placeholder="예: 산출물 관리 테이블 추가에 따른 확정"></textarea></div>
+        <div class="field mt-12"><label for="cf-why">신청 사유 *</label><textarea class="input" id="cf-why" rows="2" placeholder="예: 산출물 관리 테이블 추가에 따른 확정"></textarea></div>
         <div class="section-t">결재선</div>
         <div class="approval-line">
           <div class="al-step"><span class="pt"></span><div><b>DA 승인</b> <span class="caption faint">필수</span></div></div>
           <div class="al-step" id="cf-final"><span class="pt"></span><div><b>최종 승인 (기관 담당자)</b> <span class="caption faint">시스템 설정 사용 중</span></div></div>
         </div>
-        <div class="flex" style="margin-top:8px"><span class="caption muted">참조</span><button class="btn ghost sm"><i data-ic=plus></i>참조자</button></div>
-        <div class="banner" style="margin-top:12px"><i data-ic=info></i><div>신청하면 이 업무 영역은 <b>검토 중</b>이 되어 <b>접속 중인 모든 사람</b>에게 조회 전용으로 바뀝니다(지금 홍설계 편집 중). 회수하면 다시 편집할 수 있습니다.</div></div>
+        <div class="flex mt-8"><span class="caption muted">참조</span><button class="btn ghost sm"><i data-ic=plus></i>참조자</button></div>
+        <div class="banner mt-12"><i data-ic=info></i><div>신청하면 이 업무 영역은 <b>검토 중</b>이 되어 <b>접속 중인 모든 사람</b>에게 조회 전용으로 바뀝니다(지금 홍설계 편집 중). 회수하면 다시 편집할 수 있습니다.</div></div>
       </div>
       <div class="rp-foot"><span class="grow"></span><button class="btn" data-close="pn-confirm">취소</button><button class="btn primary" id="cf-go" data-needs="cf-why">확정 신청</button></div>
     </aside>
   </div>
 
   <div class="overlay" id="mo-ex" role="dialog" aria-modal="true" aria-labelledby="ex-t"><div class="modal"><div class="m-head"><h3 id="ex-t">표준 예외로 유지</h3></div>
-    <div class="m-body"><div class="caption muted" style="margin-bottom:8px" id="ex-target">—</div><div class="field"><label for="ex-why">사유 *</label><textarea class="input" id="ex-why" rows="3"></textarea></div></div>
+    <div class="m-body"><div class="caption muted mb-8" id="ex-target">—</div><div class="field"><label for="ex-why">사유 *</label><textarea class="input" id="ex-why" rows="3"></textarea></div></div>
     <div class="m-foot"><button class="btn" data-close="mo-ex">취소</button><button class="btn primary" id="exr-go" data-needs="ex-why">예외 기록</button></div></div></div>
   <div class="overlay" id="mo-ex2" role="dialog" aria-modal="true" aria-labelledby="ex2-t"><div class="modal"><div class="m-head"><h3 id="ex2-t">예외로 유지</h3></div>
-    <div class="m-body"><div class="caption muted" style="margin-bottom:8px" id="ex2-target">—</div><div class="field"><label for="ex2-why">사유 * <span class="faint">확정 결재에서 DA가 검토합니다</span></label><textarea class="input" id="ex2-why" rows="3"></textarea></div></div>
+    <div class="m-body"><div class="caption muted mb-8" id="ex2-target">—</div><div class="field"><label for="ex2-why">사유 * <span class="faint">확정 결재에서 DA가 검토합니다</span></label><textarea class="input" id="ex2-why" rows="3"></textarea></div></div>
     <div class="m-foot"><button class="btn" data-close="mo-ex2">취소</button><button class="btn primary" id="ex2-go" data-needs="ex2-why">예외 기록</button></div></div></div>
   <div class="overlay" id="mo-wd" role="dialog" aria-modal="true" aria-labelledby="wd-t"><div class="modal"><div class="m-head"><h3 id="wd-t">확정 신청 회수</h3></div>
-    <div class="m-body"><div class="caption muted" style="margin-bottom:8px" id="wd-desc">결재가 취소되고, 이 업무 영역의 잠금이 풀려 모든 접속자가 다시 편집할 수 있습니다.</div><div class="field"><label for="wd-why">회수 사유 *</label><textarea class="input" id="wd-why" rows="2"></textarea></div></div>
+    <div class="m-body"><div class="caption muted mb-8" id="wd-desc">결재가 취소되고, 이 업무 영역의 잠금이 풀려 모든 접속자가 다시 편집할 수 있습니다.</div><div class="field"><label for="wd-why">회수 사유 *</label><textarea class="input" id="wd-why" rows="2"></textarea></div></div>
     <div class="m-foot"><button class="btn" data-close="mo-wd">취소</button><button class="btn primary" id="wd-go" data-needs="wd-why">회수</button></div></div></div>
 </div>
 </div>
@@ -515,7 +515,7 @@ window.pageInit = function () {
     $('cf-sub').textContent = `${curSys().name} › ${LOCK.model.name} · v${VER}`;
     const reqs = []; const docsNow = getDocs(); E.forEach(e => e.a.forEach(a => { if (a.s === 'req') { const d = a.reqDoc && docsNow.find(x => x.id === a.reqDoc); reqs.push([e, a, d]); } }));
     $('cf-reqn').textContent = reqs.length;
-    $('cf-req').innerHTML = reqs.length ? `<table class="tbl"><thead><tr><th>속성</th><th>용어 신청</th><th>단계</th></tr></thead><tbody>${reqs.map(([e, a, d]) => `<tr><td>${e.n}.${a.n}</td><td>${d ? `<a class="mono" href="approvals.html?doc=${d.id}">${d.id}</a>` : '<span class="faint">연결 문서 없음(시드)</span>'}</td><td>${d ? STEP_NAME[d.step] : '—'}</td></tr>`).join('')}</tbody></table><div class="caption muted" style="margin-top:4px">진행 중인 용어 신청은 결재 상세에 함께 표시되고, 승인자가 확인해야 승인됩니다. 반려·회수된 신청이 있으면 확정할 수 없습니다.</div>` : '<div class="caption muted">없음</div>';
+    $('cf-req').innerHTML = reqs.length ? `<table class="tbl"><thead><tr><th>속성</th><th>용어 신청</th><th>단계</th></tr></thead><tbody>${reqs.map(([e, a, d]) => `<tr><td>${e.n}.${a.n}</td><td>${d ? `<a class="mono" href="approvals.html?doc=${d.id}">${d.id}</a>` : '<span class="faint">연결 문서 없음(시드)</span>'}</td><td>${d ? STEP_NAME[d.step] : '—'}</td></tr>`).join('')}</tbody></table><div class="caption muted mt-4">진행 중인 용어 신청은 결재 상세에 함께 표시되고, 승인자가 확인해야 승인됩니다. 반려·회수된 신청이 있으면 확정할 수 없습니다.</div>` : '<div class="caption muted">없음</div>';
     $('cf-final').style.display = lineFor('model', AREA).includes('final') ? '' : 'none';
     const ex = []; E.forEach(e => e.a.forEach(a => { if (a.s === 'ex') ex.push([e, a]); }));
     $('cf-exn').innerHTML = '<i data-ic=flag data-s=12></i> ' + ex.length;
@@ -744,8 +744,8 @@ window.pageInit = function () {
         <td class="ag-d">${domCell}</td>
         <td class="ag-c"><input type="checkbox" data-f="nn" tabindex="-1" aria-label="${hx(a.n)} 필수(NOT NULL)"${a.nn || a.pk ? ' checked' : ''}${ro || ln ? ' disabled' : ''} title="${hx(ln || '필수(NOT NULL)')}"></td></tr>`;
     }).join('');
-    const table = `<table class="tbl ag" aria-label="${L ? '속성' : '컬럼'} 편집 — ↑↓ 행 이동"><thead><tr><th class="ag-st"><span class="sr-only">상태</span></th><th class="ag-c" title="식별자(Primary Key)">PK</th><th>${L ? '속성명' : '컬럼명'} <span class="faint" style="font-weight:400">${L ? '/ 물리명' : '/ 논리명 · 타입'}</span></th><th class="ag-d">도메인</th><th class="ag-c" title="필수(NOT NULL)">필수</th></tr></thead><tbody>${rows || `<tr><td colspan="5" class="caption muted">${L ? '속성' : '컬럼'}이 없습니다</td></tr>`}${sysRows || ''}</tbody></table>`;
-    const add = `<div class="flex" style="margin-top:8px">${ro ? '' : `<button class="btn sm" id="rp-add"><i data-ic=plus></i>${L ? '속성' : '컬럼'} 추가 (Alt+Enter)</button>`}<span class="grow"></span><span class="caption muted">${mode === 'P' ? '시스템 컬럼은 <a href="settings.html#sys">시스템 설정</a>에서 관리' : '입력하면 표준 용어를 바로 제안합니다'}</span></div>`;
+    const table = `<table class="tbl ag" aria-label="${L ? '속성' : '컬럼'} 편집 — ↑↓ 행 이동"><thead><tr><th class="ag-st"><span class="sr-only">상태</span></th><th class="ag-c" title="식별자(Primary Key)">PK</th><th>${L ? '속성명' : '컬럼명'} <span class="faint fw-400">${L ? '/ 물리명' : '/ 논리명 · 타입'}</span></th><th class="ag-d">도메인</th><th class="ag-c" title="필수(NOT NULL)">필수</th></tr></thead><tbody>${rows || `<tr><td colspan="5" class="caption muted">${L ? '속성' : '컬럼'}이 없습니다</td></tr>`}${sysRows || ''}</tbody></table>`;
+    const add = `<div class="flex mt-8">${ro ? '' : `<button class="btn sm" id="rp-add"><i data-ic=plus></i>${L ? '속성' : '컬럼'} 추가 (Alt+Enter)</button>`}<span class="grow"></span><span class="caption muted">${mode === 'P' ? '시스템 컬럼은 <a href="settings.html#sys">시스템 설정</a>에서 관리' : '입력하면 표준 용어를 바로 제안합니다'}</span></div>`;
     return table + (ro ? '<button id="rp-add" hidden></button>' : add) + agPend(e) + agDetail(e, ro);
   }
   // confirmation for changes that reach other entities or relations
@@ -756,7 +756,7 @@ window.pageInit = function () {
     const lastPk = a.pk && e.a.filter(x => x.pk).length === 1;
     const imp = reach.map(([c, x]) => `<li>${hx(c.n)}.${hx(x.n)} <span class="mono faint">${hx(x.p)}</span>${x.pk ? ' <span class="badge">PK</span>' : ''}</li>`).join('');
     if (gPend.k === 'pkoff') return `<div class="banner warning ag-pend" role="alert"><i data-ic=warn></i><div class="grow"><b>‘${hx(a.n)}’${jr(a.n, '을/를')} 식별자에서 뺄까요?</b><div class="caption">이 PK를 받아 간 자식 FK ${reach.length}개도 함께 정리합니다.</div><ul class="ag-imp">${imp}</ul>
-      <div class="flex" style="margin-top:6px;gap:6px;flex-wrap:wrap"><button class="btn sm ghost" data-pend="cancel">취소 (Esc)</button><span class="grow"></span><button class="btn sm" data-pend="pkoff-keep">자식 FK는 일반 속성으로</button><button class="btn sm danger" data-pend="pkoff-del">자식 FK도 삭제</button></div></div></div>`;
+      <div class="flex mt-6 gap-6 wrap"><button class="btn sm ghost" data-pend="cancel">취소 (Esc)</button><span class="grow"></span><button class="btn sm" data-pend="pkoff-keep">자식 FK는 일반 속성으로</button><button class="btn sm danger" data-pend="pkoff-del">자식 FK도 삭제</button></div></div></div>`;
     const relTxt = rels.map(r => `${hx((ent(r.f) || {}).n || r.f)} → ${hx(e.n)}`).join(', ');
     const btns = reach.length ? `<button class="btn sm" data-pend="keep">자식 FK는 일반 속성으로</button><button class="btn sm danger" data-pend="del">자식 FK도 삭제</button>`
       : rels.length ? `<button class="btn sm" data-pend="del">속성만 삭제 (관계 유지)</button><button class="btn sm danger" data-pend="rel">관계까지 삭제</button>`
@@ -765,7 +765,7 @@ window.pageInit = function () {
       ${reach.length ? `<div class="caption">이 PK를 받아 간 자식 FK ${reach.length}개가 있습니다.</div><ul class="ag-imp">${imp}</ul>` : ''}
       ${rels.length ? `<div class="caption">관계 <b>${relTxt}</b>의 FK입니다. 속성만 지우면 관계는 남고 <b>FK 누락</b>으로 표시됩니다.</div>` : ''}
       ${lastPk ? '<div class="caption">마지막 식별자입니다 — 지우면 이 엔터티는 <b>식별자 없음</b>이 되고, 자식 관계의 FK를 만들 수 없습니다.</div>' : ''}
-      <div class="flex" style="margin-top:6px;gap:6px;flex-wrap:wrap"><button class="btn sm ghost" data-pend="cancel">취소 (Esc)</button><span class="grow"></span>${btns}</div></div></div>`;
+      <div class="flex mt-6 gap-6 wrap"><button class="btn sm ghost" data-pend="cancel">취소 (Esc)</button><span class="grow"></span>${btns}</div></div></div>`;
   }
   // the selected row: order · rename · delete, standard state, definition · default
   function agDetail(e, ro) {
@@ -774,12 +774,12 @@ window.pageInit = function () {
     if (!a || gPend) return a ? '' : keys;
     const L = mode === 'L', grp = e.a.filter(x => !!x.pk === !!a.pk), gi = grp.indexOf(a);
     const st = a.s === 'ok' ? '사전의 표준 용어와 같습니다' : a.s === 'req' ? `용어 신청 중${a.reqDoc ? ` — <a class="mono" href="approvals.html?doc=${a.reqDoc}">${a.reqDoc}</a>` : ''}` : a.s === 'ex' ? `예외 — ${hx(a.exReason || '사유 없음')}` : a.s === 'na' ? `표준 비대상${a.naReason ? ' — ' + hx(a.naReason) : ''}` : a.s === 'comb' ? '단어를 조합하면 표준이 됩니다 — 용어로 등록하거나 맞추세요' : '사전에 없는 단어가 있습니다 — 후보로 올리거나 예외로 남기세요';
-    const fix = !ro && (a.s === 'unreg' || a.s === 'comb') ? `<div class="flex" style="gap:6px;margin-top:4px"><a class="btn sm" href="standardize.html?area=${AREA}">표준 맞추기</a><button class="btn sm ghost" data-f="ex">예외로 유지</button></div>` : '';
+    const fix = !ro && (a.s === 'unreg' || a.s === 'comb') ? `<div class="flex gap-6 mt-4"><a class="btn sm" href="standardize.html?area=${AREA}">표준 맞추기</a><button class="btn sm ghost" data-f="ex">예외로 유지</button></div>` : '';
     const field = (id, f, lab, ph, tag) => ro ? (a[f] ? `<dt>${lab}</dt><dd>${hx(a[f])}</dd>` : '')
       : `<div class="field"><label for="${id}">${lab}</label>${tag === 'ta' ? `<textarea class="input" id="${id}" data-f="${f}" rows="2" placeholder="${ph}">${hx(a[f] || '')}</textarea>` : `<input class="input mono" id="${id}" data-f="${f}" placeholder="${ph}" value="${hx(a[f] || '')}">`}</div>`;
     return `<div class="ag-det" aria-label="선택한 ${L ? '속성' : '컬럼'}">
       <div class="ag-h">${a.pk ? icon('key', 12) : a.fk ? icon('link', 12) : icon('col', 12)}<span>${hx(L ? a.n : a.p)}</span><span class="grow"></span>
-        ${ro ? '' : `<button class="btn sm ghost" data-f="up" title="위로 (Alt+↑)" aria-label="위로"${gi <= 0 ? ' disabled' : ''}><i data-ic=up data-s=12></i></button><button class="btn sm ghost" data-f="down" title="아래로 (Alt+↓)" aria-label="아래로"${gi >= grp.length - 1 ? ' disabled' : ''}><i data-ic=down data-s=12></i></button><button class="btn sm ghost" data-f="ren" title="이름 바꾸기 (F2)"><i data-ic=pen data-s=12></i>이름</button><button class="btn sm ghost" data-f="del" title="삭제 (Delete)" style="color:var(--danger-deep)"><i data-ic=trash data-s=12></i>삭제</button>`}</div>
+        ${ro ? '' : `<button class="btn sm ghost" data-f="up" title="위로 (Alt+↑)" aria-label="위로"${gi <= 0 ? ' disabled' : ''}><i data-ic=up data-s=12></i></button><button class="btn sm ghost" data-f="down" title="아래로 (Alt+↓)" aria-label="아래로"${gi >= grp.length - 1 ? ' disabled' : ''}><i data-ic=down data-s=12></i></button><button class="btn sm ghost" data-f="ren" title="이름 바꾸기 (F2)"><i data-ic=pen data-s=12></i>이름</button><button class="btn sm ghost t-danger" data-f="del" title="삭제 (Delete)"><i data-ic=trash data-s=12></i>삭제</button>`}</div>
       <dl class="kv"><dt>${L ? '물리명' : '논리명'}</dt><dd class="${L ? 'mono' : ''}">${hx(L ? a.p : a.n)}</dd><dt>타입</dt><dd class="mono">${hx(a.t)}${domOf(a) ? ` <span class="faint">· ${hx(domOf(a))}</span>` : ''}</dd><dt>표준</dt><dd>${st}${fix}</dd>${a.fk ? `<dt>관계</dt><dd>${fkRels(e, a).map(r => hx((ent(r.f) || {}).n || r.f) + '에서 받은 FK').join(', ') || '<span class="faint">연결된 관계 없음</span>'}</dd>` : ''}${a.sec ? `<dt>보안</dt><dd>${hx(a.sec)}${a.enc && a.enc !== '없음' ? ' · ' + hx(a.enc) : ''}</dd>` : ''}
       ${ro ? field('', 'desc', '정의') + field('', 'def', '기본값') : ''}</dl>
       ${ro ? '' : (() => { const ld = lockWhy(a, 'dom'), ln = lockWhy(a, 'nn'), d = domOf(a);   // the row's 필수 · 도메인 again, reachable with Tab (the row cells are mouse shortcuts)
@@ -917,14 +917,14 @@ window.pageInit = function () {
     rows += fks.filter(f => f.c !== '—').map((f, i) => `<tr><td><span class="badge">IX</span></td><td class="mono">${e.p}_IX${String(i + 1).padStart(2, '0')}</td><td class="mono">${f.c}</td><td class="faint">FK 인덱스</td></tr>`).join('');
     rows += (e.ix || []).map(x => `<tr><td><span class="badge">IX</span></td><td class="mono">${x.n}</td><td class="mono">${x.c}</td><td class="faint">직접 추가</td></tr>`).join('');
     return `<table class="tbl"><thead><tr><th>종류</th><th>이름</th><th>컬럼</th><th></th></tr></thead><tbody>${rows}</tbody></table>
-      <div class="flex" style="margin-top:8px"><button class="btn sm" id="ix-add"><i data-ic=plus></i>인덱스</button><button class="btn sm" id="uk-add"><i data-ic=plus></i>UK</button><span class="grow"></span><span class="caption muted">이름은 <a href="settings.html#sys">명명 템플릿</a>을 따릅니다</span></div>`;
+      <div class="flex mt-8"><button class="btn sm" id="ix-add"><i data-ic=plus></i>인덱스</button><button class="btn sm" id="uk-add"><i data-ic=plus></i>UK</button><span class="grow"></span><span class="caption muted">이름은 <a href="settings.html#sys">명명 템플릿</a>을 따릅니다</span></div>`;
   }
   function secRows(e) {
     const list = e.a.filter(a => a.sec);
-    return `<div class="caption muted" style="margin-bottom:8px">도메인의 보안 속성을 상속합니다. 직접 바꾸면 사유가 남고 확정 결재에서 DA가 확인합니다.</div>
+    return `<div class="caption muted mb-8">도메인의 보안 속성을 상속합니다. 직접 바꾸면 사유가 남고 확정 결재에서 DA가 확인합니다.</div>
       <table class="tbl"><thead><tr><th>${mode === 'L' ? '속성' : '컬럼'}</th><th>개인정보</th><th>암호화</th><th>출처</th></tr></thead><tbody>
       ${e.a.map(a => `<tr><td>${mode === 'L' ? a.n : a.p}</td><td>${a.sec ? `<span class="badge b-danger">${a.sec}</span>` : '<span class="faint">—</span>'}</td><td>${a.enc && a.enc !== '없음' ? `<span class="mono">${a.enc}</span>` : '<span class="faint">없음</span>'}</td><td class="caption">${a.sec ? (a.secSrc || '도메인 상속') : ''} <a href="#" data-toast="사유를 입력하면 보안 속성을 직접 지정할 수 있습니다(목업)" data-toast-type="info">변경</a></td></tr>`).join('')}</tbody></table>
-      ${list.length ? `<div class="caption" style="margin-top:8px">개인정보 ${list.length}개 · 암호화 ${list.filter(a => a.enc && a.enc !== '없음').length}개 — 산출물 ‘개인정보 컬럼 목록’에 포함됩니다.</div>` : ''}`;
+      ${list.length ? `<div class="caption mt-8">개인정보 ${list.length}개 · 암호화 ${list.filter(a => a.enc && a.enc !== '없음').length}개 — 산출물 ‘개인정보 컬럼 목록’에 포함됩니다.</div>` : ''}`;
   }
   function panel() {
     const t = $('rp-title'), sub = $('rp-sub'), body = $('rp-body');
@@ -935,10 +935,10 @@ window.pageInit = function () {
         <div class="section-t">미준수 엔터티</div>
         ${E.filter(bad).map(e => `<div class="cand" data-goto="${e.id}"><span class="grow">${e.n}</span><span class="badge b-warning">${bad(e)}</span></div>`).join('')}
         <div class="section-t">접속자</div>
-        <div class="caption" style="line-height:22px"><span class="dot-i" style="background:var(--ink)"></span> 김모델 (나) · ${locked ? '조회' : '편집'}<br><span class="dot-i" style="background:var(--p-hong)"></span> 홍설계 · ${locked ? '조회' : '편집 — ' + (remoteSel ? ent(remoteSel).n : '—')}<br><span class="dot-i" style="background:var(--p-park)"></span> 박설계 · 조회</div>
+        <div class="caption lh-22"><span class="dot-i" style="background:var(--ink)"></span> 김모델 (나) · ${locked ? '조회' : '편집'}<br><span class="dot-i" style="background:var(--p-hong)"></span> 홍설계 · ${locked ? '조회' : '편집 — ' + (remoteSel ? ent(remoteSel).n : '—')}<br><span class="dot-i" style="background:var(--p-park)"></span> 박설계 · 조회</div>
         <div class="flex" style="margin-top:8px;gap:6px;${locked ? 'display:none' : ''}"><button class="btn sm" id="demo-conflict">동시 수정 충돌 보기</button><button class="btn sm" id="demo-off">연결 끊김 보기</button></div>
         <div class="section-t">이 화면에서 해 보기</div>
-        <div class="caption" style="line-height:20px">· 엔터티 제목을 끌어 이동 · <b>R</b> → 부모 → 자식 (같은 엔터티면 재귀)<br>· <b>R → 관계 종류 메뉴에서 배타 관계 묶기</b> → 같은 부모의 관계선 2개 클릭<br>· 엔터티 선택 후 <b>Enter</b> → 속성 추가 + 자동완성 · 사전 용어 <b>끌어 놓기</b><br>· <b>M</b> → 메모 · 제목 <b>더블클릭</b> → 이름 수정<br>· <b>Ctrl+Z / Ctrl+Y</b> → 내 편집 되돌리기·다시 실행<br>· <b>표 보기 (Ctrl+F)</b> → 일괄편집·찾기/바꾸기·비대상 지정<br>· 상단 <b>검토</b> → 명칭 중복·미입력·관계 점검<br>· <b>[물리]</b> → 게이트 A → 제약·인덱스·시스템 컬럼<br>· <b>[시스템 전체]</b> → 공통 엔터티를 참조로 가져오기</div>`;
+        <div class="caption lh-20">· 엔터티 제목을 끌어 이동 · <b>R</b> → 부모 → 자식 (같은 엔터티면 재귀)<br>· <b>R → 관계 종류 메뉴에서 배타 관계 묶기</b> → 같은 부모의 관계선 2개 클릭<br>· 엔터티 선택 후 <b>Enter</b> → 속성 추가 + 자동완성 · 사전 용어 <b>끌어 놓기</b><br>· <b>M</b> → 메모 · 제목 <b>더블클릭</b> → 이름 수정<br>· <b>Ctrl+Z / Ctrl+Y</b> → 내 편집 되돌리기·다시 실행<br>· <b>표 보기 (Ctrl+F)</b> → 일괄편집·찾기/바꾸기·비대상 지정<br>· 상단 <b>검토</b> → 명칭 중복·미입력·관계 점검<br>· <b>[물리]</b> → 게이트 A → 제약·인덱스·시스템 컬럼<br>· <b>[시스템 전체]</b> → 공통 엔터티를 참조로 가져오기</div>`;
       $('demo-conflict').onclick = demoConflict; $('demo-off').onclick = () => setOffline(true);
       body.querySelectorAll('[data-goto]').forEach(c => c.onclick = () => focusEnt(c.dataset.goto));
       return;
@@ -948,16 +948,16 @@ window.pageInit = function () {
     const rels = R.filter(r => r.f === e.id || r.t === e.id).map(r => `${ent(r.f).n} → ${ent(r.t).n} <span class="faint">(${({ nonid: '1:N 비식별', id: '1:N 식별', one: '1:1', mn: 'M:N' })[r.k]}${r.xg ? ' · 배타' : ''})</span>`);
     const sysRows = mode === 'P' && !e.ref ? SYS_COLS.map(c => `<tr class="ag-sys"><td colspan="2"><span class="badge">시스템</span></td><td class="ag-n">${c[1]}<span class="s2">${c[0]} · ${c[2]}</span></td><td class="faint">—</td><td></td></tr>`).join('') : '';
     const rst = refStale(e);
-    body.innerHTML = `${e.ref ? `<div class="banner${rst ? ' warning' : ''}" style="margin-bottom:12px"><i data-ic=${rst ? 'warn' : 'info'}></i><div class="grow"><b>${hx(e.refName || '공통 영역')} v${e.refVer || '?'} 확정본의 참조</b>입니다. 이 영역에서는 관계만 맺고, 수정은 원본 영역에서 합니다.${rst ? `<br><b>원본 v${rst} 확정본</b>이 나왔습니다 — 갱신하면 속성이 새 확정본으로 바뀝니다.` : ''}
-      <div class="flex" style="gap:6px;margin-top:6px">${e.refArea ? `<a class="btn sm" href="model.html?area=${e.refArea}&focus=${e.refId || e.id}">원본 열기</a>` : ''}${rst && canEdit() ? `<button class="btn sm primary" id="ref-up">원본 v${rst}로 갱신</button>` : ''}</div></div></div>` : ''}
-      ${remoteSel === e.id && !offline ? '<div class="banner" style="margin-bottom:12px"><i data-ic=info></i><div><b>홍설계가 이 엔터티를 편집 중</b>입니다. 같이 고칠 수 있고, 같은 칸을 동시에 고치면 마지막 입력이 남습니다.</div></div>' : ''}
-      ${e.st ? '<div class="flex" style="margin-bottom:8px;gap:6px"><span class="badge b-info">엔터티 용어 신청 중</span><span class="caption muted">분류어 ‘기본’ → _M</span></div>' : ''}
+    body.innerHTML = `${e.ref ? `<div class="banner${rst ? ' warning' : ''} mb-12"><i data-ic=${rst ? 'warn' : 'info'}></i><div class="grow"><b>${hx(e.refName || '공통 영역')} v${e.refVer || '?'} 확정본의 참조</b>입니다. 이 영역에서는 관계만 맺고, 수정은 원본 영역에서 합니다.${rst ? `<br><b>원본 v${rst} 확정본</b>이 나왔습니다 — 갱신하면 속성이 새 확정본으로 바뀝니다.` : ''}
+      <div class="flex gap-6 mt-6">${e.refArea ? `<a class="btn sm" href="model.html?area=${e.refArea}&focus=${e.refId || e.id}">원본 열기</a>` : ''}${rst && canEdit() ? `<button class="btn sm primary" id="ref-up">원본 v${rst}로 갱신</button>` : ''}</div></div></div>` : ''}
+      ${remoteSel === e.id && !offline ? '<div class="banner mb-12"><i data-ic=info></i><div><b>홍설계가 이 엔터티를 편집 중</b>입니다. 같이 고칠 수 있고, 같은 칸을 동시에 고치면 마지막 입력이 남습니다.</div></div>' : ''}
+      ${e.st ? '<div class="flex mb-8 gap-6"><span class="badge b-info">엔터티 용어 신청 중</span><span class="caption muted">분류어 ‘기본’ → _M</span></div>' : ''}
       <div class="tabs"><button class="on" data-tab="attrs">${mode === 'L' ? '속성' : '컬럼'} <span class="n">${e.a.length}</span></button>${mode === 'P' ? '<button data-tab="cons">제약·인덱스</button>' : ''}<button data-tab="sec">보안</button><button data-tab="ent">${mode === 'L' ? '엔터티' : '테이블'}</button><button data-tab="rel">관계 <span class="n">${rels.length}</span></button></div>
       <div class="pane on" data-pane="attrs">${attrGrid(e, sysRows)}</div>
       ${mode === 'P' ? `<div class="pane" data-pane="cons">${consRows(e)}</div>` : ''}
       <div class="pane" data-pane="sec">${secRows(e)}</div>
       <div class="pane" data-pane="ent"><dl class="kv"><dt>엔터티명</dt><dd>${e.n}</dd><dt>테이블명</dt><dd class="mono">${e.p}</dd><dt>분류</dt><dd>${e.c}</dd><dt>표준화</dt><dd>대상</dd>${e.sub ? `<dt>서브타입</dt><dd>${e.sub.kind} · 구분 ${e.sub.disc} · ${e.sub.kids.join(', ')}<br><span class="caption muted">물리 변환: 한 테이블로 통합(기본) · <a href="#" data-toast="서브타입별 테이블로 분할하는 변환을 미리 봅니다(목업)" data-toast-type="info">분할 미리보기</a></span></dd>` : ''}</dl></div>
-      <div class="pane" data-pane="rel"><div class="caption" style="line-height:22px">${rels.join('<br>') || '관계 없음'}</div></div>`;
+      <div class="pane" data-pane="rel"><div class="caption lh-22">${rels.join('<br>') || '관계 없음'}</div></div>`;
     $('rp-add').onclick = () => addAttr();
     agRestore(body);
     const ru = $('ref-up'); if (ru) ru.onclick = () => refreshRef(e);
@@ -1040,19 +1040,19 @@ window.pageInit = function () {
     gvis = new Set(rows.map(r => r.k)); const selVis = [...gsel].filter(k => gvis.has(k)).length, selHid = gsel.size - selVis;
     const hl = s => fv ? esc(s).split(esc(fv)).join(`<mark>${esc(fv)}</mark>`) : esc(s);
     const hits = fv ? rows.filter(r => r.a.n.includes(fv)).length : 0;
-    g.innerHTML = `<div class="gbar"><b style="font-size:14px">속성 표 보기</b><span class="caption muted">${rows.length}개</span>
+    g.innerHTML = `<div class="gbar"><b class="fs-14">속성 표 보기</b><span class="caption muted">${rows.length}개</span>
         ${['all:전체', 'bad:미준수', 'sec:보안', 'na:비대상'].map(x => { const [k, l] = x.split(':'); return `<span class="chip ${gfilter === k ? 'on' : ''}" data-gf="${k}" style="height:26px;font-size:12px">${l}</span>`; }).join('')}
         <span class="grow"></span>
-        <input class="input" id="g-find" placeholder="찾기 (논리명)" aria-label="찾기 (논리명)" value="${esc(fv)}" style="width:150px">${gRepOpen ? `<input class="input edit-only" id="g-rep" placeholder="바꿀 말" aria-label="바꿀 말" value="${esc(rv)}" style="width:130px">` : '<button class="btn sm ghost edit-only" id="g-rep-open">바꾸기…</button>'}
+        <input class="input w-150" id="g-find" placeholder="찾기 (논리명)" aria-label="찾기 (논리명)" value="${esc(fv)}">${gRepOpen ? `<input class="input edit-only w-130" id="g-rep" placeholder="바꿀 말" aria-label="바꿀 말" value="${esc(rv)}">` : '<button class="btn sm ghost edit-only" id="g-rep-open">바꾸기…</button>'}
         <span class="caption muted" style="width:90px">${fv ? `보이는 행 ${hits}건` : ''}</span>${gRepOpen ? `<button class="btn sm edit-only" id="g-replace" ${hits && rv ? '' : 'disabled'}>보이는 행 바꾸기</button>` : ''}
         <button class="btn sm ghost" id="g-close">다이어그램으로 (Esc)</button></div>
       <div class="gbulk edit-only ${gsel.size ? 'on' : ''}"><span class="gscope">표시된 선택 <b>${selVis}</b>${selHid ? ` · 숨겨진 선택 <b>${selHid}</b>` : ''}</span>
-        <span class="caption muted">도메인</span><select class="input" id="g-dom" style="width:130px"><option value="">유지</option>${Object.keys(DOMS).map(d => `<option>${d}</option>`).join('')}</select>
+        <span class="caption muted">도메인</span><select class="input w-130" id="g-dom"><option value="">유지</option>${Object.keys(DOMS).map(d => `<option>${d}</option>`).join('')}</select>
         <span class="caption muted">필수</span><select class="input" id="g-nn" style="width:90px"><option value="">유지</option><option value="1">예</option><option value="0">아니오</option></select>
         <span class="caption muted">표준</span><select class="input" id="g-std" style="width:110px"><option value="">유지</option><option value="in" ${gstd === 'in' ? 'selected' : ''}>대상</option><option value="na" ${gstd === 'na' ? 'selected' : ''}>비대상</option></select>
         <input class="input" id="g-why" placeholder="비대상 사유 *" aria-label="비대상 사유" value="${esc(gwhy)}" style="width:200px;${gstd === 'na' ? '' : 'display:none'}">
         <span class="grow"></span><button class="btn sm" id="g-clear">선택 해제</button>${selHid ? `<button class="btn sm" id="g-apply-all">${gAllArm ? `한 번 더 눌러 숨겨진 ${selHid}개 포함 적용` : `숨겨진 ${selHid}개 포함…`}</button>` : ''}<button class="btn sm primary" id="g-apply" ${selVis ? '' : 'disabled'}>표시된 ${selVis}개 적용</button></div>
-      <div class="gbody"><table class="tbl"><thead><tr><th style="width:32px"><input type="checkbox" id="g-all" class="edit-only" aria-label="보이는 행 모두 선택" ${rows.length && rows.every(r => gsel.has(r.k)) ? 'checked' : ''}></th><th></th><th>엔터티</th><th>속성명</th><th>물리명</th><th>타입</th><th>필수</th><th>보안</th></tr></thead><tbody>
+      <div class="gbody"><table class="tbl"><thead><tr><th class="w-32"><input type="checkbox" id="g-all" class="edit-only" aria-label="보이는 행 모두 선택" ${rows.length && rows.every(r => gsel.has(r.k)) ? 'checked' : ''}></th><th></th><th>엔터티</th><th>속성명</th><th>물리명</th><th>타입</th><th>필수</th><th>보안</th></tr></thead><tbody>
       ${rows.map(r => `<tr><td><input type="checkbox" class="edit-only" data-k="${r.k}" aria-label="${esc(r.e.n + '.' + r.a.n)} 선택" ${gsel.has(r.k) ? 'checked' : ''}></td><td>${stBadge(r.a.s)}</td><td>${r.e.n}${r.e.ref ? ' <span class="muted">· 참조</span>' : ''}</td><td>${r.a.pk ? '# ' : ''}${hl(r.a.n)}${r.a.fk ? ' <span class="faint">(FK)</span>' : ''}</td><td class="mono">${r.a.p}</td><td class="mono">${r.a.t}</td><td>${r.a.nn || r.a.pk ? '예' : '<span class="faint">아니오</span>'}</td><td>${r.a.sec ? `<span class="badge b-danger">${r.a.sec}</span>` : ''}</td></tr>`).join('')}</tbody></table></div>`;
     const f = g.querySelector('#g-find'); if (document.activeElement && document.activeElement.id === 'g-find-focus') f.focus();
   }
@@ -1218,8 +1218,8 @@ window.pageInit = function () {
     const p = document.createElement('div'); p.className = 'pop'; p.style.width = '300px';
     p.style.left = Math.min(node.right - c.left + 8, cv.clientWidth - 316) + 'px'; p.style.top = Math.max(node.top - c.top, 60) + 'px';
     p.innerHTML = `<b>‘${e.n}’을(를) ${e.ref ? '참조 해제' : '삭제'}할까요?</b>
-      <div class="caption" style="margin:6px 0;line-height:20px">관계 <b>${rels.length}</b>개가 함께 삭제됩니다${fks.length ? ` · 자식의 FK 속성 <b>${fks.length}</b>개: ${fks.map(([k, a]) => k.n + '.' + a.n).join(', ')}` : ''}.${remoteSel === id && !offline ? '<br><span style="color:var(--p-hong)">홍설계가 이 엔터티를 편집 중입니다.</span>' : ''}</div>
-      ${fks.length ? `<label class="flex caption"><input type="radio" name="fkopt" value="del" checked> FK 속성도 삭제</label><label class="flex caption" style="margin-bottom:6px"><input type="radio" name="fkopt" value="keep"> 일반 속성으로 남기기</label>` : ''}
+      <div class="caption my-6 lh-20">관계 <b>${rels.length}</b>개가 함께 삭제됩니다${fks.length ? ` · 자식의 FK 속성 <b>${fks.length}</b>개: ${fks.map(([k, a]) => k.n + '.' + a.n).join(', ')}` : ''}.${remoteSel === id && !offline ? '<br><span style="color:var(--p-hong)">홍설계가 이 엔터티를 편집 중입니다.</span>' : ''}</div>
+      ${fks.length ? `<label class="flex caption"><input type="radio" name="fkopt" value="del" checked> FK 속성도 삭제</label><label class="flex caption mb-6"><input type="radio" name="fkopt" value="keep"> 일반 속성으로 남기기</label>` : ''}
       <div class="flex"><button class="btn sm" id="del-no">취소</button><span class="grow"></span><button class="btn sm danger" id="del-yes">${e.ref ? '참조 해제' : '삭제'}</button></div>`;
     cv.appendChild(p); $('del-yes').focus();
     $('del-no').onclick = () => p.remove();
@@ -1399,21 +1399,21 @@ window.pageInit = function () {
     sel = null; render(); showRP();
     $('rp-title').textContent = '관계'; $('rp-sub').textContent = `${ent(r.f).n} → ${ent(r.t).n}`;
     $('rp-body').innerHTML = `<dl class="kv"><dt>관계명</dt><dd>${r.name || '—'}</dd><dt>유형</dt><dd>${({ nonid: '1:N 비식별', id: '1:N 식별', one: '1:1', mn: 'M:N' })[r.k]}${r.xg ? ' · <span style="color:var(--violet)">배타</span>' : ''}</dd><dt>부모 선택성</dt><dd>필수</dd><dt>자식 선택성</dt><dd>선택</dd></dl>` +
-      (r.xg ? `<div class="flex" style="margin-top:8px"><span class="grow"></span><button class="btn sm" id="xor-off">배타 해제</button></div>` : '') +
-      (r.k === 'mn' ? `<div class="banner warning"><i data-ic=warn></i><div class="grow"><b>M:N 해소 필요</b><div class="caption">교차 엔터티 제안: <b>요구사항리스크관계</b> <span class="mono">RQRM_RISK_R</span> · 식별 관계(PK = 두 FK)</div></div></div><div class="flex" style="margin-top:8px"><span class="grow"></span><button class="btn primary sm" id="mn-go">미리보기 후 해소</button></div>` : '');
+      (r.xg ? `<div class="flex mt-8"><span class="grow"></span><button class="btn sm" id="xor-off">배타 해제</button></div>` : '') +
+      (r.k === 'mn' ? `<div class="banner warning"><i data-ic=warn></i><div class="grow"><b>M:N 해소 필요</b><div class="caption">교차 엔터티 제안: <b>요구사항리스크관계</b> <span class="mono">RQRM_RISK_R</span> · 식별 관계(PK = 두 FK)</div></div></div><div class="flex mt-8"><span class="grow"></span><button class="btn primary sm" id="mn-go">미리보기 후 해소</button></div>` : '');
     // the FK attributes this relation brought into the child, handled as one group
     const fkAttrs = () => { const c = ent(r.t), p = ent(r.f); const pk = p.a.filter(a => a.pk); return c.a.filter(a => a.fk && (r.g ? a.fkg === r.g : pk.some(k => k.p === a.p || k.n === a.n))); };
     if (r.f !== r.t && r.k !== 'mn') {
       const fa = fkAttrs();
       $('rp-body').insertAdjacentHTML('beforeend', `<div class="section-t">FK 묶음 <span class="badge">${fa.length}</span> <span class="caption muted">이 관계로 자식에 생긴 속성 — 함께 바뀝니다</span></div><div class="caption">${fa.map(a => `${a.n} <span class="mono faint">${a.p}</span>${a.pk ? ' <span class="badge">PK</span>' : ''}`).join(' · ') || '—'}</div>
-        <div class="flex" style="margin-top:8px"><button class="btn sm" id="rel-ident">${r.k === 'id' ? '비식별로 전환' : '식별로 전환'}</button><span class="grow"></span><button class="btn sm danger" id="rel-del">관계 삭제</button></div>`);
+        <div class="flex mt-8"><button class="btn sm" id="rel-ident">${r.k === 'id' ? '비식별로 전환' : '식별로 전환'}</button><span class="grow"></span><button class="btn sm danger" id="rel-del">관계 삭제</button></div>`);
       // the same rules as the grid's PK edit: PK columns move to the top group, and the change reaches the grandchildren (one undo)
       $('rel-ident').onclick = () => { if (guard()) return; snap(); const toId = r.k !== 'id'; r.k = toId ? 'id' : 'nonid'; const c = ent(r.t); let down = 0;
         fkAttrs().forEach(a => { if (!toId) { pkReach(c, a).forEach(([g, x]) => { const i = g.a.indexOf(x); if (i >= 0) { g.a.splice(i, 1); down++; } }); }
           a.pk = toId ? 1 : 0; if (toId) a.nn = 1; placeAttr(c, a, true); if (toId) down += pkSpread(c, a); });
         render(); toast(toId ? `식별 관계로 바꿨습니다 — FK ${fa.length}개가 PK·필수가 됐습니다${down ? ` · 손자 엔터티에 FK ${down}개 추가` : ''}` : `비식별 관계로 바꿨습니다 — FK ${fa.length}개를 PK에서 뺐습니다${down ? ` · 손자 엔터티의 FK ${down}개 삭제` : ''}`, 'info', undoAction()); };
       $('rel-del').onclick = () => { const box2 = document.createElement('div'); box2.className = 'banner warning'; box2.style.marginTop = '8px';
-        box2.innerHTML = `<i data-ic=warn></i><div class="grow">관계를 삭제합니다. 자식의 FK 속성 ${fa.length}개를 어떻게 할까요?<div class="flex" style="margin-top:6px"><button class="btn sm" id="rd-keep">일반 속성으로 유지</button><button class="btn sm danger" id="rd-del">FK 속성도 삭제</button></div></div>`;
+        box2.innerHTML = `<i data-ic=warn></i><div class="grow">관계를 삭제합니다. 자식의 FK 속성 ${fa.length}개를 어떻게 할까요?<div class="flex mt-6"><button class="btn sm" id="rd-keep">일반 속성으로 유지</button><button class="btn sm danger" id="rd-del">FK 속성도 삭제</button></div></div>`;
         $('rp-body').appendChild(box2);
         const go = keep => { if (guard()) return; snap(); const c = ent(r.t); fkAttrs().forEach(a => { if (keep) { delete a.fk; delete a.fkg; } else c.a.splice(c.a.indexOf(a), 1); }); R.splice(R.indexOf(r), 1); render(); showRP(); toast(`관계를 삭제했습니다 · FK ${fa.length}개 ${keep ? '일반 속성으로 유지' : '삭제'}`, 'info', undoAction()); };
         $('rd-keep').onclick = () => go(true); $('rd-del').onclick = () => go(false); };
@@ -1505,8 +1505,8 @@ window.pageInit = function () {
     if (on) { sel = null; relSrc = null; setTool('select'); closeGrid(); }
     const has = id => !!ent(id);
     if (on) sv.innerHTML = `<div class="banner info" style="position:absolute;left:12px;top:60px;z-index:5;max-width:560px"><i data-ic=info></i><div class="grow"><b>시스템 전체 ERD · 조회 전용</b> — ${curSys().name}의 모든 업무 영역. 공통 영역의 엔터티는 <b>참조로 가져와</b> 관계를 맺을 수 있습니다.</div></div>
-      ${Object.entries(getModels()).map(([id, m], i) => { const mo = id === AREA && VER === m.ver && !snapDoc ? { E } : modelOf(id, m.ver); const es = mo.E.filter(x => !x.ref); const bad = compOf(mo).bad; const lk = modelLock(id); const st = lk.state === 'review' ? '검토 중' : lk.state === 'confirmed' ? '확정' : `v${m.ver} 작업 중`; const col = i % 3, row = Math.floor(i / 3); return `<div class="grp" style="left:${60 + col * 300}px;top:${130 + row * 200}px;width:270px;min-height:120px;cursor:pointer" ondblclick="location.href='model.html?area=${id}'" title="더블클릭하면 이 업무 영역을 엽니다"><h4>${m.name}${id === AREA ? ' <span class="badge">지금 영역</span>' : ''}</h4><div class="caption muted">엔터티 ${es.length} · 미준수 ${bad} · ${st}</div><div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:10px">${'<span style="width:34px;height:18px;border-radius:4px;background:var(--surface-2);border:1px solid var(--border)"></span>'.repeat(Math.min(es.length, 18))}</div><div class="caption faint" style="margin-top:8px"><a href="model.html?area=${id}">열기</a> · 더블클릭해도 열립니다</div></div>`; }).join('')}
-      <div class="grp" style="left:${60 + 300 * Math.min(2, Object.keys(getModels()).length % 3)}px;top:${130 + 200 * Math.ceil(Object.keys(getModels()).length / 3)}px;width:340px"><h4>공통</h4><div class="caption muted" style="margin-bottom:6px">여러 업무 영역이 함께 쓰는 엔터티</div>
+      ${Object.entries(getModels()).map(([id, m], i) => { const mo = id === AREA && VER === m.ver && !snapDoc ? { E } : modelOf(id, m.ver); const es = mo.E.filter(x => !x.ref); const bad = compOf(mo).bad; const lk = modelLock(id); const st = lk.state === 'review' ? '검토 중' : lk.state === 'confirmed' ? '확정' : `v${m.ver} 작업 중`; const col = i % 3, row = Math.floor(i / 3); return `<div class="grp" style="left:${60 + col * 300}px;top:${130 + row * 200}px;width:270px;min-height:120px;cursor:pointer" ondblclick="location.href='model.html?area=${id}'" title="더블클릭하면 이 업무 영역을 엽니다"><h4>${m.name}${id === AREA ? ' <span class="badge">지금 영역</span>' : ''}</h4><div class="caption muted">엔터티 ${es.length} · 미준수 ${bad} · ${st}</div><div class="d-flex wrap gap-4 mt-10">${'<span style="width:34px;height:18px;border-radius:4px;background:var(--surface-2);border:1px solid var(--border)"></span>'.repeat(Math.min(es.length, 18))}</div><div class="caption faint mt-8"><a href="model.html?area=${id}">열기</a> · 더블클릭해도 열립니다</div></div>`; }).join('')}
+      <div class="grp" style="left:${60 + 300 * Math.min(2, Object.keys(getModels()).length % 3)}px;top:${130 + 200 * Math.ceil(Object.keys(getModels()).length / 3)}px;width:340px"><h4>공통</h4><div class="caption muted mb-6">여러 업무 영역이 함께 쓰는 엔터티</div>
         <div class="refrow"><b class="grow">사원기본</b><span class="mono faint">EMP_M</span><span class="badge">사용 중</span></div>
         <div class="refrow"><b class="grow">부서기본</b><span class="mono faint">DEPT_M</span>${has('dept') ? '<span class="badge">참조 중</span>' : '<button class="btn sm" onclick="window.__importRef(\'dept\')">참조로 가져오기</button>'}</div>
         <div class="refrow"><b class="grow">공통코드기본</b><span class="mono faint">CMMN_CD_M</span>${has('code') ? '<span class="badge">참조 중</span>' : '<button class="btn sm" onclick="window.__importRef(\'code\')">참조로 가져오기</button>'}</div></div>
@@ -1688,7 +1688,7 @@ window.pageInit = function () {
   const vName = (p, except) => { const n = p.querySelector('input[type=text]').value.trim(); if (!n) { toast('보기 이름을 입력하세요', 'danger'); return null; } if (V.some(v => v.n === n && v.id !== except)) { toast(`‘${n}’ 보기가 이미 있습니다`, 'danger'); return null; } return n; };
   function vNew(copyOf) {
     if (guard()) return; const src = copyOf && V.find(v => v.id === copyOf);
-    askPop(`<b>${src ? `‘${hx(src.n)}’ 복제` : '새 보기'}</b><div class="caption muted" style="margin-top:4px">${src ? '배치 · 위치 · 숨긴 관계선을 그대로 복사합니다' : '같은 영역의 엔터티를 목적별로 나눠 그립니다. 만든 뒤 트리에서 끌어 놓아 배치하세요'}</div>
+    askPop(`<b>${src ? `‘${hx(src.n)}’ 복제` : '새 보기'}</b><div class="caption muted mt-4">${src ? '배치 · 위치 · 숨긴 관계선을 그대로 복사합니다' : '같은 영역의 엔터티를 목적별로 나눠 그립니다. 만든 뒤 트리에서 끌어 놓아 배치하세요'}</div>
       <input class="input" type="text" aria-label="보기 이름" value="${hx(src ? src.n + ' 복사' : '보기 ' + V.length)}"><div class="flex"><button class="btn sm" data-no>취소</button><span class="grow"></span><button class="btn sm primary" data-ok>${src ? '복제' : '만들기'}</button></div>`, p => {
       const n = vName(p); if (!n) return false; if (guard()) return;
       snap(); const id = 'v' + Date.now().toString(36);
@@ -1700,12 +1700,12 @@ window.pageInit = function () {
     askPop(`<b>보기 이름 바꾸기</b><input class="input" type="text" aria-label="보기 이름" value="${hx(v.n)}"><div class="flex"><button class="btn sm" data-no>취소</button><span class="grow"></span><button class="btn sm primary" data-ok>바꾸기</button></div>`, p => {
       const n = vName(p, id); if (!n) return false; if (n === v.n) return; if (guard()) return; snap(); v.n = n; render(); toast(`보기 이름을 ‘${n}’(으)로 바꿨습니다`, 'info', undoAction()); }); }
   function vDel(id) { const v = V.find(x => x.id === id); if (!v || id === 'all' || guard()) return;
-    askPop(`<b>‘${hx(v.n)}’ 보기를 지울까요?</b><div class="caption" style="margin:6px 0">엔터티와 관계는 그대로 남고, 이 보기의 배치(엔터티 ${(v.ents || []).length}개 · 위치 · 숨긴 관계선)만 사라집니다.</div><div class="flex"><button class="btn sm" data-no>취소</button><span class="grow"></span><button class="btn sm danger" data-ok>보기 삭제</button></div>`, () => {
+    askPop(`<b>‘${hx(v.n)}’ 보기를 지울까요?</b><div class="caption my-6">엔터티와 관계는 그대로 남고, 이 보기의 배치(엔터티 ${(v.ents || []).length}개 · 위치 · 숨긴 관계선)만 사라집니다.</div><div class="flex"><button class="btn sm" data-no>취소</button><span class="grow"></span><button class="btn sm danger" data-ok>보기 삭제</button></div>`, () => {
       if (guard()) return; snap(); V.splice(V.indexOf(v), 1); if (curView === id) curView = 'all'; setView(curView); toast(`‘${v.n}’ 보기를 지웠습니다 · 엔터티는 그대로입니다`, 'info', undoAction()); }); }
   // place an entity of this area in views (checkboxes), or drop it on the open view
   function placeIn(eid) { const e = ent(eid); if (!e || guard()) return; const vs = V.filter(v => v.id !== 'all');
     if (!vs.length) { toast('전체 보기 말고 다른 보기가 없습니다 — 먼저 [새 보기]를 만드세요', 'info'); return; }
-    askPop(`<b>‘${hx(e.n)}’ 배치할 보기</b><div class="vlist">${vs.map(v => `<label><input type="checkbox" value="${hx(v.id)}"${(v.ents || []).includes(eid) ? ' checked' : ''}> ${hx(v.n)} <span class="faint">· ${(v.ents || []).length}</span></label>`).join('')}</div><div class="caption muted">전체 보기에는 늘 있습니다. 빼도 엔터티는 지워지지 않습니다.</div><div class="flex" style="margin-top:8px"><button class="btn sm" data-no>취소</button><span class="grow"></span><button class="btn sm primary" data-ok>적용</button></div>`, p => {
+    askPop(`<b>‘${hx(e.n)}’ 배치할 보기</b><div class="vlist">${vs.map(v => `<label><input type="checkbox" value="${hx(v.id)}"${(v.ents || []).includes(eid) ? ' checked' : ''}> ${hx(v.n)} <span class="faint">· ${(v.ents || []).length}</span></label>`).join('')}</div><div class="caption muted">전체 보기에는 늘 있습니다. 빼도 엔터티는 지워지지 않습니다.</div><div class="flex mt-8"><button class="btn sm" data-no>취소</button><span class="grow"></span><button class="btn sm primary" data-ok>적용</button></div>`, p => {
       if (guard()) return; const want = new Set([...p.querySelectorAll('input:checked')].map(c => c.value)); let add = 0, del = 0;
       const chg = vs.some(v => want.has(v.id) !== (v.ents || []).includes(eid)); if (!chg) return; snap();
       vs.forEach(v => { v.ents = v.ents || []; const has = v.ents.includes(eid); if (want.has(v.id) && !has) { v.ents.push(eid); add++; } else if (!want.has(v.id) && has) { v.ents.splice(v.ents.indexOf(eid), 1); if (v.pos) delete v.pos[eid]; del++; } });
@@ -1756,7 +1756,7 @@ window.pageInit = function () {
     const self = r.f === r.t, multi = R.filter(x => x.f === r.f && x.t === r.t && x.k !== 'mn').length > 1;
     const plan = pk.filter(k => !c.a.some(fkMatch(r, k))).map(k => { const adopt = !self && !r.g && c.a.find(x => !x.fk && x.p === k.p); const clash = !adopt && (self || c.a.some(x => x.n === k.n)); return { k, adopt, clash }; });
     const name = `${c.p}_${p.p}_FK`;
-    askPop(`<b>FK 만들기 · 게이트 A</b><div class="caption" style="margin:6px 0">${hx(p.n)} → ${hx(c.n)} 관계의 FK <span class="mono">${hx(name)}</span>를 만듭니다. 자식 ${hx(c.n)}에:</div>
+    askPop(`<b>FK 만들기 · 게이트 A</b><div class="caption my-6">${hx(p.n)} → ${hx(c.n)} 관계의 FK <span class="mono">${hx(name)}</span>를 만듭니다. 자식 ${hx(c.n)}에:</div>
       <ul class="caption" style="margin:0 0 8px;padding-left:16px">${plan.map(x => `<li>${x.adopt ? `기존 컬럼 <span class="mono">${hx(x.k.p)}</span>을 FK로 지정` : `컬럼 추가 <span class="mono">${hx((self ? 'UPR_' : x.clash ? 'ORG_' : '') + x.k.p)}</span> ${hx(x.k.t)}${x.clash ? ' (역할명 — 이름을 확인하세요)' : ''}`}</li>`).join('') || '<li>추가할 컬럼은 없고, 짝만 맞춥니다</li>'}</ul>
       <div class="flex"><button class="btn sm" data-no>취소</button><span class="grow"></span><button class="btn sm primary" data-ok>FK 만들기</button></div>`, () => {
       if (guard()) return; snap(); const idr = r.k === 'id';

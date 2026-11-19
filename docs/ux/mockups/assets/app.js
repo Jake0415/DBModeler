@@ -1491,6 +1491,10 @@
     app.insertBefore(nav, content);
     app.insertBefore(top, nav);
     document.querySelectorAll('.crumbs a[href="system.html"]').forEach(a => { if (a.textContent.trim() === '요구사항관리') a.textContent = curSys().name; });
+    // the dictionary screens share one tab row under the header (01 v2 §5, D4) — they have no breadcrumb
+    { const DT = [['dictionary.html', '통합 검색'], ['excel-import.html', '엑셀 가져오기'], ['uploads.html', '업로드 이력'], ['candidates.html', '후보 큐'], ['dict-history.html', '변경 내역']];
+      const ph = DT.some(([f]) => f === curFile()) && document.querySelector('#content .page-header');
+      if (ph && !document.querySelector('.dtabs')) ph.insertAdjacentHTML('afterend', `<nav class="tabs dtabs" aria-label="사전 화면">${DT.map(([f, l]) => `<a href="${f}"${f === curFile() ? ' class="on" aria-current="page"' : ''}>${l}</a>`).join('')}</nav>`); }
     drawTree(nav);
     const toasts = document.createElement('div');
     toasts.className = 'toasts'; toasts.id = 'toasts';
