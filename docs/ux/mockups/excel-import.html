@@ -11,10 +11,18 @@
 <style>
   .stepview { display:none; } .stepview.on { display:flex; flex-direction:column; flex:1; min-height:0; }
   .drop { border:1px dashed var(--border-strong); border-radius:var(--r-lg); padding:40px; text-align:center; color:var(--fg-2); background:var(--surface); }
-  .kindcard { border:1px solid var(--border); border-radius:var(--r-lg); padding:16px; background:var(--surface); cursor:pointer; }
-  .kindcard.on { border-color:var(--ink); box-shadow:0 0 0 1px var(--ink); }
-  .modecard { border:1px solid var(--border); border-radius:var(--r-lg); padding:14px 16px; background:var(--surface); cursor:pointer; display:flex; gap:10px; align-items:flex-start; }
-  .modecard.on { border-color:var(--ink); box-shadow:0 0 0 1px var(--ink); }
+  .modes { display:flex; flex-direction:column; border:1px solid var(--ds-gray-400); border-radius:var(--r-lg); margin-bottom:20px; }
+  .modecard { display:flex; gap:12px; align-items:flex-start; padding:12px 16px; cursor:pointer; }
+  .modecard + .modecard { border-top:1px solid var(--ds-gray-400); }
+  .modecard:hover { background:var(--ds-gray-100); }
+  .modecard input { margin-top:3px; }
+  .modecard b { font-weight:500; } .modecard .caption { font-size:14px; line-height:20px; color:var(--fg-2); }
+  .modecard:focus-visible { outline:3px solid var(--focus); outline-offset:-3px; }
+  #kinds { display:inline-flex; height:36px; padding:4px; gap:2px; border-radius:var(--r-md); box-shadow:var(--ring); background:var(--surface); }
+  .kindcard { border:0; background:transparent; border-radius:4px; padding:0 12px; font:500 14px var(--font-sans); color:var(--fg-2); cursor:pointer; display:inline-flex; align-items:center; }
+  .kindcard:hover { color:var(--fg); }
+  .kindcard.on { background:var(--ds-gray-100); color:var(--fg); }
+  .kindrow { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
   #grid-body tr.sel td { background:var(--ds-blue-100); }
   .st { display:inline-flex; align-items:center; gap:4px; }
   .lg { display:inline-flex; align-items:center; gap:4px; font-size:12px; color:var(--fg-2); }
@@ -53,19 +61,22 @@
   <!-- 1 kind & mode -->
   <section class="stepview" data-step="1"><div class="pad" style="max-width:980px">
     <h2 style="font-size:16px;margin-bottom:12px">어떻게 가져올까요?</h2>
-    <div class="grid2" style="margin-bottom:20px">
+    <div class="modes" role="radiogroup" aria-label="가져오는 방식">
       <div class="modecard on" data-mode="round" tabindex="0" role="button"><input type="radio" name="mode" checked aria-label="편집용 파일 다시 올리기"><div><b>편집용 파일 다시 올리기</b><div class="caption muted">사전에서 [내려받기 › 편집용 엑셀]로 받아 고친 파일. 숨김 열(항목 ID·버전·기준본)로 <b>바뀐 것만</b> 찾아 신규·변경으로 나눕니다.</div></div></div>
       <div class="modecard" data-mode="new" tabindex="0" role="button"><input type="radio" name="mode" aria-label="새 항목 등록"><div><b>새 항목 등록 (빈 양식)</b><div class="caption muted">처음 적재하거나 새 항목만 올릴 때. 기관 사전이 비어 있으면 <b>초기 적재</b>로 기록됩니다.</div></div></div>
     </div>
     <div class="section-t">종류</div>
-    <div class="grid3" style="grid-template-columns:repeat(4,1fr)" id="kinds">
-      <div class="kindcard" data-k="단어" title="목업은 용어 양식만 진행합니다"><b>표준단어</b><div class="caption muted">단어명·약어·영문명·형식단어·동의어·금칙어</div></div>
-      <div class="kindcard" data-k="도메인"><b>표준도메인</b><div class="caption muted">그룹·형식단어·타입·길이 (도메인명은 계산)</div></div>
-      <div class="kindcard on" data-k="용어"><b>표준용어</b><div class="caption muted">용어명·도메인·설명 (약어는 계산)</div></div>
-      <div class="kindcard" data-k="코드"><b>코드값</b><div class="caption muted">코드 그룹별로 한 결재 단위</div></div>
+    <div class="kindrow">
+      <div id="kinds" role="group" aria-label="종류">
+        <button class="kindcard" data-k="단어" title="단어명·약어·영문명·형식단어·동의어·금칙어">표준단어</button>
+        <button class="kindcard" data-k="도메인" title="그룹·형식단어·타입·길이 (도메인명은 계산)">표준도메인</button>
+        <button class="kindcard on" data-k="용어" aria-pressed="true" title="용어명·도메인·설명 (약어는 계산)">표준용어</button>
+        <button class="kindcard" data-k="코드" title="코드 그룹별로 한 결재 단위">코드값</button>
+      </div>
+      <span class="caption muted" id="kind-desc">용어명·도메인·설명 (약어는 계산)</span>
     </div>
     <div class="banner" id="kind-note" hidden style="margin-top:8px"><i data-ic=info></i><div id="kind-note-t"></div></div>
-    <div class="flex" style="margin-top:12px"><a class="btn" href="dictionary.html#download">사전에서 편집용 엑셀 내려받기</a><button class="btn ghost" data-toast="빈 양식_표준용어_양식v2.xlsx — 안내·목록 시트 포함" data-toast-type="info">빈 양식 내려받기</button><span class="caption muted">양식이 아니어도 머리글 이름으로 열을 찾습니다</span></div>
+    <div class="flex" style="margin-top:12px;gap:16px"><a class="btn sm ghost" href="dictionary.html#download"><i data-ic=download></i>편집용 엑셀 (사전에서)</a><button class="btn sm ghost" data-toast="빈 양식_표준용어_양식v2.xlsx. 안내·목록 시트 포함" data-toast-type="info"><i data-ic=download></i>빈 양식</button></div>
     <div class="grid2" style="margin-top:28px;grid-template-columns:3fr 2fr;align-items:start">
       <div>
         <div class="flex"><div class="section-t" style="margin:0">최근 업로드</div><span class="grow"></span><a class="caption" href="uploads.html">업로드 이력 전체</a></div>
@@ -80,7 +91,7 @@
 
   <!-- 2 upload -->
   <section class="stepview" data-step="2"><div class="pad" style="max-width:960px">
-    <div class="drop"><b style="color:var(--fg)">파일을 끌어 놓거나 선택하세요</b><div class="caption">XLSX · CSV(UTF-8/CP949 자동 판별) · <b>최대 20MB · 10만 행</b> 중 먼저 걸리는 쪽</div><div style="margin-top:12px"><button class="btn" id="pick">파일 선택</button> <button class="btn ghost sm" id="pick-big" title="상한 초과 예시">큰 파일 예시(12만 행)</button></div><div class="banner danger" id="big-err" hidden style="margin-top:12px;text-align:left"><i data-ic=warn></i><div><b>올릴 수 없습니다 — 120,000행</b> · 상한 10만 행을 넘었습니다(파일 6.1MB). 시트를 나누거나 필터로 범위를 줄여 다시 내려받은 편집용 파일을 쓰세요.</div></div></div>
+    <div class="drop"><b style="color:var(--fg)">파일을 끌어 놓거나 선택하세요</b><div class="caption">XLSX · CSV(UTF-8/CP949 자동 판별) · <b>최대 20MB · 10만 행</b> 중 먼저 걸리는 쪽</div><div style="margin-top:12px"><button class="btn" id="pick"><i data-ic=upload></i>파일 선택</button></div><div class="caption muted" style="margin-top:12px">목업 오류 재현: <button class="btn ghost sm" id="pick-big" style="height:24px;padding:0 6px">상한 초과 파일(12만 행)</button></div><div class="banner danger" id="big-err" hidden style="margin-top:12px;text-align:left"><i data-ic=warn></i><div><b>올릴 수 없습니다 — 120,000행</b> · 상한 10만 행을 넘었습니다(파일 6.1MB). 시트를 나누거나 필터로 범위를 줄여 다시 내려받은 편집용 파일을 쓰세요.</div></div></div>
     <div id="filecard" hidden>
       <div class="card" style="margin-top:16px;display:flex;gap:12px;align-items:center"><span class="badge">XLSX</span><div class="grow"><b id="fc-name">요구사항관리_용어_2차.xlsx</b><div class="caption muted" id="fc-meta">시트 ‘표준용어’ · 14행 · 38KB · 양식 v2</div></div><button class="btn ghost sm" id="repick">바꾸기</button></div>
       <div class="banner success" style="margin-top:8px" id="bl-ok"><i data-ic=check></i><div id="bl-t"></div></div>
@@ -267,7 +278,7 @@ window.pageInit = function () {
   const setMode = m => { if (B && canWrite && m !== mode) { toast('이미 저장된 묶음은 방식을 바꿀 수 없습니다 — 새 업로드로 시작하세요', 'info'); return; } mode = m; document.querySelectorAll('.modecard').forEach(x => { const on = (x.dataset.mode === 'new' ? 'init' : 'round') === m; x.classList.toggle('on', on); x.querySelector('input').checked = on; }); if (!B) { ROWS = JSON.parse(JSON.stringify(m === 'init' ? INIT_ROWS : ROWS0)).map(judgePre); applyScope(); } drawBL(); };
   document.querySelectorAll('.modecard').forEach(m => m.onclick = () => setMode(m.dataset.mode === 'new' ? 'init' : 'round'));
   if (mode === 'init') setTimeout(() => setMode('init'), 0);   // after the baseline banner function exists
-  $('kinds').addEventListener('click', e => { const k = e.target.closest('.kindcard'); if (!k) return; document.querySelectorAll('.kindcard').forEach(x => x.classList.toggle('on', x === k)); kind = k.dataset.k; $('kind-note').hidden = kind === '용어'; $('kind-note-t').innerHTML = `<b>${kind}</b> 양식은 목업에서 진행하지 않습니다 — 열 구성과 검증 규칙이 달라 W1 구현에서 같은 흐름으로 제공합니다. 목업은 <b>표준용어</b>로 확인하세요.`; render(); });
+  $('kinds').addEventListener('click', e => { const k = e.target.closest('.kindcard'); if (!k) return; document.querySelectorAll('.kindcard').forEach(x => { x.classList.toggle('on', x === k); x.setAttribute('aria-pressed', x === k); }); kind = k.dataset.k; $('kind-desc').textContent = k.title; $('kind-note').hidden = kind === '용어'; $('kind-note-t').innerHTML = `<b>${kind}</b> 양식은 목업에서 진행하지 않습니다 — 열 구성과 검증 규칙이 달라 W1 구현에서 같은 흐름으로 제공합니다. 목업은 <b>표준용어</b>로 확인하세요.`; render(); });
   // ---- step 2
   $('pick').onclick = () => { file = true; $('big-err').hidden = true; $('filecard').hidden = false; if (mode === 'init') { $('fc-name').textContent = '기관용어_초기적재.xlsx'; $('fc-meta').textContent = `시트 ‘표준용어’ · ${ROWS.length}행 · 양식 v2 · 숨김 열 없음`; } render(); };
   $('pick-big').onclick = () => { file = false; $('filecard').hidden = true; $('big-err').hidden = false; render(); };

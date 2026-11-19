@@ -150,7 +150,7 @@
     <div class="actions">
       <span class="seg" id="vw" role="group" aria-label="보기"><button class="on" data-v="erd" aria-pressed="true">다이어그램</button><button data-v="grid" aria-pressed="false">표</button></span>
       <span class="seg" id="lp" role="group" aria-label="논리·물리"><button class="on" data-v="L">논리</button><button data-v="P">물리</button></span>
-      <span style="position:relative"><button class="btn" id="b-more" aria-haspopup="true" aria-expanded="false" aria-label="더 보기" style="width:32px;padding:0;justify-content:center">⋯</button>
+      <span style="position:relative"><button class="btn" id="b-more" aria-haspopup="true" aria-expanded="false" aria-label="더 보기" style="width:32px;padding:0;justify-content:center"><i data-ic=more></i></button>
         <div class="menu" id="moremenu" role="menu">
           <a class="mi" role="menuitem" href="import.html"><i data-ic=upload></i>가져오기 (DDL)</a>
           <a class="mi" role="menuitem" href="ddl.html"><i data-ic=file></i>DDL 만들기</a>
@@ -159,7 +159,7 @@
           <div class="msep"></div>
           <button class="mi" role="menuitem" data-toast="v4 확정본 대비: 엔터티 +2, 속성 +6, 변경 5" data-toast-type="info"><i data-ic=compare></i>v4 확정본과 비교</button>
         </div></span>
-      <span style="position:relative"><button class="btn" id="b-export">내보내기 ▾</button>
+      <span style="position:relative"><button class="btn" id="b-export">내보내기<i data-ic=down></i></button>
         <div class="menu" id="expmenu">
           <div class="row"><b>범위</b><span class="seg" id="ex-scope"><button class="on">보이는 영역</button><button>전체</button></span></div>
           <div class="row"><b>형식</b><span class="seg" id="ex-fmt"><button class="on">PNG</button><button>SVG</button><button>PDF</button></span></div>
@@ -199,7 +199,7 @@
       <div class="cv-toolbar">
         <button class="tb on" data-tool="select" title="선택 (V)">↖ <kbd>V</kbd></button>
         <button class="tb" data-tool="entity" data-edit title="엔터티 (E)">▭ 엔터티 <kbd>E</kbd></button>
-        <span style="position:relative"><button class="tb" data-tool="rel" data-edit id="relbtn" title="관계 (R)">⟜ <span id="reltype">1:N 비식별</span> ▾ <kbd>R</kbd></button>
+        <span style="position:relative"><button class="tb" data-tool="rel" data-edit id="relbtn" title="관계 (R)">⟜ <span id="reltype">1:N 비식별</span><i data-ic=down data-s=12></i> <kbd>R</kbd></button>
           <div class="menu" id="relmenu">
             <div class="mi on" data-rt="nonid">1:N 비식별 <span class="faint">점선</span></div>
             <div class="mi" data-rt="id">1:N 식별 <span class="faint">실선</span></div>
@@ -210,16 +210,16 @@
           </div></span>
         <button class="tb" data-tool="memo" data-edit title="메모 (M)"><i data-ic=pen></i>메모 <kbd>M</kbd></button>
         <span class="sep"></span>
-        <button class="tb" id="b-grid" title="표 보기 · 일괄편집 · 찾기/바꾸기 (Ctrl+F)">▤ 표 보기</button>
+        <button class="tb" id="b-grid" title="표 보기 · 일괄편집 · 찾기/바꾸기 (Ctrl+F)"><i data-ic=table></i>표 보기</button>
         <button class="tb" id="b-layout" data-edit>자동 배치</button>
         <button class="tb" id="b-sys">시스템 전체</button>
         <span class="sep"></span>
-        <button class="tb" id="b-undo" data-edit title="내 편집 되돌리기 (Ctrl+Z)">↶</button>
-        <button class="tb" id="b-redo" data-edit title="다시 실행 (Ctrl+Y)">↷</button>
+        <button class="tb" id="b-undo" data-edit title="내 편집 되돌리기 (Ctrl+Z)"><i data-ic=undo></i></button>
+        <button class="tb" id="b-redo" data-edit title="다시 실행 (Ctrl+Y)"><i data-ic=redo></i></button>
       </div>
       <div class="cv-hint" id="hint"></div>
-      <button class="side-tab" data-toggle="side" title="사전 패널 열기">사전 ▸</button>
-      <button class="rp-tab" id="rp-tab" title="우측 패널 열기">패널 ◂</button>
+      <button class="side-tab" data-toggle="side" title="사전 패널 열기">사전<i data-ic=right data-s=12></i></button>
+      <button class="rp-tab" id="rp-tab" title="우측 패널 열기"><i data-ic=left data-s=12></i>패널</button>
       <div class="cv-banner">
         <div class="banner info" id="ban-lock"><i data-ic=info></i><div class="grow" id="ban-lock-t"></div><a class="btn sm" id="ban-lock-a" href="approvals.html">결재 보기</a></div>
         <div class="banner warning" id="ban-left"><i data-ic=warn></i><div class="grow" id="ban-left-t"></div><button class="btn sm" id="ban-left-b">예외로 유지</button></div>
@@ -290,7 +290,7 @@
           <div class="al-step"><span class="pt"></span><div><b>DA 승인</b> <span class="caption faint">필수</span></div></div>
           <div class="al-step" id="cf-final"><span class="pt"></span><div><b>최종 승인 (기관 담당자)</b> <span class="caption faint">시스템 설정 사용 중</span></div></div>
         </div>
-        <div class="flex" style="margin-top:8px"><span class="caption muted">참조</span><button class="btn ghost sm">+ 참조자</button></div>
+        <div class="flex" style="margin-top:8px"><span class="caption muted">참조</span><button class="btn ghost sm"><i data-ic=plus></i>참조자</button></div>
         <div class="banner" style="margin-top:12px"><i data-ic=info></i><div>신청하면 이 업무 영역은 <b>검토 중</b>이 되어 <b>접속 중인 모든 사람</b>에게 조회 전용으로 바뀝니다(지금 홍설계 편집 중). 회수하면 다시 편집할 수 있습니다.</div></div>
       </div>
       <div class="rp-foot"><span class="grow"></span><button class="btn" data-close="pn-confirm">취소</button><button class="btn primary" id="cf-go" data-needs="cf-why">확정 신청</button></div>
@@ -596,7 +596,7 @@ window.pageInit = function () {
     rows += fks.map((f, i) => `<tr><td><span class="badge">IX</span></td><td class="mono">${e.p}_IX${String(i + 1).padStart(2, '0')}</td><td class="mono">${f.c}</td><td class="faint">FK 인덱스</td></tr>`).join('');
     rows += (e.ix || []).map(x => `<tr><td><span class="badge">IX</span></td><td class="mono">${x.n}</td><td class="mono">${x.c}</td><td class="faint">직접 추가</td></tr>`).join('');
     return `<table class="tbl"><thead><tr><th>종류</th><th>이름</th><th>컬럼</th><th></th></tr></thead><tbody>${rows}</tbody></table>
-      <div class="flex" style="margin-top:8px"><button class="btn sm" id="ix-add">+ 인덱스</button><button class="btn sm" id="uk-add">+ UK</button><span class="grow"></span><span class="caption muted">이름은 <a href="settings.html#sys">명명 템플릿</a>을 따릅니다</span></div>`;
+      <div class="flex" style="margin-top:8px"><button class="btn sm" id="ix-add"><i data-ic=plus></i>인덱스</button><button class="btn sm" id="uk-add"><i data-ic=plus></i>UK</button><span class="grow"></span><span class="caption muted">이름은 <a href="settings.html#sys">명명 템플릿</a>을 따릅니다</span></div>`;
   }
   function secRows(e) {
     const list = e.a.filter(a => a.sec);
@@ -617,7 +617,7 @@ window.pageInit = function () {
         <div class="caption" style="line-height:22px"><span class="dot-i" style="background:var(--ink)"></span> 김모델 (나) · ${locked ? '조회' : '편집'}<br><span class="dot-i" style="background:var(--p-hong)"></span> 홍설계 · ${locked ? '조회' : '편집 — ' + (remoteSel ? ent(remoteSel).n : '—')}<br><span class="dot-i" style="background:var(--p-park)"></span> 박설계 · 조회</div>
         <div class="flex" style="margin-top:8px;gap:6px;${locked ? 'display:none' : ''}"><button class="btn sm" id="demo-conflict">동시 수정 충돌 보기</button><button class="btn sm" id="demo-off">연결 끊김 보기</button></div>
         <div class="section-t">이 화면에서 해 보기</div>
-        <div class="caption" style="line-height:20px">· 엔터티 제목을 끌어 이동 · <b>R</b> → 부모 → 자식 (같은 엔터티면 재귀)<br>· <b>R ▾ 배타 관계 묶기</b> → 같은 부모의 관계선 2개 클릭<br>· 엔터티 선택 후 <b>Enter</b> → 속성 추가 + 자동완성 · 사전 용어 <b>끌어 놓기</b><br>· <b>M</b> → 메모 · 제목 <b>더블클릭</b> → 이름 수정<br>· <b>Ctrl+Z / Ctrl+Y</b> → 내 편집 되돌리기·다시 실행<br>· <b>▤ 표 보기 (Ctrl+F)</b> → 일괄편집·찾기/바꾸기·비대상 지정<br>· 상단 <b>검토</b> → 명칭 중복·미입력·관계 점검<br>· <b>[물리]</b> → 게이트 A → 제약·인덱스·시스템 컬럼<br>· <b>[시스템 전체]</b> → 공통 엔터티를 참조로 가져오기</div>`;
+        <div class="caption" style="line-height:20px">· 엔터티 제목을 끌어 이동 · <b>R</b> → 부모 → 자식 (같은 엔터티면 재귀)<br>· <b>R → 관계 종류 메뉴에서 배타 관계 묶기</b> → 같은 부모의 관계선 2개 클릭<br>· 엔터티 선택 후 <b>Enter</b> → 속성 추가 + 자동완성 · 사전 용어 <b>끌어 놓기</b><br>· <b>M</b> → 메모 · 제목 <b>더블클릭</b> → 이름 수정<br>· <b>Ctrl+Z / Ctrl+Y</b> → 내 편집 되돌리기·다시 실행<br>· <b>표 보기 (Ctrl+F)</b> → 일괄편집·찾기/바꾸기·비대상 지정<br>· 상단 <b>검토</b> → 명칭 중복·미입력·관계 점검<br>· <b>[물리]</b> → 게이트 A → 제약·인덱스·시스템 컬럼<br>· <b>[시스템 전체]</b> → 공통 엔터티를 참조로 가져오기</div>`;
       $('demo-conflict').onclick = demoConflict; $('demo-off').onclick = () => setOffline(true);
       body.querySelectorAll('[data-goto]').forEach(c => c.onclick = () => focusEnt(c.dataset.goto));
       return;
@@ -632,7 +632,7 @@ window.pageInit = function () {
       <div class="tabs"><button class="on" data-tab="attrs">${mode === 'L' ? '속성' : '컬럼'} <span class="n">${e.a.length}</span></button>${mode === 'P' ? '<button data-tab="cons">제약·인덱스</button>' : ''}<button data-tab="sec">보안</button><button data-tab="ent">${mode === 'L' ? '엔터티' : '테이블'}</button><button data-tab="rel">관계 <span class="n">${rels.length}</span></button></div>
       <div class="pane on" data-pane="attrs"><table class="tbl"><thead><tr><th></th><th>${mode === 'L' ? '속성명' : '컬럼명'}</th><th>${mode === 'L' ? '물리명' : '타입'}</th></tr></thead><tbody>
       ${e.a.map(a => `<tr><td>${stBadge(a.s)}</td><td>${a.pk ? '# ' : ''}${mode === 'L' ? a.n : a.p}${a.fk ? ' <span class="faint">(FK)</span>' : ''}${a.cand ? ' <span class="caption muted">· 후보 대기</span>' : ''}${a.sec ? ' ' + LOCKI : ''}</td><td class="mono">${mode === 'L' ? a.p : a.t}</td></tr>`).join('')}${sysRows}</tbody></table>
-      <div class="flex" style="margin-top:8px"><button class="btn sm" id="rp-add">+ ${mode === 'L' ? '속성' : '컬럼'} (Enter)</button><span class="grow"></span><span class="caption muted">${mode === 'P' ? '시스템 컬럼은 <a href="settings.html#sys">시스템 설정</a>에서 관리' : '입력하면 표준 용어를 바로 제안합니다'}</span></div>
+      <div class="flex" style="margin-top:8px"><button class="btn sm" id="rp-add"><i data-ic=plus></i>${mode === 'L' ? '속성' : '컬럼'} (Enter)</button><span class="grow"></span><span class="caption muted">${mode === 'P' ? '시스템 컬럼은 <a href="settings.html#sys">시스템 설정</a>에서 관리' : '입력하면 표준 용어를 바로 제안합니다'}</span></div>
       ${e.id === 'dlv' && mode === 'L' ? `<div class="section-t" style="margin-top:16px">선택한 속성</div><dl class="kv"><dt>논리명</dt><dd>산출물제출일 <span class="badge b-info">＋ 조합 가능</span></dd><dt>분석</dt><dd>산출물 + 제출 + 일 → 용어 미등록</dd><dt>도메인</dt><dd class="faint">용어를 고르면 채워집니다</dd></dl>
       <div class="banner warning" style="margin-top:12px"><i data-ic=warn></i><div class="grow"><b>산출물수령자명</b> — 미등록 단어 ‘수령자’. 후보 큐에 등록됐습니다(DA 처리 대기). <a href="#" data-open="mo-ex">예외로 유지</a></div></div>` : ''}</div>
       ${mode === 'P' ? `<div class="pane" data-pane="cons">${consRows(e)}</div>` : ''}
