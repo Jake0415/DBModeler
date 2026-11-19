@@ -54,7 +54,7 @@
 
   <h2 style="font-size:16px;margin-bottom:4px">화면 지도 — 화면 단위 검토</h2>
   <p class="caption muted" style="margin:0 0 8px">모든 화면 상단의 <b>목업 › 화면</b> 버튼을 누르면 그 화면의 ID, 상태별 바로가기, 관련 설계 문서, <b>검토 메모</b>가 열립니다. 이전·다음 화면으로도 이동할 수 있습니다. 메모는 이 브라우저에 저장되고 ↺ 초기화에도 남습니다. <button class="btn sm" id="map-export">전체 메모 복사(마크다운)</button></p>
-  <table class="tbl" id="screen-map" style="border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:24px"><thead><tr><th>메뉴</th><th>화면 ID</th><th>화면</th><th>상태별 바로가기</th><th>설계 문서</th><th class="num">반영 대기</th><th class="num">남은 메모</th></tr></thead><tbody></tbody></table>
+  <table class="tbl box" id="screen-map" style="margin-bottom:24px"><thead><tr><th>메뉴</th><th>화면 ID</th><th>화면</th><th>상태별 바로가기</th><th>설계 문서</th><th class="num">반영 대기</th><th class="num">남은 메모</th></tr></thead><tbody></tbody></table>
   <script src="assets/app.js"></script>
   <script>
   document.addEventListener('DOMContentLoaded', () => {
@@ -65,7 +65,7 @@
   </script>
 
   <h2 style="font-size:16px;margin-bottom:8px">전체 화면</h2>
-  <table class="tbl" style="border:1px solid var(--border);border-radius:8px;overflow:hidden">
+  <table class="tbl" >
     <thead><tr><th>ID</th><th>화면</th><th>링크</th><th>1600 프레임</th></tr></thead>
     <tbody>
       <tr><td class="mono">SC-55</td><td>홈 — 내 차례 결재 · 내 신청 · 최근 업무 영역 · 새 기능</td><td><a href="home.html">열기</a></td><td><a href="home.html?w=1600">1600</a></td></tr>

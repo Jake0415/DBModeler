@@ -23,7 +23,7 @@
     <span id="scope-chips"></span>
     <span style="width:1px;height:20px;background:var(--border)"></span>
     <span class="caption muted">프리셋</span>
-    <select class="input" id="preset" style="width:180px;height:28px" aria-label="프리셋"><option value="create">신규 생성 (CREATE)</option><option value="alter">변경분 (ALTER)</option></select>
+    <select class="input" id="preset" style="width:180px;" aria-label="프리셋"><option value="create">신규 생성 (CREATE)</option><option value="alter">변경분 (ALTER)</option></select>
     <label class="caption flex"><input type="checkbox" id="o-cm" checked> 주석 포함</label>
     <label class="caption flex"><input type="checkbox" id="o-fk" checked> FK 포함</label>
     <span class="grow"></span>
@@ -88,7 +88,7 @@ window.pageInit = function () {
   const baseVer = snapDoc ? snapDoc.ver - 1 : L.model.base;
   const prevDoc0 = getDocs().find(x => x.type === 'model' && x.area === AREA && x.ver === baseVer && x.step === 'done');
   const prevModel = prevDoc0 ? (prevDoc0.model || getModelData(AREA, baseVer)) : null; const prevDoc = prevModel ? { model: prevModel } : null;
-  function chips() { $('scope-chips').innerHTML = [['all', `업무 영역 전체 (${ents.length})`], ['pick', `선택한 테이블 (${picked.size})`], ['sys', `시스템 전체 (${sysCount}) · 조회`]].map(([k, l]) => `<span class="chip ${scope === k ? 'on' : ''}" data-sc="${k}">${l}</span>`).join('') + (scope === 'pick' ? ` <select class="input" id="pick-t" multiple size="1" style="height:28px;width:200px" aria-label="테이블 선택">${ents.map(e => `<option value="${e.id}" ${picked.has(e.id) ? 'selected' : ''}>${e.p !== '—' ? e.p : e.n}</option>`).join('')}</select>` : ''); const pt = $('pick-t'); if (pt) pt.onchange = () => { picked = new Set([...pt.selectedOptions].map(o => o.value)); draw(); }; }
+  function chips() { $('scope-chips').innerHTML = [['all', `업무 영역 전체 (${ents.length})`], ['pick', `선택한 테이블 (${picked.size})`], ['sys', `시스템 전체 (${sysCount}) · 조회`]].map(([k, l]) => `<span class="chip ${scope === k ? 'on' : ''}" data-sc="${k}">${l}</span>`).join('') + (scope === 'pick' ? ` <select class="input" id="pick-t" multiple size="1" style="width:200px" aria-label="테이블 선택">${ents.map(e => `<option value="${e.id}" ${picked.has(e.id) ? 'selected' : ''}>${e.p !== '—' ? e.p : e.n}</option>`).join('')}</select>` : ''); const pt = $('pick-t'); if (pt) pt.onchange = () => { picked = new Set([...pt.selectedOptions].map(o => o.value)); draw(); }; }
   const esc = s => String(s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c]);
   const ascii = s => /^[A-Z][A-Z0-9_]*$/.test(s);
   function draw() {

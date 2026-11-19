@@ -10,15 +10,15 @@
 <script src="assets/app.js"></script>
 <style>
   .ocards { display:grid; grid-template-columns:repeat(auto-fill, minmax(260px, 1fr)); gap:12px; }
-  .ocard { border:1px solid var(--border); border-radius:8px; background:var(--surface); padding:14px; cursor:pointer; display:flex; flex-direction:column; gap:6px; }
+  .ocard { border:1px solid var(--border); border-radius:var(--r-lg); background:var(--surface); padding:14px; cursor:pointer; display:flex; flex-direction:column; gap:6px; }
   .ocard:hover { border-color:var(--border-strong); }
   .ocard.on { border-color:var(--ink); box-shadow:0 0 0 1px var(--ink); }
   .ocard .f { display:flex; gap:4px; margin-top:auto; }
-  .prev { border:1px solid var(--border); border-radius:6px; overflow:hidden; font-size:12px; }
-  .prev .ph { background:var(--surface-2); padding:6px 8px; font-weight:600; border-bottom:1px solid var(--border); }
+  .prev { border:1px solid var(--ds-gray-400); border-radius:var(--r-lg); overflow:auto; font-size:14px; }
+  .prev .ph { background:var(--surface); padding:10px 16px; font-weight:600; border-bottom:1px solid var(--ds-gray-400); }
   .prev table { width:100%; border-collapse:collapse; }
-  .prev td, .prev th { border-bottom:1px solid var(--border); padding:3px 6px; text-align:left; white-space:nowrap; }
-  .prev th { font-weight:500; color:var(--fg-2); background:var(--surface); }
+  .prev td, .prev th { border-bottom:1px solid var(--ds-gray-400); padding:0 16px; height:44px; text-align:left; white-space:nowrap; }
+  .prev th { font-weight:400; color:var(--fg-2); background:var(--ds-gray-100); }
 </style>
 </head>
 <body data-page="model">
@@ -44,7 +44,7 @@
         <div class="ocard" data-k="ddl"><b>DDL 스크립트</b><div class="caption muted">게이트 B 통과 스크립트 — DDL 화면에서 만듭니다</div><div class="f"><a class="badge" href="ddl.html">DDL 화면</a></div></div>
       </div>
       <div class="section-t">최근 만든 산출물</div>
-      <table class="tbl" style="border:1px solid var(--border);border-radius:8px;overflow:hidden"><thead><tr><th>일시</th><th>산출물</th><th>범위 · 기준</th><th>만든 사람</th><th></th></tr></thead><tbody id="recent">
+      <table class="tbl" ><thead><tr><th>일시</th><th>산출물</th><th>범위 · 기준</th><th>만든 사람</th><th></th></tr></thead><tbody id="recent">
         <tr><td class="mono">11/16 18:20</td><td>테이블 정의서</td><td>요구사항·프로젝트 · v4 확정본</td><td>김모델</td><td><a href="#" data-toast="요구사항_프로젝트_테이블정의서_v4.xlsx 내려받기" data-toast-type="info">내려받기</a></td></tr>
         <tr><td class="mono">11/16 18:19</td><td>표준 준수검사 결과</td><td>요구사항·프로젝트 · v4 확정본</td><td>김모델</td><td><a href="#" data-toast="요구사항_프로젝트_준수검사_v4.xlsx 내려받기" data-toast-type="info">내려받기</a></td></tr>
         <tr><td class="mono">11/03 10:02</td><td>ERD (공식)</td><td>시스템 전체 · v4 확정본</td><td>이데이터</td><td><a href="#" data-toast="요구사항관리_ERD_v4.pdf 내려받기" data-toast-type="info">내려받기</a></td></tr>

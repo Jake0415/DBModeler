@@ -34,7 +34,7 @@
   <div class="pane on set-wrap" data-pane="org">
     <div class="set-row"><div class="l"><b>기관</b><span>상단 바와 산출물에 표시</span></div><div class="field-row"><div class="field"><label>기관명</label><input class="input" value="한국데이터진흥원"></div><div class="field"><label>기관 사전 이름</label><input class="input" value="KDA 표준사전"></div></div></div>
     <div class="set-row"><div class="l"><b>사전 신청 최종 승인</b><span>켜면 DA 승인 뒤 기관 담당자 승인을 거쳐 반영</span></div><div class="flex"><label class="flex"><input type="checkbox" id="fin-dict"> <span id="fin-dict-t"></span></label></div></div>
-    <div class="set-row"><div class="l"><b>운영 목표</b><span>홈 현황·통계의 목표선과 ‘기한 넘김’ 기준</span></div><div class="flex" style="gap:16px"><label class="flex">목표 준수율 <input class="input mono" id="org-goal" type="number" min="50" max="100" style="width:70px;height:28px">%</label><label class="flex">결재 기한 <input class="input mono" id="org-sla" type="number" min="1" max="30" style="width:60px;height:28px">일</label></div></div>
+    <div class="set-row"><div class="l"><b>운영 목표</b><span>홈 현황·통계의 목표선과 ‘기한 넘김’ 기준</span></div><div class="flex" style="gap:16px"><label class="flex">목표 준수율 <input class="input mono" id="org-goal" type="number" min="50" max="100" style="width:70px;">%</label><label class="flex">결재 기한 <input class="input mono" id="org-sla" type="number" min="1" max="30" style="width:60px;">일</label></div></div>
     <div class="set-row"><div class="l"><b>결재선 템플릿</b><span>신청자는 단계를 지울 수 없고 참조자만 추가</span></div>
       <div>
         <div class="card" style="margin-bottom:12px">
@@ -52,7 +52,7 @@
       </div></div>
     <div class="set-row"><div class="l"><b>도메인그룹</b><span>도메인을 묶는 분류. 사전 필터·도메인 신청·엑셀 가져오기에 쓰임</span></div>
       <div>
-        <table class="tbl" style="border:1px solid var(--border)"><thead><tr><th>그룹</th><th>설명</th><th class="num">도메인</th><th>범위</th><th></th></tr></thead><tbody>
+        <table class="tbl"><thead><tr><th>그룹</th><th>설명</th><th class="num">도메인</th><th>범위</th><th></th></tr></thead><tbody>
           <tr><td><b>날짜</b></td><td class="caption">연월일·일시·시각</td><td class="num">6</td><td><span class="badge b-common">공통</span></td><td class="faint">공통 사전에서만 수정</td></tr>
           <tr><td><b>번호</b></td><td class="caption">ID·순번·번호</td><td class="num">9</td><td><span class="badge b-common">공통</span></td><td class="faint">공통 사전에서만 수정</td></tr>
           <tr><td><b>명칭</b></td><td class="caption">명·내용·설명</td><td class="num">7</td><td><span class="badge b-common">공통</span></td><td class="faint">공통 사전에서만 수정</td></tr>
@@ -80,18 +80,18 @@
       </div></div>
     <div class="set-row"><div class="l"><b>데이터타입 매핑</b><span>도메인의 논리 타입 → 이 시스템 DBMS의 물리 타입. 축약명은 도메인 이름 자동 생성에 쓰임(예: 연월일<b class="mono">C</b>8)</span></div>
       <div>
-        <table class="tbl" style="border:1px solid var(--border)"><thead><tr><th>논리 타입</th><th>축약명</th><th>Oracle 19c</th><th>길이 조건</th><th>비고</th></tr></thead><tbody>
-          <tr><td>문자(고정)</td><td class="mono">C</td><td><input class="input mono" value="CHAR(n)" style="height:26px;width:130px"></td><td class="mono">1~2000</td><td></td></tr>
-          <tr><td>문자(가변)</td><td class="mono">V</td><td><input class="input mono" value="VARCHAR2(n)" style="height:26px;width:130px"></td><td class="mono">1~4000</td><td class="caption">4000 초과 → CLOB</td></tr>
-          <tr><td>숫자</td><td class="mono">N</td><td><input class="input mono" value="NUMBER(p,s)" style="height:26px;width:130px"></td><td class="mono">p 1~38</td><td></td></tr>
-          <tr><td>일시</td><td class="mono">T</td><td><input class="input mono" value="DATE" style="height:26px;width:130px"></td><td class="mono">—</td><td class="caption">밀리초 필요 시 TIMESTAMP</td></tr>
-          <tr><td>대용량 문자</td><td class="mono">L</td><td><input class="input mono" value="CLOB" style="height:26px;width:130px"></td><td class="mono">—</td><td></td></tr>
+        <table class="tbl"><thead><tr><th>논리 타입</th><th>축약명</th><th>Oracle 19c</th><th>길이 조건</th><th>비고</th></tr></thead><tbody>
+          <tr><td>문자(고정)</td><td class="mono">C</td><td><input class="input mono" value="CHAR(n)" style="width:130px"></td><td class="mono">1~2000</td><td></td></tr>
+          <tr><td>문자(가변)</td><td class="mono">V</td><td><input class="input mono" value="VARCHAR2(n)" style="width:130px"></td><td class="mono">1~4000</td><td class="caption">4000 초과 → CLOB</td></tr>
+          <tr><td>숫자</td><td class="mono">N</td><td><input class="input mono" value="NUMBER(p,s)" style="width:130px"></td><td class="mono">p 1~38</td><td></td></tr>
+          <tr><td>일시</td><td class="mono">T</td><td><input class="input mono" value="DATE" style="width:130px"></td><td class="mono">—</td><td class="caption">밀리초 필요 시 TIMESTAMP</td></tr>
+          <tr><td>대용량 문자</td><td class="mono">L</td><td><input class="input mono" value="CLOB" style="width:130px"></td><td class="mono">—</td><td></td></tr>
         </tbody></table>
         <div class="flex" style="margin-top:8px"><span class="caption muted">DBMS를 바꾸면 기본 매핑(PostgreSQL·Tibero·MySQL/MariaDB)을 불러온 뒤 고칠 수 있습니다.</span><span class="grow"></span><button class="btn sm" data-toast="기본 매핑으로 되돌렸습니다(Oracle 19c)" data-toast-type="info">기본값으로</button></div>
       </div></div>
     <div class="set-row"><div class="l"><b>시스템 컬럼</b><span>물리 반영 때 모든 테이블에 붙는 공통 컬럼. 표준 용어로만 지정</span></div>
       <div>
-        <table class="tbl" style="border:1px solid var(--border)"><thead><tr><th>#</th><th>용어</th><th>컬럼명</th><th>타입</th><th>필수</th><th>표준 검사</th></tr></thead><tbody>
+        <table class="tbl"><thead><tr><th>#</th><th>용어</th><th>컬럼명</th><th>타입</th><th>필수</th><th>표준 검사</th></tr></thead><tbody>
           <tr><td class="mono">1</td><td>등록일시</td><td class="mono">REG_DT</td><td class="mono">DATE</td><td><i data-ic=check></i><span class="sr-only">필수</span></td><td><span class="badge">비대상</span></td></tr>
           <tr><td class="mono">2</td><td>등록자ID</td><td class="mono">REGR_ID</td><td class="mono">VARCHAR2(20)</td><td><i data-ic=check></i><span class="sr-only">필수</span></td><td><span class="badge">비대상</span></td></tr>
           <tr><td class="mono">3</td><td>수정일시</td><td class="mono">MDFCN_DT</td><td class="mono">DATE</td><td></td><td><span class="badge">비대상</span></td></tr>
@@ -106,10 +106,9 @@
 
   <!-- SC-42 users -->
   <div class="pane" data-pane="users">
-    <div class="page-body" style="border:1px solid var(--border);border-radius:8px;overflow:hidden;height:560px">
-      <div class="main"><div class="scroll">
-        <div class="flex" style="padding:10px 12px;border-bottom:1px solid var(--border)"><span class="caption muted">인증: 사내 SSO · 사용자는 디렉터리에서 초대합니다</span><span class="grow"></span><button class="btn sm" data-toast="사내 디렉터리에서 사용자를 검색해 초대합니다(목업)" data-toast-type="info">+ 사용자 초대</button></div>
-        <table class="tbl"><thead><tr><th>이름</th><th>메일</th><th>역할</th><th>담당 시스템</th><th>마지막 접속</th><th>상태</th></tr></thead><tbody id="u-rows">
+    <div class="page-body" style="border:1px solid var(--ds-gray-400);border-radius:var(--r-lg);overflow:hidden;height:calc(100vh - 250px);min-height:480px">
+      <div class="main"><div class="flex" style="padding:10px 12px;border-bottom:1px solid var(--ds-gray-400)"><span class="caption muted">인증: 사내 SSO · 사용자는 디렉터리에서 초대합니다</span><span class="grow"></span><button class="btn sm" data-toast="사내 디렉터리에서 사용자를 검색해 초대합니다(목업)" data-toast-type="info">+ 사용자 초대</button></div><div class="scroll">
+        <table class="tbl flat"><thead><tr><th>이름</th><th>메일</th><th>역할</th><th>담당 시스템</th><th>마지막 접속</th><th>상태</th></tr></thead><tbody id="u-rows">
         </tbody></table></div></div>
       <aside class="rpanel open" id="pn-user"></aside>
     </div>
@@ -119,9 +118,9 @@
   <div class="pane set-wrap" data-pane="rules">
     <div class="banner" style="margin-bottom:12px"><i data-ic=info></i><div class="grow" id="pol-head"></div></div>
     <div class="flex" style="margin-bottom:12px"><span class="chip on" data-group="rk">단어</span><span class="chip" data-group="rk">도메인</span><span class="chip" data-group="rk">용어</span><span class="chip" data-group="rk">코드</span></div>
-    <table class="tbl" style="border:1px solid var(--border)"><thead><tr><th>필드</th><th>필수</th><th>최대 길이</th><th>허용 문자</th><th>위반 시</th></tr></thead><tbody>
+    <table class="tbl"><thead><tr><th>필드</th><th>필수</th><th>최대 길이</th><th>허용 문자</th><th>위반 시</th></tr></thead><tbody>
       <tr><td>단어명</td><td><i data-ic=check></i><span class="sr-only">필수</span></td><td class="mono">—</td><td>한글·영문·숫자</td><td><span class="badge b-danger">차단</span></td></tr>
-      <tr><td>단어 영문약어명</td><td><i data-ic=check></i><span class="sr-only">필수</span></td><td class="mono"><input class="input mono" id="pol-wd" style="width:60px;height:26px" value="6">자</td><td>영문 대문자·숫자</td><td><span class="badge b-danger">차단</span></td></tr>
+      <tr><td>단어 영문약어명</td><td><i data-ic=check></i><span class="sr-only">필수</span></td><td class="mono"><input class="input mono" id="pol-wd" style="width:60px;" value="6">자</td><td>영문 대문자·숫자</td><td><span class="badge b-danger">차단</span></td></tr>
       <tr><td>영문명</td><td></td><td class="mono">100자</td><td>영문·공백</td><td><span class="badge b-warning">경고</span></td></tr>
       <tr><td>설명</td><td></td><td class="mono">1000자</td><td>제한 없음</td><td><span class="badge b-warning">경고</span></td></tr>
     </tbody></table>

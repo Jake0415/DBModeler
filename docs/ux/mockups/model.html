@@ -32,11 +32,11 @@
   #edges { position:absolute; left:0; top:0; overflow:visible; pointer-events:none; }
   #edges path.hit { stroke:transparent; stroke-width:16; fill:none; pointer-events:stroke; cursor:pointer; }
   #edges path.hit.pick { stroke:color-mix(in srgb, var(--info) 35%, transparent); }
-  .node { position:absolute; min-width:180px; max-width:320px; background:var(--surface); border:1px solid var(--border-strong); border-radius:8px; font-size:12px; box-shadow:var(--shadow-4); user-select:none; }
-  .node.sel { border-color:var(--ink); box-shadow:0 0 0 1px var(--ink), var(--shadow-4); }
+  .node { position:absolute; min-width:180px; max-width:320px; background:var(--surface); border:1px solid var(--border-strong); border-radius:var(--r-lg); font-size:12px; box-shadow:var(--menu-shadow); user-select:none; }
+  .node.sel { border-color:var(--ink); box-shadow:0 0 0 1px var(--ink), var(--menu-shadow); }
   .node.relsrc { border-color:var(--info); box-shadow:0 0 0 2px var(--info); }
-  .node.drop { box-shadow:0 0 0 2px var(--info), var(--shadow-4); }
-  .node.remote { box-shadow:0 0 0 2px var(--p-hong), var(--shadow-4); }
+  .node.drop { box-shadow:0 0 0 2px var(--info), var(--menu-shadow); }
+  .node.remote { box-shadow:0 0 0 2px var(--p-hong), var(--menu-shadow); }
   .node.ref { border-style:dashed; background:var(--surface-2); }
   .node .rtag { position:absolute; top:-20px; left:-2px; background:var(--p-hong); color:#fff; font-size:11px; padding:1px 6px; border-radius:4px 4px 4px 0; white-space:nowrap; }
   .node .rtag.reft { background:var(--fg-3); }
@@ -66,7 +66,7 @@
   #world.lod-low .node .more, #world.lod-low .memo { display:none; }
   #world.lod-low .node .nh .title { font-size:15px; }
   .relname { font:400 11px var(--font-sans); fill:var(--fg-2); paint-order:stroke; stroke:var(--bg); stroke-width:4px; }
-  .memo { position:absolute; width:200px; background:color-mix(in srgb, var(--warning) 16%, var(--surface)); border:1px solid color-mix(in srgb, var(--warning) 45%, var(--border)); border-radius:6px; font-size:12px; box-shadow:var(--shadow-4); }
+  .memo { position:absolute; width:200px; background:color-mix(in srgb, var(--warning) 16%, var(--surface)); border:1px solid color-mix(in srgb, var(--warning) 45%, var(--border)); border-radius:6px; font-size:12px; box-shadow:var(--menu-shadow); }
   .memo .mh { display:flex; align-items:center; padding:3px 8px; color:var(--fg-2); font-size:11px; cursor:move; }
   .memo .mh button { margin-left:auto; border:0; background:none; cursor:pointer; color:var(--fg-3); font-size:14px; line-height:1; }
   .memo .mb { padding:2px 8px 8px; min-height:36px; outline:none; white-space:pre-wrap; }
@@ -74,7 +74,7 @@
   .rcur { position:absolute; pointer-events:none; transition:left .9s ease, top .9s ease; z-index:5; }
   .rcur span { position:absolute; left:12px; top:14px; color:#fff; font-size:11px; padding:1px 6px; border-radius:4px; white-space:nowrap; }
   .locked #cur-hong span::after { content:' · 조회'; }
-  .cv-toolbar { position:absolute; top:12px; left:50%; transform:translateX(-50%); display:flex; gap:2px; align-items:center; background:var(--surface); border-radius:12px; box-shadow:var(--menu-shadow); padding:4px; z-index:20; }
+  .cv-toolbar { position:absolute; top:12px; left:50%; transform:translateX(-50%); display:flex; gap:2px; align-items:center; background:var(--surface); border-radius:var(--r-xl); box-shadow:var(--menu-shadow); padding:4px; z-index:20; }
   .cv-toolbar .tb { height:30px; min-width:30px; padding:0 8px; border:0; border-radius:6px; background:none; color:var(--fg); font:500 13px var(--font-sans); cursor:pointer; display:flex; align-items:center; gap:4px; white-space:nowrap; flex:0 0 auto; }
   .cv-toolbar .tb:hover { background:var(--ds-gray-100); }
   .cv-toolbar .tb.on { background:var(--ds-gray-100); color:var(--fg); box-shadow:inset 0 0 0 1px var(--ds-gray-400); }
@@ -82,7 +82,7 @@
   .cv-toolbar kbd { font-size:10px; padding:0 3px; }
   .locked .cv-toolbar .tb[data-edit], .viewonly .cv-toolbar .tb[data-edit] { opacity:.35; pointer-events:none; }
   .viewonly #grid .edit-only { display:none !important; }
-  .menu { position:absolute; background:var(--surface); border-radius:12px; box-shadow:var(--menu-shadow); padding:6px; display:none; z-index:30; min-width:200px; }
+  .menu { position:absolute; background:var(--surface); border-radius:var(--r-xl); box-shadow:var(--menu-shadow); padding:6px; display:none; z-index:30; min-width:200px; }
   .menu.open { display:block; }
   .menu .mi { min-height:36px; padding:0 8px; border-radius:6px; cursor:pointer; font-size:14px; display:flex; align-items:center; justify-content:space-between; gap:12px; }
   .menu .mi:hover, .menu .mi.on { background:var(--ds-gray-100); }
@@ -91,26 +91,26 @@
   #expmenu { top:40px; right:0; width:330px; padding:12px; font-size:13px; }
   #expmenu .row { display:flex; align-items:center; gap:8px; margin-bottom:10px; }
   #expmenu .row > b { width:44px; font-weight:500; color:var(--fg-2); }
-  .cv-zoom { position:absolute; left:12px; bottom:12px; display:flex; gap:4px; align-items:center; background:var(--surface); border-radius:8px; box-shadow:var(--shadow-4); padding:4px; z-index:10; font-size:12px; }
+  .cv-zoom { position:absolute; left:12px; bottom:12px; display:flex; gap:4px; align-items:center; background:var(--surface); border-radius:var(--r-lg); box-shadow:var(--menu-shadow); padding:4px; z-index:10; font-size:12px; }
   .cv-zoom button { height:26px; min-width:26px; border:0; background:none; border-radius:6px; cursor:pointer; color:var(--fg); font:500 13px var(--font-sans); }
   .cv-zoom button:hover { background:var(--surface-2); }
-  .cv-mini { position:absolute; right:12px; bottom:12px; width:180px; height:120px; background:var(--surface); border-radius:8px; box-shadow:var(--shadow-4); z-index:10; overflow:hidden; }
-  .cv-hint { position:absolute; left:50%; top:56px; transform:translateX(-50%); background:var(--ink); color:var(--on-ink); font-size:12px; padding:6px 10px; border-radius:6px; z-index:20; display:none; }
+  .cv-mini { position:absolute; right:12px; bottom:12px; width:180px; height:120px; background:var(--surface); border-radius:var(--r-lg); box-shadow:var(--menu-shadow); z-index:10; overflow:hidden; }
+  .cv-hint { position:absolute; left:50%; top:56px; transform:translateX(-50%); background:var(--ds-gray-1000); color:var(--on-ink); font-size:13px; padding:6px 12px; border-radius:6px; z-index:20; display:none; }
   .cv-banner { position:absolute; left:12px; top:60px; z-index:10; display:flex; flex-direction:column; gap:6px; max-width:440px; }
   .cv-banner > .banner { display:none; }
-  .pop { position:absolute; z-index:12; background:var(--surface); border-radius:12px; box-shadow:var(--menu-shadow); padding:12px; font-size:14px; width:280px; }
-  .acl { position:absolute; z-index:13; background:var(--surface); border-radius:12px; box-shadow:var(--menu-shadow); padding:6px; width:300px; font-size:13px; }
+  .pop { position:absolute; z-index:12; background:var(--surface); border-radius:var(--r-xl); box-shadow:var(--menu-shadow); padding:12px; font-size:14px; width:280px; }
+  .acl { position:absolute; z-index:13; background:var(--surface); border-radius:var(--r-xl); box-shadow:var(--menu-shadow); padding:6px; width:300px; font-size:13px; }
   .acl .o { display:grid; grid-template-columns:1fr auto; align-items:center; min-height:32px; padding:0 8px; border-radius:6px; cursor:pointer; gap:6px; }
   .acl .o.on, .acl .o:hover { background:var(--ds-gray-100); }
   .acl .o .m { font-family:var(--font-mono); color:var(--fg-3); }
-  .grp { position:absolute; border:1px dashed var(--border-strong); border-radius:12px; background:var(--surface); padding:14px; }
+  .grp { position:absolute; border:1px dashed var(--border-strong); border-radius:var(--r-xl); background:var(--surface); padding:14px; }
   .grp h4 { margin:0 0 4px; font-size:16px; }
   .grp .refrow { display:flex; align-items:center; gap:6px; font-size:12px; padding:4px 0; border-top:1px solid var(--border); }
   #sysview { display:none; position:absolute; inset:0; }
   #cv[data-sys="1"] .cv-banner, #cv[data-sys="1"] > .cv-zoom, #cv[data-sys="1"] .cv-mini, #cv[data-sys="1"] .legend { display:none !important; }
   .legend { position:absolute; left:12px; bottom:52px; z-index:9; font-size:11px; color:var(--fg-3); display:flex; gap:8px; align-items:center; }
   /* grid mode */
-  #grid { position:absolute; left:12px; right:12px; top:56px; bottom:12px; background:var(--surface); border-radius:8px; box-shadow:var(--shadow-5); z-index:15; display:none; flex-direction:column; overflow:hidden; }
+  #grid { position:absolute; left:12px; right:12px; top:56px; bottom:12px; background:var(--surface); border-radius:var(--r-lg); box-shadow:var(--menu-shadow); z-index:15; display:none; flex-direction:column; overflow:hidden; }
   #grid.open { display:flex; }
   #grid .gbar { display:flex; align-items:center; gap:8px; padding:10px 12px; border-bottom:1px solid var(--border); flex-wrap:wrap; }
   #grid .gbulk { display:none; align-items:center; gap:8px; padding:8px 12px; background:var(--surface-2); border-bottom:1px solid var(--border); font-size:13px; }
@@ -159,7 +159,7 @@
     <div class="side" id="side">
       <div style="padding:10px 12px;border-bottom:1px solid var(--border)">
         <div class="flex" style="margin-bottom:8px"><b style="font-size:13px">사전</b><span class="grow"></span><button class="btn ghost sm" data-toggle="side">접기</button></div>
-        <input class="input" id="dict-q" value="제출" placeholder="용어 검색 · 없으면 후보 등록" aria-label="사전 용어 검색" style="height:28px">
+        <input class="input" id="dict-q" value="제출" placeholder="용어 검색 · 없으면 후보 등록" aria-label="사전 용어 검색">
         <div class="flex" style="margin-top:8px;gap:4px"><span class="chip on" data-group="sk" style="height:24px;font-size:12px">용어</span><span class="chip" data-group="sk" style="height:24px;font-size:12px">단어</span><span class="chip" data-group="sk" style="height:24px;font-size:12px">도메인</span></div>
       </div>
       <div class="scroll" id="dict"></div>
@@ -217,7 +217,7 @@
       <div id="grid"></div>
       <div class="legend">상태 <span class="dot-i s-ok"></span>표준 <span class="dot-i s-comb"></span>조합 가능 <span class="dot-i s-unreg"></span>미등록 단어 <span class="dot-i s-ex"></span>예외 <span class="dot-i s-na"></span>비대상</div>
       <div class="cv-zoom"><button id="zo">−</button><span id="zl" class="mono" style="width:40px;text-align:center">100%</span><button id="zi">+</button><button id="zfit" title="전체 맞춤 (Shift+1)">맞춤</button>
-        <select class="input" id="lodsel" style="height:26px;width:120px;font-size:12px"><option value="auto">표시: 자동(0.35배 미만 요약)</option><option value="full">전체 속성</option><option value="mid">키만</option><option value="low">요약(이름만)</option></select></div>
+        <select class="input" id="lodsel" style="width:120px;font-size:12px"><option value="auto">표시: 자동(0.35배 미만 요약)</option><option value="full">전체 속성</option><option value="mid">키만</option><option value="low">요약(이름만)</option></select></div>
       <div class="cv-mini"><svg id="mini" width="180" height="120"></svg></div>
     </div>
 
@@ -251,7 +251,7 @@
       <div class="rp-body">
         <div class="grid3" style="margin-bottom:12px">
           <div class="card"><div class="caption muted">준수율</div><div class="mono" style="font-size:20px" id="cf-rate">—</div></div>
-          <div class="card"><div class="caption muted">예외</div><div class="mono" style="font-size:20px;color:var(--violet)" id="cf-exc">—</div></div>
+          <div class="card"><div class="caption muted">예외</div><div class="mono" style="font-size:20px" id="cf-exc">—</div></div>
           <div class="card"><div class="caption muted" id="cf-base">확정본 대비</div><div class="mono" style="font-size:20px" id="cf-diff">—</div></div>
         </div>
         <div class="section-t">표준 예외 <span class="badge b-violet" id="cf-exn"><i data-ic=flag data-s=12></i> 0</span> </div>
@@ -600,7 +600,7 @@ window.pageInit = function () {
       ${e.st ? '<div class="flex" style="margin-bottom:8px;gap:6px"><span class="badge b-info">엔터티 용어 신청 중</span><span class="caption muted">분류어 ‘기본’ → _M</span></div>' : ''}
       <div class="tabs"><button class="on" data-tab="attrs">${mode === 'L' ? '속성' : '컬럼'} <span class="n">${e.a.length}</span></button>${mode === 'P' ? '<button data-tab="cons">제약·인덱스</button>' : ''}<button data-tab="sec">보안</button><button data-tab="ent">${mode === 'L' ? '엔터티' : '테이블'}</button><button data-tab="rel">관계 <span class="n">${rels.length}</span></button></div>
       <div class="pane on" data-pane="attrs"><table class="tbl"><thead><tr><th></th><th>${mode === 'L' ? '속성명' : '컬럼명'}</th><th>${mode === 'L' ? '물리명' : '타입'}</th></tr></thead><tbody>
-      ${e.a.map(a => `<tr><td>${stBadge(a.s)}</td><td>${a.pk ? '# ' : ''}${mode === 'L' ? a.n : a.p}${a.fk ? ' <span class="faint">(FK)</span>' : ''}${a.cand ? ' <span class="badge b-violet" style="height:16px">후보 대기</span>' : ''}${a.sec ? ' ' + LOCKI : ''}</td><td class="mono">${mode === 'L' ? a.p : a.t}</td></tr>`).join('')}${sysRows}</tbody></table>
+      ${e.a.map(a => `<tr><td>${stBadge(a.s)}</td><td>${a.pk ? '# ' : ''}${mode === 'L' ? a.n : a.p}${a.fk ? ' <span class="faint">(FK)</span>' : ''}${a.cand ? ' <span class="caption muted">· 후보 대기</span>' : ''}${a.sec ? ' ' + LOCKI : ''}</td><td class="mono">${mode === 'L' ? a.p : a.t}</td></tr>`).join('')}${sysRows}</tbody></table>
       <div class="flex" style="margin-top:8px"><button class="btn sm" id="rp-add">+ ${mode === 'L' ? '속성' : '컬럼'} (Enter)</button><span class="grow"></span><span class="caption muted">${mode === 'P' ? '시스템 컬럼은 <a href="settings.html#sys">시스템 설정</a>에서 관리' : '입력하면 표준 용어를 바로 제안합니다'}</span></div>
       ${e.id === 'dlv' && mode === 'L' ? `<div class="section-t" style="margin-top:16px">선택한 속성</div><dl class="kv"><dt>논리명</dt><dd>산출물제출일 <span class="badge b-info">＋ 조합 가능</span></dd><dt>분석</dt><dd>산출물 + 제출 + 일 → 용어 미등록</dd><dt>도메인</dt><dd class="faint">용어를 고르면 채워집니다</dd></dl>
       <div class="banner warning" style="margin-top:12px"><i data-ic=warn></i><div class="grow"><b>산출물수령자명</b> — 미등록 단어 ‘수령자’. 후보 큐에 등록됐습니다(DA 처리 대기). <a href="#" data-open="mo-ex">예외로 유지</a></div></div>` : ''}</div>

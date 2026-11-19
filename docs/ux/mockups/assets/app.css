@@ -693,3 +693,18 @@ select.input { padding-right:36px; }
 /* ---- scrollbars: Geist (read from vercel.com stylesheets) — thin bar, gray thumb, transparent track; hover/drag goes one step darker ---- */
 html, body, * { scrollbar-width:thin; scrollbar-color:var(--ds-gray-500) transparent; }
 *:hover { scrollbar-color:var(--ds-gray-600) transparent; }
+
+/* ---- v13: remaining shared pieces on the Geist scale ---- */
+/* key–value (detail panels) = Geist Description: label 14 gray-900, value 14/500 */
+.kv { grid-template-columns:128px 1fr; gap:10px 16px; font-size:14px; line-height:20px; }
+.kv dt { color:var(--fg-2); font-weight:400; } .kv dd { color:var(--fg); font-weight:500; }
+/* cards: 1px gray-400 border, 8px radius, no shadow, 16px padding */
+.card { border:1px solid var(--ds-gray-400); border-radius:var(--r-lg); box-shadow:none; padding:16px; background:var(--surface); }
+.grid3 { gap:12px; }
+/* section titles inside panels */
+.section-t { font-size:14px; font-weight:600; color:var(--fg); letter-spacing:-.1px; }
+.caption { color:inherit; }
+.caption.muted, .muted { color:var(--fg-2); }
+/* page header crumbs */
+.page-header .crumb { color:var(--fg-2); font-size:14px; }
+.page-header .crumb b { color:var(--fg); }

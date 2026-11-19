@@ -11,7 +11,7 @@
 <style>
   mark { background:color-mix(in srgb, var(--warning) 40%, transparent); color:inherit; border-radius:2px; }
   .mt { font-size:11px; padding:0 6px; border-radius:9999px; background:var(--ds-gray-100); color:var(--fg-2); margin-left:4px; }
-  .menu { position:absolute; right:0; top:40px; background:var(--surface); border-radius:12px; box-shadow:var(--menu-shadow); padding:6px; width:340px; display:none; z-index:40; }
+  .menu { position:absolute; right:0; top:40px; background:var(--surface); border-radius:var(--r-xl); box-shadow:var(--menu-shadow); padding:6px; width:340px; display:none; z-index:40; }
   .menu.open { display:block; }
   .menu .mi { display:flex; align-items:center; min-height:36px; width:100%; text-align:left; border:0; background:none; padding:0 8px; border-radius:6px; cursor:pointer; font:14px var(--font-sans); color:var(--fg); }
   .menu .mi:hover { background:var(--ds-gray-100); } .menu .mi:focus-visible { background:var(--ds-gray-100); outline:none; box-shadow:0 0 0 2px var(--focus); }
@@ -52,10 +52,10 @@
         <span id="kind-chips"></span>
         <span style="width:1px;height:20px;background:var(--border)"></span>
         <button class="chip on" data-src="공통">공통</button><button class="chip on" data-src="기관">기관</button><button class="chip" data-st="신청 중">신청 중</button><button class="chip" data-st="보완 필요">보완 필요</button>
-        <select class="input" id="dg" style="height:28px;width:150px;font-size:13px" aria-label="도메인그룹"><option value="">도메인그룹: 전체</option><option>날짜</option><option>번호</option><option>명칭</option><option>코드</option><option>금액·수량</option></select>
-        <select class="input" id="since" style="height:28px;width:130px;font-size:13px" aria-label="변경일"><option value="">변경일: 전체</option><option value="7">최근 7일</option><option value="30">최근 30일</option></select>
-        <select class="input" id="flen" style="height:28px;width:130px;font-size:13px" aria-label="길이 범위"><option value="">길이: 전체</option><option value="0-10">길이 10 이하</option><option value="11-100">길이 11~100</option><option value="101-99999">길이 101 이상</option></select>
-        <select class="input" id="fdom" style="height:28px;width:150px;font-size:13px" aria-label="도메인 연결"><option value="">도메인 연결: 전체</option><option value="y">연결됨</option><option value="n">연결 없음·사전에 없음</option></select>
+        <select class="input" id="dg" style="width:150px;font-size:13px" aria-label="도메인그룹"><option value="">도메인그룹: 전체</option><option>날짜</option><option>번호</option><option>명칭</option><option>코드</option><option>금액·수량</option></select>
+        <select class="input" id="since" style="width:130px;font-size:13px" aria-label="변경일"><option value="">변경일: 전체</option><option value="7">최근 7일</option><option value="30">최근 30일</option></select>
+        <select class="input" id="flen" style="width:130px;font-size:13px" aria-label="길이 범위"><option value="">길이: 전체</option><option value="0-10">길이 10 이하</option><option value="11-100">길이 11~100</option><option value="101-99999">길이 101 이상</option></select>
+        <select class="input" id="fdom" style="width:150px;font-size:13px" aria-label="도메인 연결"><option value="">도메인 연결: 전체</option><option value="y">연결됨</option><option value="n">연결 없음·사전에 없음</option></select>
         <label class="flex caption" style="gap:4px"><input type="checkbox" id="fdisc"> 원본 폐기 포함</label>
       </div>
       <div class="listhead" id="lh" aria-live="polite"></div>
