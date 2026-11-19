@@ -14,7 +14,10 @@
   .side .dict-item:hover { background:var(--surface-2); }
   .side .dict-item .l1 { display:flex; gap:6px; align-items:center; }
   .side .dict-item .l2 { font-family:var(--font-mono); font-size:12px; color:var(--fg-2); }
-  .s-ok { background:var(--success); } .s-comb { background:var(--info); } .s-unreg { background:var(--warning); } .s-ex { background:var(--violet); } .s-na { background:var(--border-strong); } .s-req { background:var(--info); box-shadow:inset 0 0 0 2px var(--surface); outline:1px solid var(--info); }
+  .s-ok { background:var(--success); } .s-comb { background:var(--info); } .s-unreg { background:var(--warning); } .s-ex { background:var(--violet); } .s-na { background:var(--border-strong); } .s-req { background:var(--surface); box-shadow:inset 0 0 0 2px var(--info); }
+  .node .ar .stw { font:500 10px var(--font-sans); padding:0 6px; border-radius:9999px; line-height:16px; }
+  .stw.comb, .stw.req { background:var(--ds-blue-200); color:var(--ds-blue-900); } .stw.unreg { background:var(--ds-amber-200); color:var(--ds-amber-900); } .stw.ex { box-shadow:inset 0 0 0 1px var(--ds-gray-500); color:var(--fg); }
+  #world.lod-mid .node .ar .stw { display:none; }
   #confirm-btn.disabled { pointer-events:auto; }
   .avs { display:flex; align-items:center; padding-left:6px; }
   .avs .av { width:24px; height:24px; border-radius:50%; color:#fff; font:600 11px var(--font-sans); display:grid; place-items:center; border:2px solid var(--surface); margin-left:-6px; }
@@ -38,7 +41,7 @@
   .node .rtag { position:absolute; top:-20px; left:-2px; background:var(--p-hong); color:#fff; font-size:11px; padding:1px 6px; border-radius:4px 4px 4px 0; white-space:nowrap; }
   .node .rtag.reft { background:var(--fg-3); }
   .node .nh { display:flex; align-items:center; gap:6px; padding:6px 10px; border-bottom:1px solid var(--border); font-weight:600; font-size:13px; cursor:move; }
-  .node .nh .cls { font:600 10px var(--font-mono); border:1px solid var(--border-strong); border-radius:4px; padding:0 4px; color:var(--fg-2); }
+  .node .nh .cls { font:500 10px var(--font-mono); background:var(--ds-gray-100); border-radius:9999px; padding:0 6px; color:var(--fg-2); }
   .node .nh .sub { font:400 11px var(--font-mono); color:var(--fg-3); margin-left:auto; }
   .node .nh input { font:600 13px var(--font-sans); border:1px solid var(--ink); border-radius:4px; padding:0 4px; width:150px; background:var(--surface); color:var(--fg); }
   .node .pk { border-bottom:1px solid var(--border); }
@@ -71,18 +74,18 @@
   .rcur { position:absolute; pointer-events:none; transition:left .9s ease, top .9s ease; z-index:5; }
   .rcur span { position:absolute; left:12px; top:14px; color:#fff; font-size:11px; padding:1px 6px; border-radius:4px; white-space:nowrap; }
   .locked #cur-hong span::after { content:' · 조회'; }
-  .cv-toolbar { position:absolute; top:12px; left:50%; transform:translateX(-50%); display:flex; gap:2px; align-items:center; background:var(--surface); border-radius:8px; box-shadow:var(--shadow-4); padding:4px; z-index:20; }
+  .cv-toolbar { position:absolute; top:12px; left:50%; transform:translateX(-50%); display:flex; gap:2px; align-items:center; background:var(--surface); border-radius:12px; box-shadow:var(--menu-shadow); padding:4px; z-index:20; }
   .cv-toolbar .tb { height:30px; min-width:30px; padding:0 8px; border:0; border-radius:6px; background:none; color:var(--fg); font:500 13px var(--font-sans); cursor:pointer; display:flex; align-items:center; gap:4px; white-space:nowrap; flex:0 0 auto; }
-  .cv-toolbar .tb:hover { background:var(--surface-2); }
-  .cv-toolbar .tb.on { background:var(--ink); color:var(--on-ink); }
+  .cv-toolbar .tb:hover { background:var(--ds-gray-100); }
+  .cv-toolbar .tb.on { background:var(--ds-gray-100); color:var(--fg); box-shadow:inset 0 0 0 1px var(--ds-gray-400); }
   .cv-toolbar .sep { width:1px; height:20px; background:var(--border); margin:0 4px; }
   .cv-toolbar kbd { font-size:10px; padding:0 3px; }
   .locked .cv-toolbar .tb[data-edit], .viewonly .cv-toolbar .tb[data-edit] { opacity:.35; pointer-events:none; }
   .viewonly #grid .edit-only { display:none !important; }
-  .menu { position:absolute; background:var(--surface); border-radius:8px; box-shadow:var(--shadow-5); padding:4px; display:none; z-index:30; }
+  .menu { position:absolute; background:var(--surface); border-radius:12px; box-shadow:var(--menu-shadow); padding:6px; display:none; z-index:30; min-width:200px; }
   .menu.open { display:block; }
-  .menu .mi { padding:6px 8px; border-radius:4px; cursor:pointer; font-size:13px; display:flex; justify-content:space-between; gap:12px; }
-  .menu .mi:hover, .menu .mi.on { background:var(--surface-2); }
+  .menu .mi { min-height:36px; padding:0 8px; border-radius:6px; cursor:pointer; font-size:14px; display:flex; align-items:center; justify-content:space-between; gap:12px; }
+  .menu .mi:hover, .menu .mi.on { background:var(--ds-gray-100); }
   .menu .msep { height:1px; background:var(--border); margin:4px 0; }
   #relmenu { top:44px; left:0; width:220px; }
   #expmenu { top:40px; right:0; width:330px; padding:12px; font-size:13px; }
@@ -95,10 +98,10 @@
   .cv-hint { position:absolute; left:50%; top:56px; transform:translateX(-50%); background:var(--ink); color:var(--on-ink); font-size:12px; padding:6px 10px; border-radius:6px; z-index:20; display:none; }
   .cv-banner { position:absolute; left:12px; top:60px; z-index:10; display:flex; flex-direction:column; gap:6px; max-width:440px; }
   .cv-banner > .banner { display:none; }
-  .pop { position:absolute; z-index:12; background:var(--surface); border-radius:8px; box-shadow:var(--shadow-5); padding:10px; font-size:13px; width:260px; }
-  .acl { position:absolute; z-index:13; background:var(--surface); border-radius:6px; box-shadow:var(--shadow-5); padding:4px; width:280px; font-size:12px; }
-  .acl .o { display:grid; grid-template-columns:1fr auto; padding:4px 6px; border-radius:4px; cursor:pointer; gap:6px; }
-  .acl .o.on, .acl .o:hover { background:var(--surface-2); }
+  .pop { position:absolute; z-index:12; background:var(--surface); border-radius:12px; box-shadow:var(--menu-shadow); padding:12px; font-size:14px; width:280px; }
+  .acl { position:absolute; z-index:13; background:var(--surface); border-radius:12px; box-shadow:var(--menu-shadow); padding:6px; width:300px; font-size:13px; }
+  .acl .o { display:grid; grid-template-columns:1fr auto; align-items:center; min-height:32px; padding:0 8px; border-radius:6px; cursor:pointer; gap:6px; }
+  .acl .o.on, .acl .o:hover { background:var(--ds-gray-100); }
   .acl .o .m { font-family:var(--font-mono); color:var(--fg-3); }
   .grp { position:absolute; border:1px dashed var(--border-strong); border-radius:12px; background:var(--surface); padding:14px; }
   .grp h4 { margin:0 0 4px; font-size:16px; }
@@ -179,7 +182,7 @@
             <div class="msep"></div>
             <div class="mi" data-rt="xor">배타 관계 묶기 <span class="faint">관계선 2개</span></div>
           </div></span>
-        <button class="tb" data-tool="memo" data-edit title="메모 (M)">✎ 메모 <kbd>M</kbd></button>
+        <button class="tb" data-tool="memo" data-edit title="메모 (M)"><i data-ic=pen></i>메모 <kbd>M</kbd></button>
         <span class="sep"></span>
         <button class="tb" id="b-grid" title="표 보기 · 일괄편집 · 찾기/바꾸기 (Ctrl+F)">▤ 표 보기</button>
         <button class="tb" id="b-layout" data-edit>자동 배치</button>
@@ -456,7 +459,7 @@ window.pageInit = function () {
       const idx = e.a.indexOf(a);
       const name = mode === 'L' ? a.n : a.p, right = mode === 'L' ? a.p : a.t;
       if (a.edit) return `<div class="ar"><span class="dot-i s-na"></span><input data-e="${e.id}" data-i="${idx}" class="attr-in" placeholder="속성명 입력 · Enter" value="${a.n}"></div>`;
-      return `<div class="ar ${a.pk ? 'pkr' : ''} ${a.fk ? 'fk' : ''} ${a.remote ? 'new' : ''} ${a.s === 'na' ? 'excl' : ''}" data-e="${e.id}" data-i="${idx}"><span class="dot-i s-${a.s}" title="${({ ok: '표준', comb: '조합 가능', unreg: '미등록 단어', ex: '예외', na: '비대상', req: '용어 신청 중' })[a.s]}"></span><span class="n">${a.pk ? '# ' : ''}${name}${a.fk ? ' (FK)' : ''}</span>${a.sec ? LOCKI : ''}<span class="p">${right}</span></div>`;
+      return `<div class="ar ${a.pk ? 'pkr' : ''} ${a.fk ? 'fk' : ''} ${a.remote ? 'new' : ''} ${a.s === 'na' ? 'excl' : ''}" data-e="${e.id}" data-i="${idx}"><span class="dot-i s-${a.s}" title="${({ ok: '표준', comb: '조합 가능', unreg: '미등록 단어', ex: '예외', na: '비대상', req: '용어 신청 중' })[a.s]}"></span><span class="n">${a.pk ? '# ' : ''}${name}${a.fk ? ' (FK)' : ''}</span>${['comb', 'unreg', 'ex', 'req'].includes(a.s) ? `<span class="stw ${a.s}">${({ comb: '조합', unreg: '미등록', ex: '예외', req: '신청 중' })[a.s]}</span>` : ''}${a.sec ? LOCKI : ''}<span class="p">${right}</span></div>`;
     };
     const b = bad(e);
     const title = renaming === e.id ? `<input class="ren-in" data-e="${e.id}" value="${e.n}">` : `<span class="title" data-e="${e.id}">${mode === 'L' ? e.n : e.p}</span>`;
@@ -464,7 +467,7 @@ window.pageInit = function () {
     const subt = e.sub ? (mode === 'L'
       ? `<div class="subt"><div class="cap"><b>${e.sub.kind === '배타' ? 'X' : 'O'}</b>서브타입 · ${e.sub.kind} · 구분 ${e.sub.disc}</div><div class="kids">${e.sub.kids.map(k => `<span>${k}</span>`).join('')}</div></div>`
       : `<div class="subt"><div class="cap">서브타입 → 한 테이블로 통합 · 구분 컬럼 <span class="mono">DLVRBL_TYPE_CD</span></div></div>`) : '';
-    const sysc = mode === 'P' && !e.ref ? `<div class="sysc">⚙ 시스템 컬럼 ${SYS_COLS.length} · ${SYS_COLS.map(c => c[1]).join(' · ')}</div>` : '';
+    const sysc = mode === 'P' && !e.ref ? `<div class="sysc">시스템 컬럼 ${SYS_COLS.length} · ${SYS_COLS.map(c => c[1]).join(' · ')}</div>` : '';
     return `${tag}<div class="nh" data-drag="${e.id}"><span class="cls">${e.c}</span>${title}${b ? `<span class="badge b-warning" style="height:16px;padding:0 5px">${b}</span>` : ''}${e.st ? '<span class="dot-i s-comb" title="엔터티 용어 신청 중"></span>' : ''}<span class="sub">${mode === 'L' ? e.p : e.n}</span></div>
       <div class="pk">${pk.map(row).join('')}</div>${rest.map(row).join('')}<div class="more">+ ${rest.length}개 속성</div>${subt}${sysc}`;
   }

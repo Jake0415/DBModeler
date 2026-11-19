@@ -93,7 +93,7 @@ window.pageInit = function () {
   $('p-sys').textContent = '담당 시스템: ' + ME.systems.join(', ');
   const docs = getDocs().filter(d => d.req === ME.id);
   const f = d => ({ live: 'ing', fix: 'fix', done: 'end' })[docGroup(d)];   // same rule as the user menu (CL14-03)
-  $('mine-body').innerHTML = docs.length ? docs.map(d => `<tr data-f="${f(d)}"><td class="mono">${d.id}</td><td><span class="badge ${d.type === 'model' ? 'b-violet' : ''}">${d.type === 'model' ? '모델 확정' : '사전 신청'}</span></td><td>${d.title}</td><td><span class="badge ${f(d) === 'fix' ? 'b-danger' : 'b-info'}">${STEP_NAME[d.step]}</span></td><td class="mono">${d.date}</td><td><a href="approvals.html?box=mine&doc=${d.id}">열기</a></td></tr>`).join('') : '<tr><td colspan="6" class="caption muted" style="text-align:center;padding:24px">신청한 문서가 없습니다</td></tr>';
+  $('mine-body').innerHTML = docs.length ? docs.map(d => `<tr data-f="${f(d)}"><td class="mono">${d.id}</td><td><span class="muted">${d.type === 'model' ? '모델 확정' : '사전 신청'}</span></td><td>${d.title}</td><td><span class="badge ${f(d) === 'fix' ? 'b-danger' : 'b-info'}">${STEP_NAME[d.step]}</span></td><td class="mono">${d.date}</td><td><a href="approvals.html?box=mine&doc=${d.id}">열기</a></td></tr>`).join('') : '<tr><td colspan="6" class="caption muted" style="text-align:center;padding:24px">신청한 문서가 없습니다</td></tr>';
   // 내 작업 (CX13-15): computed from documents, batches, candidates and audit entries made by me
   const w = [];
   getDocs().filter(d => d.req === ME.id).forEach(d => w.push({ at: d.date, g: d.type === 'model' ? '모델 확정' : '사전 신청', t: `${d.title} <span class="mono caption">${d.id}</span>`, st: STEP_NAME[d.step] || d.step, href: `approvals.html?box=mine&doc=${d.id}` }));

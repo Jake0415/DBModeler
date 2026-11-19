@@ -649,3 +649,18 @@ input[type=checkbox]:checked:disabled { background-color:var(--ds-gray-600); bor
 kbd, .gsearch kbd { height:22px; font-size:13px; }
 select.input { padding-right:36px; }
 .sdot { background:var(--ds-gray-500); }
+
+/* ---- v11: every table is a Geist table (8px bordered box); list tables inside scroll panes get a 16/20 gutter ---- */
+.tbl { border:1px solid var(--ds-gray-400); border-radius:var(--r-lg); }
+.tbl > thead > tr:first-child > th:first-child { border-top-left-radius:calc(var(--r-lg) - 1px); }
+.tbl > thead > tr:first-child > th:last-child { border-top-right-radius:calc(var(--r-lg) - 1px); }
+.tbl > tbody > tr:last-child > td { border-bottom:0; }
+.tbl > tbody > tr:last-child > td:first-child { border-bottom-left-radius:calc(var(--r-lg) - 1px); }
+.tbl > tbody > tr:last-child > td:last-child { border-bottom-right-radius:calc(var(--r-lg) - 1px); }
+.tbl.flat { border:0; border-radius:0; }
+.scroll > table.tbl { margin:16px 20px; width:calc(100% - 40px); }
+.scroll[style*="padding"] > table.tbl { margin:0; width:100%; }
+/* empty table → Geist empty state in place: header hidden, centred message under a 40px icon tile */
+.tbl:has(> tbody > tr:only-child > td:is([colspan="5"],[colspan="6"],[colspan="7"],[colspan="8"],[colspan="9"],[colspan="10"],[colspan="11"])) > thead { display:none; }
+.tbl > tbody > tr:only-child > td:is([colspan="5"],[colspan="6"],[colspan="7"],[colspan="8"],[colspan="9"],[colspan="10"],[colspan="11"]) { height:auto; padding:40px 24px !important; text-align:center !important; white-space:normal; font-size:14px; line-height:20px; color:var(--fg-2); background:var(--surface); border-radius:calc(var(--r-lg) - 1px); }
+.tbl > tbody > tr:only-child > td:is([colspan="5"],[colspan="6"],[colspan="7"],[colspan="8"],[colspan="9"],[colspan="10"],[colspan="11"])::before { content:""; display:block; width:40px; height:40px; margin:0 auto 12px; border-radius:var(--r-lg); box-shadow:var(--ring); background:var(--surface) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M22 12h-6l-2 3h-4l-2-3H2'/%3E%3Cpath d='M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z'/%3E%3C/svg%3E") center/18px no-repeat; }
