@@ -14,11 +14,11 @@
 <div id="app">
 <div id="content" class="page">
   <div class="page-header">
-    <a class="btn ghost sm" id="back" href="model.html">← 모델</a>
+    <nav class="crumbs" aria-label="경로"><a href="system.html">요구사항관리</a><span class="sl" aria-hidden="true">/</span><a id="back" href="model.html"><span id="crumb-area"></span></a><span class="sl" aria-hidden="true">/</span></nav>
     <h1>표준 맞추기</h1>
-    <span class="crumb">요구사항관리 › <b id="crumb-area"></b></span>
-    <span class="caption muted" id="scope"></span>
-    <div class="actions"><span class="caption muted" id="analyzed"></span><button class="btn sm" id="reanalyze">다시 분석</button></div>
+    
+    <span class="badge" id="scope"></span>
+    <div class="actions"><span class="caption muted" id="analyzed"></span><button class="btn sm" id="reanalyze" data-busy="800">다시 분석</button></div>
   </div>
   <div class="pad" style="padding-bottom:0" id="from-import" hidden>
     <div class="banner info"><i data-ic=info></i><div class="grow" id="from-import-t"></div></div>
@@ -121,7 +121,7 @@ window.pageInit = function () {
   const selectable = r => ['comb', 'okapply', 'unreg'].includes(r.st) || (r.st === 'req' && r.toWait);
   function draw() {
     $('rows').innerHTML = rows.map((r0, i) => { const r = effective(r0); const s = ST[r.st]; const can = selectable(r) && !readOnly; const opts = can ? procOpts(r) : [];
-      return `<tr class="${s[3]}" data-f="${s[2]}" data-i="${i}"><td><input type="checkbox" ${can ? (['comb', 'okapply', 'req'].includes(r.st) ? 'checked' : '') : 'disabled'} aria-label="${r.ent}.${r.a} 선택"></td><td><span class="badge ${s[0]}">${s[1]}</span></td><td>${r.ent}${r.entRow ? ' <span class="muted">· 테이블명</span>' : ''}</td><td>${r.now || r.a}${r.now && r.now !== r.a ? ` <span class="caption faint">(원래 ${r.a})</span>` : ''}</td><td class="mono ${r.cur === '—' ? 'faint' : ''}">${r.cur || '—'}</td><td class="arrow">${r.pr && r.pr.phys && r.pr.phys !== r.cur ? '→' : '·'}</td><td>${r.pr && r.pr.term ? r.pr.term : r.st === 'unreg' ? `<span class="faint">‘${r.word}’ 미등록</span>` : '<span class="faint">—</span>'}</td><td class="mono ${r.pr && r.pr.phys && r.pr.phys !== r.cur ? 'chg' : 'faint'}">${r.pr && r.pr.phys ? r.pr.phys : '—'}</td><td class="mono">${r.pr && r.pr.dom ? r.pr.dom : ''}</td><td>${opts.length > 1 ? `<select class="input" style="width:170px">${opts.map(o => `<option>${o}</option>`).join('')}</select>` : opts.length ? `<span class="caption">${opts[0]}${r.wait ? ` · <a href="approvals.html?doc=${r.wait}">${r.wait}</a>` : ''}</span>` : r.why ? `<span class="caption">사유: ${r.why}</span>` : '<span class="caption muted">변경 없음</span>'}</td><td class="dx"><b>${r.dx[0]}</b> ${r.dx[1]}</td></tr>`; }).join('') || '<tr class="er"><td colspan="11" class="caption muted" style="text-align:center;padding:40px">이 업무 영역에 분석할 속성이 없습니다.</td></tr>';
+      return `<tr class="${s[3]}" data-f="${s[2]}" data-i="${i}"><td><input type="checkbox" ${can ? (['comb', 'okapply', 'req'].includes(r.st) ? 'checked' : '') : 'disabled'} aria-label="${r.ent}.${r.a} 선택"></td><td><span class="badge ${s[0]}">${s[1]}</span></td><td>${r.ent}${r.entRow ? ' <span class="muted">· 테이블명</span>' : ''}</td><td>${r.now || r.a}${r.now && r.now !== r.a ? ` <span class="caption faint">(원래 ${r.a})</span>` : ''}</td><td class="mono ${r.cur === '—' ? 'faint' : ''}">${r.cur || '—'}</td><td class="arrow">${r.pr && r.pr.phys && r.pr.phys !== r.cur ? '→' : '·'}</td><td>${r.pr && r.pr.term ? r.pr.term : r.st === 'unreg' ? `<span class="faint">‘${r.word}’ 미등록</span>` : '<span class="faint">—</span>'}</td><td class="mono ${r.pr && r.pr.phys && r.pr.phys !== r.cur ? 'chg' : 'faint'}">${r.pr && r.pr.phys ? r.pr.phys : '—'}</td><td class="mono">${r.pr && r.pr.dom ? r.pr.dom : ''}</td><td>${opts.length > 1 ? `<select class="input" style="width:170px">${opts.map(o => `<option>${o}</option>`).join('')}</select>` : opts.length ? `<span class="caption">${opts[0]}${r.wait ? ` · <a href="approvals.html?doc=${r.wait}">${r.wait}</a>` : ''}</span>` : r.why ? `<span class="caption">사유: ${r.why}</span>` : '<span class="caption muted">변경 없음</span>'}</td><td class="dx"><b>${r.dx[0]}</b> ${r.dx[1]}</td></tr>`; }).join('') || '<tr class="er first"><td colspan="11" class="caption muted" style="text-align:center;padding:40px">이 업무 영역에 분석할 속성이 없습니다.</td></tr>';
     // chip counts from the same rows (CL12-40)
     const cnt = k => rows.filter(r => ST[effective(r).st][2] === k).length;
     const cur = (document.querySelector('#chips .chip.on') || {}).dataset;

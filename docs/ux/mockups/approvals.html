@@ -59,20 +59,20 @@
       <div class="banner" style="margin-bottom:12px"><span class="sg-ic" data-ic="info"></span><div>본인이 신청한 문서를 <b id="self-step">DA</b> 단계에서 승인합니다. 사유는 결재 이력과 감사 로그에 <b>‘자기 승인’</b>으로 남습니다.</div></div><label class="flex caption" id="self-ack-w" hidden style="margin-bottom:8px"><input type="checkbox" id="self-ack"> <span id="self-ack-t"></span></label>
       <div class="field"><label for="self-why">자기 승인 사유 *</label><textarea class="input" id="self-why" rows="3"></textarea></div>
     </div>
-    <div class="m-foot"><button class="btn" data-close="mo-self">취소</button><button class="btn primary" id="do-self" data-needs="self-why">사유 남기고 승인</button></div>
+    <div class="m-foot"><button class="btn" data-close="mo-self">취소</button><button class="btn primary" id="do-self" data-busy data-needs="self-why">사유 남기고 승인</button></div>
   </div></div>
   <!-- MO-24 approve -->
   <div class="overlay" id="mo-apr" role="dialog" aria-modal="true" aria-labelledby="apr-t"><div class="modal">
     <div class="m-head"><h3 id="apr-t">승인</h3></div>
     <div class="m-body"><div id="apr-sum" class="caption" style="margin-bottom:8px"></div>
       <div class="field"><label for="apr-note">승인 의견 <span class="faint">선택 · 이력에 남습니다</span></label><textarea class="input" id="apr-note" rows="2"></textarea></div><label class="flex caption" id="apr-ack-w" hidden style="margin-top:6px"><input type="checkbox" id="apr-ack"> <span id="apr-ack-t"></span></label></div>
-    <div class="m-foot"><button class="btn" data-close="mo-apr">취소</button><button class="btn primary" id="do-apr">승인</button></div>
+    <div class="m-foot"><button class="btn" data-close="mo-apr">취소</button><button class="btn primary" id="do-apr" data-busy>승인</button></div>
   </div></div>
   <!-- MO-23 reject -->
   <div class="overlay" id="mo-reject" role="dialog" aria-modal="true" aria-labelledby="rej-t"><div class="modal">
     <div class="m-head"><h3 id="rej-t">반려</h3></div>
     <div class="m-body"><div class="field"><label for="rej-why">반려 의견 * <span class="faint">신청자에게 앱 알림으로 전달됩니다</span></label><textarea class="input" id="rej-why" rows="3" placeholder="보완할 내용을 적어 주세요"></textarea></div></div>
-    <div class="m-foot"><button class="btn" data-close="mo-reject">취소</button><button class="btn danger" id="do-rej" data-needs="rej-why" data-needs-msg="반려 의견을 입력해야 합니다">반려</button></div>
+    <div class="m-foot"><button class="btn" data-close="mo-reject">취소</button><button class="btn danger" id="do-rej" data-busy data-needs="rej-why" data-needs-msg="반려 의견을 입력해야 합니다">반려</button></div>
   </div></div>
   <!-- MO-25 withdraw -->
   <div class="overlay" id="mo-wd" role="dialog" aria-modal="true" aria-labelledby="wd-t"><div class="modal">
@@ -121,7 +121,7 @@ window.pageInit = function () {
   function drawRows() {
     const L = list();
     $('rows').innerHTML = L.length ? L.map(d => `<tr aria-selected="${sel === d.id}" class="click ${sel === d.id ? 'sel' : ''} ${['done', 'withdrawn', 'rejected'].includes(d.step) ? 'dim' : ''}" data-id="${d.id}" tabindex="0"><td class="mono">${d.id}</td><td class="muted">${d.type === 'model' ? '모델 확정' : '사전 신청'}</td><td>${d.title}</td><td>${nameOf(d.req)}${d.req === ME.id ? ' <span class="muted">(나)</span>' : ''}</td><td>${box === 'queue' ? tag('run', STEP_NAME[d.step]) + '<span class="sr-only"> 내 차례</span>' : stBadge(d)}</td><td class="r">${ageCell(d)}</td><td class="num">${d.n}</td><td class="num muted">${d.date}</td></tr>`).join('')
-      : `<tr class="er"><td colspan="8" style="padding:16px 12px" class="caption muted">${box === 'queue' ? (docs.some(d => d.hist && d.hist.some(h => h.who === ME.name)) ? '처리할 결재를 모두 마쳤습니다. <a href="approvals.html?box=mine">내 신청 보기</a>' : '지금 처리할 결재가 없습니다.') : '조건에 맞는 문서가 없습니다.'} ${($('f-type').value || $('f-step').value || $('f-q').value) ? '<button class="btn sm ghost" id="f-clear">필터 지우기</button>' : ''}</td></tr>`;
+      : `<tr class="er ${box === 'queue' && !docs.filter(BOX.queue[1]).length ? 'done' : 'none'}"><td colspan="8" style="padding:16px 12px" class="caption muted">${box === 'queue' && docs.filter(BOX.queue[1]).length ? `<span class="et">필터에 맞는 대기 문서가 없습니다</span>대기 ${docs.filter(BOX.queue[1]).length}건이 필터에 가려져 있습니다.` : box === 'queue' ? (docs.some(d => d.hist && d.hist.some(h => h.who === ME.name)) ? '<span class="et">처리할 결재를 모두 마쳤습니다</span><a href="approvals.html?box=mine">내 신청 보기</a>' : '<span class="et">지금 처리할 결재가 없습니다</span>새 신청이 들어오면 알림으로 알려 드립니다.') : '<span class="et">조건에 맞는 문서가 없습니다</span>'} ${($('f-type').value || $('f-step').value || $('f-q').value) ? '<button class="btn sm ghost" id="f-clear">필터 지우기</button>' : ''}</td></tr>`;
     const c = $('f-clear'); if (c) c.onclick = () => { $('f-type').value = ''; $('f-step').value = ''; $('f-q').value = ''; drawRows(); };
   }
   function line(d) {
@@ -270,7 +270,19 @@ window.pageInit = function () {
   let pending = null;
   // undo for the mock: the whole state layer before the decision (a real server would reverse the step)
   const snapStore = () => { const o = {}; Object.keys(localStorage).filter(k => k.startsWith('dbm-')).forEach(k => { o[k] = localStorage.getItem(k); }); return o; };
-  const restoreStore = o => { Object.keys(localStorage).filter(k => k.startsWith('dbm-') && !(k in o)).forEach(k => localStorage.removeItem(k)); Object.entries(o).forEach(([k, v]) => localStorage.setItem(k, v)); };
+  let undoTok = 0;
+  // undo restores only what THIS decision changed, only while nothing else touched those keys, and only for the latest decision
+  const undoFn = (before, after, tok, did) => () => {
+    if (tok !== undoTok) { toast('이후에 다른 결재를 처리해 이 결정은 되돌릴 수 없습니다', 'info'); return; }
+    const keys = [...new Set([...Object.keys(before), ...Object.keys(after)])].filter(k => before[k] !== after[k]);
+    if (keys.some(k => localStorage.getItem(k) !== (after[k] === undefined ? null : after[k]))) { toast('그사이 다른 화면에서 바뀐 내용이 있어 되돌리지 않았습니다', 'danger'); return; }
+    keys.forEach(k => before[k] === undefined ? localStorage.removeItem(k) : localStorage.setItem(k, before[k]));
+    location.href = `approvals.html?doc=${did}`;
+  };
+  // queue decisions show ONE toast: the result message is captured and merged into the "next document" toast
+  let captured = null, realToast = null;
+  const captureToast = () => { captured = null; realToast = window.toast; window.toast = (m, type) => { if (!captured || type === 'danger') captured = [m, type]; }; };
+  const releaseToast = () => { if (realToast) { window.toast = realToast; realToast = null; } };
   function act(kind, why, self) {
     const before = snapStore();
     // the user this page was opened with must still be the selected user (another tab may have switched. CX9-06)
@@ -297,6 +309,7 @@ window.pageInit = function () {
       if (d.type === 'model') { const bad = (d.model ? modelBad(d.model) : (d.snap ? d.snap.bad : 0)) + reqEnded(d.model).length; if (bad > 0) { addHist(d, { act: '재검사 실패. 승인 취소', why: `제출 모델 미준수 ${bad}건`, step: d.step }); saveDocs(docs); toast(`재검사 실패. 제출된 모델에 미준수 ${bad}건이 있어 승인하지 않았습니다. 이력에 남겼습니다`, 'danger'); drawRows(); panel(); return; } }
       // dictionary documents: same checks before the final step applies anything
       if (d.type === 'dict' && ['da', 'final'].includes(d.step)) { const bad = checkDictDoc(d).filter(r => r.problems.length); if (bad.length) { addHist(d, { act: '재검사 실패. 승인 취소', why: bad.map(r => `${r.name}: ${r.problems[0]}`).join(' · '), step: d.step }); saveDocs(docs); toast(`재검사 실패 ${bad.length}건. 사전에 반영하지 않았습니다. [검사 결과] 탭과 이력을 확인하고 반려하세요`, 'danger'); drawRows(); panel(); return; } }
+      if (box === 'queue') captureToast();
       addHist(d, { act: `${stepRole(d.step)} 승인`, why, step: d.step, self });
       const was = d.step; d.step = was === 'da' && hasFinal(d) ? 'final' : 'done'; d.decisionPolicyVer = getPolicy().ver;
       saveDocs(docs);
@@ -319,6 +332,7 @@ window.pageInit = function () {
         toast(`최종 승인. 사전에 ${res.applied}건 반영${d.sample ? `(목업 시드: ${d.n}건 중 대표 행만)` : ''}${res.failed.length ? ` · 실패 ${res.failed.length}건` : ''} · 항목 버전이 올라갔습니다(제정차수는 DA 공표 때만)`, res.failed.length ? 'danger' : 'success', d.batch ? { label: '반영본 내려받기', fn: () => toast(`반영본_${d.batch}.xlsx. 새 버전·ID가 들어간 편집용 엑셀`, 'info') } : null);
       }
     } else if (kind === 'reject') {
+      if (box === 'queue') captureToast();
       addHist(d, { act: '반려', why, step: d.step }); d.step = 'rejected'; saveDocs(docs);
       const rel = releaseDoc(d);   // pending markers of this document are released → the requester can re-request (CL9-07)
       notifyReq(`${d.id} 반려됨. 보완 필요`, why);
@@ -330,9 +344,13 @@ window.pageInit = function () {
     }
     // decided from the queue → the next document opens; undo restores the state before the decision
     if ((kind === 'approve' || kind === 'reject') && box === 'queue') {
-      const next = list()[0]; const did = d.id;
+      releaseToast();
+      const next = list()[0]; const did = d.id; const left = docs.filter(BOX.queue[1]).length;
       sel = next ? next.id : null;
-      toast(`${did} ${kind === 'approve' ? '승인' : '반려'} 처리 · ${next ? next.id + ' 문서를 열었습니다' : '대기함을 모두 처리했습니다'}`, 'info', { label: '되돌리기', fn: () => { restoreStore(before); location.href = `approvals.html?doc=${did}`; } });
+      const tail = next ? `${next.id}을 열었습니다` : left ? `필터에 맞는 대기 문서가 없습니다 · 남은 대기 ${left}건` : '대기함을 모두 처리했습니다';
+      const tok = ++undoTok; const after = snapStore();
+      toast(`${captured ? captured[0].replace(/[.。]?$/, '') : did + ' 처리'} · ${tail}`, captured && captured[1] === 'danger' ? 'danger' : 'info', { label: '되돌리기', fn: undoFn(before, after, tok, did) });
+      captured = null;
     }
     pending = null; drawBoxes(); drawRows(); panel();
     const row = $('rows').querySelector(`tr[data-id="${sel}"]`); if (row) row.focus(); else { const pb = document.querySelector('#pn-doc .rp-head h2'); if (pb) { pb.tabIndex = -1; pb.focus(); } }   // focus returns after the dialog
@@ -344,7 +362,8 @@ window.pageInit = function () {
   $('boxes').addEventListener('click', e => { const b = e.target.closest('[data-box]'); if (!b) return; box = b.dataset.box; sel = (list()[0] || {}).id || null; drawBoxes(); drawRows(); panel(); const nb = $('boxes').querySelector(`[data-box="${box}"]`); if (nb) nb.focus(); });
   $('rows').addEventListener('click', e => { const r = e.target.closest('tr[data-id]'); if (!r) return; sel = r.dataset.id; drawRows(); panel(); });
   document.addEventListener('keydown', e => {
-    if (e.ctrlKey || e.metaKey || e.altKey || e.target.closest('input, textarea, select, [contenteditable]') || document.querySelector('.overlay.open, .gs-overlay.open')) return;
+    if (e.ctrlKey || e.metaKey || e.altKey || e.isComposing || dbmStore.get('dbm-single-keys', '1') !== '1' || e.target.closest('input, textarea, select, [contenteditable]') || document.querySelector('.overlay.open, .gs-overlay.open')) return;
+    if (!(document.activeElement === document.body || e.target.closest('#rows, #pn-doc, .main'))) return;
     const k = e.key.toLowerCase(); const L = list(); const i = L.findIndex(x => x.id === sel);
     if (k === 'j' || k === 'k') { const n = L[Math.max(0, Math.min(L.length - 1, (i < 0 ? -1 : i) + (k === 'j' ? 1 : -1)))]; if (n) { e.preventDefault(); sel = n.id; drawRows(); panel(); const r = $('rows').querySelector(`tr[data-id="${sel}"]`); if (r) r.focus(); } }
     else if (k === 'a') { const b = $('btn-apr'); if (b && !b.disabled) { e.preventDefault(); b.click(); } }

@@ -708,3 +708,42 @@ html, body, * { scrollbar-width:thin; scrollbar-color:var(--ds-gray-500) transpa
 /* page header crumbs */
 .page-header .crumb { color:var(--fg-2); font-size:14px; }
 .page-header .crumb b { color:var(--fg); }
+
+/* ---- v15: header pattern (10 #6) — [crumbs /] title [one status badge] … [secondary ≤2] [⋯] [primary 1] ---- */
+.page-header { gap:10px; }
+.page-header .crumbs { display:flex; align-items:center; gap:6px; font-size:14px; color:var(--fg-2); white-space:nowrap; margin-right:-2px; }
+.page-header .crumbs a { color:var(--fg-2); text-decoration:none; } .page-header .crumbs a:hover { color:var(--fg); text-decoration:underline; }
+.page-header .crumbs .sl { color:var(--ds-gray-500); }
+.page-header h1, .page-header h1.crumb { font-size:20px; line-height:28px; font-weight:600; letter-spacing:-.3px; }
+.page-header h1.crumb b { font-weight:600; color:var(--fg); }
+.page-header > .badge { flex:0 0 auto; }
+/* auto menus (⋯) — positioned under their button */
+.menu[data-auto] { position:absolute; right:0; top:40px; z-index:60; display:none; padding:6px; background:var(--surface); border-radius:var(--r-xl); box-shadow:var(--menu-shadow); }
+.menu[data-auto].open { display:block; }
+.menu[data-auto] .mi { display:flex; align-items:center; gap:8px; min-height:36px; padding:0 8px; border-radius:var(--r-md); color:var(--fg); text-decoration:none; font-size:14px; }
+.menu[data-auto] .mi:hover, .menu[data-auto] .mi:focus-visible { background:var(--ds-gray-100); outline:none; }
+
+/* ---- v15: state set (10 #7) ---- */
+/* button in progress: spinner before the label, width kept, not clickable twice */
+@keyframes dbm-spin { to { transform:rotate(360deg); } }
+.btn.loading { pointer-events:none; position:relative; }
+.btn.loading::before { content:""; width:14px; height:14px; border-radius:50%; border:2px solid currentColor; border-right-color:transparent; animation:dbm-spin .7s linear infinite; flex:0 0 14px; opacity:.8; }
+@media (prefers-reduced-motion: reduce) { .btn.loading::before { animation-duration:2s; } }
+/* table skeleton while a list loads */
+@keyframes dbm-pulse { 50% { opacity:.55; } }
+.skel { display:block; height:12px; border-radius:4px; background:var(--ds-gray-100); animation:dbm-pulse 1.4s ease-in-out infinite; }
+.tbl tr.skel-row td { height:var(--row); }
+/* save state — one component for model, excel import, settings */
+.savest { display:inline-flex; align-items:center; gap:6px; font-size:13px; color:var(--fg-2); white-space:nowrap; }
+.savest .sdot { margin:0; width:8px; height:8px; }
+.savest.err { color:var(--danger-deep); }
+/* empty states: none (filters) · first (start here) · done (all finished) — different icons, same structure */
+.tbl > tbody > tr.er.none > td::before { background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.3-4.3'/%3E%3C/svg%3E"); }
+.tbl > tbody > tr.er.first > td::before { background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 5v14'/%3E%3Cpath d='M5 12h14'/%3E%3C/svg%3E"); }
+.tbl > tbody > tr.er.done > td::before { background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23297a3a' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E"); }
+.tbl > tbody > tr.er > td .et { display:block; font-size:16px; font-weight:500; color:var(--fg); margin-bottom:4px; }
+.tbl > tbody > tr.er > td .btn { margin-top:12px; }
+.skel-ov { position:absolute; inset:0; z-index:4; background:var(--surface); padding:60px 20px 0; display:flex; flex-direction:column; transition:opacity .2s; }
+.skel-ov.out { opacity:0; }
+.skel-ov .skel-r { display:grid; grid-template-columns:repeat(6, 1fr); gap:24px; align-items:center; height:var(--row); border-bottom:1px solid var(--ds-gray-400); }
+@media (prefers-reduced-motion: reduce) { .skel, .skel-ov { animation:none; transition:none; } }

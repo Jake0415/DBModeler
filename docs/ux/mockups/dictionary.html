@@ -35,8 +35,6 @@
     <h1>사전</h1>
     <span class="badge" id="dictver"></span>
     <div class="actions">
-      <a class="btn ghost" href="dict-history.html">변경 내역</a>
-      <a class="btn ghost" href="uploads.html">업로드 이력</a>
       <button class="btn" id="b-pub" hidden>공표</button>
       <span style="position:relative"><button class="btn" id="b-dl" aria-haspopup="true" aria-expanded="false">내려받기 ▾</button>
         <div class="menu" id="dl-menu" role="menu">
@@ -45,7 +43,8 @@
           <button class="mi" role="menuitem" data-dl="blank"><b>빈 양식</b><div class="caption muted">새 항목 등록·초기 적재용 · 안내·목록 시트</div></button>
           <div class="caption muted" style="padding:6px 10px">공통 항목은 ‘참고’ 시트(읽기 전용)로만 들어갑니다. 신청 중 항목은 승인된 값 + ‘진행 중 신청’ 표시.</div>
         </div></span>
-      <a class="btn" href="excel-import.html">엑셀 가져오기</a>
+      <span style="position:relative"><button class="btn" data-menu-btn aria-haspopup="true" aria-expanded="false" aria-label="더 보기" style="width:32px;padding:0;justify-content:center">⋯</button>
+        <div class="menu" data-auto role="menu" style="width:200px"><a class="mi" role="menuitem" href="excel-import.html"><i data-ic=upload></i>엑셀 가져오기</a><a class="mi" role="menuitem" href="dict-history.html"><i data-ic=history></i>변경 내역</a><a class="mi" role="menuitem" href="uploads.html"><i data-ic=upload></i>업로드 이력</a></div></span>
       <button class="btn primary" data-open="pn-request" data-close-others="pn-detail">+ 등록 신청</button>
     </div>
   </div>
@@ -61,7 +60,7 @@
         <span class="sr-only" id="q-help">이름, 영문약어, 영문명, 이음동의어, 금칙어, 과거 이름, 초성으로 찾습니다</span>
         <span class="seg" id="kind-chips" role="group" aria-label="종류"></span>
         <span style="position:relative">
-          <button class="btn" id="f-btn" aria-haspopup="true" aria-expanded="false" aria-controls="f-pop"><i data-ic=filter></i>필터<span class="fcount" id="f-n" hidden></span></button>
+          <button class="btn" id="f-btn" aria-haspopup="dialog" aria-expanded="false" aria-controls="f-pop"><i data-ic=filter></i>필터<span class="fcount" id="f-n" hidden></span></button>
           <div class="menu fpop" id="f-pop" role="dialog" aria-label="상세 필터">
             <div class="frow"><span class="fl">출처</span><span class="fv"><button class="chip on" data-src="공통">공통</button><button class="chip on" data-src="기관">기관</button></span></div>
             <div class="frow"><span class="fl">상태</span><span class="fv"><button class="chip" data-st="신청 중">신청 중</button><button class="chip" data-st="보완 필요">보완 필요</button></span></div>
@@ -223,7 +222,7 @@ window.pageInit = function () {
     $('dl-n').textContent = orgN ? `기관 ${orgN}건(공통 ${L.length - orgN}건은 참고 시트) · 숨김 열(항목 ID·버전·기준본)` : '이 검색 결과에는 편집할 기관 항목이 없습니다 — 공통표준은 기관에서 편집할 수 없습니다';
     $('dl-menu').querySelector('[data-dl="filter"]').disabled = !orgN;
     $('rows').innerHTML = L.length ? L.map(({ it, m }) => `<tr class="click ${sel === it.id ? 'sel' : ''}" data-id="${it.id}" tabindex="0"><td><span class="badge ${{ 사용: 'b-success', '신청 중': 'b-info', '보완 필요': 'b-warning', '삭제 보관': 'b-danger' }[it.st] || ''}">${{ 사용: '사용', '신청 중': '신청 중', '보완 필요': '보완 필요', '삭제 보관': 'V0 삭제 보관' }[it.st] || '미사용'}</span>${it.pending && it.st !== '신청 중' ? ' <span class="caption muted">신청 중</span>' : ''}</td><td>${it.kn}</td><td><span class="muted">${it.src}</span></td><td><b>${hl(it.name, qs)}</b>${m.t && m.t !== '현재명' ? `<span class="mt">${m.t}${m.v ? ': ' + m.v : ''}</span>` : ''}${m.t === '금칙어' ? ` <span class="caption" style="color:var(--danger-deep)">‘${m.v}’ 대신 이 표준을 쓰세요</span>` : ''}</td><td class="mono">${hl(it.abbr, qs)}</td><td class="mono">${it.dom}</td><td>${it.eng || ''}</td><td class="mono">${it.ver ? 'V' + it.ver : '—'}</td><td class="mono">${it.dt}</td><td class="num">${it.use}</td></tr>`).join('')
-      : `<tr class="er"><td colspan="10" style="text-align:center;padding:40px"><div class="caption muted" style="margin-bottom:8px">‘${qs}’에 맞는 표준이 없습니다.</div><button class="btn sm primary" id="req-q">‘${qs}’ 등록 신청</button> <button class="btn sm ghost" id="clr">필터 지우기</button></td></tr>`;
+      : `<tr class="er none"><td colspan="10" style="text-align:center;padding:40px"><span class="et">‘${qs}’에 맞는 표준이 없습니다</span><div class="caption muted" style="margin-bottom:8px">필터를 지우고 다시 찾거나, 없으면 등록 신청하세요.</div><button class="btn sm primary" id="req-q">‘${qs}’ 등록 신청</button> <button class="btn sm ghost" id="clr">필터 지우기</button></td></tr>`;
     const sa = $('show-all'); if (sa) sa.onclick = () => { showAll = true; draw(); };
     const rq = $('req-q'); if (rq) rq.onclick = () => { $('pn-detail').classList.remove('open'); $('pn-request').classList.add('open'); document.querySelector('#pn-request [data-rq="term"] input').value = qs; };
     const cl = $('clr'); if (cl) cl.onclick = () => { clearAll(); $('q').value = ''; kind = ''; showAll = true; draw(); };
@@ -264,14 +263,15 @@ window.pageInit = function () {
   $('f-done').onclick = () => { setPop(false); fbtn.focus(); };
   $('f-reset').onclick = () => { clearAll(); sel = null; draw(); };
   document.addEventListener('click', e => { if (!e.target.closest('#f-pop, #f-btn')) setPop(false); });
-  fpop.addEventListener('keydown', e => { if (e.key === 'Escape') { setPop(false); fbtn.focus(); } });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && fpop.classList.contains('open')) { setPop(false); fbtn.focus(); } });
+  fpop.addEventListener('focusout', e => { if (e.relatedTarget && !fpop.contains(e.relatedTarget) && e.relatedTarget !== fbtn) setPop(false); });
   $('lh').addEventListener('click', e => { const c = e.target.closest('[data-clear]'); if (!c) return; const k = c.dataset.clear;
     if (k === 'all') clearAll(); else if (k === 'src') { srcs = new Set(['공통', '기관']); document.querySelectorAll('[data-src]').forEach(x => x.classList.add('on')); } else if (k === 'st') { stFilter = ''; document.querySelectorAll('[data-st]').forEach(x => x.classList.remove('on')); } else if (k === 'fdisc') $('fdisc').checked = false; else $(k).value = '';
-    sel = null; draw(); });
+    sel = null; draw(); const nc = document.querySelector('#lh [data-clear]'); (nc || $('f-btn')).focus(); });
   $('q').addEventListener('input', () => { showAll = false; sel = null; draw(); });
   ['dg', 'since', 'flen', 'fdom', 'fdisc'].forEach(id => $(id).onchange = () => { sel = null; draw(); });
   document.querySelector('.toolbar').addEventListener('click', e => {
-    const k = e.target.closest('[data-kind]'); if (k) { kind = k.dataset.kind; sel = null; draw(); return; }
+    const k = e.target.closest('[data-kind]'); if (k) { kind = k.dataset.kind; sel = null; draw(); const nb = document.querySelector(`#kind-chips [data-kind="${kind}"]`); if (nb) nb.focus(); return; }
     const s = e.target.closest('[data-src]'); if (s) { s.classList.toggle('on'); srcs.has(s.dataset.src) ? srcs.delete(s.dataset.src) : srcs.add(s.dataset.src); if (!srcs.size) { srcs.add(s.dataset.src); s.classList.add('on'); toast('출처는 하나 이상 골라야 합니다', 'info'); } sel = null; draw(); return; }
     const p = e.target.closest('[data-st]'); if (p) { const on = !p.classList.contains('on'); document.querySelectorAll('[data-st]').forEach(x => x.classList.remove('on')); p.classList.toggle('on', on); stFilter = on ? p.dataset.st : ''; sel = null; draw(); }
   });

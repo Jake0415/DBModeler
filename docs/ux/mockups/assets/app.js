@@ -462,6 +462,12 @@
   /* <i data-ic=name> placeholders (usable in any HTML or JS string) become SVG icons — also for content rendered later */
   const fillIc = root => { if (!root || !root.querySelectorAll) return; root.querySelectorAll('i[data-ic]:not([data-done])').forEach(e => { e.innerHTML = icon(e.dataset.ic, e.dataset.s ? +e.dataset.s : 16); e.setAttribute('data-done', '1'); e.setAttribute('aria-hidden', 'true'); }); };
   document.addEventListener('DOMContentLoaded', () => { fillIc(document); new MutationObserver(ms => ms.forEach(m => m.addedNodes.forEach(n => { if (n.nodeType === 1) fillIc(n.matches && n.matches('i[data-ic]') ? n.parentElement : n); }))).observe(document.body, { childList: true, subtree: true }); });
+  /* ⋯ menus: a [data-menu-btn] opens the .menu[data-auto] next to it; outside click / Esc closes */
+  document.addEventListener('click', e => { const b = e.target.closest('[data-menu-btn]'); document.querySelectorAll('.menu[data-auto].open').forEach(m => { if (!b || m !== b.nextElementSibling) { m.classList.remove('open'); const ob = m.previousElementSibling; if (ob) ob.setAttribute('aria-expanded', 'false'); } });
+    if (b) { const m = b.nextElementSibling; if (m && m.matches('.menu[data-auto]')) { const on = !m.classList.contains('open'); m.classList.toggle('open', on); b.setAttribute('aria-expanded', on); if (on) { const f = m.querySelector('.mi'); f && f.focus(); } } } });
+  document.addEventListener('keydown', e => { if (e.key !== 'Escape') return; const m = document.querySelector('.menu[data-auto].open'); if (m) { m.classList.remove('open'); const b = m.previousElementSibling; if (b) { b.setAttribute('aria-expanded', 'false'); b.focus(); } } });
+  /* buttons that start work show a short "in progress" state ([data-busy]) — the action itself runs as before */
+  document.addEventListener('click', e => { const b = e.target.closest('[data-busy]'); if (!b || b.disabled || b.classList.contains('loading')) return; b.classList.add('loading'); b.setAttribute('aria-busy', 'true'); setTimeout(() => { b.disabled = true; }, 0); setTimeout(() => { b.classList.remove('loading'); b.removeAttribute('aria-busy'); b.disabled = false; }, +b.dataset.busy || 600); }, true);
   /* status tag: ok · run · mine · warn · err · ex · end — one per row */
   const TAG_IC = { ex: 'flag' };   // Geist: no check / X icons inside status badges — colour + words
   window.tag = (kind, label) => `<span class="tag ${kind}">${TAG_IC[kind] ? icon(TAG_IC[kind], 12) : ''}${label}</span>`;
@@ -880,6 +886,12 @@
     if (location.hash) { const b = document.querySelector(`.tabs button[data-tab="${location.hash.slice(1)}"]`); if (b) b.click(); }
     if (window.pageInit) window.pageInit();
     updateNeeds();
+    // list skeleton (10 #7): a short loading layer over list tables on first entry — purely visual, data is already there
+    if (new URLSearchParams(location.search).get('skel') === '1') document.querySelectorAll('.scroll > table.tbl').forEach(tb => { const sc = tb.parentElement; if (!tb.tBodies[0] || !tb.tBodies[0].rows.length) return;
+      const ov = document.createElement('div'); ov.className = 'skel-ov'; ov.setAttribute('aria-hidden', 'true');
+      const cols = Math.min(6, (tb.tHead && tb.tHead.rows[0] ? tb.tHead.rows[0].cells.length : 4));
+      ov.innerHTML = Array.from({ length: 6 }, (_, r) => `<div class="skel-r">${Array.from({ length: cols }, (_, c) => `<span class="skel" style="width:${[40, 70, 55, 85, 60, 45][(r + c) % 6]}%"></span>`).join('')}</div>`).join('');
+      sc.style.position = sc.style.position || 'relative'; sc.appendChild(ov); setTimeout(() => { ov.classList.add('out'); setTimeout(() => ov.remove(), 200); }, 320); });
     try { const f = JSON.parse(sessionStorage.getItem('dbm-flash') || 'null'); if (f) { sessionStorage.removeItem('dbm-flash'); setTimeout(() => toast(f[0], f[1]), 100); } } catch (e) {}
   });
 })();

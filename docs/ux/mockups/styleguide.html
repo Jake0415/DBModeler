@@ -73,7 +73,16 @@ window.pageInit = function () {
       <div class="approval-line" style="margin-top:8px"><div class="al-step done"><span class="pt">${icon('check', 12)}</span><div><b>신청</b><div class="caption muted">김모델 · 11/17</div></div></div><div class="al-step cur"><span class="pt"></span><div><b>DA 승인</b><div class="caption muted">내 차례</div></div></div><div class="al-step"><span class="pt"></span><div><b>최종 승인</b><div class="caption muted">기관 담당자</div></div></div><div class="al-step rej"><span class="pt">${icon('x', 12)}</span><div><b>반려 예</b><div class="caption muted">반려된 단계</div></div></div><div class="al-step skip"><span class="pt"></span><div><b>최종 승인 · 사용 안 함</b><div class="caption muted">설정으로 생략된 단계</div></div></div></div></section>
     <section class="sec"><div class="sec-h"><h2>아이콘</h2></div>
       <div class="icons">${['check', 'clock', 'warn', 'err', 'info', 'flag', 'x', 'search', 'right', 'down', 'ext', 'compare', 'filter', 'download', 'upload', 'history', 'lock', 'file', 'table', 'user'].map(n => `<span>${icon(n)}${n}</span>`).join('')}</div></section>
-    <section class="sec"><div class="sec-h"><h2>쓰지 않는 것</h2></div>
+    <section class="sec"><div class="sec-h"><h2>머리줄</h2></div>
+      <div class="page-header" style="padding:0;border-bottom:1px solid var(--border);height:52px"><nav class="crumbs" aria-label="경로"><a href="#">요구사항관리</a><span class="sl">/</span><a href="#">요구사항 · 프로젝트</a><span class="sl">/</span></nav><h1>표준 맞추기</h1><span class="badge">v5</span><div class="actions"><button class="btn sm">보조</button><button class="btn sm" style="width:28px;padding:0;justify-content:center">⋯</button><button class="btn sm primary">주 행동</button></div></div>
+      <div class="caption muted" style="margin-top:6px">경로 / 제목 · 상태 배지 1개 · 보조 최대 2 · ⋯ · 주 행동 1. 부연 문구와 ← 뒤로 버튼은 쓰지 않음</div></section>
+    <section class="sec"><div class="sec-h"><h2>진행·저장</h2></div>
+      <div class="row-demo"><button class="btn primary loading">승인</button><button class="btn loading">다시 분석</button><span class="savest"><span class="sdot ok"></span>저장됨 · 14:32</span><span class="savest"><span class="sdot run"></span>검토 중 · 조회 전용</span><span class="savest err"><span class="sdot err"></span>저장 안 됨 · 최신본 확인</span></div>
+      <table class="tbl box"><tbody>${[60, 80, 45].map(w => `<tr class="skel-row"><td><span class="skel" style="width:${w}%"></span></td><td><span class="skel" style="width:${100 - w / 2}%"></span></td></tr>`).join('')}</tbody></table></section>
+    <section class="sec"><div class="sec-h"><h2>빈 상태</h2></div>
+      <table class="tbl box"><tbody><tr class="er none"><td colspan="5"><span class="et">조건에 맞는 문서가 없습니다</span>필터를 지우고 다시 찾아 보세요.</td></tr></tbody></table>
+      <table class="tbl box" style="margin-top:8px"><tbody><tr class="er first"><td colspan="5"><span class="et">아직 업로드가 없습니다</span>처음 할 일을 하나만 제안합니다.<br><button class="btn primary sm">엑셀 가져오기</button></td></tr></tbody></table>
+      <table class="tbl box" style="margin-top:8px"><tbody><tr class="er done"><td colspan="5"><span class="et">처리할 결재를 모두 마쳤습니다</span><a href="#">내 신청 보기</a></td></tr></tbody></table></section>    <section class="sec"><div class="sec-h"><h2>쓰지 않는 것</h2></div>
       <ol class="rule-list"><li>이모지·기호 아이콘, 보라·그라데이션·발광</li><li>같은 크기 타일 격자, 아이콘+제목+설명 카드</li><li>상자 속 상자, 왼쪽 색 막대 카드</li><li>상태 배지 안의 체크·X 아이콘, 한 행에 배지 둘 이상</li><li>기준 없는 큰 숫자, 장식 추세선</li><li>인사말, 구역 제목 옆 부연 문구</li><li>링크 뒤 화살표, 가운뎃점 네 개 넘는 나열</li><li>가운데 정렬, 한글 음수 자간, 굵기 700</li><li>배너 둘 이상, 권유·감탄 말투</li></ol></section>
   </div></div>`;
 };

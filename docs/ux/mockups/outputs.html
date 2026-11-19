@@ -25,10 +25,10 @@
 <div id="app">
 <div id="content" class="page">
   <div class="page-header">
-    <a class="btn ghost sm" href="model.html">← 모델</a>
+    <nav class="crumbs" aria-label="경로"><a href="system.html">요구사항관리</a><span class="sl" aria-hidden="true">/</span><a href="model.html" id="crumb-link"><span id="crumb-area"></span></a><span class="sl" aria-hidden="true">/</span></nav>
     <h1>산출물</h1>
-    <span class="crumb">요구사항관리 › <b id="crumb-area"></b></span>
-    <div class="actions"><span class="caption muted">기관 양식: <b>KDA 산출물 양식 v2</b> · <a href="settings.html">설정</a></span></div>
+    <a class="badge" href="settings.html" title="기관 산출물 양식 · 설정에서 바꿉니다">양식 KDA v2</a>
+    <div class="actions"></div>
   </div>
   <div class="page-body">
     <div class="main"><div class="scroll"><div class="pad">
@@ -65,7 +65,7 @@
         <div class="prev" id="o-prev"></div>
         <div class="banner" style="margin-top:12px" id="o-note"><i data-ic=info></i><div>공식 산출물은 <b>확정본</b>으로만 만듭니다. 작업 중 버전은 모든 시트에 ‘초안’ 표시가 붙습니다.</div></div>
       </div>
-      <div class="rp-foot"><span class="caption muted" id="o-prog"></span><span class="grow"></span><button class="btn primary" id="o-go">만들기</button></div>
+      <div class="rp-foot"><span class="caption muted" id="o-prog"></span><span class="grow"></span><button class="btn primary" id="o-go" data-busy="900">만들기</button></div>
     </aside>
   </div>
 </div>
@@ -84,7 +84,7 @@ window.pageInit = function () {
   const $ = id => document.getElementById(id), qp = new URLSearchParams(location.search);
   // area + versions from the documents (CX12-32): confirmed copies are official, the working version is a draft
   const AREA = getModels()[qp.get('area')] ? qp.get('area') : 'rq'; const L = modelLock(AREA);
-  $('crumb-area').textContent = L.model.name;
+  $('crumb-area').textContent = L.model.name; { const cl = document.getElementById('crumb-link'); if (cl) cl.href = `model.html?area=${AREA}`; }
   const done = getDocs().filter(x => x.type === 'model' && x.area === AREA && x.step === 'done').sort((a, b) => b.ver - a.ver);
   const ents = modelOf(AREA, L.model.ver).E.filter(e => !e.ref).length;
   $('o-scope').innerHTML = `<option>업무 영역 · ${L.model.name} (${ents})</option><option>선택한 테이블</option>`;

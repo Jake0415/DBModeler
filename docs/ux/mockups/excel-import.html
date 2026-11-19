@@ -42,8 +42,8 @@
 <div id="app">
 <div id="content" class="page">
   <div class="page-header">
-    <h1>엑셀 가져오기</h1>
-    <span class="crumb" id="crumb">기관 사전 · 표준용어</span>
+    <nav class="crumbs" aria-label="경로"><a href="dictionary.html">사전</a><span class="sl" aria-hidden="true">/</span></nav><h1>엑셀 가져오기</h1>
+    <span class="badge" id="crumb">기관 사전 · 표준용어</span>
   </div>
   <nav class="stepbar" aria-label="가져오기 단계"><div class="steps" id="steps"></div></nav>
 
@@ -143,7 +143,7 @@
 
   <div class="rp-foot xfoot" style="background:var(--surface)">
     <button class="btn" id="prev">이전</button>
-    <span class="saved" id="saved" aria-live="polite"></span>
+    <span class="savest" id="saved" aria-live="polite"></span>
     <span class="grow"></span>
     <span class="caption muted" id="hint" aria-live="polite"></span>
     <button class="btn primary" id="next">다음</button>
@@ -247,23 +247,23 @@ window.pageInit = function () {
     setTimeout(() => { const b = $('revalidate'); if (b) b.onclick = () => { ROWS.forEach(r => { if (r.st === 'pre') { r.st = 'new'; } judgePre(r); if (r.st === 'new' || r.st === 'chg') { const bad = r.dom && r.dom !== '—' && !DOMS.includes(r.dom); if (bad) { r.st = 'err'; r.rule = 'D-NOTFOUND'; r.bad = 'dom'; r.why = `도메인 '${r.dom}' 없음(현재 기준)`; } } }); stale = false; if (B) B.token = tokenNow(); persist(); toast('현재 기준으로 다시 검증했습니다 — 고친 값은 유지', 'success'); $('resume-banner').querySelectorAll('.banner.warning').forEach(x => { if (x.querySelector('#revalidate')) x.remove(); }); render(); }; }, 0); }
   const counts = () => { const c = { new: 0, chg: 0, same: 0, waitSame: 0, waitDiff: 0, conflict: 0, dup: 0, pre: 0, err: 0, missing: 0, pick: 0 }; ROWS.forEach(r => { c[r.st === 'pick' ? 'pick' : r.st]++; }); return c; };
   function persist() {
-    if (!canWrite) { $('saved').textContent = demo ? '예시 · 저장 안 함' : '열람 전용'; return; }
+    if (!canWrite) { $('saved').innerHTML = `<span class="sdot"></span>${demo ? '예시 · 저장 안 함' : '열람 전용'}`; return; }
     batches = getBatches();
     // another tab may have submitted this batch meanwhile — never overwrite its links/status with this tab's older copy (CX9-08)
     // the user who opened this tab must still be the selected user, and the batch revision must be the one this tab loaded (CX11-04)
-    if (liveRoleChanged()) { staleRoleToast(); $('saved').textContent = '저장 안 함 · 사용자 바뀜'; return false; }
-    if (B) { const st = batches.find(b => b.id === B.id); if (st && ((st.docs || []).length !== (B.docs || []).length || st.status !== B.status || (st.rev || 0) !== (B.rev || 0))) { toast(`${B.id}가 다른 탭에서 바뀌었습니다(${batchStateLabel(batchState(st))}) — 이 탭의 내용은 저장하지 않았습니다. 새로고침하세요`, 'danger', { label: '새로고침', fn: () => location.reload() }); $('saved').textContent = '저장 안 함 · 다른 탭 변경'; return false; } }
+    if (liveRoleChanged()) { staleRoleToast(); $('saved').innerHTML = '<span class="sdot err"></span>저장 안 함 · 사용자 바뀜'; return false; }
+    if (B) { const st = batches.find(b => b.id === B.id); if (st && ((st.docs || []).length !== (B.docs || []).length || st.status !== B.status || (st.rev || 0) !== (B.rev || 0))) { toast(`${B.id}가 다른 탭에서 바뀌었습니다(${batchStateLabel(batchState(st))}) — 이 탭의 내용은 저장하지 않았습니다. 새로고침하세요`, 'danger', { label: '새로고침', fn: () => location.reload() }); $('saved').innerHTML = '<span class="sdot err"></span>저장 안 함 · 다른 탭 변경'; return false; } }
     // the batch keeps the baseline the user actually downloaded (or 초기 적재) — CX12-09 · CL12-19
     if (!B) { const id = 'UP-2026-' + String(Math.max(...batches.map(b => +b.id.slice(-4))) + 1).padStart(4, '0'); const bl = latestBaseline(); B = { id, file: mode === 'init' ? '기관용어_초기적재.xlsx' : '요구사항관리_용어_2차.xlsx', kind, by: ME.id, at: nowStr(), baseline: mode === 'init' ? '—(초기 적재)' : bl.id, baselineScope: mode === 'init' ? '' : bl.scope, rows: ROWS.length, docs: [], status: '임시 저장', mode }; batches.unshift(B); }
     const i = batches.findIndex(b => b.id === B.id); B.counts = counts(); B.draft = ROWS; B.rev = (B.rev || 0) + 1; if (!B.token) B.token = tokenNow(); B.mode = mode; batches[i] = B; saveBatches(batches);
-    $('saved').textContent = `${B.id} · 임시 저장 ${nowStr().split(' ')[1]}`;
+    $('saved').innerHTML = `<span class="sdot ok"></span>${B.id} · 임시 저장 ${nowStr().split(' ')[1]}`;
     $('crumb').textContent = `기관 사전 · 표준${kind} · ${B.id}`;
     return true;
   }
   // ---- step 1
   // same visibility and the same state function as the upload history (CX9-09 · CL10-02)
   const recent = getBatches().filter(canSeeBatch).slice(0, 4);
-  $('recent').innerHTML = recent.map(b => { const s = batchState(b); const ld = (b.docs || []).slice(-1)[0]; return `<tr><td class="mono">${b.id}<div class="caption faint">${b.at}</div></td><td>${b.file}<div class="caption faint">${b.kind} · ${b.rows}행</div></td><td><span class="badge ${s === '반영됨' ? 'b-success' : s === '보완' ? 'b-danger' : s === '취소' ? '' : 'b-info'}">${batchStateLabel(s)}</span>${ld ? ` <a href="approvals.html?doc=${ld}" class="caption">${ld}</a>` : ''}</td><td>${['임시 저장', '보완'].includes(s) && b.by === ME.id ? `<a class="btn sm" href="excel-import.html?resume=${b.id}">이어서 작업</a>` : `<a class="caption" href="uploads.html?b=${b.id}">보기</a>`}</td></tr>`; }).join('') || '<tr class="er"><td colspan="4" class="caption muted" style="text-align:center;padding:16px">최근 업로드가 없습니다</td></tr>';
+  $('recent').innerHTML = recent.map(b => { const s = batchState(b); const ld = (b.docs || []).slice(-1)[0]; return `<tr><td class="mono">${b.id}<div class="caption faint">${b.at}</div></td><td>${b.file}<div class="caption faint">${b.kind} · ${b.rows}행</div></td><td><span class="badge ${s === '반영됨' ? 'b-success' : s === '보완' ? 'b-danger' : s === '취소' ? '' : 'b-info'}">${batchStateLabel(s)}</span>${ld ? ` <a href="approvals.html?doc=${ld}" class="caption">${ld}</a>` : ''}</td><td>${['임시 저장', '보완'].includes(s) && b.by === ME.id ? `<a class="btn sm" href="excel-import.html?resume=${b.id}">이어서 작업</a>` : `<a class="caption" href="uploads.html?b=${b.id}">보기</a>`}</td></tr>`; }).join('') || '<tr class="er none"><td colspan="4" class="caption muted" style="text-align:center;padding:16px">최근 업로드가 없습니다</td></tr>';
   const setMode = m => { if (B && canWrite && m !== mode) { toast('이미 저장된 묶음은 방식을 바꿀 수 없습니다 — 새 업로드로 시작하세요', 'info'); return; } mode = m; document.querySelectorAll('.modecard').forEach(x => { const on = (x.dataset.mode === 'new' ? 'init' : 'round') === m; x.classList.toggle('on', on); x.querySelector('input').checked = on; }); if (!B) { ROWS = JSON.parse(JSON.stringify(m === 'init' ? INIT_ROWS : ROWS0)).map(judgePre); applyScope(); } drawBL(); };
   document.querySelectorAll('.modecard').forEach(m => m.onclick = () => setMode(m.dataset.mode === 'new' ? 'init' : 'round'));
   if (mode === 'init') setTimeout(() => setMode('init'), 0);   // after the baseline banner function exists
@@ -294,7 +294,7 @@ window.pageInit = function () {
     const autos = errs.filter(r => r.auto && (!filt || r.st === filt) && (!ruleF || r.rule === ruleF));
     $('errbar').innerHTML = errs.length ? `<b style="color:var(--danger-deep)">오류 ${errs.length}</b>${Object.entries(by).map(([k, n]) => `<button data-rule="${k}" class="${ruleF === k ? 'on' : ''}"><span class="rule">${k}</span> ${RULES[k]} ${n}</button>`).join('')}<span class="grow"></span>${autos.length ? `<button id="auto-all">자동 수정 제안 ${autos.length}건 미리보기</button>` : ''}<button id="next-err">다음 오류 <kbd>F8</kbd></button>` : `<b style="color:var(--success-deep)">오류 없음</b> <span class="caption muted">보류·선택 행만 남았습니다</span>`;
     const L = ROWS.filter(r => (!filt || r.st === filt) && (!ruleF || r.rule === ruleF));
-    $('grid-body').innerHTML = L.map(r => { const s = ST[r.st]; return `<tr class="click ${s[2]} ${sel === r.r ? 'sel' : ''}" data-r="${r.r}" tabindex="0"><td class="num">${r.r}</td><td><span class="st"><span class="badge ${s[1]}">${s[0]}</span>${r.warn ? '<span title="경고 — 신청 시 확인 기록" aria-label="경고"><i data-ic=warn data-s=12></i></span>' : ''}</span></td>${cellV(r, 'name')}${cellV(r, 'abbr')}${cellV(r, 'dom')}${cellV(r, 'desc')}<td class="wrap caption">${r.rule ? `<span class="rule">${r.rule}</span> ` : ''}${r.why}</td></tr>`; }).join('') || '<tr class="er"><td colspan="7" class="caption muted" style="text-align:center;padding:30px">이 조건의 행이 없습니다</td></tr>';
+    $('grid-body').innerHTML = L.map(r => { const s = ST[r.st]; return `<tr class="click ${s[2]} ${sel === r.r ? 'sel' : ''}" data-r="${r.r}" tabindex="0"><td class="num">${r.r}</td><td><span class="st"><span class="badge ${s[1]}">${s[0]}</span>${r.warn ? '<span title="경고 — 신청 시 확인 기록" aria-label="경고"><i data-ic=warn data-s=12></i></span>' : ''}</span></td>${cellV(r, 'name')}${cellV(r, 'abbr')}${cellV(r, 'dom')}${cellV(r, 'desc')}<td class="wrap caption">${r.rule ? `<span class="rule">${r.rule}</span> ` : ''}${r.why}</td></tr>`; }).join('') || '<tr class="er none"><td colspan="7" class="caption muted" style="text-align:center;padding:30px">이 조건의 행이 없습니다</td></tr>';
     $('legend').innerHTML = `<span class="lg"><i style="background:var(--success)"></i>녹색 신청</span><span class="lg"><i style="background:var(--border-strong)"></i>회색 제외</span><span class="lg"><i style="background:var(--info)"></i>파랑 같은 내용 대기</span><span class="lg"><i style="background:var(--warning)"></i>주황 확인·선택·보류</span><span class="lg"><i style="background:var(--danger)"></i>붉은색 오류</span><span class="lg"><i data-ic=warn data-s=12></i> 경고(신청 가능, 기록)</span><span class="lg"><span class="old-v">전</span>후 = 바뀐 칸</span>`;
     drawPanel();
   }
@@ -417,7 +417,7 @@ window.pageInit = function () {
     } else { $('ack6-w').hidden = true; }
     updateNeeds();
   }
-  steps.addEventListener('click', e => { const b = e.target.closest('[data-goto]'); if (!b) return; cur = +b.dataset.goto; render(); });
+  steps.addEventListener('click', e => { const b = e.target.closest('[data-goto]'); if (!b) return; cur = +b.dataset.goto; render(); const h = document.querySelector('.stepview.on h2') || document.querySelector('#steps [aria-current="step"]'); if (h) { h.tabIndex = -1; h.focus(); } });
   $('map-repick').onclick = () => { cur = 2; render(); };
   $('prev').onclick = () => { if (cur > 1 && cur !== 4) { cur = cur === 5 ? 3 : cur - 1; render(); } };
   $('next').onclick = () => {
@@ -450,7 +450,7 @@ window.pageInit = function () {
       location.href = `approvals.html?new=1&doc=${r.doc.id}${r.dup ? '&dup=1' : ''}`; return;
     }
     cur++; render();
-    if (cur === 4) { let pct = 10; const stg = () => { const n = Math.min(3, Math.floor(pct / 25)); document.querySelectorAll('#stages span').forEach((s, i) => { s.className = i < n ? 'done' : i === n ? 'on' : ''; }); }; stg(); const tick = () => { pct += 30; $('prog').style.width = pct + '%'; stg(); if (pct >= 100) { timer = null; cur = 5; persist(); render(); toast(`검증·비교 완료 — ${B.id}로 임시 저장했습니다`, 'info'); const ch = $('chips'); if (ch) { ch.tabIndex = -1; ch.focus(); } } else timer = setTimeout(tick, 400); }; timer = setTimeout(tick, 400); }
+    if (cur === 4) { let pct = 10; const stg = () => { const n = Math.min(3, Math.floor(pct / 25)); document.querySelectorAll('#stages span').forEach((s, i) => { s.className = i < n ? 'done' : i === n ? 'on' : ''; }); }; stg(); const tick = () => { pct += 30; $('prog').style.width = pct + '%'; stg(); if (pct >= 100) { document.querySelectorAll('#stages span').forEach(s => { s.className = 'done'; }); timer = null; setTimeout(() => { if (cur !== 4) return; cur = 5; persist(); render(); toast(`검증·비교 완료 — ${B.id}로 임시 저장했습니다`, 'info'); const ch = $('chips'); if (ch) { ch.tabIndex = -1; ch.focus(); } }, 500); } else timer = setTimeout(tick, 400); }; timer = setTimeout(tick, 400); }
   };
   const BL = latestBaseline();
   const drawBL = () => { if (B && B.baseline && B.baseline.startsWith('—')) { $('bl-t').innerHTML = '<b>초기 적재</b> — 기준본 없이 새 항목만 등록합니다. 빠짐·충돌 판정은 하지 않습니다.'; return; } if (mode === 'init') { $('bl-t').innerHTML = '<b>초기 적재</b> — 기준본 없이 새 항목만 등록합니다. 빠짐·충돌 판정은 하지 않습니다.'; return; } const id = B ? B.baseline : BL.id; $('bl-t').innerHTML = `<b>기준본 ${id}</b> — ${B ? '이 묶음이 고정한' : `${BL.at} ${USERS[BL.by] ? USERS[BL.by].name : ''}이 내려받은`} 편집용 파일 기준입니다(${B ? B.baselineScope || '' : BL.scope}${B ? '' : ` · ${BL.n}건`}). 이 서버 기록으로 바뀐 것과 빠진 것을 판정합니다.`; };

@@ -141,7 +141,7 @@
 <div id="app">
 <div id="content" class="page">
   <div class="page-header">
-    <span class="crumb"><a href="system.html">요구사항관리</a> › <b>요구사항 · 프로젝트</b></span>
+    <nav class="crumbs" aria-label="경로"><a href="system.html">요구사항관리</a><span class="sl" aria-hidden="true">/</span></nav><h1 class="crumb"><b>요구사항 · 프로젝트</b></h1>
     <span class="badge mono" id="ver">v5 작업 중</span><span class="savest" id="savest" aria-live="polite"><span class="sdot ok"></span>저장됨</span>
     <div class="avs" id="avs" title="이 업무 영역에 접속한 사람"><span id="av-list"></span><span class="cap" id="avcap">3명 접속 · 2명 편집</span></div>
     <div class="actions">
@@ -703,7 +703,7 @@ window.pageInit = function () {
   $('rev-run').onclick = () => { renderReview(); toast('모델 검토를 다시 실행했습니다', 'info'); };
 
   // ---- grid mode (bulk edit · find/replace)
-  const gsel = new Set(); let gfilter = 'all'; let gvis = new Set(); let gAllArm = false;
+  const gsel = new Set(); let gfilter = 'all'; let gvis = new Set(); let gAllArm = null;   // arm = the exact scope + values the user confirmed
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
   const gpass = a => !a.edit && !(gfilter === 'bad' && !(a.s === 'comb' || a.s === 'unreg')) && !(gfilter === 'sec' && !a.sec) && !(gfilter === 'na' && a.s !== 'na');
   function renderGrid() {
@@ -731,28 +731,29 @@ window.pageInit = function () {
   }
   function openGrid(focusFind) {
     if (!$('grid').classList.contains('open')) { sideWas = $('side').classList.contains('closed'); $('side').classList.add('closed'); }
-    $('grid').classList.add('open'); $('b-grid').classList.add('on'); document.body.classList.add('gridmode'); syncView(); renderGrid();
+    $('grid').classList.add('open'); $('b-grid').classList.add('on'); document.body.classList.add('gridmode'); $('world').inert = true; cv.tabIndex = -1; syncView(); renderGrid();
     if (focusFind) { const f = $('g-find'); f.focus(); }
   }
   let sideWas = false;
-  function closeGrid() { if (!$('grid').classList.contains('open')) return; $('grid').classList.remove('open'); $('b-grid').classList.remove('on'); document.body.classList.remove('gridmode'); syncView(); $('side').classList.toggle('closed', sideWas); }
+  function closeGrid() { if (!$('grid').classList.contains('open')) return; $('grid').classList.remove('open'); $('b-grid').classList.remove('on'); document.body.classList.remove('gridmode'); $('world').inert = false; cv.tabIndex = 0; syncView(); $('side').classList.toggle('closed', sideWas); const vb = document.querySelector('#vw [data-v="erd"]'); if (vb) vb.focus(); }
   function syncView() { const g = $('grid').classList.contains('open'); document.querySelectorAll('#vw button').forEach(b => { const on = (b.dataset.v === 'grid') === g; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); }); }
   document.getElementById('vw').addEventListener('click', ev => { const b = ev.target.closest('button[data-v]'); if (!b) return; b.dataset.v === 'grid' ? openGrid(false) : closeGrid(); });
   $('b-grid').onclick = () => $('grid').classList.contains('open') ? closeGrid() : openGrid(false);
   $('grid').addEventListener('mousedown', ev => ev.stopPropagation());
   $('grid').addEventListener('click', ev => {
     ev.stopPropagation();
-    const chip = ev.target.closest('[data-gf]'); if (chip) { gfilter = chip.dataset.gf; renderGrid(); return; }
+    const chip = ev.target.closest('[data-gf]'); if (chip) { gfilter = chip.dataset.gf; gAllArm = null; renderGrid(); return; }
     if (ev.target.id === 'g-close') { closeGrid(); return; }
-    if (ev.target.id === 'g-clear') { gsel.clear(); renderGrid(); return; }
+    if (ev.target.id === 'g-clear') { gsel.clear(); gAllArm = null; renderGrid(); return; }
     if (ev.target.id === 'g-replace') {
       if (guard()) return; const fv = $('g-find').value, rv = $('g-rep').value; let n = 0; snap();
       E.forEach(e => { if (e.ref) return; e.a.forEach(a => { if (gpass(a) && a.n.includes(fv)) { a.n = a.n.split(fv).join(rv); a.s = a.s === 'na' ? 'na' : 'comb'; n++; } }); });
       render(); toast(`보이는 행 ${n}건에서 ‘${esc(fv)}’ → ‘${esc(rv)}’로 바꿨습니다(숨긴 행은 그대로) — 표준 매칭을 다시 확인합니다`, 'info', undoAction()); return;
     }
-    if (ev.target.id === 'g-apply-all' && !gAllArm) { gAllArm = true; renderGrid(); return; }
+    const sig = () => [...gsel].sort().join(',') + '|' + ['g-dom', 'g-nn', 'g-std', 'g-why'].map(id => ($(id) || {}).value || '').join('|');
+    if (ev.target.id === 'g-apply-all' && gAllArm !== sig()) { gAllArm = sig(); const keep = ['g-dom', 'g-nn', 'g-std', 'g-why'].map(id => [id, ($(id) || {}).value]); renderGrid(); keep.forEach(([id, v]) => { if ($(id) && v != null) $(id).value = v; }); const b = $('g-apply-all'); if (b) b.focus(); return; }
     if (ev.target.id === 'g-apply' || ev.target.id === 'g-apply-all') {
-      if (guard()) return; const scope = ev.target.id === 'g-apply-all' ? [...gsel] : [...gsel].filter(k => gvis.has(k)); gAllArm = false; const dom = $('g-dom').value, nn = $('g-nn').value, std = $('g-std').value, why = ($('g-why') || {}).value || '';
+      if (guard()) return; const scope = ev.target.id === 'g-apply-all' ? [...gsel] : [...gsel].filter(k => gvis.has(k)); gAllArm = null; const dom = $('g-dom').value, nn = $('g-nn').value, std = $('g-std').value, why = ($('g-why') || {}).value || '';
       if (!dom && !nn && !std) { toast('바꿀 항목을 고르세요', 'info'); return; }
       if (std === 'na' && !why.trim()) { toast('비대상 사유를 입력해야 합니다 — 확정 결재에서 DA가 검토합니다', 'danger'); $('g-why').focus(); return; }
       snap(); let n = 0, skip = 0;
@@ -766,7 +767,8 @@ window.pageInit = function () {
   });
   $('grid').addEventListener('change', ev => {
     const k = ev.target.dataset.k;
-    if (k) { ev.target.checked ? gsel.add(k) : gsel.delete(k); renderGrid(); return; }
+    if (k) { ev.target.checked ? gsel.add(k) : gsel.delete(k); gAllArm = null; renderGrid(); return; }
+    if (['g-dom', 'g-nn', 'g-why'].includes(ev.target.id)) { gAllArm = null; const b = $('g-apply-all'); if (b && /한 번 더/.test(b.textContent)) b.textContent = b.textContent.replace(/^한 번 더 눌러 숨겨진 (\d+)개 포함 적용$/, '숨겨진 $1개 포함…'); }
     if (ev.target.id === 'g-std') { renderGrid(); if (ev.target.value === 'na') $('g-why').focus(); return; }
     if (ev.target.id === 'g-all') { $('grid').querySelectorAll('[data-k]').forEach(c => ev.target.checked ? gsel.add(c.dataset.k) : gsel.delete(c.dataset.k)); renderGrid(); }
   });
@@ -989,6 +991,7 @@ window.pageInit = function () {
     const k = ev.key.toLowerCase();
     if (ev.ctrlKey && k === 'f') { openGrid(true); ev.preventDefault(); return; }
     if (ev.target.closest && ev.target.closest('input,textarea,select,[contenteditable="true"]')) return;
+    if (ev.target.closest && ev.target.closest('.page-header, .menu, #grid') && !(ev.ctrlKey || ev.metaKey)) return;   // header buttons, menus and the table keep their own keys
     if (ev.ctrlKey && k === 'z' && ev.shiftKey) { redoFn(); ev.preventDefault(); return; }
     if (ev.ctrlKey && k === 'z') { undo(); ev.preventDefault(); return; }
     if (ev.ctrlKey && k === 'y') { redoFn(); ev.preventDefault(); return; }
@@ -1120,7 +1123,7 @@ window.pageInit = function () {
   const moreM = $('moremenu'), moreB = $('b-more');
   const setMore = on => { moreM.classList.toggle('open', on); moreB.setAttribute('aria-expanded', on); if (on) { const f = moreM.querySelector('.mi'); f && f.focus(); } };
   moreB.onclick = ev => { ev.stopPropagation(); setMore(!moreM.classList.contains('open')); };
-  moreM.addEventListener('keydown', ev => { if (ev.key === 'Escape') { setMore(false); moreB.focus(); } });
+  moreM.addEventListener('keydown', ev => { if (ev.key === 'Escape') { ev.stopPropagation(); setMore(false); moreB.focus(); } });
   document.addEventListener('click', ev => { if (!ev.target.closest('#moremenu, #b-more')) setMore(false); });
   $('mi-export').onclick = ev => { ev.stopPropagation(); setMore(false); $('expmenu').classList.add('open'); };
   { const BAN = ['ban-off', 'ban-lock', 'ban-view', 'ban-gate', 'ban-left', 'ban-big', 'ban-sync']; const box = document.querySelector('.cv-banner'); let all = false;
@@ -1222,7 +1225,7 @@ window.pageInit = function () {
   }
   document.querySelector('.crumb b').textContent = LOCK.model.name;
   if (locked) {
-    document.body.classList.add('locked'); $('ban-lock').style.display = 'flex'; setSave('run', '검토 중 · 조회 전용');
+    document.body.classList.add('locked'); $('ban-lock').style.display = 'flex'; setSave('run', LOCK.state === 'confirmed' && !SNAP ? `v${VER} 확정본 · 조회 전용` : '검토 중 · 조회 전용');
     remoteSel = null; $('avcap').textContent = '3명 접속 · 모두 조회 전용';
     const b = $('confirm-btn'); b.classList.remove('disabled', 'has-tip', 'primary'); b.removeAttribute('data-tip');
     const D = SNAP ? getDocs().find(x => x.id === SNAP) : LOCK.doc;

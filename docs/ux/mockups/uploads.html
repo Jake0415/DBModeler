@@ -13,9 +13,9 @@
 <div id="app">
 <div id="content" class="page">
   <div class="page-header">
-    <a class="btn ghost sm" href="dictionary.html">← 사전</a>
-    <h1>업로드 이력</h1>
-    <span class="caption muted">엑셀 왕복 편집 묶음 · 30일 임시 보관 · 원본 열람은 올린 사람·DA</span>
+    <nav class="crumbs" aria-label="경로"><a href="dictionary.html">사전</a><span class="sl" aria-hidden="true">/</span></nav>
+    <h1 title="엑셀 왕복 편집 묶음 · 30일 임시 보관 · 원본 열람은 올린 사람·DA">업로드 이력</h1>
+    
     <div class="actions"><a class="btn primary" href="excel-import.html">엑셀 가져오기</a></div>
   </div>
   <div class="toolbar">
@@ -42,7 +42,7 @@ window.pageInit = function () {
     const L = getBatches().filter(vis).filter(b => !f || stateOf(b) === f);
     if (!sel && L[0]) sel = L[0].id;
     $('ub').innerHTML = L.map(b => { const c = b.counts; const st = stateOf(b); const d = (b.docs || []).map(docOf).filter(Boolean);
-      return `<tr class="click ${sel === b.id ? 'sel' : ''}" data-b="${b.id}" tabindex="0"><td class="mono">${b.id}<div class="caption faint">${b.at}</div></td><td>${b.file}</td><td>${b.kind}</td><td>${USERS[b.by] ? USERS[b.by].name : b.by}</td><td class="mono caption">${b.baseline}</td><td class="num">${b.rows}</td><td class="caption">${c ? `신규 ${c.new} · 변경 ${c.chg} · 후보 ${c.pick || 0} · 동일 ${c.same} · 보류 ${c.waitDiff + c.pre} · 오류 ${c.err}` : b.note || '—'}</td><td>${d.map(x => `<a class="mono" href="approvals.html?doc=${x.id}">${x.id}</a> <span class="caption">${STEP_NAME[x.step]}</span>`).join('<br>') || '—'}</td><td><span class="badge ${st === '반영됨' ? 'b-success' : st === '보완' ? 'b-danger' : st === '취소' ? '' : 'b-info'}">${st === '보완' ? '반려·회수 — 보완 필요' : st}</span>${expired(b) ? ' <span class="badge b-warning" title="검증 뒤 검수 기준·사전이 바뀜">재검증 필요</span>' : ''}</td></tr>`; }).join('') || '<tr class="er"><td colspan="9" class="caption muted" style="text-align:center;padding:30px">업로드가 없습니다</td></tr>';
+      return `<tr class="click ${sel === b.id ? 'sel' : ''}" data-b="${b.id}" tabindex="0"><td class="mono">${b.id}<div class="caption faint">${b.at}</div></td><td>${b.file}</td><td>${b.kind}</td><td>${USERS[b.by] ? USERS[b.by].name : b.by}</td><td class="mono caption">${b.baseline}</td><td class="num">${b.rows}</td><td class="caption">${c ? `신규 ${c.new} · 변경 ${c.chg} · 후보 ${c.pick || 0} · 동일 ${c.same} · 보류 ${c.waitDiff + c.pre} · 오류 ${c.err}` : b.note || '—'}</td><td>${d.map(x => `<a class="mono" href="approvals.html?doc=${x.id}">${x.id}</a> <span class="caption">${STEP_NAME[x.step]}</span>`).join('<br>') || '—'}</td><td><span class="badge ${st === '반영됨' ? 'b-success' : st === '보완' ? 'b-danger' : st === '취소' ? '' : 'b-info'}">${st === '보완' ? '반려·회수 — 보완 필요' : st}</span>${expired(b) ? ' <span class="badge b-warning" title="검증 뒤 검수 기준·사전이 바뀜">재검증 필요</span>' : ''}</td></tr>`; }).join('') || '<tr class="er first"><td colspan="9" class="caption muted" style="text-align:center;padding:30px"><span class="et">아직 업로드가 없습니다</span>사전에서 편집용 엑셀을 내려받아 고친 뒤 올리면 여기에 묶음으로 남습니다.<br><a class="btn primary sm" href="excel-import.html">엑셀 가져오기</a></td></tr>';
     panel();
   }
   function panel() {

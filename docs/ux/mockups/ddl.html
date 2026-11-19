@@ -13,10 +13,10 @@
 <div id="app">
 <div id="content" class="page">
   <div class="page-header">
-    <a class="btn ghost sm" id="back" href="model.html">← 모델</a>
-    <h1>DDL 출력</h1>
-    <span class="crumb">요구사항관리 · Oracle 19c · 스키마 RQMS · <b id="crumb-area"></b></span>
-    <div class="actions"><span class="badge" id="vbadge"></span><button class="btn sm" data-open="pn-cmp" data-close-others="pn-gateb">DBMS 비교</button></div>
+    <nav class="crumbs" aria-label="경로"><a href="system.html">요구사항관리</a><span class="sl" aria-hidden="true">/</span><a id="back" href="model.html"><span id="crumb-area"></span></a><span class="sl" aria-hidden="true">/</span></nav>
+    <h1 title="Oracle 19c · 스키마 RQMS">DDL 출력</h1>
+    
+    <span class="badge" id="vbadge"></span><div class="actions"><button class="btn sm" data-open="pn-cmp" data-close-others="pn-gateb">DBMS 비교</button></div>
   </div>
   <div class="toolbar">
     <span class="caption muted">범위 *</span>
@@ -67,7 +67,7 @@
         <div id="gb-body"></div>
         <div class="caption muted" style="margin-top:8px">문법 오류는 차단, 표준 위반은 경고 + 예외 사유로 진행합니다.</div>
       </div>
-      <div class="rp-foot"><button class="btn" id="copy">복사</button><span class="grow"></span><button class="btn primary" id="dl">내려받기 .sql</button></div>
+      <div class="rp-foot"><button class="btn" id="copy">복사</button><span class="grow"></span><button class="btn primary" id="dl" data-busy>내려받기 .sql</button></div>
     </aside>
   </div>
 </div>
