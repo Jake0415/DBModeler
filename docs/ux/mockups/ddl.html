@@ -90,6 +90,8 @@ window.pageInit = function () {
   const prevModel = prevDoc0 ? (prevDoc0.model || getModelData(AREA, baseVer)) : null; const prevDoc = prevModel ? { model: prevModel } : null;
   function chips() { $('scope-chips').innerHTML = [['all', `업무 영역 전체 (${ents.length})`], ['pick', `선택한 테이블 (${picked.size})`], ['sys', `시스템 전체 (${sysCount}) · 조회`]].map(([k, l]) => `<span class="chip ${scope === k ? 'on' : ''}" data-sc="${k}">${l}</span>`).join('') + (scope === 'pick' ? ` <select class="input" id="pick-t" multiple size="1" style="width:200px" aria-label="테이블 선택">${ents.map(e => `<option value="${e.id}" ${picked.has(e.id) ? 'selected' : ''}>${e.p !== '—' ? e.p : e.n}</option>`).join('')}</select>` : ''); const pt = $('pick-t'); if (pt) pt.onchange = () => { picked = new Set([...pt.selectedOptions].map(o => o.value)); draw(); }; }
   const esc = s => String(s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c]);
+  // column comment: name — definition, one SQL literal (quotes doubled for the whole text), then made safe for the page
+  const colComment = (e, a) => `<span class="kw">COMMENT ON COLUMN</span> ${SCH}.${esc(e.p)}.${esc(a.p)} <span class="kw">IS</span> <span class="str">'${esc((a.n + (a.desc ? ' — ' + a.desc : '')).replace(/'/g, "''"))}'</span>;`;
   const ascii = s => /^[A-Z][A-Z0-9_]*$/.test(s);
   const nm = x => x.p === '—' ? x.n : x.p;
   const SCH = curSys().schema;
@@ -108,11 +110,18 @@ window.pageInit = function () {
     target.forEach(e => {
       const base = alter && prevDoc ? prevDoc.model.E.find(x => x.id === e.id) : null;
       lines.push(`<span data-e="${e.id}" hidden></span><span class="cm">-- ${esc(e.p)} ${esc(e.n)}</span>`);
-      if (alter && base) { e.a.forEach(a => { const o = base.a.find(x => x.n === a.n || x.n === a.orig); if (!o) lines.push(`<span class="kw">ALTER TABLE</span> ${SCH}.${esc(e.p)} <span class="kw">ADD</span> (${esc(a.p)} ${esc(a.t)});`); else if (o.p !== a.p) lines.push(`<span class="kw">ALTER TABLE</span> ${SCH}.${esc(e.p)} <span class="kw">RENAME COLUMN</span> ${esc(o.p)} <span class="kw">TO</span> ${esc(a.p)};`); else if (o.t !== a.t) lines.push(`<span class="kw">ALTER TABLE</span> ${SCH}.${esc(e.p)} <span class="kw">MODIFY</span> (${esc(a.p)} ${esc(a.t)});`); }); return; }
+      if (alter && base) { const AT = `<span class="kw">ALTER TABLE</span> ${SCH}.${esc(e.p)}`, DF = a => a.def ? ' <span class="kw">DEFAULT</span> ' + esc(a.def) : '';
+        e.a.filter(a => !a.edit).forEach(a => { const o = base.a.find(x => x.n === a.n || x.n === a.orig);
+          if (!o) { lines.push(`${AT} <span class="kw">ADD</span> (${esc(a.p)} ${esc(a.t)}${DF(a)}${a.nn || a.pk ? ' <span class="kw">NOT NULL</span>' : ''});`); if (cm && a.p !== '—') lines.push(colComment(e, a)); return; }
+          if (o.p !== a.p) lines.push(`${AT} <span class="kw">RENAME COLUMN</span> ${esc(o.p)} <span class="kw">TO</span> ${esc(a.p)};`);
+          if (o.t !== a.t) lines.push(`${AT} <span class="kw">MODIFY</span> (${esc(a.p)} ${esc(a.t)});`);
+          if ((o.def || '') !== (a.def || '')) lines.push(`${AT} <span class="kw">MODIFY</span> (${esc(a.p)} <span class="kw">DEFAULT</span> ${a.def ? esc(a.def) : '<span class="kw">NULL</span>'});`);   // a removed default is set back to NULL
+          if (cm && a.p !== '—' && (o.n !== a.n || (o.desc || '') !== (a.desc || ''))) lines.push(colComment(e, a)); });
+        return; }
       lines.push(`<span class="kw">CREATE TABLE</span> ${SCH}.${esc(e.p)} (`);
       e.a.filter(a => !a.edit).forEach(a => { const bad = a.p === '—' || !ascii(a.p); lines.push(`<span class="${bad ? 'warn' : ''}">  ${esc(a.p)}${' '.repeat(Math.max(1, 20 - a.p.length))}${esc(a.t)}${a.def ? ' <span class="kw">DEFAULT</span> ' + esc(a.def) : ''}${a.nn || a.pk ? ' <span class="kw">NOT NULL</span>' : ''},${bad ? ' <span class="cm">-- 오류: 물리명 없음·무효</span>' : a.s === 'ex' ? ' <span class="cm">-- <i data-ic=warn data-s=12></i> 예외: ' + esc(a.exReason || '') + '</span>' : ''}</span>`); });
       const pk = e.a.filter(a => a.pk).map(a => a.p); lines.push(pk.length ? `  <span class="kw">CONSTRAINT</span> ${esc(e.p)}_PK <span class="kw">PRIMARY KEY</span> (${pk.join(', ')})` : '  <span class="cm">-- <i data-ic=warn data-s=12></i> PK 없음</span>'); lines.push(');');
-      if (cm) { lines.push(`<span class="kw">COMMENT ON TABLE</span> ${SCH}.${esc(e.p)} <span class="kw">IS</span> <span class="str">'${esc(e.n)}'</span>;`); e.a.filter(a => !a.edit && a.p !== '—').forEach(a => lines.push(`<span class="kw">COMMENT ON COLUMN</span> ${SCH}.${esc(e.p)}.${esc(a.p)} <span class="kw">IS</span> <span class="str">'${esc(a.n)}${a.desc ? ' — ' + esc(a.desc).replace(/'/g, "''") : ''}'</span>;`)); }
+      if (cm) { lines.push(`<span class="kw">COMMENT ON TABLE</span> ${SCH}.${esc(e.p)} <span class="kw">IS</span> <span class="str">'${esc(e.n)}'</span>;`); e.a.filter(a => !a.edit && a.p !== '—').forEach(a => lines.push(colComment(e, a))); }
     });
     // FK from the same rule as the model tree and the right panel (12 §4.1): ok → constraint, ex → reason, miss → warning
     if (fk && !alter) src.R.forEach(r => { const p = src.E.find(x => x.id === r.f), c = ents.find(x => x.id === r.t); if (!p || !c || !target.includes(c)) return; const f = fkOf(r, src.E);

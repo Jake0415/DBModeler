@@ -236,10 +236,14 @@
     if (!pk.length) return { st: 'miss', why: p.n + ' PK 없음' };
     if (pk.some(a => a.p === '—')) return { st: 'miss', why: p.n + ' PK 물리명 없음' };
     // relation group (made by drawing the relation) first; otherwise each parent PK column must have a child FK column of the same name
+    // each child column is matched to ITS parent column (fkp = the parent column it carries; else same name or ORG_ role name) — never by position
+    const pick = (k, list) => list.find(x => x.fkp === k.p) || list.find(x => !x.fkp && (x.p === k.p || x.p === 'ORG_' + k.p));
     let cc;
-    if (r.g) { const g = c.a.filter(a => a.fk && a.fkg === r.g); cc = g.length === pk.length ? g : null; }
+    if (r.g) { const g = c.a.filter(a => a.fk && a.fkg === r.g);
+      if (g.length !== pk.length) cc = null;
+      else { const m = pk.map(k => pick(k, g)); cc = m.every(Boolean) && new Set(m).size === m.length ? m : (g.some(x => x.fkp) ? null : g); } }   // older role-named groups without fkp keep their drawn order
     else if (r.f === r.t) cc = null;   // a recursive relation always needs role-named columns
-    else cc = pk.map(k => c.a.find(a => a.fk && a.p === k.p));
+    else cc = pk.map(k => pick(k, c.a.filter(a => a.fk)));
     if (!cc || cc.some(x => !x || x.p === '—')) {
       const have = cc ? cc.filter(x => x && x.p !== '—').length : 0;
       return { st: 'miss', why: r.f === r.t ? '재귀 관계 — 역할명 FK 컬럼 지정 필요' : !c.a.some(a => a.fk) ? 'FK 컬럼 없음' : have ? `부모 PK ${pk.length}개 중 ${have}개만 대응 — 나머지 컬럼 지정 필요` : 'FK 컬럼 이름이 부모 PK와 다름(역할명) — 대응 컬럼 지정 필요' };
@@ -584,6 +588,9 @@
   };
   /* the role that is CURRENTLY selected (another tab may have switched it after this page loaded) */
   window.liveRoleChanged = () => store.get('dbm-role', 'kim') !== ME.id;
+  // the account as saved right now — another tab may have taken a role or a system away since this page loaded
+  window.freshUser = () => { try { const db = JSON.parse(store.get('dbm-users', 'null')); if (db) return db[ME.id] || null; } catch (e) {} return USERS[ME.id] || null; };
+  window.liveCanEdit = area => { const u = freshUser(); return !!u && u.status !== 'stopped' && canUser(u, 'model.edit', { area }); };
   window.staleRoleToast = () => toast(`다른 탭에서 사용자가 바뀌었습니다(지금 ${USERS[store.get('dbm-role', 'kim')] ? USERS[store.get('dbm-role', 'kim')].name : ''}) — 새로고침한 뒤 다시 처리하세요`, 'danger', { label: '새로고침', fn: () => location.reload() });
   /* one batch-state function for every screen (upload history, excel step 1) */
   window.batchState = b => {
@@ -1118,7 +1125,7 @@
           return;
         }
         if (r.grp) html += `<div class="tgrp" role="none" style="--lv:${r.lvl}" title="${esc(r.grp.title)}">${r.grp.label}<span>${r.grp.n}</span></div>`;
-        html += `<div role="treeitem" class="trow2 k-${r.kind}${r.id === selId ? ' sel' : ''}${r.gray ? ' gray' : ''}" data-id="${esc(r.id)}" aria-level="${r.lvl}" aria-posinset="${r.pos}" aria-setsize="${r.size}"${r.open != null ? ` aria-expanded="${r.open}"` : ''}${r.selectable ? ` aria-selected="${r.id === selId}"` : ''} tabindex="${r.id === focusId ? 0 : -1}" aria-label="${esc(r.aria || '')}"${r.title ? ` title="${esc(r.title)}"` : ''} style="--lv:${r.lvl}"><span class="ttw" data-tw aria-hidden="true">${r.open == null ? '' : `<i data-ic=${r.open ? 'down' : 'right'} data-s=12></i>`}</span>${iconOf(r) ? `<span class="tico${icoCls(r)}" aria-hidden="true"><i data-ic=${iconOf(r)} data-s=14></i></span>` : ''}${r.html.replace(/^<span class="tdot[^"]*" aria-hidden="true">(<i[^>]*><\/i>)?<\/span>/, '')}<button type="button" class="tmore" data-tmore tabindex="-1" aria-hidden="true" title="메뉴 (Shift+F10)"><i data-ic=more data-s=14></i></button></div>`;
+        html += `<div role="treeitem" aria-haspopup="menu" class="trow2 k-${r.kind}${r.id === selId ? ' sel' : ''}${r.gray ? ' gray' : ''}" data-id="${esc(r.id)}" aria-level="${r.lvl}" aria-posinset="${r.pos}" aria-setsize="${r.size}"${r.open != null ? ` aria-expanded="${r.open}"` : ''}${r.selectable ? ` aria-selected="${r.id === selId}"` : ''} tabindex="${r.id === focusId ? 0 : -1}" aria-label="${esc(r.aria || '')}"${r.title ? ` title="${esc(r.title)}"` : ''} style="--lv:${r.lvl}"><span class="ttw" data-tw aria-hidden="true">${r.open == null ? '' : `<i data-ic=${r.open ? 'down' : 'right'} data-s=12></i>`}</span>${iconOf(r) ? `<span class="tico${icoCls(r)}" aria-hidden="true"><i data-ic=${iconOf(r)} data-s=14></i></span>` : ''}${r.html.replace(/^<span class="tdot[^"]*" aria-hidden="true">(<i[^>]*><\/i>)?<\/span>/, '')}<span class="tmore" data-tmore aria-hidden="true" title="메뉴 (Shift+F10)"><i data-ic=more data-s=14></i></span></div>`;
         if (r.kind === 'area' && r.open && r.desc && !q.trim()) html += `<div class="tdesc" role="none" style="--lv:${r.lvl + 1}">${esc(r.desc)}</div>`;
       });
       tree.innerHTML = html || '<div class="tempty">맞는 객체가 없습니다</div>';
@@ -1173,7 +1180,7 @@
       if (e.key === ' ' && el.matches('a.tlink')) { e.preventDefault(); el.click(); return; }
       if (e.key === 'Enter' || e.key === ' ') { if (el.matches('a.tlink')) return; e.preventDefault(); if (r) { kbSel = true; select(r, false); kbSel = false; } return; }
       if (e.key === '*') { e.preventDefault(); if (!r) return; const sib = Object.values(rowMap).filter(x => x.parent === r.parent && x.open === false); sib.forEach(x => { const t0 = ST.tog[x.key] = ST.tog[x.key] || {}; t0[x.nid] = true; }); save(); render(); return; }
-      if (e.key === 'ContextMenu' || (e.key === 'F10' && e.shiftKey)) { e.preventDefault(); if (r && r.kind !== 'link') { const b = el.getBoundingClientRect(); openMenu(r, b.left + 24, b.bottom + 2, el); } return; }
+      if ((e.key === 'ContextMenu' || (e.key === 'F10' && e.shiftKey)) && !el.matches('a.tlink')) { e.preventDefault(); if (r && r.kind !== 'link') { const b = el.getBoundingClientRect(); openMenu(r, b.left + 24, b.bottom + 2, el); } return; }
       if (e.key === 'F2' || e.key === 'Delete') { e.preventDefault(); if (!r || r.kind === 'link') return; const want = e.key === 'F2' ? ['rename'] : ['delete', 'delrel']; const it = menuOf(r).find(x => want.includes(x.id));
         if (!it) { toast(e.key === 'F2' ? '이 항목은 이름을 바꿀 수 없습니다' : '이 항목은 트리에서 지울 수 없습니다', 'info'); return; } runCmd(r, it); return; }
       if (e.key.length === 1 && /\S/.test(e.key) && !e.ctrlKey && !e.metaKey && !e.altKey) {   // type-ahead
@@ -1188,6 +1195,9 @@
       // only the model screen's own view decides "read-only here"; DDL · outputs · standardize show a copy, and their commands open the model screen
       const l = live(), onModel = file === 'model.html' && l && l.area === r.area;
       if (onModel && (l.snap || /^snap:/.test(l.ver || ''))) return '제출본은 조회 전용입니다';
+      // a screen showing another version (DDL · outputs on a confirmed / submitted copy): its rows are not the working copy's rows
+      const wv = 'v' + ((getModels()[r.area] || {}).ver || '');
+      if (!onModel && l && l.area === r.area && l.ver && l.ver !== wv) return `이 화면은 ${/^snap:/.test(l.ver) ? '제출본 ' + l.ver.slice(5) : l.ver + ' 확정본'}을 보여 줍니다 — 작업본(${wv}) 모델 화면에서 편집하세요`;
       const L = modelLock(r.area);
       if (L.state === 'review') return '결재 중이라 편집할 수 없습니다 — 회수하거나 결재가 끝난 뒤 편집하세요';
       if (L.state === 'confirmed') return '확정본은 고칠 수 없습니다 — 다음 작업 버전에서 편집하세요';
@@ -1201,7 +1211,7 @@
       const I = (id, label, o = {}) => Object.assign({ id, label }, o), SEP = { sep: 1 };
       const ed = (id, label, o = {}) => I(id, label, Object.assign({ why: editWhy(r, 'ent' in o ? o.ent : e) }, o));
       const fold = [I('expand', '모두 펼치기'), I('collapse', '모두 접기')];
-      if (r.kind === 'area') return [I('open', '모델 열기'), I('std', '표준 맞추기'), I('ddl', 'DDL 만들기'), I('outputs', '산출물'), SEP, I('hist', '결재 이력'), I('newview', '보기 추가', { mock: T3 }), I('dup', '영역 복제', { mock: '영역 복제는 목업에서 시연만 합니다 — 복제본은 새 업무 영역 v1 작업 중으로 만들어집니다' }), SEP, ...fold];
+      if (r.kind === 'area') return [I('open', '모델 열기'), I('std', '표준 맞추기'), I('ddl', 'DDL 만들기'), I('outputs', '산출물'), SEP, I('hist', '결재함 열기'), I('newview', '보기 추가', { mock: T3 }), I('dup', '영역 복제', { mock: '영역 복제는 목업에서 시연만 합니다 — 복제본은 새 업무 영역 v1 작업 중으로 만들어집니다' }), SEP, ...fold];
       if (r.kind === 'folder') {
         if (r.nid === 'f:ents' || r.nid === 'f:tbls') return [ed('newent', P ? '새 테이블' : '새 엔터티', { ent: null, key: 'E' }), I('grid', '표 보기 · 일괄 편집'), SEP, ...fold];
         if (r.nid === 'f:views') return [I('newview', '새 보기', { mock: T3 }), SEP, ...fold];
@@ -1212,7 +1222,7 @@
       if (r.kind === 'ent' || r.kind === 'table') {
         if (!e) return [];
         if (e.ref) return [I('select', '선택'), I('fit', '위치 맞춤'), I('src', `원본 열기${e.refName ? ' · ' + e.refName : ''}`), I('used', '사용처 (관계)'), SEP, ed('delete', '참조 해제', { ent: null, key: 'Delete', danger: 1 })];
-        return [I('select', '선택'), I('fit', '위치 맞춤'), SEP, ed('rename', '이름 바꾸기', { key: 'F2' }), ed('addattr', P ? '컬럼 추가' : '속성 추가', { key: 'Insert' }), I('std', '표준 맞추기'), I('ddl', 'DDL 미리보기'), I('used', '사용처 (관계)'), SEP, I('unplace', '보기에서 빼기', { mock: '전체 보기에서는 뺄 수 없습니다 — ' + T3 }), ed('delete', '객체 삭제', { key: 'Delete', danger: 1 })];
+        return [I('select', '선택'), I('fit', '위치 맞춤'), SEP, ed('rename', '이름 바꾸기', { key: 'F2' }), ed('addattr', P ? '컬럼 추가' : '속성 추가', { key: 'Insert' }), I('std', '표준 맞추기'), I('ddl', 'DDL 미리보기'), I('used', '사용처 (관계)'), SEP, I('unplace', '보기에서 빼기', { why: '전체 보기에서는 뺄 수 없습니다 — 보기 나누기는 다음 단계(T3)입니다' }), ed('delete', P ? '테이블 삭제' : '엔터티 삭제', { key: 'Delete', danger: 1 })];
       }
       if (r.kind === 'attr' || r.kind === 'col') {
         const a = e && e.a[r.ai]; if (!a || a.edit) return [];
@@ -1226,7 +1236,7 @@
         const x = s.R[r.rel]; if (!x) return [];
         return [I('select', '선택 · 관계 정보'), I('fit', '위치 맞춤'), SEP, ...(x.k === 'mn' ? [ed('mn', 'M:N 해소', { ent: null })] : x.f !== x.t ? [ed('ident', x.k === 'id' ? '비식별로 전환' : '식별로 전환', { ent: null })] : []), I('hideline', '관계선만 숨기기', { mock: '관계선 숨기기는 보기마다 정하는 설정입니다 — ' + T3 }), SEP, ed('delrel', '관계 삭제', { ent: null, key: 'Delete', danger: 1 })];
       }
-      if (r.kind === 'prel') { const f = fkOf(s.R[r.rel] || {}, s.E); return [I('select', '관계 선택'), I('ddl', 'DDL 미리보기'), ...(f.st === 'miss' ? [ed('mkfk', 'FK 만들기', { ent: null, mock: `FK 만들기는 게이트 A(물리 반영 전 점검)를 거칩니다 — ${f.why}. 목업에서는 [관계]의 FK 묶음이나 속성 그리드에서 FK 컬럼을 맞추세요` })] : []), I('rule', '이름 규칙 다시 적용', { mock: '제약조건 이름을 명명 템플릿대로 다시 만듭니다(목업) — 시스템 설정 › 명명 템플릿' })]; }
+      if (r.kind === 'prel') { const f = fkOf(s.R[r.rel] || {}, s.E); return [I('select', '관계 선택'), I('ddl', 'DDL 미리보기'), ...(f.st === 'miss' ? [ed('mkfk', 'FK 만들기', { ent: null, mock: `FK 만들기는 게이트 A(물리 반영 전 점검)를 거치는 다음 단계(T3) 기능입니다 — 지금 원인: ${f.why}` })] : []), I('rule', '이름 규칙 다시 적용', { mock: '제약조건 이름을 명명 템플릿대로 다시 만듭니다(목업) — 시스템 설정 › 명명 템플릿' })]; }
       if (r.kind === 'cons' || r.kind === 'ix') return [I('select', '테이블 선택'), I('ddl', 'DDL 미리보기')];
       if (r.kind === 'term') return [I('dict', '사전에서 보기'), I('hl', '사용 엔터티 강조'), I('std', '모델에 최신 표준 다시 적용'), I('dreq', '사전 변경 신청')];
       if (r.kind === 'dom') return [I('dict', '사전에서 보기'), I('hl', '사용 엔터티 강조')];
@@ -1234,6 +1244,7 @@
       return [];
     }
     function runCmd(r, it) {
+      const now = menuOf(r).find(x => x.id === it.id); if (now) it = now;   // checked again at run time: the state may have changed while the menu was open
       if (it.why) { toast(it.why, 'info'); return; }
       if (it.mock) { toast(it.mock, 'info'); return; }
       const c = it.id, s = src(r.area), sn = s.snap ? '&snap=' + s.snap : '', go = h => { location.href = h; };
@@ -1252,9 +1263,14 @@
         dict: `dictionary.html?q=${encodeURIComponent(term)}`, dreq: `dictionary.html?q=${encodeURIComponent(term)}`, src: e && e.refArea ? `model.html?area=${e.refArea}&focus=${r.ent}` : '' };
       if (c in NAV) { if (c === 'dict' && window.openDictTab && document.getElementById('dict-q')) { openDictTab(term, true); return; } if (NAV[c]) go(NAV[c]); else toast('원본 영역을 찾지 못했습니다', 'danger'); return; }
       // object commands: the page with this area open runs them; otherwise the model screen opens and runs it
-      const d = { cmd: c, area: r.area, kind: r.kind, id: r.ent || null, ai: r.ai != null ? r.ai : null, rel: r.rel != null ? r.rel : null };
+      // targets travel as stable keys (attribute names, relation ends) — never as array positions, which differ between versions and after a reorder
+      const ea = e && r.ai != null ? e.a[r.ai] : null, rr = r.rel != null ? s.R[r.rel] : null;
+      const d = { cmd: c, area: r.area, kind: r.kind, id: r.ent || null, ai: r.ai != null ? r.ai : null, rel: r.rel != null ? r.rel : null,
+        akey: ea ? { n: ea.n, p: ea.p } : null, rkey: rr ? { f: rr.f, t: rr.t, k: rr.k, g: rr.g || '' } : null };
       if (!window.dispatchEvent(new CustomEvent('dbm-tree-cmd', { cancelable: true, detail: d }))) return;
-      go(`model.html?area=${r.area}${d.id ? '&focus=' + d.id : ''}${d.ai != null ? '&attr=' + d.ai : ''}${d.rel != null ? '&rel=' + d.rel : ''}&cmd=${c}`);
+      // another screen: a one-time token in this tab only (a link or a bookmark never edits the model), read and removed on arrival
+      try { sessionStorage.setItem('dbm-tree-cmd', JSON.stringify(Object.assign({ at: Date.now(), user: ME.id }, d))); } catch (er) {}
+      go(`model.html?area=${r.area}${d.id ? '&focus=' + d.id : ''}`);
     }
     const ctx = document.createElement('div'); ctx.className = 'tctx'; ctx.id = 'tr-ctx'; ctx.setAttribute('role', 'menu'); ctx.hidden = true; document.body.appendChild(ctx);
     let ctxRow = null, ctxItems = [], ctxBack = null;
@@ -1272,7 +1288,8 @@
       const first = ctx.querySelector('.tctx-i:not([aria-disabled])') || ctx.querySelector('.tctx-i'); if (first) first.focus();
     }
     function closeMenu(back) { if (ctx.hidden) return; ctx.hidden = true; const el = back && (ctxBack && document.contains(ctxBack) ? ctxBack : tree.querySelector(`[data-id="${CSS.escape(ctxRow ? ctxRow.id : '')}"]`)); if (el) focusRow(el.closest('[role=treeitem]') || el); }
-    ctx.addEventListener('click', e => { const b = e.target.closest('.tctx-i'); if (!b) return; const it = ctxItems[+b.dataset.i], r = ctxRow; closeMenu(true); if (it && r) runCmd(r, it); });
+    ctx.addEventListener('click', e => { const b = e.target.closest('.tctx-i'); if (!b) return; if (b.getAttribute('aria-disabled') === 'true') { b.focus(); return; }   // the reason is already in its name and tooltip
+      const it = ctxItems[+b.dataset.i], r = ctxRow; closeMenu(true); if (it && r) runCmd(r, it); });
     ctx.addEventListener('keydown', e => {
       e.stopPropagation();
       const its = [...ctx.querySelectorAll('.tctx-i')]; let i = its.indexOf(document.activeElement);
@@ -1282,8 +1299,9 @@
       if (e.key.length === 1 && /\S/.test(e.key)) { const ch = e.key; const order = its.slice(i + 1).concat(its.slice(0, i + 1)); const hit = order.find(x => x.textContent.trim().startsWith(ch)); if (hit) hit.focus(); }
     });
     document.addEventListener('mousedown', e => { if (!ctx.hidden && !ctx.contains(e.target) && !e.target.closest('[data-tmore]')) closeMenu(false); }, true);
-    window.addEventListener('resize', () => closeMenu(false));
-    nav.querySelector('#tr-full').addEventListener('scroll', () => closeMenu(false), { passive: true });
+    const closeKeep = () => closeMenu(ctx.contains(document.activeElement));   // focus inside the menu goes back to its row
+    window.addEventListener('resize', closeKeep);
+    nav.querySelector('#tr-full').addEventListener('scroll', closeKeep, { passive: true });
     tree.addEventListener('contextmenu', e => {
       const el = e.target.closest('[role=treeitem]'); if (!el || el.matches('a.tlink')) return;   // shortcuts keep the browser's own menu (open in a new tab)
       const r = rowMap[el.dataset.id]; if (!r) return; e.preventDefault(); focusRow(el); openMenu(r, e.clientX, e.clientY, el);

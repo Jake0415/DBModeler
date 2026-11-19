@@ -171,7 +171,12 @@
   .ag-pend { margin-top:8px; }
   .ag-pend .ag-imp { margin:4px 0 0; padding-left:16px; font-size:12px; line-height:18px; }
   .ag-keys { margin-top:8px; font-size:12px; color:var(--fg-3); line-height:18px; }
-  .ag-keys kbd { font-size:10px; padding:0 3px; }
+  .ag-keys kbd { font-size:12px; padding:0 3px; }
+  .ag-two { display:flex; align-items:flex-end; gap:12px; flex-wrap:wrap; }
+  .ag-two .field { flex:1; min-width:150px; }
+  .ag-two select.input { height:30px; font-size:13px; }
+  .ag-nn { display:flex; align-items:center; gap:6px; font-size:13px; height:30px; flex-wrap:wrap; }
+  .ag-nn input { width:15px; height:15px; accent-color:var(--ink); }
 </style>
 </head>
 <body data-page="model">
@@ -399,6 +404,7 @@ window.pageInit = function () {
     // state AND version: v5 confirmed + v6 started elsewhere also reads as "edit" — the version tells them apart (CL11-01)
     if (!SNAP) { const fresh = modelLock(AREA); if (fresh.state !== LOCK.state || fresh.model.ver !== VER || (fresh.doc && LOCK.doc && fresh.doc.step !== LOCK.doc.step)) { toast(`이 업무 영역의 상태가 바뀌었습니다(${fresh.model.ver !== VER ? `v${VER}은 확정됨 · 지금 v${fresh.model.ver} 작업 중` : fresh.doc ? fresh.doc.id + ' ' + STEP_NAME[fresh.doc.step] : '편집 가능'}) — 최신 상태로 다시 여세요`, 'danger', { label: '새로고침', fn: () => location.reload() }); return true; } }
     if (liveRoleChanged()) { staleRoleToast(); return true; }
+    if (!viewOnly && !liveCanEdit(AREA)) { toast('편집 권한이 바뀌었습니다(다른 탭에서 역할 · 담당 시스템이 회수됨) — 새로고침하면 조회 전용으로 열립니다', 'danger', { label: '새로고침', fn: () => location.reload() }); return true; }
     if (DEMO) { toast('예시 화면은 조회 전용입니다 — 저장·확정 신청이 되지 않습니다. 실제 작업은 메뉴의 업무 영역에서 하세요', 'info'); return true; }
     if (revConflict) { toast('다른 탭에서 이 버전을 먼저 저장했습니다 — 덮어쓰지 않도록 편집을 막았습니다. 새로고침하세요', 'danger', { label: '새로고침', fn: () => location.reload() }); return true; }
     if (confirmed) { toast('확정본은 고칠 수 없습니다 — [v6 작업 시작]으로 다음 작업 버전을 여세요', 'info'); return true; }
@@ -407,11 +413,12 @@ window.pageInit = function () {
     if (cv.dataset.sys === '1') { toast('시스템 전체 ERD는 조회 전용입니다 — 업무 영역으로 돌아가 편집하세요', 'info'); return true; }
     return false;
   };
-  const canEdit = () => !(confirmed || review || viewOnly || DEMO || revConflict || cv.dataset.sys === '1') && modelLock(AREA).state === LOCK.state && getModel(AREA).ver === VER && !liveRoleChanged();   // silent check for drag/memo (R5)
+  const canEdit = () => !(confirmed || review || viewOnly || DEMO || revConflict || cv.dataset.sys === '1') && modelLock(AREA).state === LOCK.state && getModel(AREA).ver === VER && !liveRoleChanged() && liveCanEdit(AREA);   // silent check for drag/memo (R5)
   // optimistic revision per area+version: a tab that loaded an older revision may not overwrite a newer save (CL9-03)
   let myRev = 0, revConflict = false;
   function saveData() {
     if (locked || viewOnly || DEMO || !dataReady || revConflict) return;
+    if (!liveCanEdit(AREA)) { revConflict = true; setSave('err', '저장 안 됨 · 권한 변경'); toast('편집 권한이 회수되어 이 탭의 편집은 저장하지 않았습니다 — 새로고침하세요', 'danger', { label: '새로고침', fn: () => location.reload() }); return; }
     // this version may have been submitted / confirmed in another tab meanwhile — never write into it then (CL11-01)
     const lk = modelLock(AREA); if (lk.state !== 'edit' || lk.model.ver !== VER) { revConflict = true; toast(`v${VER}은 다른 탭에서 ${lk.state === 'edit' ? `확정되고 v${lk.model.ver} 작업이 시작됐습니다` : lk.state === 'review' ? '확정 신청됐습니다' : '확정됐습니다'} — 이 탭의 편집은 저장하지 않았습니다`, 'danger', { label: '새로고침', fn: () => location.reload() }); return; }
     const cur = getModelData(AREA, VER);
@@ -421,7 +428,8 @@ window.pageInit = function () {
   }
   function setSave(kind, text) { const s = $('savest'); if (!s) return; s.className = 'savest' + (kind === 'err' ? ' err' : ''); s.innerHTML = `<span class="sdot ${kind === 'err' ? 'err' : kind === 'run' ? 'run' : 'ok'}"></span>${text}`; }
   // undo bound to one action: if something else happened after it, say so instead of undoing the wrong thing (R6)
-  const undoAction = () => { const t = hist.length; return { label: '실행 취소', fn: () => { if (hist.length !== t) { toast('이후에 다른 편집이 있어 이 작업만 따로 되돌릴 수 없습니다 — Ctrl+Z로 차례대로 되돌리세요', 'info'); return; } undo(); } }; };
+  // each history entry has its own id — the toast undoes ITS edit only, never whatever happens to be last (the 50-entry cap keeps the length unchanged)
+  const undoAction = () => { const id = histIds[histIds.length - 1]; return { label: '실행 취소', fn: () => { if (!id || histIds[histIds.length - 1] !== id) { toast('이후에 다른 편집이 있어 이 작업만 따로 되돌릴 수 없습니다 — Ctrl+Z로 차례대로 되돌리세요', 'info'); return; } undo(); } }; };
   // standard-matching results applied item by item (not a blanket conversion)
   // each standardize row maps to a concrete model change; only the rows the user selected are applied (R3)
   // each function receives the RESOLVED target (attribute found by name, or the entity) — never a fixed array position (CX11-06)
@@ -502,20 +510,22 @@ window.pageInit = function () {
   const LOCKI = '<span class="lk" title="개인정보"><svg width="10" height="11" viewBox="0 0 10 11"><rect x="1" y="5" width="8" height="6" rx="1" fill="currentColor"/><path d="M3 5V3.5a2 2 0 0 1 4 0V5" fill="none" stroke="currentColor" stroke-width="1.3"/></svg></span>';
 
   // ---- undo / redo (my edits only)
-  const hist = [], redo = [];
+  const hist = [], redo = [], histIds = [], redoIds = []; let histSeq = 0;
   const state = () => JSON.stringify({ E, R, M });
   const restore = s => { E.splice(0, E.length, ...s.E); R.splice(0, R.length, ...s.R); M.splice(0, M.length, ...s.M); };
   let dirty = false;
-  const snap = () => { hist.push(state()); if (hist.length > 50) hist.shift(); redo.length = 0; dirty = true; };
+  const snap = () => { hist.push(state()); histIds.push(++histSeq); if (hist.length > 50) { hist.shift(); histIds.shift(); } redo.length = 0; redoIds.length = 0; dirty = true; return histSeq; };
+  // drop one entry only if it is still the last one (an input that ends with nothing changed)
+  const dropHist = id => { if (id && histIds[histIds.length - 1] === id) { hist.pop(); histIds.pop(); return true; } return false; };
   function undo() {
     if (guard()) return;
     if (!hist.length) { toast('되돌릴 내 편집이 없습니다', 'info'); return; }
-    redo.push(state()); restore(JSON.parse(hist.pop())); sel = null; dirty = true; render(); toast('내 편집 1건을 되돌렸습니다 · 다른 사람의 편집은 그대로입니다', 'info');
+    redo.push(state()); redoIds.push(histIds.pop()); restore(JSON.parse(hist.pop())); sel = null; dirty = true; render(); toast('내 편집 1건을 되돌렸습니다 · 다른 사람의 편집은 그대로입니다', 'info');
   }
   function redoFn() {
     if (guard()) return;
     if (!redo.length) { toast('다시 실행할 편집이 없습니다', 'info'); return; }
-    hist.push(state()); restore(JSON.parse(redo.pop())); sel = null; dirty = true; render(); toast('되돌린 편집을 다시 실행했습니다', 'info');
+    hist.push(state()); histIds.push(redoIds.pop() || ++histSeq); restore(JSON.parse(redo.pop())); sel = null; dirty = true; render(); toast('되돌린 편집을 다시 실행했습니다', 'info');
   }
   function remoteApply(fn) {
     fn(E); dirty = true;
@@ -652,27 +662,45 @@ window.pageInit = function () {
     if (f === 'dom' && (a.s === 'ok' || a.s === 'req')) return '표준 용어가 도메인을 정합니다 — 바꾸려면 용어를 바꾸거나 예외로 등록하세요';
     return null;
   };
-  const childRels = e => R.filter(r => r.f === e.id && r.t !== e.id && r.k !== 'mn');
-  const fkMatch = (r, pa) => x => x.fk && x.p !== '—' && (x.p === pa.p || x.p === 'ORG_' + pa.p) && (!r.g || x.fkg === r.g);
+  const childRels = e => R.filter(r => r.f === e.id && r.k !== 'mn');   // recursive relations included: their role-named column depends on this PK too
+  // the child column that carries parent column pa through relation r (fkp = the parent column it carries; else same name · ORG_ · UPR_ role name)
+  const fkMatch = (r, pa) => x => x.fk && x !== pa && x.p !== '—' && (!r.g || x.fkg === r.g) && (x.fkp ? x.fkp === pa.p : (r.f === r.t ? x.p === 'UPR_' + pa.p : x.p === pa.p || x.p === 'ORG_' + pa.p));
   // relations this FK column belongs to (child side)
-  const fkRels = (e, a) => R.filter(r => r.t === e.id && r.f !== r.t && r.k !== 'mn' && (r.g ? a.fkg === r.g : ((ent(r.f) || { a: [] }).a.some(k => k.pk && k.p === a.p))));
-  // child FK columns a parent PK column reaches — an identifying relation carries it on to the grandchildren
+  const fkRels = (e, a) => R.filter(r => r.t === e.id && r.f !== r.t && r.k !== 'mn' && (r.g ? a.fkg === r.g : ((ent(r.f) || { a: [] }).a.some(k => k.pk && fkMatch(r, k)(a)))));
+  // child FK columns a parent PK column reaches — an identifying relation carries it on to the grandchildren.
+  // visits are counted per relation + column (two relations into the same child, or two paths into a grandchild, are each followed)
   function pkReach(e, a, seen = new Set()) {
-    const out = []; if (seen.has(e.id)) return out; seen.add(e.id);
-    childRels(e).forEach(r => { const c = ent(r.t); if (!c || c.ref) return; c.a.filter(fkMatch(r, a)).forEach(x => { out.push([c, x]); if (x.pk) out.push(...pkReach(c, x, seen)); }); });
+    const out = [];
+    childRels(e).forEach(r => { const c = ent(r.t); if (!c || c.ref) return;
+      c.a.filter(fkMatch(r, a)).forEach(x => { if (seen.has(x)) return; seen.add(x); out.push([c, x]); if (x.pk && r.f !== r.t) out.push(...pkReach(c, x, seen)); }); });
     return out;
   }
   // PK columns stay together at the top: the array order is the canvas · DDL · definition-sheet order
   function placeAttr(e, a, atEnd) { const i = e.a.indexOf(a); if (i >= 0) e.a.splice(i, 1); const k = e.a.filter(x => x.pk).length; e.a.splice(a.pk || !atEnd ? k : e.a.length, 0, a); }
+  // a relation whose FK must be role-named (name clash, or a second relation into the same child) gets a group,
+  // so the shared FK rule (fkOf) pairs its columns by fkp instead of by name
+  function ensureGroup(r, p, c, except) {
+    if (r.g) return; r.g = 'g' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+    p.a.filter(k => k.pk && k !== except).forEach(k => { const x = c.a.find(y => y.fk && !y.fkg && (y.fkp ? y.fkp === k.p : y.p === k.p)); if (x) { x.fkg = r.g; x.fkp = k.p; } });
+  }
   // a new parent PK column → an FK column in every child (identifying → PK there too, and onward)
   function pkSpread(e, a, seen = new Set()) {
-    let n = 0; if (seen.has(e.id)) return n; seen.add(e.id);
-    childRels(e).forEach(r => { const c = ent(r.t); if (!c || c.ref || c.a.some(fkMatch(r, a))) return;
+    let n = 0;
+    childRels(e).forEach(r => { if (r.f === r.t) return;   // a recursive relation needs a role name the modeler chooses
+      const key = R.indexOf(r) + ':' + a.p; if (seen.has(key)) return; seen.add(key);
+      const c = ent(r.t); if (!c || c.ref) return;
+      const multi = childRels(e).filter(x => x.t === r.t).length > 1;
+      if (!r.g && multi) ensureGroup(r, e, c, a);
+      if (c.a.some(fkMatch(r, a))) return;
       const clash = c.a.some(x => x.n === a.n), idr = r.k === 'id';
-      const x = { n: clash ? '원' + a.n : a.n, p: clash ? 'ORG_' + a.p : a.p, t: a.t, dom: domOf(a), fk: 1, pk: idr ? 1 : 0, nn: idr ? 1 : 0, s: clash ? 'comb' : a.s };
+      if (clash && !r.g) ensureGroup(r, e, c, a);
+      const x = { n: clash ? '원' + a.n : a.n, p: clash ? 'ORG_' + a.p : a.p, t: a.t, dom: domOf(a), fk: 1, fkp: a.p, pk: idr ? 1 : 0, nn: idr ? 1 : 0, s: clash ? 'comb' : a.s };
       if (r.g) x.fkg = r.g; placeAttr(c, x, true); n++; if (idr) n += pkSpread(c, x, seen); });
     return n;
   }
+  // a child FK kept as a plain column: it no longer carries the parent's key — out of the PK as well, into the plain group
+  function toPlain(c, x) { delete x.fk; delete x.fkg; delete x.fkp; if (x.pk) { x.pk = 0; placeAttr(c, x); } }
+  const pendAttr = () => { const e = gPend && ent(gPend.e); const i = e ? e.a.indexOf(gPend.a) : -1; return i >= 0 ? [e, i, gPend.a] : [e, -1, null]; };
   const curAttr = () => { const e = sel && typeof sel === 'string' && ent(sel); return e && treeAttr != null && e.a[treeAttr] && !e.a[treeAttr].edit ? [e, e.a[treeAttr], treeAttr] : [e, null, null]; };
   const pickRow = (ai, f) => { treeOrigin = true; treeAttr = ai; gFocus = { e: sel, ai, f: f || 'row' }; render(); };
   function attrGrid(e, sysRows) {
@@ -692,32 +720,32 @@ window.pageInit = function () {
         <td class="ag-c"><input type="checkbox" data-f="nn" tabindex="-1" aria-label="${hx(a.n)} 필수(NOT NULL)"${a.nn || a.pk ? ' checked' : ''}${ro || ln ? ' disabled' : ''} title="${hx(ln || '필수(NOT NULL)')}"></td></tr>`;
     }).join('');
     const table = `<table class="tbl ag" aria-label="${L ? '속성' : '컬럼'} 편집 — ↑↓ 행 이동"><thead><tr><th class="ag-st"><span class="sr-only">상태</span></th><th class="ag-c" title="식별자(Primary Key)">PK</th><th>${L ? '속성명' : '컬럼명'} <span class="faint" style="font-weight:400">${L ? '/ 물리명' : '/ 논리명 · 타입'}</span></th><th class="ag-d">도메인</th><th class="ag-c" title="필수(NOT NULL)">필수</th></tr></thead><tbody>${rows || `<tr><td colspan="5" class="caption muted">${L ? '속성' : '컬럼'}이 없습니다</td></tr>`}${sysRows || ''}</tbody></table>`;
-    const add = `<div class="flex" style="margin-top:8px">${ro ? '' : `<button class="btn sm" id="rp-add"><i data-ic=plus></i>${L ? '속성' : '컬럼'} 추가 (Insert)</button>`}<span class="grow"></span><span class="caption muted">${mode === 'P' ? '시스템 컬럼은 <a href="settings.html#sys">시스템 설정</a>에서 관리' : '입력하면 표준 용어를 바로 제안합니다'}</span></div>`;
+    const add = `<div class="flex" style="margin-top:8px">${ro ? '' : `<button class="btn sm" id="rp-add"><i data-ic=plus></i>${L ? '속성' : '컬럼'} 추가 (Alt+Enter)</button>`}<span class="grow"></span><span class="caption muted">${mode === 'P' ? '시스템 컬럼은 <a href="settings.html#sys">시스템 설정</a>에서 관리' : '입력하면 표준 용어를 바로 제안합니다'}</span></div>`;
     return table + (ro ? '<button id="rp-add" hidden></button>' : add) + agPend(e) + agDetail(e, ro);
   }
   // confirmation for changes that reach other entities or relations
   function agPend(e) {
     if (!gPend || gPend.e !== e.id) return '';
-    const a = e.a[gPend.ai]; if (!a) { gPend = null; return ''; }
+    const a = gPend.a; if (e.a.indexOf(a) < 0) { gPend = null; return ''; }   // the attribute itself, not its position — a reorder meanwhile never retargets the confirmation
     const reach = a.pk ? pkReach(e, a) : [], rels = a.fk ? fkRels(e, a) : [];
     const lastPk = a.pk && e.a.filter(x => x.pk).length === 1;
     const imp = reach.map(([c, x]) => `<li>${hx(c.n)}.${hx(x.n)} <span class="mono faint">${hx(x.p)}</span>${x.pk ? ' <span class="badge">PK</span>' : ''}</li>`).join('');
     if (gPend.k === 'pkoff') return `<div class="banner warning ag-pend" role="alert"><i data-ic=warn></i><div class="grow"><b>‘${hx(a.n)}’${jr(a.n, '을/를')} 식별자에서 뺄까요?</b><div class="caption">이 PK를 받아 간 자식 FK ${reach.length}개도 함께 정리합니다.</div><ul class="ag-imp">${imp}</ul>
-      <div class="flex" style="margin-top:6px;gap:6px;flex-wrap:wrap"><button class="btn sm danger" data-pend="pkoff-del">자식 FK도 삭제</button><button class="btn sm" data-pend="pkoff-keep">자식 FK는 일반 속성으로</button><span class="grow"></span><button class="btn sm ghost" data-pend="cancel">취소 (Esc)</button></div></div></div>`;
+      <div class="flex" style="margin-top:6px;gap:6px;flex-wrap:wrap"><button class="btn sm ghost" data-pend="cancel">취소 (Esc)</button><span class="grow"></span><button class="btn sm" data-pend="pkoff-keep">자식 FK는 일반 속성으로</button><button class="btn sm danger" data-pend="pkoff-del">자식 FK도 삭제</button></div></div></div>`;
     const relTxt = rels.map(r => `${hx((ent(r.f) || {}).n || r.f)} → ${hx(e.n)}`).join(', ');
-    const btns = reach.length ? `<button class="btn sm danger" data-pend="del">자식 FK도 삭제</button><button class="btn sm" data-pend="keep">자식 FK는 일반 속성으로</button>`
-      : rels.length ? `<button class="btn sm" data-pend="del">속성만 삭제</button><button class="btn sm danger" data-pend="rel">관계도 삭제</button>`
+    const btns = reach.length ? `<button class="btn sm" data-pend="keep">자식 FK는 일반 속성으로</button><button class="btn sm danger" data-pend="del">자식 FK도 삭제</button>`
+      : rels.length ? `<button class="btn sm" data-pend="del">속성만 삭제 (관계 유지)</button><button class="btn sm danger" data-pend="rel">관계까지 삭제</button>`
       : `<button class="btn sm danger" data-pend="del">삭제</button>`;
     return `<div class="banner warning ag-pend" role="alert"><i data-ic=warn></i><div class="grow"><b>‘${hx(a.n)}’${jr(a.n, '을/를')} 삭제할까요?</b>
       ${reach.length ? `<div class="caption">이 PK를 받아 간 자식 FK ${reach.length}개가 있습니다.</div><ul class="ag-imp">${imp}</ul>` : ''}
       ${rels.length ? `<div class="caption">관계 <b>${relTxt}</b>의 FK입니다. 속성만 지우면 관계는 남고 <b>FK 누락</b>으로 표시됩니다.</div>` : ''}
       ${lastPk ? '<div class="caption">마지막 식별자입니다 — 지우면 이 엔터티는 <b>식별자 없음</b>이 되고, 자식 관계의 FK를 만들 수 없습니다.</div>' : ''}
-      <div class="flex" style="margin-top:6px;gap:6px;flex-wrap:wrap">${btns}<span class="grow"></span><button class="btn sm ghost" data-pend="cancel">취소 (Esc)</button></div></div></div>`;
+      <div class="flex" style="margin-top:6px;gap:6px;flex-wrap:wrap"><button class="btn sm ghost" data-pend="cancel">취소 (Esc)</button><span class="grow"></span>${btns}</div></div></div>`;
   }
   // the selected row: order · rename · delete, standard state, definition · default
   function agDetail(e, ro) {
     const [, a, ai] = curAttr();
-    const keys = `<div class="ag-keys">행을 고르면 순서 · 이름 · 정의를 고칠 수 있습니다. <kbd>↑</kbd><kbd>↓</kbd> 행 이동 · <kbd>Alt</kbd>+<kbd>↑↓</kbd> 순서 · <kbd>F2</kbd> 이름 · <kbd>Delete</kbd> 삭제 · <kbd>Insert</kbd> 추가</div>`;
+    const keys = `<div class="ag-keys">행을 고르면 순서 · 이름 · 정의를 고칠 수 있습니다. <kbd>↑</kbd><kbd>↓</kbd> 행 이동 · <kbd>Alt</kbd>+<kbd>↑↓</kbd> 순서 · <kbd>Space</kbd> PK · <kbd>N</kbd> 필수 · <kbd>Enter</kbd> 상세로 · <kbd>F2</kbd> 이름 · <kbd>Delete</kbd> 삭제 · <kbd>Alt</kbd>+<kbd>Enter</kbd> 추가</div>`;
     if (!a || gPend) return a ? '' : keys;
     const L = mode === 'L', grp = e.a.filter(x => !!x.pk === !!a.pk), gi = grp.indexOf(a);
     const st = a.s === 'ok' ? '사전의 표준 용어와 같습니다' : a.s === 'req' ? `용어 신청 중${a.reqDoc ? ` — <a class="mono" href="approvals.html?doc=${a.reqDoc}">${a.reqDoc}</a>` : ''}` : a.s === 'ex' ? `예외 — ${hx(a.exReason || '사유 없음')}` : a.s === 'na' ? `표준 비대상${a.naReason ? ' — ' + hx(a.naReason) : ''}` : a.s === 'comb' ? '단어를 조합하면 표준이 됩니다 — 용어로 등록하거나 맞추세요' : '사전에 없는 단어가 있습니다 — 후보로 올리거나 예외로 남기세요';
@@ -729,20 +757,24 @@ window.pageInit = function () {
         ${ro ? '' : `<button class="btn sm ghost" data-f="up" title="위로 (Alt+↑)" aria-label="위로"${gi <= 0 ? ' disabled' : ''}><i data-ic=up data-s=12></i></button><button class="btn sm ghost" data-f="down" title="아래로 (Alt+↓)" aria-label="아래로"${gi >= grp.length - 1 ? ' disabled' : ''}><i data-ic=down data-s=12></i></button><button class="btn sm ghost" data-f="ren" title="이름 바꾸기 (F2)"><i data-ic=pen data-s=12></i>이름</button><button class="btn sm ghost" data-f="del" title="삭제 (Delete)" style="color:var(--danger-deep)"><i data-ic=trash data-s=12></i>삭제</button>`}</div>
       <dl class="kv"><dt>${L ? '물리명' : '논리명'}</dt><dd class="${L ? 'mono' : ''}">${hx(L ? a.p : a.n)}</dd><dt>타입</dt><dd class="mono">${hx(a.t)}${domOf(a) ? ` <span class="faint">· ${hx(domOf(a))}</span>` : ''}</dd><dt>표준</dt><dd>${st}${fix}</dd>${a.fk ? `<dt>관계</dt><dd>${fkRels(e, a).map(r => hx((ent(r.f) || {}).n || r.f) + '에서 받은 FK').join(', ') || '<span class="faint">연결된 관계 없음</span>'}</dd>` : ''}${a.sec ? `<dt>보안</dt><dd>${hx(a.sec)}${a.enc && a.enc !== '없음' ? ' · ' + hx(a.enc) : ''}</dd>` : ''}
       ${ro ? field('', 'desc', '정의') + field('', 'def', '기본값') : ''}</dl>
+      ${ro ? '' : (() => { const ld = lockWhy(a, 'dom'), ln = lockWhy(a, 'nn'), d = domOf(a);   // the row's 필수 · 도메인 again, reachable with Tab (the row cells are mouse shortcuts)
+        return `<div class="ag-two"><div class="field"><label for="ag-dom">도메인</label>${ld ? `<div class="ag-fix" id="ag-dom-why">${hx(d || '—')} ${icon('lock', 12)} <span class="caption muted">${hx(ld)}</span></div>` : `<select class="input mono" id="ag-dom" data-f="dom"><option value="">${d ? '(없음)' : '선택'}</option>${domList().map(x => `<option${x === d ? ' selected' : ''}>${hx(x)}</option>`).join('')}</select>`}</div>
+          <label class="ag-nn"><input type="checkbox" id="ag-nn" data-f="nn"${a.nn || a.pk ? ' checked' : ''}${ln ? ` disabled aria-describedby="ag-nn-why"` : ''}> 필수 (NOT NULL)${ln ? `<span class="caption muted" id="ag-nn-why"> — ${hx(ln)}</span>` : ''}</label></div>`; })()}
       ${ro ? '' : field('ag-desc', 'desc', '정의 <span class="faint">— 테이블 정의서와 컬럼 주석(COMMENT)에 들어갑니다</span>', '예: 이 자금이 들어오거나 나간 날짜', 'ta') + field('ag-def', 'def', '기본값 <span class="faint">— DDL DEFAULT</span>', "예: 'N' · SYSDATE · 0")}
       ${ro ? '' : keys.replace('행을 고르면 순서 · 이름 · 정의를 고칠 수 있습니다. ', '')}</div>`;
   }
   function agRestore(body) {
     const f = gFocus; gFocus = null; if (!f || f.e !== sel) return;
     const tr = body.querySelector(`.ag tr[data-ai="${f.ai}"]`);
-    const el = f.f === 'pend' ? body.querySelector('.ag-pend [data-pend]') : f.f === 'row' ? tr : (tr && tr.querySelector(`[data-f="${f.f}"]`)) || body.querySelector(`[data-f="${f.f}"]`) || tr;
+    const el = f.f === 'pend' ? body.querySelector('.ag-pend [data-pend]') : f.f === 'row' ? tr : f.f === 'det-nn' ? $('ag-nn') : f.f === 'det-dom' ? $('ag-dom') : (tr && tr.querySelector(`[data-f="${f.f}"]`)) || body.querySelector(`[data-f="${f.f}"]`) || tr;
     if (el && !el.disabled) { el.focus({ preventScroll: true }); (el.closest('tr') || el).scrollIntoView({ block: 'nearest' }); } else if (tr) tr.focus({ preventScroll: true });
   }
   function agEdit(e, ai, f, v) {
     const a = e && e.a[ai]; if (!a) return;
     if (guard() || refGuard(e)) { render(); return; }
     const why = lockWhy(a, f); if (why) { toast(why, 'info'); render(); return; }
-    if (f === 'pk' && !v && pkReach(e, a).length) { gPend = { k: 'pkoff', e: e.id, ai }; gFocus = { e: e.id, ai, f: 'pend' }; render(); return; }
+    if (f === 'pk' && !v && pkReach(e, a).length) { gPend = { k: 'pkoff', e: e.id, a }; gFocus = { e: e.id, ai, f: 'pend' }; render(); return; }
+    if (f === 'def') { const chk = defCheck(a, String(v).trim()); if (chk.err) { toast(chk.err, 'danger'); const i = $('ag-def'); if (i) { i.value = a.def || ''; i.setAttribute('aria-invalid', 'true'); i.focus(); } return; } if (chk.v !== String(v).trim()) { v = chk.v; toast(chk.note, 'info'); } }
     snap();
     if (f === 'pk') {
       a.pk = v ? 1 : 0; if (v) a.nn = 1; placeAttr(e, a); treeOrigin = true; treeAttr = e.a.indexOf(a); gFocus = { e: e.id, ai: treeAttr, f: 'pk' };
@@ -751,32 +783,45 @@ window.pageInit = function () {
     }
     if (f === 'nn') { a.nn = v ? 1 : 0; agLive(`${a.n} 필수 ${v ? '켬' : '끔'}`); }
     if (f === 'dom') { a.dom = v; delete a.d; const t = domType(v); if (t) a.t = t; const kids = a.pk ? pkReach(e, a) : []; kids.forEach(([, x]) => { x.dom = v; if (t) x.t = t; }); toast(`‘${a.n}’ 도메인을 ${v || '(없음)'}(으)로 바꿨습니다${t ? ` · 타입 ${t}` : ''}${kids.length ? ` · 자식 FK ${kids.length}개도 같이` : ''}`, 'info', undoAction()); }
-    if (f === 'desc' || f === 'def') { const s = String(v).trim(); if (s) a[f] = s; else delete a[f]; agLive(`${f === 'desc' ? '정의' : '기본값'} 저장됨`); }
-    gFocus = gFocus || { e: e.id, ai, f: f === 'desc' || f === 'def' ? 'row' : f }; render();
+    if (f === 'desc' || f === 'def') {   // saved in place: no redraw, so the click that took the focus away (a row, [삭제]) still lands
+      const s = String(v).trim(); if (s) a[f] = s; else delete a[f];
+      const inp = $(f === 'desc' ? 'ag-desc' : 'ag-def'); if (inp) { inp.value = a[f] || ''; inp.removeAttribute('aria-invalid'); }
+      dirty = false; saveData(); agLive(`${f === 'desc' ? '정의' : '기본값'} 저장됨`); return;
+    }
+    gFocus = gFocus || { e: e.id, ai, f }; render();
+  }
+  // a default the DDL can take: text types get quotes, numbers must be numbers, dates take SYSDATE / TO_DATE
+  function defCheck(a, s) {
+    if (!s) return { v: s };
+    const t = String(a.t || '').toUpperCase(), fn = /^(NULL|SYSDATE|SYSTIMESTAMP|CURRENT_DATE|CURRENT_TIMESTAMP|USER|TO_DATE\(.*\)|TO_CHAR\(.*\))$/i.test(s);
+    if (/CHAR/.test(t)) { if (fn || /^'.*'$/.test(s)) return { v: s }; const q = `'${s.replace(/'/g, "''")}'`; return { v: q, note: `문자 타입이라 따옴표를 붙여 ${q}(으)로 저장했습니다` }; }
+    if (/NUMBER/.test(t)) return fn || /^-?\d+(\.\d+)?$/.test(s) ? { v: s } : { err: `숫자 타입(${a.t})에는 숫자만 넣을 수 있습니다 — 예: 0` };
+    if (/DATE|TIMESTAMP/.test(t)) return fn ? { v: s } : { err: `날짜 타입(${a.t})은 SYSDATE나 TO_DATE('2026-01-01','YYYY-MM-DD')로 넣습니다` };
+    return { v: s };
   }
   function agDelAsk(e, ai) {
     const a = e && e.a[ai]; if (!a || guard() || refGuard(e)) return;
     const risky = (a.pk && (pkReach(e, a).length || e.a.filter(x => x.pk).length === 1)) || (a.fk && fkRels(e, a).length);
     if (!risky) { agDel(e, ai, 'del'); return; }
-    gPend = { k: 'del', e: e.id, ai }; gFocus = { e: e.id, ai, f: 'pend' }; render();
+    gPend = { k: 'del', e: e.id, a }; gFocus = { e: e.id, ai, f: 'pend' }; render();
   }
   // opt: del (child FKs go too) · keep (child FKs stay as plain columns) · rel (the relation this FK belongs to goes too)
   function agDel(e, ai, opt) {
     const a = e && e.a[ai]; gPend = null; if (!a || guard()) { render(); return; }
     const reach = a.pk ? pkReach(e, a) : [], rels = a.fk && opt === 'rel' ? fkRels(e, a) : [];
     snap();
-    reach.forEach(([c, x]) => { const i = c.a.indexOf(x); if (i < 0) return; if (opt === 'keep') { delete x.fk; delete x.fkg; } else c.a.splice(i, 1); });
+    reach.forEach(([c, x]) => { const i = c.a.indexOf(x); if (i < 0) return; if (opt === 'keep') toPlain(c, x); else c.a.splice(i, 1); });
     let freed = 0;
-    rels.forEach(r => { const p = ent(r.f); e.a.forEach(x => { if (x !== a && x.fk && (r.g ? x.fkg === r.g : p && p.a.some(k => k.pk && k.p === x.p))) { delete x.fk; delete x.fkg; freed++; } }); R.splice(R.indexOf(r), 1); });
+    rels.forEach(r => { const p = ent(r.f); e.a.slice().forEach(x => { if (x !== a && x.fk && (r.g ? x.fkg === r.g : p && p.a.some(k => k.pk && fkMatch(r, k)(x)))) { toPlain(e, x); freed++; } }); R.splice(R.indexOf(r), 1); });
     e.a.splice(e.a.indexOf(a), 1);
     treeOrigin = true; treeAttr = e.a.length ? Math.min(ai, e.a.length - 1) : null; gFocus = { e: e.id, ai: treeAttr, f: 'row' };
     render();
     toast(`‘${a.n}’${jr(a.n, '을/를')} 삭제했습니다${reach.length ? ` · 자식 FK ${reach.length}개 ${opt === 'keep' ? '일반 속성으로 유지' : '삭제'}` : ''}${rels.length ? ` · 관계 ${rels.length}개 삭제${freed ? `(남은 FK ${freed}개는 일반 속성)` : ''}` : a.fk ? ' · 관계는 FK 누락으로 남습니다' : ''}`, 'info', undoAction());
   }
   function agPkOff(keep) {
-    const e = gPend && ent(gPend.e), ai = gPend && gPend.ai, a = e && e.a[ai]; gPend = null; if (!a || guard()) { render(); return; }
+    const [e, ai, a] = pendAttr(); gPend = null; if (!a) { toast('확인하던 속성을 찾지 못했습니다 — 이미 바뀌었거나 삭제됐습니다', 'danger'); render(); return; } if (guard()) { render(); return; }
     const reach = pkReach(e, a); snap();
-    reach.forEach(([c, x]) => { const i = c.a.indexOf(x); if (i < 0) return; if (keep) { delete x.fk; delete x.fkg; } else c.a.splice(i, 1); });
+    reach.forEach(([c, x]) => { const i = c.a.indexOf(x); if (i < 0) return; if (keep) toPlain(c, x); else c.a.splice(i, 1); });
     a.pk = 0; placeAttr(e, a); treeOrigin = true; treeAttr = e.a.indexOf(a); gFocus = { e: e.id, ai: treeAttr, f: 'pk' };
     render(); toast(`‘${a.n}’${jr(a.n, '을/를')} 식별자에서 뺐습니다 · 자식 FK ${reach.length}개 ${keep ? '일반 속성으로 유지' : '삭제'}`, 'info', undoAction());
   }
@@ -790,13 +835,15 @@ window.pageInit = function () {
   }
   function agRename(e, ai) {
     const a = e && e.a[ai]; if (!a || guard() || refGuard(e)) return;
-    snap(); a.orig = JSON.stringify(a); a.edit = 1; focusEnt(e.id);   // one place to type a name: the canvas input with the term suggestions
+    editHid = snap(); a.orig = JSON.stringify(a); a.edit = 1; focusEnt(e.id);   // one place to type a name: the canvas input with the term suggestions
   }
   const rpb = $('rp-body');
   rpb.addEventListener('click', ev => {
     const pend = ev.target.closest('[data-pend]');
-    if (pend) { const k = pend.dataset.pend; if (k === 'cancel') { const ai = gPend && gPend.ai; gPend = null; gFocus = { e: sel, ai, f: 'row' }; render(); return; }
-      const e = ent(gPend.e), ai = gPend.ai; if (k === 'pkoff-del' || k === 'pkoff-keep') agPkOff(k === 'pkoff-keep'); else agDel(e, ai, k); return; }
+    if (pend) { const k = pend.dataset.pend, [pe, pai] = pendAttr(); if (k === 'cancel') { gPend = null; gFocus = { e: sel, ai: pai, f: 'row' }; render(); return; }
+      if (k === 'pkoff-del' || k === 'pkoff-keep') agPkOff(k === 'pkoff-keep');
+      else if (pai < 0) { gPend = null; toast('확인하던 속성을 찾지 못했습니다 — 이미 바뀌었거나 삭제됐습니다', 'danger'); render(); }
+      else agDel(pe, pai, k); return; }
     const [e, a, ai] = curAttr();
     const b = ev.target.closest('.ag-det [data-f]');
     if (b && a && b.tagName === 'BUTTON') { const f = b.dataset.f;
@@ -810,11 +857,15 @@ window.pageInit = function () {
     const tr = t.closest('.ag tbody tr[data-ai]'); const e = ent(sel); if (!e) return;
     if (tr && (f === 'pk' || f === 'nn')) { treeOrigin = true; treeAttr = +tr.dataset.ai; gFocus = { e: e.id, ai: treeAttr, f }; agEdit(e, treeAttr, f, t.checked); }
     else if (tr && f === 'dom') { treeOrigin = true; treeAttr = +tr.dataset.ai; gFocus = { e: e.id, ai: treeAttr, f }; agEdit(e, treeAttr, f, t.value); }
+    else if (!tr && (f === 'nn' || f === 'dom')) { const [, a, ai] = curAttr(); if (a) { gFocus = { e: e.id, ai, f: 'det-' + f }; agEdit(e, ai, f, f === 'nn' ? t.checked : t.value); } }   // the same two in the detail (keyboard path)
     else if (f === 'desc' || f === 'def') { const [, a, ai] = curAttr(); if (a && String(t.value).trim() !== (a[f] || '')) agEdit(e, ai, f, t.value); }
   });
   rpb.addEventListener('keydown', ev => {
-    if (ev.key === 'Escape' && gPend) { ev.stopPropagation(); const ai = gPend.ai; gPend = null; gFocus = { e: sel, ai, f: 'row' }; render(); return; }
-    if (ev.target.matches('.ag-det textarea, .ag-det input')) { if (ev.key === 'Escape') { ev.stopPropagation(); ev.target.blur(); } else if (ev.key === 'Enter' && ev.target.tagName === 'INPUT') { ev.preventDefault(); ev.target.blur(); } return; }
+    if (ev.key === 'Escape' && gPend) { ev.stopPropagation(); const [, pai] = pendAttr(); gPend = null; gFocus = { e: sel, ai: pai, f: 'row' }; render(); return; }
+    if (ev.target.matches('.ag-det textarea, .ag-det input:not([type=checkbox])')) {
+      if (ev.key === 'Escape') { ev.stopPropagation(); const [, a] = curAttr(); const f = ev.target.dataset.f; if (a && f) ev.target.value = a[f] || ''; ev.target.blur(); }   // Esc = cancel: back to the saved value
+      else if (ev.key === 'Enter' && ev.target.tagName === 'INPUT') { ev.preventDefault(); ev.target.blur(); }
+      return; }
     const tr = ev.target.closest('.ag tbody tr[data-ai]'); if (!tr || ev.target !== tr) return;
     const e = ent(sel), ai = +tr.dataset.ai; if (!e) return;
     const vis = [...rpb.querySelectorAll('.ag tbody tr[data-ai]:not(.ag-new)')].map(x => +x.dataset.ai), at = vis.indexOf(ai);
@@ -824,8 +875,9 @@ window.pageInit = function () {
     else if (k === 'Home' || k === 'End') { if (vis.length) pickRow(k === 'Home' ? vis[0] : vis[vis.length - 1]); }
     else if (k === 'Delete') agDelAsk(e, ai);
     else if (k === 'F2') agRename(e, ai);
-    else if (k === 'Insert') addAttr();
-    else if (k === 'Enter') { if (treeAttr !== ai) pickRow(ai); else { const d = $('ag-desc'); if (d) d.focus(); } }
+    else if (k === 'Insert' || (k === 'Enter' && ev.altKey)) addAttr();
+    else if ((k === 'n' || k === 'N') && !ev.ctrlKey && !ev.metaKey && canEdit()) { const c = tr.querySelector('[data-f="nn"]'); if (c && !c.disabled) { treeOrigin = true; treeAttr = ai; gFocus = { e: e.id, ai, f: 'row' }; agEdit(e, ai, 'nn', !c.checked); } else if (c) toast(c.title, 'info'); }
+    else if (k === 'Enter') { if (treeAttr !== ai) pickRow(ai); else { const d = $('ag-dom') || $('ag-nn') || $('ag-desc'); if (d) d.focus(); } }
     else if (k === ' ' && canEdit()) { const c = tr.querySelector('[data-f="pk"]'); if (c && !c.disabled) agEdit(e, ai, 'pk', !c.checked); else if (c) toast(c.title, 'info'); }
     else done = false;
     if (done) { ev.preventDefault(); ev.stopPropagation(); }
@@ -1041,7 +1093,7 @@ window.pageInit = function () {
   function focusEnt(id) { sel = id; showRP(); render(); const b = box(id); panX = cv.clientWidth / 2 - (b.x + b.w / 2) * zoom; panY = cv.clientHeight / 2 - (b.y + b.h / 2) * zoom; applyView(); }
   function addAttr() {
     if (!sel || guard()) return; const e = ent(sel); if (refGuard(e)) return;
-    e.a.forEach(a => delete a.edit); snap(); e.a.push({ n: '', p: '—', t: '—', s: 'na', edit: 1 }); render();
+    e.a.forEach(a => delete a.edit); editHid = snap(); e.a.push({ n: '', p: '—', t: '—', s: 'na', edit: 1 }); render();
   }
   let acEl = null, acIdx = 0;
   function showAC(inp) {
@@ -1055,13 +1107,26 @@ window.pageInit = function () {
     cv.appendChild(acEl);
   }
   const fromTerm = t => Object.assign({ n: t.n, p: t.p, t: t.t, dom: t.d, s: t.s, sec: t.sec, enc: t.enc }, t.doc ? { reqDoc: t.doc } : {});   // a 신청 중 term keeps its document link
+  let editHid = null;   // the history entry the open name input started — Esc or "nothing changed" drops exactly that one
+  const back = (a, o) => { Object.keys(a).forEach(k => delete a[k]); Object.assign(a, o); };
   function commitAttr(inp, term) {
-    const e = ent(inp.dataset.e), a = e.a[+inp.dataset.i];
-    if (term) { Object.assign(a, fromTerm(term)); toast(`‘${term.n}’ 용어를 적용했습니다 · ${term.p}${term.sec ? ' · 도메인 보안 속성(개인정보) 상속' : ''}`); }
+    const e = ent(inp.dataset.e), i = +inp.dataset.i, a = e.a[i];
+    const old = a.orig ? JSON.parse(a.orig) : null;
+    // the input was opened while editable — check again before it lands (another tab may have locked the area or taken the role)
+    if (guard() || refGuard(e)) { if (old) back(a, old); else e.a.splice(i, 1); dropHist(editHid); editHid = null; if (acEl) { acEl.remove(); acEl = null; } render(); return; }
+    const reach = old && a.pk ? pkReach(e, a) : [], oldP = a.p;
+    const fkKeep = a.fk ? { t: a.t, dom: a.dom, fkp: a.fkp || String(a.p).replace(/^(ORG_|UPR_)/, '') } : null;
+    if (term) { Object.assign(a, fromTerm(term)); toast(`‘${term.n}’ 용어를 적용했습니다 · ${term.p}${term.sec ? ' · 도메인 보안 속성(개인정보) 상속' : ''}${fkKeep ? ' · FK라 타입·도메인은 부모를 따릅니다' : ''}`); }
     else if (inp.value.trim()) { Object.assign(a, { n: inp.value.trim(), s: 'unreg' }); toast('용어 없이 입력했습니다 — 미준수로 집계됩니다', 'info'); }
-    else if (a.orig) { const o = JSON.parse(a.orig); Object.keys(a).forEach(k => delete a[k]); Object.assign(a, o); }
-    else e.a.splice(+inp.dataset.i, 1);
-    delete a.edit; delete a.orig; if (acEl) { acEl.remove(); acEl = null; } render();
+    else if (old) back(a, old);
+    else e.a.splice(i, 1);
+    delete a.edit; delete a.orig;
+    if (fkKeep && e.a.includes(a)) Object.assign(a, fkKeep);   // an FK keeps the parent's type and its pairing (role names are fine)
+    // a renamed PK takes its child FK columns along: same pairing, new physical name · type · domain
+    if (reach.length && (a.p !== oldP || a.t !== old.t)) { reach.forEach(([, x]) => { x.fkp = a.p; if (x.p === oldP) x.p = a.p; else if (x.p === 'ORG_' + oldP) x.p = 'ORG_' + a.p; x.t = a.t; x.dom = domOf(a); }); setTimeout(() => toast(`자식 FK ${reach.length}개도 ${a.p}(으)로 맞췄습니다`, 'info'), 50); }
+    const ss = o => JSON.stringify(Object.keys(o).filter(k => o[k] !== undefined).sort().map(k => [k, o[k]]));
+    if (old && e.a.includes(a) && ss(a) === ss(old)) dropHist(editHid);   // nothing changed → no undo entry
+    editHid = null; if (acEl) { acEl.remove(); acEl = null; } render();
   }
   function commitRename(inp, ok) {
     const e = ent(inp.dataset.e); renaming = null;
@@ -1189,7 +1254,7 @@ window.pageInit = function () {
         p.innerHTML = `<b>재귀 관계를 만들까요?</b><div class="caption muted" style="margin:4px 0 8px">같은 엔터티를 다시 눌렀습니다. 예: 상위리스크ID → 리스크ID</div><div class="flex"><button class="btn sm" id="pop-no">취소</button><span class="grow"></span><button class="btn sm primary" id="pop-yes">재귀 관계 만들기</button></div>`;
         cv.appendChild(p);
         $('pop-no').onclick = () => { p.remove(); setTool('rel'); };
-        $('pop-yes').onclick = () => { p.remove(); if (refGuard(ent(id))) { setTool('select'); return; } snap(); R.push({ f: id, t: id, k: 'nonid', name: '상위' }); const e = ent(id); e.a.push({ n: '상위' + e.a[0].n, p: 'UPR_' + e.a[0].p, t: e.a[0].t, fk: 1, s: 'comb' }); setTool('select'); toast(`재귀 관계와 ‘상위${e.a[0].n} (FK)’를 추가했습니다`); };
+        $('pop-yes').onclick = () => { p.remove(); if (refGuard(ent(id))) { setTool('select'); return; } snap(); R.push({ f: id, t: id, k: 'nonid', name: '상위' }); const e = ent(id); e.a.push({ n: '상위' + e.a[0].n, p: 'UPR_' + e.a[0].p, t: e.a[0].t, fk: 1, fkp: e.a[0].p, s: 'comb' }); setTool('select'); toast(`재귀 관계와 ‘상위${e.a[0].n} (FK)’를 추가했습니다`); };
         return;
       }
       const parent = ent(relSrc), child = ent(id);
@@ -1197,7 +1262,7 @@ window.pageInit = function () {
       const g = 'g' + Date.now(); snap(); R.push({ f: relSrc, t: id, k: relType, name: '', g });
       if (relType !== 'mn') parent.a.filter(a => a.pk).forEach(k => {
         const clash = child.a.some(a => a.n === k.n);
-        child.a.push({ n: clash ? '원' + k.n : k.n, p: clash ? 'ORG_' + k.p : k.p, t: k.t, fk: 1, fkg: g, pk: relType === 'id' ? 1 : 0, nn: relType === 'id' ? 1 : 0, s: clash ? 'comb' : 'ok' });
+        child.a.push({ n: clash ? '원' + k.n : k.n, p: clash ? 'ORG_' + k.p : k.p, t: k.t, dom: domOf(k), fk: 1, fkg: g, fkp: k.p, pk: relType === 'id' ? 1 : 0, nn: relType === 'id' ? 1 : 0, s: clash ? 'comb' : 'ok' });
         toast(clash ? `이름이 겹쳐 ‘원${k.n} (FK)’로 추가했습니다 — 역할명을 확인하세요` : `‘${k.n} (FK)’가 ${child.n}에 추가됐습니다 · 되돌리기 Ctrl+Z`, clash ? 'violet' : 'success');
       });
       else toast('M:N 관계를 만들었습니다 — 관계를 선택해 [M:N 해소]로 교차 엔터티를 만드세요', 'info');
@@ -1209,7 +1274,7 @@ window.pageInit = function () {
     const title = ev.target.closest('.title');
     if (title) { if (guard() || refGuard(ent(title.dataset.e))) return; renaming = title.dataset.e; render(); return; }
     const row = ev.target.closest('.ar[data-i]');
-    if (row) { const e = ent(row.dataset.e); if (guard() || refGuard(e)) return; snap(); const a = e.a[+row.dataset.i]; a.orig = JSON.stringify(a); a.edit = 1; sel = e.id; render(); return; }
+    if (row) { const e = ent(row.dataset.e); if (guard() || refGuard(e)) return; editHid = snap(); const a = e.a[+row.dataset.i]; a.orig = JSON.stringify(a); a.edit = 1; sel = e.id; render(); return; }
     if (!ev.target.closest('.node,.cv-toolbar,.cv-zoom,.cv-mini,.cv-banner,#sysview') && tool === 'select' && !locked) { setTool('entity'); cv.dispatchEvent(new MouseEvent('click', { clientX: ev.clientX, clientY: ev.clientY, bubbles: true })); }
   });
   cv.addEventListener('input', ev => {
@@ -1230,7 +1295,7 @@ window.pageInit = function () {
       const e = ent(inp.dataset.e), a = e.a[+inp.dataset.i];
       if (a.orig) { const o = JSON.parse(a.orig); Object.keys(a).forEach(k => delete a[k]); Object.assign(a, o); }  // existing attribute: restore
       else e.a.splice(+inp.dataset.i, 1);                                                                           // new attribute: discard
-      hist.pop(); if (acEl) { acEl.remove(); acEl = null; } dirty = true; render();   // the discarded row was already saved by addAttr — save its removal too
+      dropHist(editHid); editHid = null; if (acEl) { acEl.remove(); acEl = null; } dirty = true; render();   // the discarded row was already saved by addAttr — save its removal too
     }
   });
   cv.addEventListener('focusout', ev => { if (ev.target.classList && ev.target.classList.contains('ren-in') && renaming) commitRename(ev.target, true); });
@@ -1308,7 +1373,11 @@ window.pageInit = function () {
       const fa = fkAttrs();
       $('rp-body').insertAdjacentHTML('beforeend', `<div class="section-t">FK 묶음 <span class="badge">${fa.length}</span> <span class="caption muted">이 관계로 자식에 생긴 속성 — 함께 바뀝니다</span></div><div class="caption">${fa.map(a => `${a.n} <span class="mono faint">${a.p}</span>${a.pk ? ' <span class="badge">PK</span>' : ''}`).join(' · ') || '—'}</div>
         <div class="flex" style="margin-top:8px"><button class="btn sm" id="rel-ident">${r.k === 'id' ? '비식별로 전환' : '식별로 전환'}</button><span class="grow"></span><button class="btn sm danger" id="rel-del">관계 삭제</button></div>`);
-      $('rel-ident').onclick = () => { if (guard()) return; snap(); const toId = r.k !== 'id'; r.k = toId ? 'id' : 'nonid'; fkAttrs().forEach(a => { a.pk = toId ? 1 : 0; if (toId) a.nn = 1; }); render(); toast(toId ? `식별 관계로 바꿨습니다 — FK ${fa.length}개가 모두 PK·NOT NULL이 됐습니다` : `비식별 관계로 바꿨습니다 — FK ${fa.length}개를 PK에서 뺐습니다`, 'info', undoAction()); };
+      // the same rules as the grid's PK edit: PK columns move to the top group, and the change reaches the grandchildren (one undo)
+      $('rel-ident').onclick = () => { if (guard()) return; snap(); const toId = r.k !== 'id'; r.k = toId ? 'id' : 'nonid'; const c = ent(r.t); let down = 0;
+        fkAttrs().forEach(a => { if (!toId) { pkReach(c, a).forEach(([g, x]) => { const i = g.a.indexOf(x); if (i >= 0) { g.a.splice(i, 1); down++; } }); }
+          a.pk = toId ? 1 : 0; if (toId) a.nn = 1; placeAttr(c, a, true); if (toId) down += pkSpread(c, a); });
+        render(); toast(toId ? `식별 관계로 바꿨습니다 — FK ${fa.length}개가 PK·필수가 됐습니다${down ? ` · 손자 엔터티에 FK ${down}개 추가` : ''}` : `비식별 관계로 바꿨습니다 — FK ${fa.length}개를 PK에서 뺐습니다${down ? ` · 손자 엔터티의 FK ${down}개 삭제` : ''}`, 'info', undoAction()); };
       $('rel-del').onclick = () => { const box2 = document.createElement('div'); box2.className = 'banner warning'; box2.style.marginTop = '8px';
         box2.innerHTML = `<i data-ic=warn></i><div class="grow">관계를 삭제합니다. 자식의 FK 속성 ${fa.length}개를 어떻게 할까요?<div class="flex" style="margin-top:6px"><button class="btn sm" id="rd-keep">일반 속성으로 유지</button><button class="btn sm danger" id="rd-del">FK 속성도 삭제</button></div></div>`;
         $('rp-body').appendChild(box2);
@@ -1560,6 +1629,9 @@ window.pageInit = function () {
   function runTreeCmd(d) {
     const e = d.id ? ent(d.id) : null;
     if (d.id && !e) { toast('이 객체를 찾지 못했습니다 — 이름이 바뀌었거나 삭제됐습니다', 'danger'); return; }
+    // the row may be a frame behind: confirm the target by name, not just by position
+    if (e && d.akey && d.ai != null && !(e.a[d.ai] && e.a[d.ai].n === d.akey.n && e.a[d.ai].p === d.akey.p)) { const i = e.a.findIndex(x => !x.edit && x.n === d.akey.n && x.p === d.akey.p); if (i < 0) { toast(`‘${d.akey.n}’ 속성을 찾지 못해 실행하지 않았습니다`, 'danger'); return; } d.ai = i; }
+    if (d.rkey && d.rel != null) { const x = R[d.rel], k = d.rkey; if (!x || x.f !== k.f || x.t !== k.t || (x.g || '') !== k.g) { const i = R.findIndex(y => y.f === k.f && y.t === k.t && y.k === k.k && (y.g || '') === k.g); if (i < 0) { toast('그 관계를 찾지 못해 실행하지 않았습니다', 'danger'); return; } d.rel = i; } }
     const pickEnt = () => { treeOrigin = true; treeAttr = d.ai; closeGrid(); focusEnt(e.id); };
     const attr = d.ai != null && e && e.a[d.ai];
     if (d.ai != null && (!attr || attr.edit)) { toast('이 속성을 찾지 못했습니다', 'danger'); return; }
@@ -1585,7 +1657,16 @@ window.pageInit = function () {
   }
   window.addEventListener('dbm-tree-cmd', ev => { const d = ev.detail; if (d.area !== AREA || SNAP_BAD) return; ev.preventDefault(); runTreeCmd(d); });
   // a command started from another screen's tree arrives as ?cmd= — run once, then drop it from the address
-  if (q.get('cmd')) setTimeout(() => { runTreeCmd({ cmd: q.get('cmd'), area: AREA, id: q.get('focus') || null, ai: q.has('attr') ? +q.get('attr') : null, rel: q.has('rel') ? +q.get('rel') : null }); const u = new URL(location.href); u.searchParams.delete('cmd'); history.replaceState(null, '', u.pathname.split('/').pop() + u.search); }, 260);
+  // a command started from another screen's tree: a one-time token in this tab (never the address — a link or a bookmark does not edit),
+  // fresh (15 s), same user, same area; targets are found again by name, never by position
+  { let tk = null; try { tk = JSON.parse(sessionStorage.getItem('dbm-tree-cmd') || 'null'); sessionStorage.removeItem('dbm-tree-cmd'); } catch (er) {}
+    if (tk && tk.area === AREA && tk.user === ME.id && Date.now() - tk.at < 15000 && !SNAP) setTimeout(() => {
+      const e = tk.id ? ent(tk.id) : null;
+      if (tk.akey) { const k = tk.akey; const ai = e ? [x => x.p === k.p && x.n === k.n, x => k.p !== '—' && x.p === k.p, x => x.n === k.n].reduce((f, fn) => f >= 0 ? f : e.a.findIndex(x => !x.edit && fn(x)), -1) : -1;
+        if (ai < 0) { toast(`작업본에서 ‘${k.n}’ 속성을 찾지 못해 실행하지 않았습니다`, 'danger'); return; } tk.ai = ai; }
+      if (tk.rkey) { const k = tk.rkey; const ri = R.findIndex(x => x.f === k.f && x.t === k.t && x.k === k.k && (x.g || '') === k.g); if (ri < 0) { toast('작업본에서 그 관계를 찾지 못해 실행하지 않았습니다', 'danger'); return; } tk.rel = ri; }
+      runTreeCmd(tk);
+    }, 260); }
   window.dispatchEvent(new Event('dbm-tree-refresh'));
   if (q.get('sys')) setTimeout(() => $('b-sys').click(), 150);
   // DDL / outputs open for THIS area (and this submitted copy when viewing one) — CX12-30

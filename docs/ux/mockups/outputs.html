@@ -105,7 +105,7 @@ window.pageInit = function () {
     const m = mdl(), E = m.E.filter(e => !e.ref); const first = E.find(e => e.id === pickEnt) || E[0]; const fi = Math.max(0, E.indexOf(first));
     const cnt = st => E.reduce((s, e) => s + e.a.filter(a => a.s === st).length, 0);
     const tot = E.reduce((s, e) => s + e.a.length, 0), na = cnt('na'), ok = cnt('ok') + cnt('ex'), tgt = tot - na;
-    P.tbl = ['테이블 정의서', first ? `시트 ${fi + 1}/${E.length} · ${first.p} ${first.n}` : '테이블 없음', ['컬럼명', '논리명', '타입', 'PK', 'NULL', '도메인'], first ? first.a.slice(0, 6).map(a => [a.p || '—', a.n, a.t || '—', a.pk ? 'Y' : '', a.nn ? 'N' : 'Y', a.dom || '—']) : []];
+    P.tbl = ['테이블 정의서', first ? `시트 ${fi + 1}/${E.length} · ${first.p} ${first.n}` : '테이블 없음', ['컬럼명', '논리명', '타입', 'PK', 'NULL', '기본값', '도메인', '정의'], first ? first.a.filter(a => !a.edit).slice(0, 6).map(a => [a.p || '—', a.n, a.t || '—', a.pk ? 'Y' : '', a.nn || a.pk ? 'N' : 'Y', a.def || '', a.dom || a.d || '—', a.desc || '']) : []];
     const C = compOf(m); P.cmp = ['표준 준수검사 결과', `요약 · 준수율 ${C.rate}% (미준수 ${C.bad}, 예외 ${C.ex}, 신청 중 ${C.req}, 비대상 ${C.na}) — 모델 화면과 같은 계산`, ['엔터티', '대상', '미준수', '예외', '비대상', '준수율'], E.slice(0, 6).map(e => { const c = compOf({ E: [e] }); return [e.n, String(c.tot), String(c.bad), String(c.ex), String(c.na), c.rate + '%']; })];
     const terms = {}; E.forEach(e => e.a.filter(a => a.s === 'ok').forEach(a => { terms[a.n] = terms[a.n] || [a.n, a.p, a.dom || '—', 0]; terms[a.n][3]++; }));
     const tl = Object.values(terms).sort((a, b) => b[3] - a[3]); P.term = ['용어 사용 현황', `표준 용어 ${tl.length}`, ['용어', '물리명', '도메인', '사용 위치 수'], tl.slice(0, 6).map(r => [r[0], r[1], r[2], String(r[3])])];
