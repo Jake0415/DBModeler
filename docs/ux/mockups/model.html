@@ -348,6 +348,8 @@ window.pageInit = function () {
   const SNAPDOC = SNAP ? getDocs().find(x => x.id === SNAP && x.type === 'model') : null;
   if (SNAPDOC && SNAPDOC.area !== AREA) { location.replace(`model.html?area=${SNAPDOC.area}&snap=${SNAPDOC.id}`); return; }
   const SNAP_BAD = !!SNAP && !SNAPDOC;
+  // review visibility (requester + approval line only): a submitted copy under review is closed to others; the area shows its last confirmed copy
+  const SNAP_HIDDEN = !!SNAPDOC && inReview(SNAPDOC) && !canSeeDoc(SNAPDOC);
   // ?state= presets are read-only samples: never saved, never submitted, never written to the shared judgement (CX9-01)
   const DEMO = (!!STATE || q.has('big')) && !SNAP; if (DEMO) setTimeout(() => setSave('run', '예시 화면 · 저장 안 함'), 0);   // ?big=1 → 300+ entity sample to show the size warning (read-only)
   const confirmed = LOCK.state === 'confirmed' && !SNAP, review = LOCK.state === 'review' || !!SNAP;
@@ -1187,7 +1189,10 @@ window.pageInit = function () {
   // data source (S5): ?state= preset (demo, not saved) → document snapshot (review/confirmed/snap) → saved working data → seed
   const loadData = d => { if (!d) return false; E.splice(0, E.length, ...JSON.parse(JSON.stringify(d.E))); R.splice(0, R.length, ...JSON.parse(JSON.stringify(d.R))); M.splice(0, M.length, ...JSON.parse(JSON.stringify(d.M || []))); return true; };
   const snapDoc = SNAP ? SNAPDOC : (locked ? LOCK.doc : null);
-  if (SNAP_BAD) { E.splice(0, E.length); R.splice(0, R.length); M.splice(0, M.length); }   // nothing to show rather than the wrong model
+  const REVIEW_HIDDEN = !SNAP && LOCK.state === 'review' && LOCK.doc && !canSeeDoc(LOCK.doc);
+  if (SNAP_HIDDEN) { E.splice(0, E.length); R.splice(0, R.length); M.splice(0, M.length); }
+  else if (REVIEW_HIDDEN) { const c = confirmedCopy(AREA); if (!loadData(c)) { E.splice(0, E.length); R.splice(0, R.length); M.splice(0, M.length); } }
+  else if (SNAP_BAD) { E.splice(0, E.length); R.splice(0, R.length); M.splice(0, M.length); }   // nothing to show rather than the wrong model
   else if (q.has('big')) { for (let i = 0; i < 305; i++) E.push({ id: 'b' + i, n: `대용량엔터티${i}`, p: `BIG${i}_M`, c: 'M', x: 1300 + (i % 20) * 280, y: 60 + Math.floor(i / 20) * 200, px: 1300 + (i % 20) * 280, py: 60 + Math.floor(i / 20) * 200, a: [{ n: `대용량${i}ID`, p: `BIG${i}_ID`, t: 'VARCHAR2(10)', pk: 1, nn: 1, s: 'ok' }, { n: '이름', p: 'NM', t: 'VARCHAR2(100)', s: 'ok' }] }); }
   else if (STATE === 'applied') { applyStd(); }
   else if (STATE === 'resolved') { applyStd(); keepRecipientAsEx(RECIP_WHY); }
@@ -1254,7 +1259,13 @@ window.pageInit = function () {
     const D = SNAP ? getDocs().find(x => x.id === SNAP) : LOCK.doc;
     const did = D ? D.id : '';
     $('ban-lock-a').href = `approvals.html?doc=${did}`;
-    if (SNAP_BAD) {
+    if (SNAP_HIDDEN || REVIEW_HIDDEN) {
+      b.style.display = 'none';
+      $('ver').textContent = REVIEW_HIDDEN && LOCK.model.base ? `v${LOCK.model.base} 확정본` : '열람 제한';
+      $('ban-lock').className = 'banner info';
+      $('ban-lock-t').innerHTML = SNAP_HIDDEN ? `<b>${SNAP}</b>는 결재 중입니다 — 결재 중인 제출본은 품의자와 결재 담당자만 볼 수 있습니다.` : `<b>${josa('v' + VER, '은/는')} 결재 중</b>이라 품의자와 결재 담당자만 볼 수 있습니다. ${LOCK.model.base ? `마지막 확정본 <b>v${LOCK.model.base}</b>을 조회 전용으로 보여 줍니다.` : '아직 확정본이 없어 보여 줄 내용이 없습니다.'}`;
+      $('ban-lock-a').style.display = 'none';
+    } else if (SNAP_BAD) {
       $('ver').textContent = '열 수 없음'; b.style.display = 'none';
       $('ban-lock').className = 'banner danger'; $('ban-lock-t').innerHTML = `<b>${SNAP}</b> — 이 업무 영역의 모델 확정 문서가 아니거나 없는 문서입니다. 작업본을 대신 보여 주지 않습니다.`;
       $('ban-lock-a').href = 'approvals.html'; $('ban-lock-a').textContent = '결재함';
@@ -1298,7 +1309,7 @@ window.pageInit = function () {
   drawParticipants();
   if (q.get('focus') && ent(q.get('focus'))) setTimeout(() => { focusEnt(q.get('focus')); if (q.get('attr')) { treeOrigin = true; treeAttr = +q.get('attr'); render(); hlAttr(treeAttr); } }, 120);
   // ---- model tree (12 · T1)
-  window.treeData = () => ({ area: AREA, E, R, mode, ver: SNAP ? 'snap:' + SNAP : 'v' + VER, label: $('ver').textContent.trim(), ro: document.body.classList.contains('locked') || document.body.classList.contains('viewonly') });
+  window.treeData = () => ({ area: AREA, E, R, mode, ver: SNAP ? 'snap:' + SNAP : REVIEW_HIDDEN ? 'v' + LOCK.model.base : 'v' + VER, label: $('ver').textContent.trim(), ro: document.body.classList.contains('locked') || document.body.classList.contains('viewonly') });
   function hlAttr(ai) { setTimeout(() => { const tr = document.querySelector(`#rp-body tr[data-ai="${ai}"]`); document.querySelectorAll('#rp-body tr.hl').forEach(x => x.classList.remove('hl')); if (tr) { tr.classList.add('hl'); tr.scrollIntoView({ block: 'nearest' }); } }, 0); }
   window.addEventListener('dbm-tree-select', ev => {
     const d = ev.detail; if (d.area !== AREA || SNAP_BAD) return;

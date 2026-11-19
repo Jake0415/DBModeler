@@ -645,7 +645,13 @@
     return c;
   };
   /* one visibility rule for lists, deep links and file actions */
-  window.canSeeDoc = d => !!d && (can('appr.viewall') || d.req === ME.id || (d.cc || []).includes(ME.id));
+  window.inReview = d => !!d && ['da', 'final'].includes(d.step);
+  window.onLine = (u, d) => !!u && u.status !== 'stopped' && (canUser(u, 'appr.da', { doc: d }) || ((d.line || ['da', 'final']).includes('final') && canUser(u, 'appr.final', { doc: d })) || (d.hist || []).some(h => h.whoId === u.id));
+  window.canUserSeeDoc = (u, d) => !!d && !!u && (d.req === u.id || (inReview(d) ? onLine(u, d) : (canUser(u, 'appr.viewall') || (d.cc || []).includes(u.id) || onLine(u, d))));
+  window.canSeeDoc = d => canUserSeeDoc(USERS[ME.id] || ME, d);
+  // what a viewer may see of an area: a version under review is shown only to its requester and approvers — others see the last confirmed copy
+  window.confirmedCopy = area => { const m = getModel(area); if (!m.base) return null; const d = getDocs().find(x => x.type === 'model' && x.area === area && x.ver === m.base && x.step === 'done'); return (d && d.model) || getModelData(area, m.base) || modelSeed(area); };
+  window.areaView = area => { const L = modelLock(area), m = getModel(area); if (L.state === 'review' && L.doc && !canSeeDoc(L.doc)) { const c = confirmedCopy(area); return { model: c || { E: [], R: [], M: [] }, hidden: true, ver: m.base, label: m.base ? `v${m.base} 확정본 (v${m.ver} 결재 중)` : `v${m.ver} 결재 중 · 열람 제한` }; } if (L.state !== 'edit' && L.doc && L.doc.model) return { model: L.doc.model, hidden: false, ver: m.ver }; return { model: modelOf(area, m.ver), hidden: false, ver: m.ver }; };
   window.canSeeBatch = b => !!b && (b.by === ME.id || can('excel.viewall'));
   /* model diff between two stored structures (by entity id / attribute logical name) */
   window.modelDiff = (a, b) => {
@@ -910,8 +916,8 @@
     const src = area => {
       const l = live(); const m = getModels()[area];
       if (l && l.area === area) return { E: l.E, R: l.R, ver: l.ver, label: l.label, ro: l.ro, snap: l.snap || null };
-      const L = modelLock(area); const d = (L.state !== 'edit' && L.doc && L.doc.model) ? L.doc.model : modelOf(area, m.ver);
-      return { E: d.E || [], R: d.R || [], ver: 'v' + m.ver, label: '', ro: false };
+      const v = areaView(area); const d = v.model;
+      return { E: d.E || [], R: d.R || [], ver: 'v' + v.ver, label: v.hidden ? v.label : '', ro: v.hidden };
     };
     const STC = { comb: '조합 가능', unreg: '미등록', ex: '예외', na: '비대상', req: '신청 중' };
     const entBad = e => e.ref ? 0 : (e.p === '—' ? 1 : 0) + e.a.filter(a => !a.edit && ['comb', 'unreg'].includes(a.s)).length;

@@ -74,12 +74,14 @@ window.pageInit = function () {
   // area + version (or a submitted copy) come from where the user started (CX12-30 · CL12-42)
   const AREA = getModels()[q.get('area')] ? q.get('area') : defArea();
   const L = modelLock(AREA); const snapDoc = q.get('snap') ? getDocs().find(x => x.id === q.get('snap') && x.type === 'model' && x.area === AREA) : null;
-  const src = snapDoc ? (snapDoc.model || modelSeed(AREA)) : (L.state !== 'edit' && L.doc && L.doc.model) ? L.doc.model : modelOf(AREA, L.model.ver);
-  const label = snapDoc ? `v${snapDoc.ver} ${snapDoc.step === 'done' ? '확정본' : '제출 사본'} · ${snapDoc.id}` : L.state === 'confirmed' ? `v${L.model.ver} 확정본` : L.state === 'review' ? `v${L.model.ver} 검토 중 사본` : `v${L.model.ver} 작업본(미확정)`;
+  const snapHidden = !!snapDoc && inReview(snapDoc) && !canSeeDoc(snapDoc); const view = areaView(AREA);
+  const src = snapHidden ? { E: [], R: [], M: [] } : snapDoc ? (snapDoc.model || modelSeed(AREA)) : view.model;
+  const label = snapHidden ? `${snapDoc.id} 결재 중 · 열람 제한` : !snapDoc && view.hidden ? view.label : snapDoc ? `v${snapDoc.ver} ${snapDoc.step === 'done' ? '확정본' : '제출 사본'} · ${snapDoc.id}` : L.state === 'confirmed' ? `v${L.model.ver} 확정본` : L.state === 'review' ? `v${L.model.ver} 검토 중 사본` : `v${L.model.ver} 작업본(미확정)`;
   $('crumb-area').textContent = L.model.name; $('vbadge').textContent = label; $('vbadge').className = 'badge ' + (L.state === 'edit' && !snapDoc ? 'b-warning' : 'b-success');
   $('back').href = `model.html?area=${AREA}${snapDoc ? '&snap=' + snapDoc.id : ''}`;
   const ents = src.E.filter(e => !e.ref);
-  window.treeData = () => ({ area: AREA, E: src.E, R: src.R, mode: 'P', ver: snapDoc ? 'snap:' + snapDoc.id : 'v' + L.model.ver, label, ro: true, snap: snapDoc ? snapDoc.id : null });
+  if (snapHidden || (!snapDoc && view.hidden)) setTimeout(() => toast(snapHidden ? '결재 중인 제출본은 품의자와 결재 담당자만 볼 수 있습니다' : `${josa('v' + L.model.ver, '은/는')} 결재 중이라 확정본 v${L.model.base}의 DDL을 보여 줍니다`, 'info'), 300);
+  window.treeData = () => ({ area: AREA, E: src.E, R: src.R, mode: 'P', ver: snapDoc ? 'snap:' + snapDoc.id : 'v' + view.ver, label, ro: true, snap: snapDoc ? snapDoc.id : null });
   setTimeout(() => window.dispatchEvent(new Event('dbm-tree-refresh')), 0); let scope = 'all', picked = new Set();
   const sysCount = Object.keys(getModels()).reduce((n, a) => n + modelOf(a, getModel(a).ver).E.filter(e => !e.ref).length, 0);
   // ALTER compares with the confirmed copy BEFORE the selected version (a snapshot compares with its own predecessor — CX14-15)

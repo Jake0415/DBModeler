@@ -245,7 +245,7 @@ window.pageInit = function () {
     if (!d) { p.classList.remove('open'); return; }
     p.classList.add('open');
     // deep links follow the same visibility rule as the lists (CL9-22)
-    if (!canSeeDoc(d)) { deadEnd(p, d.id, '열람 권한이 없습니다', `이 결재 문서는 신청자·참조자·결재 역할(DA·기관 담당자)만 볼 수 있습니다. 지금 역할: ${ME.roles.map(r => ROLE_NAME[r]).join('·')}`); return; }
+    if (!canSeeDoc(d)) { deadEnd(p, d.id, '열람 권한이 없습니다', inReview(d) ? '결재 중인 문서는 품의자와 이 문서의 결재 담당자만 볼 수 있습니다. 결재가 끝나면 참조자 · 결재 역할도 볼 수 있습니다.' : `이 결재 문서는 신청자 · 참조자 · 결재 역할(DA · 기관 담당자)만 볼 수 있습니다. 지금 역할: ${ME.roles.map(r => ROLE_NAME[r]).join('·') || '조회만'}`); return; }
     const mine = d.req === ME.id, live = ['da', 'final'].includes(d.step);
     const hist = [{ at: d.date, who: nameOf(d.req), act: '신청', why: d.reason }].concat(d.hist || []);
     let right = '';

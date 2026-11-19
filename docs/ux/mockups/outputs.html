@@ -86,9 +86,10 @@ window.pageInit = function () {
   const AREA = getModels()[qp.get('area')] ? qp.get('area') : defArea(); const L = modelLock(AREA);
   $('crumb-area').textContent = L.model.name; { const cl = document.getElementById('crumb-link'); if (cl) cl.href = `model.html?area=${AREA}`; }
   const done = getDocs().filter(x => x.type === 'model' && x.area === AREA && x.step === 'done').sort((a, b) => b.ver - a.ver);
+  const reviewHidden = L.state === 'review' && L.doc && !canSeeDoc(L.doc);   // the version under review: requester + approvers only
   const ents = modelOf(AREA, L.model.ver).E.filter(e => !e.ref).length;
   $('o-scope').innerHTML = `<option>업무 영역 · ${L.model.name} (${ents})</option><option>선택한 테이블</option>`;
-  $('o-ver').innerHTML = done.map(d => `<option value="${d.id}">v${d.ver} 확정본 (공식) · ${d.id}</option>`).join('') + (L.state === 'edit' ? `<option value="work">v${L.model.ver} 작업 중 (초안 표시)</option>` : L.state === 'review' ? `<option value="work">v${L.model.ver} 검토 중 사본 (초안 표시)</option>` : '');
+  $('o-ver').innerHTML = done.map(d => `<option value="${d.id}">v${d.ver} 확정본 (공식) · ${d.id}</option>`).join('') + (L.state === 'edit' ? `<option value="work">v${L.model.ver} 작업 중 (초안 표시)</option>` : L.state === 'review' && !reviewHidden ? `<option value="work">v${L.model.ver} 검토 중 사본 (초안 표시)</option>` : '');
   const FMT = { tbl: ['xlsx', 'pdf'], cmp: ['xlsx'], term: ['xlsx'], sec: ['xlsx', 'pdf'], erd: ['pdf', 'png', 'svg'], rev: ['xlsx'], chg: ['xlsx', 'html'] };
   let cur = 'tbl', pickEnt = null;
   // model tree (12 · T1): a table chosen in the tree opens its sheet of the table definition
@@ -99,7 +100,7 @@ window.pageInit = function () {
   // the version the user came from is selected (CX14-14): snapshot → that copy, otherwise the working version, else the latest confirmed copy
   const snapQ = qp.get('snap'); if (snapQ && done.some(d => d.id === snapQ)) $('o-ver').value = snapQ; else if (L.state !== 'confirmed' && $('o-ver').querySelector('[value="work"]')) $('o-ver').value = 'work';
   // previews are computed from the selected area + version (no fixed rows)
-  const mdl = () => { const d = verDoc(); return (d && d.model) || (d && getModelData(AREA, d.ver)) || modelOf(AREA, d ? d.ver : L.model.ver); };
+  const mdl = () => { const d = verDoc(); if (!d && reviewHidden) return confirmedCopy(AREA) || { E: [], R: [], M: [] }; return (d && d.model) || (d && getModelData(AREA, d.ver)) || modelOf(AREA, d ? d.ver : L.model.ver); };
   function compute() {
     const m = mdl(), E = m.E.filter(e => !e.ref); const first = E.find(e => e.id === pickEnt) || E[0]; const fi = Math.max(0, E.indexOf(first));
     const cnt = st => E.reduce((s, e) => s + e.a.filter(a => a.s === st).length, 0);

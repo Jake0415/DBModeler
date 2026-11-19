@@ -63,7 +63,7 @@ window.pageInit = function () {
 
   /* ---- areas: compOf / modelLock / linkState — same numbers as the model screen ---- */
   const AREAS = Object.entries(models).map(([id, m]) => {
-    const L = modelLock(id); const mo = L.state !== 'edit' && L.doc && L.doc.model ? L.doc.model : modelOf(id, m.ver);
+    const L = modelLock(id); const mo = areaView(id).model;
     const C = compOf(mo); if (L.state === 'edit') { const ended = reqEnded(mo).length; if (ended) { C.bad += ended; C.rate = C.tot ? Math.floor((C.tot - C.bad) / C.tot * 100) : 0; } } const linked = [];
     (mo.E || []).forEach(e => { if (e.st && e.reqDoc) linked.push(e.reqDoc); e.a.forEach(a => { if (a.s === 'req' && a.reqDoc) linked.push(a.reqDoc); }); });
     const open = [...new Set(linked)].filter(x => linkState(x).s === 'live');
