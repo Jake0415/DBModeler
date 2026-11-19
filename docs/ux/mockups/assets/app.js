@@ -22,11 +22,11 @@
   const PRODUCT = { name: 'NeoDB', version: '1.0.0', build: '20261117.a1b2c3', env: '운영', released: '2026-11-17', dict: '공통표준 2025.11 (적재 11/03) · 기관 사전 제정 12차' };
   window.PRODUCT = PRODUCT;
   const USERS = {
-    kim: { id: 'kim', name: '김모델', org: '데이터정책팀', mail: 'kim@kda.go.kr', roles: ['modeler', 'da'], systems: ['요구사항관리', '인사시스템'] },
-    park: { id: 'park', name: '박설계', org: '정보화사업팀', mail: 'park@kda.go.kr', roles: ['modeler'], systems: ['요구사항관리'] },
+    kim: { id: 'kim', name: '김모델', org: '데이터정책팀', mail: 'kim@kda.go.kr', roles: ['modeler', 'da'], systems: ['요구사항관리', '인사시스템', '통합ERP'] },
+    park: { id: 'park', name: '박설계', org: '정보화사업팀', mail: 'park@kda.go.kr', roles: ['modeler'], systems: ['요구사항관리', '통합ERP'] },
     lee: { id: 'lee', name: '이데이터', org: '데이터정책팀', mail: 'lee@kda.go.kr', roles: ['da', 'admin'], systems: ['전체'] },
     hyun: { id: 'hyun', name: '이현업', org: '기획조정실', mail: 'hyun@kda.go.kr', roles: ['owner'], systems: ['전체'] },
-    choi: { id: 'choi', name: '최담당', org: '재무회계팀', mail: 'choi@kda.go.kr', roles: ['owner', 'modeler'], systems: ['회계시스템'] }
+    choi: { id: 'choi', name: '최담당', org: '재무회계팀', mail: 'choi@kda.go.kr', roles: ['owner', 'modeler'], systems: ['회계시스템', '통합ERP'] }
   };
   const ROLE_NAME = { modeler: '모델러', da: 'DA', owner: '기관 담당자', admin: 'Admin' };
   window.USERS = USERS; window.ROLE_NAME = ROLE_NAME;
@@ -181,136 +181,160 @@
   window.consOf = (e, E, R) => {
     if (e.ref) return { pk: null, uk: [], fk: [], ix: [] };
     const pkc = e.a.filter(a => a.pk).map(a => a.p);
-    const fk = R.filter(r => r.t === e.id && r.f !== r.t && r.k !== 'mn').map(r => Object.assign({ r }, fkOf(r, E))).filter(f => f.st === 'ok');
+    const fk = R.filter(r => r.t === e.id && r.k !== 'mn').map(r => Object.assign({ r }, fkOf(r, E))).filter(f => f.st === 'ok');
     return { pk: pkc.length && e.p !== '—' ? { n: e.p + '_PK', c: pkc.join(', ') } : null, uk: (e.uk || []).map((c, i) => ({ n: `${e.p}_UK${i + 1}`, c })), fk: fk.map(f => ({ n: f.name, c: f.cols.join(', ') })), ix: fk.map((f, i) => ({ n: `${e.p}_IX${String(i + 1).padStart(2, '0')}`, c: f.cols.join(', '), auto: 1 })).concat((e.ix || []).map(x => ({ n: x.n, c: x.c }))) };
   };
   /* diagram views of a business area (12 §3.1): placement only, "전체" always first */
   const VIEWS0 = { rq: [{ id: 'all', n: '전체' }, { id: 'dlv', n: '산출물 흐름', ents: ['rqrm', 'dlv', 'hist'] }] };
   /* ---- 통합ERP sample system (13): six business modules, generated from a word list so physical names, types and FK columns stay consistent.
-     Attribute marks: * PK · ! 조합 가능(용어 미등록) · ? 미등록 단어 · # 예외(사유) — FK columns are added from the relations. ---- */
-  const ERP_WORDS = { 고객: 'CUST', 거래처: 'BCNC', 공급사: 'SPLR', 담당자: 'PIC', 견적: 'QUOT', 주문: 'ORD', 출하: 'SHIP', 매출: 'SLS', 반품: 'RTGD', 매입: 'PRCH', 구매: 'PUR', 발주: 'PO', 요청: 'REQ', 입고: 'WRHS', 출고: 'RLS', 이동: 'MVMT', 실사: 'ACTL', 수불: 'RCDS', 품목: 'ITEM', 분류: 'CL', 창고: 'WH', 위치: 'LOC', 재고: 'STCK', 로트: 'LOT', 제품: 'PRDT', 구성: 'CMPS', 공정: 'PRCS', 설비: 'EQP', 생산: 'PRDCT', 계획: 'PLAN', 작업지시: 'WORDR', 작업: 'WORK', 실적: 'PRFMNC', 투입: 'INPT', 검사: 'INSP', 품질: 'QLTY', 가동: 'OPRT', 비가동: 'NOPRT', 계정: 'ACNT', 원가센터: 'CCTR', 전표: 'SLIP', 세금계산서: 'TXINV', 채권: 'BOND', 채무: 'DEBT', 은행: 'BANK', 계좌번호: 'ACTNO', 예금주: 'DPSTR', 예산: 'BDGT', 집행: 'EXCN', 마감: 'CLSG', 차변: 'DBT', 대변: 'CRDT', 차대: 'DC', 적요: 'SMRY', 사원: 'EMP', 부서: 'DEPT', 직급: 'JBGD', 발령: 'APNT', 근태: 'DCLZ', 근무: 'WRK', 출근: 'ATDN', 퇴근: 'LVWK', 초과근무: 'OVTM', 휴가: 'VCTN', 급여: 'SLRY', 기본급: 'BSSLRY', 수당: 'ALWNC', 공제: 'DDCT', 실지급: 'RLPAY', 가족: 'FMLY', 부양: 'SPRT', 교육: 'EDU', 과정: 'CRS', 이수: 'CMPTN', 자격증: 'CRTFCT', 자격: 'QLFC', 발급: 'ISSU', 기관: 'INST', 취득: 'ACQS', 입사: 'JNCMP', 퇴사: 'RSGN', 재직: 'HFFC', 성별: 'SEX', 생년월일: 'BRDT', 영문: 'ENG', 상위: 'UP', 레벨: 'LVL', 사업자등록번호: 'BRNO', 대표자: 'RPRSV', 업종: 'TPBIZ', 등급: 'GRD', 여신한도: 'CRLMT', 거래: 'DLNG', 시작: 'BGNG', 종료: 'END', 유효: 'VLD', 사용: 'USE', 대표: 'RPRS', 판매: 'SALE', 단가: 'UPRC', 가격: 'PRC', 할인: 'DSCNT', 공급: 'SPLY', 가액: 'VAL', 부가세: 'VAT', 총: 'TOT', 결제: 'STLM', 조건: 'CND', 납기: 'DUDT', 배송: 'DLVY', 운송장: 'WAYBL', 업체: 'ENT', 완료: 'CMPTN', 사유: 'RSN', 변경: 'CHG', 이전: 'BFR', 전: 'BFR', 값: 'VAL', 항목: 'ARTCL', 적용: 'APLY', 통화: 'CRNCY', 희망: 'HOPE', 승인: 'APRV', 합격: 'PASS', 불량: 'DFCT', 양품: 'GDS', 결과: 'RSLT', 지급: 'PAY', 예정: 'PRNMNT', 최소: 'MIN', 규격: 'STD', 단위: 'UNIT', 안전: 'SAFE', 표준: 'STD', 관리: 'MNG', 적재: 'LDNG', 가능: 'PSBLTY', 할당: 'ALOC', 가용: 'AVL', 최종: 'LAST', 제조: 'MNFCT', 출발: 'DPRT', 도착: 'ARVL', 장부: 'BOOK', 차이: 'DIFF', 조정: 'ADJ', 기말: 'TRMEND', 소요: 'RQRD', 손실: 'LOSS', 시간: 'HR', 도입: 'INTRCN', 년월: 'YM', 년도: 'YR', 발행: 'PBLCN', 발생: 'OCRN', 만기: 'MTRY', 입금: 'RCPT', 잔액: 'BLNC', 용도: 'PRPS', 관계: 'REL', 양: 'QTY', 소수: 'DCML', 일수: 'DCNT', 메모: 'MEMO', 저장: 'STRG', 자재: 'MTRL', 계좌: 'BACNT', 신청: 'APLCN', 지시: 'INST',
+     Attribute marks: * PK · ! 조합 가능(단어는 모두 있지만 용어 미등록) · # 예외(사유). A name with a word that is not in the list is 미등록 by itself.
+     Relations: [parent, child, kind, name, noFk reason, role] — role = [Korean prefix, physical prefix] makes role-named FK columns (BOM 모/자품목, 출발/도착 창고, 상위 계정). ---- */
+  const ERP_WORDS = { 고객: 'CUST', 거래처: 'BCNC', 공급사: 'SPLR', 담당자: 'PIC', 견적: 'QUOT', 주문: 'ORD', 출하: 'SHIP', 매출: 'SLS', 반품: 'RTGD', 매입: 'PRCH', 구매: 'PUR', 발주: 'PO', 요청: 'REQ', 입고: 'WRHS', 출고: 'RLS', 이동: 'MVMT', 실사: 'ACTL', 수불: 'RCDS', 품목: 'ITEM', 분류: 'CL', 창고: 'WH', 위치: 'LOC', 재고: 'STCK', 로트: 'LOT', 제품: 'PRDT', 구성: 'CMPS', 공정: 'PRCS', 설비: 'EQP', 생산: 'PRDCT', 계획: 'PLAN', 작업지시: 'WORDR', 작업: 'WORK', 실적: 'PRFMNC', 투입: 'INPT', 검사: 'INSP', 품질: 'QLTY', 가동: 'OPRT', 비가동: 'NOPRT', 계정: 'ACNT', 과목: 'SBJT', 원가센터: 'CCTR', 전표: 'SLIP', 세금계산서: 'TXINV', 채권: 'RCVB', 채무: 'PYBL', 회계: 'ACNTG', 은행: 'BANK', 계좌번호: 'ACTNO', 계좌: 'BACNT', 예금주: 'DPSTR', 예산: 'BDGT', 집행: 'EXCN', 마감: 'CLSG', 차변: 'DBT', 대변: 'CRDT', 차대: 'DC', 적요: 'SMRY', 사원: 'EMP', 부서: 'DEPT', 직급: 'JBGD', 발령: 'APNT', 근태: 'DCLZ', 근무: 'WRK', 출근: 'ATDN', 퇴근: 'LVWK', 초과근무: 'OVTM', 휴가: 'VCTN', 신청: 'APLCN', 급여: 'SLRY', 기본급: 'BSSLRY', 수당: 'ALWNC', 공제: 'DDCT', 실지급: 'RLPAY', 가족: 'FMLY', 부양: 'SPRT', 교육: 'EDU', 과정: 'CRS', 이수: 'CMPTN', 자격증: 'CRTFCT', 자격: 'QLFC', 발급: 'ISSU', 기관: 'INST', 취득: 'ACQS', 입사: 'JNCMP', 퇴사: 'RSGN', 재직: 'HFFC', 성별: 'SEX', 생년월일: 'BRDT', 영문: 'ENG', 상위: 'UP', 레벨: 'LVL', 사업자등록번호: 'BRNO', 대표자: 'RPRSV', 업종: 'TPBIZ', 등급: 'GRD', 여신한도: 'CRLMT', 거래: 'DLNG', 시작: 'BGNG', 종료: 'END', 유효: 'VLD', 사용: 'USE', 대표: 'RPRS', 판매: 'SALE', 단가: 'UPRC', 가격: 'PRC', 할인: 'DSCNT', 공급가액: 'SPLY_AMT', 부가세: 'VAT', 총: 'TOT', 결제: 'STLM', 조건: 'CND', 납기: 'DUDT', 배송: 'DLVY', 운송장: 'WAYBL', 업체: 'ENT', 완료: 'CMPL', 사유: 'RSN', 변경: 'CHG', 이전: 'BFR', 값: 'VL', 항목: 'ARTCL', 적용: 'APLY', 통화: 'CRNCY', 희망: 'HOPE', 승인: 'APRV', 합격: 'PASS', 불량: 'DFCT', 양품: 'GDS', 결과: 'RSLT', 지급: 'PAY', 예정: 'PRNMNT', 최소: 'MIN', 규격: 'SPEC', 단위: 'UNIT', 안전: 'SAFE', 표준: 'STD', 관리: 'MNG', 적재: 'LDNG', 가능: 'PSBLTY', 할당: 'ALOC', 가용: 'AVL', 최종: 'LAST', 제조: 'MNFCT', 출발: 'DPRT', 도착: 'ARVL', 장부: 'BOOK', 차이: 'DIFF', 조정: 'ADJ', 기말: 'TRMEND', 소요: 'RQRD', 손실: 'LOSS', 시간: 'HR', 도입: 'INTRCN', 년월: 'YM', 년도: 'YR', 발행: 'PBLCN', 발생: 'OCRN', 만기: 'MTRY', 입금: 'RCPT', 잔액: 'BLNC', 용도: 'PRPS', 관계: 'REL', 일수: 'DCNT', 저장: 'STRG', 자재: 'MTRL', 지시: 'INSTR', 모: 'PRNT', 자: 'CHLD', 수주: 'ORDR',
     번호: 'NO', 코드: 'CD', 명: 'NM', 일자: 'YMD', 일시: 'DT', 금액: 'AMT', 액: 'AMT', 수량: 'QTY', 율: 'RT', 여부: 'YN', 구분: 'SE', 상태: 'STTS', 유형: 'TYPE', 순번: 'SN', 내용: 'CN', 주소: 'ADDR', 전화번호: 'TELNO', 이메일: 'EML', 기본: 'M', 내역: 'D', 이력: 'H', 상세: 'DTL' };
-  const ERP_TYPE = { NO: 'VARCHAR2(20)', CD: 'VARCHAR2(10)', NM: 'VARCHAR2(100)', YMD: 'CHAR(8)', DT: 'DATE', AMT: 'NUMBER(18,2)', UPRC: 'NUMBER(18,2)', QTY: 'NUMBER(15,3)', RT: 'NUMBER(5,2)', YN: 'CHAR(1)', SE: 'VARCHAR2(2)', STTS: 'VARCHAR2(2)', TYPE: 'VARCHAR2(2)', SN: 'NUMBER(5)', CN: 'VARCHAR2(4000)', ADDR: 'VARCHAR2(200)', TELNO: 'VARCHAR2(20)', EML: 'VARCHAR2(100)', BRNO: 'VARCHAR2(10)', ACTNO: 'VARCHAR2(30)', BRDT: 'CHAR(8)', HR: 'NUMBER(7,2)', YM: 'CHAR(6)', YR: 'CHAR(4)', DCNT: 'NUMBER(5,1)', MEMO: 'VARCHAR2(1000)' };
+  const ERP_TYPE = { NO: 'VARCHAR2(20)', CD: 'VARCHAR2(10)', NM: 'VARCHAR2(100)', YMD: 'CHAR(8)', DT: 'DATE', AMT: 'NUMBER(18,2)', UPRC: 'NUMBER(18,2)', QTY: 'NUMBER(15,3)', RT: 'NUMBER(5,2)', YN: 'CHAR(1)', SE: 'VARCHAR2(2)', STTS: 'VARCHAR2(2)', TYPE: 'VARCHAR2(2)', SN: 'NUMBER(5)', CN: 'VARCHAR2(4000)', ADDR: 'VARCHAR2(200)', TELNO: 'VARCHAR2(20)', EML: 'VARCHAR2(100)', BRNO: 'CHAR(10)', ACTNO: 'VARCHAR2(30)', BRDT: 'CHAR(8)', HR: 'NUMBER(7,2)', YM: 'CHAR(6)', YR: 'CHAR(4)', DCNT: 'NUMBER(5,1)' };
   const ERP_DOM = { NO: '번호V20', CD: '코드V10', NM: '명V100', YMD: '연월일C8', DT: '일시T', AMT: '금액N18', UPRC: '금액N18', QTY: '수량N15', RT: '율N5', YN: '여부C1', SE: '구분V2', STTS: '상태V2', TYPE: '유형V2', SN: '순번N5', CN: '내용V4000', ADDR: '주소V200', TELNO: '전화번호V20', EML: '이메일V100', BRNO: '사업자번호C10', ACTNO: '계좌번호V30', BRDT: '연월일C8', HR: '시간N7', YM: '연월C6', YR: '연도C4', DCNT: '일수N5' };
   const ERP_SECRET = { 전화번호: '양방향(ARIA)', 이메일: '없음', 주소: '없음', 생년월일: '양방향(ARIA)', 계좌번호: '양방향(ARIA)', 가족명: '없음', 사원명: '없음' };
   const erpSplit = name => { const out = []; let s = name; while (s.length) { let hit = null; for (let l = Math.min(7, s.length); l >= 1; l--) { const w = s.slice(0, l); if (ERP_WORDS[w]) { hit = w; break; } } if (!hit) return null; out.push(ERP_WORDS[hit]); s = s.slice(hit.length); } return out; };
   const ERP = {
     e_sd: { name: '영업관리', ver: 3, base: 2, desc: '고객 · 견적 · 주문 · 출하 · 매출 · 반품',
-      ents: [['cust', '고객기본', '고객번호*,고객명,사업자등록번호,대표자명,업종명,고객등급코드,주소,전화번호,이메일,여신한도금액,거래시작일자,사용여부'],
-        ['custpic', '고객담당자내역', '담당자순번*,담당자명,부서명,전화번호,이메일,대표여부'],
-        ['price', '판매가격기본', '적용시작일자*,판매단가,통화코드,적용종료일자'],
-        ['quot', '견적기본', '견적번호*,견적일자,유효종료일자,견적금액,견적상태코드,견적메모?'],
+      ents: [['cust', '고객기본', '고객번호*,고객명,사업자등록번호,대표자명,업종명,고객등급코드,주소,전화번호,이메일,여신한도금액,거래시작일자,사용여부', 'M'],
+        ['custpic', '고객담당자내역', '담당자순번*,담당자명,부서명,전화번호,이메일,대표여부', 'M'],
+        ['price', '판매가격기본', '적용시작일자*,판매단가,통화코드,적용종료일자', 'M'],
+        ['quot', '견적기본', '견적번호*,견적일자,유효종료일자,견적금액,견적상태코드,견적특기사항'],
         ['quotd', '견적상세내역', '견적순번*,견적수량,판매단가,할인율,견적금액'],
-        ['ord', '주문기본', '주문번호*,주문일자,납기일자,주문상태코드,결제조건코드,공급가액,부가세액,주문총금액,배송주소,배송요청사항?'],
+        ['ord', '주문기본', '주문번호*,주문일자,납기일자,주문상태코드,결제조건코드,공급가액,부가세액,주문총금액,배송주소,배송요청사항'],
         ['ordd', '주문상세내역', '주문순번*,주문수량,판매단가,할인금액,공급가액,출하완료여부'],
         ['ship', '출하기본', '출하번호*,출하일자,출하상태코드,운송장번호,배송업체명'],
-        ['shipd', '출하상세내역', '출하순번*,출하수량,로트번호'],
+        ['shipd', '출하상세내역', '출하순번*,출하수량'],
         ['sls', '매출기본', '매출번호*,매출일자,공급가액,부가세액,매출총금액,세금계산서번호'],
+        ['slsd', '매출상세내역', '매출순번*,매출수량,공급가액,부가세액'],
         ['rtn', '반품기본', '반품번호*,반품일자,반품수량,반품사유내용,반품상태코드'],
-        ['ordh', '주문상태이력', '이력순번*,변경일시,이전상태코드,변경상태코드!']],
-      refs: [['item', 'e_wm'], ['wh', 'e_wm'], ['emp', 'e_hr']],
-      rels: [['cust', 'custpic', 'id', '담당한다'], ['cust', 'quot', 'nonid', '요청한다'], ['quot', 'quotd', 'id', '포함한다'], ['item', 'quotd', 'nonid', '견적된다'], ['cust', 'ord', 'nonid', '주문한다'], ['quot', 'ord', 'nonid', '전환된다'], ['emp', 'ord', 'nonid', '영업 담당한다'], ['ord', 'ordd', 'id', '포함한다'], ['item', 'ordd', 'nonid', '주문된다'], ['item', 'price', 'id', '가격을 가진다'], ['ord', 'ship', 'nonid', '출하된다'], ['wh', 'ship', 'nonid', '출고한다'], ['ship', 'shipd', 'id', '포함한다'], ['ord', 'sls', 'nonid', '매출된다'], ['ord', 'rtn', 'nonid', '반품된다'], ['ord', 'ordh', 'id', '기록된다']],
-      views: [['flow', '주문 → 출하 → 매출', ['ord', 'ordd', 'ship', 'shipd', 'sls', 'rtn']], ['cust', '고객 · 견적', ['cust', 'custpic', 'quot', 'quotd', 'price']]] },
-    e_mm: { name: '구매관리', ver: 2, base: 1, desc: '공급사 · 구매요청 · 발주 · 입고검사 · 매입',
-      ents: [['splr', '공급사기본', '공급사번호*,공급사명,사업자등록번호,대표자명,주소,전화번호,결제조건코드,거래상태코드!'],
-        ['sprice', '공급사단가기본', '적용시작일자*,구매단가?,최소주문수량,적용종료일자'],
+        ['ordh', '주문상태이력', '이력순번*,변경일시,이전상태코드,변경상태코드!', 'H']],
+      refs: [['bcnc', 'e_fi'], ['item', 'e_wm'], ['lot', 'e_wm'], ['wh', 'e_wm'], ['emp', 'e_hr']],
+      rels: [['bcnc', 'cust', 'nonid', '회계 거래처이다'], ['cust', 'custpic', 'id', '담당한다'], ['cust', 'quot', 'nonid', '요청한다'], ['quot', 'quotd', 'id', '포함한다'], ['item', 'quotd', 'nonid', '견적된다'], ['cust', 'ord', 'nonid', '주문한다'], ['quot', 'ord', 'nonid', '전환된다'], ['emp', 'ord', 'nonid', '영업 담당한다'], ['ord', 'ordd', 'id', '포함한다'], ['item', 'ordd', 'nonid', '주문된다'], ['item', 'price', 'id', '가격을 가진다'], ['ord', 'ship', 'nonid', '출하된다'], ['wh', 'ship', 'nonid', '출고한다'], ['ship', 'shipd', 'id', '포함한다'], ['ordd', 'shipd', 'nonid', '출하된다'], ['lot', 'shipd', 'nonid', '추적된다'], ['ship', 'sls', 'nonid', '매출된다'], ['sls', 'slsd', 'id', '포함한다'], ['shipd', 'slsd', 'nonid', '청구된다'], ['shipd', 'rtn', 'nonid', '반품된다'], ['ord', 'ordh', 'id', '기록된다']],
+      views: [['flow', '주문 → 출하 → 매출', ['ord', 'ordd', 'ship', 'shipd', 'sls', 'slsd', 'rtn']], ['cust', '고객 · 견적', ['cust', 'custpic', 'quot', 'quotd', 'price']]] },
+    e_mm: { name: '구매관리', ver: 2, base: 1, desc: '공급사 · 구매요청 · 발주 · 구매입고 · 입고검사 · 매입',
+      ents: [['splr', '공급사기본', '공급사번호*,공급사명,사업자등록번호,대표자명,주소,전화번호,결제조건코드,거래상태코드!', 'M'],
+        ['sprice', '공급사단가기본', '적용시작일자*,구매단가!,최소주문수량,적용종료일자', 'M'],
         ['preq', '구매요청기본', '구매요청번호*,요청일자,요청부서코드,요청사유내용,승인상태코드'],
         ['preqd', '구매요청상세내역', '요청순번*,요청수량,희망납기일자'],
         ['po', '발주기본', '발주번호*,발주일자,납기일자,발주상태코드,발주총금액,통화코드'],
-        ['pod', '발주상세내역', '발주순번*,발주수량,구매단가?,발주금액,입고완료여부'],
+        ['pod', '발주상세내역', '발주순번*,발주수량,구매단가!,발주금액,입고완료여부'],
+        ['grcpt', '구매입고내역', '입고번호*,입고일자,입고수량'],
         ['qc', '입고검사기본', '검사번호*,검사일자,합격수량,불량수량,검사결과코드'],
         ['pur', '매입기본', '매입번호*,매입일자,공급가액,부가세액,세금계산서번호,지급예정일자'],
-        ['poh', '발주변경이력', '이력순번*,변경일시,변경항목명,변경전값내용']],
-      refs: [['item', 'e_wm'], ['wh', 'e_wm']],
-      rels: [['splr', 'sprice', 'id', '단가를 가진다'], ['item', 'sprice', 'id', '구매단가가 있다'], ['preq', 'preqd', 'id', '포함한다'], ['item', 'preqd', 'nonid', '요청된다'], ['splr', 'po', 'nonid', '발주받는다'], ['preq', 'po', 'nonid', '전환된다'], ['po', 'pod', 'id', '포함한다'], ['item', 'pod', 'nonid', '발주된다'], ['pod', 'qc', 'nonid', '검사된다'], ['wh', 'qc', 'nonid', '입고된다'], ['splr', 'pur', 'nonid', '청구한다'], ['po', 'pur', 'nonid', '매입된다'], ['po', 'poh', 'id', '기록된다']],
-      views: [['flow', '요청 → 발주 → 입고', ['preq', 'preqd', 'po', 'pod', 'qc']]] },
+        ['purd', '매입상세내역', '매입순번*,매입수량,공급가액'],
+        ['poh', '발주변경이력', '이력순번*,변경일시,변경항목명,변경이전값내용', 'H']],
+      refs: [['bcnc', 'e_fi'], ['item', 'e_wm'], ['wh', 'e_wm']],
+      rels: [['bcnc', 'splr', 'nonid', '회계 거래처이다'], ['splr', 'sprice', 'id', '단가를 가진다'], ['item', 'sprice', 'id', '구매단가가 있다'], ['preq', 'preqd', 'id', '포함한다'], ['item', 'preqd', 'nonid', '요청된다'], ['splr', 'po', 'nonid', '발주받는다'], ['preq', 'po', 'nonid', '전환된다'], ['po', 'pod', 'id', '포함한다'], ['item', 'pod', 'nonid', '발주된다'], ['pod', 'grcpt', 'nonid', '입고된다'], ['wh', 'grcpt', 'nonid', '받는다'], ['grcpt', 'qc', 'nonid', '검사된다'], ['splr', 'pur', 'nonid', '청구한다'], ['pur', 'purd', 'id', '포함한다'], ['grcpt', 'purd', 'nonid', '대사된다'], ['po', 'poh', 'id', '기록된다']],
+      views: [['flow', '요청 → 발주 → 입고 → 매입', ['preq', 'preqd', 'po', 'pod', 'grcpt', 'qc', 'pur', 'purd']]] },
     e_wm: { name: '재고관리', ver: 6, base: 5, desc: '품목 · 창고 · 재고 · 입출고 · 이동 · 실사',
       ents: [['icat', '품목분류기본', '분류코드*,분류명,분류레벨순번', 'K'],
-        ['item', '품목기본', '품목코드*,품목명,규격명,품목유형코드,재고단위코드,안전재고수량,표준단가,로트관리여부,사용여부'],
-        ['wh', '창고기본', '창고코드*,창고명,창고유형코드,주소,관리부서코드'],
-        ['loc', '저장위치기본', '위치코드*,위치명,적재가능수량'],
+        ['item', '품목기본', '품목코드*,품목명,규격명,품목유형코드,재고단위코드,안전재고수량,표준단가,로트관리여부,사용여부', 'M'],
+        ['wh', '창고기본', '창고코드*,창고명,창고유형코드,주소,관리부서코드', 'M'],
+        ['loc', '저장위치기본', '위치코드*,위치명,적재가능수량', 'M'],
+        ['lot', '로트기본', '로트번호*,제조일자,유효종료일자,로트상태코드', 'M'],
         ['stck', '재고기본', '재고수량,할당수량,가용수량,최종입고일자'],
-        ['lot', '로트기본', '로트번호*,제조일자,유효종료일자,로트상태코드'],
         ['wrhs', '입고기본', '입고번호*,입고일자,입고유형코드,입고수량'],
         ['rls', '출고기본', '출고번호*,출고일자,출고유형코드,출고수량'],
-        ['mv', '재고이동내역', '이동번호*,이동일자,이동수량,출발창고코드,도착창고코드'],
+        ['mv', '재고이동내역', '이동번호*,이동일자,이동수량'],
         ['cnt', '재고실사기본', '실사번호*,실사일자,장부수량,실사수량,차이수량,조정여부'],
-        ['sth', '재고수불이력', '수불순번*,수불일시,수불구분코드,수불수량,기말수량']],
-      rels: [['icat', 'icat', 'nonid', '상위 분류'], ['icat', 'item', 'nonid', '분류한다'], ['wh', 'loc', 'id', '나뉜다'], ['item', 'stck', 'id', '보관된다'], ['wh', 'stck', 'id', '보관한다'], ['item', 'lot', 'id', '생산된다'], ['item', 'wrhs', 'nonid', '입고된다'], ['wh', 'wrhs', 'nonid', '받는다'], ['lot', 'wrhs', 'nonid', '추적된다'], ['item', 'rls', 'nonid', '출고된다'], ['wh', 'rls', 'nonid', '내보낸다'], ['item', 'mv', 'nonid', '이동된다'], ['item', 'cnt', 'nonid', '실사된다'], ['wh', 'cnt', 'nonid', '실사한다'], ['stck', 'sth', 'id', '기록된다', '이력 테이블 · 대량 적재라 운영 DB에서 FK를 쓰지 않음']],
+        ['sth', '재고수불이력', '수불순번*,수불일시,수불구분코드,수불수량,기말수량', 'H']],
+      rels: [['icat', 'icat', 'nonid', '상위 분류'], ['icat', 'item', 'nonid', '분류한다'], ['wh', 'loc', 'id', '나뉜다'], ['item', 'stck', 'id', '보관된다'], ['wh', 'stck', 'id', '보관한다'], ['item', 'lot', 'id', '생산된다'], ['item', 'wrhs', 'nonid', '입고된다'], ['wh', 'wrhs', 'nonid', '받는다'], ['lot', 'wrhs', 'nonid', '추적된다'], ['item', 'rls', 'nonid', '출고된다'], ['wh', 'rls', 'nonid', '내보낸다'], ['lot', 'rls', 'nonid', '추적된다'], ['item', 'mv', 'nonid', '이동된다'], ['wh', 'mv', 'nonid', '내보낸다', null, ['출발', 'DPRT']], ['wh', 'mv', 'nonid', '받는다', null, ['도착', 'ARVL']], ['item', 'cnt', 'nonid', '실사된다'], ['wh', 'cnt', 'nonid', '실사한다'], ['stck', 'sth', 'id', '기록된다', '이력 테이블 · 대량 적재라 운영 DB에서 FK를 쓰지 않음']],
       views: [['flow', '재고 수불', ['stck', 'wrhs', 'rls', 'mv', 'sth', 'cnt']]] },
     e_pp: { name: '생산관리', ver: 1, base: 0, desc: '제품 구성(BOM) · 공정 · 설비 · 작업지시 · 실적 · 품질',
-      ents: [['bom', '제품구성기본', '구성순번*,소요수량,손실율!'],
-        ['prcs', '공정기본', '공정코드*,공정명,표준작업시간,공정순번'],
-        ['eqp', '설비기본', '설비코드*,설비명,설비유형코드,도입일자,가동상태코드'],
+      ents: [['bom', '제품구성기본', '소요수량,손실율!', 'M'],
+        ['prcs', '공정기본', '공정코드*,공정명,표준작업시간,공정순번', 'M'],
+        ['eqp', '설비기본', '설비코드*,설비명,설비유형코드,도입일자,가동상태코드', 'M'],
         ['plan', '생산계획기본', '계획번호*,계획년월,계획수량,계획상태코드'],
-        ['wo', '작업지시기본', '작업지시번호*,지시일자?,작업지시수량,시작예정일자,완료예정일자,작업상태코드'],
+        ['wo', '작업지시기본', '작업지시번호*,지시일자!,작업지시수량,시작예정일자,완료예정일자,작업상태코드'],
         ['wor', '작업실적내역', '실적순번*,실적일자,양품수량,불량수량,작업시간'],
         ['inpt', '자재투입내역', '투입순번*,투입일자,투입수량'],
         ['qcp', '품질검사기본', '검사번호*,검사일자,검사수량,합격여부,불량유형코드'],
-        ['eqh', '설비가동이력', '가동순번*,시작일시,종료일시,비가동사유코드']],
-      refs: [['item', 'e_wm'], ['wh', 'e_wm']],
-      rels: [['item', 'bom', 'id', '구성된다'], ['item', 'plan', 'nonid', '계획된다'], ['plan', 'wo', 'nonid', '지시된다'], ['prcs', 'wo', 'nonid', '수행한다'], ['item', 'wo', 'nonid', '생산된다'], ['wo', 'wor', 'id', '실적을 낸다'], ['eqp', 'wor', 'nonid', '가동한다'], ['wo', 'inpt', 'id', '투입한다'], ['wh', 'inpt', 'nonid', '불출한다'], ['wo', 'qcp', 'nonid', '검사된다'], ['eqp', 'eqh', 'id', '기록된다']],
-      views: [['flow', '계획 → 작업지시 → 실적', ['plan', 'wo', 'wor', 'inpt', 'qcp']]] },
-    e_fi: { name: '회계관리', ver: 4, base: 3, desc: '계정과목 · 전표 · 세금계산서 · 채권 · 채무 · 예산',
-      ents: [['acnt', '계정기본', '계정코드*,계정명,계정구분코드,상위계정코드,차대구분코드,사용여부'],
-        ['cc', '원가센터기본', '원가센터코드*,원가센터명,관리부서코드'],
-        ['bcnc', '거래처기본', '거래처코드*,거래처명,사업자등록번호#,거래처구분코드'],
-        ['bank', '은행계좌기본', '계좌번호*,은행코드,예금주명,계좌용도코드'],
+        ['eqh', '설비가동이력', '가동순번*,시작일시,종료일시,비가동사유코드', 'H']],
+      refs: [['item', 'e_wm'], ['lot', 'e_wm'], ['wh', 'e_wm']],
+      rels: [['item', 'bom', 'id', '구성한다(제품)', null, ['모', 'PRNT']], ['item', 'bom', 'id', '구성된다(부품)', null, ['자', 'CHLD']], ['item', 'plan', 'nonid', '계획된다'], ['plan', 'wo', 'nonid', '지시된다'], ['prcs', 'wo', 'nonid', '수행한다'], ['item', 'wo', 'nonid', '생산된다'], ['wo', 'wor', 'id', '실적을 낸다'], ['eqp', 'wor', 'nonid', '가동한다'], ['wo', 'inpt', 'id', '투입한다'], ['lot', 'inpt', 'nonid', '투입된다'], ['wh', 'inpt', 'nonid', '불출한다'], ['wo', 'qcp', 'nonid', '검사된다'], ['eqp', 'eqh', 'id', '기록된다']],
+      views: [['flow', '계획 → 작업지시 → 실적', ['plan', 'wo', 'wor', 'inpt', 'qcp']], ['bom', '제품 구성(BOM)', ['bom', 'prcs']]] },
+    e_fi: { name: '회계관리', ver: 4, base: 3, desc: '계정과목 · 전표 · 세금계산서 · 매출채권 · 매입채무 · 예산',
+      ents: [['acnt', '계정과목기본', '계정코드*,계정명,계정구분코드,차대구분코드,사용여부', 'M'],
+        ['cc', '원가센터기본', '원가센터코드*,원가센터명,관리부서코드', 'M'],
+        ['bcnc', '거래처기본', '거래처코드*,거래처명,사업자등록번호#,거래처구분코드', 'M'],
+        ['bank', '은행계좌기본', '계좌번호*,은행코드,예금주명,계좌용도코드', 'M'],
         ['slip', '전표기본', '전표번호*,전표일자,전표유형코드,적요내용,승인상태코드'],
         ['slipd', '전표상세내역', '전표순번*,차변금액,대변금액,적요내용'],
         ['txinv', '세금계산서기본', '세금계산서번호*,발행일자,공급가액,부가세액,발행구분코드'],
-        ['ar', '채권기본', '채권번호*,발생일자,채권금액,입금금액,잔액금액,만기일자'],
-        ['ap', '채무기본', '채무번호*,발생일자,채무금액,지급금액,잔액금액,지급예정일자'],
+        ['ar', '매출채권기본', '채권번호*,발생일자,채권금액,입금금액,잔액금액,만기일자'],
+        ['ap', '매입채무기본', '채무번호*,발생일자,채무금액,지급금액,잔액금액,지급예정일자'],
         ['bdgt', '예산기본', '예산년도*,예산금액,집행금액'],
-        ['close', '월마감이력', '마감년월*,마감일시,마감상태코드']],
-      rels: [['slip', 'slipd', 'id', '포함한다'], ['acnt', 'slipd', 'nonid', '기표된다'], ['cc', 'slipd', 'nonid', '귀속된다'], ['bcnc', 'slipd', 'nonid', '거래한다'], ['bcnc', 'txinv', 'nonid', '발행받는다'], ['bcnc', 'ar', 'nonid', '받을 돈'], ['txinv', 'ar', 'nonid', '근거가 된다'], ['bcnc', 'ap', 'nonid', '줄 돈'], ['bank', 'ap', 'nonid', '지급한다'], ['acnt', 'bdgt', 'id', '편성된다'], ['cc', 'bdgt', 'id', '배정된다']],
+        ['close', '회계마감이력', '마감년월*,마감일시,마감상태코드', 'H']],
+      refs: [['sls', 'e_sd'], ['pur', 'e_mm']],
+      rels: [['acnt', 'acnt', 'nonid', '상위 계정', null, ['상위', 'UP']], ['slip', 'slipd', 'id', '포함한다'], ['acnt', 'slipd', 'nonid', '기표된다'], ['cc', 'slipd', 'nonid', '귀속된다'], ['bcnc', 'slipd', 'nonid', '거래한다'], ['bcnc', 'txinv', 'nonid', '발행받는다'], ['sls', 'ar', 'nonid', '채권이 생긴다'], ['bcnc', 'ar', 'nonid', '받을 돈'], ['txinv', 'ar', 'nonid', '근거가 된다'], ['pur', 'ap', 'nonid', '채무가 생긴다'], ['bcnc', 'ap', 'nonid', '줄 돈'], ['bank', 'ap', 'nonid', '지급한다'], ['acnt', 'bdgt', 'id', '편성된다'], ['cc', 'bdgt', 'id', '배정된다']],
       views: [['slip', '전표', ['slip', 'slipd', 'acnt', 'cc', 'bcnc']], ['arap', '채권 · 채무', ['bcnc', 'txinv', 'ar', 'ap', 'bank']]] },
     e_hr: { name: '인사관리', ver: 5, base: 4, desc: '사원 · 부서 · 발령 · 근태 · 휴가 · 급여 · 교육',
-      ents: [['dept', '부서기본', '부서코드*,부서명,사용여부'],
+      ents: [['dept', '부서기본', '부서코드*,부서명,사용여부', 'M'],
         ['jbgd', '직급기본', '직급코드*,직급명,직급순번', 'K'],
-        ['emp', '사원기본', '사원번호*,사원명,영문명,생년월일,성별코드,입사일자,퇴사일자,재직상태코드,전화번호,이메일,주소'],
-        ['appt', '발령이력', '발령순번*,발령일자,발령구분코드,이전부서코드'],
+        ['emp', '사원기본', '사원번호*,사원명,영문명,생년월일,성별코드,입사일자,퇴사일자,재직상태코드,전화번호,이메일,주소', 'M'],
+        ['fam', '가족내역', '가족순번*,가족명,관계코드,생년월일,부양여부', 'M'],
+        ['edu', '교육이수내역', '교육순번*,교육과정명,이수일자,이수시간', 'M'],
+        ['crtf', '자격증내역', '자격순번*,자격증명,취득일자,발급기관명', 'M'],
+        ['appt', '발령이력', '발령순번*,발령일자,발령구분코드', 'H'],
         ['dclz', '근태내역', '근무일자*,출근일시,퇴근일시,근태구분코드,초과근무시간'],
-        ['vctn', '휴가신청내역', '휴가신청번호?*,휴가구분코드,시작일자,종료일자,휴가일수,승인상태코드'],
+        ['vctn', '휴가신청내역', '휴가신청번호*,휴가구분코드,시작일자,종료일자,휴가일수,승인상태코드'],
         ['slry', '급여기본', '급여년월*,지급일자,기본급금액,수당금액,공제금액,실지급금액,계좌번호'],
-        ['slryd', '급여상세내역', '항목순번*,급여항목코드,지급금액'],
-        ['fam', '가족내역', '가족순번*,가족명,관계코드,생년월일,부양여부'],
-        ['edu', '교육이수내역', '교육순번*,교육과정명,이수일자,이수시간'],
-        ['crtf', '자격증내역', '자격순번*,자격증명,취득일자,발급기관명']],
-      rels: [['dept', 'dept', 'nonid', '상위 부서'], ['dept', 'emp', 'nonid', '소속된다'], ['jbgd', 'emp', 'nonid', '부여된다'], ['emp', 'appt', 'id', '발령받는다'], ['dept', 'appt', 'nonid', '발령 부서'], ['emp', 'dclz', 'id', '근무한다'], ['emp', 'vctn', 'id', '신청한다'], ['emp', 'slry', 'id', '받는다'], ['slry', 'slryd', 'id', '포함한다'], ['emp', 'fam', 'id', '부양한다'], ['emp', 'edu', 'id', '이수한다'], ['emp', 'crtf', 'id', '보유한다']],
+        ['slryd', '급여상세내역', '항목순번*,급여항목코드,지급금액']],
+      rels: [['dept', 'dept', 'nonid', '상위 부서', null, ['상위', 'UP']], ['dept', 'emp', 'nonid', '소속된다'], ['jbgd', 'emp', 'nonid', '부여된다'], ['emp', 'appt', 'id', '발령받는다'], ['dept', 'appt', 'nonid', '이전 부서', null, ['이전', 'BFR']], ['dept', 'appt', 'nonid', '발령 부서'], ['emp', 'dclz', 'id', '근무한다'], ['emp', 'vctn', 'id', '신청한다'], ['emp', 'slry', 'id', '받는다'], ['slry', 'slryd', 'id', '포함한다'], ['emp', 'fam', 'id', '부양한다'], ['emp', 'edu', 'id', '이수한다'], ['emp', 'crtf', 'id', '보유한다']],
       views: [['pay', '급여', ['emp', 'slry', 'slryd', 'dept']], ['att', '근태 · 휴가', ['emp', 'dclz', 'vctn']]] }
   };
-  // build one attribute from "이름" + marks
+  // build one attribute from "이름" + marks; the type comes from the last word (분류어) of the physical name
   const erpAttr = raw => {
-    const pk = raw.includes('*'), comb = raw.includes('!'), unreg = raw.includes('?'), ex = raw.includes('#');
-    const n = raw.replace(/[*!?#]/g, ''); const ws = erpSplit(n);
-    const tail = ws ? ws[ws.length - 1] : null;
-    const a = { n, p: ws && !unreg ? ws.join('_') : '—', t: ws && !unreg ? (ERP_TYPE[tail] || 'VARCHAR2(50)') : '—', dom: ws && !unreg ? (ERP_DOM[tail] || '') : '', s: unreg || !ws ? 'unreg' : comb ? 'comb' : ex ? 'ex' : 'ok' };
+    const pk = raw.includes('*'), comb = raw.includes('!'), ex = raw.includes('#');
+    const n = raw.replace(/[*!#]/g, ''); const ws = erpSplit(n);
+    const tail = ws ? ws[ws.length - 1].split('_').pop() : null;
+    const a = { n, p: ws ? ws.join('_') : '—', t: ws ? (ERP_TYPE[tail] || 'VARCHAR2(50)') : '—', dom: ws ? (ERP_DOM[tail] || '') : '', s: !ws ? 'unreg' : comb ? 'comb' : ex ? 'ex' : 'ok' };
     if (comb) { a.p = '—'; a.t = '—'; }
     if (ex) { a.p = 'BIZ_NO'; a.exReason = '외부 회계 연계 컬럼명 유지(BIZ_NO)'; }
     if (pk) { a.pk = 1; a.nn = 1; }
     const sk = Object.keys(ERP_SECRET).find(k => n.endsWith(k)); if (sk) { a.sec = '개인정보'; a.enc = ERP_SECRET[sk]; }
     return a;
   };
-  const ERP_CLASS = n => n.endsWith('이력') ? 'H' : n.endsWith('내역') ? 'A' : /기본$/.test(n) && /(고객|공급사|거래처|품목|창고|위치|로트|계정|원가센터|은행|사원|부서|공정|설비|제품구성|판매가격|공급사단가)/.test(n) ? 'M' : 'A';
+  const ERP_CLASS = n => n.endsWith('이력') ? 'H' : 'A';
   function buildErp() {
     const seeds = {}, meta = {}, views = {};
-    const base = {};   // every entity of every module first (references copy the original's key columns)
+    const base = {};
     Object.entries(ERP).forEach(([area, d]) => d.ents.forEach(([id, n, attrs, c]) => { const ws = erpSplit(n); base[area + ':' + id] = { id, n, p: ws ? ws.join('_') : '—', c: c || ERP_CLASS(n), a: attrs.split(',').map(erpAttr) }; }));
+    const order = e => { if (e.ref) return; const fkpk = e.a.filter(a => a.pk && a.fk), own = e.a.filter(a => a.pk && !a.fk), rest = e.a.filter(a => !a.pk); e.a = fkpk.concat(own, rest); };
+    // relations in order; each child's keys are put in order right away so a later child copies the parent key in the parent's order
+    const relate = (E, rels) => { const R = []; rels.forEach(([f, t, k, name, noFk, role], i) => {
+      const p = E.find(e => e.id === f), c = E.find(e => e.id === t); if (!p || !c) return;
+      const r = { f, t, k, name }; if (noFk) r.noFk = noFk; R.push(r);
+      const pk = p.a.filter(a => a.pk);
+      if (role) { r.g = 'g' + (i + 1); pk.forEach(k0 => c.a.push({ n: role[0] + k0.n, p: role[1] + '_' + k0.p, t: k0.t, dom: k0.dom, s: 'ok', fk: 1, fkg: r.g, pk: k === 'id' ? 1 : undefined, nn: k === 'id' ? 1 : undefined })); order(c); return; }
+      if (f === t) { pk.forEach(k0 => c.a.push({ n: '상위' + k0.n, p: 'UP_' + k0.p, t: k0.t, dom: k0.dom, s: 'ok' })); return; }   // recursive without role mapping → stays 누락 (one example)
+      pk.forEach(k0 => { const ex0 = c.a.find(a => a.p === k0.p && a.p !== '—' && !a.fkg); if (ex0) { ex0.fk = 1; if (k === 'id') { ex0.pk = 1; ex0.nn = 1; } return; } c.a.push({ n: k0.n, p: k0.p, t: k0.t, dom: k0.dom, s: k0.s === 'ex' ? 'ok' : k0.s, fk: 1, pk: k === 'id' ? 1 : undefined, nn: k === 'id' ? 1 : undefined }); });
+      order(c);
+    }); return R; };
+    // a module's own entities relate first (references copy the original's keys after that)
+    Object.entries(ERP).forEach(([area, d]) => { const E = d.ents.map(([id]) => base[area + ':' + id]); relate(E, d.rels.filter(([f, t]) => d.ents.some(x => x[0] === f) && d.ents.some(x => x[0] === t))); E.forEach(order); });
     Object.entries(ERP).forEach(([area, d]) => {
       const E = d.ents.map(([id]) => JSON.parse(JSON.stringify(base[area + ':' + id])));
-      (d.refs || []).forEach(([id, from]) => { const o = base[from + ':' + id]; E.push({ id, n: o.n, p: o.p, c: o.c, ref: 1, refArea: from, refName: ERP[from].name, a: o.a.filter(a => a.pk || /명$/.test(a.n)).slice(0, 3).map(a => Object.assign({}, a)) }); });
+      // rebuild FK columns of this module from scratch (the shared base above already holds the in-module ones)
+      (d.refs || []).forEach(([id, from]) => { const o = base[from + ':' + id]; E.push({ id, n: o.n, p: o.p, c: o.c, ref: 1, refArea: from, refName: ERP[from].name, refVer: ERP[from].base, a: o.a.filter(a => a.pk || /명$/.test(a.n)).slice(0, 4).map(a => Object.assign({}, a, { fk: undefined, fkg: undefined })) }); });
       const R = [];
-      d.rels.forEach(([f, t, k, name, noFk], i) => {
-        const p = E.find(e => e.id === f), c = E.find(e => e.id === t); if (!p || !c) return;
-        const r = { f, t, k, name }; if (noFk) r.noFk = noFk; R.push(r);
-        if (f === t) { c.a.push({ n: '상위' + p.a.find(a => a.pk).n, p: 'UP_' + p.a.find(a => a.pk).p, t: p.a.find(a => a.pk).t, s: 'ok' }); return; }   // recursive: a role-named column (no FK group yet → shown as 누락 until mapped)
-        p.a.filter(a => a.pk).forEach(k0 => { const ex0 = c.a.find(a => a.p === k0.p && a.p !== '—'); if (ex0) { ex0.fk = 1; if (k === 'id') { ex0.pk = 1; ex0.nn = 1; } return; } const na = { n: k0.n, p: k0.p, t: k0.t, dom: k0.dom, s: k0.s === 'ex' ? 'ok' : k0.s, fk: 1 }; if (k === 'id') { na.pk = 1; na.nn = 1; } const at = c.a.findIndex(a => !a.pk); c.a.splice(k === 'id' ? Math.max(0, c.a.filter(a => a.pk && !a.fk).length ? 0 : 0) : (at < 0 ? c.a.length : at), 0, na); });
+      d.rels.forEach(([f, t, k, name, noFk, role], i) => {
+        const inner = d.ents.some(x => x[0] === f) && d.ents.some(x => x[0] === t);
+        const r = { f, t, k, name }; if (noFk) r.noFk = noFk;
+        if (role) r.g = 'g' + (i + 1);
+        if (inner) {   // FK columns already made in the shared pass — recover the role group number from the made columns
+          const c = E.find(e => e.id === t); if (role) { const g = c.a.find(a => a.fkg && a.p.startsWith(role[1] + '_')); if (g) r.g = g.fkg; }
+          R.push(r); return;
+        }
+        R.push(r); const p = E.find(e => e.id === f), c = E.find(e => e.id === t); if (!p || !c) return;
+        if (role) { p.a.filter(a => a.pk).forEach(k0 => c.a.push({ n: role[0] + k0.n, p: role[1] + '_' + k0.p, t: k0.t, dom: k0.dom, s: 'ok', fk: 1, fkg: r.g, pk: k === 'id' ? 1 : undefined, nn: k === 'id' ? 1 : undefined })); order(c); return; }
+        p.a.filter(a => a.pk).forEach(k0 => { const ex0 = c.a.find(a => a.p === k0.p && a.p !== '—' && !a.fkg); if (ex0) { ex0.fk = 1; if (k === 'id') { ex0.pk = 1; ex0.nn = 1; } return; } c.a.push({ n: k0.n, p: k0.p, t: k0.t, dom: k0.dom, s: k0.s === 'ex' ? 'ok' : k0.s, fk: 1, pk: k === 'id' ? 1 : undefined, nn: k === 'id' ? 1 : undefined }); });
+        order(c);
       });
-      // identifying parents' keys first, own key next, then the rest
-      E.forEach(e => { if (e.ref) return; const fkpk = e.a.filter(a => a.pk && a.fk), own = e.a.filter(a => a.pk && !a.fk), rest = e.a.filter(a => !a.pk); e.a = fkpk.concat(own, rest); });
-      // layout: masters on the first row, then transactions, history last
-      const order = ['K', 'M', 'A', 'H']; const own = E.filter(e => !e.ref).sort((a, b) => order.indexOf(a.c) - order.indexOf(b.c));
+      E.forEach(e => e.a.forEach(a => { Object.keys(a).forEach(k => { if (a[k] === undefined) delete a[k]; }); }));
+      const ord = ['K', 'M', 'A', 'H']; const own = E.filter(e => !e.ref).sort((a, b) => ord.indexOf(a.c) - ord.indexOf(b.c));
       own.forEach((e, i) => { e.x = 60 + (i % 4) * 330; e.y = 60 + Math.floor(i / 4) * 300; e.px = e.x + 20; e.py = e.y + 40; });
       E.filter(e => e.ref).forEach((e, i) => { e.x = 60 + 4 * 330; e.y = 60 + i * 200; e.px = e.x + 40; e.py = e.y + 40; });
       seeds[area] = { E, R, M: [] };
@@ -325,7 +349,7 @@
 
   Object.assign(MODEL0, ERP_BUILT.meta);
   // the address decides the system: ?system=ERP, or an area / snapshot that belongs to another system
-  { const sy = qs.get('system'), ar = qs.get('area'); if (sy && SYSLIST.some(s => s.code === sy)) store.set('dbm-sys', sy); else if (ar && getAllModels()[ar]) store.set('dbm-sys', getAllModels()[ar].system || 'RQMS'); }
+  { const sy = qs.get('system'), ar = qs.get('area'); if (ar && getAllModels()[ar]) store.set('dbm-sys', getAllModels()[ar].system || 'RQMS'); else if (sy && SYSLIST.some(s => s.code === sy)) store.set('dbm-sys', sy); }
   window.viewsOf = area => J('dbm-views-' + area, null) || clone(VIEWS0[area] || [{ id: 'all', n: '전체' }]);
   window.modelSeed = area => clone(MODEL_SEED[area] || (J('dbm-area-seed-' + area, null)) || { E: [], R: [], M: [] });
   /* the structure of an area+version as the screens should see it: saved working data → seed */
@@ -853,8 +877,8 @@
           const ahNote = qq && !eh && ah.length ? `<span class="tmeta">${P ? '컬럼' : '속성'} ${ah.length}</span>` : '';
           return N('e:' + e.id, P ? 'table' : 'ent', {
             ent: e.id, selectable: true, gray: P && !e.ref && (e.px == null || e.py == null),
-            html: P ? `<span class="tn1 mono">${mark(e.p === '—' ? e.n + ' (물리명 없음)' : e.p)}</span>${e.ref ? '<span class="tmeta">참조 · 읽기 전용</span>' : ahNote}` : `${entDot(e)}<span class="tn1">${mark(e.n)}</span>${e.ref ? `<span class="tmeta">${esc(e.refName || '공통')} 영역</span>` : ahNote || (entBad(e) ? `<span class="tct" title="미준수 ${entBad(e)}">${entBad(e)}</span>` : `<span class="tmeta mono">${mark(e.p === '—' ? '' : e.p)}</span>`)}`,
-            aria: `${P ? e.p : e.n}, ${entState(e)}`, title: P ? e.n : (e.p !== '—' ? e.p : '물리명 없음'),
+            html: P ? `<span class="tn1 mono">${mark(e.p === '—' ? e.n + ' (물리명 없음)' : e.p)}</span>${e.ref ? `<span class="tmeta">${esc(e.refName || '공통')}${e.refVer ? ' v' + e.refVer + ' 확정' : ''}</span>` : ahNote || `<span class="tmeta">${esc(e.n)}</span>`}` : `${entDot(e)}<span class="tn1">${mark(e.n)}</span>${e.ref ? `<span class="tmeta">${esc(e.refName || '공통')}${e.refVer ? ' v' + e.refVer + ' 확정' : ''}</span>` : (ahNote || (entBad(e) ? `<span class="tct tbad" title="미준수 ${entBad(e)}">${entBad(e)}</span>` : '')) + `<span class="tmeta mono">${mark(e.p === '—' ? '물리명 없음' : e.p)}</span>`}`,
+            aria: `${P ? e.p : e.n}${!P && e.p !== '—' ? ' ' + e.p : ''}, ${entState(e)}${e.ref ? ', ' + (e.refName || '공통') + ' 영역에서 참조' : ''}`, title: P ? e.n : (e.p !== '—' ? e.p : '물리명 없음'),
             open: kids.length && !e.ref ? (qq && ah.length ? true : isOp('e:' + e.id, false)) : null, kids: e.ref ? null : kids });
         }).filter(Boolean);
         const kidsOf = [];
@@ -877,6 +901,8 @@
           if (subs.length) kidsOf.push(folder('f:subs', '서브타입', subs.map(e => N('s:' + e.id, 'ent', { ent: e.id, selectable: true, html: `<span class="tn1">${esc(e.n)}</span><span class="tmeta">${esc(e.sub.kind)} · ${e.sub.kids.length}</span>`, aria: `${e.n} 서브타입 ${e.sub.kind}`, title: e.sub.kids.join(', ') }))));
         } else {
           if (entNodes.length || !qq) kidsOf.push(folder('f:tbls', '테이블', groupEnts(entNodes, area, isOp), { def: area === cur, count: qq ? entNodes.filter(n => !s.E.find(e => e.id === n.ent).ref).length : ents.filter(e => !e.ref).length }));
+          const refT = entNodes.filter(n => s.E.find(e => e.id === n.ent).ref);
+          if (refT.length) kidsOf.push(folder('f:refs', '다른 영역에서 참조', refT, { def: false, title: '다른 업무 영역의 테이블 · FK가 가리키는 원본' }));
           const pr = s.R.map((r, i) => ({ r, i, f: fkOf(r, s.E) })).filter(x => x.f.st !== 'none' && ents.some(e => e.id === x.r.t)).filter(({ r }) => { const a = s.E.find(e => e.id === r.f), b = s.E.find(e => e.id === r.t); return !qq || areaHit || hitFn(a.p) || hitFn(b.p); });
           const FST = { ok: '반영', ex: '제외', miss: '누락', mn: '해소 필요' };
           const miss = pr.filter(x => x.f.st === 'miss').length;
@@ -904,16 +930,19 @@
         }
         if (qq && !areaHit && !kidsOf.length) return;
         if (qq && areaHit) found++;
-        out.push(N('area', 'area', { title: m.desc ? `${m.name} — ${m.desc} · 엔터티 ${s.E.filter(e => !e.ref).length}` : '', html: `<span class="tn1"><b>${mark(m.name)}</b></span>${stateBadge(area)}`, aria: `${m.name}, ${area === cur && live() && live().label ? live().label : '업무 영역'}${m.desc ? ', ' + m.desc : ''}`, open: qq ? true : isOp('area', area === cur), kids: kidsOf }));
+        out.push(N('area', 'area', { desc: m.desc || '', title: m.desc ? `${m.name} — ${m.desc} · 엔터티 ${s.E.filter(e => !e.ref).length}` : '', html: `<span class="tn1"><b>${mark(m.name)}</b></span>${stateBadge(area)}`, aria: `${m.name}, ${area === cur && live() && live().label ? live().label : '업무 영역'}${m.desc ? ', ' + m.desc : ''}`, open: qq ? true : isOp('area', area === cur), kids: kidsOf }));
       });
       return { nodes: out, found };
     }
     // entities by kind (기준 정보 · 거래 · 이력 · 코드) once an area has more than 6 — ERP areas read like their business
-    const KIND = { M: ['기준 정보', '고객 · 품목 · 사원처럼 오래 쓰는 정보'], A: ['거래', '주문 · 발주 · 전표처럼 업무가 일어날 때마다 쌓이는 정보'], H: ['이력', '변경 · 상태 기록'], K: ['코드 · 분류', '분류 체계 · 직급 같은 기준 코드'] };
-    function groupEnts(nodes, area, isOp) {
+    const KIND = { M: ['기준 정보', '고객 · 품목 · 사원처럼 오래 두고 쓰는 정보와 그 하위 정보'], A: ['거래', '주문 · 발주 · 전표처럼 업무가 일어날 때마다 쌓이는 정보'], H: ['이력', '변경 · 상태 기록'], K: ['코드 · 분류', '분류 체계 · 직급 같은 기준 코드'] };
+    function groupEnts(nodes, area) {
       const s = src(area), own = nodes.filter(n => !s.E.find(e => e.id === n.ent).ref);
-      if (own.length <= 6 || q.trim()) return own;
-      return ['M', 'A', 'H', 'K'].map(c => { const k = own.filter(n => s.E.find(e => e.id === n.ent).c === c); if (!k.length) return null; const nid = 'g:' + c; return Object.assign({ id: area + '|' + nid, nid, area, key: SYS + ':' + area + '@' + s.ver, kind: 'folder', html: `<span class="tn1">${KIND[c][0]}</span><span class="tct">${k.length}</span>`, aria: `${KIND[c][0]} ${k.length}, ${KIND[c][1]}`, title: KIND[c][1], open: isOp(nid, true), kids: k }); }).filter(Boolean);
+      const kinds = ['M', 'K', 'A', 'H'].filter(c => own.some(n => s.E.find(e => e.id === n.ent).c === c));
+      if (kinds.length < 2) return own;
+      const out = [];
+      kinds.forEach(c => { const k = own.filter(n => s.E.find(e => e.id === n.ent).c === c); k[0].grp = { label: KIND[c][0], n: k.length, title: KIND[c][1] }; k.forEach(n => { n.aria += ', ' + KIND[c][0]; }); out.push(...k); });
+      return out;
     }
     function flatten(nodes, lvl, parent, acc) {
       nodes.forEach((n, i) => { n.lvl = lvl; n.pos = i + 1; n.size = nodes.length; n.parent = parent; acc.push(n); if (n.kids && n.open) flatten(n.kids, lvl + 1, n.id, acc); });
@@ -933,7 +962,7 @@
             <label class="tfind"><i data-ic=search data-s=14></i><input id="tr-q" type="search" placeholder="엔터티·속성·테이블·용어 찾기" aria-label="모델 객체 찾기" autocomplete="off"></label>
             <span class="tmw"><button class="tfb" type="button" data-menu-btn aria-expanded="false" aria-controls="mn-tf" aria-label="거르기" title="거르기"><i data-ic=filter data-s=14></i></button><div class="menu" data-auto id="mn-tf">
               <label class="mi"><input type="checkbox" data-tf="bad"> 미준수만</label><label class="mi"><input type="checkbox" data-tf="ex"> 예외 있는 것만</label><label class="mi"><input type="checkbox" data-tf="noref"> 참조 숨기기</label>
-              <div class="sep"></div><div class="mi" style="cursor:default">분류<span class="seg" style="margin-left:auto">${['', 'K', 'M', 'A', 'H'].map(c => `<button type="button" data-tc="${c}" class="${c === '' ? 'on' : ''}" title="${({ '': '전체', K: '키', M: '마스터', A: '액션', H: '이력' })[c]}">${c || '전체'}</button>`).join('')}</span></div></div></span>
+              <div class="sep"></div><div class="mi" style="cursor:default">분류<span class="seg" style="margin-left:auto">${['', 'M', 'A', 'H', 'K'].map(c => `<button type="button" data-tc="${c}" class="${c === '' ? 'on' : ''}">${({ '': '전체', M: '기준', A: '거래', H: '이력', K: '코드' })[c]}</button>`).join('')}</span></div></div></span>
           </div>
           <div class="tfbar" id="tr-fbar" hidden></div>
           <div class="sr-only" id="tr-live" aria-live="polite"></div>
@@ -976,7 +1005,9 @@
           html += (first ? `<div class="tlinks" role="none" style="--lv:${r.lvl}">` : '') + `<a role="treeitem" class="tlink" href="${r.href}" data-id="${esc(r.id)}" aria-level="${r.lvl}" aria-posinset="${r.pos}" aria-setsize="${r.size}" aria-label="${esc(r.aria)}" tabindex="${focusId === r.id ? 0 : -1}"${file === r.href.split('?')[0] && r.area === famArea ? ' aria-current="page"' : ''}>${r.html}</a>` + (last ? '</div>' : '');
           return;
         }
+        if (r.grp) html += `<div class="tgrp" role="none" style="--lv:${r.lvl}" title="${esc(r.grp.title)}">${r.grp.label}<span>${r.grp.n}</span></div>`;
         html += `<div role="treeitem" class="trow2 k-${r.kind}${r.id === selId ? ' sel' : ''}${r.gray ? ' gray' : ''}" data-id="${esc(r.id)}" aria-level="${r.lvl}" aria-posinset="${r.pos}" aria-setsize="${r.size}"${r.open != null ? ` aria-expanded="${r.open}"` : ''}${r.selectable ? ` aria-selected="${r.id === selId}"` : ''} tabindex="${r.id === focusId ? 0 : -1}" aria-label="${esc(r.aria || '')}"${r.title ? ` title="${esc(r.title)}"` : ''} style="--lv:${r.lvl}"><span class="ttw" data-tw aria-hidden="true">${r.open == null ? '' : `<i data-ic=${r.open ? 'down' : 'right'} data-s=12></i>`}</span>${r.html}</div>`;
+        if (r.kind === 'area' && r.open && r.desc && !q.trim()) html += `<div class="tdesc" role="none" style="--lv:${r.lvl + 1}">${esc(r.desc)}</div>`;
       });
       tree.innerHTML = html || '<div class="tempty">맞는 객체가 없습니다</div>';
       const l = live(); const curName = (getModels()[cur] || {}).name || '';
@@ -984,7 +1015,7 @@
       const ro = nav.querySelector('#tr-ro'); ro.hidden = !(l && l.ro); if (l && l.ro) ro.textContent = `${l.label} · 조회 전용`;
       nav.querySelector('#tr-live').textContent = q.trim() ? (found ? `${found}건 찾음` : '맞는 객체가 없습니다') : '';
       const fb = nav.querySelector('#tr-fbar'); fb.hidden = !fltOn();
-      if (fltOn()) fb.innerHTML = `<span>${[flt.bad && '미준수만', flt.ex && '예외 있는 것만', flt.noref && '참조 숨김', flt.cls && '분류 ' + flt.cls].filter(Boolean).join(' · ')}</span><button type="button" class="btn ghost sm" id="tr-fclr">지우기</button>`;
+      if (fltOn()) fb.innerHTML = `<span>${[flt.bad && '미준수만', flt.ex && '예외 있는 것만', flt.noref && '참조 숨김', flt.cls && ({ M: '기준 정보', A: '거래', H: '이력', K: '코드 · 분류' })[flt.cls] + '만'].filter(Boolean).join(' · ')}</span><button type="button" class="btn ghost sm" id="tr-fclr">지우기</button>`;
       if (had) { const f = tree.querySelector('[tabindex="0"]'); if (f) f.focus({ preventScroll: true }); else if (q.trim()) qIn.focus(); }
       if (focusId && rowMap[focusId]) { const fr = rowMap[focusId]; const ps = []; let p = fr.parent; while (p) { ps.push(p); p = rowMap[p] && rowMap[p].parent; } lastFocus = { parents: ps, idx: rows.indexOf(fr) }; }
       fit();

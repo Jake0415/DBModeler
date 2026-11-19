@@ -919,6 +919,12 @@ body.dict-in-tree .side-tab, body.dict-in-tree #side [data-toggle="side"] { disp
 .tlink b { font:500 12px var(--font-mono); color:var(--ds-amber-900); }
 .tlink[aria-current="page"] { color:var(--fg); font-weight:500; }
 .tlink:focus-visible { outline:2px solid var(--focus); outline-offset:1px; }
+.tgrp { display:flex; align-items:center; gap:6px; height:24px; margin-top:4px; padding-left:calc((var(--lv) - 1) * 16px + 22px); font-size:12px; color:var(--fg-2); }
+.tgrp span { font:500 11px var(--font-mono); color:var(--fg-3); }
+.tgrp::after { content:''; flex:1; height:1px; background:var(--ds-gray-400); margin-right:8px; }
+.tdesc { padding:0 8px 4px calc((var(--lv) - 1) * 16px + 22px); font-size:12px; line-height:16px; color:var(--fg-2); }
+.trow2 .tct.tbad { color:var(--ds-amber-900); }
+.trow2 .tct + .tmeta { margin-left:0; padding-left:8px; }
 .tresize { position:absolute; top:0; right:-3px; width:6px; height:100%; cursor:col-resize; z-index:5; }
 .tresize:hover, .tresize:focus-visible { background:color-mix(in srgb, var(--focus) 35%, transparent); outline:none; }
 #app.treemin .tresize { display:none; }/* tree → page: the target row/line is marked for a moment */

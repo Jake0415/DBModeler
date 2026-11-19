@@ -1,0 +1,39 @@
+# ERP 예시·모델 트리 재검토 (e1)
+
+커밋 `e85760d`와 [ERP 예시 적용 기록](../13-erp-sample-tree-review.md), [모델 트리 기획](../12-model-tree-plan.md)을 대조했다. 파일과 줄 번호는 해당 커밋 기준이다. 목업의 ERP 생성기와 FK 판정 함수를 Node.js에서 실행했고, 화면 이동과 접근성은 코드로 검토했다. 브라우저·보조기기 동작과 Oracle DDL 실행은 미검증이다.
+
+## 높음
+
+1. **결재 문서의 산출물이 다른 시스템을 열 수 있다.** ERP를 선택한 상태에서 요구사항관리 모델 문서의 ‘모델 보기’를 누르면 `area`로 요구사항관리 제출 사본이 열린다. 같은 문서의 ‘산출물’은 `outputs.html?k=tbl`만 열어 ERP 기본 영역으로 갈 수 있다. 반대로 사본을 먼저 열면 공용 저장소의 시스템 선택이 바뀌어 같은 산출물 링크의 결과가 달라진다. **수정** 문서 링크에 영역과 사본 ID를 전달하고 산출물에서 해당 버전을 고른다. 조회 링크는 화면의 시스템만 해석하고, 명시적인 시스템 전환에서 기본 선택을 저장한다. 시스템·영역·사본이 충돌하면 대상 불일치를 안내한다. [approvals.html:265](../mockups/approvals.html#L265) · [app.js:328](../mockups/assets/app.js#L328) · [model.html:348](../mockups/model.html#L348) · [outputs.html:86](../mockups/outputs.html#L86) · [outputs.html:97](../mockups/outputs.html#L97)
+
+2. **공급가액이 준수 상태의 문자열 컬럼으로 생성된다.** `가액 → VAL`에 타입·도메인이 없어 주문·주문상세·매출·매입·세금계산서의 공급가액 5개가 모두 `SPLY_VAL VARCHAR2(50)`, 도메인 공란, `ok`가 된다. 사업자등록번호도 `사업자번호C10`과 `VARCHAR2(10)`이 어긋난다. **수정** 등록 용어 ‘공급가액’에 금액 약어와 `NUMBER(18,2)` 도메인을 지정하고, 사업자등록번호 타입은 등록 도메인에서 읽는다. 분류어의 타입을 결정할 수 없으면 검토 대상으로 표시한다. [app.js:191](../mockups/assets/app.js#L191) · [app.js:193](../mockups/assets/app.js#L193) · [app.js:288](../mockups/assets/app.js#L288) · [13-erp-sample-tree-review.md:26](../13-erp-sample-tree-review.md#L26)
+
+3. **BOM에 구성 자재가 없고 자재투입에도 투입 품목이 없다.** 제품구성기본은 제품인 품목 한 건과 순번·수량만 연결한다. 어떤 부품을 몇 개 쓰는지 식별할 수 없고, 자재투입도 작업지시와 창고만 가리킨다. **수정** 제품과 구성품을 각각 역할명이 있는 품목 FK로 모델링한다. 최소한 ‘BOM 구성내역’에 제품·구성품·소요수량을 두고, 자재투입은 구성품 및 사용 로트를 가리키게 한다. 개정별 구성이 필요하면 BOM 머리와 구성 행을 나눈다. [app.js:242](../mockups/assets/app.js#L242) · [app.js:248](../mockups/assets/app.js#L248) · [app.js:251](../mockups/assets/app.js#L251)
+
+4. **주문부터 출하·매출·반품까지 품목별 수량을 추적할 수 없다.** 출하상세는 출하 머리만 가리키고 주문상세의 복합키가 없다. 주문에 여러 품목이 있으면 같은 주문번호 아래에서 어느 행이 부분 출하·반품됐는지 알 수 없다. 매출·반품도 주문 머리 수준에 머문다. **수정** 주문상세 → 출하상세 → 매출상세·반품상세로 연결한다. 로트 출하는 재고 영역의 품목·로트 복합키로 추적하고, 출하와 재고 출고를 연결한다. [app.js:204](../mockups/assets/app.js#L204) · [app.js:212](../mockups/assets/app.js#L212) · [app.js:233](../mockups/assets/app.js#L233)
+
+5. **발주·실입고·매입을 대사할 수 없다.** ‘요청 → 발주 → 입고’ 보기의 마지막 객체는 입고검사다. 재고 입고에는 발주상세 FK가 없고, 매입은 발주 머리만 가리킨다. 분할 입고나 한 매입 문서에 여러 입고 행이 들어오면 발주수량·검수수량·청구수량을 맞출 근거가 없다. **수정** 입고 행에 발주상세를 연결하고 검사 결과가 해당 입고 행을 가리키게 한다. 매입상세에 발주·입고 행을 대사할 수량·금액을 두고 다이어그램에 실입고를 포함한다. [app.js:219](../mockups/assets/app.js#L219) · [app.js:225](../mockups/assets/app.js#L225) · [app.js:239](../mockups/assets/app.js#L239) · [Oracle 매입 송장 대사](https://docs.oracle.com/en/cloud/saas/financials/25d/fappp/matching-invoice-lines.html)
+
+## 중간
+
+6. **회계가 영업·구매와 끊기고 채권·채무에 정산 근거가 없다.** 매출·매입에는 세금계산서번호 문자열만 있고 회계 세금계산서와의 관계가 없다. 채권에만 세금계산서 연결이 있고, 채무의 은행계좌 연결만으로는 분할 지급이나 여러 채무의 일괄 지급을 표현할 수 없다. **수정** 공통 거래처에 고객·공급사 역할을 연결하고, 매출·매입의 원천 행과 세금계산서·전표를 연결한다. 입금·지급 및 채권·채무 충당 내역에 정산 금액을 기록한다. 화면 명칭도 ‘계정과목’, ‘매출채권’, ‘매입채무’처럼 구체화한다. [app.js:208](../mockups/assets/app.js#L208) · [app.js:222](../mockups/assets/app.js#L222) · [app.js:255](../mockups/assets/app.js#L255) · [app.js:266](../mockups/assets/app.js#L266)
+
+7. **재고의 관리 단위와 창고 이동의 참조가 맞지 않는다.** 저장위치와 로트를 따로 관리하지만 재고는 창고·품목별로만 집계된다. 출고에는 로트가 없고, 이동의 출발·도착 창고코드는 어느 쪽도 창고 FK가 아니다. **수정** 재고기본을 창고별 요약으로 명시하고, 위치·로트별 잔량과 이동을 보여 줄 상세를 둔다. 이동·출고·실사 행에 필요한 위치·로트를 연결하고 출발/도착 창고는 별개 역할의 FK로 지정한다. [app.js:231](../mockups/assets/app.js#L231) · [app.js:239](../mockups/assets/app.js#L239)
+
+8. **단어 분해 결과와 의도한 미준수 시연이 섞인다.** 미등록 표시가 없는 ‘월마감이력’은 ‘월’이 없어 테이블명이 `—`가 되고, 반대로 ‘구매단가’는 사전에 있는 두 단어로 분해되는데 `?` 표시가 미등록 단어로 덮는다. ‘휴가신청번호’도 분해 가능하지만 미등록 표시로 `EMP_NO, —` PK가 생성된다. **수정** 등록 용어 우선, 완전 분해, 미등록 단어를 구분하고 단어 분해가 모호하면 등록 용어로 해결한다. ‘회계월마감’의 이름 규칙을 등록하고, 의도된 미준수 속성 한두 개는 비키 컬럼에서 시연한다. [app.js:196](../mockups/assets/app.js#L196) · [app.js:265](../mockups/assets/app.js#L265) · [app.js:275](../mockups/assets/app.js#L275) · [app.js:284](../mockups/assets/app.js#L284) · [ddl.html:100](../mockups/ddl.html#L100)
+
+9. **식별 관계 전파가 복합키 순서를 뒤집고 역할이 겹치면 컬럼을 합친다.** 급여 PK는 `EMP_NO, SLRY_YM`인데 급여상세 PK는 `SLRY_YM, EMP_NO, ARTCL_SN`이다. DDL의 복합 FK는 부모 순서대로 정상 판정되지만 자식 PK의 선두 순서가 다르다. 입고의 품목 FK와 로트 복합 FK는 `ITEM_CD`를 공유한다. 이 공유는 의도할 수 있으나, 현재 생성기는 역할과 타입을 확인하지 않고 동명 컬럼을 재사용하므로 BOM이나 출발·도착 역할을 추가하면 서로 다른 값을 한 컬럼으로 묶게 된다. 현재 시드에 유효 물리명이 같은 중복 컬럼은 0개였다. **수정** 참조할 부모 키 순서를 유지해 한 묶음으로 전파하고, 관계별 대응 컬럼과 공유 여부를 명시한다. DDL 전에는 컬럼명·제약명 중복 및 각 FK의 타입·순서를 검증한다. [app.js:169](../mockups/assets/app.js#L169) · [app.js:239](../mockups/assets/app.js#L239) · [app.js:280](../mockups/assets/app.js#L280) · [app.js:304](../mockups/assets/app.js#L304)
+
+10. **상위 계정 FK가 빠지고 재귀 FK의 판정 경로가 다르다.** 품목분류·부서는 문서에 명시된 의도적 누락 사례다. 상위계정코드는 관계 자체가 없어 누락 경고에도 잡히지 않는다. 또한 부서의 역할명 FK를 그룹으로 매핑하면 `fkOf`와 CREATE DDL에서는 반영될 수 있지만 `consOf`는 자기 참조를 항상 제외한다. **수정** 상위 계정 관계를 추가하고 자기 참조도 공통 판정 결과로 제약조건에 표시한다. 재귀 누락 시연은 하나를 남겨 상태 차이를 보여 준다. [app.js:170](../mockups/assets/app.js#L170) · [app.js:184](../mockups/assets/app.js#L184) · [app.js:255](../mockups/assets/app.js#L255) · [app.js:266](../mockups/assets/app.js#L266) · [ddl.html:116](../mockups/ddl.html#L116) · [13-erp-sample-tree-review.md:48](../13-erp-sample-tree-review.md#L48)
+
+11. **공용 사전과 ERP의 표준 판정이 서로 다른 데이터를 사용한다.** ERP 생성기는 로컬 상수로 판정하고, 트리는 사전에 등록 항목이 없어도 `ok` 속성을 ‘표준 용어’로 만든다. 사전의 사용처는 선택 시스템의 모델만 검색해서 전 기관에 적용되는 ‘미사용’ 신청의 영향 범위를 축소할 수 있다. 후보 상세에서는 다른 시스템의 위치가 링크를 잃는다. **수정** 생성기와 사전 화면에서 동일한 등록 용어·도메인 ID를 사용한다. 사전 사용처는 전체 시스템 집계와 시스템 필터를 제공하고, 후보 위치에는 시스템·영역을 표시해 원본으로 이동하게 한다. [app.js:284](../mockups/assets/app.js#L284) · [app.js:389](../mockups/assets/app.js#L389) · [app.js:894](../mockups/assets/app.js#L894) · [dictionary.html:233](../mockups/dictionary.html#L233) · [dictionary.html:255](../mockups/dictionary.html#L255) · [candidates.html:59](../mockups/candidates.html#L59)
+
+12. **결재함·엑셀·감사에서 공용 범위가 드러나지 않는다.** 결재 목록은 권한·함·유형·상태로만 거르고, 엑셀 재개는 공용 배치 ID로, 감사의 문서 이동은 결재 ID로 열린다. ERP를 선택해도 기관 공용 엑셀인지 요구사항관리에서 시작한 요청인지 항목만 보고 판단하기 어렵다. **수정** 기관 사전·엑셀에는 ‘기관 공용’을 표시하고 모델과 모델에서 시작된 사전 신청에는 출처 시스템·영역을 남긴다. 기존 모델 문서는 영역에서 시스템을 복원한다. 결재함·감사의 시스템 필터에는 ‘전체’와 ‘기관 공용’을 두고, 배치 재개는 원래 배치를 유지한다. [approvals.html:97](../mockups/approvals.html#L97) · [approvals.html:117](../mockups/approvals.html#L117) · [app.js:342](../mockups/assets/app.js#L342) · [excel-import.html:204](../mockups/excel-import.html#L204) · [excel-import.html:455](../mockups/excel-import.html#L455) · [audit.html:44](../mockups/audit.html#L44)
+
+13. **참조 폴더가 논리 모드에만 있고 원본 버전이 없다.** 물리 모드에서 분류 함수가 참조를 걸러 내므로 관계 목록에는 참조 테이블이 나오지만 테이블 탐색 경로는 사라진다. 참조 시드는 원본 확정 버전 정보 없이 초기 속성 일부를 복사하므로 기획의 확정본 고정·갱신 규칙도 시연하기 어렵다. **수정** 양쪽 모드에서 ‘가져온 참조’ 폴더를 같은 위치에 두고 원본 영역·확정 버전 및 ‘원본 열기’를 제공한다. 관계 목록에서 FK가 가리키는 원본도 찾아갈 수 있게 한다. [app.js:302](../mockups/assets/app.js#L302) · [app.js:871](../mockups/assets/app.js#L871) · [app.js:879](../mockups/assets/app.js#L879) · [app.js:914](../mockups/assets/app.js#L914) · [12-model-tree-plan.md:47](../12-model-tree-plan.md#L47)
+
+14. **분류 묶음과 한 줄 표기가 ERP에서 이름과 상태를 가린다.** 고객담당자·사원가족·자격 정보가 ‘거래’에 들어간다. 6개 이하가 되는 검색·필터 상태에서는 분류 경로가 사라진다. 논리 행의 물리명은 미준수 수로 대체되고 접근 가능한 이름에는 물리명과 참조 원본이 빠진다. 분류 필터 버튼도 화면의 폴더명 대신 K/M/A/H를 사용한다. **수정** 영역 아래에 ‘다이어그램’, ‘엔터티/테이블’, ‘가져온 참조’, ‘관계’, ‘사용 중인 표준’을 둔다. 분류는 명시 속성으로 지정하고 ‘기준정보/거래/이력/코드’ 경로를 검색에서도 유지한다. 240px에서는 논리명과 상태를 우선하고 선택·키보드 포커스에서 전체 논리명, 물리명, 상태, 원본을 확인할 수 있게 한다. 넓은 폭에서는 물리명과 미준수 수를 함께 표시하고 필터에는 축약 문자 대신 같은 분류 이름을 쓴다. [app.js:295](../mockups/assets/app.js#L295) · [app.js:856](../mockups/assets/app.js#L856) · [app.js:912](../mockups/assets/app.js#L912) · [app.js:936](../mockups/assets/app.js#L936) · [app.css:905](../mockups/assets/app.css#L905) · [12-model-tree-plan.md:182](../12-model-tree-plan.md#L182)
+
+## 낮음
+
+15. **관계 수가 적용 기록과 다르다.** 생성기를 실행한 결과 자체 엔터티 63개, 자체 속성 394개, 참조 7개, 관계 78개였다. 문서는 79개로 표기한다. **수정** 예외·누락 관계를 포함하는 집계 기준을 명시하고 실제 생성 결과에서 문서 수치를 갱신한다. [13-erp-sample-tree-review.md:12](../13-erp-sample-tree-review.md#L12) · [app.js:300](../mockups/assets/app.js#L300)
