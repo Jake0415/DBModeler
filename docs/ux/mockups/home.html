@@ -10,11 +10,11 @@
 <script src="assets/app.js"></script>
 <style>
   /* 8:4 asymmetric — work on the left, the ledger on the right (08 §10) */
-  .hl { display:grid; grid-template-columns:minmax(0, 8fr) minmax(0, 4fr); gap:32px; padding:24px 32px 32px; }
+  .hl { container:hl / inline-size; display:grid; grid-template-columns:minmax(0, 8fr) minmax(0, 4fr); gap:32px; padding:24px 32px 32px; }
   .hl.lf { grid-template-columns:minmax(0, 4fr) minmax(0, 8fr); }
   .hl > div { min-width:0; }
   .ok-line { font-size:12px; color:var(--fg-3); padding-top:8px; }
-  .reasons { margin:8px 0 0; padding-left:20px; font-size:13px; line-height:28px; }
+  .reasons { margin:8px 0 0; padding-left:20px; font-size:14px; line-height:28px; }
   .reasons li::marker { color:var(--fg-3); font-variant-numeric:tabular-nums; }
   .cols6 { display:grid; grid-template-columns:repeat(6, 1fr); gap:8px; align-items:end; height:96px; margin-top:12px; }
   .cols6 .c { display:flex; flex-direction:column; align-items:stretch; gap:4px; height:100%; justify-content:flex-end; font-size:12px; font-variant-numeric:tabular-nums; color:var(--fg-3); text-align:left; }
@@ -22,6 +22,20 @@
   .cols6 .c.pub i { background:var(--accent); }
   .cols6 .c b { font-weight:500; color:var(--fg-2); }
   .page-header .d { font-size:14px; color:var(--fg-3); font-variant-numeric:tabular-nums; }
+  /* urgent: one action on the first line (#16) */
+  .urgent { margin:24px 32px 0; align-items:center; }
+  .urgent > i > .ic, .urgent > .ic { margin-top:0; }
+  /* nothing to do: the section folds into one line */
+  .sec.calm .sec-h { margin-bottom:0; }
+  .sec.calm .sec-h .end { font-size:12px; color:var(--fg-3); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0; }
+  /* ledger: basis folds under the value below 1700px, so 4 columns never wrap */
+  .ledger .lb { display:none; }
+  .ledger td.gap { white-space:nowrap; }
+  @container hl (max-width:1476px) {
+    .ledger th.bc, .ledger td.bc { display:none; }
+    .ledger .lb { display:block; font:400 12px/16px var(--font-sans); color:var(--fg-3); white-space:nowrap; }
+    .ledger td.v { white-space:nowrap; }
+  }
 </style>
 </head>
 <body data-page="home">
@@ -86,7 +100,16 @@ window.pageInit = function () {
   T.push({ w: 85, t: '보완 필요 · 내 신청', n: fix.length, old: null, st: fix.length ? tag('err', '반려·회수') : '', go: fix.length ? [fix[0].id, `approvals.html?doc=${fix[0].id}`] : ['내 신청', 'approvals.html?box=mine'] });
   T.sort((a, b) => b.w - a.w);
   const act = T.filter(t => t.n > 0), calm = T.filter(t => !t.n);
-  const todo = `<section class="sec"><div class="sec-h"><h2>오늘 할 일</h2></div>
+  const calmNames = calm.map(t => t.t.split(' · ')[0]).join(', ');
+  /* urgent: at most one action above everything (late approvals on me > fix my request > org-wide late) */
+  const myLate = (ME.has('da') || ME.has('owner')) ? q.filter(docLate) : [];
+  const orgLate = ME.has('admin') ? live.filter(docLate) : [];
+  const U = myLate.length ? { t: `기한 넘긴 결재 <b>${myLate.length}건</b>`, ic: 'clock', a: '결재함 열기', h: 'approvals.html?box=queue' }
+    : fix.length ? { t: `보완 필요한 내 신청 <b>${fix.length}건</b>`, ic: 'warn', a: fix.length === 1 ? `${fix[0].id} 열기` : '내 신청 열기', h: fix.length === 1 ? `approvals.html?doc=${fix[0].id}` : 'approvals.html?box=mine' }
+    : orgLate.length ? { t: `기관 전체 기한 넘긴 결재 <b>${orgLate.length}건</b>`, ic: 'clock', a: '오래 머무는 결재 보기', h: '#stale' } : null;
+  const urgent = U ? `<div class="banner danger urgent" role="status"><i data-ic=${U.ic}></i><span class="grow">${U.t}</span><a class="btn sm" href="${U.h}">${U.a}</a></div>` : '';
+  const todo = !act.length ? `<section class="sec calm"><div class="sec-h"><h2>오늘 할 일</h2><span class="end" title="문제 없음: ${calmNames}">처리할 일이 없습니다</span></div></section>`
+    : `<section class="sec"><div class="sec-h"><h2>오늘 할 일</h2></div>
     ${act.length ? `<table class="tbl plain box"><thead><tr><th>할 일</th><th class="r">건수</th><th class="r">가장 오래</th><th>상태</th><th class="r">바로 가기</th></tr></thead><tbody>${act.map(t => `<tr><td>${t.t}</td><td class="r num">${t.n}</td><td class="r num">${t.old == null ? '—' : t.old + '일'}</td><td>${t.st || '<span class="faint">—</span>'}</td><td class="r"><a href="${t.go[1]}">${t.go[0]}</a></td></tr>`).join('')}</tbody></table>` : '<div class="ok-line" style="padding:12px 0">처리할 일이 없습니다.</div>'}
     ${calm.length ? `<div class="ok-line">문제 없음: ${calm.map(t => t.t.split(' · ')[0]).join(', ')}</div>` : ''}</section>`;
 
@@ -112,14 +135,14 @@ window.pageInit = function () {
   const candN = getCands().filter(x => candState(x) === '대기').length;
   const judge = (bad, txt) => `<td class="gap ${bad ? 'bad' : 'ok'}">${txt}</td>`;
   const ledger = `<section class="sec"><div class="sec-h"><h2>현황</h2></div>
-    <table class="tbl plain box ledger"><thead><tr><th>항목</th><th class="r">값</th><th>기준</th><th class="r">판정</th></tr></thead><tbody>
-      <tr><td><a href="#areas">표준 준수율</a></td><td class="v">${RATE}%</td><td class="muted">목표 ${GOAL}%</td>${judge(RATE < GOAL, RATE < GOAL ? (GOAL - RATE) + '%p 부족' : '충족')}</tr>
-      <tr><td><a href="#stale">기한 넘긴 결재</a></td><td class="v">${lt.length}</td><td class="muted">0건</td>${judge(lt.length > 0, lt.length ? lt.length + '건 넘김' : '충족')}</tr>
-      <tr><td>평균 처리 기간</td><td class="v">${leadT.toFixed(1)}일</td><td class="muted">${SLA}일 이내</td>${judge(leadT > SLA, leadT > SLA ? (leadT - SLA).toFixed(1) + '일 초과' : '충족')}</tr>
-      <tr><td><a href="approvals.html${ME.has('da') || ME.has('owner') ? '?box=all' : '?box=mine'}">진행 중 결재</a></td><td class="v">${live.length}</td><td class="muted">—</td><td class="gap ok">—</td></tr>
-      <tr><td><a href="#areas">확정된 업무 영역</a></td><td class="v">${st.conf}/${AREAS.length}</td><td class="muted">—</td><td class="gap ok">검토 중 ${st.rev}</td></tr>
-      <tr><td><a href="dictionary.html">표준 사전 항목</a></td><td class="v">${dict.length}</td><td class="muted">—</td><td class="gap ok">이번 달 ${month}건 변경</td></tr>
-      <tr><td><a href="candidates.html">후보 큐 대기</a></td><td class="v">${candN}</td><td class="muted">—</td><td class="gap ok">—</td></tr>
+    <table class="tbl plain box ledger"><thead><tr><th>항목</th><th class="r">값</th><th class="bc">기준</th><th class="r">판정</th></tr></thead><tbody>
+      <tr><td><a href="#areas">표준 준수율</a></td><td class="v">${RATE}%<span class="lb">목표 ${GOAL}%</span></td><td class="muted bc">목표 ${GOAL}%</td>${judge(RATE < GOAL, RATE < GOAL ? (GOAL - RATE) + '%p 부족' : '충족')}</tr>
+      <tr><td><a href="#stale">기한 넘긴 결재</a></td><td class="v">${lt.length}<span class="lb">기준 0건</span></td><td class="muted bc">0건</td>${judge(lt.length > 0, lt.length ? lt.length + '건 넘김' : '충족')}</tr>
+      <tr><td>평균 처리 기간</td><td class="v">${leadT.toFixed(1)}일<span class="lb">${SLA}일 이내</span></td><td class="muted bc">${SLA}일 이내</td>${judge(leadT > SLA, leadT > SLA ? (leadT - SLA).toFixed(1) + '일 초과' : '충족')}</tr>
+      <tr><td><a href="approvals.html${ME.has('da') || ME.has('owner') ? '?box=all' : '?box=mine'}">진행 중 결재</a></td><td class="v">${live.length}</td><td class="muted bc">—</td><td class="gap ok">—</td></tr>
+      <tr><td><a href="#areas">확정된 업무 영역</a></td><td class="v">${st.conf}/${AREAS.length}</td><td class="muted bc">—</td><td class="gap ok">검토 중 ${st.rev}</td></tr>
+      <tr><td><a href="dictionary.html">표준 사전 항목</a></td><td class="v">${dict.length}</td><td class="muted bc">—</td><td class="gap ok">이번 달 ${month}건 변경</td></tr>
+      <tr><td><a href="candidates.html">후보 큐 대기</a></td><td class="v">${candN}</td><td class="muted bc">—</td><td class="gap ok">—</td></tr>
     </tbody></table></section>`;
 
   /* ---- my requests (right): short table, fix first ---- */
@@ -162,7 +185,7 @@ window.pageInit = function () {
   const left = lead === 'modeler' ? todo + areas : todo + areas + stats;
   const right = lead === 'modeler' ? mine + cand : (lead === 'admin' || lead === 'owner' ? ledger + staleS + weeksS + (ME.has('modeler') ? mine : '') : ledger + mine + staleS + weeksS + cand);
   const lf = lead === 'admin' || lead === 'owner';
-  $('home').innerHTML = lf ? `<div class="hl lf"><div>${right}</div><div>${left}</div></div>` : `<div class="hl"><div>${left}</div><div>${right}</div></div>`;
+  $('home').innerHTML = urgent + (lf ? `<div class="hl lf"><div>${right}</div><div>${left}</div></div>` : `<div class="hl"><div>${left}</div><div>${right}</div></div>`);
 };
 </script>
 </body>

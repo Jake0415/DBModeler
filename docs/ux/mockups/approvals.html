@@ -11,7 +11,7 @@
 <style>
   .diff-old{color:var(--danger-deep);text-decoration:line-through}.diff-new{color:var(--success-deep);font-weight:500}
   .foot-zone { display:flex; align-items:center; gap:8px; }
-  .sumline { display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-top:10px; font-size:13px; color:var(--fg-2); }
+  .sumline { display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-top:10px; font-size:14px; color:var(--fg-2); }
   .sumline b { color:var(--fg); font-weight:600; font-variant-numeric:tabular-nums; }
   .sumline .sep { width:1px; height:12px; background:var(--ds-gray-400); }
   .sumlink { border:0; height:24px; padding:0 10px; border-radius:9999px; font:500 12px var(--font-sans); cursor:pointer; background:var(--ds-gray-200); color:var(--fg); }
@@ -217,14 +217,35 @@ window.pageInit = function () {
     return `<div class="sumline">${parts.join('<span class="sep" aria-hidden="true"></span>')}</div>`;
   }
   const KBD = '<span class="caption muted kbdh"><kbd>J</kbd><kbd>K</kbd> 이동 <kbd>A</kbd> 승인 <kbd>R</kbd> 반려</span>';
+  // not found / no permission: a way back instead of a dead end (#15). search by number · my requests · the list
+  function deadEnd(p, id, title, msg) {
+    const hasQ = ME.has('da') || ME.has('owner');
+    p.innerHTML = `<div class="rp-head"><div class="t"><span class="mono">${id}</span><button class="iconbtn close" id="pn-x" aria-label="닫기" style="width:28px;height:28px;border-radius:var(--r-md)">${icon('x')}</button></div><h2 style="margin-top:8px">${title}</h2></div>
+      <div class="rp-body"><div class="banner">${icon('info')}<div>${msg}</div></div>
+        <form id="de-f" style="display:flex;gap:8px;margin-top:16px" autocomplete="off"><input class="input" id="de-q" placeholder="신청번호 (예: ${(docs[0] || {}).id || 'D-2026-0001'})" aria-label="신청번호로 찾기" style="flex:1;min-width:0"><button class="btn" type="submit">${icon('search', 14)} 찾기</button></form>
+        <div class="caption" id="de-m" role="status" style="color:var(--danger-deep);min-height:20px;margin-top:4px"></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px"><button class="btn sm" id="de-mine">내 신청으로</button>${hasQ ? '<button class="btn sm ghost" id="de-list">결재함 목록으로</button>' : ''}</div></div>`;
+    const close = () => { sel = null; p.classList.remove('open'); drawRows(); const nb = $('boxes').querySelector('button.on') || $('boxes').querySelector('button'); if (nb) nb.focus(); };
+    const go = b => { box = b; sel = (list()[0] || {}).id || null; drawBoxes(); drawRows(); panel(); const nb = $('boxes').querySelector(`[data-box="${box}"]`); if (nb) nb.focus(); };
+    $('pn-x').onclick = close;
+    $('de-mine').onclick = () => go('mine');
+    if ($('de-list')) $('de-list').onclick = () => go('queue');
+    $('de-f').onsubmit = e => {
+      e.preventDefault(); const v = $('de-q').value.trim().toUpperCase(); if (!v) { $('de-q').focus(); return; }
+      const d = docs.find(x => x.id.toUpperCase() === v);
+      if (!d || !canSeeDoc(d)) { $('de-m').textContent = `${v} 신청을 찾을 수 없거나 볼 수 없습니다.`; $('de-q').select(); return; }
+      sel = d.id; if (!BOX[box][1](d)) box = BOX.queue[1](d) ? 'queue' : BOX.mine[1](d) ? 'mine' : BOX.cc[1](d) ? 'cc' : 'all';
+      drawBoxes(); drawRows(); panel(); const h = document.querySelector('#pn-doc .rp-head h2'); if (h) { h.tabIndex = -1; h.focus(); }
+    };
+  }
   function panel() {
     const p = $('pn-doc'); const d = docs.find(x => x.id === sel);
     // a link to a document that does not exist says so instead of silently showing nothing
-    if (!d && sel && sel === q.get('doc')) { p.classList.add('open'); p.innerHTML = `<div class="rp-head"><div class="t"><span class="mono">${sel}</span><button class="iconbtn close" id="pn-x" aria-label="닫기" style="width:28px;height:28px;border-radius:var(--r-md)">${icon('x')}</button></div><h2 style="margin-top:8px">문서를 찾을 수 없습니다</h2></div><div class="rp-body"><div class="banner">${icon('info')}<div>${sel} 결재 문서가 없거나 삭제됐습니다. 신청번호를 확인하거나 목록에서 찾으세요.</div></div></div>`; $('pn-x').onclick = () => { sel = null; p.classList.remove('open'); }; return; }
+    if (!d && sel && sel === q.get('doc')) { p.classList.add('open'); deadEnd(p, sel, '문서를 찾을 수 없습니다', `${sel} 결재 문서가 없거나 삭제됐습니다. 신청번호로 다시 찾거나 목록으로 돌아가세요.`); return; }
     if (!d) { p.classList.remove('open'); return; }
     p.classList.add('open');
     // deep links follow the same visibility rule as the lists (CL9-22)
-    if (!canSeeDoc(d)) { p.innerHTML = `<div class="rp-head"><div class="t"><span class="mono">${d.id}</span><button class="iconbtn close" id="pn-x" aria-label="닫기" style="width:28px;height:28px;border-radius:var(--r-md)">${icon('x')}</button></div><h2 style="margin-top:8px">열람 권한이 없습니다</h2></div><div class="rp-body"><div class="banner">${icon('info')}<div>이 결재 문서는 신청자·참조자·결재 역할(DA·기관 담당자)만 볼 수 있습니다. 지금 역할: ${ME.roles.map(r => ROLE_NAME[r]).join('·')}</div></div></div>`; $('pn-x').onclick = () => { sel = null; p.classList.remove('open'); }; return; }
+    if (!canSeeDoc(d)) { deadEnd(p, d.id, '열람 권한이 없습니다', `이 결재 문서는 신청자·참조자·결재 역할(DA·기관 담당자)만 볼 수 있습니다. 지금 역할: ${ME.roles.map(r => ROLE_NAME[r]).join('·')}`); return; }
     const mine = d.req === ME.id, live = ['da', 'final'].includes(d.step);
     const hist = [{ at: d.date, who: nameOf(d.req), act: '신청', why: d.reason }].concat(d.hist || []);
     let right = '';

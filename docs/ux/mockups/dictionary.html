@@ -305,7 +305,7 @@ window.pageInit = function () {
     const noId = ch.filter(c => !c.itemId).length;
     pubTarget = ch.map(c => c.at + '|' + c.item + '|' + c.doc).join('\n');   // the set the DA confirmed — publishing checks it is unchanged
     $('pub-t').textContent = `제정 ${pub.cha + 1}차 공표`;
-    $('pub-sum').innerHTML = `<div class="grid3"><div class="card"><div class="caption muted">추가</div><div class="mono" style="font-size:20px">${by.추가}</div></div><div class="card"><div class="caption muted">변경</div><div class="mono" style="font-size:20px">${by.변경}</div></div><div class="card"><div class="caption muted">미사용</div><div class="mono" style="font-size:20px">${by.미사용}</div></div></div>
+    $('pub-sum').innerHTML = `<div class="mline"><span><b>${by.추가}</b>추가</span><span><b>${by.변경}</b>변경</span><span><b>${by.미사용}</b>미사용</span></div>
       <div class="caption muted" style="margin-top:8px">직전 공표: 제정 ${pub.cha}차 · ${pub.at} · ${pub.by} — 그 뒤 승인된 <b>항목 ${Object.keys(last).length}개</b>(변경 기록 ${ch.length}건${noId ? ` · 그중 항목 ID 없는 집계 기록 ${noId}건은 차수만 기록` : ''})가 대상입니다. 진행 중 신청은 포함하지 않습니다. <a href="dict-history.html?unpub=1">대상 목록 보기</a></div>`;
     $('pub-why').value = ''; $('mo-pub').classList.add('open');
     setBlock($('pub-go'), Object.keys(last).length ? '' : '직전 공표 이후 승인된 변경이 없어 공표할 수 없습니다');

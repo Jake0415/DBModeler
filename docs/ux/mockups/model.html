@@ -32,15 +32,16 @@
   #edges { position:absolute; left:0; top:0; overflow:visible; pointer-events:none; }
   #edges path.hit { stroke:transparent; stroke-width:16; fill:none; pointer-events:stroke; cursor:pointer; }
   #edges path.hit.pick { stroke:color-mix(in srgb, var(--info) 35%, transparent); }
-  .node { position:absolute; min-width:180px; max-width:320px; background:var(--surface); border:1px solid var(--border-strong); border-radius:var(--r-lg); font-size:12px; box-shadow:var(--menu-shadow); user-select:none; }
-  .node.sel { border-color:var(--ink); box-shadow:0 0 0 1px var(--ink), var(--menu-shadow); }
+  .node { position:absolute; min-width:180px; max-width:320px; background:var(--surface); border:1px solid var(--border-strong); border-radius:var(--r-lg); font-size:12px; box-shadow:0 1px 2px rgba(0,0,0,.04); user-select:none; }
+  .node.sel { border-color:var(--ds-gray-1000); box-shadow:0 0 0 1px var(--ds-gray-1000); }
   .node.relsrc { border-color:var(--info); box-shadow:0 0 0 2px var(--info); }
   .node.drop { box-shadow:0 0 0 2px var(--info), var(--menu-shadow); }
   .node.remote { box-shadow:0 0 0 2px var(--p-hong), var(--menu-shadow); }
   .node.ref { border-style:dashed; background:var(--surface-2); }
   .node .rtag { position:absolute; top:-20px; left:-2px; background:var(--p-hong); color:#fff; font-size:11px; padding:1px 6px; border-radius:4px 4px 4px 0; white-space:nowrap; }
   .node .rtag.reft { background:var(--fg-3); }
-  .node .nh { display:flex; align-items:center; gap:6px; padding:6px 10px; border-bottom:1px solid var(--border); font-weight:600; font-size:13px; cursor:move; }
+  .node .nh { display:flex; align-items:center; gap:6px; padding:6px 10px; border-bottom:1px solid var(--border); font-weight:600; font-size:14px; cursor:move; }
+  .node .nh .nbad { height:18px; padding:0 6px; font-size:11px; border-radius:9999px; background:var(--ds-amber-200); color:var(--ds-amber-900); font-weight:500; display:inline-flex; align-items:center; white-space:nowrap; }
   .node .nh .cls { font:500 10px var(--font-mono); background:var(--ds-gray-100); border-radius:9999px; padding:0 6px; color:var(--fg-2); }
   .node .nh .sub { font:400 11px var(--font-mono); color:var(--fg-3); margin-left:auto; }
   .node .nh input { font:600 13px var(--font-sans); border:1px solid var(--ink); border-radius:4px; padding:0 4px; width:150px; background:var(--surface); color:var(--fg); }
@@ -74,7 +75,8 @@
   .rcur { position:absolute; pointer-events:none; transition:left .9s ease, top .9s ease; z-index:5; }
   .rcur span { position:absolute; left:12px; top:14px; color:#fff; font-size:11px; padding:1px 6px; border-radius:4px; white-space:nowrap; }
   .locked #cur-hong span::after { content:' · 조회'; }
-  .cv-toolbar { position:absolute; top:12px; left:50%; transform:translateX(-50%); display:flex; gap:2px; align-items:center; background:var(--surface); border-radius:var(--r-xl); box-shadow:var(--menu-shadow); padding:4px; z-index:20; }
+  #world { margin-top:41px; }
+  .cv-toolbar { position:absolute; top:0; left:0; right:0; transform:none; justify-content:flex-start; border-bottom:1px solid var(--ds-gray-400); display:flex; gap:2px; align-items:center; background:var(--surface); border-radius:0; box-shadow:none; padding:4px 12px; z-index:20; }
   .cv-toolbar .tb { height:30px; min-width:30px; padding:0 8px; border:0; border-radius:6px; background:none; color:var(--fg); font:500 13px var(--font-sans); cursor:pointer; display:flex; align-items:center; gap:4px; white-space:nowrap; flex:0 0 auto; }
   .cv-toolbar .tb:hover { background:var(--ds-gray-100); }
   .cv-toolbar .tb.on { background:var(--ds-gray-100); color:var(--fg); box-shadow:inset 0 0 0 1px var(--ds-gray-400); }
@@ -133,7 +135,8 @@
   #grid .gbulk.on { display:flex; }
   #grid .gbody { flex:1; overflow:auto; }
   #grid mark { background:color-mix(in srgb, var(--warning) 40%, transparent); color:inherit; border-radius:2px; }
-  #grid select.input, #grid input.input { height:28px; font-size:13px; }
+  #grid select.input, #grid input.input { height:32px; font-size:14px; }
+  #grid .tbl td { height:36px; }
   .locked #grid .edit-only { display:none !important; }
 </style>
 </head>
@@ -272,10 +275,10 @@
     <aside class="rpanel wide" id="pn-confirm">
       <div class="rp-head"><div class="t"><h2>모델 확정 신청</h2><button class="iconbtn close" data-close="pn-confirm" style="width:28px;height:28px" aria-label="닫기"><i data-ic=x></i></button></div><div class="rp-sub" id="cf-sub"></div></div>
       <div class="rp-body">
-        <div class="grid3" style="margin-bottom:12px">
-          <div class="card"><div class="caption muted">준수율</div><div class="mono" style="font-size:20px" id="cf-rate">—</div></div>
-          <div class="card"><div class="caption muted">예외</div><div class="mono" style="font-size:20px" id="cf-exc">—</div></div>
-          <div class="card"><div class="caption muted" id="cf-base">확정본 대비</div><div class="mono" style="font-size:20px" id="cf-diff">—</div></div>
+        <div class="mline">
+          <span><b id="cf-rate">—</b>준수율</span>
+          <span><b id="cf-exc">—</b>예외</span>
+          <span><b id="cf-diff">—</b><span id="cf-base">확정본 대비</span></span>
         </div>
         <div class="section-t">표준 예외 <span class="badge b-violet" id="cf-exn"><i data-ic=flag data-s=12></i> 0</span> </div>
         <table class="tbl"><thead><tr><th>항목</th><th>사유</th></tr></thead><tbody id="cf-ex"></tbody></table>
@@ -496,7 +499,7 @@ window.pageInit = function () {
       ? `<div class="subt"><div class="cap"><b>${e.sub.kind === '배타' ? 'X' : 'O'}</b>서브타입 · ${e.sub.kind} · 구분 ${e.sub.disc}</div><div class="kids">${e.sub.kids.map(k => `<span>${k}</span>`).join('')}</div></div>`
       : `<div class="subt"><div class="cap">서브타입 → 한 테이블로 통합 · 구분 컬럼 <span class="mono">DLVRBL_TYPE_CD</span></div></div>`) : '';
     const sysc = mode === 'P' && !e.ref ? `<div class="sysc">시스템 컬럼 ${SYS_COLS.length} · ${SYS_COLS.map(c => c[1]).join(' · ')}</div>` : '';
-    return `${tag}<div class="nh" data-drag="${e.id}"><span class="cls">${e.c}</span>${title}${b ? `<span class="badge b-warning" style="height:16px;padding:0 5px">${b}</span>` : ''}${e.st ? '<span class="dot-i s-comb" title="엔터티 용어 신청 중"></span>' : ''}<span class="sub">${mode === 'L' ? e.p : e.n}</span></div>
+    return `${tag}<div class="nh" data-drag="${e.id}"><span class="cls">${e.c}</span>${title}${b ? `<span class="nbad" title="미준수 속성 ${b}개">미준수 ${b}</span>` : ''}${e.st ? '<span class="dot-i s-comb" title="엔터티 용어 신청 중"></span>' : ''}<span class="sub">${mode === 'L' ? e.p : e.n}</span></div>
       <div class="pk">${pk.map(row).join('')}</div>${rest.map(row).join('')}<div class="more">+ ${rest.length}개 속성</div>${subt}${sysc}`;
   }
   function renderMemos() {
@@ -607,7 +610,7 @@ window.pageInit = function () {
     $('sel-info').textContent = sel ? `선택: ${ent(sel).n}` : '선택 없음';
     if (!sel) {
       t.textContent = '업무 영역 요약'; sub.textContent = mode === 'L' ? '요구사항 · 프로젝트 · 논리' : '요구사항 · 프로젝트 · 물리(Oracle)';
-      body.innerHTML = `<div class="grid2" style="margin-bottom:12px"><div class="card"><div class="caption muted">엔터티</div><div class="mono" style="font-size:20px">${E.length}</div></div><div class="card"><div class="caption muted">관계</div><div class="mono" style="font-size:20px">${R.length}</div></div></div>
+      body.innerHTML = `<div class="mline"><span><b>${E.length}</b>엔터티</span><span><b>${R.length}</b>관계</span></div>
         <div class="section-t">미준수 엔터티</div>
         ${E.filter(bad).map(e => `<div class="cand" data-goto="${e.id}"><span class="grow">${e.n}</span><span class="badge b-warning">${bad(e)}</span></div>`).join('')}
         <div class="section-t">접속자</div>
@@ -652,7 +655,7 @@ window.pageInit = function () {
     const sec = (title, items, lvl, render) => `<div class="section-t">${title} <span class="badge ${items.length ? lvl : 'b-success'}">${items.length}</span></div>${items.length ? `<table class="tbl"><tbody>${items.map(render).join('')}</tbody></table>` : '<div class="caption faint">문제 없음</div>'}`;
     const total = noRel.length + mn.length + typeless.length + nameDup.length + noPk.length + noDef.length;
     $('c-rev').textContent = total;
-    $('rev-body').innerHTML = `<div class="grid2" style="margin-bottom:8px"><div class="card"><div class="caption muted">점검 항목</div><div class="mono" style="font-size:20px">6</div></div><div class="card"><div class="caption muted">확인 필요</div><div class="mono" style="font-size:20px">${total}</div></div></div>` +
+    $('rev-body').innerHTML = `<div class="mline"><span><b>6</b>점검 항목</span><span><b>${total}</b>확인 필요</span></div>` +
       sec('관계 · M:N 미해소', mn, 'b-warning', r => `<tr data-goto="${r.f}" class="click"><td>${ent(r.f).n} ↔ ${ent(r.t).n}</td><td class="caption">교차 엔터티 필요</td></tr>`) +
       sec('물리 정보 · 타입 미정', typeless, 'b-warning', ([e, a]) => `<tr data-goto="${e.id}" class="click"><td>${e.n}.${a.n}</td><td class="caption">표준 맞추기</td></tr>`) +
       sec('명칭 중복 · 같은 이름 다른 엔터티', nameDup, 'b-info', ([e, a]) => `<tr data-goto="${e.id}" class="click"><td>${e.n}.${a.n}</td><td class="caption">FK가 아닌데 이름이 같음</td></tr>`) +
@@ -703,6 +706,7 @@ window.pageInit = function () {
   $('rev-run').onclick = () => { renderReview(); toast('모델 검토를 다시 실행했습니다', 'info'); };
 
   // ---- grid mode (bulk edit · find/replace)
+  let gRepOpen = false;
   const gsel = new Set(); let gfilter = 'all'; let gvis = new Set(); let gAllArm = null;   // arm = the exact scope + values the user confirmed
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
   const gpass = a => !a.edit && !(gfilter === 'bad' && !(a.s === 'comb' || a.s === 'unreg')) && !(gfilter === 'sec' && !a.sec) && !(gfilter === 'na' && a.s !== 'na');
@@ -716,8 +720,8 @@ window.pageInit = function () {
     g.innerHTML = `<div class="gbar"><b style="font-size:14px">속성 표 보기</b><span class="caption muted">${rows.length}개</span>
         ${['all:전체', 'bad:미준수', 'sec:보안', 'na:비대상'].map(x => { const [k, l] = x.split(':'); return `<span class="chip ${gfilter === k ? 'on' : ''}" data-gf="${k}" style="height:26px;font-size:12px">${l}</span>`; }).join('')}
         <span class="grow"></span>
-        <input class="input" id="g-find" placeholder="찾기 (논리명)" aria-label="찾기 (논리명)" value="${esc(fv)}" style="width:150px"><input class="input edit-only" id="g-rep" placeholder="바꿀 말" aria-label="바꿀 말" value="${esc(rv)}" style="width:130px">
-        <span class="caption muted" style="width:90px">${fv ? `보이는 행 ${hits}건` : ''}</span><button class="btn sm edit-only" id="g-replace" ${hits && rv ? '' : 'disabled'}>보이는 행 바꾸기</button>
+        <input class="input" id="g-find" placeholder="찾기 (논리명)" aria-label="찾기 (논리명)" value="${esc(fv)}" style="width:150px">${gRepOpen ? `<input class="input edit-only" id="g-rep" placeholder="바꿀 말" aria-label="바꿀 말" value="${esc(rv)}" style="width:130px">` : '<button class="btn sm ghost edit-only" id="g-rep-open">바꾸기…</button>'}
+        <span class="caption muted" style="width:90px">${fv ? `보이는 행 ${hits}건` : ''}</span>${gRepOpen ? `<button class="btn sm edit-only" id="g-replace" ${hits && rv ? '' : 'disabled'}>보이는 행 바꾸기</button>` : ''}
         <button class="btn sm ghost" id="g-close">다이어그램으로 (Esc)</button></div>
       <div class="gbulk edit-only ${gsel.size ? 'on' : ''}"><span class="gscope">표시된 선택 <b>${selVis}</b>${selHid ? ` · 숨겨진 선택 <b>${selHid}</b>` : ''}</span>
         <span class="caption muted">도메인</span><select class="input" id="g-dom" style="width:130px"><option value="">유지</option>${Object.keys(DOMS).map(d => `<option>${d}</option>`).join('')}</select>
@@ -744,6 +748,7 @@ window.pageInit = function () {
     ev.stopPropagation();
     const chip = ev.target.closest('[data-gf]'); if (chip) { gfilter = chip.dataset.gf; gAllArm = null; renderGrid(); return; }
     if (ev.target.id === 'g-close') { closeGrid(); return; }
+    if (ev.target.id === 'g-rep-open') { gRepOpen = true; renderGrid(); const r = $('g-rep'); if (r) r.focus(); return; }
     if (ev.target.id === 'g-clear') { gsel.clear(); gAllArm = null; renderGrid(); return; }
     if (ev.target.id === 'g-replace') {
       if (guard()) return; const fv = $('g-find').value, rv = $('g-rep').value; let n = 0; snap();
@@ -767,7 +772,7 @@ window.pageInit = function () {
   });
   $('grid').addEventListener('change', ev => {
     const k = ev.target.dataset.k;
-    if (k) { ev.target.checked ? gsel.add(k) : gsel.delete(k); gAllArm = null; renderGrid(); return; }
+    if (k) { ev.target.checked ? gsel.add(k) : gsel.delete(k); gAllArm = null; renderGrid(); const c = $('grid').querySelector(`[data-k="${k}"]`); if (c) c.focus(); return; }
     if (['g-dom', 'g-nn', 'g-why'].includes(ev.target.id)) { gAllArm = null; const b = $('g-apply-all'); if (b && /한 번 더/.test(b.textContent)) b.textContent = b.textContent.replace(/^한 번 더 눌러 숨겨진 (\d+)개 포함 적용$/, '숨겨진 $1개 포함…'); }
     if (ev.target.id === 'g-std') { renderGrid(); if (ev.target.value === 'na') $('g-why').focus(); return; }
     if (ev.target.id === 'g-all') { $('grid').querySelectorAll('[data-k]').forEach(c => ev.target.checked ? gsel.add(c.dataset.k) : gsel.delete(c.dataset.k)); renderGrid(); }
@@ -1110,7 +1115,7 @@ window.pageInit = function () {
     const rows = gateRows(), um = rows.filter(r => r[2].includes('미매핑') || r[2].includes('테이블명')).length, tn = rows.filter(r => r[2].includes('타입')).length;
     $('ban-gate-t').innerHTML = rows.length ? `<b>게이트 A · 경고 ${rows.length}</b> — 미매핑 ${um} · 타입 미정 ${tn}. 진행은 막지 않습니다.` : '<b>게이트 A · 통과</b> — 물리 반영 전 점검에서 남은 경고가 없습니다.';
     $('ban-gate').className = 'banner ' + (rows.length ? 'warning' : 'success');
-    $('gate-body').innerHTML = `<div class="grid2" style="margin-bottom:12px"><div class="card"><div class="caption muted">미매핑</div><div class="mono" style="font-size:20px">${um}</div></div><div class="card"><div class="caption muted">타입 미정</div><div class="mono" style="font-size:20px">${tn}</div></div></div>` +
+    $('gate-body').innerHTML = `<div class="mline"><span><b>${um}</b>미매핑</span><span><b>${tn}</b>타입 미정</span></div>` +
       (rows.length ? `<table class="tbl"><thead><tr><th>위치</th><th>문제</th><th></th></tr></thead><tbody>${rows.map(([e, a, w, act]) => `<tr><td>${e.n}${a ? '.' + a.n : ' (테이블명)'}</td><td><span class="badge ${w.includes('미등록') ? 'b-warning' : 'b-info'}">${w}</span></td><td>${act === 'ex' && a && a.s !== 'ex' ? `<a href="#" data-gex="${e.id}|${a.n}">예외</a>` : act === '엔터티 용어 신청 중' ? '<span class="faint">대기</span>' : `<a href="standardize.html?area=${AREA}">맞추기</a>`}</td></tr>`).join('')}</tbody></table>` : '<div class="banner success"><i data-ic=check></i><div>점검할 항목이 없습니다.</div></div>');
     $('gate-body').querySelectorAll('[data-gex]').forEach(x => x.onclick = ev => { ev.preventDefault(); const [eid, an] = x.dataset.gex.split('|'); window.__openEx(eid, an); });
     return rows.length;
@@ -1265,7 +1270,7 @@ window.pageInit = function () {
   }
   // dictionary panel: the user's choice is remembered; at 1600 it starts closed by default
   const sidePref = dbmStore.get('dbm-side', '');
-  if (sidePref === 'closed' || (!sidePref && document.documentElement.classList.contains('frame-1600'))) $('side').classList.add('closed');
+  if (sidePref === 'closed' || (!sidePref && (document.documentElement.classList.contains('frame-1600') || innerWidth < 1920))) $('side').classList.add('closed');
   new MutationObserver(() => dbmStore.set('dbm-side', $('side').classList.contains('closed') ? 'closed' : 'open')).observe($('side'), { attributes: true, attributeFilter: ['class'] });
   if (viewOnly && !locked) {
     document.body.classList.add('viewonly'); $('ban-view').style.display = 'flex'; if (!document.body.classList.contains('locked')) setSave('run', '조회 전용');

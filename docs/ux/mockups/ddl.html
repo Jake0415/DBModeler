@@ -44,11 +44,7 @@
         <div class="caption muted" style="margin-top:4px">모델과 운영 DB의 실제 구조를 비교합니다(예시 값). 운영 DB 접속 정보는 시스템 설정에서 Admin이 등록합니다.</div></div>
       <div class="rp-body">
         <div class="field-row"><div class="field"><label>비교 대상</label><select class="input"><option>운영 · RQMS@prod (Oracle 19c)</option><option>개발 · RQMS@dev</option></select></div><div class="field"><label>기준 모델</label><select class="input"><option>v5 초안</option><option>v4 확정본</option></select></div></div>
-        <div class="grid3" style="margin-bottom:12px">
-          <div class="card"><div class="caption muted">모델에만</div><div class="mono" style="font-size:20px">2</div></div>
-          <div class="card"><div class="caption muted">DB에만</div><div class="mono" style="font-size:20px">1</div></div>
-          <div class="card"><div class="caption muted">다름</div><div class="mono" style="font-size:20px">3</div></div>
-        </div>
+        <div class="mline"><span><b>2</b>모델에만</span><span><b>1</b>DB에만</span><span><b>3</b>다름</span></div>
         <table class="tbl"><thead><tr><th>객체</th><th>모델</th><th>운영 DB</th><th>구분</th></tr></thead><tbody>
           <tr><td class="mono">DLVRBL_M</td><td class="mono">있음</td><td class="faint">없음</td><td><span class="badge b-info">모델에만</span></td></tr>
           <tr><td class="mono">DLVRBL_HIST_D</td><td class="mono">있음</td><td class="faint">없음</td><td><span class="badge b-info">모델에만</span></td></tr>
@@ -115,7 +111,7 @@ window.pageInit = function () {
     $('sql').innerHTML = lines.map((l, i) => `<div class="ln ${l.includes('-- 오류:') ? 'warn' : ''}"><i>${i + 1}</i>${l}</div>`).join('');
     $('gb-banner').className = 'banner ' + (block.length ? 'danger' : warn.length ? 'warning' : 'success');
     $('gb-text').innerHTML = `<b>게이트 B: 차단 ${block.length} · 경고 ${warn.length}.</b> ${block.length ? '물리명·타입이 없는 컬럼이 있어 출력이 막힙니다 — 모델에서 표준 맞추기 후 다시 여세요.' : warn.length ? '표준 위반은 경고로 남고 예외 사유와 함께 출력합니다.' : '문제 없음.'}`;
-    $('gb-body').innerHTML = `<div class="grid2" style="margin-bottom:12px"><div class="card"><div class="caption muted">테이블</div><div class="mono" style="font-size:20px">${target.length}</div></div><div class="card"><div class="caption muted">관계</div><div class="mono" style="font-size:20px">${src.R.length}</div></div></div>
+    $('gb-body').innerHTML = `<div class="mline"><span><b>${target.length}</b>테이블</span><span><b>${src.R.length}</b>관계</span></div>
       <table class="tbl"><thead><tr><th>구분</th><th>항목</th></tr></thead><tbody>${block.map(x => `<tr><td><span class="badge b-danger">차단</span></td><td class="caption">${x}</td></tr>`).join('')}${warn.map(x => `<tr><td><span class="badge b-warning">경고</span></td><td class="caption">${x}</td></tr>`).join('')}${!block.length && !warn.length ? '<tr class="er"><td colspan="2" class="caption muted">문제 없음</td></tr>' : ''}</tbody></table>
       <div class="caption muted" style="margin-top:8px">문법·물리명 누락은 차단, 표준 위반은 경고 + 예외 사유로 진행합니다.</div>`;
     ['copy', 'dl'].forEach(id => { $(id).disabled = !!block.length; });

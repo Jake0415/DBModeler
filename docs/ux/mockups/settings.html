@@ -13,6 +13,12 @@
   .set-row { display:grid; grid-template-columns:240px 1fr; gap:24px; padding:16px 0; border-bottom:1px solid var(--border); }
   .set-row .l b { display:block; font-size:14px; } .set-row .l span { font-size:12px; color:var(--fg-3); }
   .tline { display:grid; grid-template-columns:28px 1fr 180px 90px; gap:8px; align-items:center; padding:6px 0; }
+  .set-row .l .lastchg { display:block; margin-top:4px; font-size:11px; color:var(--fg-3); }
+  .set-row .l .lastchg:empty { display:none; }
+  .tabs .tdot { display:none; width:6px; height:6px; margin:0 0 0 6px; vertical-align:2px; }
+  .tabs button.dirty .tdot { display:inline-block; }
+  .setbar { display:none; align-items:center; gap:8px; height:56px; padding:0 20px; border-top:1px solid var(--ds-gray-400); background:var(--surface); flex:none; }
+  .setbar.show { display:flex; }
 </style>
 </head>
 <body data-page="settings">
@@ -20,21 +26,20 @@
 <div id="content" class="page" data-tabscope>
   <div class="page-header" style="border-bottom:0">
     <h1>설정</h1>
-    <div class="actions"><button class="btn primary" id="save">저장</button></div>
   </div>
   <div class="tabs" style="margin:0;padding:0 20px;background:var(--surface)">
-    <button class="on" data-tab="org">기관</button>
-    <button data-tab="sys">시스템</button>
+    <button class="on" data-tab="org">기관<span class="sdot run tdot" aria-hidden="true"></span></button>
+    <button data-tab="sys">시스템<span class="sdot run tdot" aria-hidden="true"></span></button>
     <button data-tab="users">사용자 · 역할</button>
-    <button data-tab="rules">검수 기준</button>
+    <button data-tab="rules">검수 기준<span class="sdot run tdot" aria-hidden="true"></span></button>
   </div>
   <div class="scroll"><div class="pad">
 
   <!-- SC-40 org -->
   <div class="pane on set-wrap" data-pane="org">
     <div class="set-row"><div class="l"><b>기관</b><span>상단 바와 산출물에 표시</span></div><div class="field-row"><div class="field"><label>기관명</label><input class="input" value="한국데이터진흥원"></div><div class="field"><label>기관 사전 이름</label><input class="input" value="KDA 표준사전"></div></div></div>
-    <div class="set-row"><div class="l"><b>사전 신청 최종 승인</b><span>켜면 DA 승인 뒤 기관 담당자 승인을 거쳐 반영</span></div><div class="flex"><label class="flex"><input type="checkbox" id="fin-dict"> <span id="fin-dict-t"></span></label></div></div>
-    <div class="set-row"><div class="l"><b>운영 목표</b><span>홈 현황·통계의 목표선과 ‘기한 넘김’ 기준</span></div><div class="flex" style="gap:16px"><label class="flex">목표 준수율 <input class="input mono" id="org-goal" type="number" min="50" max="100" style="width:70px;">%</label><label class="flex">결재 기한 <input class="input mono" id="org-sla" type="number" min="1" max="30" style="width:60px;">일</label></div></div>
+    <div class="set-row"><div class="l"><b>사전 신청 최종 승인</b><span>켜면 DA 승인 뒤 기관 담당자 승인을 거쳐 반영</span><span class="lastchg" data-last="결재선"></span></div><div class="flex"><label class="flex"><input type="checkbox" id="fin-dict"> <span id="fin-dict-t"></span></label></div></div>
+    <div class="set-row"><div class="l"><b>운영 목표</b><span>홈 현황·통계의 목표선과 ‘기한 넘김’ 기준</span><span class="lastchg" data-last="운영 목표"></span></div><div class="flex" style="gap:16px"><label class="flex">목표 준수율 <input class="input mono" id="org-goal" type="number" min="50" max="100" style="width:70px;">%</label><label class="flex">결재 기한 <input class="input mono" id="org-sla" type="number" min="1" max="30" style="width:60px;">일</label></div></div>
     <div class="set-row"><div class="l"><b>결재선 템플릿</b><span>신청자는 단계를 지울 수 없고 참조자만 추가</span></div>
       <div>
         <div class="card" style="margin-bottom:12px">
@@ -70,7 +75,7 @@
 
   <!-- SC-41 system -->
   <div class="pane set-wrap" data-pane="sys">
-    <div class="flex" style="margin-bottom:12px"><select class="input" style="width:240px"><option>요구사항관리</option><option>인사시스템</option><option>회계시스템</option></select><span class="grow"></span><button class="btn sm">+ 시스템 추가</button></div>
+    <div class="flex" style="margin-bottom:12px"><select class="input" style="width:240px" data-nodirty aria-label="시스템 고르기"><option>요구사항관리</option><option>인사시스템</option><option>회계시스템</option></select><span class="grow"></span><button class="btn sm">+ 시스템 추가</button></div>
     <div class="set-row"><div class="l"><b>대상 DBMS</b><span>타입 매핑·이름 길이·예약어 정책</span></div><div class="field-row"><div class="field"><label>DBMS</label><select class="input"><option>Oracle</option><option>PostgreSQL</option><option>Tibero</option><option>MySQL / MariaDB</option></select></div><div class="field"><label>버전 · 기본 스키마</label><input class="input mono" value="19c · RQMS"></div></div></div>
     <div class="set-row"><div class="l"><b>명명 템플릿</b><span>표준 물리명과 분류어 접미로 이름 생성</span></div>
       <div>
@@ -99,7 +104,7 @@
         </tbody></table>
         <div class="flex" style="margin-top:8px"><button class="btn sm" data-toast="사전에서 표준 용어를 골라 시스템 컬럼을 추가합니다(목업)" data-toast-type="info">+ 용어로 추가</button><label class="flex caption"><input type="checkbox" checked> 논리 모델에는 표시하지 않음</label><label class="flex caption"><input type="checkbox" checked> 코드성 테이블(_R)은 등록 컬럼만</label></div>
       </div></div>
-    <div class="set-row"><div class="l"><b>모델 확정 최종 승인</b><span>이 시스템의 업무 영역별 모델 확정에 기관 담당자 승인 추가</span></div><div id="fin-model"></div></div>
+    <div class="set-row"><div class="l"><b>모델 확정 최종 승인</b><span>이 시스템의 업무 영역별 모델 확정에 기관 담당자 승인 추가</span><span class="lastchg" data-last="결재선"></span></div><div id="fin-model"></div></div>
     <div class="set-row"><div class="l"><b>업무 영역</b></div><div><span class="badge">요구사항 · 프로젝트</span> <span class="badge">리스크</span> <button class="btn ghost sm">+ 추가</button></div></div>
     <div class="banner warning" style="margin-top:16px"><i data-ic=warn></i><div class="grow">DBMS나 명명 템플릿을 바꾸면 컬럼 <b class="mono">74</b>개의 타입·이름을 다시 점검해야 합니다. 저장 전에 영향 목록을 확인하세요.</div><button class="btn sm">영향 미리보기</button></div>
   </div>
@@ -141,6 +146,12 @@
   </div>
 
   </div></div>
+  <!-- unsaved-changes bar (개선 #9): one save for 기관·시스템·검수 기준, names the changed tabs -->
+  <div class="setbar" id="setbar" role="region" aria-label="저장하지 않은 변경">
+    <span id="sb-msg" aria-live="polite"></span><span class="grow"></span>
+    <button class="btn" id="sb-revert" title="화면 값을 마지막 저장값으로 되돌립니다">되돌리기</button>
+    <button class="btn primary" id="sb-save">저장</button>
+  </div>
 </div>
 </div>
 <script>
@@ -156,8 +167,45 @@ window.pageInit = function () {
   const pol = getPolicy();
   const drawPol = () => { const p = getPolicy(); $('pol-head').innerHTML = `<b>검수 기준 v${p.ver}</b> · 적용 ${p.at} · ${p.by}`; $('pol-hist').innerHTML = p.hist.map(h => `<tr><td class="mono">v${h.ver}</td><td class="mono">${h.at}</td><td>${h.by}</td><td class="caption">${h.what}</td></tr>`).join(''); };
   drawPol(); $('pol-wd').value = pol.wordAbbr || 6;
-  $('save').onclick = () => {
+  // dirty tracking for the tabs saved together (기관·시스템·검수 기준); 사용자·역할 saves per user in its panel
+  const DT = { org: '기관 설정', sys: '시스템 설정', rules: '검수 기준' };
+  // only fields with a real save path count (결재선 · 운영 목표 · 단어 약어 길이); the rest of the mock form is not stored
+  const SAVED = '#fin-dict, [data-fm], #org-goal, #org-sla, #pol-wd';
+  const fieldsOf = t => [...document.querySelectorAll(`.pane[data-pane="${t}"] input, .pane[data-pane="${t}"] select, .pane[data-pane="${t}"] textarea`)].filter(f => !f.hasAttribute('data-nodirty') && f.matches(SAVED));
+  const valOf = f => (f.type === 'checkbox' || f.type === 'radio') ? f.checked : f.value;
+  let base = {}, sbTimer = 0;
+  const snap = () => { base = {}; Object.keys(DT).forEach(t => { base[t] = fieldsOf(t).map(valOf); }); };
+  const diff = () => { const out = {}; Object.keys(DT).forEach(t => { const n = fieldsOf(t).filter((f, i) => valOf(f) !== base[t][i]).length; if (n) out[t] = n; }); return out; };
+  const dirtyN = () => Object.values(diff()).reduce((a, b) => a + b, 0);
+  const hhmm = () => { const d = new Date(); return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; };
+  function refreshBar() {
+    const d = diff(), n = Object.values(d).reduce((a, b) => a + b, 0), bar = $('setbar');
+    document.querySelectorAll('.tabs button[data-tab]').forEach(b => { const on = !!d[b.dataset.tab]; b.classList.toggle('dirty', on); if (on) b.title = `저장하지 않은 변경 ${d[b.dataset.tab]}건`; else b.removeAttribute('title'); });
+    if (!n) { if (!sbTimer) bar.classList.remove('show'); return; }
+    clearTimeout(sbTimer); sbTimer = 0;
+    $('sb-msg').innerHTML = `<span class="savest"><span class="sdot run"></span>저장하지 않은 변경 <b class="mono">${n}</b>건 · ${Object.keys(d).map(t => DT[t]).join(', ')}</span>`;
+    $('sb-revert').style.display = ''; $('sb-save').style.display = ''; bar.classList.add('show');
+  }
+  function showSaved() {
+    const bar = $('setbar'); $('sb-msg').innerHTML = `<span class="savest"><span class="sdot ok"></span>저장됨 · ${hhmm()}</span>`;
+    $('sb-revert').style.display = 'none'; $('sb-save').style.display = 'none'; bar.classList.add('show');
+    clearTimeout(sbTimer); sbTimer = setTimeout(() => { sbTimer = 0; if (!dirtyN()) bar.classList.remove('show'); }, 2500);
+  }
+  function drawLast() {
+    // last change per section from the audit log (설정 변경 — 운영 목표 / 결재선)
+    const au = getAudit();
+    document.querySelectorAll('[data-last]').forEach(el => { const a = au.find(x => x.act && x.act.indexOf(el.dataset.last) >= 0 && x.target === '기관·시스템 설정'); el.textContent = a ? `마지막 변경: ${a.who} · ${String(a.at).split(' ')[0]}` : ''; });
+  }
+  $('sb-revert').onclick = () => {
+    Object.keys(DT).forEach(t => fieldsOf(t).forEach((f, i) => { if (f.type === 'checkbox' || f.type === 'radio') f.checked = base[t][i]; else f.value = base[t][i]; }));
+    fdT(); refreshBar(); toast('마지막 저장값으로 되돌렸습니다', 'info');
+  };
+  $('sb-save').onclick = () => saveAll();
+  $('content').addEventListener('input', refreshBar); $('content').addEventListener('change', refreshBar);
+  window.addEventListener('beforeunload', e => { if (dirtyN()) { e.preventDefault(); e.returnValue = ''; } });
+  function saveAll() {
     if (liveRoleChanged()) { staleRoleToast(); return; }
+    const names = Object.keys(diff()).map(t => DT[t]);
     const o = getOrg(); const before = JSON.stringify(o); o.finalDict = $('fin-dict').checked; document.querySelectorAll('[data-fm]').forEach(c => { o.finalModel[c.dataset.fm] = c.checked; });
     const g0 = o.goal || 90, s0 = o.sla || 3, g1 = Math.min(100, Math.max(50, +$('org-goal').value || 90)), s1 = Math.min(30, Math.max(1, +$('org-sla').value || 3));
     const goalChg = g0 !== g1 || s0 !== s1; o.goal = g1; o.sla = s1; $('org-goal').value = g1; $('org-sla').value = s1;
@@ -167,8 +215,9 @@ window.pageInit = function () {
     if (lineChg) { changes.push(`결재선: 사전 최종 승인 ${o.finalDict ? '켬' : '끔'} · 모델 최종 승인 ${Object.entries(o.finalModel).map(([a, v]) => (areas[a] ? areas[a].name : a) + ' ' + (v ? '켬' : '끔')).join(', ')}`); pushAudit({ act: '설정 변경 — 결재선', target: '기관·시스템 설정', why: changes[changes.length - 1] }); }
     const p = getPolicy(); const wd = +$('pol-wd').value || 6;
     if (wd !== (p.wordAbbr || 6)) { const nv = { ver: p.ver + 1, at: today2(), by: ME.name, wordAbbr: wd, hist: [{ ver: p.ver + 1, at: today2(), by: ME.name, what: `단어 영문약어명 ${p.wordAbbr || 6}자 → ${wd}자` }].concat(p.hist) }; savePolicy(nv); pushAudit({ act: `검수 기준 v${nv.ver}`, target: '검수 기준', why: nv.hist[0].what }); changes.push(`검수 기준 v${nv.ver}`); drawPol(); }
-    toast(changes.length ? `저장했습니다 — ${changes.join(' · ')}. 새 신청부터 적용되고 감사 로그에 남았습니다` : '바뀐 설정이 없습니다', changes.length ? 'success' : 'info');
-  };
+    toast(changes.length ? `저장했습니다 — ${changes.join(' · ')}. 새 신청부터 적용되고 감사 로그에 남았습니다` : names.length ? `저장했습니다 — ${names.join(', ')}` : '바뀐 설정이 없습니다', changes.length || names.length ? 'success' : 'info');
+    snap(); drawLast(); refreshBar(); if (names.length || changes.length) showSaved();
+  }
   function today2() { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; }
   const list = Object.values(USERS);
   const last = { kim: '방금', park: '11/17 18:20', lee: '11/18 08:40', hyun: '11/17 09:10', choi: '11/12 14:02' };
@@ -190,7 +239,7 @@ window.pageInit = function () {
         <div class="section-t">계정</div>
         <div class="flex">${self ? '<span class="caption muted">본인 계정은 중지할 수 없습니다</span>' : '<button class="btn sm" data-toast="계정을 중지했습니다 — 진행 중 결재는 다른 담당자에게 넘어갑니다" data-toast-type="info">사용 중지</button>'}</div>
       </div>
-      <div class="rp-foot"><span class="grow"></span>${self ? '<button class="btn primary sm" disabled>저장</button>' : '<button class="btn primary sm" id="role-save">저장</button>'}</div>`;
+      <div class="rp-foot"><span class="grow"></span>${self ? '<button class="btn primary sm" disabled title="자기 역할은 스스로 바꿀 수 없습니다">내 역할 저장</button>' : `<button class="btn primary sm" id="role-save">${u.name} 역할 저장</button>`}</div>`;
     // role change is stored and applied on next screen load; the audit log records before → after (CX12-35)
     const rs = $('role-save'); if (rs) rs.onclick = () => { if (liveRoleChanged()) { staleRoleToast(); return; } const nr = [...document.querySelectorAll('#pn-user [data-role]:checked')].map(c => c.dataset.role); if (!nr.length) { toast('역할을 하나 이상 고르세요', 'danger'); return; } const prev = u.roles.slice(); if (prev.join() === nr.join()) { toast('바뀐 역할이 없습니다', 'info'); return; }
       const ov = JSON.parse(dbmStore.get('dbm-user-roles', '{}')); ov[u.id] = nr; dbmStore.set('dbm-user-roles', JSON.stringify(ov)); u.roles = nr; if (USERS[u.id]) USERS[u.id].roles = nr;
@@ -200,8 +249,11 @@ window.pageInit = function () {
       draw(); toast(`${u.name}의 역할을 저장했습니다 — ${nr.map(r => ROLE_NAME[r]).join('·')} · 감사 로그에 기록`, 'success'); };
   }
   document.addEventListener('click', e => { if (!e.target.closest || !e.target.closest('#rq-deny')) return; if (liveRoleChanged()) { staleRoleToast(); return; } let liveR = ME.roles; try { const ov = JSON.parse(dbmStore.get('dbm-user-roles') || 'null'); if (ov && ov[ME.id]) liveR = ov[ME.id]; } catch (er) {} if (!liveR.includes('admin')) { toast('Admin 권한이 없어 처리할 수 없습니다 — 다른 탭에서 역할이 바뀌었을 수 있습니다', 'danger'); return; } const u = USERS[selU]; const rq = reqOf(selU); if (!rq) return; dbmStore.set('dbm-rolereq-' + selU, 'null'); pushNotif({ to: [selU], k: 'res', t: `역할 변경 요청 거절 — ${rq.role}`, m: ME.name, href: 'mypage.html' }); pushAudit({ act: '역할 요청 거절', target: u.name, why: rq.role }); draw(); toast(`${u.name}의 요청을 거절했습니다 — 알림을 보냈습니다`, 'info'); });
-  $('u-rows').addEventListener('click', e => { const r = e.target.closest('[data-u]'); if (r) { selU = r.dataset.u; draw(); } });
-  draw();
+  // unsaved role draft of the open user: switching users or leaving the page asks first (CX D7-02)
+  const roleDraft = () => { const u = USERS[selU]; if (!u) return false; const boxes = [...document.querySelectorAll('#pn-user [data-role]:not(:disabled)')]; if (!boxes.length) return false; const now = boxes.filter(c => c.checked).map(c => c.dataset.role).sort().join(','); return now !== [...u.roles].sort().join(','); };
+  $('u-rows').addEventListener('click', e => { const r = e.target.closest('[data-u]'); if (!r) return; if (r.dataset.u !== selU && roleDraft() && !confirm(`의 역할 변경을 저장하지 않았습니다. 버리고 다른 사용자를 볼까요?`)) return; selU = r.dataset.u; draw(); });
+  window.addEventListener('beforeunload', e => { if (roleDraft()) { e.preventDefault(); e.returnValue = ''; } });
+  draw(); snap(); drawLast(); refreshBar();
 };
 </script>
 </body>

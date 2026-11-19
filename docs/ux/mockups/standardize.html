@@ -8,7 +8,15 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&display=swap">
 <link rel="stylesheet" href="assets/app.css">
 <script src="assets/app.js"></script>
-<style>.arrow{color:var(--fg-3);padding:0 4px}.chg{color:var(--success-deep);font-weight:500}.dx{font-size:11px;color:var(--fg-2)}.dx b{font-family:var(--font-mono);font-weight:500}</style>
+<style>
+.dx{font-size:12px;color:var(--fg-2);white-space:normal !important;min-width:200px}.dx b{font-family:var(--font-mono);font-weight:500}
+/* 현재 → 제안 한 칸 두 줄: 윗줄 현재(바뀌면 취소선), 아랫줄 제안(진하게) */
+.cv{display:flex;flex-direction:column;line-height:18px;padding:6px 0}.cv s{color:var(--fg-3)}.cv b{font-weight:600;color:var(--fg)}.cv .faint{font-weight:400}
+/* 고정 일괄 줄(모델 표 보기 .gbulk 와 같은 꼴) */
+.sbulk{display:flex;align-items:center;gap:8px;padding:8px 16px;background:var(--surface-2);border-top:1px solid var(--border);font-size:14px}.sbulk[hidden]{display:none}.sbulk .mline{margin:0 0 0 8px}
+.sbulk .mi{border:0;background:none;width:100%;font:inherit;cursor:pointer;text-align:left}.sbulk .mi:disabled{color:var(--fg-3);cursor:default}
+#ap-sum tr.grp td{background:var(--surface-2)}
+</style>
 </head>
 <body data-page="model">
 <div id="app">
@@ -28,16 +36,19 @@
     <div class="main">
       <div class="scroll" data-filter-target="s">
         <table class="tbl">
-          <thead><tr><th><input type="checkbox" id="sd-all" aria-label="처리 가능한 행 모두 선택"></th><th>상태</th><th>테이블</th><th>현재 이름</th><th>현재 물리명</th><th></th><th>제안 용어</th><th>제안 물리명</th><th>도메인</th><th>처리</th><th>진단</th></tr></thead>
+          <thead><tr><th><input type="checkbox" id="sd-all" aria-label="보이는 행 중 처리 가능한 행 모두 선택"></th><th>상태</th><th>테이블</th><th title="윗줄 현재 · 아랫줄 제안">이름</th><th title="윗줄 현재 · 아랫줄 제안">물리명</th><th>도메인</th><th>처리</th><th>진단</th></tr></thead>
           <tbody id="rows"></tbody>
         </table>
       </div>
-      <div class="rp-foot" style="background:var(--surface)">
-        <div class="caption" id="sd-prev" aria-live="polite"></div>
+      <div class="sbulk" id="sd-bar" role="region" aria-label="선택한 행 일괄 처리">
+        <b id="sd-n" aria-live="polite"></b>
+        <div class="mline" id="sd-prev"></div>
         <span class="grow"></span>
-        <button class="btn" id="sd-na" data-open="mo-na">선택 항목 비대상 지정</button>
-        <button class="btn" id="sd-ex" data-open="mo-ex">선택 항목 예외로 유지</button>
-        <button class="btn primary" id="sd-apply" data-open="mo-apply">적용</button>
+        <button class="btn sm primary" id="sd-apply" data-open="mo-apply">선택 적용</button>
+        <button class="btn sm" id="sd-ex" data-open="mo-ex">예외로 표시</button>
+        <span style="position:relative"><button class="btn sm" data-menu-btn aria-haspopup="true" aria-expanded="false" aria-label="더 보기" style="width:32px;padding:0;justify-content:center">⋯</button>
+          <div class="menu" data-auto role="menu" style="width:200px;top:auto;bottom:36px"><button class="mi" role="menuitem" id="sd-na" data-open="mo-na">비대상으로 지정</button></div></span>
+        <button class="btn sm ghost" id="sd-clear">선택 해제</button>
       </div>
     </div>
   </div>
@@ -119,13 +130,23 @@ window.pageInit = function () {
   const effective = r => local[r.key] ? Object.assign({}, r, local[r.key]) : r;
   const procOpts = r => r.st === 'comb' ? (r.sus ? ['분해 확인 후 용어 신청', '예외로 유지'] : ['용어 신청 묶음', '예외로 유지']) : r.st === 'okapply' ? ['용어 적용'] : r.st === 'unreg' ? (r.dx[0] === 'W-PEND' ? ['선행 승인 대기', '예외로 유지'] : ['후보 등록', '예외로 유지']) : r.st === 'req' ? (r.toWait ? ['신청 중 용어로 맞춤', '예외로 유지'] : []) : [];
   const selectable = r => ['comb', 'okapply', 'unreg'].includes(r.st) || (r.st === 'req' && r.toWait);
+  // one cell, two lines: current (struck through when it changes) over the proposal (bold); unchanged → the value alone
+  const none = v => !v || v === '—';
+  const two = (cur, nxt, note) => {
+    const top = none(cur) ? '<span class="faint">—</span>' : cur;
+    if (none(nxt) || nxt === cur) return note ? `<span class="cv"><span>${top}</span>${note}</span>` : top;
+    return `<span class="cv">${none(cur) ? top : `<s><span class="sr-only">현재 </span>${cur}</s>`}<b><span class="sr-only">제안 </span>${nxt}</b></span>`;
+  };
   function draw() {
+    const prev = {}; document.querySelectorAll('#rows tr[data-i]').forEach(tr => { const c = tr.querySelector('input[type=checkbox]'), s = tr.querySelector('select'); prev[tr.dataset.i] = { c: c ? c.checked : null, s: s ? s.value : null }; });
     $('rows').innerHTML = rows.map((r0, i) => { const r = effective(r0); const s = ST[r.st]; const can = selectable(r) && !readOnly; const opts = can ? procOpts(r) : [];
-      return `<tr class="${s[3]}" data-f="${s[2]}" data-i="${i}"><td><input type="checkbox" ${can ? (['comb', 'okapply', 'req'].includes(r.st) ? 'checked' : '') : 'disabled'} aria-label="${r.ent}.${r.a} 선택"></td><td><span class="badge ${s[0]}">${s[1]}</span></td><td>${r.ent}${r.entRow ? ' <span class="muted">· 테이블명</span>' : ''}</td><td>${r.now || r.a}${r.now && r.now !== r.a ? ` <span class="caption faint">(원래 ${r.a})</span>` : ''}</td><td class="mono ${r.cur === '—' ? 'faint' : ''}">${r.cur || '—'}</td><td class="arrow">${r.pr && r.pr.phys && r.pr.phys !== r.cur ? '→' : '·'}</td><td>${r.pr && r.pr.term ? r.pr.term : r.st === 'unreg' ? `<span class="faint">‘${r.word}’ 미등록</span>` : '<span class="faint">—</span>'}</td><td class="mono ${r.pr && r.pr.phys && r.pr.phys !== r.cur ? 'chg' : 'faint'}">${r.pr && r.pr.phys ? r.pr.phys : '—'}</td><td class="mono">${r.pr && r.pr.dom ? r.pr.dom : ''}</td><td>${opts.length > 1 ? `<select class="input" style="width:170px">${opts.map(o => `<option>${o}</option>`).join('')}</select>` : opts.length ? `<span class="caption">${opts[0]}${r.wait ? ` · <a href="approvals.html?doc=${r.wait}">${r.wait}</a>` : ''}</span>` : r.why ? `<span class="caption">사유: ${r.why}</span>` : '<span class="caption muted">변경 없음</span>'}</td><td class="dx"><b>${r.dx[0]}</b> ${r.dx[1]}</td></tr>`; }).join('') || '<tr class="er first"><td colspan="11" class="caption muted" style="text-align:center;padding:40px">이 업무 영역에 분석할 속성이 없습니다.</td></tr>';
+      return `<tr class="${s[3]}" data-f="${s[2]}" data-i="${i}"><td><input type="checkbox" ${can ? (['comb', 'okapply', 'req'].includes(r.st) ? 'checked' : '') : 'disabled'} aria-label="${r.ent}.${r.a} 선택"></td><td><span class="badge ${s[0]}">${s[1]}</span></td><td>${r.ent}${r.entRow ? ' <span class="muted">· 테이블명</span>' : ''}</td><td${r.now && r.now !== r.a ? ` title="원래 이름 ${r.a}"` : ''}>${two(r.now || r.a, r.pr && r.pr.term, r.st === 'unreg' ? `<span class="faint">‘${r.word}’ 미등록</span>` : '')}</td><td class="mono">${two(r.cur, r.pr && r.pr.phys)}</td><td class="mono">${r.pr && r.pr.dom ? r.pr.dom : ''}</td><td>${opts.length > 1 ? `<select class="input" style="width:170px">${opts.map(o => `<option>${o}</option>`).join('')}</select>` : opts.length ? `<span class="caption">${opts[0]}${r.wait ? ` · <a href="approvals.html?doc=${r.wait}">${r.wait}</a>` : ''}</span>` : r.why ? `<span class="caption">사유: ${r.why}</span>` : '<span class="caption muted">변경 없음</span>'}</td><td class="dx"><b>${r.dx[0]}</b> ${r.dx[1]}</td></tr>`; }).join('') || '<tr class="er first"><td colspan="8" class="caption muted" style="text-align:center;padding:40px">이 업무 영역에 분석할 속성이 없습니다.</td></tr>';
     // chip counts from the same rows (CL12-40)
     const cnt = k => rows.filter(r => ST[effective(r).st][2] === k).length;
     const cur = (document.querySelector('#chips .chip.on') || {}).dataset;
     $('chips').innerHTML = [['', '전체', rows.length], ['ok', '표준', cnt('ok')], ['comb', '조합 가능', cnt('comb')], ['req', '신청 중', cnt('req')], ['unreg', '미등록 단어', cnt('unreg')], ['ex', '예외', cnt('ex')], ['na', '비대상', cnt('na')]].map(([k, l, n]) => `<span class="chip ${(cur ? cur.filter : '') === k ? 'on' : ''}" data-group="s" data-filter="${k}">${l} <span class="n">${n}</span></span>`).join('') + '<span class="grow"></span><span class="caption muted">작업본·사전·진행 중 신청으로 계산 · 상태별로 골라 한 번에 처리</span>';
+    // what the user had chosen stays chosen (only rows whose state changed are re-decided)
+    document.querySelectorAll('#rows tr[data-i]').forEach(tr => { const p = prev[tr.dataset.i]; if (!p) return; const c = tr.querySelector('input[type=checkbox]'), s = tr.querySelector('select'); if (c && !c.disabled && p.c != null) c.checked = p.c; if (s && p.s != null && [...s.options].some(o => o.value === p.s)) s.value = p.s; });
     if (cur && cur.filter) document.querySelectorAll('.scroll tbody tr').forEach(tr => { tr.style.display = (tr.dataset.f || '') === cur.filter ? '' : 'none'; });
     $('scope').textContent = `범위: 영역 전체 · 테이블 ${model.E.filter(e => !e.ref).length}개 · 속성 ${model.E.reduce((n, e) => n + (e.ref ? 0 : e.a.length), 0)}개`;
     sum();
@@ -152,33 +173,46 @@ window.pageInit = function () {
     const resolved = new Set(P.filter(([, p]) => ['용어 신청 묶음', '분해 확인 후 용어 신청', '예외로 유지', '용어 적용', '신청 중 용어로 맞춤'].includes(p)).map(([r]) => r.key));
     pending.push(...rows.map(effective).filter(r => r.st === 'req' && r.toWait));
     const left = pending.filter(r => !resolved.has(r.key)).length;
-    return { C, P, req, cand, keepEx, apply, wait, phys, left };
+    // 모델 변경 = rows whose attribute/table changes in the working model (incl. 예외·비대상 records); 결재 신청·후보 등록 are counted apart
+    const ho = handoff.ex.length + handoff.na.length;
+    const mod = apply.length + req.length + wait.length + keepEx.length + ho;
+    return { C, P, req, cand, keepEx, apply, wait, phys, left, ho, mod };
   }
   function sum() {
-    const s = summary(), all = trs().map(tr => tr.querySelector('input[type=checkbox]')).filter(c => c && !c.disabled);
-    $('sd-all').checked = all.length && all.every(c => c.checked); $('sd-all').indeterminate = !$('sd-all').checked && all.some(c => c.checked);
+    const s = summary();
+    // header check and its range follow the rows on screen (tab · filter result)
+    const vis = trs().filter(visible).map(tr => tr.querySelector('input[type=checkbox]')).filter(c => c && !c.disabled);
+    const on = vis.filter(c => c.checked).length;
+    $('sd-all').disabled = !vis.length || readOnly;
+    $('sd-all').checked = !!vis.length && on === vis.length; $('sd-all').indeterminate = on > 0 && on < vis.length;
     const hc = hiddenChecked();
-    $('sd-prev').innerHTML = `<b>선택 ${s.C.length}행</b>${hc ? ` <span class="caption muted">(필터로 숨긴 선택 ${hc}행은 제외)</span>` : ''} · 용어 적용 <b class="mono">${s.apply.length}</b> · 용어 신청 <b class="mono">${s.req.length}</b> · 후보 등록 <b class="mono">${s.cand.length}</b> · 예외 <b class="mono">${s.keepEx.length}</b> · 물리명 변경 ${s.phys} · <b>적용 뒤 남는 미준수 <span class="mono">${s.left}</span></b>`;
-    const ho = handoff.ex.length + handoff.na.length;
-    ['sd-ex', 'sd-na'].forEach(id => $(id).disabled = !s.C.length || readOnly);
-    $('sd-apply').disabled = (!s.C.length && !ho) || readOnly;
-    $('sd-apply').textContent = s.C.length || ho ? `${s.C.length + ho}건 적용` : '적용';
+    const bar = (s.C.length || s.ho) && !readOnly;
+    $('sd-bar').hidden = readOnly;   // always visible while editable — the one completing action never disappears
+    $('sd-n').innerHTML = s.C.length ? `${s.C.length}건 선택` : s.ho ? `기록 ${s.ho}건 대기` : '<span class="muted">처리할 행을 고르세요</span>';
+    $('sd-prev').innerHTML = `<span title="${s.phys ? `물리명 변경 ${s.phys}건 포함 · ` : ''}예외·비대상 기록 포함"><b>${s.mod}</b>모델 변경</span><span title="용어 ${s.req.length}개를 결재 문서 1건으로 묶어 신청"><b>${s.req.length ? 1 : 0}</b>결재 신청${s.req.length ? ` (용어 ${s.req.length})` : ''}</span><span><b>${s.cand.length}</b>후보 등록</span><span><b>${s.left}</b>남는 미준수</span>${hc ? `<span class="caption muted" title="필터로 숨긴 행의 선택은 적용하지 않습니다">숨긴 선택 ${hc}건 제외</span>` : ''}`;
+    ['sd-ex', 'sd-na', 'sd-clear'].forEach(id => $(id).disabled = !s.C.length || readOnly);
+    $('sd-apply').disabled = (!s.C.length && !s.ho) || readOnly;
+    $('sd-apply').textContent = s.C.length ? '선택 적용' : `기록 ${s.ho}건 적용`;
   }
   document.querySelector('#rows').addEventListener('change', sum);
   $('chips').addEventListener('click', () => setTimeout(sum, 0));
   $('sd-all').onchange = e => { trs().filter(visible).forEach(tr => { const c = tr.querySelector('input[type=checkbox]'); if (c && !c.disabled) c.checked = e.target.checked; }); sum(); };
+  $('sd-clear').onclick = () => { trs().forEach(tr => { const c = tr.querySelector('input[type=checkbox]'); if (c && !c.disabled) c.checked = false; }); sum(); };
   $('reanalyze').onclick = () => location.reload();
   const listHtml = C => C.map(tr => `<span class="badge">${rowOf(tr).ent}.${rowOf(tr).a}</span>`).join(' ');
   $('sd-ex').addEventListener('click', () => { const C = summary().C; $('sx-t').textContent = `예외로 유지 (선택 ${C.length}건)`; $('sx-list').innerHTML = listHtml(C); });
   $('sd-na').addEventListener('click', () => { const C = summary().C; $('na-t').textContent = `비대상으로 지정 (선택 ${C.length}건)`; $('na-list').innerHTML = listHtml(C); });
   const idOf = r => ({ key: r.key, e: r.e, a: r.a });
   const mark = (kind, why) => { const C = summary().C; const keys = C.map(tr => rowOf(tr)); keys.forEach(r => { local[r.key] = { st: kind, why }; handoff[kind].push(Object.assign(idOf(r), { why })); });
-    draw(); toast(`${keys.length}건을 ${kind === 'ex' ? '예외로 기록' : '비대상으로 지정'}했습니다 — [적용]을 누르면 사유와 함께 모델에 반영됩니다`, 'violet', { label: '실행 취소', fn: () => { keys.forEach(r => { delete local[r.key]; handoff[kind] = handoff[kind].filter(x => x.key !== r.key); }); draw(); toast(`${keys.length}건을 되돌렸습니다`, 'info'); } }); };
+    draw(); toast(`${keys.length}건을 ${kind === 'ex' ? '예외로 기록' : '비대상으로 지정'}했습니다. 아래 줄의 [적용]을 누르면 사유와 함께 모델에 반영됩니다`, 'violet', { label: '실행 취소', fn: () => { keys.forEach(r => { delete local[r.key]; handoff[kind] = handoff[kind].filter(x => x.key !== r.key); }); draw(); toast(`${keys.length}건을 되돌렸습니다`, 'info'); } }); };
   $('sx-go').onclick = () => { const w = $('sx-why').value.trim(); $('mo-ex').classList.remove('open'); $('sx-why').value = ''; mark('ex', w); };
   $('na-go').onclick = () => { const w = $('na-why').value.trim(); $('mo-na').classList.remove('open'); $('na-why').value = ''; mark('na', w); };
   $('sd-apply').addEventListener('click', () => {
     const s = summary();
-    $('ap-sum').innerHTML = `<tbody><tr><td>용어 적용 (사전에 있는 용어로 이름·물리명·타입)</td><td class="num mono">${s.apply.length}</td></tr><tr><td>용어 신청 묶음 → 결재 문서 1건</td><td class="num mono">${s.req.length}</td></tr><tr><td>결재 대기 중인 용어로 맞춤(신청 재사용)</td><td class="num mono">${s.wait.length}</td></tr><tr><td>　└ 물리명 변경 (운영 DB 영향)</td><td class="num mono">${s.phys}</td></tr><tr><td>후보 큐 등록 (속성은 미등록으로 남음)</td><td class="num mono">${s.cand.length}</td></tr><tr><td>예외로 유지</td><td class="num mono">${s.keepEx.length + handoff.ex.length}</td></tr><tr><td><b>적용 뒤 남는 미준수</b></td><td class="num mono"><b>${s.left}</b></td></tr></tbody>`;
+    const R = (l, n) => `<tr><td>　${l}</td><td class="num mono">${n}</td></tr>`;
+    $('ap-sum').innerHTML = `<tbody><tr class="grp"><td><b>모델 변경 ${s.mod}건</b></td><td class="num mono"><b>${s.mod}</b></td></tr>${R('용어 적용 (사전에 있는 용어로 이름·물리명·타입)', s.apply.length)}${R('신청할 용어로 이름 맞춤', s.req.length)}${R('결재 대기 중인 용어로 맞춤(신청 재사용)', s.wait.length)}${R('예외로 유지', s.keepEx.length + handoff.ex.length)}${R('비대상 지정', handoff.na.length)}${R('└ 물리명 변경 (운영 DB 영향)', s.phys)}`
+      + `<tr class="grp"><td><b>결재 신청 ${s.req.length ? 1 : 0}건(용어 ${s.req.length}) · 후보 등록 ${s.cand.length}건</b></td><td class="num mono"><b>${(s.req.length ? 1 : 0) + s.cand.length}</b></td></tr>${R(`용어 신청 묶음 → 결재 문서 ${s.req.length ? 1 : 0}건`, s.req.length)}${R('후보 큐 등록 (속성은 미등록으로 남음)', s.cand.length)}`
+      + `<tr><td><b>적용 뒤 남는 미준수</b></td><td class="num mono"><b>${s.left}</b></td></tr></tbody>`;
     $('ap-phys').style.display = s.phys ? 'flex' : 'none';
     $('ap-reqf').style.display = s.req.length ? '' : 'none';
     $('ap-exf').style.display = s.keepEx.length ? '' : 'none';

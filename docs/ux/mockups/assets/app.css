@@ -747,3 +747,23 @@ html, body, * { scrollbar-width:thin; scrollbar-color:var(--ds-gray-500) transpa
 .skel-ov.out { opacity:0; }
 .skel-ov .skel-r { display:grid; grid-template-columns:repeat(6, 1fr); gap:24px; align-items:center; height:var(--row); border-bottom:1px solid var(--ds-gray-400); }
 @media (prefers-reduced-motion: reduce) { .skel, .skel-ov { animation:none; transition:none; } }
+
+/* ---- v16 type scale (10 #10): 12 meta · 14 body/table/guidance · 16 panel titles · 20 page titles; 13px kept only for code (mono) ---- */
+.nav a.sub2, .btn.sm, .step, .compbar, .cand, .ac .opt, .npanel .ni .t, .toast .act, .scr-b, .linkrow, .field > label, .hbar, .ledger td.gap, .banner, .tabs button { font-size:14px; }
+.hbar .v, .savest, kbd, .gsearch kbd, .scr-h { font-size:12px; }
+.rp-head h2, .modal h3.sm, .sec-h h2.lg { font-size:16px; }
+.caption { font-size:12px; line-height:16px; }
+.banner .caption, .rp-body > .caption:not(.muted), .field .help { font-size:12px; }
+
+/* ---- v16 dark-theme corrections (10 #11) ---- */
+:root { --focus-halo:rgba(0,0,0,.08); --overlay:rgba(0,0,0,.24); --ds-red-800:#da2f35; --ds-amber-800:#ff990a; }
+:root[data-theme="dark"] { --focus-halo:rgba(255,255,255,.16); --overlay:rgba(0,0,0,.62); --ds-red-800:#d93036; --ds-amber-800:#ff990a; }
+.input:focus, select.input:focus, textarea.input:focus { box-shadow:0 0 0 1px var(--ds-gray-1000), 0 0 0 4px var(--focus-halo); }
+.overlay { background:var(--overlay); }
+.modal .btn.danger { background:var(--ds-red-800); }
+.btn.warn { background:var(--ds-amber-800); }
+/* selected row: besides the tint, a 2px marker on the first cell so it survives focus moves (light and dark) */
+.tbl tr.sel td:first-child, .tbl tr[aria-selected="true"] td:first-child { box-shadow:inset 2px 0 0 var(--ds-blue-700); }
+/* empty-state icons drawn in gray read too dark on black — lighten them */
+:root[data-theme="dark"] .tbl > tbody > tr.er > td::before { filter:none; background-color:var(--ds-gray-100); box-shadow:0 0 0 1px var(--ds-gray-500); background-blend-mode:normal; }
+:root[data-theme="dark"] .tbl > tbody > tr.er:not(.done) > td::before { filter:brightness(1.8); }
