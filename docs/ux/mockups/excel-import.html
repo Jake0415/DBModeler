@@ -240,7 +240,7 @@ window.pageInit = function () {
   const frozen = !!(lastDoc && ['da', 'final', 'done'].includes(lastDoc.step));
   const demo = !!verifyId || (q.has('step') && !resumeId);
   const notMine = B && B.by !== ME.id;
-  const canWrite = !demo && !frozen && !notMine && !missingB;
+  const canWrite = !demo && !frozen && !notMine && !missingB && can('dict.request');   // RBAC (15): 사전 신청 권한
   const tokenNow = () => ({ policy: getPolicy().ver, dict: dictRev() });
   let stale = !!(B && B.token && canWrite && (B.token.policy !== getPolicy().ver || B.token.dict !== dictRev()));
   if (missingB) { $('resume-banner').hidden = false; $('resume-banner').innerHTML = `<div class="banner danger"><i data-ic=warn></i><div class="grow"><b>${lookupId}</b> 업로드를 찾을 수 없거나 열람 권한이 없습니다. 새 업로드는 1단계부터 시작하세요 — 이 화면은 아무것도 저장하지 않습니다.</div><a class="btn sm" href="uploads.html">업로드 이력</a><a class="btn sm" href="excel-import.html">새 업로드</a></div>`; }

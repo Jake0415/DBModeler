@@ -69,16 +69,20 @@
     { id: 'dict.view', g: '사전', n: '표준 사전 · 변경 내역 보기', roles: ['*'], scope: 'org' },
     { id: 'dict.request', g: '사전', n: '사전 신청 · 엑셀 가져오기 · 후보 등록', roles: ['modeler', 'da'], scope: 'org' },
     { id: 'cand.decide', g: '사전', n: '후보 큐 판단', roles: ['da'], scope: 'org' },
-    { id: 'dict.publish', g: '사전', n: '사전 공표 · 삭제 보관 영구 삭제', roles: ['da'], scope: 'org', note: '영구 삭제는 Admin도 할 수 있다', extra: ['admin'] },
+    { id: 'dict.publish', g: '사전', n: '사전 공표', roles: ['da'], scope: 'org' },
+    { id: 'dict.purge', g: '사전', n: '삭제 보관 항목 영구 삭제', roles: ['da', 'admin'], scope: 'org' },
+    { id: 'excel.viewall', g: '사전', n: '다른 사람의 엑셀 업로드 묶음 보기', roles: ['da'], scope: 'org', note: '나머지는 자기 묶음만' },
     { id: 'appr.da', g: '결재', n: '1단계(DA) 승인 · 반려', roles: ['da'], scope: 'sys', note: '사전 신청은 기관 전체, 모델 확정은 담당 시스템만' },
-    { id: 'appr.final', g: '결재', n: '최종 승인 · 반려', roles: ['owner'], scope: 'sys', note: '사전 신청은 기관 전체, 모델 확정은 담당 시스템만' },
+    { id: 'appr.final', g: '결재', n: '최종 승인 · 반려', roles: ['owner'], scope: 'sys', note: '사전 신청은 기관 전체, 모델 확정은 담당 시스템만 · 신청자와 1단계 승인자는 최종 승인할 수 없다' },
     { id: 'appr.viewall', g: '결재', n: '모든 결재 문서 보기', roles: ['da', 'owner'], scope: 'org', note: '나머지 사용자는 자기 신청 · 참조 문서만' },
     { id: 'audit.view', g: '관리', n: '감사 로그 보기', roles: ['da', 'admin'], scope: 'org' },
     { id: 'settings', g: '관리', n: '기관 · 시스템 · 검수 기준 설정', roles: ['admin'], scope: 'org' },
     { id: 'users', g: '관리', n: '사용자 · 역할 · 인증 관리', roles: ['admin'], scope: 'org', note: '자기 역할 · 상태는 바꿀 수 없다' }
   ];
   window.PERMS = PERMS;
-  window.sysOfArea = area => { const m = getAllModels()[area]; return m ? (m.sys || '요구사항관리') : curSys().name; };
+  window.sysOfArea = area => { const m = getAllModels()[area]; if (!m) return null; const s = SYSLIST.find(x => x.code === (m.system || 'RQMS')); return s ? s.name : (m.sys || null); };
+  // Korean particle after a word (받침 → 은/이, 없으면 는/가)
+  window.josa = (w, pair) => { const c = String(w).charCodeAt(String(w).length - 1); const has = c >= 0xAC00 && c <= 0xD7A3 && (c - 0xAC00) % 28 > 0; const [a, b] = pair.split('/'); return w + (has ? a : b); };
   window.inScope = (u, sysName) => { const s = u.systems || []; return s.includes('전체') || s.includes(sysName); };
   // can(user, permission, { system | area | doc }) — the only question every screen asks
   window.canUser = (u, pid, ctx) => {
@@ -88,13 +92,19 @@
     if (!roleOk) return false;
     if (p.scope !== 'sys' || !ctx) return true;
     if (p.adminAll && roles.includes('admin')) return true;
-    const d = ctx.doc; if (d && d.type !== 'model') return true;   // dictionary requests are agency-wide
-    const sysName = ctx.system || (ctx.area ? sysOfArea(ctx.area) : d ? sysOfArea(d.area) : null);
-    return !sysName || inScope(u, sysName);
+    const d = ctx.doc; if (d && d.type === 'dict') return true;   // dictionary requests are agency-wide
+    const sysName = ctx.system || (ctx.area ? sysOfArea(ctx.area) : d ? (d.sys || sysOfArea(d.area)) : null);
+    return !!sysName && inScope(u, sysName);
   };
   window.can = (pid, ctx) => canUser(USERS[ME.id] || ME, pid, ctx);
   // whose turn: the document's step, the role for that step, and (model documents) the system in charge
-  window.canActOn = d => !!d && ((d.step === 'da' && can('appr.da', { doc: d })) || (d.step === 'final' && can('appr.final', { doc: d })));
+  const daApprover = d => { const h = (d.hist || []).filter(x => x.step === 'da' && /승인/.test(x.act || '') && !/취소|실패/.test(x.act || '')).slice(-1)[0]; return h ? (h.whoId || (Object.values(USERS).find(u => u.name === h.who) || {}).id) : null; };
+  window.canUserAct = (u, d, step) => { if (!u || !d) return false; if (step === 'da') return canUser(u, 'appr.da', { doc: d }); if (step === 'final') return canUser(u, 'appr.final', { doc: d }) && d.req !== u.id && daApprover(d) !== u.id; return false; };
+  window.canActOn = d => !!d && ['da', 'final'].includes(d.step) && canUserAct(USERS[ME.id] || ME, d, d.step);
+  // who can take a step (active accounts only) — also the notification list
+  window.approversFor = (d, step) => Object.values(USERS).filter(u => u.status !== 'stopped' && canUserAct(u, d, step));
+  // steps of the line nobody could take (checked before submitting and after account changes)
+  window.lineGaps = d => (d.line || lineFor(d.type, d.area)).filter(s => !approversFor(Object.assign({ hist: [] }, d), s).filter(u => s !== 'final' || u.id !== d.req).length);
   window.roleBadges = u => u.roles.map(r => `<span class="badge">${ROLE_NAME[r]}</span>`).join(' ');
 
   /* ================= v5 shared state layer =================
@@ -141,14 +151,14 @@
       if (busy.length || nameBusy.length) return { doc: null, conflict: busy.map(d => `${d.name}(${d.pending})`).concat(nameBusy.map(x => `${x.it.name}(${x.doc})`)) };
     }
     // the approval line and the validation-policy version are frozen into the document when it is created
-    const doc = Object.assign({ id: nextDocId(docs), req: ME.id, step: 'da', date: now(), cc: [], hist: [], n: 1, line: lineFor(o.type, o.area), policyVer: getPolicy().ver, submittedAt: today() + ' ' + now().split(' ')[1] }, o);
+    const doc = Object.assign({ id: nextDocId(docs), req: ME.id, step: 'da', date: now(), cc: [], hist: [], n: 1, line: lineFor(o.type, o.area), policyVer: getPolicy().ver, submittedAt: today() + ' ' + now().split(' ')[1] }, o.type === 'model' ? { sys: sysOfArea(o.area) } : {}, o);
     docs.unshift(doc); saveDocs(docs);
     // items with an existing id become "pending" in the dictionary (MD-10: one open request per item)
     if (doc.items) { const dict = getDict(); doc.items.forEach(it => { const d = it.id && dict.find(x => x.id === it.id); if (d) d.pending = doc.id; }); saveDict(dict); }
-    pushNotif({ to: Object.values(USERS).filter(u => u.roles.includes('da') && u.id !== ME.id).map(u => u.id), k: 'appr', t: `${doc.id} ${doc.type === 'model' ? '모델 확정' : '사전 신청'} — DA 승인 차례`, m: `${ME.name} · ${doc.title}`, href: `approvals.html?doc=${doc.id}` });
+    pushNotif({ to: approversFor(doc, 'da').filter(u => u.id !== ME.id).map(u => u.id), k: 'appr', t: `${doc.id} ${doc.type === 'model' ? '모델 확정' : '사전 신청'} — DA 승인 차례`, m: `${ME.name} · ${doc.title}`, href: `approvals.html?doc=${doc.id}` });
     return { doc, dup: false };
   };
-  window.addHist = (doc, e) => { doc.hist = (doc.hist || []).concat([Object.assign({ at: now(), who: ME.name }, e)]); };
+  window.addHist = (doc, e) => { doc.hist = (doc.hist || []).concat([Object.assign({ at: now(), who: ME.name, whoId: ME.id }, e)]); };
 
   /* ---- model versions & locks: computed from documents, never from the URL ---- */
   const MODEL0 = { rq: { ver: 5, base: 4, name: '요구사항 · 프로젝트' }, risk: { ver: 2, base: 1, name: '리스크' } };
@@ -636,7 +646,7 @@
   };
   /* one visibility rule for lists, deep links and file actions */
   window.canSeeDoc = d => !!d && (can('appr.viewall') || d.req === ME.id || (d.cc || []).includes(ME.id));
-  window.canSeeBatch = b => !!b && (b.by === ME.id || ME.has('da'));
+  window.canSeeBatch = b => !!b && (b.by === ME.id || can('excel.viewall'));
   /* model diff between two stored structures (by entity id / attribute logical name) */
   window.modelDiff = (a, b) => {
     const out = []; if (!a || !b) return null;

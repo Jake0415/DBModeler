@@ -369,7 +369,7 @@ window.pageInit = function () {
     if (revConflict) { toast('다른 탭에서 이 버전을 먼저 저장했습니다 — 덮어쓰지 않도록 편집을 막았습니다. 새로고침하세요', 'danger', { label: '새로고침', fn: () => location.reload() }); return true; }
     if (confirmed) { toast('확정본은 고칠 수 없습니다 — [v6 작업 시작]으로 다음 작업 버전을 여세요', 'info'); return true; }
     if (review) { toast('검토 중이라 편집할 수 없습니다 — 회수하거나 결재가 끝난 뒤 다음 작업 버전에서 편집하세요', 'info'); return true; }
-    if (viewOnly) { toast(outOfScope ? `${sysOfArea(AREA)}은(는) 담당 시스템이 아니라 조회만 할 수 있습니다` : '모델 편집은 모델러 역할만 할 수 있습니다', 'info'); return true; }
+    if (viewOnly) { toast(outOfScope ? `담당 시스템에 ${josa(sysOfArea(AREA), '이/가')} 없어 조회만 할 수 있습니다` : '모델 편집은 모델러 역할만 할 수 있습니다', 'info'); return true; }
     if (cv.dataset.sys === '1') { toast('시스템 전체 ERD는 조회 전용입니다 — 업무 영역으로 돌아가 편집하세요', 'info'); return true; }
     return false;
   };
@@ -704,9 +704,11 @@ window.pageInit = function () {
     // a term request this model waits on must not have been rejected / withdrawn (CX11-07)
     const ended = reqEnded({ E });
     if (ended.length) { toast(`용어 신청이 반려·회수된 속성 ${ended.length}건이 있습니다(${ended.join(', ')}) — 표준 맞추기에서 다시 맞춘 뒤 신청하세요`, 'danger'); return; }
+    if (!can('model.submit', { area: AREA })) { toast('확정 신청 권한이 없습니다 — 담당 시스템의 모델러만 신청합니다', 'danger'); return; }
+    { const gaps = lineGaps({ type: 'model', area: AREA, req: ME.id }); if (gaps.length) { toast(`${sysOfArea(AREA)} 모델을 처리할 ${gaps.map(s => STEP_NAME[s]).join(' · ')} 담당자가 없습니다 — 신청하면 결재가 멈춥니다. Admin에게 담당 지정을 요청하세요`, 'danger'); return; } }
     // always a NEW document (requester = current user); same area+version in progress → no duplicate (R2)
     const r = createDoc({ type: 'model', area: AREA, ver: VER, title: `${curSys().name} › ${LOCK.model.name} v${VER} 확정`, n: E.length, reason: $('cf-why').value.trim(), cc: ['hyun'], key: `model:${AREA}:v${VER}`, snap: lastComp, model: JSON.parse(JSON.stringify({ E, R, M })) });   // the document keeps the model as submitted
-    flash(r.dup ? `이미 진행 중인 확정 신청 ${r.doc.id}이 있습니다` : `확정 신청 ${r.doc.id} — DA에게 보냈습니다. 결재가 끝날 때까지 이 업무 영역은 조회 전용입니다`, 'info');
+    flash(r.dup ? `이미 진행 중인 확정 신청 ${r.doc.id}이 있습니다` : `확정 신청 ${r.doc.id} — 1단계 담당 ${approversFor(r.doc, 'da').length}명에게 알렸습니다. 결재가 끝날 때까지 이 업무 영역은 조회 전용입니다`, 'info');
     location.href = `model.html?area=${AREA}`;
   };
   $('wd-go').onclick = () => {
@@ -1291,7 +1293,7 @@ window.pageInit = function () {
   if (viewOnly && !locked) {
     document.body.classList.add('viewonly'); $('ban-view').style.display = 'flex'; if (!document.body.classList.contains('locked')) setSave('run', '조회 전용');
     if ($('ban-view-r')) $('ban-view-r').textContent = ME.roles.map(r => ROLE_NAME[r]).join(', ') || '조회만';
-    if (outOfScope) $('ban-view').querySelector('.grow').innerHTML = `<b>조회 전용</b> — <b>${sysOfArea(AREA)}</b>은(는) 내 담당 시스템이 아닙니다. 편집하려면 Admin에게 담당 시스템 추가를 요청하세요. 내 담당: ${(ME.systems || []).join(', ')}`;
+    if (outOfScope) $('ban-view').querySelector('.grow').innerHTML = `<b>조회 전용</b> — 내 담당 시스템(${(ME.systems || []).join(', ') || '없음'})에 <b>${sysOfArea(AREA)}</b>${josa(sysOfArea(AREA), '이/가').slice(-1)} 없습니다. <a href="mypage.html?req=sys&sys=${encodeURIComponent(sysOfArea(AREA))}">담당 시스템 추가 요청</a>`;
   }
   drawParticipants();
   if (q.get('focus') && ent(q.get('focus'))) setTimeout(() => { focusEnt(q.get('focus')); if (q.get('attr')) { treeOrigin = true; treeAttr = +q.get('attr'); render(); hlAttr(treeAttr); } }, 120);

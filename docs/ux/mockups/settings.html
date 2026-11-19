@@ -340,7 +340,7 @@ window.pageInit = function () {
         ${reqOf(u.id) ? `<div class="banner info" style="margin-bottom:12px"><i data-ic=info></i><div class="grow"><b>역할 변경 요청</b> — ${esc(reqOf(u.id).role)} · ${esc(reqOf(u.id).at)}<br><span class="caption">${esc(reqOf(u.id).why)}</span></div><button class="btn sm" id="rq-deny">거절</button></div>` : ''}
         <div class="usum" id="uf-sum" role="alert"></div>${formHtml(u, false)}
         <div class="section-t">할 수 있는 일 <span class="caption muted">권한표 기준 · 저장된 역할과 담당 시스템</span></div>
-        <ul class="caption" style="margin:0;padding-left:18px;line-height:20px">${PERMS.filter(p => canUser(u, p.id)).map(p => `<li>${p.n}${p.scope === 'sys' && !(p.adminAll && (u.roles || []).includes('admin')) ? ` <span class="faint">— ${(u.systems || []).includes('전체') ? '모든 시스템' : (u.systems || []).join(', ')}</span>` : ''}</li>`).join('') || '<li>없음 (사용 중지)</li>'}</ul>
+        <ul class="caption" style="margin:0;padding-left:18px;line-height:20px">${PERMS.filter(p => canUser(u, p.id) && !p.roles.includes('*')).map(p => `<li>${p.n}${p.id.startsWith('appr.') && p.scope === 'sys' ? ` <span class="faint">— 사전 신청은 기관 전체 · 모델 확정은 ${(u.systems || []).includes('전체') ? '모든 시스템' : (u.systems || []).join(', ')}</span>` : p.scope === 'sys' && !(p.adminAll && (u.roles || []).includes('admin')) ? ` <span class="faint">— ${(u.systems || []).includes('전체') ? '모든 시스템' : (u.systems || []).join(', ')}</span>` : ''}</li>`).join('') || '<li>보기만 (모델 · 사전 · DDL · 산출물)</li>'}</ul>
         ${ME.has('admin') && !self ? `<div class="dz"><div class="section-t" style="margin-top:0">계정 관리</div><div class="flex" style="flex-wrap:wrap;gap:6px">
           ${u.auth !== 'sso' ? '<button class="btn sm" id="ua-reset">비밀번호 초기화</button>' : ''}
           ${u.status === 'locked' ? '<button class="btn sm" id="ua-unlock">잠금 해제</button>' : ''}
@@ -374,14 +374,17 @@ window.pageInit = function () {
       if (!self && ME.has('admin') && u.roles.includes('admin') && !roles.includes('admin') && adminCount() <= 1) { toast('마지막 Admin의 Admin 역할은 뺄 수 없습니다 — 다른 사용자에게 먼저 주세요', 'danger'); return; }
       const prevRoles = u.roles.slice();
       Object.assign(u, { company: v('company'), org: v('org'), name: v('name'), phone: v('phone'), mail: v('mail').toLowerCase() });
-      if (!self && ME.has('admin')) { u.roles = roles; u.systems = systems; }
+      const prevSys = (u.systems || []).slice();
+      if (!self && can('users')) { u.roles = roles; u.systems = systems; }
+      if (prevSys.some(s => !u.systems.includes(s) && !u.systems.includes('전체'))) { revokeSessions(u); saveUsers(); }
       if (JSON.stringify([u.company, u.org, u.name, u.phone, u.mail, u.roles, u.systems]) === before) { toast('바뀐 내용이 없습니다', 'info'); return; }
       saveUsers(); const ov = JSON.parse(dbmStore.get('dbm-user-roles', '{}')); delete ov[u.id]; dbmStore.set('dbm-user-roles', JSON.stringify(ov));
       const roleChg = prevRoles.join() !== u.roles.join();
       if (roleChg && prevRoles.some(r => !u.roles.includes(r))) { revokeSessions(u); saveUsers(); }   // a role taken away ends that person's open sessions
       pushAudit({ act: roleChg ? '역할 변경' : '사용자 정보 수정', target: `${u.name} (${u.id})`, why: roleChg ? `${prevRoles.map(r => ROLE_NAME[r]).join('·') || '조회만'} → ${u.roles.map(r => ROLE_NAME[r]).join('·') || '조회만'}` : '회사 · 부서 · 이름 · 연락처 · 담당 시스템' });
-      if (roleChg) { const rq = reqOf(u.id); if (rq) { dbmStore.set('dbm-rolereq-' + u.id, 'null'); pushNotif({ to: [u.id], k: 'res', t: `역할 변경 요청 처리됨 — ${u.roles.map(r => ROLE_NAME[r]).join('·')}`, m: `${ME.name} · 요청: ${rq.role}`, href: 'mypage.html' }); } }
-      draw(); toast(`${u.name} 정보를 저장했습니다 · 감사 로그에 기록`, 'success');
+      const rq0 = reqOf(u.id), sysMet = !!(rq0 && rq0.key && rq0.key.startsWith('sys:') && (u.systems || []).includes(rq0.key.slice(4)));
+      if ((roleChg && !(rq0 && rq0.key && rq0.key.startsWith('sys:'))) || sysMet) { const rq = rq0; if (rq) { dbmStore.set('dbm-rolereq-' + u.id, 'null'); pushNotif({ to: [u.id], k: 'res', t: `역할 변경 요청 처리됨 — ${u.roles.map(r => ROLE_NAME[r]).join('·')}`, m: `${ME.name} · 요청: ${rq.role}`, href: 'mypage.html' }); } }
+      draw(); toast(`${u.name} 정보를 저장했습니다 · 감사 로그에 기록`, 'success'); warnGaps();
     };
     if (isNew) return;
     const u = USERS[selU];
@@ -392,7 +395,7 @@ window.pageInit = function () {
     const st = $('ua-stop'); if (st) st.onclick = () => {
       if (u.roles.includes('admin') && adminCount() <= 1) { toast('마지막 Admin은 중지할 수 없습니다', 'danger'); return; }
       const mine = myQueueOf(u).length;
-      ask(`<b>${esc(u.name)} 계정을 사용 중지할까요?</b> 로그인이 막히고, 이력은 그대로 남습니다.${mine ? ` 지금 이 사람의 역할로 처리할 결재가 ${mine}건 있습니다 — <b>자동으로 넘어가지 않으니</b> 중지 전에 처리하거나 결재선의 담당자를 바꾸세요.` : ''} 열려 있는 세션은 바로 끝납니다.<div class="field" style="margin-top:8px"><label for="ua-why">사유 *</label><input class="input" id="ua-why" placeholder="예: 퇴사 · 전출 · 휴직" data-nodirty aria-describedby="ua-whyerr"><div class="err" id="ua-whyerr" role="alert" style="font-size:12px;color:var(--danger-deep)"></div></div><div class="flex" style="margin-top:6px"><button class="btn sm" id="ua-no">취소</button><span class="grow"></span><button class="btn sm danger" id="ua-yes">사용 중지</button></div>`, () => { const why = $('ua-why').value.trim(); if (!why) { $('ua-whyerr').textContent = '사유를 입력하세요'; $('ua-why').focus(); return; } u.status = 'stopped'; u.stopWhy = why; revokeSessions(u); saveUsers(); pushAudit({ act: '계정 사용 중지', target: `${u.name} (${u.id})`, why }); draw(); toast(`${u.name} 계정을 사용 중지했습니다 · 감사 로그에 기록`, 'success'); });
+      ask(`<b>${esc(u.name)} 계정을 사용 중지할까요?</b> 로그인이 막히고, 이력은 그대로 남습니다.${mine ? ` 지금 이 사람의 역할로 처리할 결재가 ${mine}건 있습니다 — <b>자동으로 넘어가지 않으니</b> 중지 전에 처리하거나 결재선의 담당자를 바꾸세요.` : ''} 열려 있는 세션은 바로 끝납니다.<div class="field" style="margin-top:8px"><label for="ua-why">사유 *</label><input class="input" id="ua-why" placeholder="예: 퇴사 · 전출 · 휴직" data-nodirty aria-describedby="ua-whyerr"><div class="err" id="ua-whyerr" role="alert" style="font-size:12px;color:var(--danger-deep)"></div></div><div class="flex" style="margin-top:6px"><button class="btn sm" id="ua-no">취소</button><span class="grow"></span><button class="btn sm danger" id="ua-yes">사용 중지</button></div>`, () => { const why = $('ua-why').value.trim(); if (!why) { $('ua-whyerr').textContent = '사유를 입력하세요'; $('ua-why').focus(); return; } u.status = 'stopped'; u.stopWhy = why; revokeSessions(u); saveUsers(); pushAudit({ act: '계정 사용 중지', target: `${u.name} (${u.id})`, why }); draw(); warnGaps(); toast(`${u.name} 계정을 사용 중지했습니다 · 감사 로그에 기록`, 'success'); });
     };
     const dl = $('ua-del'); if (dl) dl.onclick = () => {
       const h = historyOf(u); if (h.length) { toast(`이력이 있어 삭제할 수 없습니다(${h.join(' · ')}) — 사용 중지하세요`, 'danger'); return; }
@@ -400,6 +403,8 @@ window.pageInit = function () {
       ask(`<b>${esc(u.name)}(${esc(u.id)}) 계정을 삭제할까요?</b> 되돌릴 수 없습니다. 이 ID는 다시 쓸 수 없게 예약됩니다.<div class="flex" style="margin-top:6px"><button class="btn sm" id="ua-no">취소</button><span class="grow"></span><button class="btn sm danger" id="ua-yes">삭제</button></div>`, () => { const nm = u.name, id = u.id; delete USERS[id]; reserveId(id); saveUsers(); pushAudit({ act: '사용자 삭제', target: `${nm} (${id})`, why: '이력 없는 계정' }); selU = (list().find(x => x.id !== ME.id) || list()[0]).id; draw(); toast(`${nm}(${id}) 계정을 삭제했습니다 · 감사 로그에 기록`, 'success'); });
     };
   }
+  // after account changes: any system whose model documents nobody could approve any more?
+  function warnGaps() { const g = []; SYSLIST.forEach(s => { const area = Object.keys(getAllModels()).find(a => (getAllModels()[a].system || 'RQMS') === s.code); if (!area) return; const gaps = lineGaps({ type: 'model', area, req: '_none' }); if (gaps.length) g.push(`${s.name}: ${gaps.map(x => STEP_NAME[x]).join(' · ')}`); }); if (g.length) setTimeout(() => toast(`결재 담당자가 없는 시스템이 생겼습니다 — ${g.join(' / ')}. 모델 확정 결재가 멈춥니다. 담당 시스템을 지정하세요`, 'danger'), 400); }
   const myQueueOf = u => getDocs().filter(d => (d.step === 'da' && (u.roles || []).includes('da')) || (d.step === 'final' && (u.roles || []).includes('owner')));
   function showTemp(pw, id) { $('pw-v').textContent = pw; $('pw-t').textContent = id ? `임시 비밀번호 · ${USERS[id].name}` : `임시 비밀번호 · ${USERS[selU].name}`; $('mo-pw').classList.add('open'); $('mo-pw')._opener = null; setTimeout(() => $('pw-copy').focus(), 0); }
   new MutationObserver(() => { if (!$('mo-pw').classList.contains('open')) { $('pw-v').textContent = ''; const b = $('ua-reset') || $('uf-save'); if (b) b.focus(); } }).observe($('mo-pw'), { attributes: true, attributeFilter: ['class'] });
@@ -409,7 +414,7 @@ window.pageInit = function () {
   const formDraft = () => { const P = $('pn-acct'); if (!P.querySelector('#uf-save')) return false; if (mode === 'new') return [...P.querySelectorAll('.input')].some(i => i.id !== 'uf-company' && i.value.trim()); const u = USERS[selU]; if (!u) return false; const v = id => ($('uf-' + id) || {}).value; const rolesNow = [...P.querySelectorAll('[data-role]:checked')].map(c => c.dataset.role).join(); return ['company', 'org', 'name', 'phone', 'mail'].some(k => (v(k) || '') !== (u[k] || '')) || ((u.roles || []).join() !== rolesNow && !P.querySelector('[data-role]').disabled); };
   $('u-rows').addEventListener('click', e => { const r = e.target.closest('[data-u]'); if (!r) return; if ((r.dataset.u !== selU || mode === 'new') && formDraft() && !confirm('저장하지 않은 입력이 있습니다. 버리고 다른 사용자를 볼까요?')) return; selU = r.dataset.u; mode = 'view'; draw(); });
   $('u-rows').addEventListener('keydown', e => { if (e.key === 'Enter') { const r = e.target.closest('[data-u]'); if (r) r.click(); } });
-  $('u-new').onclick = () => { if (!ME.has('admin')) { toast('사용자 등록은 Admin만 할 수 있습니다', 'danger'); return; } if (formDraft() && !confirm('저장하지 않은 입력이 있습니다. 버리고 새로 등록할까요?')) return; mode = 'new'; draw(); };
+  $('u-new').onclick = () => { if (!can('users')) { toast('사용자 등록은 Admin만 할 수 있습니다', 'danger'); return; } if (formDraft() && !confirm('저장하지 않은 입력이 있습니다. 버리고 새로 등록할까요?')) return; mode = 'new'; draw(); };
   $('u-q').addEventListener('input', () => { uq = $('u-q').value; drawList(); });
   $('u-st').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; ust = b.dataset.v; $('u-st').querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); drawList(); });
   window.addEventListener('beforeunload', e => { if (formDraft()) { e.preventDefault(); e.returnValue = ''; } });

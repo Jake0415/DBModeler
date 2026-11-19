@@ -65,7 +65,7 @@ CREATE TABLE RQMS.TMP_LOG ( -- 임시로그
 ALTER TABLE RQMS.RQRM_D ADD CONSTRAINT RQRM_D_FK1 FOREIGN KEY (PRJ_ID) REFERENCES RQMS.PRJ_M (PRJ_ID);`;
   // permission: only modelers import (CX12-28)
   const canImport = can('model.edit', { system: curSys().name });
-  if (!canImport) document.querySelector('.page-header').insertAdjacentHTML('afterend', '<div class="pad" style="padding-bottom:0"><div class="banner info"><i data-ic=info></i><div class="grow"><b>조회 전용</b> — 가져오기는 모델러 역할만 할 수 있습니다.</div></div></div>');
+  if (!canImport) document.querySelector('.page-header').insertAdjacentHTML('afterend', `<div class="pad" style="padding-bottom:0"><div class="banner info"><i data-ic=info></i><div class="grow"><b>조회 전용</b> — ${ME.has('modeler') ? `내 담당 시스템에 ${josa(curSys().name, '이/가')} 없어 가져오기를 할 수 없습니다. <a href="mypage.html?req=sys&sys=${encodeURIComponent(curSys().name)}">담당 시스템 추가 요청</a>` : 'DDL 가져오기는 모델러 역할만 할 수 있습니다.'}</div></div></div>`);
   const models = getModels();
   $('dst-area').innerHTML = Object.entries(models).map(([id, m]) => { const L = modelLock(id); return `<option value="${id}" ${L.state !== 'edit' ? 'disabled' : ''}>${m.name} · v${m.ver}${L.state !== 'edit' ? ' (편집 불가)' : ''}</option>`; }).join('');
   let parsed = null;

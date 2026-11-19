@@ -52,12 +52,12 @@ window.pageInit = function () {
   // plain text, not a badge per area (one badge per row)
   $('k-final').innerHTML = ids.map(a => `${getModels()[a].name} <span class="${getOrg().finalModel[a] !== false ? '' : 'muted'}">${getOrg().finalModel[a] !== false ? '사용' : '안 함'}</span>`).join('<span class="faint">, </span>');
   // creating an area is for modelers / admin; others only browse (CX12-20)
-  if (!can('area.create', { system: curSys().name })) { $('add-area').disabled = true; $('add-area').title = ME.has('modeler') ? `${curSys().name}은(는) 내 담당 시스템이 아니라 업무 영역을 만들 수 없습니다` : '업무 영역은 모델러 · Admin만 만들 수 있습니다'; }
+  if (!can('area.create', { system: curSys().name })) { $('add-area').disabled = true; $('add-area').title = ME.has('modeler') ? `내 담당 시스템에 ${josa(curSys().name, '이/가')} 없어 업무 영역을 만들 수 없습니다` : '업무 영역은 모델러 · Admin만 만들 수 있습니다'; }
   $('add-area').onclick = () => { if ($('add-area').disabled) return; $('mo-area').classList.add('open'); $('ma-name').focus(); };
   // model tree [+] → system.html#new (also when already here); the hash is cleared so a reload doesn't reopen it
   const openNew = () => { if (location.hash !== '#new') return; history.replaceState(null, '', location.pathname + location.search); setTimeout(() => $('add-area').click(), 0); };
   openNew(); window.addEventListener('hashchange', openNew);
-  $('ma-go').onclick = () => { const nm = $('ma-name').value.trim(); if (!nm) return; if (liveRoleChanged()) { staleRoleToast(); return; } const id = addArea(nm, { E: [], R: [], M: [] }); flash(`업무 영역 ‘${nm}’을 만들었습니다 — v1 작업 버전`, 'success'); location.href = `model.html?area=${id}`; };
+  $('ma-go').onclick = () => { const nm = $('ma-name').value.trim(); if (!nm) return; if (liveRoleChanged()) { staleRoleToast(); return; } if (!can('area.create', { system: curSys().name })) { toast('이 시스템에 업무 영역을 만들 권한이 없습니다', 'danger'); return; } if (!Object.values(USERS).some(u => u.status !== 'stopped' && canUser(u, 'model.edit', { system: curSys().name }))) toast(`${curSys().name}을(를) 맡은 모델러가 없어 아무도 이 영역을 편집할 수 없습니다 — 담당 지정이 필요합니다`, 'danger'); const id = addArea(nm, { E: [], R: [], M: [] }); flash(`업무 영역 ‘${nm}’을 만들었습니다 — v1 작업 버전`, 'success'); location.href = `model.html?area=${id}`; };
   document.getElementById('areas').innerHTML = ids.map(a => {
     const L = modelLock(a), c = getComp(a);
     const st = L.state === 'review' ? `<span class="badge b-info">검토 중 · ${L.doc.id}</span>` : L.state === 'confirmed' ? '<span class="badge b-success">확정본</span>' : '<span class="badge">작업 중</span>';

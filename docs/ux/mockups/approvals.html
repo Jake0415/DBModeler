@@ -101,7 +101,7 @@ window.pageInit = function () {
     queue: ['대기함', d => inQueue(d)],
     mine: ['내 신청', d => d.req === ME.id],
     cc: ['참조함', d => (d.cc || []).includes(ME.id)],
-    all: ['전체', d => ME.has('da') || ME.has('owner') || d.req === ME.id || (d.cc || []).includes(ME.id)]
+    all: ['전체', d => canSeeDoc(d)]
   };
   let box = q.get('box') || (ME.has('da') || ME.has('owner') ? 'queue' : 'mine');
   if (box === 'queue' && !(ME.has('da') || ME.has('owner'))) box = 'mine';
@@ -335,9 +335,10 @@ window.pageInit = function () {
       const was = d.step; d.step = was === 'da' && hasFinal(d) ? 'final' : 'done'; d.decisionPolicyVer = getPolicy().ver;
       saveDocs(docs);
       if (d.step === 'final') {
-        pushNotif({ to: Object.values(USERS).filter(u => u.roles.includes('owner')).map(u => u.id), k: 'appr', t: `${d.id}. 최종 승인 차례`, m: d.title, href: `approvals.html?doc=${d.id}` });
+        const fin = approversFor(d, 'final'); pushNotif({ to: fin.map(u => u.id), k: 'appr', t: `${d.id}. 최종 승인 차례`, m: d.title, href: `approvals.html?doc=${d.id}` });
+        if (!fin.length) addHist(d, { act: '최종 승인 담당자 없음 — 담당 지정 필요', step: 'final' }), saveDocs(docs);
         notifyReq(`${d.id} DA 승인됨. 최종 승인 대기`, d.title);
-        toast('DA 승인. 최종 승인(기관 담당자)에게 알렸습니다', 'info');
+        toast(fin.length ? `DA 승인. 최종 승인 담당자 ${fin.length}명에게 알렸습니다` : 'DA 승인. 이 시스템을 맡은 최종 승인자가 없어 결재가 멈춰 있습니다 — Admin에게 담당 지정을 요청하세요', fin.length ? 'info' : 'danger');
       } else if (d.type === 'model') {
         notifyReq(`${d.id} 최종 승인. v${d.ver} 확정본`, d.title);
         toast(`${was === 'da' ? 'DA 승인으로 완료' : '최종 승인'}. v${d.ver}이 확정본이 됐습니다. 모델 화면에서 다음 작업 버전을 시작할 수 있습니다`, 'success', { label: '확정본 보기', fn: () => location.href = `model.html?area=${d.area}&snap=${d.id}` });
@@ -407,8 +408,8 @@ window.pageInit = function () {
   } else if (q.get('new') && q.get('doc')) {
     const id = q.get('doc'), d = nd;
     $('new-banner').hidden = false;
-    $('new-banner').innerHTML = `<div class="banner">${icon('check')}<div class="grow"><b>${id} ${q.get('dup') ? '이미 신청돼 있습니다' : '신청됨'}</b>. ${d ? d.title : ''}. ${q.get('dup') ? '같은 내용의 진행 중 신청이 있어 새로 만들지 않았습니다.' : ME.has('da') ? 'DA 역할도 있어 바로 대기함에 들어왔습니다. 직접 승인하면 ‘자기 승인’으로 남습니다.' : 'DA에게 알렸습니다.'}</div></div>`;
-    box = ME.has('da') ? 'queue' : 'mine';
+    $('new-banner').innerHTML = `<div class="banner">${icon('check')}<div class="grow"><b>${id} ${q.get('dup') ? '이미 신청돼 있습니다' : '신청됨'}</b>. ${d ? d.title : ''}. ${q.get('dup') ? '같은 내용의 진행 중 신청이 있어 새로 만들지 않았습니다.' : d && canActOn(d) ? '1단계를 내가 처리할 수 있어 바로 대기함에 들어왔습니다. 직접 승인하면 ‘자기 승인’으로 남습니다.' : `1단계 담당 ${d ? approversFor(d, 'da').length : 0}명에게 알렸습니다.`}</div></div>`;
+    box = d && canActOn(d) ? 'queue' : 'mine';
   }
   if (q.get('doc')) { sel = q.get('doc'); const d = docs.find(x => x.id === sel); if (d && !BOX[box][1](d)) box = BOX.queue[1](d) ? 'queue' : BOX.mine[1](d) ? 'mine' : BOX.cc[1](d) ? 'cc' : 'all'; }
   if (!sel) sel = (list()[0] || {}).id || null;
