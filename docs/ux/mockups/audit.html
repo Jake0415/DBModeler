@@ -52,7 +52,7 @@ window.pageInit = function () {
   JSON.parse(dbmStore.get('dbm-purge', '[]')).forEach(p => rows.push({ at: key(p.at), who: p.who, f: 'purge', kind: '<span class="badge b-danger">영구 삭제</span>', tgt: `<span class="mono">${p.id}</span> ${p.name}`, what: `${p.kind || ''} 항목 영구 삭제 · 근거 ${p.doc !== '—' ? docLink(p.doc) : '—'}`, why: p.why || '' }));
   rows.push(...FIXED); rows.sort((a, b) => b.at.localeCompare(a.at));
   const ab = document.getElementById('ab');
-  ab.innerHTML = rows.map(r => `<tr data-f="${r.f}" data-at="${r.at}"><td class="mono">${r.at}</td><td>${r.who}</td><td>${r.kind}</td><td>${r.tgt}</td><td>${r.what}</td><td class="caption">${r.why}</td><td class="mono">${r.ip || '—'}</td></tr>`).join('') || '<tr><td colspan="7" class="caption muted" style="text-align:center;padding:24px">기록이 없습니다</td></tr>';
+  ab.innerHTML = rows.map(r => `<tr data-f="${r.f}" data-at="${r.at}"><td class="mono">${r.at}</td><td>${r.who}</td><td>${r.kind}</td><td>${r.tgt}</td><td>${r.what}</td><td class="caption">${r.why}</td><td class="mono">${r.ip || '—'}</td></tr>`).join('') || '<tr class="er"><td colspan="7" class="caption muted" style="text-align:center;padding:24px">기록이 없습니다</td></tr>';
   // chip + period + text search in one pass
   const aq = document.getElementById('aq'), per = document.getElementById('aper'); let kind = '';
   const since = () => { const n = +per.value; if (!n) return ''; const d = new Date(Date.now() - n * 864e5); return d.toISOString().slice(0, 10); };

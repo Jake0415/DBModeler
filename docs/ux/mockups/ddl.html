@@ -116,7 +116,7 @@ window.pageInit = function () {
     $('gb-banner').className = 'banner ' + (block.length ? 'danger' : warn.length ? 'warning' : 'success');
     $('gb-text').innerHTML = `<b>게이트 B: 차단 ${block.length} · 경고 ${warn.length}.</b> ${block.length ? '물리명·타입이 없는 컬럼이 있어 출력이 막힙니다 — 모델에서 표준 맞추기 후 다시 여세요.' : warn.length ? '표준 위반은 경고로 남고 예외 사유와 함께 출력합니다.' : '문제 없음.'}`;
     $('gb-body').innerHTML = `<div class="grid2" style="margin-bottom:12px"><div class="card"><div class="caption muted">테이블</div><div class="mono" style="font-size:20px">${target.length}</div></div><div class="card"><div class="caption muted">관계</div><div class="mono" style="font-size:20px">${src.R.length}</div></div></div>
-      <table class="tbl"><thead><tr><th>구분</th><th>항목</th></tr></thead><tbody>${block.map(x => `<tr><td><span class="badge b-danger">차단</span></td><td class="caption">${x}</td></tr>`).join('')}${warn.map(x => `<tr><td><span class="badge b-warning">경고</span></td><td class="caption">${x}</td></tr>`).join('')}${!block.length && !warn.length ? '<tr><td colspan="2" class="caption muted">문제 없음</td></tr>' : ''}</tbody></table>
+      <table class="tbl"><thead><tr><th>구분</th><th>항목</th></tr></thead><tbody>${block.map(x => `<tr><td><span class="badge b-danger">차단</span></td><td class="caption">${x}</td></tr>`).join('')}${warn.map(x => `<tr><td><span class="badge b-warning">경고</span></td><td class="caption">${x}</td></tr>`).join('')}${!block.length && !warn.length ? '<tr class="er"><td colspan="2" class="caption muted">문제 없음</td></tr>' : ''}</tbody></table>
       <div class="caption muted" style="margin-top:8px">문법·물리명 누락은 차단, 표준 위반은 경고 + 예외 사유로 진행합니다.</div>`;
     ['copy', 'dl'].forEach(id => { $(id).disabled = !!block.length; });
   }

@@ -29,7 +29,7 @@
     <div class="main">
       <div class="toolbar"><b style="font-size:13px">파싱 미리보기</b><span id="pstate"></span><span class="grow"></span><span class="caption muted" id="psum"></span></div>
       <div class="scroll">
-        <table class="tbl"><thead><tr><th>테이블</th><th>논리명</th><th class="num">컬럼</th><th>PK</th><th class="num">FK</th><th>점검</th></tr></thead><tbody id="prev"><tr><td colspan="6" class="caption muted" style="text-align:center;padding:30px">왼쪽에 DDL을 넣고 [파싱]을 누르세요</td></tr></tbody></table>
+        <table class="tbl"><thead><tr><th>테이블</th><th>논리명</th><th class="num">컬럼</th><th>PK</th><th class="num">FK</th><th>점검</th></tr></thead><tbody id="prev"><tr class="er"><td colspan="6" class="caption muted" style="text-align:center;padding:30px">왼쪽에 DDL을 넣고 [파싱]을 누르세요</td></tr></tbody></table>
         <div class="pad">
           <div class="field"><label>가져올 위치</label>
             <div class="flex"><label class="flex caption"><input type="radio" name="dst" value="new" checked> 새 업무 영역</label><label class="flex caption"><input type="radio" name="dst" value="cur"> 기존 업무 영역에 추가</label><select class="input" id="dst-area" style="width:220px;height:28px" aria-label="기존 업무 영역"></select></div></div>
@@ -93,7 +93,7 @@ ALTER TABLE RQMS.RQRM_D ADD CONSTRAINT RQRM_D_FK1 FOREIGN KEY (PRJ_ID) REFERENCE
     $('pstate').innerHTML = errs.length && !tables.length ? '<span class="badge b-danger">파싱 실패</span>' : errs.length ? '<span class="badge b-warning">일부 경고</span>' : '<span class="badge b-success">파싱 완료</span>';
     const cols = tables.reduce((n, x) => n + x.cols.length, 0);
     $('psum').textContent = tables.length ? `테이블 ${tables.length} · 컬럼 ${cols} · PK ${tables.filter(x => x.pk.length).length} · FK ${fks.length}` : '';
-    $('prev').innerHTML = tables.map(tb => `<tr class="${tb.pk.length ? '' : 'row-warning'}"><td class="mono">${tb.phys}</td><td>${tb.name}</td><td class="num">${tb.cols.length}</td><td>${tb.pk.length ? '<i data-ic=check></i><span class="sr-only">있음</span>' : '—'}</td><td class="num">${fks.filter(f => f.child === tb.phys).length}</td><td>${tb.pk.length ? '<span class="badge b-success">정상</span>' : '<span class="badge b-warning">PK 없음</span>'}</td></tr>`).join('') + errs.map(x => `<tr class="row-danger"><td colspan="6" class="caption">${x}</td></tr>`).join('') || '<tr><td colspan="6" class="caption muted" style="text-align:center;padding:30px">결과 없음</td></tr>';
+    $('prev').innerHTML = tables.map(tb => `<tr class="${tb.pk.length ? '' : 'row-warning'}"><td class="mono">${tb.phys}</td><td>${tb.name}</td><td class="num">${tb.cols.length}</td><td>${tb.pk.length ? '<i data-ic=check></i><span class="sr-only">있음</span>' : '—'}</td><td class="num">${fks.filter(f => f.child === tb.phys).length}</td><td>${tb.pk.length ? '<span class="badge b-success">정상</span>' : '<span class="badge b-warning">PK 없음</span>'}</td></tr>`).join('') + errs.map(x => `<tr class="row-danger"><td colspan="6" class="caption">${x}</td></tr>`).join('') || '<tr class="er"><td colspan="6" class="caption muted" style="text-align:center;padding:30px">결과 없음</td></tr>';
     $('go').disabled = !tables.length || !canImport; $('go').textContent = tables.length ? `${tables.length}개 테이블 가져오기` : '가져오기';
     $('foot-note').textContent = tables.filter(x => !x.pk.length).length ? `PK 없는 테이블 ${tables.filter(x => !x.pk.length).length}개는 경고와 함께 가져옵니다` : '';
   }

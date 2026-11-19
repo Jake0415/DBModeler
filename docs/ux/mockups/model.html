@@ -472,7 +472,7 @@ window.pageInit = function () {
       <div class="pk">${pk.map(row).join('')}</div>${rest.map(row).join('')}<div class="more">+ ${rest.length}개 속성</div>${subt}${sysc}`;
   }
   function renderMemos() {
-    $('memos').innerHTML = M.filter(m => m.mode === mode).map(m => `<div class="memo" id="m-${m.id}" style="left:${m.x}px;top:${m.y}px"><div class="mh" data-mdrag="${m.id}">메모 · ${m.by}<button data-mdel="${m.id}" title="메모 삭제" aria-label="닫기"><i data-ic=x></i></button></div><div class="mb" contenteditable="${canEdit()}" data-mid="${m.id}">${m.text}</div></div>`).join('');
+    $('memos').innerHTML = M.filter(m => m.mode === mode).map(m => `<div class="memo" id="m-${m.id}" style="left:${m.x}px;top:${m.y}px"><div class="mh" data-mdrag="${m.id}">메모 · ${m.by}<button data-mdel="${m.id}" title="메모 삭제" aria-label="메모 삭제"><i data-ic=x></i></button></div><div class="mb" contenteditable="${canEdit()}" data-mid="${m.id}">${m.text}</div></div>`).join('');
   }
   function render() {
     nodes.innerHTML = '';
@@ -697,7 +697,7 @@ window.pageInit = function () {
         <input class="input" id="g-why" placeholder="비대상 사유 *" aria-label="비대상 사유" value="${esc(gwhy)}" style="width:200px;${gstd === 'na' ? '' : 'display:none'}">
         <span class="grow"></span><button class="btn sm" id="g-clear">선택 해제</button><button class="btn sm primary" id="g-apply">일괄 적용</button></div>
       <div class="gbody"><table class="tbl"><thead><tr><th style="width:32px"><input type="checkbox" id="g-all" class="edit-only" aria-label="보이는 행 모두 선택" ${rows.length && rows.every(r => gsel.has(r.k)) ? 'checked' : ''}></th><th></th><th>엔터티</th><th>속성명</th><th>물리명</th><th>타입</th><th>필수</th><th>보안</th></tr></thead><tbody>
-      ${rows.map(r => `<tr><td><input type="checkbox" class="edit-only" data-k="${r.k}" aria-label="${esc(r.e.n + '.' + r.a.n)} 선택" ${gsel.has(r.k) ? 'checked' : ''}></td><td>${stBadge(r.a.s)}</td><td>${r.e.n}${r.e.ref ? ' <span class="badge">참조</span>' : ''}</td><td>${r.a.pk ? '# ' : ''}${hl(r.a.n)}${r.a.fk ? ' <span class="faint">(FK)</span>' : ''}</td><td class="mono">${r.a.p}</td><td class="mono">${r.a.t}</td><td>${r.a.nn || r.a.pk ? '예' : '<span class="faint">아니오</span>'}</td><td>${r.a.sec ? `<span class="badge b-danger">${r.a.sec}</span>` : ''}</td></tr>`).join('')}</tbody></table></div>`;
+      ${rows.map(r => `<tr><td><input type="checkbox" class="edit-only" data-k="${r.k}" aria-label="${esc(r.e.n + '.' + r.a.n)} 선택" ${gsel.has(r.k) ? 'checked' : ''}></td><td>${stBadge(r.a.s)}</td><td>${r.e.n}${r.e.ref ? ' <span class="muted">· 참조</span>' : ''}</td><td>${r.a.pk ? '# ' : ''}${hl(r.a.n)}${r.a.fk ? ' <span class="faint">(FK)</span>' : ''}</td><td class="mono">${r.a.p}</td><td class="mono">${r.a.t}</td><td>${r.a.nn || r.a.pk ? '예' : '<span class="faint">아니오</span>'}</td><td>${r.a.sec ? `<span class="badge b-danger">${r.a.sec}</span>` : ''}</td></tr>`).join('')}</tbody></table></div>`;
     const f = g.querySelector('#g-find'); if (document.activeElement && document.activeElement.id === 'g-find-focus') f.focus();
   }
   function openGrid(focusFind) {
