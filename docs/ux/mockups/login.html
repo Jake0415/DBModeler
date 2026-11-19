@@ -57,42 +57,51 @@ window.pageInit = function () {
   $('lg-banner').innerHTML = q.get('fail') ? '<div class="banner danger" style="margin-bottom:12px"><i data-ic=warn></i><div>SSO 인증에 실패했습니다. 다시 시도하거나 기관 IT 지원(내선 1234)에 문의하세요. <span class="mono caption">오류 ID E-20261118-SSO1</span></div></div>'
     : q.get('expired') ? `<div class="banner info" style="margin-bottom:12px"><i data-ic=info></i><div>세션이 만료됐습니다. 편집 중이던 내용은 이 브라우저에 보관돼 있고, 로그인하면 <b>${safe ? ((SCREENS.find(s => s.file === safe.split(/[?#]/)[0]) || {}).name || safe.split('?')[0]).split('(')[0].trim() : '홈'}</b> 화면으로 돌아가 이어서 작업합니다.</div></div>` : '';
   const A = getAuth();
-  const go = id => { const u = USERS[id]; u.fails = 0; u.last = new Date().toTimeString().slice(0, 5); delete u.lockUntil; if (u.status === 'locked') u.status = 'active'; saveUsers(); dbmStore.set('dbm-role', id); const start = { '결재함': 'approvals.html' }[dbmStore.get('dbm-start', '')] || 'home.html'; location.href = safe || start; };
-  const err = (m, el) => { $('lg-err').textContent = m; if (el) { el.setAttribute('aria-invalid', 'true'); el.focus(); } };
-  // the screen follows the agency's authentication mode (settings → 사용자 · 역할)
+  if (q.get('revoked')) $('lg-banner').innerHTML = '<div class="banner info" style="margin-bottom:12px"><i data-ic=info></i><div>계정 상태나 비밀번호가 바뀌어 로그아웃됐습니다. 다시 로그인하세요.</div></div>';
+  // a successful sign-in starts a new session (its time is what later revocations compare with)
+  const go = id => { const u = USERS[id]; u.last = new Date().toTimeString().slice(0, 5); saveUsers(); dbmStore.set('dbm-role', id); dbmStore.set('dbm-sess-at', String(Date.now())); const start = { '결재함': 'approvals.html' }[dbmStore.get('dbm-start', '')] || 'home.html'; location.href = safe || start; };
+  const err = (m, el) => { $('lg-err').textContent = m; if (el) { el.setAttribute('aria-invalid', 'true'); el.setAttribute('aria-describedby', 'lg-err'); el.focus(); } };
   const ssoOnly = A.mode === 'sso', ssoBtn = A.mode !== 'local';
   if (ssoOnly) { $('lg-sub').textContent = '기관 통합 인증(SSO)으로 로그인합니다.'; $('lg-form').hidden = true; }
   $('lg-sso').innerHTML = ssoBtn ? `${ssoOnly ? '' : '<div class="lg-sep">또는</div>'}<button class="btn${ssoOnly ? ' primary' : ''}" id="lg-sso-go" type="button">사내 SSO로 로그인 <span class="caption muted" style="margin-left:6px">${A.ssoProto}</span></button>${ssoOnly ? '<button class="btn ghost sm" id="lg-break" type="button" style="margin-top:12px;height:28px;font-size:13px">SSO 장애 · 관리자 비상 로그인</button>' : ''}` : '';
   $('lg-help').innerHTML = ssoOnly ? 'SSO에 문제가 있으면 기관 IT 지원(내선 1234)에 문의하세요.' : `비밀번호를 ${A.lockFails}번 틀리면 ${A.lockMin}분 동안 잠깁니다. 비밀번호를 잊었으면 관리자에게 초기화를 요청하세요(내선 1234).`;
-  const sg = $('lg-sso-go'); if (sg) sg.onclick = () => { const u = Object.values(USERS).find(x => x.id === ME.id && x.status !== 'stopped') || Object.values(USERS).find(x => x.status !== 'stopped'); toast(`SSO 인증 화면으로 이동합니다(목업) — ${u.name}(으)로 로그인`, 'info'); setTimeout(() => go(u.id), 600); };
-  const br = $('lg-break'); if (br) br.onclick = () => { $('lg-form').hidden = false; br.hidden = true; $('lg-sub').textContent = 'SSO 장애 때 관리자(Admin)만 ID · 비밀번호로 로그인할 수 있습니다.'; $('lg-id').focus(); };
+  // SSO (mock): the IdP decides who the user is; a stopped account is refused, the local lock is left as it is
+  const sg = $('lg-sso-go'); if (sg) sg.onclick = () => { const u = Object.values(USERS).find(x => x.id === ME.id) || Object.values(USERS)[0]; if (u.status === 'stopped') { err('사용이 중지된 계정입니다. 관리자에게 문의하세요'); return; } toast(`SSO 인증 화면으로 이동합니다(목업) — IdP가 확인한 ${u.name}(으)로 로그인`, 'info'); setTimeout(() => go(u.id), 600); };
+  let breakGlass = false;
+  const br = $('lg-break'); if (br) br.onclick = () => { breakGlass = true; $('lg-form').hidden = false; br.hidden = true; $('lg-sub').textContent = 'SSO 장애 때 지정된 관리자만 ID · 비밀번호로 로그인합니다. 사용 기록이 남고 다른 관리자에게 알림이 갑니다.'; $('lg-form').insertAdjacentHTML('afterbegin', '<div class="field"><label for="lg-why">비상 로그인 사유 *</label><input class="input" id="lg-why" placeholder="예: SSO 서버 응답 없음(11/19 09:10)"></div>'); $('lg-why').focus(); };
   let pending = null;
+  const FAIL = 'ID 또는 비밀번호가 맞지 않습니다. 계속 틀리면 계정이 잠길 수 있습니다';
   $('lg-form').onsubmit = e => {
     e.preventDefault(); $('lg-err').textContent = ''; ['lg-id', 'lg-pw'].forEach(x => $(x).removeAttribute('aria-invalid'));
     const id = $('lg-id').value.trim().toLowerCase(), pw = $('lg-pw').value;
+    if (breakGlass && !$('lg-why').value.trim()) return err('비상 로그인 사유를 입력하세요', $('lg-why'));
     if (!id) return err('ID를 입력하세요', $('lg-id')); if (!pw) return err('비밀번호를 입력하세요', $('lg-pw'));
     const u = USERS[id];
-    // the same message for an unknown ID and a wrong password (no account guessing)
-    if (!u) return err('ID 또는 비밀번호가 맞지 않습니다', $('lg-pw'));
-    if (u.status === 'stopped') return err('사용이 중지된 계정입니다. 관리자에게 문의하세요');
-    if (u.status === 'locked' && u.lockUntil && Date.now() < u.lockUntil) return err(`비밀번호를 ${A.lockFails}번 틀려 계정이 잠겼습니다. ${Math.ceil((u.lockUntil - Date.now()) / 60000)}분 뒤 다시 시도하거나 관리자에게 잠금 해제를 요청하세요`);
-    if (ssoOnly && !(u.roles || []).includes('admin')) return err('지금은 SSO 로그인만 허용됩니다. 비상 로그인은 관리자만 할 수 있습니다');
-    if (u.auth === 'sso' && !ssoOnly) return err('SSO 연동 계정입니다. [사내 SSO로 로그인]을 누르세요');
-    if (u.pwHash !== pwHash(u.id, pw)) {
-      u.fails = (u.fails || 0) + 1;
-      if (u.fails >= A.lockFails) { u.status = 'locked'; u.lockUntil = Date.now() + A.lockMin * 60000; saveUsers(); pushAudit({ act: '계정 잠김', target: `${u.name} (${u.id})`, why: `비밀번호 ${A.lockFails}회 실패` }); return err(`비밀번호를 ${A.lockFails}번 틀려 계정이 ${A.lockMin}분 동안 잠겼습니다`); }
-      saveUsers(); return err(`ID 또는 비밀번호가 맞지 않습니다 (${u.fails}/${A.lockFails})`, $('lg-pw'));
+    // the password is checked first; until it matches, every failure reads the same (no hint that the ID exists, is locked, stopped or an admin)
+    if (u && u.lockUntil && Date.now() >= u.lockUntil) { u.status = u.status === 'locked' ? 'active' : u.status; u.fails = 0; delete u.lockUntil; saveUsers(); }   // an expired lock starts over
+    if (!u || u.auth === 'sso' || u.pwHash !== pwHash(u.id, pw)) {
+      if (u && u.auth !== 'sso' && u.status !== 'stopped') { u.fails = (u.fails || 0) + 1; if (u.fails >= A.lockFails && u.status !== 'locked') { u.status = 'locked'; u.lockUntil = Date.now() + A.lockMin * 60000; pushAudit({ act: '계정 잠김', target: `${u.name} (${u.id})`, why: `비밀번호 ${A.lockFails}회 실패` }); } saveUsers(); }
+      return err(FAIL, $('lg-pw'));
     }
+    // identity confirmed — now the account's own state may be told
+    if (u.status === 'stopped') return err('사용이 중지된 계정입니다. 관리자에게 문의하세요');
+    if (u.status === 'locked') return err(`비밀번호를 여러 번 틀려 계정이 잠겼습니다. ${Math.max(1, Math.ceil((u.lockUntil - Date.now()) / 60000))}분 뒤 다시 시도하거나 관리자에게 잠금 해제를 요청하세요`);
+    if (ssoOnly && !(breakGlass && (u.roles || []).includes('admin'))) return err('지금은 SSO 로그인만 허용됩니다. 비상 로그인은 관리자만 할 수 있습니다');
+    if (u.pwTemp && u.tempUntil && Date.now() > u.tempUntil) return err('임시 비밀번호의 사용 기한(24시간)이 지났습니다. 관리자에게 다시 발급을 요청하세요');
+    u.fails = 0; saveUsers();
+    if (breakGlass) { const why = $('lg-why').value.trim(); pushAudit({ act: '관리자 비상 로그인', target: `${u.name} (${u.id})`, why }); pushNotif({ to: Object.values(USERS).filter(x => x.id !== u.id && (x.roles || []).includes('admin')).map(x => x.id), k: 'sys', t: `관리자 비상 로그인 — ${u.name}`, m: why, href: 'audit.html' }); }
     const old = u.pwAt && (Date.now() - new Date(u.pwAt.slice(0, 10)).getTime()) / 86400000 > A.pwDays;
-    if (u.pwTemp || old) { pending = u.id; $('lg-form').hidden = true; $('lg-sso').hidden = true; $('lg-change').hidden = false; $('lg-change-why').textContent = u.pwTemp ? '임시 비밀번호로 로그인했습니다. 새 비밀번호를 정해야 계속할 수 있습니다.' : `비밀번호를 바꾼 지 ${A.pwDays}일이 지났습니다. 새 비밀번호를 정하세요.`; $('lg-rule').textContent = `${A.pwMin}자 이상 · 영문 · 숫자 · 특수문자 · ID 미포함 · 같은 문자 3번 연속 금지 · 이전 비밀번호와 달라야 합니다`; $('lg-n1').focus(); return; }
+    if (u.pwTemp || old) { pending = { id: u.id, rev: u.pwHash }; $('lg-form').hidden = true; $('lg-sso').hidden = true; $('lg-change').hidden = false; $('lg-change-why').textContent = u.pwTemp ? '임시 비밀번호로 로그인했습니다. 새 비밀번호를 정해야 계속할 수 있습니다.' : `비밀번호를 바꾼 지 ${A.pwDays}일이 지났습니다. 새 비밀번호를 정하세요.`; $('lg-rule').textContent = `${A.pwMin}자 이상 · 영문 · 숫자 · 특수문자(!@#$ 등, 공백 불가) · ID 미포함 · 같은 문자 3번 연속 금지 · 이전 비밀번호와 달라야 합니다`; $('lg-n1').focus(); return; }
     go(u.id);
   };
   $('lg-change').onsubmit = e => {
-    e.preventDefault(); const u = USERS[pending]; if (!u) return; const n1 = $('lg-n1').value, n2 = $('lg-n2').value; $('lg-cerr').textContent = '';
-    const p = pwProblems(u.id, n1); if (p.length) { $('lg-cerr').textContent = '비밀번호 규칙: ' + p.join(' · '); $('lg-n1').focus(); return; }
-    if (pwHash(u.id, n1) === u.pwHash) { $('lg-cerr').textContent = '이전 비밀번호와 같습니다'; $('lg-n1').focus(); return; }
-    if (n1 !== n2) { $('lg-cerr').textContent = '비밀번호가 서로 다릅니다'; $('lg-n2').focus(); return; }
-    u.pwHash = pwHash(u.id, n1); u.pwTemp = false; u.pwAt = new Date().toISOString().slice(0, 10); saveUsers(); pushAudit({ act: '비밀번호 변경', target: `${u.name} (${u.id})`, why: '로그인 때 변경' }); flash('비밀번호를 바꿨습니다', 'success'); go(u.id);
+    e.preventDefault(); if (!pending) return; const u = USERS[pending.id]; const n1 = $('lg-n1').value, n2 = $('lg-n2').value; const cerr = (m, el) => { $('lg-cerr').textContent = m; el.setAttribute('aria-describedby', 'lg-cerr'); el.focus(); }; $('lg-cerr').textContent = '';
+    // the account must still be the one that signed in (not stopped, not re-issued meanwhile)
+    if (!u || u.status === 'stopped' || u.pwHash !== pending.rev) { $('lg-change').hidden = true; $('lg-form').hidden = false; pending = null; return err('계정 상태가 바뀌었습니다. 처음부터 다시 로그인하세요'); }
+    const p = pwProblems(u.id, n1); if (p.length) return cerr('비밀번호 규칙: ' + p.join(' · '), $('lg-n1'));
+    if (pwHash(u.id, n1) === u.pwHash) return cerr('이전 비밀번호와 같습니다', $('lg-n1'));
+    if (n1 !== n2) return cerr('비밀번호가 서로 다릅니다', $('lg-n2'));
+    u.pwHash = pwHash(u.id, n1); u.pwTemp = false; delete u.tempUntil; u.pwAt = new Date().toISOString().slice(0, 10); saveUsers(); pushAudit({ act: '비밀번호 변경', target: `${u.name} (${u.id})`, why: '로그인 때 변경' }); flash('비밀번호를 바꿨습니다', 'success'); go(u.id);
   };
   if (!ssoOnly) setTimeout(() => $('lg-id').focus(), 0);
   $('lg-foot').textContent = `${PRODUCT.name} ${PRODUCT.version} · build ${PRODUCT.build} · ${PRODUCT.env}`;

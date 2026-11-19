@@ -102,16 +102,16 @@ window.pageInit = function () {
     $('sec-auth').innerHTML = sso ? `<span class="badge b-success">사내 SSO</span> <span class="caption muted">비밀번호는 기관 통합 인증(${A.ssoProto})에서 바꿉니다</span>` : `<span class="badge">ID · 비밀번호</span> <span class="caption muted">이 시스템의 자체 계정입니다${A.mode !== 'local' ? ' · 로그인 화면에서 SSO도 쓸 수 있습니다' : ''}</span>`;
     $('sec-pwrow').hidden = sso; $('sec-pwat').textContent = `마지막 변경 ${U.pwAt || '—'} · ${A.pwDays}일마다 바꿉니다`;
     $('s-rule').textContent = `${A.pwMin}자 이상 · 영문 · 숫자 · 특수문자 · ID 미포함 · 같은 문자 3번 연속 금지`;
-    $('sec-pw').onsubmit = e => { e.preventDefault(); const er = m => { $('s-err').textContent = m; };
+    $('sec-pw').onsubmit = e => { e.preventDefault(); const er = m => { $('s-err').textContent = m; ['s-cur', 's-n1', 's-n2'].forEach(x => $(x).setAttribute('aria-describedby', 's-err')); };
       if (U.pwHash !== pwHash(U.id, $('s-cur').value)) { er('지금 비밀번호가 맞지 않습니다'); $('s-cur').focus(); return; }
       const n1 = $('s-n1').value, n2 = $('s-n2').value, p = pwProblems(U.id, n1);
       if (p.length) { er('비밀번호 규칙: ' + p.join(' · ')); $('s-n1').focus(); return; }
       if (pwHash(U.id, n1) === U.pwHash) { er('지금 비밀번호와 같습니다'); $('s-n1').focus(); return; }
       if (n1 !== n2) { er('새 비밀번호가 서로 다릅니다'); $('s-n2').focus(); return; }
-      U.pwHash = pwHash(U.id, n1); U.pwAt = new Date().toISOString().slice(0, 10); U.pwTemp = false; saveUsers(); pushAudit({ act: '비밀번호 변경', target: `${U.name} (${U.id})`, why: '마이페이지' });
+      U.pwHash = pwHash(U.id, n1); U.pwAt = new Date().toISOString().slice(0, 10); U.pwTemp = false; delete U.tempUntil; U.sessRev = Date.now(); dbmStore.set('dbm-sess-at', String(Date.now() + 1)); saveUsers();   /* other sessions end, this one stays */ pushAudit({ act: '비밀번호 변경', target: `${U.name} (${U.id})`, why: '마이페이지' });
       ['s-cur', 's-n1', 's-n2'].forEach(x => $(x).value = ''); er(''); $('sec-pwat').textContent = `마지막 변경 ${U.pwAt} · ${A.pwDays}일마다 바꿉니다`; toast('비밀번호를 바꿨습니다 · 다른 기기의 세션은 다시 로그인해야 합니다', 'success'); };
   }
-  $('p-phone').addEventListener('input', () => { const d = $('p-phone').value.replace(/\D/g, '').slice(0, 11); $('p-phone').value = d.length < 4 ? d : d.length < 8 ? d.slice(0, 3) + '-' + d.slice(3) : d.slice(0, 3) + '-' + d.slice(3, d.length - 4) + '-' + d.slice(-4); });
+  $('p-phone').addEventListener('input', () => { const d = $('p-phone').value.replace(/\D/g, '').slice(0, 11); const a = d.startsWith('02') ? 2 : 3; $('p-phone').value = d.length <= a ? d : d.length < a + 5 ? d.slice(0, a) + '-' + d.slice(a) : d.slice(0, a) + '-' + d.slice(a, d.length - 4) + '-' + d.slice(-4); });
   $('p-roles').innerHTML = ME.roles.map(r => `<span class="badge">${ROLE_NAME[r]}</span>`).join(' ');
   $('p-sys').textContent = '담당 시스템: ' + ME.systems.join(', ');
   const docs = getDocs().filter(d => d.req === ME.id);
@@ -135,8 +135,8 @@ window.pageInit = function () {
   const dn = dbmStore.get('dbm-disp-' + ME.id, ''); if (dn) $('p-disp').value = dn;
   $('p-save').onclick = () => {
     const v = $('p-disp').value.trim(); if (!v) { toast('표시 이름을 입력하세요', 'danger'); return; }
-    const ph = $('p-phone').value.trim(), ml = $('p-mail').value.trim(); $('p-cerr').textContent = '';
-    if (!/^0\d{1,2}-\d{3,4}-\d{4}$/.test(ph)) { $('p-cerr').textContent = '전화번호 형식이 맞지 않습니다 (예: 010-1234-5678)'; $('p-phone').focus(); return; }
+    const ph = $('p-phone').value.trim(), ml = $('p-mail').value.trim().toLowerCase(); $('p-cerr').textContent = '';
+    if (!/^(02-\d{3,4}|0\d{2}-\d{3,4})-\d{4}$/.test(ph)) { $('p-cerr').textContent = '전화번호 형식이 맞지 않습니다 (예: 010-1234-5678, 02-123-4567)'; $('p-phone').setAttribute('aria-describedby', 'p-cerr'); $('p-phone').focus(); return; }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(ml)) { $('p-cerr').textContent = '이메일 형식이 맞지 않습니다'; $('p-mail').focus(); return; }
     if (Object.values(USERS).some(x => x.id !== ME.id && (x.mail || '').toLowerCase() === ml.toLowerCase())) { $('p-cerr').textContent = '다른 사용자가 쓰는 이메일입니다'; $('p-mail').focus(); return; }
     dbmStore.set('dbm-disp-' + ME.id, v);

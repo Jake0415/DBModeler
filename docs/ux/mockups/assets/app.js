@@ -45,14 +45,20 @@
   window.saveAuth = a => store.set('dbm-auth', JSON.stringify(a));
   window.AUTH_MODE = { local: 'ID · 비밀번호', both: 'ID · 비밀번호 + SSO(선택)', sso: 'SSO만 (관리자 비상 로그인 허용)' };
   // password rules — one function for registration, reset and self-change
-  window.pwProblems = (id, pw, name) => { const a = getAuth(), p = []; if ((pw || '').length < a.pwMin) p.push(`${a.pwMin}자 이상`); if (!/[A-Za-z]/.test(pw)) p.push('영문 포함'); if (!/[0-9]/.test(pw)) p.push('숫자 포함'); if (!/[^A-Za-z0-9]/.test(pw)) p.push('특수문자 포함'); if (id && pw && pw.toLowerCase().includes(String(id).toLowerCase())) p.push('ID를 포함하면 안 됨'); if (/(.)\1\1/.test(pw || '')) p.push('같은 문자 3번 연속 금지'); return p; };
-  window.tempPassword = () => { const A = 'ABCDEFGHJKLMNPQRSTUVWXYZ', a = 'abcdefghijkmnpqrstuvwxyz', d = '23456789', s = '!@#$%*?'; const pick = x => x[Math.floor(Math.random() * x.length)]; let out = pick(A) + pick(a) + pick(d) + pick(s); while (out.length < 12) out += pick(A + a + d + s); return out.split('').sort(() => Math.random() - 0.5).join(''); };
+  window.pwProblems = (id, pw, name) => { const a = getAuth(), p = []; if ((pw || '').length < a.pwMin) p.push(`${a.pwMin}자 이상`); if (!/[A-Za-z]/.test(pw)) p.push('영문 포함'); if (!/[0-9]/.test(pw)) p.push('숫자 포함'); if (!/[!-\/:-@\[-`{-~]/.test(pw || '')) p.push('특수문자(!@#$ 등) 포함'); if (/\s/.test(pw || '')) p.push('공백 불가'); if (id && pw && pw.toLowerCase().includes(String(id).toLowerCase())) p.push('ID를 포함하면 안 됨'); if (/(.)\1\1/.test(pw || '')) p.push('같은 문자 3번 연속 금지'); return p; };
+  window.tempPassword = () => { const A = 'ABCDEFGHJKLMNPQRSTUVWXYZ', a = 'abcdefghijkmnpqrstuvwxyz', d = '23456789', s = '!@#$%*?'; const rnd = n => { const b = new Uint32Array(1); crypto.getRandomValues(b); return b[0] % n; }; const pick = x => x[rnd(x.length)]; let out = pick(A) + pick(a) + pick(d) + pick(s); while (out.length < 12) out += pick(A + a + d + s); const c = out.split(''); for (let i = c.length - 1; i > 0; i--) { const j = rnd(i + 1); [c[i], c[j]] = [c[j], c[i]]; } return c.join(''); };
+  // deleted IDs stay reserved forever — notifications, read marks, audit subjects keyed by ID must never pass to a new person
+  window.reservedIds = () => { try { return JSON.parse(store.get('dbm-users-deleted', '[]')); } catch (e) { return []; } };
+  window.reserveId = id => { const r = reservedIds(); if (!r.includes(id)) { r.push(id); store.set('dbm-users-deleted', JSON.stringify(r)); } };
+  window.revokeSessions = u => { u.sessRev = Date.now(); };   // the mock "server" marks old sessions invalid
   window.USER_STATUS = { active: '사용', stopped: '사용 중지', locked: '잠김' };
   // ?as=role from a scenario/shortcut link becomes the selected demo user (kept while moving between screens — CL12-01)
   if (qs.get('as') && USERS[qs.get('as')] && store.get('dbm-role', 'kim') !== qs.get('as')) store.set('dbm-role', qs.get('as'));
   const meId = store.get('dbm-role', 'kim');
   const ME = Object.assign({}, USERS[meId] || USERS.kim || Object.values(USERS)[0], { has(r) { return (this.roles || []).includes(r); } });
   window.ME = ME;
+  { const pg = (document.body && document.body.dataset.page) || location.pathname; const signedOut = /login|error/.test(pg) || /login\.html|error\.html/.test(location.pathname); const sessAt = +store.get('dbm-sess-at', '0'); const me0 = USERS[meId];
+    if (!signedOut && me0 && (me0.status === 'stopped' || (me0.sessRev && sessAt && me0.sessRev > sessAt))) { location.replace('login.html?revoked=1'); } }
   window.roleBadges = u => u.roles.map(r => `<span class="badge">${ROLE_NAME[r]}</span>`).join(' ');
 
   /* ================= v5 shared state layer =================
@@ -537,7 +543,8 @@
   window.hasFinal = d => (d.line || ['da', 'final']).includes('final');
 
   /* ---- audit events: one append-only source written by actions (settings, publish, purge, role change); audit screen merges it with document history ---- */
-  window.pushAudit = e => { const all = J('dbm-audit', []); all.unshift(Object.assign({ id: 'au' + Date.now() + Math.random().toString(36).slice(2, 5), at: today() + ' ' + now().split(' ')[1], who: ME.name, whoId: ME.id }, e)); S('dbm-audit', all.slice(0, 300)); };
+  const txt = v => typeof v === 'string' ? v.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') : v;
+  window.pushAudit = e => { e = Object.assign({}, e, { target: txt(e.target), why: txt(e.why) }); const all = J('dbm-audit', []); all.unshift(Object.assign({ id: 'au' + Date.now() + Math.random().toString(36).slice(2, 5), at: today() + ' ' + now().split(' ')[1], who: ME.name, whoId: ME.id }, e)); S('dbm-audit', all.slice(0, 300)); };
   window.getAudit = () => J('dbm-audit', []);
 
   /* ---- validation policy (검수 기준) with a version number — documents and upload validations remember the version they were checked with ---- */
@@ -1244,7 +1251,7 @@
     mk.innerHTML = `<button class="mf-btn" id="mk-fab" type="button" aria-haspopup="dialog" aria-expanded="false" title="목업 검토용 도구 · 실제 제품에는 없음">목업${(() => { const n = (J('dbm-notes', {})[curFile()] || []).filter(x => !x.done).length; return n ? ` <span class="scr-n">${n}</span>` : ''; })()}</button>
       <div class="mock-tools" id="mk-pop" role="dialog" aria-label="목업 도구">
         <div class="mt-h">목업 도구 <span class="caption muted">실제 제품에는 없음</span></div>
-        <label class="mt-row"><span>역할</span><select id="mk-role" aria-label="역할 보기 전환">${Object.values(USERS).map(u => `<option value="${u.id}" ${u.id === ME.id ? 'selected' : ''}>${u.name} · ${u.roles.map(r => ROLE_NAME[r]).join('·')}</option>`).join('')}</select></label>
+        <label class="mt-row"><span>역할</span><select id="mk-role" aria-label="역할 보기 전환">${Object.values(USERS).filter(u => u.status !== 'stopped').map(u => `<option value="${u.id}" ${u.id === ME.id ? 'selected' : ''}>${txt(u.name)} · ${(u.roles || []).map(r => ROLE_NAME[r]).join('·') || '조회만'}</option>`).join('')}</select></label>
         <div class="mt-row"><span>화면 크기</span><span class="seg" id="seg-frame" title="맞춤 = 창 폭 전체(최소 1600px) · 1920/1600 = 고정 미리보기"><button data-v="fit">맞춤</button><button data-v="1920">1920</button><button data-v="1600">1600</button></span></div>
         <div class="mt-row"><span>테마</span><span class="seg" id="seg-theme"><button data-v="light">라이트</button><button data-v="dark">다크</button></span></div>
         <div class="mt-row mt-acts"><button class="btn sm" id="mk-scr" aria-expanded="false" title="화면 정보 · 상태별 바로가기 · 설계 문서 · 검토 메모">화면 정보</button><a class="btn sm" href="index.html" title="전체 화면·교차 시나리오">목업 지도</a><button class="btn sm ghost" id="mk-reset" title="결재 진행 상태·알림 읽음을 처음으로 · 검토 메모는 유지">데이터 초기화</button></div>
@@ -1262,7 +1269,7 @@
     const tsel = st.querySelector(`[data-v="${themePref === 'dark' ? 'dark' : 'light'}"]`); if (tsel) tsel.classList.add('on');
     sf.addEventListener('click', e => { const v = e.target.dataset.v; if (!v) return; store.set('dbm-frame', v); const p = new URLSearchParams(location.search); p.set('w', v); location.search = p.toString(); });
     st.addEventListener('click', e => { const v = e.target.dataset.v; if (!v) return; store.set('dbm-theme', v); applyTheme(v); st.querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.v === v)); });
-    mk.querySelector('#mk-role').addEventListener('change', e => { store.set('dbm-role', e.target.value); const p = new URLSearchParams(location.search); p.delete('as'); location.search = p.toString(); location.reload(); });
+    mk.querySelector('#mk-role').addEventListener('change', e => { store.set('dbm-role', e.target.value); store.set('dbm-sess-at', String(Date.now())); const p = new URLSearchParams(location.search); p.delete('as'); location.search = p.toString(); location.reload(); });
     mk.querySelector('#mk-scr').addEventListener('click', e => { e.stopPropagation(); mkOpen(false); toggleScreenPanel(); });
     const sp = document.createElement('aside'); sp.className = 'scr-panel'; sp.id = 'scr-panel'; sp.setAttribute('aria-label', '화면 정보'); sp.addEventListener('click', e => e.stopPropagation()); app.appendChild(sp);
     if (store.get('dbm-scr-open', '0') === '1') toggleScreenPanel(true);
