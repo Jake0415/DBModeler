@@ -38,6 +38,9 @@
   .node.drop { box-shadow:0 0 0 2px var(--info), var(--menu-shadow); }
   .node.remote { box-shadow:0 0 0 2px var(--p-hong), var(--menu-shadow); }
   .node.ref { border-style:dashed; background:var(--surface-2); }
+  .node.thl { box-shadow:0 0 0 3px var(--ds-amber-700), var(--menu-shadow); }
+  #rp-body tr.hl > td { background:var(--ds-gray-100); }
+  #rp-body tr.hl > td:first-child { box-shadow:inset 2px 0 0 var(--ink); }
   .node .rtag { position:absolute; top:-20px; left:-2px; background:var(--p-hong); color:#fff; font-size:11px; padding:1px 6px; border-radius:4px 4px 4px 0; white-space:nowrap; }
   .node .rtag.reft { background:var(--fg-3); }
   .node .nh { display:flex; align-items:center; gap:6px; padding:6px 10px; border-bottom:1px solid var(--border); font-weight:600; font-size:14px; cursor:move; }
@@ -505,7 +508,17 @@ window.pageInit = function () {
   function renderMemos() {
     $('memos').innerHTML = M.filter(m => m.mode === mode).map(m => `<div class="memo" id="m-${m.id}" style="left:${m.x}px;top:${m.y}px"><div class="mh" data-mdrag="${m.id}">메모 · ${m.by}<button data-mdel="${m.id}" title="메모 삭제" aria-label="메모 삭제"><i data-ic=x></i></button></div><div class="mb" contenteditable="${canEdit()}" data-mid="${m.id}">${m.text}</div></div>`).join('');
   }
+  // model tree (12 · T1): the tree reads this canvas's own data and follows its selection
+  let lastTreeSel, treeAttr = null, treeOrigin = false, dictAutoFor = '';
+  const treeSync = () => {
+    const s = typeof sel === 'string' && ent(sel) ? sel : null;
+    if (!treeOrigin && s !== (lastTreeSel || '').split(':')[0]) treeAttr = null;   // a selection made on the canvas drops the tree's attribute
+    treeOrigin = false;
+    const key = s + ':' + (treeAttr == null ? '' : treeAttr);
+    if (key !== lastTreeSel) { lastTreeSel = key; window.dispatchEvent(new CustomEvent('dbm-canvas-select', { detail: { area: AREA, id: s, ai: s ? treeAttr : null } })); } else window.dispatchEvent(new Event('dbm-tree-refresh'));
+  };
   function render() {
+    queueMicrotask(treeSync);
     nodes.innerHTML = '';
     E.forEach(e => {
       const d = document.createElement('div');
@@ -517,7 +530,7 @@ window.pageInit = function () {
     });
     renderMemos(); drawEdges(); mini(); panel(); updateComp();
     if (dirty) { dirty = false; saveData(); }   // edits persist per area+version (S5) — only when something changed
-    const inp = nodes.querySelector('.attr-in'); if (inp) { inp.focus(); inp.select(); showAC(inp); }
+    const inp = nodes.querySelector('.attr-in'); if (inp) { inp.focus(); inp.select(); showAC(inp); const dk = inp.dataset.e + ':' + inp.dataset.i; if (window.openDictTab && dictAutoFor !== dk) { dictAutoFor = dk; openDictTab(null, false); } } else dictAutoFor = '';
     const ren = nodes.querySelector('.ren-in'); if (ren) { ren.focus(); ren.select(); }
     if ($('grid').classList.contains('open')) renderGrid();
   }
@@ -589,11 +602,11 @@ window.pageInit = function () {
   function consRows(e) {
     if (e.p === '—') return '<div class="banner warning"><i data-ic=warn></i><div>테이블 물리명이 정해지지 않아 제약조건 이름을 만들 수 없습니다 — 게이트 A 경고</div></div>';
     const pk = e.a.filter(a => a.pk).map(a => a.p);
-    const fks = R.filter(r => r.t === e.id && r.f !== r.t && r.k !== 'mn').map((r, i) => { const par = ent(r.f); return { n: `${e.p}_${par.p}_FK${i + 1}`, c: par.a.filter(a => a.pk).map(a => a.p).join(', '), note: `→ ${par.p}` }; });
+    const fks = R.filter(r => r.t === e.id && r.f !== r.t && r.k !== 'mn').map(r => { const par = ent(r.f), f = fkOf(r, E); return f.st === 'ok' ? { n: f.name, c: f.cols.join(', '), note: `→ ${par.p}` } : { n: f.st === 'ex' ? 'FK 제외' : 'FK 누락', c: '—', note: f.why, warn: f.st === 'miss' }; });
     let rows = `<tr><td><span class="badge">PK</span></td><td class="mono">${e.p}_PK</td><td class="mono">${pk.join(', ')}</td><td class="faint">인덱스 자동</td></tr>`;
     rows += (e.uk || []).map((c, i) => `<tr><td><span class="badge">UK</span></td><td class="mono">${e.p}_UK${i + 1}</td><td class="mono">${c}</td><td></td></tr>`).join('');
-    rows += fks.map(f => `<tr><td><span class="badge b-info">FK</span></td><td class="mono">${f.n}</td><td class="mono">${f.c}</td><td class="mono faint">${f.note}</td></tr>`).join('');
-    rows += fks.map((f, i) => `<tr><td><span class="badge">IX</span></td><td class="mono">${e.p}_IX${String(i + 1).padStart(2, '0')}</td><td class="mono">${f.c}</td><td class="faint">FK 인덱스</td></tr>`).join('');
+    rows += fks.map(f => `<tr><td><span class="badge ${f.warn ? 'b-warning' : 'b-info'}">FK</span></td><td class="${f.c === '—' ? '' : 'mono'}">${f.n}</td><td class="mono">${f.c}</td><td class="${f.c === '—' ? 'caption' : 'mono faint'}">${f.note}</td></tr>`).join('');
+    rows += fks.filter(f => f.c !== '—').map((f, i) => `<tr><td><span class="badge">IX</span></td><td class="mono">${e.p}_IX${String(i + 1).padStart(2, '0')}</td><td class="mono">${f.c}</td><td class="faint">FK 인덱스</td></tr>`).join('');
     rows += (e.ix || []).map(x => `<tr><td><span class="badge">IX</span></td><td class="mono">${x.n}</td><td class="mono">${x.c}</td><td class="faint">직접 추가</td></tr>`).join('');
     return `<table class="tbl"><thead><tr><th>종류</th><th>이름</th><th>컬럼</th><th></th></tr></thead><tbody>${rows}</tbody></table>
       <div class="flex" style="margin-top:8px"><button class="btn sm" id="ix-add"><i data-ic=plus></i>인덱스</button><button class="btn sm" id="uk-add"><i data-ic=plus></i>UK</button><span class="grow"></span><span class="caption muted">이름은 <a href="settings.html#sys">명명 템플릿</a>을 따릅니다</span></div>`;
@@ -631,7 +644,7 @@ window.pageInit = function () {
       ${e.st ? '<div class="flex" style="margin-bottom:8px;gap:6px"><span class="badge b-info">엔터티 용어 신청 중</span><span class="caption muted">분류어 ‘기본’ → _M</span></div>' : ''}
       <div class="tabs"><button class="on" data-tab="attrs">${mode === 'L' ? '속성' : '컬럼'} <span class="n">${e.a.length}</span></button>${mode === 'P' ? '<button data-tab="cons">제약·인덱스</button>' : ''}<button data-tab="sec">보안</button><button data-tab="ent">${mode === 'L' ? '엔터티' : '테이블'}</button><button data-tab="rel">관계 <span class="n">${rels.length}</span></button></div>
       <div class="pane on" data-pane="attrs"><table class="tbl"><thead><tr><th></th><th>${mode === 'L' ? '속성명' : '컬럼명'}</th><th>${mode === 'L' ? '물리명' : '타입'}</th></tr></thead><tbody>
-      ${e.a.map(a => `<tr><td>${stBadge(a.s)}</td><td>${a.pk ? '# ' : ''}${mode === 'L' ? a.n : a.p}${a.fk ? ' <span class="faint">(FK)</span>' : ''}${a.cand ? ' <span class="caption muted">· 후보 대기</span>' : ''}${a.sec ? ' ' + LOCKI : ''}</td><td class="mono">${mode === 'L' ? a.p : a.t}</td></tr>`).join('')}${sysRows}</tbody></table>
+      ${e.a.map((a, ai) => `<tr data-ai="${ai}"${treeAttr === ai ? ' class="hl"' : ''}><td>${stBadge(a.s)}</td><td>${a.pk ? '# ' : ''}${mode === 'L' ? a.n : a.p}${a.fk ? ' <span class="faint">(FK)</span>' : ''}${a.cand ? ' <span class="caption muted">· 후보 대기</span>' : ''}${a.sec ? ' ' + LOCKI : ''}</td><td class="mono">${mode === 'L' ? a.p : a.t}</td></tr>`).join('')}${sysRows}</tbody></table>
       <div class="flex" style="margin-top:8px"><button class="btn sm" id="rp-add"><i data-ic=plus></i>${mode === 'L' ? '속성' : '컬럼'} (Enter)</button><span class="grow"></span><span class="caption muted">${mode === 'P' ? '시스템 컬럼은 <a href="settings.html#sys">시스템 설정</a>에서 관리' : '입력하면 표준 용어를 바로 제안합니다'}</span></div>
       ${e.id === 'dlv' && mode === 'L' ? `<div class="section-t" style="margin-top:16px">선택한 속성</div><dl class="kv"><dt>논리명</dt><dd>산출물제출일 <span class="badge b-info">＋ 조합 가능</span></dd><dt>분석</dt><dd>산출물 + 제출 + 일 → 용어 미등록</dd><dt>도메인</dt><dd class="faint">용어를 고르면 채워집니다</dd></dl>
       <div class="banner warning" style="margin-top:12px"><i data-ic=warn></i><div class="grow"><b>산출물수령자명</b> — 미등록 단어 ‘수령자’. 후보 큐에 등록됐습니다(DA 처리 대기). <a href="#" data-open="mo-ex">예외로 유지</a></div></div>` : ''}</div>
@@ -993,10 +1006,11 @@ window.pageInit = function () {
   cv.addEventListener('focusout', ev => { if (ev.target.classList && ev.target.classList.contains('ren-in') && renaming) commitRename(ev.target, true); });
   document.addEventListener('mousedown', ev => { const o = ev.target.closest('.acl .o'); if (!o) return; ev.preventDefault(); const inp = nodes.querySelector('.attr-in'); if (inp) commitAttr(inp, o.dataset.ti ? TERMS[+o.dataset.ti] : null); });
   document.addEventListener('keydown', ev => {
+    if (ev.target.closest && ev.target.closest('.mtree')) return;   // the left column (tree · dictionary) keeps every key, Ctrl+F/Z included
     const k = ev.key.toLowerCase();
     if (ev.ctrlKey && k === 'f') { openGrid(true); ev.preventDefault(); return; }
     if (ev.target.closest && ev.target.closest('input,textarea,select,[contenteditable="true"]')) return;
-    if (ev.target.closest && ev.target.closest('.page-header, .menu, #grid') && !(ev.ctrlKey || ev.metaKey)) return;   // header buttons, menus and the table keep their own keys
+    if (ev.target.closest && ev.target.closest('.page-header, .menu, #grid, .mtree') && !(ev.ctrlKey || ev.metaKey)) return;   // the tree keeps its own keys (Delete · Enter never reach the canvas)   // header buttons, menus and the table keep their own keys
     if (ev.ctrlKey && k === 'z' && ev.shiftKey) { redoFn(); ev.preventDefault(); return; }
     if (ev.ctrlKey && k === 'z') { undo(); ev.preventDefault(); return; }
     if (ev.ctrlKey && k === 'y') { redoFn(); ev.preventDefault(); return; }
@@ -1277,7 +1291,29 @@ window.pageInit = function () {
     if ($('ban-view-r')) $('ban-view-r').textContent = ME.roles.map(r => ROLE_NAME[r]).join(', ');
   }
   drawParticipants();
-  if (q.get('focus') && ent(q.get('focus'))) setTimeout(() => focusEnt(q.get('focus')), 120);
+  if (q.get('focus') && ent(q.get('focus'))) setTimeout(() => { focusEnt(q.get('focus')); if (q.get('attr')) { treeOrigin = true; treeAttr = +q.get('attr'); render(); hlAttr(treeAttr); } }, 120);
+  // ---- model tree (12 · T1)
+  window.treeData = () => ({ area: AREA, E, R, mode, ver: SNAP ? 'snap:' + SNAP : 'v' + VER, label: $('ver').textContent.trim(), ro: document.body.classList.contains('locked') || document.body.classList.contains('viewonly') });
+  function hlAttr(ai) { setTimeout(() => { const tr = document.querySelector(`#rp-body tr[data-ai="${ai}"]`); document.querySelectorAll('#rp-body tr.hl').forEach(x => x.classList.remove('hl')); if (tr) { tr.classList.add('hl'); tr.scrollIntoView({ block: 'nearest' }); } }, 0); }
+  window.addEventListener('dbm-tree-select', ev => {
+    const d = ev.detail; if (d.area !== AREA || SNAP_BAD) return;
+    if (d.kind === 'view') { ev.preventDefault(); toast(d.view === 'all' ? '전체 보기를 보고 있습니다' : '보기 전환은 다음 단계(T3)에서 동작합니다 · 지금은 전체 보기', 'info'); return; }
+    if (d.kind === 'term' || d.kind === 'dom') { ev.preventDefault(); if (window.openDictTab) openDictTab(d.term); return; }
+    if (!d.id || !ent(d.id)) return;
+    ev.preventDefault();
+    treeOrigin = true; treeAttr = d.ai;
+    if (d.fit && !$('grid').classList.contains('open')) focusEnt(d.id); else { sel = d.id; showRP(); render(); }   // the table view stays open
+    const tab = (d.kind === 'rel' || d.kind === 'prel') ? 'rel' : (d.kind === 'cons' || d.kind === 'ix') && mode === 'P' ? 'cons' : null;
+    if (tab) { const b = document.querySelector(`#rp [data-tab="${tab}"]`); if (b) b.click(); }
+    if (d.ai != null) hlAttr(d.ai);
+  });
+  window.addEventListener('dbm-tree-highlight', ev => {
+    const d = ev.detail; if (d.area !== AREA) return; ev.preventDefault();
+    const ids = (d.ents || []).filter(id => ent(id));
+    ids.forEach(id => { const n = document.getElementById('n-' + id); if (n) { n.classList.add('thl'); setTimeout(() => n.classList.remove('thl'), 2400); } });
+    toast(`‘${d.term}’을(를) 쓰는 엔터티 ${ids.length}개를 강조했습니다`, 'info');
+  });
+  window.dispatchEvent(new Event('dbm-tree-refresh'));
   if (q.get('sys')) setTimeout(() => $('b-sys').click(), 150);
   // DDL / outputs open for THIS area (and this submitted copy when viewing one) — CX12-30
   document.querySelectorAll('a[href="ddl.html"], a[href^="outputs.html"]').forEach(a => { const u = new URL(a.getAttribute('href'), location.href); u.searchParams.set('area', AREA); if (SNAP && SNAPDOC) u.searchParams.set('snap', SNAPDOC.id); a.setAttribute('href', u.pathname.split('/').pop() + u.search); });   // system home → whole-system ERD (area group view)

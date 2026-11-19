@@ -137,6 +137,15 @@ window.pageInit = function () {
     if (none(nxt) || nxt === cur) return note ? `<span class="cv"><span>${top}</span>${note}</span>` : top;
     return `<span class="cv">${none(cur) ? top : `<s><span class="sr-only">현재 </span>${cur}</s>`}<b><span class="sr-only">제안 </span>${nxt}</b></span>`;
   };
+  window.addEventListener('dbm-tree-select', ev => {
+    const d = ev.detail; if (d.area !== AREA || !d.id) return; ev.preventDefault();
+    const trs = [...document.querySelectorAll('#rows tr[data-i]')].filter(tr => (rows[+tr.dataset.i] || {}).e === d.id);
+    document.querySelectorAll('#rows tr.thl').forEach(x => x.classList.remove('thl'));
+    if (!trs.length) { toast('이 엔터티는 맞출 항목이 없습니다(미준수 없음)', 'info'); return; }
+    const vis = trs.filter(tr => tr.offsetParent !== null);
+    if (!vis.length) { toast(`이 엔터티의 행 ${trs.length}개가 지금 필터에 가려져 있습니다 — [전체]를 누르세요`, 'info'); return; }
+    vis.forEach(tr => tr.classList.add('thl')); vis[0].scrollIntoView({ block: 'center' });
+  });
   function draw() {
     const prev = {}; document.querySelectorAll('#rows tr[data-i]').forEach(tr => { const c = tr.querySelector('input[type=checkbox]'), s = tr.querySelector('select'); prev[tr.dataset.i] = { c: c ? c.checked : null, s: s ? s.value : null }; });
     $('rows').innerHTML = rows.map((r0, i) => { const r = effective(r0); const s = ST[r.st]; const can = selectable(r) && !readOnly; const opts = can ? procOpts(r) : [];

@@ -90,7 +90,10 @@ window.pageInit = function () {
   $('o-scope').innerHTML = `<option>업무 영역 · ${L.model.name} (${ents})</option><option>선택한 테이블</option>`;
   $('o-ver').innerHTML = done.map(d => `<option value="${d.id}">v${d.ver} 확정본 (공식) · ${d.id}</option>`).join('') + (L.state === 'edit' ? `<option value="work">v${L.model.ver} 작업 중 (초안 표시)</option>` : L.state === 'review' ? `<option value="work">v${L.model.ver} 검토 중 사본 (초안 표시)</option>` : '');
   const FMT = { tbl: ['xlsx', 'pdf'], cmp: ['xlsx'], term: ['xlsx'], sec: ['xlsx', 'pdf'], erd: ['pdf', 'png', 'svg'], rev: ['xlsx'], chg: ['xlsx', 'html'] };
-  let cur = 'tbl';
+  let cur = 'tbl', pickEnt = null;
+  // model tree (12 · T1): a table chosen in the tree opens its sheet of the table definition
+  window.addEventListener('dbm-tree-select', ev => { const d = ev.detail; if (d.area !== AREA || !d.id) return; ev.preventDefault(); if (!mdl().E.some(e => e.id === d.id && !e.ref)) { toast('이 테이블은 지금 고른 버전에 없습니다', 'info'); return; } pickEnt = d.id; show('tbl'); });
+  window.treeData = () => { const d = verDoc(), m = mdl(); return { area: AREA, E: m.E, R: m.R, mode: 'P', ver: d ? 'snap:' + d.id : 'v' + L.model.ver, label: d ? `v${d.ver} 확정본` : `v${L.model.ver} 작업본`, ro: true, snap: d ? d.id : null }; };
   const verDoc = () => done.find(d => d.id === $('o-ver').value);
   function erdTitle() { const d = verDoc(); if (!d) return [['시스템 › 영역', `요구사항관리 › ${L.model.name}`], ['버전', `v${L.model.ver} 작업 중 — 초안(공식 아님)`], ['승인', '—']]; const who = (d.hist || []).filter(h => /승인/.test(h.act)).map(h => h.who).join(', '); return [['시스템 › 영역', `요구사항관리 › ${L.model.name}`], ['버전', `v${d.ver} · 확정 ${d.date} · ${d.id}`], ['승인', who || '—']]; }
   // the version the user came from is selected (CX14-14): snapshot → that copy, otherwise the working version, else the latest confirmed copy
@@ -98,10 +101,10 @@ window.pageInit = function () {
   // previews are computed from the selected area + version (no fixed rows)
   const mdl = () => { const d = verDoc(); return (d && d.model) || (d && getModelData(AREA, d.ver)) || modelOf(AREA, d ? d.ver : L.model.ver); };
   function compute() {
-    const m = mdl(), E = m.E.filter(e => !e.ref); const first = E[0];
+    const m = mdl(), E = m.E.filter(e => !e.ref); const first = E.find(e => e.id === pickEnt) || E[0]; const fi = Math.max(0, E.indexOf(first));
     const cnt = st => E.reduce((s, e) => s + e.a.filter(a => a.s === st).length, 0);
     const tot = E.reduce((s, e) => s + e.a.length, 0), na = cnt('na'), ok = cnt('ok') + cnt('ex'), tgt = tot - na;
-    P.tbl = ['테이블 정의서', first ? `시트 1/${E.length} · ${first.p} ${first.n}` : '테이블 없음', ['컬럼명', '논리명', '타입', 'PK', 'NULL', '도메인'], first ? first.a.slice(0, 6).map(a => [a.p || '—', a.n, a.t || '—', a.pk ? 'Y' : '', a.nn ? 'N' : 'Y', a.dom || '—']) : []];
+    P.tbl = ['테이블 정의서', first ? `시트 ${fi + 1}/${E.length} · ${first.p} ${first.n}` : '테이블 없음', ['컬럼명', '논리명', '타입', 'PK', 'NULL', '도메인'], first ? first.a.slice(0, 6).map(a => [a.p || '—', a.n, a.t || '—', a.pk ? 'Y' : '', a.nn ? 'N' : 'Y', a.dom || '—']) : []];
     const C = compOf(m); P.cmp = ['표준 준수검사 결과', `요약 · 준수율 ${C.rate}% (미준수 ${C.bad}, 예외 ${C.ex}, 신청 중 ${C.req}, 비대상 ${C.na}) — 모델 화면과 같은 계산`, ['엔터티', '대상', '미준수', '예외', '비대상', '준수율'], E.slice(0, 6).map(e => { const c = compOf({ E: [e] }); return [e.n, String(c.tot), String(c.bad), String(c.ex), String(c.na), c.rate + '%']; })];
     const terms = {}; E.forEach(e => e.a.filter(a => a.s === 'ok').forEach(a => { terms[a.n] = terms[a.n] || [a.n, a.p, a.dom || '—', 0]; terms[a.n][3]++; }));
     const tl = Object.values(terms).sort((a, b) => b[3] - a[3]); P.term = ['용어 사용 현황', `표준 용어 ${tl.length}`, ['용어', '물리명', '도메인', '사용 위치 수'], tl.slice(0, 6).map(r => [r[0], r[1], r[2], String(r[3])])];
@@ -118,7 +121,8 @@ window.pageInit = function () {
     document.querySelectorAll('.ocard').forEach(c => c.classList.toggle('on', c.dataset.k === k));
   };
   document.getElementById('cards').addEventListener('click', e => { const c = e.target.closest('.ocard'); if (c && !e.target.closest('a')) show(c.dataset.k); });
-  $('o-ver').onchange = () => show(cur);
+  $('o-ver').onchange = () => { show(cur); window.dispatchEvent(new Event('dbm-tree-refresh')); };
+  setTimeout(() => window.dispatchEvent(new Event('dbm-tree-refresh')), 0);
   // generation shows progress and the version it was made from; official ERD is rendered on the server (03 ERD-Q2 보강) — the mockup shows the states
   $('o-go').onclick = () => {
     const t = $('o-title').textContent, d = verDoc(), f = $('o-fmt').value;

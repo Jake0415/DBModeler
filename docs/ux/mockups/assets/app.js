@@ -131,7 +131,7 @@
       { n: '사원번호', p: 'EMP_NO', t: 'NUMBER(6)', pk: 1, nn: 1, s: 'ok' }, { n: '사원명', p: 'EMP_NM', t: 'VARCHAR2(100)', nn: 1, s: 'ok', sec: '개인정보', enc: '없음' }, { n: '휴대전화번호', p: 'MBTL_NO', t: 'VARCHAR2(20)', s: 'ok', sec: '개인정보', enc: '양방향(ARIA)' }] },
     { id: 'mbr', n: '프로젝트팀원구성내역', p: 'PRJ_MBR_D', c: 'A', x: 400, y: 220, px: 440, py: 240, a: [
       { n: '프로젝트ID', p: 'PRJ_ID', t: 'VARCHAR2(10)', pk: 1, fk: 1, nn: 1, s: 'ok' }, { n: '팀원사원번호', p: 'TMBR_EMP_NO', t: 'NUMBER(6)', pk: 1, fk: 1, nn: 1, s: 'ok' }, { n: '투입시작일자', p: 'INPT_BEGIN_YMD', t: 'CHAR(8)', s: 'ok' }, { n: '역할구분코드', p: 'ROLE_SE_CD', t: 'CHAR(1)', s: 'ok' }] },
-    { id: 'rqrm', n: '요구사항내역', p: 'RQRM_D', c: 'A', x: 60, y: 340, px: 60, py: 380, a: [
+    { id: 'rqrm', n: '요구사항내역', p: 'RQRM_D', c: 'A', x: 60, y: 340, px: 60, py: 380, ix: [{ n: 'RQRM_D_IX90', c: 'REQ_CUST_NM' }], a: [
       { n: '요구사항ID', p: 'DEMND_MATER_ID', t: 'VARCHAR2(10)', pk: 1, nn: 1, s: 'ok' }, { n: '요구사항명', p: 'DEMND_MATER_NM', t: 'VARCHAR2(100)', nn: 1, s: 'ok' }, { n: '요구사항내용', p: 'DEMND_MATER_CN', t: 'VARCHAR2(1000)', s: 'ok' }, { n: '요청고객명', p: 'REQ_CUST_NM', t: 'VARCHAR2(100)', s: 'ex', exReason: '대외 연계 컬럼명 유지', sec: '개인정보', enc: '없음', secSrc: '직접 지정 · 사유 있음' }, { n: '프로젝트ID', p: 'PRJ_ID', t: 'VARCHAR2(10)', fk: 1, s: 'ok' }] },
     { id: 'dlv', n: '산출물기본', p: 'DLVRBL_M', c: 'M', x: 420, y: 450, px: 460, py: 500, st: 1, reqDoc: 'REQ-2026-0013', uk: ['DLVRBL_NM'], sub: { disc: '산출물유형코드', kind: '배타', kids: ['문서산출물', '모델산출물'] }, a: [
       { n: '산출물ID', p: 'DLVRBL_ID', t: 'VARCHAR2(10)', pk: 1, nn: 1, s: 'ok' }, { n: '산출물명', p: 'DLVRBL_NM', t: 'VARCHAR2(100)', nn: 1, s: 'ok' }, { n: '산출물제출일', p: '—', t: '—', s: 'comb' }, { n: '산출물수령자명', p: '—', t: '—', s: 'unreg', cand: 1 }, { n: '요구사항ID', p: 'DEMND_MATER_ID', t: 'VARCHAR2(10)', fk: 1, s: 'ok' }] },
@@ -144,12 +144,43 @@
     { f: 'prj', t: 'mbr', k: 'id', name: '구성된다' },
     { f: 'emp', t: 'mbr', k: 'id', name: '참여한다' },
     { f: 'rqrm', t: 'dlv', k: 'nonid', name: '산출한다' },
-    { f: 'dlv', t: 'hist', k: 'id', name: '기록된다' },
+    { f: 'dlv', t: 'hist', k: 'id', name: '기록된다', noFk: '이력 테이블 · 운영 DB에서 FK를 쓰지 않음(대량 적재)' },
     { f: 'rqrm', t: 'risk', k: 'mn', name: '관련된다' }
   ], M: [{ id: 'm1', mode: 'L', x: 820, y: 330, text: '산출물이력 순번 체계는 DA 확인 후 확정 (11/18 회의)', by: '박설계' }] },
     risk: { E: [{ id: 'risk', n: '리스크기본', p: 'RISK_M', c: 'M', x: 60, y: 60, px: 60, py: 60, a: [{ n: '리스크ID', p: 'RISK_ID', t: 'VARCHAR2(10)', pk: 1, nn: 1, s: 'ok' }, { n: '리스크명', p: 'RISK_NM', t: 'VARCHAR2(100)', s: 'ok' }, { n: '리스크등급코드', p: 'RISK_GRD_CD', t: 'CHAR(1)', s: 'ok' }] },
       { id: 'rsp', n: '리스크대응내역', p: 'RISK_RSPNS_D', c: 'A', x: 420, y: 60, px: 460, py: 60, a: [{ n: '리스크ID', p: 'RISK_ID', t: 'VARCHAR2(10)', pk: 1, fk: 1, nn: 1, s: 'ok' }, { n: '대응순번', p: 'RSPNS_SN', t: 'NUMBER(5)', pk: 1, nn: 1, s: 'ok' }, { n: '대응내용', p: 'RSPNS_CN', t: 'VARCHAR2(1000)', s: 'ok' }] }], R: [{ f: 'risk', t: 'rsp', k: 'id', name: '대응한다' }], M: [] }
   };
+  /* FK of a relation: ok (constraint made) · ex (left out with a reason) · miss (no FK column / table name) · mn (resolve first) */
+  window.fkOf = (r, E) => {
+    const p = E.find(x => x.id === r.f), c = E.find(x => x.id === r.t);
+    if (!p || !c) return { st: 'none' };
+    if (r.k === 'mn') return { st: 'mn', why: 'M:N 관계 — 해소한 뒤 FK가 생깁니다' };
+    if (r.noFk) return { st: 'ex', why: r.noFk };
+    if (p.p === '—' || c.p === '—') return { st: 'miss', why: (c.p === '—' ? c.n : p.n) + ' 테이블 물리명 없음' };
+    const pk = p.a.filter(a => a.pk);
+    if (!pk.length) return { st: 'miss', why: p.n + ' PK 없음' };
+    if (pk.some(a => a.p === '—')) return { st: 'miss', why: p.n + ' PK 물리명 없음' };
+    // relation group (made by drawing the relation) first; otherwise each parent PK column must have a child FK column of the same name
+    let cc;
+    if (r.g) { const g = c.a.filter(a => a.fk && a.fkg === r.g); cc = g.length === pk.length ? g : null; }
+    else if (r.f === r.t) cc = null;   // a recursive relation always needs role-named columns
+    else cc = pk.map(k => c.a.find(a => a.fk && a.p === k.p));
+    if (!cc || cc.some(x => !x || x.p === '—')) {
+      const have = cc ? cc.filter(x => x && x.p !== '—').length : 0;
+      return { st: 'miss', why: r.f === r.t ? '재귀 관계 — 역할명 FK 컬럼 지정 필요' : !c.a.some(a => a.fk) ? 'FK 컬럼 없음' : have ? `부모 PK ${pk.length}개 중 ${have}개만 대응 — 나머지 컬럼 지정 필요` : 'FK 컬럼 이름이 부모 PK와 다름(역할명) — 대응 컬럼 지정 필요' };
+    }
+    return { st: 'ok', cols: cc.map(a => a.p), pcols: pk.map(a => a.p), ref: !!p.ref, name: `${c.p}_${p.p}_FK${r.g ? '_' + String(r.g).slice(-2).toUpperCase() : ''}` };
+  };
+  /* constraints and indexes of a table (PK · UK · FK · FK index · explicit index) */
+  window.consOf = (e, E, R) => {
+    if (e.ref) return { pk: null, uk: [], fk: [], ix: [] };
+    const pkc = e.a.filter(a => a.pk).map(a => a.p);
+    const fk = R.filter(r => r.t === e.id && r.f !== r.t && r.k !== 'mn').map(r => Object.assign({ r }, fkOf(r, E))).filter(f => f.st === 'ok');
+    return { pk: pkc.length && e.p !== '—' ? { n: e.p + '_PK', c: pkc.join(', ') } : null, uk: (e.uk || []).map((c, i) => ({ n: `${e.p}_UK${i + 1}`, c })), fk: fk.map(f => ({ n: f.name, c: f.cols.join(', ') })), ix: fk.map((f, i) => ({ n: `${e.p}_IX${String(i + 1).padStart(2, '0')}`, c: f.cols.join(', '), auto: 1 })).concat((e.ix || []).map(x => ({ n: x.n, c: x.c }))) };
+  };
+  /* diagram views of a business area (12 §3.1): placement only, "전체" always first */
+  const VIEWS0 = { rq: [{ id: 'all', n: '전체' }, { id: 'dlv', n: '산출물 흐름', ents: ['rqrm', 'dlv', 'hist'] }] };
+  window.viewsOf = area => J('dbm-views-' + area, null) || clone(VIEWS0[area] || [{ id: 'all', n: '전체' }]);
   window.modelSeed = area => clone(MODEL_SEED[area] || (J('dbm-area-seed-' + area, null)) || { E: [], R: [], M: [] });
   /* the structure of an area+version as the screens should see it: saved working data → seed */
   window.modelOf = (area, ver) => { const d = getModelData(area, ver); return d ? clone(d) : modelSeed(area); };
@@ -468,7 +499,7 @@
   const fillIc = root => { if (!root || !root.querySelectorAll) return; root.querySelectorAll('i[data-ic]:not([data-done])').forEach(e => { e.innerHTML = icon(e.dataset.ic, e.dataset.s ? +e.dataset.s : 16); e.setAttribute('data-done', '1'); e.setAttribute('aria-hidden', 'true'); }); };
   document.addEventListener('DOMContentLoaded', () => { fillIc(document); new MutationObserver(ms => ms.forEach(m => m.addedNodes.forEach(n => { if (n.nodeType === 1) fillIc(n.matches && n.matches('i[data-ic]') ? n.parentElement : n); }))).observe(document.body, { childList: true, subtree: true }); });
   /* ⋯ menus: a [data-menu-btn] opens the .menu[data-auto] next to it; outside click / Esc closes */
-  document.addEventListener('click', e => { const b = e.target.closest('[data-menu-btn]'); document.querySelectorAll('.menu[data-auto].open').forEach(m => { if (!b || m !== b.nextElementSibling) { m.classList.remove('open'); const ob = m.previousElementSibling; if (ob) ob.setAttribute('aria-expanded', 'false'); } });
+  document.addEventListener('click', e => { const b = e.target.closest('[data-menu-btn]'); const inMenu = e.target.closest('.menu[data-auto]'); document.querySelectorAll('.menu[data-auto].open').forEach(m => { if (inMenu === m && !e.target.closest('a')) return; if (!b || m !== b.nextElementSibling) { m.classList.remove('open'); const ob = m.previousElementSibling; if (ob) ob.setAttribute('aria-expanded', 'false'); } });
     if (b) { const m = b.nextElementSibling; if (m && m.matches('.menu[data-auto]')) { const on = !m.classList.contains('open'); m.classList.toggle('open', on); b.setAttribute('aria-expanded', on); if (on) { const f = m.querySelector('.mi'); f && f.focus(); } } } });
   document.addEventListener('keydown', e => { if (e.key !== 'Escape') return; const m = document.querySelector('.menu[data-auto].open'); if (m) { m.classList.remove('open'); const b = m.previousElementSibling; if (b) { b.setAttribute('aria-expanded', 'false'); b.focus(); } } });
   /* buttons that start work show a short "in progress" state ([data-busy]) — the action itself runs as before */
@@ -613,89 +644,300 @@
   document.addEventListener('focusout', e => { const w = e.target.closest && e.target.closest('.tmw'); const to = e.relatedTarget; if (!w || !to || w.contains(to)) return; const m = w.querySelector('.menu[data-auto].open'); if (!m) return; m.classList.remove('open'); const b = w.querySelector('[data-menu-btn]'); if (b) b.setAttribute('aria-expanded', 'false'); });
   document.addEventListener('keydown', e => { if (!['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(e.key)) return; const m = e.target.closest && e.target.closest('.menu[data-auto].open'); if (!m) return; const it = [...m.querySelectorAll('.mi')]; if (!it.length) return; e.preventDefault(); let i = it.indexOf(document.activeElement); i = e.key === 'Home' ? 0 : e.key === 'End' ? it.length - 1 : (i + (e.key === 'ArrowDown' ? 1 : -1) + it.length) % it.length; it[i].focus(); });
 
-  /* ---- model tree (11 §2.2): system · find · business areas (current one open) · system tools · recent entities · collapse ---- */
+  /* ---- model tree (12 · DA#-style object explorer, T1 read tree):
+     system › business area › (shortcuts · views · objects · used standards) › object › attribute.
+     The tree shows the same area · version · logical/physical mode the canvas opened — model.html supplies window.treeData(). ---- */
   const SYSTEMS = [{ name: '요구사항관리', db: 'Oracle 19c', code: 'RQMS', href: 'system.html', cur: true }, { name: '인사시스템', db: 'Tibero 7', href: 'error.html?code=404&what=인사시스템', none: true }, { name: '회계시스템', db: 'PostgreSQL 15', href: 'error.html?code=404&what=회계시스템', none: true }];
+  const treeKey = () => 'dbm-tree3-' + ME.id;
   function drawTree(nav) {
-    const page = document.body.dataset.page, file = curFile(), qp = new URLSearchParams(location.search), models = getModels();
-    const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;');
+    const page = document.body.dataset.page, file = curFile(), qp = new URLSearchParams(location.search);
+    const app = document.getElementById('app');
+    const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
     const fam = ['model.html', 'standardize.html', 'ddl.html', 'outputs.html'].includes(file) && !qp.get('sys');
-    const famArea = fam ? (models[qp.get('area')] ? qp.get('area') : 'rq') : null;
+    const models0 = getModels();
+    const famArea = fam ? (models0[qp.get('area')] ? qp.get('area') : 'rq') : null;
     if (famArea) store.set('dbm-last-area', famArea);
-    const cur = famArea || (models[store.get('dbm-last-area', '')] ? store.get('dbm-last-area', '') : 'rq');
-    const openSt = J('dbm-tree-open2', {});
-    const isOpen = id => id in openSt ? !!openSt[id] : id === cur;
-    const href = id => 'model.html' + (id === 'rq' ? '' : '?area=' + id);
-    const state = id => { const L = modelLock(id); return L.state === 'review' ? '<span class="tbadge">검토</span>' : L.state === 'confirmed' ? '<span class="tbadge">확정</span>' : `<span class="tver" title="작업 중 v${models[id].ver}">v${models[id].ver}</span>`; };
-    const subs = id => {
-      const bad = compOf(modelOf(id, models[id].ver)).bad;
-      const on = f => famArea === id && file === f ? ' on" aria-current="page' : '';
-      return `<a class="tl sub${on('model.html')}" href="${href(id)}">모델</a>
-        <a class="tl sub${on('standardize.html')}" href="standardize.html?area=${id}">표준 맞추기${bad ? `<span class="tn" title="미준수 ${bad}">${bad}</span>` : ''}</a>
-        <a class="tl sub${on('ddl.html')}" href="ddl.html?area=${id}">DDL</a>
-        <a class="tl sub${on('outputs.html')}" href="outputs.html?area=${id}">산출물</a>`;
-    };
-    const areasHtml = q => {
-      q = (q || '').trim().toUpperCase();
-      let found = 0;
-      const html = Object.entries(models).map(([id, m]) => {
-        let ents = [], nameHit = false;
-        if (q) {
-          ents = (modelOf(id, m.ver).E || []).filter(e => !e.ref && (String(e.n).toUpperCase().includes(q) || String(e.p || '').toUpperCase().includes(q)));
-          nameHit = String(m.name).toUpperCase().includes(q);
-          if (!nameHit && !ents.length) return '';
-          found += ents.length + (nameHit ? 1 : 0);
-        }
-        const open = !!q || isOpen(id);
-        const more = ents.length > 12 ? `<div class="tempty">외 ${ents.length - 12}개 · 모델에서 찾기</div>` : '';
-        return `<div class="tarea${id === cur ? ' cur' : ''}">
-          <div class="trow"><button class="tx" type="button" data-tx="${id}" aria-expanded="${open}" aria-controls="ts-${id}" aria-label="${esc(m.name)} 하위 메뉴"${q ? ' disabled' : ''}><i data-ic=${open ? 'down' : 'right'} data-s=12></i></button><a class="tname" href="${href(id)}" title="${esc(m.name)}">${esc(m.name)}</a>${state(id)}</div>
-          ${open ? `<div class="tsubs" id="ts-${id}">${(!q || nameHit) ? subs(id) : ''}${ents.slice(0, 12).map(e => `<a class="tl sub" href="model.html?area=${id}&focus=${e.id}">${esc(e.n)}${e.p && e.p !== '—' ? `<span class="tn mono">${esc(e.p)}</span>` : ''}</a>`).join('')}${more}</div>` : ''}
-        </div>`;
-      }).join('');
-      const live = nav.querySelector('#tr-live'); if (live) live.textContent = q ? (found ? `${found}건 찾음` : '맞는 영역·엔터티가 없습니다') : '';
-      return html || '<div class="tempty">맞는 영역·엔터티가 없습니다</div>';
-    };
-    const recHtml = () => { const rec = J(recKey(), []).filter(r => models[r.area] && (modelOf(r.area, models[r.area].ver).E || []).some(e => e.id === r.id));
-      return rec.length ? rec.map(r => `<a class="tl" href="model.html?area=${r.area}&focus=${r.id}"><i data-ic=history></i><span class="tt">${esc(r.n)}</span><span class="tn">${esc(models[r.area].name)}</span></a>`).join('') : '<div class="tempty">모델에서 엔터티를 열면 여기에 남습니다</div>'; };
-    const min = () => document.getElementById('app').classList.contains('treemin');
+    const cur = famArea || (models0[store.get('dbm-last-area', '')] ? store.get('dbm-last-area', '') : 'rq');
     const canNew = ME.has('modeler') || ME.has('admin');
     const sys = SYSTEMS[0];
+    const ST = Object.assign({ tog: {}, w: 0, manual: false, tab: 'm' }, J(treeKey(), {}));
+    const save = () => S(treeKey(), ST);
+    const SYS = sys.code;
+    const autoOpen = new Set();   // paths opened only to reveal a canvas selection — not saved as the user's choice
+    let selId = null, focusId = null, q = '', flt = { bad: false, ex: false, noref: false, cls: '' }, rowMap = {}, lastFocus = { parents: [], idx: 0 };
+    const live = () => (window.treeData ? window.treeData() : null);
+    const pageMode = () => { const l = live(); return l ? l.mode : ['ddl.html', 'outputs.html'].includes(file) ? 'P' : 'L'; };
+    // what the tree shows for an area: the canvas's own data for the open area, otherwise that area's current version
+    const src = area => {
+      const l = live(); const m = getModels()[area];
+      if (l && l.area === area) return { E: l.E, R: l.R, ver: l.ver, label: l.label, ro: l.ro, snap: l.snap || null };
+      const L = modelLock(area); const d = (L.state !== 'edit' && L.doc && L.doc.model) ? L.doc.model : modelOf(area, m.ver);
+      return { E: d.E || [], R: d.R || [], ver: 'v' + m.ver, label: '', ro: false };
+    };
+    const STC = { comb: '조합 가능', unreg: '미등록', ex: '예외', na: '비대상', req: '신청 중' };
+    const entBad = e => e.ref ? 0 : (e.p === '—' ? 1 : 0) + e.a.filter(a => !a.edit && ['comb', 'unreg'].includes(a.s)).length;
+    const entDot = e => e.ref ? '<span class="tdot" aria-hidden="true"><i data-ic=ext data-s=12></i></span>' : entBad(e) ? '<span class="tdot half" aria-hidden="true"></span>' : e.a.some(a => a.s === 'ex') ? '<span class="tdot ex" aria-hidden="true"></span>' : '<span class="tdot ok" aria-hidden="true"></span>';
+    const entState = e => e.ref ? '참조' : entBad(e) ? `미준수 ${entBad(e)}` : e.a.some(a => a.s === 'ex') ? '예외 있음' : '준수';
+    const hitFn = s => { const v = q.trim(); if (!v || s == null) return false; s = String(s); return v.length <= 2 ? s.startsWith(v) || s.toUpperCase().startsWith(v.toUpperCase()) : s.toUpperCase().includes(v.toUpperCase()); };
+    const mark = s => { const v = q.trim(); s = esc(s); if (!v) return s; const i = s.toUpperCase().indexOf(esc(v).toUpperCase()); return i < 0 ? s : s.slice(0, i) + '<mark>' + s.slice(i, i + v.length) + '</mark>' + s.slice(i + v.length); };
+    const passF = e => (!flt.bad || entBad(e) > 0) && (!flt.ex || e.a.some(a => a.s === 'ex')) && (!flt.noref || !e.ref) && (!flt.cls || e.c === flt.cls);
+    const fltOn = () => flt.bad || flt.ex || flt.noref || !!flt.cls;
+    const stateBadge = area => { const l = live(); if (l && l.area === area && l.label) return `<span class="tbadge">${esc(l.label)}</span>`; const L = modelLock(area); const m = getModels()[area]; return L.state === 'review' ? '<span class="tbadge">검토</span>' : L.state === 'confirmed' ? '<span class="tbadge">확정</span>' : `<span class="tver" title="작업 중 v${m.ver}">v${m.ver}</span>`; };
+
+    // ---- build the node tree (hierarchical), then flatten what is open
+    function build() {
+      const models = getModels(), P = pageMode() === 'P', qq = q.trim(); let found = 0;
+      const out = [];
+      Object.entries(models).forEach(([area, m]) => {
+        const s = src(area), k = SYS + ':' + area + '@' + s.ver, tog = ST.tog[k] || {};
+        const isOp = (nid, def) => nid in tog ? !!tog[nid] : autoOpen.has(k + '|' + nid) ? true : def;
+        const N = (nid, kind, o) => Object.assign({ id: area + '|' + nid, nid, area, key: k, kind, kids: null }, o);
+        const ents = s.E.filter(passF);
+        const areaHit = hitFn(m.name);
+        // objects
+        const entNodes = ents.map(e => {
+          const eh = hitFn(e.n) || hitFn(e.p), ah = e.a.map((a, i) => (hitFn(a.n) || hitFn(a.p)) ? i : -1).filter(i => i >= 0);
+          if (qq && !areaHit && !eh && !ah.length) return null;
+          found += (eh ? 1 : 0) + ah.length;
+          const attrs = e.a.map((a, i) => ({ a, i })).filter(x => !qq || areaHit || eh || ah.includes(x.i));
+          const kids = attrs.map(({ a, i }) => N('a:' + e.id + ':' + i, P ? 'col' : 'attr', {
+            ent: e.id, ai: i, selectable: true,
+            html: P ? (a.p === '—' ? `<span class="tn1">${mark(a.n)}</span><span class="tmeta ts-miss">물리명 없음</span>` : `<span class="tn1 mono">${mark(a.p)}</span><span class="tmeta">${esc(a.t)}${a.pk ? ' · PK' : ''}${a.fk ? ' · FK' : ''}</span>`) : `<span class="tn1">${mark(a.n)}</span><span class="tmeta">${a.pk ? 'PK' : ''}${a.fk ? (a.pk ? ' · ' : '') + 'FK' : ''}${STC[a.s] ? `${a.pk || a.fk ? ' · ' : ''}<span class="ts-${a.s}">${STC[a.s]}</span>` : ''}</span>`,
+            aria: `${P ? a.p : a.n}${a.pk ? ', PK' : ''}${a.fk ? ', FK' : ''}${STC[a.s] ? ', ' + STC[a.s] : ''}`, title: P ? a.n : `${a.p} · ${a.t}` }));
+          const ahNote = qq && !eh && ah.length ? `<span class="tmeta">${P ? '컬럼' : '속성'} ${ah.length}</span>` : '';
+          return N('e:' + e.id, P ? 'table' : 'ent', {
+            ent: e.id, selectable: true, gray: P && !e.ref && (e.px == null || e.py == null),
+            html: P ? `<span class="tn1 mono">${mark(e.p === '—' ? e.n + ' (물리명 없음)' : e.p)}</span>${e.ref ? '<span class="tmeta">참조 · 읽기 전용</span>' : ahNote}` : `${entDot(e)}<span class="tn1">${mark(e.n)}</span>${e.ref ? '<span class="tmeta">참조 · 읽기 전용</span>' : ahNote || (entBad(e) ? `<span class="tct">${entBad(e)}</span>` : '')}`,
+            aria: `${P ? e.p : e.n}, ${entState(e)}`, title: P ? e.n : (e.p !== '—' ? e.p : '물리명 없음'),
+            open: kids.length && !e.ref ? (qq && ah.length ? true : isOp('e:' + e.id, false)) : null, kids: e.ref ? null : kids });
+        }).filter(Boolean);
+        const kidsOf = [];
+        const folder = (nid, label, kids, o = {}) => N(nid, 'folder', Object.assign({ html: `<span class="tn1">${label}</span><span class="tct">${o.count != null ? o.count : kids.length}</span>${o.warn ? '<span class="twarn" aria-hidden="true"></span>' : ''}`, aria: `${label} ${o.count != null ? o.count : kids.length}${o.warn ? ', 경고 있음' : ''}`, open: kids.length ? (qq ? true : isOp(nid, o.def || false)) : null, kids }, o));
+        // shortcuts (always visible when the area is open — not hidden in a folder)
+        if (!qq) {
+          const bad = compOf(s).bad;
+          const sn = s.snap ? '&snap=' + s.snap : '';
+          [['model.html?area=' + area + sn, '모델'], ['standardize.html?area=' + area, '표준 맞추기', bad, '작업본'], ['ddl.html?area=' + area + sn, 'DDL'], ['outputs.html?area=' + area + sn, '산출물']].forEach((l, j) => kidsOf.push(N('l:' + j, 'link', { href: l[0], html: `${l[1]}${l[2] ? ` <b>${l[2]}</b>` : ''}`, aria: l[1] + (l[2] ? ` 미준수 ${l[2]}` : '') + (l[3] && s.snap ? ', 작업본 기준' : '') })));
+          const vs = viewsOf(area);
+          kidsOf.push(folder('f:views', '보기', vs.map(v => N('v:' + v.id, 'view', { view: v.id, html: `<span class="tn1">${esc(v.n)}</span>${area === famArea && file === 'model.html' && v.id === 'all' ? '<span class="tmeta">보는 중</span>' : ''}`, aria: v.n + (v.id === 'all' ? ', 기본 보기' : '') })), { def: false }));
+        }
+        if (!P) {
+          if (entNodes.length || !qq) kidsOf.push(folder('f:ents', '엔터티', entNodes, { def: area === cur, count: qq ? entNodes.length : ents.length }));
+          const rels = s.R.filter(r => ents.some(e => e.id === r.f) && ents.some(e => e.id === r.t)).map((r, i) => ({ r, i })).filter(({ r }) => { const a = s.E.find(e => e.id === r.f), b = s.E.find(e => e.id === r.t); return !qq || areaHit || hitFn(a.n) || hitFn(b.n) || hitFn(r.name); });
+          if (rels.length || !qq) kidsOf.push(folder('f:rels', '관계', rels.map(({ r, i }) => { const a = s.E.find(e => e.id === r.f), b = s.E.find(e => e.id === r.t); return N('r:' + i, 'rel', { rel: i, ent: r.t, selectable: true, html: `<span class="tn1">${esc(a.n)} → ${esc(b.n)}</span><span class="tmeta">${esc(r.name || '')}</span>`, aria: `${a.n}에서 ${b.n}, ${({ nonid: '비식별', id: '식별', one: '1:1', mn: 'M:N' })[r.k] || ''}`, title: ({ nonid: '1:N 비식별', id: '1:N 식별', one: '1:1', mn: 'M:N' })[r.k] }); })));
+          const subs = ents.filter(e => e.sub && (!qq || areaHit || hitFn(e.n)));
+          if (subs.length) kidsOf.push(folder('f:subs', '서브타입', subs.map(e => N('s:' + e.id, 'ent', { ent: e.id, selectable: true, html: `<span class="tn1">${esc(e.n)}</span><span class="tmeta">${esc(e.sub.kind)} · ${e.sub.kids.length}</span>`, aria: `${e.n} 서브타입 ${e.sub.kind}`, title: e.sub.kids.join(', ') }))));
+        } else {
+          if (entNodes.length || !qq) kidsOf.push(folder('f:tbls', '테이블', entNodes, { def: area === cur, count: qq ? entNodes.length : ents.length }));
+          const pr = s.R.map((r, i) => ({ r, i, f: fkOf(r, s.E) })).filter(x => x.f.st !== 'none' && ents.some(e => e.id === x.r.t)).filter(({ r }) => { const a = s.E.find(e => e.id === r.f), b = s.E.find(e => e.id === r.t); return !qq || areaHit || hitFn(a.p) || hitFn(b.p); });
+          const FST = { ok: '반영', ex: '제외', miss: '누락', mn: '해소 필요' };
+          const miss = pr.filter(x => x.f.st === 'miss').length;
+          if (pr.length || !qq) kidsOf.push(folder('f:prels', '관계 (FK)', pr.map(({ r, i, f }) => { const a = s.E.find(e => e.id === r.f), b = s.E.find(e => e.id === r.t); return N('pr:' + i, 'prel', { rel: i, ent: r.t, selectable: true, html: `${f.st === 'miss' ? '<span class="twarn" aria-hidden="true"></span>' : ''}<span class="tn1 mono">${esc(a.p === '—' ? a.n : a.p)} → ${esc(b.p === '—' ? b.n : b.p)}</span><span class="tmeta ts-${f.st}">${FST[f.st]}</span>`, aria: `${a.p}에서 ${b.p}, FK ${FST[f.st]}${f.why ? ', ' + f.why : ''}`, title: f.st === 'ok' ? f.name + ' (' + f.cols.join(', ') + ')' : f.why }); }), { warn: miss > 0, def: miss > 0 && area === cur }));
+          if (!qq) {
+            const cons = []; const ixs = [];
+            ents.forEach(e => { const c = consOf(e, s.E, s.R); if (c.pk) cons.push(['PK', c.pk, e]); c.uk.forEach(u => cons.push(['UK', u, e])); c.fk.forEach(f => cons.push(['FK', f, e])); c.ix.forEach(x => ixs.push([x, e])); });
+            const cnt = t => cons.filter(c => c[0] === t).length;
+            kidsOf.push(folder('f:cons', `제약조건 · PK ${cnt('PK')} · FK ${cnt('FK')} · UK ${cnt('UK')}`, cons.map(([t, c, e], i) => N('c:' + i, 'cons', { ent: e.id, selectable: true, html: `<span class="tkind">${t}</span><span class="tn1 mono">${esc(c.n)}</span>`, aria: `${t} ${c.n}, ${c.c}`, title: c.c })), { count: cons.length, warn: miss > 0 }));
+            kidsOf.push(folder('f:ix', '인덱스', ixs.map(([x, e], i) => N('i:' + i, 'ix', { ent: e.id, selectable: true, html: `<span class="tn1 mono">${esc(x.n)}</span><span class="tmeta">${x.auto ? 'FK 인덱스' : esc(x.c)}</span>`, aria: `인덱스 ${x.n}, ${x.c}`, title: x.c }))));
+          }
+        }
+        // standards this area uses (the dictionary stays the source)
+        const dict = getDict(); const own = ents.filter(e => !e.ref);
+        const terms = dict.filter(d => d.k === 'term' && d.ver > 0 && own.some(e => e.a.some(a => a.n === d.name)) && (!qq || hitFn(d.name) || hitFn(d.abbr)));
+        const doms = [...new Set(terms.map(d => d.dom).filter(x => x && x !== '—'))];
+        const unreg = own.reduce((n, e) => n + e.a.filter(a => a.s === 'unreg').length, 0);
+        if (qq) found += terms.length;
+        if (terms.length || !qq) {
+          const tk = terms.map(d => N('t:' + d.id, 'term', { term: d.name, ents: own.filter(e => e.a.some(a => a.n === d.name)).map(e => e.id), selectable: true, html: `<span class="tn1">${mark(d.name)}</span><span class="tmeta mono">${esc(d.abbr)}</span>`, aria: `용어 ${d.name}, ${d.abbr}`, title: d.dom }));
+          const dk = doms.map(dm => { const used = own.filter(e => e.a.some(a => terms.some(d => d.dom === dm && d.name === a.n))); return N('d:' + dm, 'dom', { dom: dm, ents: used.map(e => e.id), selectable: true, html: `<span class="tn1">${esc(dm)}</span><span class="tmeta">엔터티 ${used.length}</span>`, aria: `도메인 ${dm}, 엔터티 ${used.length}` }); });
+          kidsOf.push(N('f:std', 'folder', { html: `<span class="tn1">사용한 표준</span><span class="tct">용어 ${terms.length} · 도메인 ${doms.length}${unreg ? ` · 후보 ${unreg}` : ''}</span>`, aria: `사용한 표준, 용어 ${terms.length}, 도메인 ${doms.length}${unreg ? ', 미등록 ' + unreg : ''}`, open: qq && terms.length ? true : isOp('f:std', false),
+            kids: [folder('f:terms', '용어', tk), folder('f:doms', '도메인', dk)].filter(f => f.kids.length || !qq) }));
+        }
+        if (qq && !areaHit && !kidsOf.length) return;
+        if (qq && areaHit) found++;
+        out.push(N('area', 'area', { html: `<span class="tn1"><b>${mark(m.name)}</b></span>${stateBadge(area)}`, aria: `${m.name}, ${area === cur && live() && live().label ? live().label : '업무 영역'}`, open: qq ? true : isOp('area', area === cur), kids: kidsOf }));
+      });
+      return { nodes: out, found };
+    }
+    function flatten(nodes, lvl, parent, acc) {
+      nodes.forEach((n, i) => { n.lvl = lvl; n.pos = i + 1; n.size = nodes.length; n.parent = parent; acc.push(n); if (n.kids && n.open) flatten(n.kids, lvl + 1, n.id, acc); });
+      return acc;
+    }
+    // ---- markup
+    const tabs = page === 'model' && document.getElementById('side');
     nav.innerHTML = `
-      <div class="tfull" id="tr-full">
-        <div class="tsys">
-          <a class="tsys-a${page === 'system' ? ' on' : ''}" href="system.html"${page === 'system' ? ' aria-current="page"' : ''} title="시스템 홈"><b>${sys.name}</b><span>${sys.db} · ${sys.code}</span></a>
-          <span class="tmw"><button class="tsw" type="button" data-menu-btn aria-expanded="false" aria-controls="mn-sys" aria-label="시스템 바꾸기"><i data-ic=down data-s=14></i></button><div class="menu" data-auto id="mn-sys">${SYSTEMS.map(s => `<a class="mi${s.cur ? ' on' : ''}" href="${s.href}"${s.cur ? ' aria-current="true"' : ''}><span>${s.name}</span><span class="caption muted" style="margin-left:auto">${s.none ? '목업 화면 없음' : s.db}</span></a>`).join('')}</div></span>
+      ${tabs ? `<div class="ltabs" role="tablist" aria-label="왼쪽 칸"><button role="tab" id="lt-m" aria-controls="tp-model" data-lt="m">모델</button><button role="tab" id="lt-d" aria-controls="tp-dict" data-lt="d">사전</button></div>` : ''}
+      <div class="tpanel" id="tp-model"${tabs ? ' role="tabpanel" aria-labelledby="lt-m"' : ''}>
+        <div class="tfull" id="tr-full">
+          <div class="tsys">
+            <a class="tsys-a${page === 'system' ? ' on' : ''}" href="system.html"${page === 'system' ? ' aria-current="page"' : ''} title="시스템 홈"><b>${sys.name}</b><span>${sys.db} · ${sys.code}</span></a>
+            <span class="tmw"><button class="tsw" type="button" data-menu-btn aria-expanded="false" aria-controls="mn-sys" aria-label="시스템 바꾸기"><i data-ic=down data-s=14></i></button><div class="menu" data-auto id="mn-sys">${SYSTEMS.map(s => `<a class="mi${s.cur ? ' on' : ''}" href="${s.href}"${s.cur ? ' aria-current="true"' : ''}><span>${s.name}</span><span class="caption muted" style="margin-left:auto">${s.none ? '목업 화면 없음' : s.db}</span></a>`).join('')}</div></span>
+          </div>
+          <div class="tfrow">
+            <label class="tfind"><i data-ic=search data-s=14></i><input id="tr-q" type="search" placeholder="엔터티·속성·테이블·용어 찾기" aria-label="모델 객체 찾기" autocomplete="off"></label>
+            <span class="tmw"><button class="tfb" type="button" data-menu-btn aria-expanded="false" aria-controls="mn-tf" aria-label="거르기" title="거르기"><i data-ic=filter data-s=14></i></button><div class="menu" data-auto id="mn-tf">
+              <label class="mi"><input type="checkbox" data-tf="bad"> 미준수만</label><label class="mi"><input type="checkbox" data-tf="ex"> 예외 있는 것만</label><label class="mi"><input type="checkbox" data-tf="noref"> 참조 숨기기</label>
+              <div class="sep"></div><div class="mi" style="cursor:default">분류<span class="seg" style="margin-left:auto">${['', 'K', 'M', 'A', 'H'].map(c => `<button type="button" data-tc="${c}" class="${c === '' ? 'on' : ''}" title="${({ '': '전체', K: '키', M: '마스터', A: '액션', H: '이력' })[c]}">${c || '전체'}</button>`).join('')}</span></div></div></span>
+          </div>
+          <div class="tfbar" id="tr-fbar" hidden></div>
+          <div class="sr-only" id="tr-live" aria-live="polite"></div>
+          <div class="tro" id="tr-ro" hidden></div>
+          <div class="tsec"><span>업무 영역</span>${canNew ? '<a class="tadd" href="system.html#new" aria-label="새 업무 영역" title="새 업무 영역"><i data-ic=plus data-s=14></i></a>' : ''}</div>
+          <div role="tree" id="tr-tree" class="otree"></div>
+          <div class="tsep"></div>
+          <a class="tl${file === 'model.html' && qp.get('sys') ? ' on" aria-current="page' : ''}" href="model.html?sys=1"><i data-ic=compare></i>시스템 전체 ERD</a>
+          <a class="tl${file === 'import.html' ? ' on" aria-current="page' : ''}" href="import.html"><i data-ic=upload></i>DDL 가져오기</a>
+          <div class="tsec"><span>최근 연 엔터티</span></div>
+          <div id="tr-rec"></div>
         </div>
-        <label class="tfind"><i data-ic=search data-s=14></i><input id="tr-q" type="search" placeholder="영역·엔터티 찾기" aria-label="업무 영역·엔터티 찾기" autocomplete="off"></label><div class="sr-only" id="tr-live" aria-live="polite"></div>
-        <div class="tsec"><span>업무 영역</span>${canNew ? '<a class="tadd" href="system.html#new" aria-label="새 업무 영역" title="새 업무 영역"><i data-ic=plus data-s=14></i></a>' : ''}</div>
-        <div class="tareas" id="tr-areas">${areasHtml('')}</div>
-        <div class="tsep"></div>
-        <a class="tl${file === 'model.html' && qp.get('sys') ? ' on" aria-current="page' : ''}" href="model.html?sys=1"><i data-ic=compare></i>시스템 전체 ERD</a>
-        <a class="tl${file === 'import.html' ? ' on" aria-current="page' : ''}" href="import.html"><i data-ic=upload></i>DDL 가져오기</a>
-        <div class="tsec"><span>최근 연 엔터티</span></div>
-        <div id="tr-rec">${recHtml()}</div>
       </div>
+      ${tabs ? '<div class="tpanel" id="tp-dict" role="tabpanel" aria-labelledby="lt-d" hidden></div>' : ''}
       <div class="tmini" aria-label="접힌 모델 트리">
         <a class="tm-i${page === 'system' ? ' on" aria-current="page' : ''}" href="system.html" title="시스템 홈 · ${sys.name}" aria-label="시스템 홈"><i data-ic=table></i></a>
-        ${Object.entries(models).map(([id, m]) => `<a class="tm-i tm-a${id === famArea ? ' on" aria-current="true' : ''}" href="${href(id)}" title="${esc(m.name)}" aria-label="${esc(m.name)}">${esc(String(m.name).trim()[0])}</a>`).join('')}
+        ${Object.entries(models0).map(([id, m]) => `<a class="tm-i tm-a${id === famArea ? ' on" aria-current="true' : ''}" href="model.html${id === 'rq' ? '' : '?area=' + id}" title="${esc(m.name)}" aria-label="${esc(m.name)}">${esc(String(m.name).trim()[0])}</a>`).join('')}
         <a class="tm-i${file === 'model.html' && qp.get('sys') ? ' on" aria-current="page' : ''}" href="model.html?sys=1" title="시스템 전체 ERD" aria-label="시스템 전체 ERD"><i data-ic=compare></i></a>
         <a class="tm-i${file === 'import.html' ? ' on" aria-current="page' : ''}" href="import.html" title="DDL 가져오기" aria-label="DDL 가져오기"><i data-ic=upload></i></a>
       </div>
-      <button class="tcollapse" id="tr-min" type="button"></button>`;
-    const btn = nav.querySelector('#tr-min');
-    const syncMin = () => { const m = min(); btn.innerHTML = `<i data-ic=${m ? 'right' : 'left'}></i><span>접기</span>`; btn.setAttribute('aria-label', m ? '모델 트리 펼치기' : '모델 트리 접기'); btn.setAttribute('aria-expanded', String(!m)); btn.setAttribute('aria-controls', 'tr-full'); btn.title = m ? '펼치기' : '접기'; };
-    syncMin();
-    btn.addEventListener('click', () => { const app = document.getElementById('app'); app.classList.toggle('treemin'); store.set('dbm-tree-min', min() ? '1' : '0'); syncMin(); window.dispatchEvent(new Event('resize')); });
-    const areas = nav.querySelector('#tr-areas'), q = nav.querySelector('#tr-q');
-    q.addEventListener('input', () => { areas.innerHTML = areasHtml(q.value); });
-    q.addEventListener('keydown', e => { if (e.key === 'Escape' && q.value) { e.stopPropagation(); q.value = ''; areas.innerHTML = areasHtml(''); } });
-    areas.addEventListener('click', e => {
-      const t = e.target.closest('[data-tx]'); if (!t) return;
-      const id = t.dataset.tx; openSt[id] = !isOpen(id); S('dbm-tree-open2', openSt);
-      areas.innerHTML = areasHtml(q.value); const nb = areas.querySelector(`[data-tx="${id}"]`); if (nb) nb.focus();
+      <button class="tcollapse" id="tr-min" type="button"></button>
+      <div class="tresize" id="tr-rs" role="separator"${['model.html', 'standardize.html', 'ddl.html', 'outputs.html', 'import.html'].includes(file) ? '' : ' hidden'} aria-orientation="vertical" aria-label="모델 트리 폭" tabindex="0" title="끌어서 폭 조절 · 두 번 누르면 내용에 맞춤"></div>`;
+    const tree = nav.querySelector('#tr-tree'), qIn = nav.querySelector('#tr-q');
+    const recHtml = () => { const models = getModels(); const rec = J(recKey(), []).filter(r => models[r.area] && (modelOf(r.area, models[r.area].ver).E || []).some(e => e.id === r.id));
+      return rec.length ? rec.map(r => `<a class="tl" href="model.html?area=${r.area}&focus=${r.id}"><i data-ic=history></i><span class="tt">${esc(r.n)}</span><span class="tn">${esc(models[r.area].name)}</span></a>`).join('') : '<div class="tempty">모델에서 엔터티를 열면 여기에 남습니다</div>'; };
+    nav.querySelector('#tr-rec').innerHTML = recHtml();
+    window.addEventListener('dbm-recent', () => { nav.querySelector('#tr-rec').innerHTML = recHtml(); });
+
+    // ---- render rows
+    function render() {
+      const had = tree.contains(document.activeElement);
+      const { nodes, found } = build();
+      const rows = flatten(nodes, 1, null, []);
+      rowMap = {}; rows.forEach(r => { rowMap[r.id] = r; });
+      if (!focusId || !rowMap[focusId]) { const anc = lastFocus.parents.find(p => rowMap[p]); focusId = anc || (rows[Math.min(lastFocus.idx, rows.length - 1)] || {}).id || (selId && rowMap[selId] ? selId : null); }
+      let html = '';
+      rows.forEach((r, i) => {
+        if (r.kind === 'link') {
+          const first = !rows[i - 1] || rows[i - 1].kind !== 'link', last = !rows[i + 1] || rows[i + 1].kind !== 'link';
+          html += (first ? `<div class="tlinks" role="none" style="--lv:${r.lvl}">` : '') + `<a role="treeitem" class="tlink" href="${r.href}" data-id="${esc(r.id)}" aria-level="${r.lvl}" aria-posinset="${r.pos}" aria-setsize="${r.size}" aria-label="${esc(r.aria)}" tabindex="${focusId === r.id ? 0 : -1}"${file === r.href.split('?')[0] && r.area === famArea ? ' aria-current="page"' : ''}>${r.html}</a>` + (last ? '</div>' : '');
+          return;
+        }
+        html += `<div role="treeitem" class="trow2 k-${r.kind}${r.id === selId ? ' sel' : ''}${r.gray ? ' gray' : ''}" data-id="${esc(r.id)}" aria-level="${r.lvl}" aria-posinset="${r.pos}" aria-setsize="${r.size}"${r.open != null ? ` aria-expanded="${r.open}"` : ''}${r.selectable ? ` aria-selected="${r.id === selId}"` : ''} tabindex="${r.id === focusId ? 0 : -1}" aria-label="${esc(r.aria || '')}"${r.title ? ` title="${esc(r.title)}"` : ''} style="--lv:${r.lvl}"><span class="ttw" data-tw aria-hidden="true">${r.open == null ? '' : `<i data-ic=${r.open ? 'down' : 'right'} data-s=12></i>`}</span>${r.html}</div>`;
+      });
+      tree.innerHTML = html || '<div class="tempty">맞는 객체가 없습니다</div>';
+      const l = live(); const curName = (getModels()[cur] || {}).name || '';
+      tree.setAttribute('aria-label', `모델 트리 · ${curName}${l && l.label ? ' ' + l.label : ''} · ${pageMode() === 'P' ? '물리' : '논리'}`);
+      const ro = nav.querySelector('#tr-ro'); ro.hidden = !(l && l.ro); if (l && l.ro) ro.textContent = `${l.label} · 조회 전용`;
+      nav.querySelector('#tr-live').textContent = q.trim() ? (found ? `${found}건 찾음` : '맞는 객체가 없습니다') : '';
+      const fb = nav.querySelector('#tr-fbar'); fb.hidden = !fltOn();
+      if (fltOn()) fb.innerHTML = `<span>${[flt.bad && '미준수만', flt.ex && '예외 있는 것만', flt.noref && '참조 숨김', flt.cls && '분류 ' + flt.cls].filter(Boolean).join(' · ')}</span><button type="button" class="btn ghost sm" id="tr-fclr">지우기</button>`;
+      if (had) { const f = tree.querySelector('[tabindex="0"]'); if (f) f.focus({ preventScroll: true }); else if (q.trim()) qIn.focus(); }
+      if (focusId && rowMap[focusId]) { const fr = rowMap[focusId]; const ps = []; let p = fr.parent; while (p) { ps.push(p); p = rowMap[p] && rowMap[p].parent; } lastFocus = { parents: ps, idx: rows.indexOf(fr) }; }
+      fit();
+    }
+    let raf = 0; const later = () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(render); };
+    function markSel() { tree.querySelectorAll('.trow2').forEach(el => { const on = el.dataset.id === selId; el.classList.toggle('sel', on); if (el.hasAttribute('aria-selected')) el.setAttribute('aria-selected', on); }); }
+    const toggle = (id, v) => { const r = rowMap[id]; if (!r || r.open == null) return; const t0 = ST.tog[r.key] = ST.tog[r.key] || {}; t0[r.nid] = v == null ? !r.open : v; save(); focusId = id; render(); };
+    const focusRow = el => { if (!el) return; tree.querySelectorAll('[tabindex="0"]').forEach(x => x.tabIndex = -1); el.tabIndex = 0; el.focus(); focusId = el.dataset.id; };
+    // selecting tells the page; a page that doesn't handle it (home, system home) opens the model screen
+    function select(r, fit) {
+      if (r.kind === 'folder' || r.kind === 'area') { toggle(r.id); return; }
+      if (r.selectable) { selId = r.id; focusId = r.id; markSel(); }
+      const d = { area: r.area, kind: r.kind, id: r.ent || null, ai: r.ai != null ? r.ai : null, rel: r.rel != null ? r.rel : null, view: r.view || null, term: r.term || r.dom || null, ents: r.ents || null, fit: !!fit };
+      const ev = new CustomEvent(fit && (r.kind === 'term' || r.kind === 'dom') ? 'dbm-tree-highlight' : 'dbm-tree-select', { cancelable: true, detail: d });
+      if (!window.dispatchEvent(ev)) return;
+      if (r.kind === 'term' || r.kind === 'dom') { if (fit && r.ents && r.ents[0]) location.href = `model.html?area=${r.area}&focus=${r.ents[0]}`; else location.href = `dictionary.html?q=${encodeURIComponent(r.term || r.dom)}`; return; }
+      if (r.kind === 'view') { location.href = `model.html${r.area === 'rq' ? '' : '?area=' + r.area}`; return; }
+      if (d.id) location.href = `model.html?area=${r.area}&focus=${d.id}${d.ai != null ? '&attr=' + d.ai : ''}`;
+    }
+    tree.addEventListener('click', e => {
+      const a = e.target.closest('a.tlink'); if (a) return;   // shortcuts are plain links
+      const el = e.target.closest('[role=treeitem]'); if (!el) return; const r = rowMap[el.dataset.id]; if (!r) return;
+      if (e.target.closest('[data-tw]') && r.open != null) { toggle(r.id); return; }
+      const now = Date.now();
+      if (r.selectable && lastClick.id === r.id && now - lastClick.t < 450) { lastClick = {}; select(r, true); return; }   // double click = fit (works even if the row was redrawn)
+      lastClick = { id: r.id, t: now }; select(r, false);
     });
-    window.addEventListener('dbm-recent', () => { const r = nav.querySelector('#tr-rec'); if (r) r.innerHTML = recHtml(); });
+    let lastClick = {}, kbSel = false, t2Told = false;
+    window.treeKeyboardSelect = () => kbSel;
+    tree.addEventListener('keydown', e => {
+      const el = e.target.closest('[role=treeitem]'); if (!el) return;
+      // keys the tree handles stop here — the row may be redrawn, so the page's own shortcuts (Enter = add attribute, Delete) must never see them
+      if (!e.ctrlKey && !e.metaKey && !e.altKey && e.key !== 'Tab' && e.key !== 'Escape') e.stopPropagation();
+      const items = [...tree.querySelectorAll('[role=treeitem]')]; const i = items.indexOf(el); const r = rowMap[el.dataset.id];
+      const go = j => { e.preventDefault(); focusRow(items[Math.max(0, Math.min(items.length - 1, j))]); };
+      if (e.key === 'ArrowDown') return go(i + 1);
+      if (e.key === 'ArrowUp') return go(i - 1);
+      if (e.key === 'Home') return go(0);
+      if (e.key === 'End') return go(items.length - 1);
+      if (e.key === 'ArrowRight') { e.preventDefault(); if (r && r.open === false) toggle(r.id, true); else if (r && r.open) go(i + 1); return; }
+      if (e.key === 'ArrowLeft') { e.preventDefault(); if (r && r.open) toggle(r.id, false); else { const pid = r ? r.parent : rowMap[el.dataset.id] && rowMap[el.dataset.id].parent; const p = pid && tree.querySelector(`[data-id="${CSS.escape(pid)}"]`); if (p) focusRow(p); } return; }
+      if (e.key === ' ' && el.matches('a.tlink')) { e.preventDefault(); el.click(); return; }
+      if (e.key === 'Enter' || e.key === ' ') { if (el.matches('a.tlink')) return; e.preventDefault(); if (r) { kbSel = true; select(r, false); kbSel = false; } return; }
+      if (e.key === '*') { e.preventDefault(); if (!r) return; const sib = Object.values(rowMap).filter(x => x.parent === r.parent && x.open === false); sib.forEach(x => { const t0 = ST.tog[x.key] = ST.tog[x.key] || {}; t0[x.nid] = true; }); save(); render(); return; }
+      if (e.key === 'F2' || e.key === 'Delete' || e.key === 'ContextMenu' || (e.key === 'F10' && e.shiftKey)) { e.preventDefault(); if (!t2Told) { t2Told = true; toast('이름 바꾸기 · 삭제 · 메뉴는 다음 단계(T2)에서 동작합니다', 'info'); } return; }
+      if (e.key.length === 1 && /\S/.test(e.key) && !e.ctrlKey && !e.metaKey && !e.altKey) {   // type-ahead
+        const ch = e.key.toUpperCase(); const order = items.slice(i + 1).concat(items.slice(0, i + 1));
+        const hit = order.find(x => (x.getAttribute('aria-label') || x.textContent).trim().toUpperCase().startsWith(ch)); if (hit) { e.preventDefault(); focusRow(hit); }
+      }
+    });
+    tree.addEventListener('focusin', e => { const el = e.target.closest('[role=treeitem]'); if (el) { focusId = el.dataset.id; tree.querySelectorAll('[tabindex="0"]').forEach(x => { if (x !== el) x.tabIndex = -1; }); el.tabIndex = 0; } });
+    // canvas → tree: mark and reveal the row, never take the keyboard focus (12 §4.2)
+    window.addEventListener('dbm-canvas-select', e => {
+      const { area, id } = e.detail || {}; if (!area) return;
+      if (!id) { selId = null; render(); return; }
+      const P = pageMode() === 'P', s = src(area), k = SYS + ':' + area + '@' + s.ver, t0 = ST.tog[k] = ST.tog[k] || {};
+      // a tree selection inside this entity (attribute, relation, constraint) stays as it is
+      const curR = selId && rowMap[selId]; if (curR && curR.area === area && curR.ent === id && e.detail.ai == null) { markSel(); return; }
+      ['area', P ? 'f:tbls' : 'f:ents'].concat(e.detail.ai != null ? ['e:' + id] : []).forEach(n => { if (!(n in t0)) autoOpen.add(k + '|' + n); });
+      selId = area + (e.detail.ai != null ? `|a:${id}:${e.detail.ai}` : '|e:' + id); if (!tree.contains(document.activeElement)) focusId = selId;
+      render();
+      const el = tree.querySelector(`[data-id="${CSS.escape(selId)}"]`); if (el) { const box = nav.querySelector('#tr-full').getBoundingClientRect(), b = el.getBoundingClientRect(); if (b.top < box.top || b.bottom > box.bottom) el.scrollIntoView({ block: 'nearest' }); }
+    });
+    window.addEventListener('dbm-tree-refresh', later);
+    // ---- find · filter
+    qIn.addEventListener('input', () => { q = qIn.value; render(); });
+    qIn.addEventListener('keydown', e => { if (e.key === 'Escape' && qIn.value) { e.stopPropagation(); qIn.value = ''; q = ''; render(); } else if (e.key === 'ArrowDown') { const f = tree.querySelector('[role=treeitem]'); if (f) { e.preventDefault(); focusRow(f); } } });
+    nav.querySelector('#mn-tf').addEventListener('change', e => { const c = e.target.closest('[data-tf]'); if (c) { flt[c.dataset.tf] = c.checked; render(); } });
+    nav.querySelector('#mn-tf').addEventListener('click', e => { const b = e.target.closest('[data-tc]'); if (!b) return; e.stopPropagation(); flt.cls = b.dataset.tc; nav.querySelectorAll('[data-tc]').forEach(x => x.classList.toggle('on', x === b)); render(); });
+    nav.addEventListener('click', e => { if (e.target.id === 'tr-fclr') { flt = { bad: false, ex: false, noref: false, cls: '' }; nav.querySelectorAll('[data-tf]').forEach(c => c.checked = false); nav.querySelectorAll('[data-tc]').forEach(x => x.classList.toggle('on', x.dataset.tc === '')); render(); qIn.focus(); } });
+    // ---- width: follows the content, never squeezes the canvas below 760px (12 §4.6)
+    const minned = () => app.classList.contains('treemin');
+    const modelish = page === 'model';   // model family screens (model · standardize · DDL · outputs · import)
+    const maxW = () => { if (!modelish) return 240; const rp = modelish ? [...document.querySelectorAll('.rpanel.open')].reduce((w, p) => w + p.getBoundingClientRect().width, 0) : 0; return Math.max(240, modelish ? app.clientWidth - rp - 760 : 400); };
+    let curW = 0;
+    const setW = w => { if (minned()) return; curW = Math.round(Math.min(Math.max(w, 240), maxW())); app.style.setProperty('--nav', curW + 'px'); const rs = nav.querySelector('#tr-rs'); rs.setAttribute('aria-valuenow', curW); rs.setAttribute('aria-valuemin', 240); rs.setAttribute('aria-valuemax', maxW()); };
+    const needW = () => { tree.classList.add('measure'); const w = [...tree.querySelectorAll('.trow2, .tlinks')].reduce((m, el) => Math.max(m, el.scrollWidth), 0); tree.classList.remove('measure'); return w + 24; };
+    function fit() {
+      if (minned()) return;
+      if (!modelish) { setW(240); return; }
+      if (modelish && app.clientWidth - [...document.querySelectorAll('.rpanel.open')].reduce((w, p) => w + p.getBoundingClientRect().width, 0) - 760 < 240) { app.classList.add('treemin'); syncMin(); return; }   // not even 240px fits → the tree folds first (not remembered)
+      if (ST.manual) { setW(curW || ST.w || 264); return; }
+      setW(Math.max(curW, needW(), 240));
+    }
+    window.addEventListener('resize', () => { if (!minned()) { const c = curW; curW = 0; setW(c || ST.w || 264); fit(); } });
+    const rs = nav.querySelector('#tr-rs');
+    rs.addEventListener('pointerdown', e => { if (minned()) return; e.preventDefault(); rs.setPointerCapture(e.pointerId); const x0 = e.clientX, w0 = curW; const mv = ev => setW(w0 + ev.clientX - x0); const up = () => { rs.removeEventListener('pointermove', mv); rs.removeEventListener('pointerup', up); ST.manual = true; ST.w = curW; save(); window.dispatchEvent(new Event('resize')); }; rs.addEventListener('pointermove', mv); rs.addEventListener('pointerup', up); });
+    rs.addEventListener('dblclick', () => { ST.manual = false; ST.w = 0; save(); curW = 0; setW(needW()); toast(`트리 폭을 내용에 맞췄습니다 · ${curW}px`, 'info'); window.dispatchEvent(new Event('resize')); });
+    rs.addEventListener('keydown', e => { if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return; e.preventDefault(); setW(curW + (e.key === 'ArrowRight' ? 16 : -16)); ST.manual = true; ST.w = curW; save(); window.dispatchEvent(new Event('resize')); });
+    // ---- collapse to the 56px icon column
+    const btn = nav.querySelector('#tr-min');
+    const syncMin = () => { const m = minned(); btn.innerHTML = `<i data-ic=${m ? 'right' : 'left'}></i><span>접기</span>`; btn.setAttribute('aria-label', m ? '모델 트리 펼치기' : '모델 트리 접기'); btn.setAttribute('aria-expanded', String(!m)); btn.setAttribute('aria-controls', 'tr-full'); btn.title = m ? '펼치기' : '접기'; if (m) app.style.removeProperty('--nav'); else { curW = 0; fit(); } };
+    btn.addEventListener('click', () => { app.classList.toggle('treemin'); store.set('dbm-tree-min', minned() ? '1' : '0'); syncMin(); window.dispatchEvent(new Event('resize')); });
+    // ---- [모델 | 사전] — the model screen's dictionary panel moves into this one column (12 §4.6)
+    if (tabs) {
+      const side = document.getElementById('side'); const dp = nav.querySelector('#tp-dict');
+      dp.appendChild(side); side.classList.remove('closed'); document.body.classList.add('dict-in-tree');
+      const setTab = (v, focus, expand) => { ST.tab = v; save(); nav.querySelectorAll('[data-lt]').forEach(b => { const on = b.dataset.lt === v; b.setAttribute('aria-selected', on); b.tabIndex = on ? 0 : -1; }); nav.querySelector('#tp-model').hidden = v !== 'm'; dp.hidden = v !== 'd'; if (minned() && (focus || expand)) { app.classList.remove('treemin'); store.set('dbm-tree-min', '0'); syncMin(); } if (focus) (v === 'd' ? document.getElementById('dict-q') : qIn).focus(); };
+      nav.querySelector('.ltabs').addEventListener('click', e => { const b = e.target.closest('[data-lt]'); if (b) setTab(b.dataset.lt, true); });
+      nav.querySelector('.ltabs').addEventListener('keydown', e => { if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') { e.preventDefault(); const v = ST.tab === 'm' ? 'd' : 'm'; setTab(v, false); nav.querySelector(`[data-lt="${v}"]`).focus(); } });
+      document.addEventListener('keydown', e => { if (e.altKey && (e.key === '1' || e.key === '2')) { e.preventDefault(); setTab(e.key === '1' ? 'm' : 'd', true); } });
+      document.addEventListener('click', e => { const t = e.target.closest('[data-toggle="side"]'); if (!t) return; e.stopPropagation(); e.preventDefault(); setTab('d', true); }, true);
+      window.openDictTab = (q0, focus) => { setTab('d', !!focus, true); const i = document.getElementById('dict-q'); if (i && q0 != null) { i.value = q0; i.dispatchEvent(new Event('input')); } };
+      setTab(ST.tab === 'd' ? 'd' : 'm', false);
+    }
+    syncMin();
+    render();
   }
+
 
   function navLink(href, label, key, extra) {
     const page = document.body.dataset.page;
@@ -754,7 +996,7 @@
     const showTree = ['home', 'system', 'model'].includes(page);
     if (!showTree) app.classList.add('notree');
     const tmin = store.get('dbm-tree-min', '');
-    if (tmin === '1' || (tmin === '' && curFile() === 'model.html' && window.innerWidth < 1920)) app.classList.add('treemin');
+    if (tmin === '1' || (tmin === '' && curFile() === 'model.html' && (document.documentElement.classList.contains('frame-1600') || Math.min(window.innerWidth, app.clientWidth || window.innerWidth) < 1920))) app.classList.add('treemin');
     app.insertBefore(nav, content);
     app.insertBefore(top, nav);
     drawTree(nav);
