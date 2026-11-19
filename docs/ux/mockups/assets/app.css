@@ -925,6 +925,20 @@ body.dict-in-tree .side-tab, body.dict-in-tree #side [data-toggle="side"] { disp
 .tdesc { padding:0 8px 4px calc((var(--lv) - 1) * 16px + 22px); font-size:12px; line-height:16px; color:var(--fg-2); }
 .trow2 .tct.tbad { color:var(--ds-amber-900); }
 .trow2 .tct + .tmeta { margin-left:0; padding-left:8px; }
+.tico { width:16px; height:16px; flex:none; display:grid; place-items:center; color:var(--fg-2); }
+.tico.ti-db { color:var(--fg); }
+.tico.ti-ok { color:var(--ds-gray-900, var(--fg-2)); }
+.tico.ti-bad { color:var(--ds-amber-700); }
+.tico.ti-ex { color:var(--violet); }
+.tico.ti-ref { color:var(--fg-3); }
+.tico.ti-pk { color:var(--ds-amber-900); }
+.tico.ti-fk { color:var(--ds-blue-900); }
+.tsec-r { display:flex; align-items:center; gap:2px; }
+.tsec .tmw > .menu.thelp { position:fixed; left:calc(var(--nav) + 8px); right:auto; top:104px; width:360px; max-height:calc(100vh - 140px); overflow:auto; padding:10px; z-index:120; }   /* beside the tree, never clipped by it */
+.thelp-h { font-weight:600; font-size:14px; margin:0 0 6px 4px; }
+.thelp-r { display:flex; gap:8px; padding:6px 4px; border-top:1px solid var(--ds-gray-400); font-size:13px; color:var(--fg); }
+.thelp-r b { font-weight:500; }
+.thelp-st { display:flex; flex-wrap:wrap; align-items:center; gap:4px 8px; padding:8px 4px 2px; border-top:1px solid var(--ds-gray-400); font-size:12px; color:var(--fg-2); }
 .tresize { position:absolute; top:0; right:-3px; width:6px; height:100%; cursor:col-resize; z-index:5; }
 .tresize:hover, .tresize:focus-visible { background:color-mix(in srgb, var(--focus) 35%, transparent); outline:none; }
 #app.treemin .tresize { display:none; }/* tree → page: the target row/line is marked for a moment */

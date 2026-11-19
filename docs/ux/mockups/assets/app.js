@@ -165,9 +165,10 @@
   /* systems (13): 요구사항관리 (original sample) and 통합ERP (business sample). Areas carry system; screens see the selected system's areas. */
   const SYSLIST = [{ code: 'RQMS', name: '요구사항관리', db: 'Oracle 19c', schema: 'RQMS', desc: '요구사항 · 프로젝트 관리 시스템' }, { code: 'ERP', name: '통합ERP', db: 'Oracle 19c', schema: 'ERP', desc: '영업 · 구매 · 재고 · 생산 · 회계 · 인사 통합 시스템' }];
   window.SYSLIST = SYSLIST;
-  window.curSys = () => { const c = store.get('dbm-sys', 'RQMS'); return SYSLIST.find(s => s.code === c) || SYSLIST[0]; };
+  window.curSys = () => { const c = store.get('dbm-sys', 'ERP'); return SYSLIST.find(s => s.code === c) || SYSLIST[0]; };
   window.getAllModels = () => { const all = J('dbm-model', clone(MODEL0)); Object.keys(MODEL0).forEach(k => { if (!all[k]) all[k] = clone(MODEL0[k]); }); return all; };
-  window.getModels = () => { const c = curSys().code; return Object.fromEntries(Object.entries(getAllModels()).filter(([, m]) => (m.system || 'RQMS') === c)); };
+  const AREA_ORDER = ['e_hr', 'e_tr', 'e_fi', 'e_sd', 'e_mm', 'e_wm', 'e_pp'];
+  window.getModels = () => { const c = curSys().code; const ent = Object.entries(getAllModels()).filter(([, m]) => (m.system || 'RQMS') === c); ent.sort((a, b) => { const x = AREA_ORDER.indexOf(a[0]), y = AREA_ORDER.indexOf(b[0]); return (x < 0 ? 99 : x) - (y < 0 ? 99 : y); }); return Object.fromEntries(ent); };
   window.defArea = () => Object.keys(getModels())[0] || 'rq';
   window.getModel = area => getAllModels()[area] || MODEL0.rq;
   /* new business area (system home [+ 업무 영역], DDL import): id, name, v1 working version, optional imported structure */
@@ -258,6 +259,7 @@
      Attribute marks: * PK · ! 조합 가능(단어는 모두 있지만 용어 미등록) · # 예외(사유). A name with a word that is not in the list is 미등록 by itself.
      Relations: [parent, child, kind, name, noFk reason, role] — role = [Korean prefix, physical prefix] makes role-named FK columns (BOM 모/자품목, 출발/도착 창고, 상위 계정). ---- */
   const ERP_WORDS = { 고객: 'CUST', 거래처: 'BCNC', 공급사: 'SPLR', 담당자: 'PIC', 견적: 'QUOT', 주문: 'ORD', 출하: 'SHIP', 매출: 'SLS', 반품: 'RTGD', 매입: 'PRCH', 구매: 'PUR', 발주: 'PO', 요청: 'REQ', 입고: 'WRHS', 출고: 'RLS', 이동: 'MVMT', 실사: 'ACTL', 수불: 'RCDS', 품목: 'ITEM', 분류: 'CL', 창고: 'WH', 위치: 'LOC', 재고: 'STCK', 로트: 'LOT', 제품: 'PRDT', 구성: 'CMPS', 공정: 'PRCS', 설비: 'EQP', 생산: 'PRDCT', 계획: 'PLAN', 작업지시: 'WORDR', 작업: 'WORK', 실적: 'PRFMNC', 투입: 'INPT', 검사: 'INSP', 품질: 'QLTY', 가동: 'OPRT', 비가동: 'NOPRT', 계정: 'ACNT', 과목: 'SBJT', 원가센터: 'CCTR', 전표: 'SLIP', 세금계산서: 'TXINV', 채권: 'RCVB', 채무: 'PYBL', 회계: 'ACNTG', 은행: 'BANK', 계좌번호: 'ACTNO', 계좌: 'BACNT', 예금주: 'DPSTR', 예산: 'BDGT', 집행: 'EXCN', 마감: 'CLSG', 차변: 'DBT', 대변: 'CRDT', 차대: 'DC', 적요: 'SMRY', 사원: 'EMP', 부서: 'DEPT', 직급: 'JBGD', 발령: 'APNT', 근태: 'DCLZ', 근무: 'WRK', 출근: 'ATDN', 퇴근: 'LVWK', 초과근무: 'OVTM', 휴가: 'VCTN', 신청: 'APLCN', 급여: 'SLRY', 기본급: 'BSSLRY', 수당: 'ALWNC', 공제: 'DDCT', 실지급: 'RLPAY', 가족: 'FMLY', 부양: 'SPRT', 교육: 'EDU', 과정: 'CRS', 이수: 'CMPTN', 자격증: 'CRTFCT', 자격: 'QLFC', 발급: 'ISSU', 기관: 'INST', 취득: 'ACQS', 입사: 'JNCMP', 퇴사: 'RSGN', 재직: 'HFFC', 성별: 'SEX', 생년월일: 'BRDT', 영문: 'ENG', 상위: 'UP', 레벨: 'LVL', 사업자등록번호: 'BRNO', 대표자: 'RPRSV', 업종: 'TPBIZ', 등급: 'GRD', 여신한도: 'CRLMT', 거래: 'DLNG', 시작: 'BGNG', 종료: 'END', 유효: 'VLD', 사용: 'USE', 대표: 'RPRS', 판매: 'SALE', 단가: 'UPRC', 가격: 'PRC', 할인: 'DSCNT', 공급가액: 'SPLY_AMT', 부가세: 'VAT', 총: 'TOT', 결제: 'STLM', 조건: 'CND', 납기: 'DUDT', 배송: 'DLVY', 운송장: 'WAYBL', 업체: 'ENT', 완료: 'CMPL', 사유: 'RSN', 변경: 'CHG', 이전: 'BFR', 값: 'VL', 항목: 'ARTCL', 적용: 'APLY', 통화: 'CRNCY', 희망: 'HOPE', 승인: 'APRV', 합격: 'PASS', 불량: 'DFCT', 양품: 'GDS', 결과: 'RSLT', 지급: 'PAY', 예정: 'PRNMNT', 최소: 'MIN', 규격: 'SPEC', 단위: 'UNIT', 안전: 'SAFE', 표준: 'STD', 관리: 'MNG', 적재: 'LDNG', 가능: 'PSBLTY', 할당: 'ALOC', 가용: 'AVL', 최종: 'LAST', 제조: 'MNFCT', 출발: 'DPRT', 도착: 'ARVL', 장부: 'BOOK', 차이: 'DIFF', 조정: 'ADJ', 기말: 'TRMEND', 소요: 'RQRD', 손실: 'LOSS', 시간: 'HR', 도입: 'INTRCN', 년월: 'YM', 년도: 'YR', 발행: 'PBLCN', 발생: 'OCRN', 만기: 'MTRY', 입금: 'RCPT', 잔액: 'BLNC', 용도: 'PRPS', 관계: 'REL', 일수: 'DCNT', 저장: 'STRG', 자재: 'MTRL', 지시: 'INSTR', 모: 'PRNT', 자: 'CHLD', 수주: 'ORDR',
+    자금: 'FUND', 수입: 'INCM', 지출: 'EXPN', 입출금: 'DPWD', 이체: 'TRSF', 출금: 'WDRW', 차입: 'BRWG', 차입금: 'LOAN', 상환: 'RPMT', 원금: 'PRIN', 이자: 'INTR', 방식: 'MTHD', 투자: 'INVT', 자산: 'AST', 어음: 'BILL', 매매: 'TRD', 기준: 'STDR', 환율: 'EXRT', 일별: 'DAY', 평가: 'EVL', 등록: 'REG',
     번호: 'NO', 코드: 'CD', 명: 'NM', 일자: 'YMD', 일시: 'DT', 금액: 'AMT', 액: 'AMT', 수량: 'QTY', 율: 'RT', 여부: 'YN', 구분: 'SE', 상태: 'STTS', 유형: 'TYPE', 순번: 'SN', 내용: 'CN', 주소: 'ADDR', 전화번호: 'TELNO', 이메일: 'EML', 기본: 'M', 내역: 'D', 이력: 'H', 상세: 'DTL' };
   const ERP_TYPE = { NO: 'VARCHAR2(20)', CD: 'VARCHAR2(10)', NM: 'VARCHAR2(100)', YMD: 'CHAR(8)', DT: 'DATE', AMT: 'NUMBER(18,2)', UPRC: 'NUMBER(18,2)', QTY: 'NUMBER(15,3)', RT: 'NUMBER(5,2)', YN: 'CHAR(1)', SE: 'VARCHAR2(2)', STTS: 'VARCHAR2(2)', TYPE: 'VARCHAR2(2)', SN: 'NUMBER(5)', CN: 'VARCHAR2(4000)', ADDR: 'VARCHAR2(200)', TELNO: 'VARCHAR2(20)', EML: 'VARCHAR2(100)', BRNO: 'CHAR(10)', ACTNO: 'VARCHAR2(30)', BRDT: 'CHAR(8)', HR: 'NUMBER(7,2)', YM: 'CHAR(6)', YR: 'CHAR(4)', DCNT: 'NUMBER(5,1)' };
   const ERP_DOM = { NO: '번호V20', CD: '코드V10', NM: '명V100', YMD: '연월일C8', DT: '일시T', AMT: '금액N18', UPRC: '금액N18', QTY: '수량N15', RT: '율N5', YN: '여부C1', SE: '구분V2', STTS: '상태V2', TYPE: '유형V2', SN: '순번N5', CN: '내용V4000', ADDR: '주소V200', TELNO: '전화번호V20', EML: '이메일V100', BRNO: '사업자번호C10', ACTNO: '계좌번호V30', BRDT: '연월일C8', HR: '시간N7', YM: '연월C6', YR: '연도C4', DCNT: '일수N5' };
@@ -323,6 +325,20 @@
       refs: [['item', 'e_wm'], ['lot', 'e_wm'], ['wh', 'e_wm']],
       rels: [['item', 'bom', 'id', '구성한다(제품)', null, ['모', 'PRNT']], ['item', 'bom', 'id', '구성된다(부품)', null, ['자', 'CHLD']], ['item', 'plan', 'nonid', '계획된다'], ['plan', 'wo', 'nonid', '지시된다'], ['prcs', 'wo', 'nonid', '수행한다'], ['item', 'wo', 'nonid', '생산된다'], ['wo', 'wor', 'id', '실적을 낸다'], ['eqp', 'wor', 'nonid', '가동한다'], ['wo', 'inpt', 'id', '투입한다'], ['lot', 'inpt', 'nonid', '투입된다'], ['wh', 'inpt', 'nonid', '불출한다'], ['wo', 'qcp', 'nonid', '검사된다'], ['eqp', 'eqh', 'id', '기록된다']],
       views: [['flow', '계획 → 작업지시 → 실적', ['plan', 'wo', 'wor', 'inpt', 'qcp']], ['bom', '제품 구성(BOM)', ['bom', 'prcs']]] },
+    e_tr: { name: '재무관리', ver: 2, base: 1, desc: '자금 계획 · 입출금 · 이체 · 차입금 · 투자 자산 · 어음 · 환율',
+      ents: [['fplan', '자금계획기본', '계획번호*,계획년월,수입예정금액,지출예정금액,계획상태코드'],
+        ['fplanD', '자금계획상세내역', '계획순번*,자금구분코드,예정일자,예정금액,실적금액'],
+        ['dpwd', '입출금내역', '거래번호*,거래일시,입출금구분코드,거래금액,잔액금액,적요내용'],
+        ['trns', '자금이체내역', '이체번호*,이체일자,이체금액,수수료금액,이체상태코드'],
+        ['brwg', '차입금기본', '차입번호*,차입기관명,차입일자,만기일자,원금금액,이자율!,상환방식코드', 'M'],
+        ['rpmt', '차입금상환내역', '상환순번*,상환일자,원금상환금액,이자금액'],
+        ['invt', '투자자산기본', '자산번호*,자산명,자산유형코드,취득일자,취득금액,평가금액', 'M'],
+        ['note', '어음기본', '어음번호*,어음구분코드,발행일자,만기일자,어음금액,어음상태코드'],
+        ['exrt', '환율이력', '통화코드*,적용일자*,매매기준율,등록일시', 'H'],
+        ['dfund', '일별자금이력', '기준일자*,총수입금액,총지출금액,기말잔액금액', 'H']],
+      refs: [['bank', 'e_fi'], ['bcnc', 'e_fi']],
+      rels: [['fplan', 'fplanD', 'id', '포함한다'], ['bank', 'dpwd', 'nonid', '거래된다'], ['bank', 'trns', 'nonid', '돈이 나간다', null, ['출금', 'WDRW']], ['bank', 'trns', 'nonid', '돈이 들어온다', null, ['입금', 'RCPT']], ['brwg', 'rpmt', 'id', '상환된다'], ['bank', 'rpmt', 'nonid', '지급한다'], ['bcnc', 'note', 'nonid', '발행 · 수취한다']],
+      views: [['cash', '자금 흐름', ['fplan', 'fplanD', 'dpwd', 'trns', 'dfund']], ['loan', '차입 · 투자', ['brwg', 'rpmt', 'invt', 'note']]] },
     e_fi: { name: '회계관리', ver: 4, base: 3, desc: '계정과목 · 전표 · 세금계산서 · 매출채권 · 매입채무 · 예산',
       ents: [['acnt', '계정과목기본', '계정코드*,계정명,계정구분코드,차대구분코드,사용여부', 'M'],
         ['cc', '원가센터기본', '원가센터코드*,원가센터명,관리부서코드', 'M'],
@@ -415,7 +431,7 @@
   Object.assign(MODEL_SEED, ERP_BUILT.seeds);
   Object.assign(VIEWS0, ERP_BUILT.views);
 
-  Object.assign(MODEL0, ERP_BUILT.meta);
+  ['e_hr', 'e_tr', 'e_fi', 'e_sd', 'e_mm', 'e_wm', 'e_pp'].forEach(k => { if (ERP_BUILT.meta[k]) MODEL0[k] = ERP_BUILT.meta[k]; });
   // the address decides the system: ?system=ERP, or an area / snapshot that belongs to another system
   { const sy = qs.get('system'), ar = qs.get('area'); if (ar && getAllModels()[ar]) store.set('dbm-sys', getAllModels()[ar].system || 'RQMS'); else if (sy && SYSLIST.some(s => s.code === sy)) store.set('dbm-sys', sy); }
   window.viewsOf = area => J('dbm-views-' + area, null) || clone(VIEWS0[area] || [{ id: 'all', n: '전체' }]);
@@ -737,7 +753,18 @@
     more: '<circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/>',
     left: '<path d="m15 18-6-6 6-6"/>',
     undo: '<path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/>',
-    redo: '<path d="M21 7v6h-6"/><path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3l3 2.7"/>'
+    redo: '<path d="M21 7v6h-6"/><path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3l3 2.7"/>',
+    db: '<ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5V19A9 3 0 0 0 21 19V5"/><path d="M3 12A9 3 0 0 0 21 12"/>',
+    col: '<rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 3v18"/><path d="M15 3v18"/>',
+    key: '<path d="m15.5 7.5 2.3 2.3a1 1 0 0 0 1.4 0l2.1-2.1a1 1 0 0 0 0-1.4L19 4"/><path d="m21 2-9.6 9.6"/><circle cx="7.5" cy="15.5" r="5.5"/>',
+    link: '<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>',
+    flow: '<rect width="8" height="8" x="3" y="3" rx="2"/><path d="M7 11v4a2 2 0 0 0 2 2h4"/><rect width="8" height="8" x="13" y="13" rx="2"/>',
+    layers: '<path d="M12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"/><path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"/><path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"/>',
+    term: '<path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/>',
+    tag: '<path d="M12.59 2.59A2 2 0 0 0 11.17 2H4a2 2 0 0 0-2 2v7.17a2 2 0 0 0 .59 1.42l8.7 8.7a2.43 2.43 0 0 0 3.42 0l6.58-6.58a2.43 2.43 0 0 0 0-3.42z"/><circle cx="7.5" cy="7.5" r="1"/>',
+    shield: '<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/>',
+    list: '<path d="M3 12h.01"/><path d="M3 18h.01"/><path d="M3 6h.01"/><path d="M8 12h13"/><path d="M8 18h13"/><path d="M8 6h13"/>',
+    help: '<circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/>'
   };
   window.icon = (n, s = 16) => `<svg class="ic${s === 12 ? ' s12' : ''}" width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${s === 12 ? 2 : 1.5}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${LU[n] || ''}</svg>`;
   /* <i data-ic=name> placeholders (usable in any HTML or JS string) become SVG icons — also for content rendered later */
@@ -946,18 +973,19 @@
           found += (eh ? 1 : 0) + ah.length;
           const attrs = e.a.map((a, i) => ({ a, i })).filter(x => !qq || areaHit || eh || ah.includes(x.i));
           const kids = attrs.map(({ a, i }) => N('a:' + e.id + ':' + i, P ? 'col' : 'attr', {
-            ent: e.id, ai: i, selectable: true,
+            ent: e.id, ai: i, selectable: true, pk: !!a.pk, fk: !!a.fk,
             html: P ? (a.p === '—' ? `<span class="tn1">${mark(a.n)}</span><span class="tmeta ts-miss">물리명 없음</span>` : `<span class="tn1 mono">${mark(a.p)}</span><span class="tmeta">${esc(a.t)}${a.pk ? ' · PK' : ''}${a.fk ? ' · FK' : ''}</span>`) : `<span class="tn1">${mark(a.n)}</span><span class="tmeta">${a.pk ? 'PK' : ''}${a.fk ? (a.pk ? ' · ' : '') + 'FK' : ''}${STC[a.s] ? `${a.pk || a.fk ? ' · ' : ''}<span class="ts-${a.s}">${STC[a.s]}</span>` : ''}</span>`,
             aria: `${P ? a.p : a.n}${a.pk ? ', PK' : ''}${a.fk ? ', FK' : ''}${STC[a.s] ? ', ' + STC[a.s] : ''}`, title: P ? a.n : `${a.p} · ${a.t}` }));
           const ahNote = qq && !eh && ah.length ? `<span class="tmeta">${P ? '컬럼' : '속성'} ${ah.length}</span>` : '';
           return N('e:' + e.id, P ? 'table' : 'ent', {
-            ent: e.id, selectable: true, gray: P && !e.ref && (e.px == null || e.py == null),
+            ent: e.id, selectable: true, st: e.ref ? 'ref' : entBad(e) ? 'bad' : e.a.some(a => a.s === 'ex') ? 'ex' : 'ok', gray: P && !e.ref && (e.px == null || e.py == null),
             html: P ? `<span class="tn1 mono">${mark(e.p === '—' ? e.n + ' (물리명 없음)' : e.p)}</span>${e.ref ? `<span class="tmeta">${esc(e.refName || '공통')}${e.refVer ? ' v' + e.refVer + ' 확정' : ''}</span>` : ahNote || `<span class="tmeta">${esc(e.n)}</span>`}` : `${entDot(e)}<span class="tn1">${mark(e.n)}</span>${e.ref ? `<span class="tmeta">${esc(e.refName || '공통')}${e.refVer ? ' v' + e.refVer + ' 확정' : ''}</span>` : (ahNote || (entBad(e) ? `<span class="tct tbad" title="미준수 ${entBad(e)}">${entBad(e)}</span>` : '')) + `<span class="tmeta mono">${mark(e.p === '—' ? '물리명 없음' : e.p)}</span>`}`,
             aria: `${P ? e.p : e.n}${!P && e.p !== '—' ? ' ' + e.p : ''}, ${entState(e)}${e.ref ? ', ' + (e.refName || '공통') + ' 영역에서 참조' : ''}`, title: P ? e.n : (e.p !== '—' ? e.p : '물리명 없음'),
             open: kids.length && !e.ref ? (qq && ah.length ? true : isOp('e:' + e.id, false)) : null, kids: e.ref ? null : kids });
         }).filter(Boolean);
         const kidsOf = [];
-        const folder = (nid, label, kids, o = {}) => N(nid, 'folder', Object.assign({ title: o.title || '', html: `<span class="tn1">${label}</span><span class="tct">${o.count != null ? o.count : kids.length}</span>${o.warn ? '<span class="twarn" aria-hidden="true"></span>' : ''}`, aria: `${label} ${o.count != null ? o.count : kids.length}${o.warn ? ', 경고 있음' : ''}`, open: kids.length ? (qq ? true : isOp(nid, o.def || false)) : null, kids }, o));
+        const FHELP = { 'f:views': '같은 영역의 테이블을 목적별로 나눠 그린 ERD 그림', 'f:ents': '데이터를 담는 표(테이블). 펼치면 컬럼(칸)이 보입니다', 'f:tbls': '실제 DB에 만들어질 테이블. 펼치면 컬럼과 타입이 보입니다', 'f:rels': '두 테이블이 어떻게 이어지는지(예: 부서 → 사원 소속된다)', 'f:prels': '관계마다 FK(다른 테이블을 가리키는 키)가 만들어졌는지', 'f:subs': '하나의 테이블을 종류별로 나눈 구조(예: 정규직 · 계약직)', 'f:std': '이 영역이 쓰는 표준 사전의 용어와 데이터 형식(도메인)', 'f:terms': '표준 사전에 등록된 이름과 영문 약어', 'f:doms': '데이터 형식 묶음(예: 금액N18 = 숫자 18자리)', 'f:cons': 'PK(기본키) · FK(참조키) · UK(중복 금지) 규칙', 'f:ix': '검색을 빠르게 하는 색인', 'f:refs': '다른 업무 영역의 테이블을 읽기 전용으로 가져와 관계만 맺은 것' };
+        const folder = (nid, label, kids, o = {}) => N(nid, 'folder', Object.assign({ title: o.title || FHELP[nid] || '', html: `<span class="tn1">${label}</span><span class="tct">${o.count != null ? o.count : kids.length}</span>${o.warn ? '<span class="twarn" aria-hidden="true"></span>' : ''}`, aria: `${label} ${o.count != null ? o.count : kids.length}${o.warn ? ', 경고 있음' : ''}`, open: kids.length ? (qq ? true : isOp(nid, o.def || false)) : null, kids }, o));
         // shortcuts (always visible when the area is open — not hidden in a folder)
         if (!qq) {
           const bad = compOf(s).bad;
@@ -1042,7 +1070,11 @@
           <div class="tfbar" id="tr-fbar" hidden></div>
           <div class="sr-only" id="tr-live" aria-live="polite"></div>
           <div class="tro" id="tr-ro" hidden></div>
-          <div class="tsec"><span>업무 영역</span>${canNew ? '<a class="tadd" href="system.html#new" aria-label="새 업무 영역" title="새 업무 영역"><i data-ic=plus data-s=14></i></a>' : ''}</div>
+          <div class="tsec"><span>업무 영역</span><span class="tsec-r"><span class="tmw"><button class="tadd" type="button" data-menu-btn aria-expanded="false" aria-controls="mn-thelp" aria-label="트리 보는 법" title="트리 보는 법"><i data-ic=help data-s=14></i></button><div class="menu thelp" data-auto id="mn-thelp">
+            <div class="thelp-h">트리 보는 법 <span class="caption muted">예: 통합ERP · 인사관리</span></div>
+            ${[['db', '업무 영역', '시스템 안의 업무 묶음. 버전과 결재(확정)의 단위입니다', '인사관리 · 재무관리 · 회계관리'], ['flow', '다이어그램', '같은 영역의 테이블을 목적별로 나눠 그린 ERD', '급여 · 근태 · 휴가'], ['table', '테이블(엔터티)', '데이터를 담는 표. 오른쪽 회색 글자가 DB 이름입니다', '사원기본 = EMP_M'], ['col', '컬럼(속성)', '테이블의 칸', '사원명 · 입사일자'], ['key', '기본키(PK)', '행 하나를 구별하는 값', '사원번호'], ['link', 'FK · 관계', '다른 테이블을 가리키는 칸, 테이블 사이의 연결', '부서 → 사원 (소속된다)'], ['layers', '서브타입', '한 테이블을 종류별로 나눈 구조', '정규직 · 계약직'], ['term', '표준 용어', '표준 사전에 등록된 이름과 영문 약어', '사원번호 = EMP_NO'], ['tag', '도메인', '데이터 형식 묶음', '금액N18 · 연월일C8'], ['shield', '제약조건', '물리 모드: PK · FK · UK 규칙', 'EMP_M_PK'], ['list', '인덱스', '물리 모드: 검색을 빠르게 하는 색인', 'EMP_M_IX01'], ['ext', '참조', '다른 영역의 테이블을 읽기 전용으로 가져온 것', '회계관리의 은행계좌']].map(([ic, n, d, ex]) => `<div class="thelp-r"><span class="tico"><i data-ic=${ic} data-s=14></i></span><div><b>${n}</b><div class="caption">${d}</div><div class="caption faint">예: ${ex}</div></div></div>`).join('')}
+            <div class="thelp-st"><span class="tico ti-ok"><i data-ic=table data-s=14></i></span>표준 준수 <span class="tico ti-bad"><i data-ic=table data-s=14></i></span>미준수 있음(숫자 = 개수) <span class="tico ti-ex"><i data-ic=table data-s=14></i></span>예외 있음</div>
+          </div></span>${canNew ? '<a class="tadd" href="system.html#new" aria-label="새 업무 영역" title="새 업무 영역"><i data-ic=plus data-s=14></i></a>' : ''}</span></div>
           <div role="tree" id="tr-tree" class="otree"></div>
           <div class="tsep"></div>
           <a class="tl${file === 'model.html' && qp.get('sys') ? ' on" aria-current="page' : ''}" href="model.html?sys=1"><i data-ic=compare></i>시스템 전체 ERD</a>
@@ -1074,6 +1106,10 @@
       rowMap = {}; rows.forEach(r => { rowMap[r.id] = r; });
       if (!focusId || !rowMap[focusId]) { const anc = lastFocus.parents.find(p => rowMap[p]); focusId = anc || (rows[Math.min(lastFocus.idx, rows.length - 1)] || {}).id || (selId && rowMap[selId] ? selId : null); }
       let html = '';
+      const FICON = { 'f:views': 'flow', 'f:ents': 'table', 'f:tbls': 'table', 'f:rels': 'link', 'f:prels': 'link', 'f:subs': 'layers', 'f:std': 'term', 'f:terms': 'term', 'f:doms': 'tag', 'f:cons': 'shield', 'f:ix': 'list', 'f:refs': 'ext' };
+      const KICON = { area: 'db', view: 'flow', rel: 'link', prel: 'link', cons: 'shield', ix: 'list', term: 'term', dom: 'tag' };
+      const iconOf = r => r.kind === 'folder' ? FICON[r.nid] : r.kind === 'ent' || r.kind === 'table' ? 'table' : r.kind === 'attr' || r.kind === 'col' ? (r.pk ? 'key' : r.fk ? 'link' : 'col') : KICON[r.kind];
+      const icoCls = r => r.kind === 'ent' || r.kind === 'table' ? ' ti-' + (r.st || 'ok') : r.kind === 'attr' || r.kind === 'col' ? (r.pk ? ' ti-pk' : r.fk ? ' ti-fk' : '') : r.kind === 'area' ? ' ti-db' : '';
       rows.forEach((r, i) => {
         if (r.kind === 'link') {
           const first = !rows[i - 1] || rows[i - 1].kind !== 'link', last = !rows[i + 1] || rows[i + 1].kind !== 'link';
@@ -1081,7 +1117,7 @@
           return;
         }
         if (r.grp) html += `<div class="tgrp" role="none" style="--lv:${r.lvl}" title="${esc(r.grp.title)}">${r.grp.label}<span>${r.grp.n}</span></div>`;
-        html += `<div role="treeitem" class="trow2 k-${r.kind}${r.id === selId ? ' sel' : ''}${r.gray ? ' gray' : ''}" data-id="${esc(r.id)}" aria-level="${r.lvl}" aria-posinset="${r.pos}" aria-setsize="${r.size}"${r.open != null ? ` aria-expanded="${r.open}"` : ''}${r.selectable ? ` aria-selected="${r.id === selId}"` : ''} tabindex="${r.id === focusId ? 0 : -1}" aria-label="${esc(r.aria || '')}"${r.title ? ` title="${esc(r.title)}"` : ''} style="--lv:${r.lvl}"><span class="ttw" data-tw aria-hidden="true">${r.open == null ? '' : `<i data-ic=${r.open ? 'down' : 'right'} data-s=12></i>`}</span>${r.html}</div>`;
+        html += `<div role="treeitem" class="trow2 k-${r.kind}${r.id === selId ? ' sel' : ''}${r.gray ? ' gray' : ''}" data-id="${esc(r.id)}" aria-level="${r.lvl}" aria-posinset="${r.pos}" aria-setsize="${r.size}"${r.open != null ? ` aria-expanded="${r.open}"` : ''}${r.selectable ? ` aria-selected="${r.id === selId}"` : ''} tabindex="${r.id === focusId ? 0 : -1}" aria-label="${esc(r.aria || '')}"${r.title ? ` title="${esc(r.title)}"` : ''} style="--lv:${r.lvl}"><span class="ttw" data-tw aria-hidden="true">${r.open == null ? '' : `<i data-ic=${r.open ? 'down' : 'right'} data-s=12></i>`}</span>${iconOf(r) ? `<span class="tico${icoCls(r)}" aria-hidden="true"><i data-ic=${iconOf(r)} data-s=14></i></span>` : ''}${r.html.replace(/^<span class="tdot[^"]*" aria-hidden="true">(<i[^>]*><\/i>)?<\/span>/, '')}</div>`;
         if (r.kind === 'area' && r.open && r.desc && !q.trim()) html += `<div class="tdesc" role="none" style="--lv:${r.lvl + 1}">${esc(r.desc)}</div>`;
       });
       tree.innerHTML = html || '<div class="tempty">맞는 객체가 없습니다</div>';

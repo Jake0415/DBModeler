@@ -44,7 +44,7 @@ window.pageInit = function () {
   const $ = id => document.getElementById(id);
   const ids = Object.keys(getModels()); let T = 0, Cc = 0;
   { const s = curSys(); $('sys-name').textContent = s.name; $('sys-badge').textContent = `${s.db} · ${s.schema}`; document.title = s.name + ' · 시스템 홈 · NeoDB 목업'; }
-  const OWN = { e_sd: '정영업', e_mm: '한구매', e_wm: '김모델', e_pp: '오생산', e_fi: '최회계', e_hr: '박설계' };
+  const OWN = { e_tr: '한재무', e_sd: '정영업', e_mm: '한구매', e_wm: '김모델', e_pp: '오생산', e_fi: '최회계', e_hr: '박설계' };
   // counts from each area's working structure (or its submitted copy when locked) — CX12-19 · CL12-31
   const sizeOf = a => { const L = modelLock(a); const m = areaView(a).model; const ents = m.E.filter(x => !x.ref); return [ents.length, ents.reduce((n, x) => n + x.a.length, 0)]; };
   ids.forEach(a => { const [t2, c2] = sizeOf(a); T += t2; Cc += c2; });
