@@ -1,5 +1,7 @@
 # 디자인 개편 방안 — "AI스럽지 않은 업무용 SaaS"
 
+> **기록 문서** (2026-11-20): 현재 기준은 [01 디자인 가이드 v2](01-design-guide.md)다. 이 문서와 값이 다르면 v2를 따른다.
+
 > 상태: **방안(결정 전)** · 2026-11-19
 > 대상: [01-design-guide.md](01-design-guide.md) v1, 목업 `docs/ux/mockups/` 전체(공통 `assets/app.css`)
 > 근거:
