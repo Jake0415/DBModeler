@@ -46,7 +46,10 @@ window.pageInit = function () {
   const FIXED = [];   // only events that happened in this state (CX14-12)
   getDocs().forEach(d => (d.hist || []).forEach(h => rows.push({ at: key(h.at), who: h.who, f: 'appr' + (h.self ? ' self' : '') + (d.type === 'model' && (h.step === 'final' || /확정/.test(h.act)) ? ' model' : '') + (d.type === 'dict' && /승인/.test(h.act) && d.step === 'done' && h === d.hist[d.hist.length - 1] ? ' dict' : ''),
     kind: h.self ? '<span class="badge b-violet">자기 승인</span>' : /반려/.test(h.act) ? `<span class="badge b-danger">${h.act}</span>` : `<span class="badge">${h.act}</span>`, tgt: docLink(d.id), what: d.title + (d.step === 'done' && h === d.hist[d.hist.length - 1] ? (d.type === 'model' ? ' · <b>확정본</b>' : ' · <b>사전 반영</b>') : ''), why: h.why || '' })));
-  getChanges().filter(c => c.act === '공표').forEach(c => rows.push({ at: key(c.at), who: c.by, f: 'dict', kind: '<span class="badge b-violet">공표</span>', tgt: `<a href="dict-history.html#pub">${c.item}</a>`, what: '기관 사전 제정차수 +1', why: c.diff || '' }));
+  // a publication row opens the change history with that edition highlighted (E9)
+  // the current edition (getPub) is a publication too, even when the seed has no change-history row for it
+  { const P = getPub(); if (P && P.cha && !getChanges().some(c => c.act === '공표' && +(c.pub || (String(c.item).match(/(\d+)차/) || [])[1]) === +P.cha)) rows.push({ at: key(P.at), who: P.by, f: 'dict', kind: '<span class="badge b-violet">공표</span>', tgt: `<a href="dict-history.html?pub=${P.cha}#pub-${P.cha}" title="변경 내역에서 제정 ${P.cha}차 보기">제정 ${P.cha}차 공표</a>`, what: '기관 사전 제정차수 +1', why: P.why || '' }); }
+  getChanges().filter(c => c.act === '공표').forEach(c => { const n = c.pub || (String(c.item).match(/(\d+)차/) || [])[1]; rows.push({ at: key(c.at), who: c.by, f: 'dict', kind: '<span class="badge b-violet">공표</span>', tgt: n ? `<a href="dict-history.html?pub=${n}#pub-${n}" title="변경 내역에서 제정 ${n}차 보기">${c.item}</a>` : `<a href="dict-history.html">${c.item}</a>`, what: '기관 사전 제정차수 +1', why: c.diff || '' }); });
   const F2 = a => /역할/.test(a) ? 'role' : /설정|검수 기준/.test(a) ? 'set' : /후보/.test(a) ? 'dict' : 'set';
   getAudit().filter(a => a.act !== '영구 삭제').forEach(a => rows.push({ at: key(a.at), who: a.who, f: F2(a.act), kind: `<span class="badge ${/역할/.test(a.act) ? 'b-warning' : ''}">${a.act}</span>`, tgt: a.target || '', what: a.what || a.why || '', why: a.what ? (a.why || '') : '' }));
   JSON.parse(dbmStore.get('dbm-purge', '[]')).forEach(p => rows.push({ at: key(p.at), who: p.who, f: 'purge', kind: '<span class="badge b-danger">영구 삭제</span>', tgt: `<span class="mono">${p.id}</span> ${p.name}`, what: `${p.kind || ''} 항목 영구 삭제 · 근거 ${p.doc !== '—' ? docLink(p.doc) : '—'}`, why: p.why || '' }));
@@ -57,7 +60,14 @@ window.pageInit = function () {
   const aq = document.getElementById('aq'), per = document.getElementById('aper'); let kind = '';
   const since = () => { const n = +per.value; if (!n) return ''; const d = new Date(Date.now() - n * 864e5); return d.toISOString().slice(0, 10); };
   let shown = 0;
+  // filters that leave nothing show an empty row with a way back (E9)
+  const empty = document.createElement('tr'); empty.className = 'er none'; empty.hidden = true;
+  empty.innerHTML = '<td colspan="7" class="caption muted u-tc u-p-24">조건에 맞는 기록이 없습니다 <button class="btn sm u-ml-24" type="button" id="aclr">필터 지우기</button></td>';
+  if (rows.length) ab.appendChild(empty);
+  const clear = () => { kind = ''; aq.value = ''; per.value = '0'; document.querySelectorAll('.chip[data-group="ak"]').forEach(c => c.classList.toggle('on', c.dataset.filter === '')); apply(); aq.focus(); };
+  empty.querySelector('#aclr').onclick = clear;
   const apply = () => { const v = aq.value.trim(), lo = since(); shown = 0; [...ab.rows].forEach(r => { if (!r.dataset.at) return; const ok = (!kind || (r.dataset.f || '').split(' ').includes(kind)) && (!v || r.innerText.includes(v)) && (!lo || r.dataset.at >= lo); r.style.display = ok ? '' : 'none'; if (ok) shown++; });
+    empty.hidden = !rows.length || shown > 0;
     document.getElementById('alh').innerHTML = `<b class="u-fg">${shown}건</b>${kind || v || lo ? ' · 필터 적용' : ''} · 결재 이력·공표·설정·역할·영구 삭제를 한 곳에서 시간순으로`; };
   aq.oninput = apply; per.onchange = apply;
   document.querySelector('.toolbar').addEventListener('click', e => { const c = e.target.closest('.chip[data-filter]'); if (!c) return; kind = c.dataset.filter; setTimeout(apply, 0); });

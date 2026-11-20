@@ -38,6 +38,8 @@ window.pageInit = function () {
   $('pubtag').textContent = `현재 제정 ${pub.cha}차 · ${pub.at} 공표`;
   let act = '';
   const qp = new URLSearchParams(location.search);
+  // ?pub=<차수> or #pub-<n> (from the audit log) highlights that publication row (E9)
+  const HL = +(qp.get('pub') || (location.hash.match(/^#pub-(\d+)$/) || [])[1] || 0); let hitRow = false;
   if (qp.get('unpub')) $('per').value = 'pub'; else if (qp.get('per')) $('per').value = qp.get('per');
   // DA: publish from the unpublished list (CX12-08 · CL12-14) · DA/Admin: permanent-delete log (30 v1.2 ⑦)
   const unpub = getChanges().filter(c => !c.pub && c.act !== '공표').length;
@@ -50,16 +52,23 @@ window.pageInit = function () {
   };
   function draw() {
     const R = L();
-    $('lh').innerHTML = `<b class="u-fg">${R.length}건</b> · 반영 구분: 초기 적재 / 데이터 보완 / 사용자 변경 승인 · 이력은 추가만 되고 지워지지 않습니다`;
+    const hit = HL && R.some(c => c.act === '공표' && +(c.pub || (String(c.item).match(/(\d+)차/) || [])[1] || 0) === HL);
+    const inEd = HL ? getChanges().filter(c => c.act !== '공표' && +c.pub === HL).length : 0;
+    $('lh').innerHTML = `<b class="u-fg">${R.length}건</b> · 반영 구분: 초기 적재 / 데이터 보완 / 사용자 변경 승인 · 이력은 추가만 되고 지워지지 않습니다`
+      + (HL ? ` · <b class="u-fg">제정 ${HL}차</b>${HL === +pub.cha ? ` (${pub.at} · ${pub.by})` : ''} ${hit ? `공표 행을 표시했습니다 · 이 차수에 실린 변경 ${inEd}건` : inEd ? `이 차수에 실린 변경 ${inEd}건을 표시했습니다` : '이 차수의 기록이 지금 목록에 없습니다(필터 또는 이전 기록)'} <a href="dict-history.html">표시 지우기</a>` : '');
+    hitRow = hit;
     // field-level before → after on screen, the same content the report promises (CL8-01 · CX9 Top 10)
     const fieldHtml = c => c.fields && c.fields.length ? c.fields.map(f => `${f[0]}: <span class="old-v">${f[1] === '' ? '(빈 값)' : f[1]}</span>${f[2]}`).join('<br>') + (c.diff && c.diff.includes('업로드') ? `<br><span class="faint">${c.diff.split(' · ').filter(x => x.startsWith('업로드')).join('')}</span>` : '') : (c.diff || '');
     const useOf = c => { const d = c.itemId && getDict().find(x => x.id === c.itemId); return d ? d.use : null; };
-    $('cb').innerHTML = R.map(c => `<tr><td class="mono">${c.at}</td><td><b>${c.item}</b>${c.itemId ? `<div class="caption faint mono">${c.itemId}${useOf(c) ? ` · 사용처 ${useOf(c)}` : ''}</div>` : ''}</td><td>${c.kind}</td><td><span class="badge ${c.act === '공표' ? 'b-violet' : c.act.includes('미사용') ? '' : 'b-success'}">${c.act}</span></td><td class="caption">${originOf(c)}</td><td class="mono">${c.ver}</td><td class="caption wrap">${fieldHtml(c)}</td><td>${c.doc && c.doc !== '—' ? `<a class="mono" href="approvals.html?doc=${c.doc}">${c.doc}</a>` : '—'}</td><td class="caption">${c.by}</td><td>${c.pub ? `<span class="num muted">${c.pub}차</span>` : '<span class="caption muted">미공표</span>'}</td></tr>`).join('') || '<tr class="er none"><td colspan="10" class="caption muted u-tc u-p-32">조건에 맞는 변경이 없습니다</td></tr>';
+    const pubN = c => c.act === '공표' ? +(c.pub || (String(c.item).match(/(\d+)차/) || [])[1] || 0) : 0;
+    const mark = c => HL && (hitRow ? pubN(c) === HL : c.act !== '공표' && +c.pub === HL);
+    $('cb').innerHTML = R.map(c => `<tr${pubN(c) ? ` id="pub-${pubN(c)}"` : ''}${mark(c) ? ` class="sel" data-hl="1"${hitRow ? ' aria-current="true"' : ''}` : ''}><td class="mono">${c.at}</td><td><b>${c.item}</b>${c.itemId ? `<div class="caption faint mono">${c.itemId}${useOf(c) ? ` · 사용처 ${useOf(c)}` : ''}</div>` : ''}</td><td>${c.kind}</td><td><span class="badge ${c.act === '공표' ? 'b-violet' : c.act.includes('미사용') ? '' : 'b-success'}">${c.act}</span></td><td class="caption">${originOf(c)}</td><td class="mono">${c.ver}</td><td class="caption wrap">${fieldHtml(c)}</td><td>${c.doc && c.doc !== '—' ? `<a class="mono" href="approvals.html?doc=${c.doc}">${c.doc}</a>` : '—'}</td><td class="caption">${c.by}</td><td>${c.pub ? `<span class="num muted">${c.pub}차</span>` : '<span class="caption muted">미공표</span>'}</td></tr>`).join('') || '<tr class="er none"><td colspan="10" class="caption muted u-tc u-p-32">조건에 맞는 변경이 없습니다</td></tr>';
   }
   document.querySelector('.toolbar').addEventListener('click', e => { const c = e.target.closest('[data-a]'); if (!c) return; document.querySelectorAll('[data-a]').forEach(x => x.classList.toggle('on', x === c)); act = c.dataset.a; draw(); });
   $('per').onchange = draw; $('qq').oninput = draw;
   $('b-xls').onclick = () => toast(`사전변경내역_${$('per').selectedOptions[0].text.replace(/[: ]/g, '')}.xlsx — ${L().length}건 · 필드별 전후 · 신청번호 · 모델 사용처 수`, 'info');
   draw();
+  if (HL) { const r = document.getElementById('pub-' + HL) || document.querySelector('#cb tr[data-hl]'); if (r) { r.scrollIntoView({ block: 'center' }); r.tabIndex = -1; r.focus({ preventScroll: true }); } }
 };
 </script>
 </body>

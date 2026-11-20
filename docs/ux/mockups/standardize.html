@@ -26,7 +26,10 @@
     <h1>표준 맞추기</h1>
     
     <span class="badge" id="scope"></span>
-    <div class="actions"><span class="caption muted" id="analyzed"></span><a class="btn sm" id="to-wiz" href="term-wizard.html" title="이름을 단어로 나눠 대안을 비교하고 용어 등록·모델 반영까지 단계별로 진행">용어 자동분석</a><button class="btn sm" id="reanalyze" data-busy="800">다시 분석</button></div>
+    <div class="actions"><button class="btn sm" id="reanalyze" data-busy="800">다시 분석</button><span class="u-flex u-gap-8 u-ai-c"><span class="caption muted">미등록 단어 · 용어가 많을 때 한 번에 만듭니다</span><a class="btn sm ghost" id="to-wiz" href="term-wizard.html" title="이름을 단어로 나눠 대안을 비교하고 용어 등록·모델 반영까지 단계별로 진행(용어 자동분석)">용어 일괄 만들기(마법사)</a></span></div>
+  </div>
+  <div class="pad u-pb-0" id="ctx" hidden>
+    <div class="banner info"><i data-ic=info></i><div class="grow" id="ctx-t"></div><a class="btn sm" id="ctx-back" href="model.html">모델에서 보기</a></div>
   </div>
   <div class="pad u-pb-0" id="from-import" hidden>
     <div class="banner info"><i data-ic=info></i><div class="grow" id="from-import-t"></div></div>
@@ -82,9 +85,12 @@ window.pageInit = function () {
   const AREA = getModels()[q.get('area')] ? q.get('area') : defArea();
   const LK = modelLock(AREA), VER = LK.model.ver;
   $('crumb-area').textContent = `${LK.model.name} · v${VER}`;
-  $('back').href = `model.html?area=${AREA}`;
-  $('to-wiz').href = `term-wizard.html?area=${AREA}&from=standardize`;
-  $('analyzed').textContent = `분석 ${nowStr()} · 사전 기준 현재(제정 ${getPub().cha}차 + 승인 반영분)`;
+  // context from the model (D4): &e=<entity id>&a=<attribute name> → that row is highlighted; every way back focuses the entity
+  const CE = q.get('e') || '', CA = q.get('a') || '';
+  const backUrl = `model.html?area=${AREA}${CE ? '&focus=' + encodeURIComponent(CE) : ''}`;
+  $('back').href = backUrl;
+  $('to-wiz').href = `term-wizard.html?area=${AREA}&from=standardize${CE ? '&e=' + encodeURIComponent(CE) + (CA ? '&a=' + encodeURIComponent(CA) : '') : ''}`;
+  const ANALYZED = `분석 ${nowStr()} · 사전 기준 현재(제정 ${getPub().cha}차 + 승인 반영분)`;   // shown at the right of the filter row (the header keeps room for the title and the wizard entry)
   if (q.get('from') === 'import') { const imp = J2('dbm-import-last'); $('from-import').hidden = false; $('from-import-t').innerHTML = `<b>DDL 가져오기가 끝나 자동으로 열었습니다.</b> ${imp && imp.area === AREA ? `가져온 ${imp.tables}개 테이블·${imp.cols}개 컬럼을 ‘${LK.model.name}’ 영역 v${VER}로 만들고 분석했습니다.` : '가져온 구조를 분석했습니다.'}`; }
   function J2(k) { try { return JSON.parse(dbmStore.get(k, 'null')); } catch (e) { return null; } }
 
@@ -128,6 +134,7 @@ window.pageInit = function () {
   // local decisions made on this screen (예외·비대상) before [적용] — undoable, then handed to the model
   const local = {}; const handoff = { ex: [], na: [] };
   const ST = { ok: ['b-success', '표준', 'ok', 'row-success'], okapply: ['b-success', '사전에 있음', 'comb', 'row-success'], comb: ['b-info', '조합 가능', 'comb', 'row-info'], req: ['b-info', '신청 중', 'req', 'row-info'], unreg: ['b-warning', '미등록 단어', 'unreg', 'row-warning'], ex: ['b-ex', '<i data-ic=flag data-s=12></i>예외', 'ex', ''], na: ['', '비대상', 'na', 'row-mute'] };
+  const TODO = ['comb', 'req', 'unreg'];   // 할 일 = 조합 가능 · 신청 중 · 미등록 단어 (D1)
   const effective = r => local[r.key] ? Object.assign({}, r, local[r.key]) : r;
   const procOpts = r => r.st === 'comb' ? (r.sus ? ['분해 확인 후 용어 신청', '예외로 유지'] : ['용어 신청 묶음', '예외로 유지']) : r.st === 'okapply' ? ['용어 적용'] : r.st === 'unreg' ? (r.dx[0] === 'W-PEND' ? ['선행 승인 대기', '예외로 유지'] : ['후보 등록', '예외로 유지']) : r.st === 'req' ? (r.toWait ? ['신청 중 용어로 맞춤', '예외로 유지'] : []) : [];
   const selectable = r => ['comb', 'okapply', 'unreg'].includes(r.st) || (r.st === 'req' && r.toWait);
@@ -150,20 +157,20 @@ window.pageInit = function () {
   function draw() {
     const prev = {}; document.querySelectorAll('#rows tr[data-i]').forEach(tr => { const c = tr.querySelector('input[type=checkbox]'), s = tr.querySelector('select'); prev[tr.dataset.i] = { c: c ? c.checked : null, s: s ? s.value : null }; });
     $('rows').innerHTML = rows.map((r0, i) => { const r = effective(r0); const s = ST[r.st]; const can = selectable(r) && !readOnly; const opts = can ? procOpts(r) : [];
-      return `<tr class="${s[3]}" data-f="${s[2]}" data-i="${i}"><td><input type="checkbox" ${can ? (['comb', 'okapply', 'req'].includes(r.st) ? 'checked' : '') : 'disabled'} aria-label="${r.ent}.${r.a} 선택"></td><td><span class="badge ${s[0]}">${s[1]}</span></td><td>${r.ent}${r.entRow ? ' <span class="muted">· 테이블명</span>' : ''}</td><td${r.now && r.now !== r.a ? ` title="원래 이름 ${r.a}"` : ''}>${two(r.now || r.a, r.pr && r.pr.term, r.st === 'unreg' ? `<span class="faint">‘${r.word}’ 미등록</span>` : '')}</td><td class="mono">${two(r.cur, r.pr && r.pr.phys)}</td><td class="mono">${r.pr && r.pr.dom ? r.pr.dom : ''}</td><td>${opts.length > 1 ? `<select class="input" style="width:170px">${opts.map(o => `<option>${o}</option>`).join('')}</select>` : opts.length ? `<span class="caption">${opts[0]}${r.wait ? ` · <a href="approvals.html?doc=${r.wait}">${r.wait}</a>` : ''}</span>` : r.why ? `<span class="caption">사유: ${r.why}</span>` : '<span class="caption muted">변경 없음</span>'}</td><td class="dx"><b>${r.dx[0]}</b> ${r.dx[1]}</td></tr>`; }).join('') || '<tr class="er first"><td colspan="8" class="caption muted" style="text-align:center;padding:40px">이 업무 영역에 분석할 속성이 없습니다.</td></tr>';
+      return `<tr class="${s[3]}" data-f="${s[2]}${TODO.includes(s[2]) ? ' todo' : ''}" data-i="${i}"><td><input type="checkbox" ${can ? (['comb', 'okapply', 'req'].includes(r.st) ? 'checked' : '') : 'disabled'} aria-label="${r.ent}.${r.a} 선택"></td><td><span class="badge ${s[0]}">${s[1]}</span></td><td>${r.ent}${r.entRow ? ' <span class="muted">· 테이블명</span>' : ''}</td><td${r.now && r.now !== r.a ? ` title="원래 이름 ${r.a}"` : ''}>${two(r.now || r.a, r.pr && r.pr.term, r.st === 'unreg' ? `<span class="faint">‘${r.word}’ 미등록</span>` : '')}</td><td class="mono">${two(r.cur, r.pr && r.pr.phys)}</td><td class="mono">${r.pr && r.pr.dom ? r.pr.dom : ''}</td><td>${opts.length > 1 ? `<select class="input" style="width:170px">${opts.map(o => `<option>${o}</option>`).join('')}</select>` : opts.length ? `<span class="caption">${opts[0]}${r.wait ? ` · <a href="approvals.html?doc=${r.wait}">${r.wait}</a>` : ''}</span>` : r.why ? `<span class="caption">사유: ${r.why}</span>` : '<span class="caption muted">변경 없음</span>'}</td><td class="dx"><b>${r.dx[0]}</b> ${r.dx[1]}</td></tr>`; }).join('') || '<tr class="er first"><td colspan="8" class="caption muted" style="text-align:center;padding:40px">이 업무 영역에 분석할 속성이 없습니다.</td></tr>';
     // chip counts from the same rows (CL12-40)
     const cnt = k => rows.filter(r => ST[effective(r).st][2] === k).length;
     const cur = (document.querySelector('#chips .chip.on') || {}).dataset;
-    $('chips').innerHTML = [['', '전체', rows.length], ['ok', '표준', cnt('ok')], ['comb', '조합 가능', cnt('comb')], ['req', '신청 중', cnt('req')], ['unreg', '미등록 단어', cnt('unreg')], ['ex', '예외', cnt('ex')], ['na', '비대상', cnt('na')]].map(([k, l, n]) => `<span class="chip ${(cur ? cur.filter : '') === k ? 'on' : ''}" data-group="s" data-filter="${k}">${l} <span class="n">${n}</span></span>`).join('') + '<span class="grow"></span><span class="caption muted">작업본·사전·진행 중 신청으로 계산 · 상태별로 골라 한 번에 처리</span>';
+    $('chips').innerHTML = [['', '전체', rows.length], ['todo', '할 일(미준수)', TODO.reduce((n, k) => n + cnt(k), 0)], ['ok', '표준', cnt('ok')], ['comb', '조합 가능', cnt('comb')], ['req', '신청 중', cnt('req')], ['unreg', '미등록 단어', cnt('unreg')], ['ex', '예외', cnt('ex')], ['na', '비대상', cnt('na')]].map(([k, l, n]) => `<span class="chip ${(cur ? cur.filter : '') === k ? 'on' : ''}" data-group="s" data-filter="${k}">${l} <span class="n">${n}</span></span>`).join('') + `<span class="grow"></span><span class="caption muted" id="analyzed" title="작업본·사전·진행 중 신청으로 계산 · 상태별로 골라 한 번에 처리">${ANALYZED}</span>`;
     // what the user had chosen stays chosen (only rows whose state changed are re-decided)
     document.querySelectorAll('#rows tr[data-i]').forEach(tr => { const p = prev[tr.dataset.i]; if (!p) return; const c = tr.querySelector('input[type=checkbox]'), s = tr.querySelector('select'); if (c && !c.disabled && p.c != null) c.checked = p.c; if (s && p.s != null && [...s.options].some(o => o.value === p.s)) s.value = p.s; });
-    if (cur && cur.filter) document.querySelectorAll('.scroll tbody tr').forEach(tr => { tr.style.display = (tr.dataset.f || '') === cur.filter ? '' : 'none'; });
+    if (cur && cur.filter) document.querySelectorAll('.scroll tbody tr').forEach(tr => { tr.style.display = (tr.dataset.f || '').split(' ').includes(cur.filter) ? '' : 'none'; });
     $('scope').textContent = `범위: 영역 전체 · 테이블 ${model.E.filter(e => !e.ref).length}개 · 속성 ${model.E.reduce((n, e) => n + (e.ref ? 0 : e.a.length), 0)}개`;
     sum();
   }
   // permission & lock: same judgement as the model screen
   const canStd = can('model.edit', { area: AREA }); const readOnly = !canStd || LK.state !== 'edit';
-  if (readOnly) document.querySelector('.page-header').insertAdjacentHTML('afterend', `<div class="pad u-pb-0"><div class="banner info"><i data-ic=info></i><div class="grow"><b>조회 전용</b> — ${!canStd ? (ME.has('modeler') ? `내 담당 시스템에 ${josa(sysOfArea(AREA), '이/가')} 없어 조회만 할 수 있습니다. <a href="mypage.html?req=sys&sys=${encodeURIComponent(sysOfArea(AREA))}">담당 시스템 추가 요청</a>` : '표준 맞추기는 모델러 역할만 할 수 있습니다.') : `${LK.doc ? LK.doc.id : ''} ${LK.state === 'review' ? '확정 결재 중' : '확정본'}이라 고칠 수 없습니다.`}</div><a class="btn sm" href="model.html?area=${AREA}">모델로</a></div></div>`);
+  if (readOnly) document.querySelector('.page-header').insertAdjacentHTML('afterend', `<div class="pad u-pb-0"><div class="banner info"><i data-ic=info></i><div class="grow"><b>조회 전용</b> — ${!canStd ? (ME.has('modeler') ? `내 담당 시스템에 ${josa(sysOfArea(AREA), '이/가')} 없어 조회만 할 수 있습니다. <a href="mypage.html?req=sys&sys=${encodeURIComponent(sysOfArea(AREA))}">담당 시스템 추가 요청</a>` : '표준 맞추기는 모델러 역할만 할 수 있습니다.') : `${LK.doc ? LK.doc.id : ''} ${LK.state === 'review' ? '확정 결재 중' : '확정본'}이라 고칠 수 없습니다.`}</div><a class="btn sm" href="${backUrl}">모델로</a></div></div>`);
   // redo after a rejected/withdrawn term request keeps its reason and shows the reviewer's comment
   const redoDoc = q.get('redo') ? getDocs().find(x => x.id === q.get('redo') && x.kind === 'std') : null;
   if (redoDoc && ['rejected', 'withdrawn'].includes(redoDoc.step)) { const last = (redoDoc.hist || []).slice(-1)[0]; document.querySelector('.page-header').insertAdjacentHTML('afterend', `<div class="pad u-pb-0"><div class="banner warning"><i data-ic=warn></i><div class="grow"><b>${redoDoc.id} 보완해서 다시 적용</b> — ${STEP_NAME[redoDoc.step]}${last && last.why ? ` · 의견: ${last.why}` : ''}. 그때 신청한 용어: ${(redoDoc.items || []).map(i => i.name).join(', ')}. 다시 적용하면 <b>새 신청번호</b>가 만들어집니다.</div></div></div>`); $('ap-why').value = redoDoc.reason || ''; }
@@ -248,10 +255,24 @@ window.pageInit = function () {
     // candidates are registered for real, with their location (CX13-03)
     s.cand.forEach(([r]) => addCandidate({ t: '단어', name: r.word, abbr: '' }, { area: AREA, e: r.e, ent: r.ent, attr: r.a }));
     try { sessionStorage.setItem('dbm-apply', JSON.stringify({ area: AREA, ver: VER, rows: rowsOut, ex: handoff.ex, na: handoff.na, doc: docId, req: s.req.length, cand: s.cand.length })); } catch (e) {}
-    location.href = `model.html?area=${AREA}`;
+    location.href = backUrl;
   };
   draw();
-  if (q.get('f')) { const chip = document.querySelector(`#chips .chip[data-filter="${q.get('f')}"]`); if (chip) chip.click(); }
+  // ?f= opens a filter (D1): f=todo with no to-do rows falls back to 전체 and says so
+  const F = q.get('f');
+  if (F) { const chip = document.querySelector(`#chips .chip[data-filter="${F}"]`); const n = chip ? +((chip.querySelector('.n') || {}).textContent || 0) : 0;
+    if (chip && (n > 0 || F !== 'todo')) chip.click(); else if (F === 'todo') setTimeout(() => toast('남은 미준수가 없어 전체 목록을 보여 줍니다', 'info'), 200); }
+  // model context (D4): highlight and scroll to the row; a filter that hides it gives way to 전체
+  if (CE) {
+    const ce = model.E.find(x => x.id === CE); const all = trs().filter(tr => (rows[+tr.dataset.i] || {}).e === CE);
+    const hit = all.filter(tr => !CA || rows[+tr.dataset.i].a === CA || rows[+tr.dataset.i].now === CA);
+    const pick = hit.length ? hit : all;
+    if (pick.length && pick.some(tr => !visible(tr))) { const ch = document.querySelector('#chips .chip[data-filter=""]'); if (ch) ch.click(); }
+    pick.forEach(tr => tr.classList.add('thl'));
+    if (pick.length) setTimeout(() => pick[0].scrollIntoView({ block: 'center' }), 0);
+    $('ctx').hidden = false; $('ctx-back').href = backUrl;
+    $('ctx-t').innerHTML = ce ? `${q.get('from') === 'ddl' ? 'DDL 출력 전 점검의' : '모델의'} <b>${ce.n}${CA && CA !== ce.n ? '.' + CA : ''}</b>에서 왔습니다 — ${pick.length ? `해당 행 ${pick.length}개를 표시했습니다.` : '이 항목은 맞출 것이 없습니다(표준 · 예외 · 비대상).'}` : '모델에서 고른 엔터티를 찾지 못했습니다 — 전체 목록을 보여 줍니다.';
+  }
 };
 </script>
 </body>

@@ -58,7 +58,7 @@
       <div class="rp-foot"><button class="btn" data-toast="비교 결과를 엑셀로 내려받았습니다" data-toast-type="info">엑셀</button><span class="grow"></span><button class="btn primary" data-toast="차이 4건으로 ALTER 스크립트를 만들었습니다" data-toast-type="info">ALTER 스크립트 만들기</button></div>
     </aside>
     <aside class="rpanel open" id="pn-gateb">
-      <div class="rp-head"><h2>점검 결과</h2><div class="caption muted">게이트 B · 출력 직전</div></div>
+      <div class="rp-head"><h2>출력 전 점검</h2><div class="caption muted">내려받기 · 복사 직전에 확인합니다</div></div>
       <div class="rp-body">
         <div id="gb-body"></div>
         <div class="caption muted u-mt-8">문법 오류는 차단, 표준 위반은 경고 + 예외 사유로 진행합니다.</div>
@@ -100,10 +100,11 @@ window.pageInit = function () {
     const target = scope === 'pick' ? ents.filter(e => picked.has(e.id)) : scope === 'sys' ? [] : ents;
     const cm = $('o-cm').checked, fk = $('o-fk').checked, alter = $('preset').value === 'alter';
     // gate B from the actual attributes: missing physical name / type blocks, non-standard is a warning (with exception reason) — CX12-31
-    const block = [], warn = [];
-    target.forEach(e => { if (e.p === '—' || !ascii(e.p)) block.push(`${e.n}: 테이블 물리명 ${e.p === '—' ? '없음' : '무효'}`); e.a.forEach(a => { if (a.edit) return; if (a.p === '—' || !ascii(a.p)) block.push(`${e.n}.${a.n}: 물리명 ${a.p === '—' ? '없음' : '무효(' + a.p + ')'}`); else if (a.t === '—') block.push(`${e.n}.${a.n}: 타입 없음`); else if (a.s === 'ex') warn.push(`${e.n}.${a.n}: 비표준 · 예외 사유 있음`); else if (['comb', 'unreg'].includes(a.s)) warn.push(`${e.n}.${a.n}: 미준수`); }); });
-    if (scope === 'sys') block.push('시스템 전체는 조회용입니다 — 업무 영역별로 출력하세요');
-    if (!target.length && scope !== 'sys') block.push('출력할 테이블이 없습니다 — 범위를 고르세요');
+    // each finding keeps where it is (entity · attribute) so the row can open the model or standardize there (D8)
+    const block = [], warn = [], F = (t, e, a, std) => ({ t, e, a, std });
+    target.forEach(e => { if (e.p === '—' || !ascii(e.p)) block.push(F(`${e.n}: 테이블 물리명 ${e.p === '—' ? '없음' : '무효'}`, e, null, true)); e.a.forEach(a => { if (a.edit) return; if (a.p === '—' || !ascii(a.p)) block.push(F(`${e.n}.${a.n}: 물리명 ${a.p === '—' ? '없음' : '무효(' + a.p + ')'}`, e, a, true)); else if (a.t === '—') block.push(F(`${e.n}.${a.n}: 타입 없음`, e, a, false)); else if (a.s === 'ex') warn.push(F(`${e.n}.${a.n}: 비표준 · 예외 사유 있음`, e, a, false)); else if (['comb', 'unreg'].includes(a.s)) warn.push(F(`${e.n}.${a.n}: 미준수`, e, a, true)); }); });
+    if (scope === 'sys') block.push(F('시스템 전체는 조회용입니다 — 업무 영역별로 출력하세요'));
+    if (!target.length && scope !== 'sys') block.push(F('출력할 테이블이 없습니다 — 범위를 고르세요'));
     const lines = [];
     lines.push(`<span class="cm">-- NeoDB · ${curSys().name} / ${L.model.name} · ${label} · ${alter ? `변경분(ALTER) — v${baseVer} 확정본 대비` : '신규 생성(CREATE)'}</span>`);
     if (alter && !prevDoc) lines.push(`<span class="cm">-- 비교할 v${baseVer} 확정본 사본이 없어 전체를 CREATE로 냅니다</span>`);
@@ -129,19 +130,30 @@ window.pageInit = function () {
     if (fk && !alter) src.R.forEach(r => { const p = src.E.find(x => x.id === r.f), c = ents.find(x => x.id === r.t); if (!p || !c || !target.includes(c)) return; const f = fkOf(r, src.E);
       if (f.st === 'ok') lines.push(`<span class="kw">ALTER TABLE</span> ${SCH}.${esc(c.p)} <span class="kw">ADD CONSTRAINT</span> ${esc(f.name)} <span class="kw">FOREIGN KEY</span> (${f.cols.join(', ')}) <span class="kw">REFERENCES</span> ${SCH}.${esc(p.p)} (${f.pcols.join(', ')})${r.del === 'cascade' ? ' <span class="kw">ON DELETE CASCADE</span>' : r.del === 'setnull' ? ' <span class="kw">ON DELETE SET NULL</span>' : ''};`);   // 막기 = no clause (Oracle NO ACTION)
       else if (f.st === 'ex') lines.push(`<span class="cm">-- FK 제외: ${esc(nm(c))} → ${esc(nm(p))} · ${esc(f.why)}</span>`);
-      else if (f.st === 'miss') { lines.push(`<span class="cm">-- <i data-ic=warn data-s=12></i> FK 누락: ${esc(nm(c))} → ${esc(nm(p))} · ${esc(f.why)}</span>`); warn.push(`${c.n} → ${p.n}: FK 누락 · ${f.why}`); } });
+      else if (f.st === 'miss') { lines.push(`<span class="cm">-- <i data-ic=warn data-s=12></i> FK 누락: ${esc(nm(c))} → ${esc(nm(p))} · ${esc(f.why)}</span>`); warn.push(F(`${c.n} → ${p.n}: FK 누락 · ${f.why}`, c, null, false)); } });
     $('sql').innerHTML = lines.map((l, i) => `<div class="ln ${l.includes('-- 오류:') ? 'warn' : ''}"><i>${i + 1}</i>${l}</div>`).join('');
     $('gb-banner').className = 'banner ' + (block.length ? 'danger' : warn.length ? 'warning' : 'success');
-    $('gb-text').innerHTML = `<b>게이트 B: 차단 ${block.length} · 경고 ${warn.length}.</b> ${block.length ? '물리명·타입이 없는 컬럼이 있어 출력이 막힙니다 — 모델에서 표준 맞추기 후 다시 여세요.' : warn.length ? '표준 위반은 경고로 남고 예외 사유와 함께 출력합니다.' : '문제 없음.'}`;
-    $('gb-body').innerHTML = `<div class="mline"><span><b>${target.length}</b>테이블</span><span><b>${src.R.length}</b>관계</span></div>
-      <table class="tbl"><thead><tr><th>구분</th><th>항목</th></tr></thead><tbody>${block.map(x => `<tr><td><span class="badge b-danger">차단</span></td><td class="caption">${x}</td></tr>`).join('')}${warn.map(x => `<tr><td><span class="badge b-warning">경고</span></td><td class="caption">${x}</td></tr>`).join('')}${!block.length && !warn.length ? '<tr class="er"><td colspan="2" class="caption muted">문제 없음</td></tr>' : ''}</tbody></table>
+    $('gb-text').innerHTML = `<b>출력 전 점검: 차단 ${block.length} · 경고 ${warn.length}.</b> ${block.length ? '물리명·타입이 없는 컬럼이 있어 내려받기가 막힙니다 — 오른쪽 점검 행의 [모델에서 열기] · [표준 맞추기]로 고치세요.' : warn.length ? '표준 위반은 경고로 남고 예외 사유와 함께 출력합니다.' : '문제 없음.'}`;
+    // D8: every finding links to where it is fixed (the model at that entity · standardize at that row); read-only copies (snapshots) link to the model only
+    const fixLinks = x => !x.e ? '' : `<div class="u-flex u-gap-8 u-mt-4"><a class="btn sm" href="model.html?area=${AREA}&focus=${encodeURIComponent(x.e.id)}">모델에서 열기</a>${x.std && !snapDoc ? `<a class="btn sm ghost" href="standardize.html?area=${AREA}&f=todo&from=ddl&e=${encodeURIComponent(x.e.id)}${x.a ? '&a=' + encodeURIComponent(x.a.n) : ''}">표준 맞추기</a>` : ''}</div>`;
+    const fRow = (x, cls, lab) => `<tr><td><span class="badge ${cls}">${lab}</span></td><td class="caption wrap">${esc(x.t)}${fixLinks(x)}</td></tr>`;
+    $('gb-body').innerHTML = `<div class="mline"><span><b>${target.length}</b>테이블</span><span><b>${src.R.length}</b>관계</span><span><b>${block.length}</b>차단</span><span><b>${warn.length}</b>경고</span></div>
+      <table class="tbl"><thead><tr><th>구분</th><th>항목 · 고칠 곳</th></tr></thead><tbody>${block.map(x => fRow(x, 'b-danger', '차단')).join('')}${warn.map(x => fRow(x, 'b-warning', '경고')).join('')}${!block.length && !warn.length ? '<tr class="er"><td colspan="2" class="caption muted">문제 없음</td></tr>' : ''}</tbody></table>
       <div class="caption muted u-mt-8">문법·물리명 누락은 차단, 표준 위반은 경고 + 예외 사유로 진행합니다.</div>`;
     ['copy', 'dl'].forEach(id => { $(id).disabled = !!block.length; });
   }
   $('scope-chips').addEventListener('click', e => { const c = e.target.closest('[data-sc]'); if (!c) return; scope = c.dataset.sc; draw(); });
   ['preset', 'o-cm', 'o-fk'].forEach(id => $(id).onchange = draw);
-  $('copy').onclick = () => { const txt = [...$('sql').querySelectorAll('.ln')].map(l => { const c = l.cloneNode(true); const i = c.querySelector('i'); if (i) i.remove(); return c.textContent; }).join('\n'); (navigator.clipboard ? navigator.clipboard.writeText(txt) : Promise.reject()).then(() => toast(`SQL ${txt.split('\n').length}줄을 클립보드에 복사했습니다`, 'success'), () => window.prompt('복사해서 쓰세요', txt)); };
-  $('dl').onclick = () => toast(`${SCH}_${AREA}_${label.split(' ')[0]}.sql 내려받기 (UTF-8)`, 'success');
+  const sqlText = () => [...$('sql').querySelectorAll('.ln')].map(l => { const c = l.cloneNode(true); const i = c.querySelector('i'); if (i) i.remove(); return c.textContent; }).join('\n');
+  $('copy').onclick = () => { const txt = sqlText(); (navigator.clipboard ? navigator.clipboard.writeText(txt) : Promise.reject()).then(() => toast(`SQL ${txt.split('\n').length}줄을 클립보드에 복사했습니다`, 'success'), () => window.prompt('복사해서 쓰세요', txt)); };
+  // D9: a real UTF-8 .sql file made from the preview text (BOM so Windows editors read Korean comments correctly)
+  $('dl').onclick = () => {
+    if ($('dl').disabled) return;
+    const txt = sqlText(), name = `${SCH}_${AREA}_${label.split(' ')[0]}${$('preset').value === 'alter' ? '_ALTER' : ''}.sql`;
+    const url = URL.createObjectURL(new Blob(['﻿' + txt + '\n'], { type: 'application/sql;charset=utf-8' }));
+    const a = document.createElement('a'); a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000);
+    toast(`${name}을(를) 내려받았습니다 — ${txt.split('\n').length}줄 · UTF-8`, 'success');
+  };
   draw();
   window.addEventListener('dbm-tree-select', ev => {
     const d = ev.detail; if (d.area !== AREA || !d.id) return; const e = src.E.find(x => x.id === d.id); if (!e) return; ev.preventDefault();

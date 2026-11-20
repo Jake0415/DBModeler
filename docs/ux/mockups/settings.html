@@ -29,6 +29,14 @@
   .pwbox { font-size:20px; letter-spacing:1px; padding:12px; border-radius:var(--r-md); background:var(--ds-gray-100); text-align:center; user-select:all; }
   .usum:empty { display:none; }
   .dz { margin-top:16px; padding-top:12px; border-top:1px solid var(--ds-gray-400); }
+  /* numeric settings: allowed range + unit next to the input, inline error — no silent correction (E4) */
+  .numrow { align-items:flex-start; }
+  .numf { display:inline-flex; flex-direction:column; gap:2px; }
+  .numf .n3 { width:72px; }
+  .numf .rng { font-size:12px; color:var(--fg-3); }
+  .numf .ferr { font-size:12px; color:var(--danger-deep); }
+  .numf .ferr:empty { display:none; }
+  .numf .input[aria-invalid="true"] { border-color:var(--danger); box-shadow:0 0 0 1px var(--danger); }
 </style>
 </head>
 <body data-page="settings">
@@ -50,7 +58,10 @@
   <div class="pane on set-wrap" data-pane="org">
     <div class="set-row"><div class="l"><b>기관</b><span>상단 바와 산출물에 표시</span></div><div class="field-row"><div class="field"><label for="org-name">기관명</label><input class="input" id="org-name" value="한국데이터진흥원"></div><div class="field"><label for="org-dict">기관 사전 이름</label><input class="input" id="org-dict" value="KDA 표준사전"></div></div></div>
     <div class="set-row"><div class="l"><b>사전 신청 최종 승인</b><span>켜면 DA 승인 뒤 기관 담당자 승인을 거쳐 반영</span><span class="lastchg" data-last="결재선"></span></div><div class="flex"><label class="flex"><input type="checkbox" id="fin-dict"> <span id="fin-dict-t"></span></label></div></div>
-    <div class="set-row"><div class="l"><b>운영 목표</b><span>홈 현황·통계의 목표선과 ‘기한 넘김’ 기준</span><span class="lastchg" data-last="운영 목표"></span></div><div class="flex u-gap-16"><label class="flex">목표 준수율 <input class="input mono" id="org-goal" type="number" min="50" max="100" style="width:70px;">%</label><label class="flex">결재 기한 <input class="input mono" id="org-sla" type="number" min="1" max="30" style="width:60px;">일</label></div></div>
+    <div class="set-row"><div class="l"><b>운영 목표</b><span>홈 현황·통계의 목표선과 ‘기한 넘김’ 기준</span><span class="lastchg" data-last="운영 목표"></span></div><div>
+      <div class="flex u-gap-16 u-wrap numrow"><div class="numf"><label class="flex" for="org-goal">목표 준수율 <input class="input mono n3" id="org-goal" type="number" min="50" max="100" step="1" aria-describedby="org-goal-r org-goal-e">%</label><span class="rng" id="org-goal-r">허용 50~100 · 단위 %</span><span class="ferr" id="org-goal-e" role="alert"></span></div>
+        <div class="numf"><label class="flex" for="org-sla">결재 기한 <input class="input mono n3" id="org-sla" type="number" min="1" max="30" step="1" aria-describedby="org-sla-r org-sla-e">일</label><span class="rng" id="org-sla-r">허용 1~30 · 단위 일(달력 기준)</span><span class="ferr" id="org-sla-e" role="alert"></span></div></div>
+      <div class="caption muted u-mt-4">저장하면 <b>다음 신청부터 적용</b>됩니다. 이미 진행 중인 결재의 기한은 바뀌지 않습니다.</div></div></div>
     <div class="set-row"><div class="l"><b>결재선 템플릿</b><span>신청자는 단계를 지울 수 없고 참조자만 추가</span></div>
       <div>
         <div class="card u-mb-12">
@@ -66,17 +77,8 @@
           <div class="caption muted u-mt-8">신청 조건: 미준수 0건(사유 있는 예외 제외)</div>
         </div>
       </div></div>
-    <div class="set-row"><div class="l"><b>도메인그룹</b><span>도메인을 묶는 분류. 사전 필터·도메인 신청·엑셀 가져오기에 쓰임</span></div>
-      <div>
-        <table class="tbl"><thead><tr><th>그룹</th><th>설명</th><th class="num">도메인</th><th>범위</th><th></th></tr></thead><tbody>
-          <tr><td><b>날짜</b></td><td class="caption">연월일·일시·시각</td><td class="num">6</td><td><span class="badge b-common">공통</span></td><td class="faint">공통 사전에서만 수정</td></tr>
-          <tr><td><b>번호</b></td><td class="caption">ID·순번·번호</td><td class="num">9</td><td><span class="badge b-common">공통</span></td><td class="faint">공통 사전에서만 수정</td></tr>
-          <tr><td><b>명칭</b></td><td class="caption">명·내용·설명</td><td class="num">7</td><td><span class="badge b-common">공통</span></td><td class="faint">공통 사전에서만 수정</td></tr>
-          <tr><td><b>코드</b></td><td class="caption">코드·여부·구분</td><td class="num">8</td><td><span class="badge b-org">기관</span></td><td><a href="#" data-toast="도메인그룹 수정은 사전 신청과 같은 결재선을 거칩니다" data-toast-type="info">수정</a></td></tr>
-          <tr><td><b>금액·수량</b></td><td class="caption">금액·수·율</td><td class="num">5</td><td><span class="badge b-org">기관</span></td><td><a href="#" data-toast="도메인그룹 수정은 사전 신청과 같은 결재선을 거칩니다" data-toast-type="info">수정</a></td></tr>
-        </tbody></table>
-        <div class="flex u-mt-8"><button class="btn sm" data-toast="도메인그룹 추가 신청을 만들었습니다 — DA 승인 후 반영" data-toast-type="info"><i data-ic=plus></i>그룹 추가 신청</button><span class="caption muted">도메인이 있는 그룹은 삭제할 수 없고 ‘미사용’만 가능</span></div>
-      </div></div>
+    <div class="set-row"><div class="l"><b>도메인그룹 · 분류</b><span>사전 필터·도메인 신청·엑셀 가져오기에 쓰임</span></div>
+      <div><a href="domain-groups.html">도메인그룹 · 분류는 사전 › 도메인 그룹 · 분류에서 관리합니다</a> <span class="caption muted">(그룹은 DA 직접 관리 · 분류는 품의)</span></div></div>
     <div class="set-row"><div class="l"><b>자기 승인</b><span>역할을 겸한 사용자가 자기 신청을 승인할 때</span></div><div>허용 · <b>사유 필수</b> · 감사 로그에 ‘자기 승인’ 표시</div></div>
     <div class="set-row"><div class="l"><b>메일 알림</b><span>결재선 담당자에게만 발송</span></div>
       <div><div class="field-row"><div class="field"><label for="smtp-host">SMTP 서버</label><input class="input mono" id="smtp-host" value="mail.kda.go.kr:587"></div><div class="field"><label for="smtp-from">발신 주소</label><input class="input mono" id="smtp-from" value="neodb@kda.go.kr"></div></div>
@@ -157,11 +159,11 @@
     <div class="flex u-mb-12"><span class="chip on" data-group="rk">단어</span><span class="chip" data-group="rk">도메인</span><span class="chip" data-group="rk">용어</span><span class="chip" data-group="rk">코드</span></div>
     <table class="tbl"><thead><tr><th>필드</th><th>필수</th><th>최대 길이</th><th>허용 문자</th><th>위반 시</th></tr></thead><tbody>
       <tr><td>단어명</td><td><i data-ic=check></i><span class="sr-only">필수</span></td><td class="mono">—</td><td>한글·영문·숫자</td><td><span class="badge b-danger">차단</span></td></tr>
-      <tr><td>단어 영문약어명</td><td><i data-ic=check></i><span class="sr-only">필수</span></td><td class="mono"><input class="input mono" id="pol-wd" style="width:60px;" value="6">자</td><td>영문 대문자·숫자</td><td><span class="badge b-danger">차단</span></td></tr>
+      <tr><td><label for="pol-wd">단어 영문약어명</label></td><td><i data-ic=check></i><span class="sr-only">필수</span></td><td><span class="numf"><span class="flex mono"><input class="input mono n3" id="pol-wd" type="number" min="2" max="10" step="1" value="6" aria-describedby="pol-wd-r pol-wd-e">자</span><span class="rng" id="pol-wd-r">허용 2~10 · 단위 자</span><span class="ferr" id="pol-wd-e" role="alert"></span></span></td><td>영문 대문자·숫자</td><td><span class="badge b-danger">차단</span></td></tr>
       <tr><td>영문명</td><td></td><td class="mono">100자</td><td>영문·공백</td><td><span class="badge b-warning">경고</span></td></tr>
       <tr><td>설명</td><td></td><td class="mono">1000자</td><td>제한 없음</td><td><span class="badge b-warning">경고</span></td></tr>
     </tbody></table>
-    <div class="banner info u-mt-12"><i data-ic=info></i><div>저장하면 <b>정책 버전이 하나 올라가고</b>, 이전 기준으로 검증한 엑셀 묶음은 업로드 이력에 ‘재검증 필요’로 표시됩니다. 진행 중인 신청은 승인 때 현재 기준으로 다시 검사합니다.</div></div>
+    <div class="banner info u-mt-12"><i data-ic=info></i><div>저장하면 <b>다음 신청부터 적용</b>됩니다. <b>정책 버전이 하나 올라가고</b>, 이전 기준으로 검증한 엑셀 묶음은 업로드 이력에 ‘재검증 필요’로 표시됩니다. 진행 중인 신청은 승인 때 현재 기준으로 다시 검사합니다.</div></div>
     <div class="section-t">검수 기준 변경 이력</div><table class="tbl"><thead><tr><th>버전</th><th>시각</th><th>변경자</th><th>내용</th></tr></thead><tbody id="pol-hist"></tbody></table>
 
     <h3 style="font-size:15px;margin:28px 0 4px">표준 제외 규칙</h3>
@@ -189,9 +191,16 @@
 <script>
 window.pageInit = function () {
   if (!can('settings')) { location.replace('error.html?code=403&need=Admin&what=설정'); return; }
-  if (location.hash === '#perms') document.querySelector('.tabs button[data-tab="perms"]').click();
-  if (location.hash === '#system') document.querySelector('.tabs button[data-tab="sys"]').click();
+  // every incoming hash opens its tab — callers use #rules · #sys (also #system · #perms · #users · #org · #auth) (E4)
+  const HASH_TAB = { org: 'org', sys: 'sys', system: 'sys', users: 'users', user: 'users', auth: 'users', perms: 'perms', rules: 'rules', policy: 'rules', exclude: 'rules' };
+  const openHash = () => { const t = HASH_TAB[location.hash.slice(1)]; const b = t && document.querySelector(`.tabs button[data-tab="${t}"]`); if (b && !b.classList.contains('on')) b.click(); };
+  openHash(); window.addEventListener('hashchange', openHash);
   const $ = id => document.getElementById(id);
+  // numeric fields: range + unit shown beside the input; out-of-range values stop the save with an inline error
+  const NUM = [['org-goal', 50, 100, '%', 'org'], ['org-sla', 1, 30, '일', 'org'], ['pol-wd', 2, 10, '자', 'rules']];
+  const numErr = (id, lo, hi, u) => { const raw = $(id).value.trim(), v = Number(raw); return raw === '' ? `값을 입력하세요 (${lo}~${hi}${u})` : !Number.isInteger(v) ? `정수로 입력하세요 (${lo}~${hi}${u})` : v < lo || v > hi ? `${lo}~${hi}${u} 사이로 입력하세요 — 지금 ${raw}${u}` : ''; };
+  const checkNum = id => { const d = NUM.find(x => x[0] === id); const m = numErr(d[0], d[1], d[2], d[3]); $(id + '-e').textContent = m; if (m) $(id).setAttribute('aria-invalid', 'true'); else $(id).removeAttribute('aria-invalid'); return m; };
+  NUM.forEach(([id]) => { $(id).addEventListener('input', () => checkNum(id)); $(id).addEventListener('blur', () => checkNum(id)); });
   // approval-line settings and the validation policy are saved to the state layer and read by new documents / validations (CX12-34)
   const org = getOrg(); const areas = getModels();
   $('org-goal').value = org.goal || 90; $('org-sla').value = org.sla || 3;
@@ -231,24 +240,26 @@ window.pageInit = function () {
   }
   $('sb-revert').onclick = () => {
     Object.keys(DT).forEach(t => fieldsOf(t).forEach((f, i) => { if (f.type === 'checkbox' || f.type === 'radio') f.checked = base[t][i]; else f.value = base[t][i]; }));
-    fdT(); refreshBar(); toast('마지막 저장값으로 되돌렸습니다', 'info');
+    NUM.forEach(([id]) => checkNum(id)); fdT(); refreshBar(); toast('마지막 저장값으로 되돌렸습니다', 'info');
   };
   $('sb-save').onclick = () => saveAll();
   $('content').addEventListener('input', refreshBar); $('content').addEventListener('change', refreshBar);
   window.addEventListener('beforeunload', e => { if (dirtyN()) { e.preventDefault(); e.returnValue = ''; } });
   function saveAll() {
     if (liveRoleChanged()) { staleRoleToast(); return; }
+    const bad = NUM.filter(([id]) => checkNum(id));
+    if (bad.length) { const [id, , , , tab] = bad[0]; const b = document.querySelector(`.tabs button[data-tab="${tab}"]`); if (b && !b.classList.contains('on')) b.click(); $(id).focus(); toast(`저장하지 않았습니다 — 허용 범위를 벗어난 값 ${bad.length}건을 고쳐 주세요`, 'danger'); return; }
     const names = Object.keys(diff()).map(t => DT[t]);
     const o = getOrg(); const before = JSON.stringify(o); o.finalDict = $('fin-dict').checked; document.querySelectorAll('[data-fm]').forEach(c => { o.finalModel[c.dataset.fm] = c.checked; });
-    const g0 = o.goal || 90, s0 = o.sla || 3, g1 = Math.min(100, Math.max(50, +$('org-goal').value || 90)), s1 = Math.min(30, Math.max(1, +$('org-sla').value || 3));
-    const goalChg = g0 !== g1 || s0 !== s1; o.goal = g1; o.sla = s1; $('org-goal').value = g1; $('org-sla').value = s1;
+    const g0 = o.goal || 90, s0 = o.sla || 3, g1 = +$('org-goal').value, s1 = +$('org-sla').value;   // already validated above — never auto-corrected
+    const goalChg = g0 !== g1 || s0 !== s1; o.goal = g1; o.sla = s1;
     const lineChg = JSON.stringify(Object.assign({}, JSON.parse(before), { goal: 0, sla: 0 })) !== JSON.stringify(Object.assign({}, o, { goal: 0, sla: 0 }));
     saveOrg(o);
     const changes = []; if (goalChg) { changes.push(`운영 목표: 준수율 ${g0}% → ${g1}% · 결재 기한 ${s0}일 → ${s1}일`); pushAudit({ act: '설정 변경 — 운영 목표', target: '기관·시스템 설정', why: changes[changes.length - 1] }); }
     if (lineChg) { changes.push(`결재선: 사전 최종 승인 ${o.finalDict ? '켬' : '끔'} · 모델 최종 승인 ${Object.entries(o.finalModel).map(([a, v]) => (areas[a] ? areas[a].name : a) + ' ' + (v ? '켬' : '끔')).join(', ')}`); pushAudit({ act: '설정 변경 — 결재선', target: '기관·시스템 설정', why: changes[changes.length - 1] }); }
-    const p = getPolicy(); const wd = +$('pol-wd').value || 6;
+    const p = getPolicy(); const wd = +$('pol-wd').value;
     if (wd !== (p.wordAbbr || 6)) { const nv = { ver: p.ver + 1, at: today2(), by: ME.name, wordAbbr: wd, hist: [{ ver: p.ver + 1, at: today2(), by: ME.name, what: `단어 영문약어명 ${p.wordAbbr || 6}자 → ${wd}자` }].concat(p.hist) }; savePolicy(nv); pushAudit({ act: `검수 기준 v${nv.ver}`, target: '검수 기준', why: nv.hist[0].what }); changes.push(`검수 기준 v${nv.ver}`); drawPol(); }
-    toast(changes.length ? `저장했습니다 — ${changes.join(' · ')}. 새 신청부터 적용되고 감사 로그에 남았습니다` : names.length ? `저장했습니다 — ${names.join(', ')}` : '바뀐 설정이 없습니다', changes.length || names.length ? 'success' : 'info');
+    toast(changes.length ? `저장했습니다 — ${changes.join(' · ')}. 다음 신청부터 적용되고 감사 로그에 남았습니다` : names.length ? `저장했습니다 — ${names.join(', ')}` : '바뀐 설정이 없습니다', changes.length || names.length ? 'success' : 'info');
     snap(); drawLast(); refreshBar(); if (names.length || changes.length) showSaved();
   }
   function today2() { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; }

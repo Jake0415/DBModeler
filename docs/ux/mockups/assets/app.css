@@ -3,6 +3,7 @@
    Order: 1 tokens · 2 base · 3 utilities · 4 shell · 5 model tree · 6 page · 7 controls · 8 badges · 9 table · 10 panel · 11 feedback · 12 components · 13 screen pieces · 14 mock tools
    Colour: Vercel Geist scale (vercel.com/geist/colors). 100–300 backgrounds · 400–600 borders · 700–800 fills · 900 secondary text · 1000 primary text.
    Rule: change a component where it is defined — never append an override further down. */
+[hidden] { display:none !important; }   /* the hidden attribute always wins over component display rules (banner · flex · toolbar) */
 
 /* ============ 1. tokens ============ */
 :root {
@@ -404,6 +405,9 @@ select.input { padding-right:36px; }
 .fchip { display:inline-flex; align-items:center; gap:6px; cursor:pointer; }
 /* focus comes last among the field rules: it wins over the tool-row select (box-shadow:none) and the error ring */
 .input:focus, select.input:focus, textarea.input:focus { outline:none; box-shadow:0 0 0 1px var(--ds-gray-1000), 0 0 0 4px var(--focus-halo); }
+/* an invalid field keeps its red edge while focused (the halo stays, the inner ring turns red) */
+.input[aria-invalid="true"], .input[aria-invalid="true"]:focus { border-color:var(--danger); }
+.input[aria-invalid="true"]:focus { box-shadow:0 0 0 1px var(--danger), 0 0 0 4px var(--focus-halo); }
 /* checkbox / radio — 16px, radius 4, 1px gray-700 border, checked = ink fill */
 input[type=checkbox], input[type=radio] { appearance:none; -webkit-appearance:none; width:16px; height:16px; margin:0; flex:0 0 16px; border:1px solid var(--ds-gray-700); border-radius:4px; background:var(--surface); display:inline-grid; place-items:center; cursor:pointer; vertical-align:-3px; }
 input[type=radio] { border-radius:50%; }

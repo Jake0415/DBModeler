@@ -101,8 +101,15 @@
   .cv-zoom button:hover { background:var(--surface-2); }
   .cv-mini { position:absolute; right:12px; bottom:12px; width:180px; height:120px; background:var(--surface); border-radius:var(--r-lg); box-shadow:var(--menu-shadow); z-index:10; overflow:hidden; }
   .cv-hint { position:absolute; left:50%; top:56px; transform:translateX(-50%); background:var(--ds-gray-1000); color:var(--on-ink); font-size:13px; padding:6px 12px; border-radius:6px; z-index:20; display:none; }
-  .cv-banner { position:absolute; left:12px; top:60px; z-index:10; display:flex; flex-direction:column; gap:6px; max-width:440px; }
-  .cv-banner > .banner { display:none; }
+  /* D2: guidance is a strip under the toolbar (never over the canvas) — one line folded, full text unfolded; the canvas moves down by its height */
+  .cv-banner { position:absolute; left:0; right:0; top:37px; z-index:19; display:grid; grid-template-columns:minmax(0,1fr) auto; column-gap:8px; row-gap:4px; align-items:center; padding:4px 12px; background:var(--surface); border-bottom:1px solid var(--ds-gray-400); }
+  .cv-banner[hidden] { display:none !important; }
+  .cv-banner > .banner { display:none; grid-column:1; padding-top:4px; padding-bottom:4px; }
+  .cv-banner > .banner > .grow { min-width:0; }
+  .cv-banner.min > .banner > .grow { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .cv-banner > .ban-ctl { grid-column:2; grid-row:1; display:flex; gap:4px; align-items:center; }
+  #world { margin-top:calc(41px + var(--ban-h, 0px)); }
+  .cv-hint { top:calc(56px + var(--ban-h, 0px)); }
   .pop { position:absolute; z-index:12; background:var(--surface); border-radius:var(--r-xl); box-shadow:var(--menu-shadow); padding:12px; font-size:14px; width:280px; }
   .acl { position:absolute; z-index:13; background:var(--surface); border-radius:var(--r-xl); box-shadow:var(--menu-shadow); padding:6px; width:300px; font-size:13px; }
   .acl .o { display:grid; grid-template-columns:1fr auto; align-items:center; min-height:32px; padding:0 8px; border-radius:6px; cursor:pointer; gap:6px; }
@@ -241,7 +248,7 @@
     <a class="stat" href="candidates.html"><span class="dot-i" style="background:var(--violet);opacity:.5"></span>후보 대기 <b id="c-cand">0</b></a>
     <a class="stat" href="#" id="b-review"><span class="dot-i" style="background:var(--fg-3)"></span>검토 <b id="c-rev">5</b></a>
     <span class="grow"></span><span class="caption faint" id="sel-info">선택 없음</span>
-    <a class="btn sm" href="standardize.html" id="cb-std">표준 맞추기</a>
+    <a class="btn sm" href="standardize.html?f=todo" id="cb-std">표준 맞추기</a>
   </div>
   <div class="page-body">
     <div class="side" id="side">
@@ -337,7 +344,7 @@
         <div id="gate-body"></div>
         <div class="caption muted u-mt-8">물리 반영 때 시스템 컬럼 4개(<span class="mono">REG_DT · REGR_ID · MDFCN_DT · MDFR_ID</span>)가 모든 테이블에 붙습니다 — <a href="settings.html#sys">시스템 설정</a></div>
       </div>
-      <div class="rp-foot"><a class="btn" href="standardize.html">표준 맞추기로 이동</a><span class="grow"></span><button class="btn primary" id="gate-go">경고 확인 후 계속</button></div>
+      <div class="rp-foot"><a class="btn" href="standardize.html?f=todo">표준 맞추기로 이동</a><span class="grow"></span><button class="btn primary" id="gate-go">경고 확인 후 계속</button></div>
     </aside>
 
     <!-- PN-38 confirm -->
@@ -399,7 +406,7 @@ window.pageInit = function () {
     $('c-cand').textContent = candOpenCount();
   };
   // DX-17: a modeler with request rights puts the term straight into the request basket (no candidate queue round trip)
-  $('dict-wiz').onclick = ev => { ev.preventDefault(); location.href = `term-wizard.html?area=${AREA}${typeof sel === 'string' && ent(sel) ? '&ents=' + sel : ''}&from=model`; };   // built on click: AREA is defined further down
+  $('dict-wiz').onclick = ev => { ev.preventDefault(); const se = typeof sel === 'string' && ent(sel); let sa = null; try { sa = se ? curAttr()[1] : null; } catch (x) { sa = null; } location.href = se ? wizUrl(se, sa) : `term-wizard.html?area=${AREA}&from=model`; };   // built on click: AREA is defined further down
   $('dict-bk').onclick = () => {
     const v = ($('dict-q').value || '').trim(); if (!v) { toast('담을 용어를 검색창에 입력하세요', 'info'); return; }
     if (!can('dict.request')) { toast('사전 신청 권한이 없습니다 — [후보 등록]을 쓰세요', 'info'); return; }
@@ -414,6 +421,12 @@ window.pageInit = function () {
 
   // ---- business area: seed structure comes from the shared state layer (app.js modelSeed)
   const AREA = getModels()[q.get('area')] ? q.get('area') : defArea();
+  // context hand-off (D4): the entity · attribute travel to standardize / term-wizard, which highlight that row and come back with &focus=
+  const ctxQ = (e, a) => e ? `&e=${encodeURIComponent(e.id)}${a ? '&a=' + encodeURIComponent(a.n) : ''}` : '';
+  const stdUrl = (e, a) => `standardize.html?area=${AREA}&f=todo${ctxQ(e, a)}`;
+  { const dl = document.createElement('datalist'); dl.id = 'ent-terms';   // D3: entity-term suggestions for a new entity's name (dictionary + requests in flight)
+    dl.innerHTML = getDict().filter(x => x.kn === '엔터티 용어' && ((x.st === '사용' && x.ver > 0) || x.st === '신청 중')).map(x => `<option value="${x.name}">${x.abbr || ''} · ${x.st === '사용' ? '사전' : '신청 중'}</option>`).join(''); document.body.appendChild(dl); }
+  const wizUrl = (e, a) => `term-wizard.html?area=${AREA}&from=model${e ? '&ents=' + encodeURIComponent(e.id) : ''}${ctxQ(e, a)}`;
   const _seed = modelSeed(AREA);
   const E = _seed.E, R = _seed.R, M = _seed.M;
   // views (12 §3 · T3): part of the area's model data — positions per view, which entities are placed, hidden relation lines
@@ -534,7 +547,7 @@ window.pageInit = function () {
     b.dataset.tip = viewOnly ? (outOfScope ? '담당 시스템이 아니라 확정 신청할 수 없습니다' : '확정 신청은 모델러 역할만 할 수 있습니다') : `미준수 ${bad}건이 남아 있습니다 — [표준 맞추기]에서 해결하거나 사유를 남겨 예외로 처리하세요`;
     b.setAttribute('aria-label', can ? '확정 신청' : '확정 신청 (불가: ' + b.dataset.tip + ')');
     if (fix) { b.removeAttribute('aria-disabled'); b.setAttribute('aria-label', `미준수 ${bad}건 해결 — 표준 맞추기로 이동`); }
-    b.onclick = () => { if (fix) { location.href = `standardize.html?area=${AREA}`; return; } if (!can) { toast(b.dataset.tip, 'info'); return; } fillConfirm(); openPanel('pn-confirm'); };
+    b.onclick = () => { if (fix) { location.href = `standardize.html?area=${AREA}&f=todo`; return; } if (!can) { toast(b.dataset.tip, 'info'); return; } fillConfirm(); openPanel('pn-confirm'); };
     // remaining-unregistered banner from the current attributes and the candidate's real state (CX12-22)
     const left = candAttrs();
     $('ban-left').style.display = left.length && !viewOnly ? 'flex' : 'none';
@@ -592,7 +605,7 @@ window.pageInit = function () {
       return `<div class="ar ${a.pk ? 'pkr' : ''} ${a.fk ? 'fk' : ''} ${a.remote ? 'new' : ''} ${a.s === 'na' ? 'excl' : ''}" data-e="${e.id}" data-i="${idx}"><span class="dot-i s-${a.s}" title="${({ ok: '표준', comb: '조합 가능', unreg: '미등록 단어', ex: '예외', na: '비대상', req: '용어 신청 중' })[a.s]}"></span><span class="n">${a.pk ? '# ' : ''}${name}${a.fk ? ' (FK)' : ''}</span>${['comb', 'unreg', 'ex', 'req'].includes(a.s) ? `<span class="stw ${a.s}">${({ comb: '조합', unreg: '미등록', ex: '예외', req: '신청 중' })[a.s]}</span>` : ''}${a.sec ? LOCKI : ''}<span class="p">${right}</span></div>`;
     };
     const b = bad(e);
-    const title = renaming === e.id ? `<input class="ren-in" data-e="${e.id}" value="${e.n}">` : `<span class="title" data-e="${e.id}">${mode === 'L' ? e.n : e.p}</span>`;
+    const title = renaming === e.id ? `<input class="ren-in" data-e="${e.id}" value="${e.fresh ? '' : e.n}" list="ent-terms" autocomplete="off" aria-label="엔터티 이름" placeholder="엔터티 이름 · 예: 산출물검수기본">` : `<span class="title" data-e="${e.id}">${mode === 'L' ? e.n : e.p}</span>`;
     const stl = refStale(e);
     const tag = e.ref ? `<span class="rtag reft" title="${hx(e.refName || '다른 영역')} v${e.refVer || '?'} 확정본을 읽기 전용으로 가져온 참조">${hx(e.refName || '공통')} v${e.refVer || '?'} · 참조${stl ? ` · 원본 v${stl} 확정 — 갱신` : ''}</span>` : remoteSel === e.id && !offline ? '<span class="rtag">홍설계 편집 중</span>' : '';
     const subt = e.sub ? (mode === 'L'
@@ -811,7 +824,7 @@ window.pageInit = function () {
     if (!a || gPend) return a ? '' : keys;
     const L = mode === 'L', grp = e.a.filter(x => !!x.pk === !!a.pk), gi = grp.indexOf(a);
     const st = a.s === 'ok' ? '사전의 표준 용어와 같습니다' : a.s === 'req' ? `용어 신청 중${a.reqDoc ? ` — <a class="mono" href="approvals.html?doc=${a.reqDoc}">${a.reqDoc}</a>` : ''}` : a.s === 'ex' ? `예외 — ${hx(a.exReason || '사유 없음')}` : a.s === 'na' ? `표준 비대상${a.naReason ? ' — ' + hx(a.naReason) : ''}` : a.s === 'comb' ? '단어를 조합하면 표준이 됩니다 — 용어로 등록하거나 맞추세요' : '사전에 없는 단어가 있습니다 — 후보로 올리거나 예외로 남기세요';
-    const fix = !ro && (a.s === 'unreg' || a.s === 'comb') ? `<div class="flex u-gap-8 u-mt-4"><a class="btn sm" href="standardize.html?area=${AREA}">표준 맞추기</a><button class="btn sm ghost" data-f="ex">예외로 유지</button></div>` : '';
+    const fix = !ro && (a.s === 'unreg' || a.s === 'comb') ? `<div class="flex u-gap-8 u-mt-4 u-wrap"><a class="btn sm" href="${stdUrl(e, a)}">표준 맞추기</a><a class="btn sm ghost" href="${wizUrl(e, a)}">용어 자동분석</a><button class="btn sm ghost" data-f="ex">예외로 유지</button></div>` : '';
     const field = (id, f, lab, ph, tag) => ro ? (a[f] ? `<dt>${lab}</dt><dd>${hx(a[f])}</dd>` : '')
       : `<div class="field"><label for="${id}">${lab}</label>${tag === 'ta' ? `<textarea class="input" id="${id}" data-f="${f}" rows="2" placeholder="${ph}">${hx(a[f] || '')}</textarea>` : `<input class="input mono" id="${id}" data-f="${f}" placeholder="${ph}" value="${hx(a[f] || '')}">`}</div>`;
     return `<div class="ag-det" aria-label="선택한 ${L ? '속성' : '컬럼'}">
@@ -1156,7 +1169,7 @@ window.pageInit = function () {
     if (t === 'memo') hint('메모를 놓을 곳을 클릭하세요');
     render();
   }
-  function toWorld(ev) { const r = cv.getBoundingClientRect(); return { x: (ev.clientX - r.left - panX) / zoom, y: (ev.clientY - r.top - panY) / zoom }; }
+  function toWorld(ev) { const r = cv.getBoundingClientRect(); return { x: (ev.clientX - r.left - panX) / zoom, y: (ev.clientY - r.top - world.offsetTop - panY) / zoom }; }   // world sits under the toolbar + guidance strip (D2)
   function focusEnt(id) { if (ent(id) && !inView(ent(id))) { curView = 'all'; dbmStore.set('dbm-view-' + AREA, 'all'); toast('지금 보기에 없어 전체 보기로 바꿨습니다', 'info'); } sel = id; showRP(); render(); const b = box(id); panX = cv.clientWidth / 2 - (b.x + b.w / 2) * zoom; panY = cv.clientHeight / 2 - (b.y + b.h / 2) * zoom; applyView(); }
   function addAttr() {
     if (!sel || guard()) return; const e = ent(sel); if (refGuard(e)) return;
@@ -1197,6 +1210,16 @@ window.pageInit = function () {
   }
   function commitRename(inp, ok) {
     const e = ent(inp.dataset.e); renaming = null;
+    if (e && e.fresh) {   // D3: a just-made entity — a name is required; Esc / empty cancels the entity, Enter goes on to its identifier
+      const v = inp.value.trim();
+      if (!ok || !v || v === '새엔터티') { E.splice(E.indexOf(e), 1); V.forEach(x => { if (x.ents) x.ents = x.ents.filter(i => i !== e.id); }); if (sel === e.id) sel = null; dirty = true; render(); toast('엔터티 추가를 취소했습니다', 'info'); return; }
+      delete e.fresh; e.n = v;
+      const t = getDict().find(x => x.kn === '엔터티 용어' && x.name === v && ['사용', '신청 중'].includes(x.st));
+      if (t && t.st === '사용' && t.ver > 0 && t.abbr) e.p = t.abbr;
+      e.a.forEach(a => delete a.edit); e.a.push({ n: '', p: '—', t: '—', s: 'na', pk: 1, edit: 1 }); sel = e.id; dirty = true; render();
+      toast(t ? (t.st === '사용' ? `엔터티 용어 ‘${v}’를 적용했습니다 · ${t.abbr} — 식별자를 입력하세요` : `‘${v}’는 엔터티 용어 신청 중입니다(${t.pending || '결재 중'}) — 식별자를 입력하세요`) : `‘${v}’ 엔터티를 만들었습니다 — 식별자를 입력하세요 · 엔터티 용어는 [표준 맞추기]에서 신청합니다`, 'info');
+      return;
+    }
     if (ok && inp.value.trim() && inp.value.trim() !== e.n) { snap(); e.n = inp.value.trim(); toast('이름을 바꿨습니다 · 엔터티 용어를 다시 확인합니다', 'info'); }
     render();
   }
@@ -1310,9 +1333,10 @@ window.pageInit = function () {
     }
     if (tool === 'entity' && !node) {
       const w = toWorld(ev), id = 'e' + Date.now(); snap();
-      E.push({ id, n: '새엔터티', p: '—', c: 'M', x: w.x, y: w.y, px: w.x, py: w.y, a: [{ n: '', p: '—', t: '—', s: 'na', pk: 1, edit: 1 }] });
+      // D3: the name comes first (like F2, with entity-term suggestions); Enter goes on to the identifier — no '새엔터티' left behind
+      E.push({ id, n: '새엔터티', p: '—', c: 'M', x: w.x, y: w.y, px: w.x, py: w.y, a: [], fresh: 1 });
       if (curView !== 'all') { const v = vCur(); (v.ents = v.ents || []).push(id); }   // made in a view → placed in it (and always in 전체)
-      sel = id; setTool('select'); toast('엔터티를 추가했습니다 — 식별자부터 입력하세요', 'info'); return;
+      sel = id; renaming = id; setTool('select'); render(); hint('엔터티 이름을 입력하세요 · Enter 다음(식별자) · Esc 취소'); setTimeout(() => hint(''), 2500); return;
     }
     if (tool === 'rel' && node) {
       const id = node.id.slice(2);
@@ -1350,7 +1374,9 @@ window.pageInit = function () {
       dropHist(editHid); editHid = null; if (acEl) { acEl.remove(); acEl = null; } dirty = true; render();   // the discarded row was already saved by addAttr — save its removal too
     }
   });
-  cv.addEventListener('focusout', ev => { if (ev.target.classList && ev.target.classList.contains('ren-in') && renaming) commitRename(ev.target, true); });
+  // a re-render replaces the name input (its removal also fires focusout) — only a real blur commits (D3: a new entity would be cancelled)
+  cv.addEventListener('focusout', ev => { const t = ev.target; if (!(t.classList && t.classList.contains('ren-in')) || !renaming) return;
+    setTimeout(() => { if (!renaming) return; const now = nodes.querySelector('.ren-in'); if (now && now !== t) return; if (document.activeElement === t) return; commitRename(t, true); }, 0); });
   document.addEventListener('mousedown', ev => { const o = ev.target.closest('.acl .o'); if (!o) return; ev.preventDefault(); const inp = nodes.querySelector('.attr-in'); if (inp) commitAttr(inp, o.dataset.ti ? TERMS[+o.dataset.ti] : null); });
   document.addEventListener('keydown', ev => {
     if (ev.target.closest && ev.target.closest('.mtree')) return;   // the left column (tree · dictionary) keeps every key, Ctrl+F/Z included
@@ -1479,7 +1505,7 @@ window.pageInit = function () {
     $('ban-gate-t').innerHTML = rows.length ? `<b>게이트 A · 경고 ${rows.length}</b> — 미매핑 ${um} · 타입 미정 ${tn}. 진행은 막지 않습니다.` : '<b>게이트 A · 통과</b> — 물리 반영 전 점검에서 남은 경고가 없습니다.';
     $('ban-gate').className = 'banner ' + (rows.length ? 'warning' : 'success');
     $('gate-body').innerHTML = `<div class="mline"><span><b>${um}</b>미매핑</span><span><b>${tn}</b>타입 미정</span></div>` +
-      (rows.length ? `<table class="tbl"><thead><tr><th>위치</th><th>문제</th><th></th></tr></thead><tbody>${rows.map(([e, a, w, act]) => `<tr><td>${e.n}${a ? '.' + a.n : ' (테이블명)'}</td><td><span class="badge ${w.includes('미등록') ? 'b-warning' : 'b-info'}">${w}</span></td><td>${act === 'ex' && a && a.s !== 'ex' ? `<a href="#" data-gex="${e.id}|${a.n}">예외</a>` : act === '엔터티 용어 신청 중' ? '<span class="faint">대기</span>' : `<a href="standardize.html?area=${AREA}">맞추기</a>`}</td></tr>`).join('')}</tbody></table>` : '<div class="banner success"><i data-ic=check></i><div>점검할 항목이 없습니다.</div></div>');
+      (rows.length ? `<table class="tbl"><thead><tr><th>위치</th><th>문제</th><th></th></tr></thead><tbody>${rows.map(([e, a, w, act]) => `<tr><td>${e.n}${a ? '.' + a.n : ' (테이블명)'}</td><td><span class="badge ${w.includes('미등록') ? 'b-warning' : 'b-info'}">${w}</span></td><td>${act === 'ex' && a && a.s !== 'ex' ? `<a href="#" data-gex="${e.id}|${a.n}">예외</a>` : act === '엔터티 용어 신청 중' ? '<span class="faint">대기</span>' : `<a href="${stdUrl(e, a)}">맞추기</a>`}</td></tr>`).join('')}</tbody></table>` : '<div class="banner success"><i data-ic=check></i><div>점검할 항목이 없습니다.</div></div>');
     $('gate-body').querySelectorAll('[data-gex]').forEach(x => x.onclick = ev => { ev.preventDefault(); const [eid, an] = x.dataset.gex.split('|'); window.__openEx(eid, an); });
     return rows.length;
   }
@@ -1494,11 +1520,24 @@ window.pageInit = function () {
   moreM.addEventListener('keydown', ev => { if (ev.key === 'Escape') { ev.stopPropagation(); setMore(false); moreB.focus(); } });
   document.addEventListener('click', ev => { if (!ev.target.closest('#moremenu, #b-more')) setMore(false); });
   $('mi-export').onclick = ev => { ev.stopPropagation(); setMore(false); $('expmenu').classList.add('open'); };
-  { const BAN = ['ban-off', 'ban-lock', 'ban-view', 'ban-gate', 'ban-left', 'ban-big', 'ban-sync']; const box = document.querySelector('.cv-banner'); let all = false;
-    const more = document.createElement('button'); more.className = 'btn sm ban-more'; box.appendChild(more);
-    const arrange = () => { const vis = BAN.map(id => $(id)).filter(b => b && b.style.display && b.style.display !== 'none'); vis.forEach((b, i) => { box.insertBefore(b, more); b.classList.toggle('fold', !all && i > 0); }); more.hidden = vis.length < 2; more.textContent = all ? '접기' : `안내 ${vis.length - 1}건 더`; more.setAttribute('aria-expanded', all); };
-    more.onclick = () => { all = !all; arrange(); };
-    new MutationObserver(arrange).observe(box, { attributes: true, subtree: true, attributeFilter: ['style'] }); arrange(); }
+  // D2: one strip under the toolbar — folded = the top guidance on one line; [펼치기] = every guidance in full. Remembered per user (dbm-model-hint)
+  { const BAN = ['ban-off', 'ban-lock', 'ban-view', 'ban-gate', 'ban-left', 'ban-big', 'ban-sync']; const box = document.querySelector('.cv-banner');
+    const HK = 'dbm-model-hint', hintMap = () => { try { return JSON.parse(dbmStore.get(HK, '{}')) || {}; } catch (x) { return {}; } };
+    let all = hintMap()[ME.id] === 'open';
+    const ctl = document.createElement('span'); ctl.className = 'ban-ctl'; const tg = document.createElement('button'); tg.className = 'btn sm ghost'; tg.id = 'ban-toggle'; ctl.appendChild(tg); box.appendChild(ctl);
+    const tb = document.querySelector('.cv-toolbar'); const fit = () => { const top = (tb ? tb.offsetHeight : 37) + 'px'; if (box.style.top !== top) box.style.top = top; const h = box.hidden || !box.offsetParent ? '0px' : box.offsetHeight + 'px'; if (cv.style.getPropertyValue('--ban-h') !== h) cv.style.setProperty('--ban-h', h); };
+    let busy = false;
+    const arrange = () => { if (busy) return; busy = true;
+      const vis = BAN.map(id => $(id)).filter(b => b && b.style.display && b.style.display !== 'none');
+      vis.forEach((b, i) => { box.insertBefore(b, ctl); b.classList.toggle('fold', !all && i > 0); const t = b.querySelector('.grow'); if (t) { if (!all) t.title = t.textContent.trim(); else t.removeAttribute('title'); } });
+      box.hidden = !vis.length; box.classList.toggle('min', !all);
+      const longOne = vis.length === 1 && vis[0].querySelector('.grow') && vis[0].querySelector('.grow').scrollWidth > vis[0].querySelector('.grow').clientWidth + 1;
+      tg.hidden = !vis.length || (!all && vis.length < 2 && !longOne);
+      tg.textContent = all ? '접기' : `펼치기${vis.length > 1 ? ` (안내 ${vis.length}건)` : ''}`; tg.setAttribute('aria-expanded', all);
+      fit(); busy = false; };
+    tg.onclick = () => { all = !all; const m = hintMap(); m[ME.id] = all ? 'open' : 'min'; dbmStore.set(HK, JSON.stringify(m)); arrange(); };
+    new MutationObserver(recs => { if (recs.some(r => r.target !== box)) arrange(); }).observe(box, { attributes: true, subtree: true, attributeFilter: ['style'] }); arrange();
+    if (window.ResizeObserver) new ResizeObserver(fit).observe(box); window.addEventListener('resize', arrange); }
   $('expmenu').addEventListener('click', ev => { ev.stopPropagation(); const b = ev.target.closest('.seg button'); if (b) b.parentElement.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); });
   (() => { const bd = getDocs().find(x => x.type === 'model' && x.area === AREA && x.ver === BASE && x.step === 'done');
     $('ex-title-1').textContent = `${curSys().name} › ${LOCK.model.name} · ${mode === 'L' ? '논리' : '물리'} ERD`;

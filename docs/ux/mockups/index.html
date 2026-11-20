@@ -30,6 +30,10 @@
   <p class="muted" style="margin:8px 0 24px">1920×1080 기준 프레임입니다. 각 화면 상단 바의 점선 <b>목업</b> 버튼에서 1600 확인 프레임과 다크 테마로 바꿀 수 있습니다. 데이터는 요구사항관리 샘플이고 저장되지 않습니다.
   근거: <a href="../02-flows.md">02-flows.md</a> · <a href="../01-design-guide.md">01-design-guide.md</a></p>
 
+  <div class="card u-mb-24" id="role-guide"><b>역할별 바로가기 (목업 사용자)</b>
+    <div class="caption muted">아래 이름을 누르면 그 사용자로 바뀌어 홈이 열립니다. 역할은 목업 데이터(USERS)에서 그대로 읽어 표시합니다. 설정 · 사용자 관리는 <b>관리자(Admin)</b>만, 감사 로그는 DA 또는 Admin만 열 수 있습니다. 검토용으로 주소에 <span class="mono">&amp;audit=1</span>을 붙이면 역할이 저장되지 않습니다.</div>
+    <div class="path" id="role-links"></div></div>
+
   <h2 class="u-fs-16 u-mb-8">교차 시나리오 (끝까지 클릭)</h2>
   <div class="card u-mb-12"><b>T1 설치 직후 첫 사용</b><div class="caption muted">기관 사전이 빈 상태 → 엑셀로 등록 → 겸임 DA 자기 승인</div>
     <div class="path"><a href="dictionary.html?empty=1">SC-10 사전(빈 상태 배너)</a><span class="ar">→</span><a href="excel-import.html?mode=init">SC-13 엑셀 초기 적재 1~6단계</a><span class="ar">→</span><a href="approvals.html">SC-20 대기함</a><span class="ar">→</span><a href="approvals.html?box=mine">PN-21 방금 만든 신청 → MO-22 자기 승인</a></div></div>
@@ -58,6 +62,11 @@
   <script src="assets/app.js"></script>
   <script>
   document.addEventListener('DOMContentLoaded', () => {
+    // E2: the role guide is drawn from USERS, so it can never say a user is Admin when the seed says otherwise
+    { const ORDER = ['admin', 'owner', 'da', 'modeler'], LBL = { admin: '관리자', owner: '기관 담당자', da: 'DA', modeler: '모델러' };
+      const DOES = { admin: '설정 · 사용자 · 감사 로그', owner: '최종 승인', da: '1단계 승인 · 공표', modeler: '모델 편집 · 사전 신청' };
+      const label = u => { const r = ORDER.filter(x => (u.roles || []).includes(x)); if (!r.length) return `조회만 ${u.name}`; return `${LBL[r[0]]}${r.length > 1 ? `(겸 ${r.slice(1).map(x => LBL[x]).join(' · ')})` : ''} ${u.name}`; };
+      document.getElementById('role-links').innerHTML = Object.values(USERS).slice().sort((a, b) => ORDER.findIndex(x => (a.roles || []).includes(x)) - ORDER.findIndex(x => (b.roles || []).includes(x))).map(u => { const r = ORDER.filter(x => (u.roles || []).includes(x)); return `<a href="home.html?as=${u.id}" title="${r.map(x => DOES[x]).join(' · ') || '조회만'} — 담당 시스템: ${(u.systems || []).join(', ')}">${label(u)} <span class="mono faint">${u.id}</span></a>`; }).join(''); }
     const notes = getNotes();
     document.querySelector('#screen-map tbody').innerHTML = SCREENS.map(s => `<tr><td>${s.menu}</td><td class="mono u-nowrap">${s.ids.replace(/ · /g, '<br>')}</td><td><a href="${s.file}"><b>${s.name}</b></a></td><td class="caption">${s.states.map(([l, u]) => `<a href="${u}">${l}</a>`).join(' · ')}</td><td class="caption">${s.docs.map(([l, u]) => `<a href="${u}" target="_blank" rel="noopener">${l}</a>`).join(' · ')}</td><td class="num" title="${s.todo.map(t => t[0]).join('\n').replace(/"/g, '&quot;')}">${s.todo.length || ''}</td><td class="num">${(notes[s.file] || []).filter(x => !x.done).length || ''}</td></tr>`).join('');
     document.getElementById('map-export').onclick = () => { const md = notesMarkdown(); (navigator.clipboard ? navigator.clipboard.writeText(md) : Promise.reject()).then(() => alert('전체 메모를 마크다운 표로 복사했습니다'), () => window.prompt('복사해서 쓰세요', md)); };
@@ -85,7 +94,7 @@
       <tr><td class="mono">SC-36</td><td>가져오기 (엑셀·DDL)</td><td><a href="import.html">열기</a></td><td></td></tr>
       <tr><td class="mono">SC-37 · PN-37</td><td>DDL 출력 · 게이트 B · DBMS 비교</td><td><a href="ddl.html">열기</a></td><td></td></tr>
       <tr><td class="mono">SC-38</td><td>산출물 — 테이블 정의서 · 준수검사 · 용어 사용 · 개인정보 · ERD · 검토 · 변경 이력</td><td><a href="outputs.html">열기</a></td><td><a href="outputs.html?w=1600">1600</a></td></tr>
-      <tr><td class="mono">SC-40~43</td><td>설정 — 기관(도메인그룹) · 시스템(타입 매핑·시스템 컬럼) · 사용자·역할 · 검수 기준(표준 제외 규칙)</td><td><a href="settings.html">열기</a></td><td></td></tr>
+      <tr><td class="mono">SC-40~43</td><td>설정 (Admin) — 기관(결재선·운영 목표) · 시스템(타입 매핑·시스템 컬럼) · 사용자·역할 · 검수 기준(표준 제외 규칙) · 도메인그룹은 사전 › 도메인 그룹 · 분류</td><td><a href="settings.html?as=lee">열기(관리자 이데이터)</a> · <a href="settings.html?as=lee#rules">검수 기준</a> · <a href="settings.html?as=lee#sys">시스템</a></td><td></td></tr>
     </tbody>
   </table>
   <p class="caption faint u-mt-16">로컬 실행: <span class="mono">powershell -File docs/ux/mockups/serve.ps1</span> → http://localhost:5178</p>

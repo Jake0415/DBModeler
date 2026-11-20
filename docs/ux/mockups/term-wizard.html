@@ -29,7 +29,13 @@
 .tw-radios label { display:flex; gap:6px; align-items:center; font-size:14px; }
 .tw-sub { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
 /* ② 결과 표 */
-.tw-why { white-space:normal !important; min-width:240px; font-size:12px; line-height:16px; color:var(--fg-2); padding-top:6px !important; padding-bottom:6px !important; }
+/* D6: the table scrolls sideways inside its own box; 근거 is two lines at most (full text on hover), name columns are narrowed */
+.tw-x { overflow-x:auto; max-width:100%; }
+.tw-tbl th, .tw-tbl td { padding-left:10px; padding-right:10px; }
+.tw-why { white-space:normal !important; min-width:220px; max-width:360px; font-size:12px; line-height:16px; color:var(--fg-2); padding-top:6px !important; padding-bottom:6px !important; }
+.tw-why .clamp { display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+.tw-tbl td.tw-nm { max-width:150px; overflow:hidden; text-overflow:ellipsis; }
+.tw-tbl td.tw-ph { max-width:170px; overflow:hidden; text-overflow:ellipsis; }
 .tw-tbl tr[tabindex]:focus-visible td { box-shadow:inset 0 0 0 2px var(--focus); }
 .tw-tbl tr.cur td { background:var(--ds-blue-100); }
 .tw-cv { display:flex; flex-direction:column; line-height:18px; padding:6px 0; } .tw-cv s { color:var(--fg-3); } .tw-cv b { font-weight:600; }
@@ -73,9 +79,15 @@ button.badge.tw-pb[aria-pressed="true"] { outline:2px solid var(--ds-gray-1000);
     <nav class="crumbs" aria-label="경로"><a id="crumb-sys" href="system.html"></a><span class="sl" aria-hidden="true">/</span><a id="back" href="model.html"><span id="crumb-area"></span></a><span class="sl" aria-hidden="true">/</span></nav>
     <h1>용어 자동분석</h1>
     <span class="badge" id="scope"></span>
-    <div class="actions"><span class="caption muted">모델 → 용어 → 모델</span><a class="btn sm" id="to-std" href="standardize.html">표준 맞추기</a></div>
+    <div class="actions"><span class="caption muted" title="모델 → 용어 → 모델">미등록 단어 · 용어를 한 번에 만드는 마법사</span><a class="btn sm" id="to-std" href="standardize.html">표준 맞추기로 돌아가기</a></div>
   </div>
   <div id="ro-slot"></div>
+  <div class="pad u-pb-0" id="resume" hidden>
+    <div class="banner info" role="status"><i data-ic=info></i><div class="grow" id="resume-t"></div><button class="btn sm" id="resume-go">이어서</button><button class="btn sm ghost" id="resume-new">새로 분석</button></div>
+  </div>
+  <div class="pad u-pb-0" id="ctx" hidden>
+    <div class="banner info"><i data-ic=info></i><div class="grow" id="ctx-t"></div><a class="btn sm ghost" id="ctx-back" href="model.html">모델에서 보기</a></div>
+  </div>
   <div class="toolbar">
     <ol class="steps tw-steps" id="steps" aria-label="자동분석 단계"></ol>
     <span class="grow"></span>
@@ -130,10 +142,12 @@ MDFCN_ID
             <div class="mline" id="r-sum"></div>
           </div>
           <div class="toolbar" id="r-chips" role="group" aria-label="상태로 거르기"></div>
+          <div class="tw-x" id="r-wrap">
           <table class="tbl tw-tbl flat" id="r-tbl">
             <thead><tr><th><input type="checkbox" id="r-all" aria-label="보이는 행 중 처리할 수 있는 행 모두 포함"></th><th>상태</th><th>테이블</th><th>현재 이름</th><th>현재 물리명</th><th>최적 후보 용어</th><th>약어(물리명)</th><th>도메인</th><th class="num">점수</th><th>근거</th><th><span class="sr-only">단어 구성</span></th></tr></thead>
             <tbody id="r-rows"></tbody>
           </table>
+          </div>
         </section>
 
         <!-- ③ 단어 구성 -->
@@ -153,7 +167,7 @@ MDFCN_ID
           <div class="mline" id="g-sum"></div>
           <div class="tw-bar">
             <b class="u-fs-14" id="g-n" aria-live="polite"></b><span class="grow"></span>
-            <button class="btn sm" id="g-basket"><i data-ic=plus></i>신청 바구니에 담기</button>
+            <button class="btn sm" id="g-basket"><i data-ic=plus></i>바구니에 담기</button>
             <button class="btn sm" id="g-cand">후보 큐로</button>
             <button class="btn sm" id="g-req">바로 신청</button>
           </div>
@@ -161,7 +175,7 @@ MDFCN_ID
             <thead><tr><th><input type="checkbox" id="g-all" aria-label="처리할 수 있는 항목 모두 선택"></th><th>구분</th><th>이름</th><th>약어</th><th>도메인</th><th>쓰는 곳</th><th>상태</th></tr></thead>
             <tbody id="g-rows"></tbody>
           </table>
-          <div class="caption muted u-mt-8">바구니는 <a href="dictionary.html">표준 사전</a>의 [신청 바구니]에서 이어서 신청합니다. 후보 큐는 DA가 검토합니다(<a href="candidates.html">후보 큐</a>).</div>
+          <div class="caption muted u-mt-8">바구니는 <a href="dictionary.html">표준 사전</a>의 [바구니]에서 이어서 신청합니다. 후보 큐는 DA가 검토합니다(<a href="candidates.html">후보 큐</a>).</div>
         </section>
 
         <!-- ⑤ 모델 반영 -->
@@ -204,14 +218,21 @@ window.pageInit = function () {
   const model = modelOf(AREA, VER);
   $('crumb-sys').textContent = curSys().name;
   $('crumb-area').textContent = `${MNAME} · v${VER}`;
-  $('back').href = `model.html?area=${AREA}`;
-  $('to-std').href = `standardize.html?area=${AREA}`;
+  // model context (D4): &e=<entity>&a=<attribute> → that row is marked in ② and every way back focuses the entity
+  const CE = q.get('e') || '', CA = q.get('a') || '';
+  const CENT = CE ? model.E.find(x => x.id === CE && !x.ref) : null;
+  const focusE = CENT ? CE : ((q.get('ents') || '').split(',').filter(Boolean).length === 1 ? q.get('ents') : '');
+  const backUrl = `model.html?area=${AREA}${focusE ? '&focus=' + encodeURIComponent(focusE) : ''}`;
+  const isCtx = r => !!CENT && r.e === CE && (CA ? (r.a === CA || r.cur.n === CA || (r.entRow && CA === r.ent)) : r.entRow);
+  $('back').href = backUrl;
+  $('to-std').href = `standardize.html?area=${AREA}&f=todo${CENT ? '&e=' + encodeURIComponent(CE) + (CA ? '&a=' + encodeURIComponent(CA) : '') : ''}`;
+  if (CENT) { $('ctx').hidden = false; $('ctx-back').href = backUrl; $('ctx-t').innerHTML = `모델의 <b>${esc(CENT.n)}${CA && CA !== CENT.n ? '.' + esc(CA) : ''}</b>에서 왔습니다 — ② 분석 결과에서 이 행을 표시합니다.`; }
 
   // permission & lock: ①–③ are analysis only (anyone); ④·⑤ change the dictionary queue / the model (CX12-28 pattern)
   const canEdit = can('model.edit', { area: AREA });
   const readOnly = !canEdit || LK.state !== 'edit';
   const roWhy = !canEdit ? (ME.has('modeler') ? `내 담당 시스템에 ${josa(sysOfArea(AREA), '이/가')} 없어 등록·반영은 할 수 없습니다` : '용어 등록·모델 반영은 모델러 역할만 할 수 있습니다') : `${LK.doc ? LK.doc.id + ' ' : ''}${LK.state === 'review' ? '확정 결재 중' : '확정본'}이라 모델을 고칠 수 없습니다`;
-  if (readOnly) $('ro-slot').innerHTML = `<div class="pad u-pb-0"><div class="banner info"><i data-ic=info></i><div class="grow"><b>분석만 가능</b> — ${roWhy}. ①~③(분석·단어 구성)은 볼 수 있고 ④ 용어 등록·⑤ 모델 반영은 막혀 있습니다.${!canEdit && ME.has('modeler') ? ` <a href="mypage.html?req=sys&sys=${encodeURIComponent(sysOfArea(AREA))}">담당 시스템 추가 요청</a>` : ''}</div><a class="btn sm" href="model.html?area=${AREA}">모델로</a></div></div>`;
+  if (readOnly) $('ro-slot').innerHTML = `<div class="pad u-pb-0"><div class="banner info"><i data-ic=info></i><div class="grow"><b>분석만 가능</b> — ${roWhy}. ①~③(분석·단어 구성)은 볼 수 있고 ④ 용어 등록·⑤ 모델 반영은 막혀 있습니다.${!canEdit && ME.has('modeler') ? ` <a href="mypage.html?req=sys&sys=${encodeURIComponent(sysOfArea(AREA))}">담당 시스템 추가 요청</a>` : ''}</div><a class="btn sm" href="${backUrl}">모델로</a></div></div>`;
 
   // ---------- dictionary lookups ----------
   const dict = getDict();
@@ -350,8 +371,37 @@ window.pageInit = function () {
     if (c && c.have) { r.st = 'std'; r.needApply = true; return; }
     r.st = !c || c.unk.length || c.bad.length ? 'unk' : c.sus.length ? 'sus' : 'comb';
   }
+  // ---------- D5: the analysis survives a trip to the basket / candidate queue (per user · area · working version) ----------
+  const WK = 'dbm-wiz-' + ME.id + '-' + AREA;
+  let formAt = null, restoring = false;
+  const formGet = () => ({ ents: [...document.querySelectorAll('#o-ents input:checked')].map(c => c.value), entrow: $('o-entrow').checked, basis: radio('basis'), range: radio('range'), max: $('o-max').value, prio: $('o-prio').value, conn: $('o-conn').value, strip: $('o-strip').value, suffix: $('o-suffix').value, na: $('o-na').value });
+  const formSet = f => { if (!f) return; document.querySelectorAll('#o-ents input').forEach(c => { c.checked = (f.ents || []).includes(c.value); }); $('o-entrow').checked = !!f.entrow;
+    ['basis', 'range'].forEach(n => { const b = document.querySelector(`input[name=${n}][value="${f[n]}"]`); if (b) b.checked = true; });
+    ['max', 'prio', 'conn', 'strip', 'suffix', 'na'].forEach(k => { if (f[k] != null) $('o-' + k).value = f[k]; }); };
+  const sigOf = c => c ? c.parts.map(p => p.w + ':' + p.kind).join('+') : '';
+  function wizSave() {
+    if (!rows.length || restoring || !formAt) return;
+    const inc = {}, pick = {}; rows.forEach(r => { inc[r.key] = !!r.inc; if (r.choice) pick[r.key] = { sig: sigOf(r.choice), parts: r.choice.parts.map(p => ({ w: p.w, kind: p.kind, abbr: p.abbr })) }; });
+    dbmStore.set(WK, JSON.stringify({ ver: VER, at: nowStr(), step, maxStep, form: formAt, newWords, inc, pick, regSel, mSel, filter, listAll, cur, lastDoc }));
+  }
+  const wizClear = () => dbmStore.del(WK);
+  const wizLoad = () => { try { const s = JSON.parse(dbmStore.get(WK, 'null')); return s && s.form ? s : null; } catch (e) { return null; } };
+  function wizRestore(s) {
+    restoring = true; formSet(s.form); entsN();
+    Object.keys(newWords).forEach(k => delete newWords[k]); Object.assign(newWords, s.newWords || {});
+    if (s.ver !== VER) { restoring = false; go(1, false); toast(`작업 버전이 v${s.ver}에서 v${VER}로 바뀌어 입력 옵션과 새 단어만 되살렸습니다 — [분석]을 눌러 다시 분석하세요`, 'info'); return; }
+    analyze(); refreshAlts();
+    if (!rows.length) { restoring = false; wizClear(); go(1, false); toast('저장한 분석의 항목이 모두 정리돼 이어서 할 것이 없습니다 — 옵션은 되살렸습니다', 'info'); return; }
+    rows.forEach(r => { const p = s.pick && s.pick[r.key];
+      if (p) { const a = r.alts.find(x => sigOf(x) === p.sig); if (a) r.choice = a; else if (p.parts && p.parts.length) { const c = mkAlt(rejudge(p.parts), r, O, null); c.custom = true; r.alts.unshift(c); r.choice = c; } judge(r); }
+      if (s.inc && r.key in s.inc) r.inc = !!s.inc[r.key] && actionable(r); });
+    regSel = s.regSel || {}; mSel = s.mSel || {}; filter = s.filter || ''; listAll = !!s.listAll; cur = s.cur || 0; lastDoc = s.lastDoc || null;
+    maxStep = Math.max(2, s.maxStep || 2); restoring = false;
+    go(Math.max(2, Math.min(5, s.step || 2)), false);
+    toast(`${s.at}에 저장한 분석을 이어서 엽니다 — ${STEPS[step - 1]} 단계`, 'info');
+  }
   function analyze() {
-    O = readOpt(); const out = [];
+    O = readOpt(); formAt = formGet(); const out = [];
     model.E.forEach(e => {
       if (e.ref || !O.ents.includes(e.id)) return;
       if (O.entRows) out.push({ key: `${e.n}.${e.n}`, e: e.id, ent: e.n, a: e.n, entRow: true, cur: { n: e.n, p: e.p, t: '', dom: '', s: e.p === '—' ? 'comb' : e.st ? 'req' : 'ok', reqDoc: e.reqDoc } });
@@ -402,7 +452,10 @@ window.pageInit = function () {
     if (n === 2) drawResult(); if (n === 3) drawWords(); if (n === 4) drawReg(); if (n === 5) drawApply();
     footNote();
     if (focus) $('h-p' + n).focus();
+    if (n === 2 && !ctxShown) { const tr = document.querySelector('#r-rows tr.thl'); if (tr) { ctxShown = true; setTimeout(() => tr.scrollIntoView({ block: 'center' }), 0); } }
+    wizSave();
   }
+  let ctxShown = false;
   function footNote() {
     const inc = rows.filter(r => r.inc).length;
     $('foot-note').textContent = step === 1 ? `테이블 ${readOpt().ents.length}개 선택 · [분석]을 누르면 결과를 계산합니다` : `분석 ${rows.length}건 · 포함 ${inc}건 · ${O.basis === 'p' ? '물리명' : '논리명'} 기준`;
@@ -410,7 +463,7 @@ window.pageInit = function () {
   function next() {
     if (step === 1) {
       if (!readOpt().ents.length) { toast('분석할 테이블을 하나 이상 고르세요', 'danger'); return; }
-      const had = rows.length; analyze(); refreshAlts();
+      const had = rows.length; $('resume').hidden = true; analyze(); refreshAlts();
       if (!rows.length) { toast(O.range === 'todo' ? '선택한 테이블에 미준수 항목이 없습니다 — 대상 범위를 [전체]로 바꿔 다시 분석하세요' : '분석할 속성이 없습니다', 'info'); return; }
       maxStep = 2; if (had) toast('조건이 바뀌어 다시 분석했습니다 — 단어 구성 선택은 새로 계산됐습니다', 'info');
     }
@@ -445,11 +498,12 @@ window.pageInit = function () {
     $('r-sum').innerHTML = `<span><b>${rows.length}</b>분석</span>` + Object.keys(ST).map(k => `<span><b>${cnt(k)}</b>${ST[k][1]}</span>`).join('') + `<span><b>${rows.filter(r => r.inc).length}</b>포함</span>`;
     $('r-chips').innerHTML = [['', '전체', rows.length]].concat(Object.keys(ST).map(k => [k, ST[k][1], cnt(k)])).map(([k, l, n]) => `<button class="chip ${filter === k ? 'on' : ''}" data-f="${k}" aria-pressed="${filter === k}">${l} <span class="n">${n}</span></button>`).join('') + '<span class="grow"></span><span class="caption muted">체크한 행이 ④ 용어 등록·⑤ 모델 반영 대상 · 행을 열어 분해 대안 확인</span>';
     $('r-rows').innerHTML = rows.map((r, i) => { if (filter && r.st !== filter) return ''; const c = r.choice, s = ST[r.st], can = actionable(r);
-      return `<tr tabindex="0" data-i="${i}" class="${r.st === 'na' || r.st === 'ex' ? 'row-mute' : ''}"><td><input type="checkbox" data-inc="${i}" ${r.inc ? 'checked' : ''} ${can ? '' : 'disabled'} aria-label="${esc(r.ent)}.${esc(r.a)} 포함"></td>`
+      const why = r.st === 'na' ? (r.auto ? `비대상 규칙 ${r.rule} 일치` : `비대상 — ${r.cur.why || ''}`) : r.st === 'ex' ? `예외 — ${r.cur.why || ''}` : r.st === 'std' && !r.needApply ? '모델에서 표준 판정' + (c ? ` · ${c.why}` : '') : c ? c.why : '분해 후보 없음' + (O.basis === 'p' ? ' — 물리명 없음' : '');
+      return `<tr tabindex="0" data-i="${i}" class="${r.st === 'na' || r.st === 'ex' ? 'row-mute' : ''}${isCtx(r) ? ' thl' : ''}"><td><input type="checkbox" data-inc="${i}" ${r.inc ? 'checked' : ''} ${can ? '' : 'disabled'} aria-label="${esc(r.ent)}.${esc(r.a)} 포함"></td>`
         + `<td><span class="badge ${s[0]}">${s[1]}</span>${r.st === 'std' && r.needApply ? '<span class="sub2">사전에 있음 · 모델 반영 필요</span>' : ''}</td>`
-        + `<td>${esc(r.ent)}${r.entRow ? ' <span class="muted">· 테이블명</span>' : ''}</td><td>${esc(r.cur.n)}</td><td class="mono">${esc(r.cur.p)}</td>`
-        + `<td>${c ? esc(c.term) + susBadge(c) : '<span class="faint">후보 없음</span>'}</td><td class="mono">${c ? esc(c.phys) : ''}</td><td class="mono">${c && c.dom ? esc(c.dom) : '<span class="faint">—</span>'}</td><td class="num mono">${c ? c.score : ''}</td>`
-        + `<td class="tw-why">${r.st === 'na' ? (r.auto ? `비대상 규칙 <b class="mono">${esc(r.rule)}</b> 일치` : `비대상 — ${esc(r.cur.why || '')}`) : r.st === 'ex' ? `예외 — ${esc(r.cur.why || '')}` : r.st === 'std' && !r.needApply ? '모델에서 표준 판정' + (c ? ` · ${esc(c.why)}` : '') : c ? esc(c.why) : '분해 후보 없음' + (O.basis === 'p' ? ' — 물리명 없음' : '')}</td>`
+        + `<td>${esc(r.ent)}${r.entRow ? ' <span class="muted">· 테이블명</span>' : ''}</td><td class="tw-nm" title="${esc(r.cur.n)}">${esc(r.cur.n)}</td><td class="mono tw-ph" title="${esc(r.cur.p)}">${esc(r.cur.p)}</td>`
+        + `<td>${c ? esc(c.term) + susBadge(c) : '<span class="faint">후보 없음</span>'}</td><td class="mono tw-ph" title="${c ? esc(c.phys) : ''}">${c ? esc(c.phys) : ''}</td><td class="mono">${c && c.dom ? esc(c.dom) : '<span class="faint">—</span>'}</td><td class="num mono">${c ? c.score : ''}</td>`
+        + `<td class="tw-why" title="${esc(why)}"><span class="clamp">${esc(why)}</span></td>`
         + `<td><button class="btn sm ghost" data-open3="${i}">대안 ${r.alts.length}</button></td></tr>`; }).join('') || '<tr class="er none"><td colspan="11">이 상태의 항목이 없습니다</td></tr>';
     syncAll();
   }
@@ -570,10 +624,15 @@ window.pageInit = function () {
   const guard = () => { if (readOnly) { toast(roWhy, 'danger'); return false; } if (liveRoleChanged()) { staleRoleToast(); return false; } return true; };
   $('g-basket').onclick = () => { if (!guard()) return; const C = gChecked().filter(it => !it.unk); if (!C.length) return;
     const [a, s] = addToBasket(C.map(toItem)); C.forEach(it => { regSel[it.key] = false; });
-    toast(`신청 바구니에 ${a}건 담았습니다${s ? ` · 이미 있던 ${s}건 제외` : ''}`, 'success', { label: '바구니 보기', fn: () => { location.href = 'dictionary.html?basket=1'; } }); drawReg(); };
+    drawReg(); wizSave();
+    toast(`바구니에 ${a}건 담았습니다${s ? ` · 이미 있던 ${s}건 제외` : ''} — 분석은 저장돼 있어 돌아오면 이어서 합니다`, 'success', { label: '바구니 보기', fn: () => { location.href = `dictionary.html?basket=1&ret=${encodeURIComponent(RET)}`; } }); };
+  // D5: the way back from the basket / candidate queue (the receiving screens show it from &ret=)
+  const RET = `term-wizard.html?area=${AREA}&resume=1${CENT ? '&e=' + encodeURIComponent(CE) + (CA ? '&a=' + encodeURIComponent(CA) : '') : ''}`;
+  document.querySelectorAll('#p4 a[href="dictionary.html"], #p4 a[href="candidates.html"]').forEach(a => { a.href = a.getAttribute('href') + (a.getAttribute('href') === 'dictionary.html' ? '?basket=1&' : '?') + 'ret=' + encodeURIComponent(RET); });
   $('g-cand').onclick = () => { if (!guard()) return; const C = gChecked(); if (!C.length) return; let n = 0;
     C.forEach(it => { it.locs.forEach(r => { addCandidate({ t: it.k === 'word' ? '단어' : '용어', name: it.name, abbr: it.abbr || '' }, { area: AREA, e: r.e, ent: r.ent, attr: r.a }); n++; }); regSel[it.key] = false; });
-    toast(`후보 큐에 ${C.length}건(발생 위치 ${n}곳)을 등록했습니다 — DA가 검토합니다`, 'success', { label: '후보 큐 보기', fn: () => { location.href = 'candidates.html'; } }); drawReg(); };
+    drawReg(); wizSave();
+    toast(`후보 큐에 ${C.length}건(발생 위치 ${n}곳)을 등록했습니다 — DA가 검토합니다 · 분석은 저장돼 있어 돌아오면 이어서 합니다`, 'success', { label: '후보 큐 보기', fn: () => { location.href = `candidates.html?ret=${encodeURIComponent(RET)}`; } }); };
   $('g-req').onclick = () => { if (!guard()) return; const C = gChecked().filter(it => !it.unk); if (!C.length) return;
     $('rq-t').textContent = `바로 신청 (${C.length}건)`; $('rq-list').innerHTML = orderItems(C.map(toItem)).map(i => `<span class="badge">${KN[i.k]} ${esc(i.name)}</span>`).join(' ') + (gChecked().some(it => it.unk) ? '<div class="caption muted u-mt-8">미등록 단어는 신청에서 빠집니다(후보 큐로 보내세요).</div>' : '');
     $('mo-req').classList.add('open'); $('mo-req')._opener = $('g-req'); updateNeeds(); setTimeout(() => $('rq-why').focus(), 0); };
@@ -644,13 +703,26 @@ window.pageInit = function () {
     $('m-done').innerHTML = `<div class="tw-done" role="status"><div class="flex u-mb-8"><i data-ic=check></i><b>모델 반영을 준비했습니다</b></div>
       <div class="mline"><span><b>${applied.ok}</b>반영(표준 ${applied.std} · 이름만 ${applied.name})</span><span><b>${applied.req}</b>신청 중</span><span><b>${applied.na}</b>비대상 제외</span><span><b>${applied.skip}</b>선택 안 함</span></div>
       <div class="caption muted u-mb-12">모델 화면을 열면 작업 버전 v${VER}에 한 번에 반영되고, 토스트의 [실행 취소]로 되돌릴 수 있습니다.${lastDoc ? ` 용어 신청 ${lastDoc.id}는 되돌려도 남습니다(결재함에서 회수).` : ''}</div>
-      <a class="btn primary" id="m-view" href="model.html?area=${AREA}">모델에서 보기</a></div>`;
+      <a class="btn primary" id="m-view" href="${backUrl}">모델에서 보기</a></div>`;
+    wizClear();   // the analysis is finished — nothing to resume
     $('m-view').focus();
   };
 
   // ---------- start ----------
   entsN(); go(1, false);
-  if (q.get('auto') === '1') next();
+  // D5: keep the analysis while the user works elsewhere; offer to resume on return (&resume=1 resumes straight away)
+  document.addEventListener('change', () => setTimeout(wizSave, 0));
+  $('sc').addEventListener('click', () => setTimeout(wizSave, 0));
+  window.addEventListener('pagehide', wizSave);
+  const saved = wizLoad();
+  if (saved && q.get('resume') === '1') wizRestore(saved);
+  else if (saved) {
+    const n = Object.values(saved.inc || {}).filter(Boolean).length;
+    $('resume-t').innerHTML = `<b>분석을 이어서 할까요?</b> ${esc(saved.at)}에 저장한 분석이 있습니다 — ${STEPS[(saved.step || 2) - 1]} 단계 · 포함 ${n}건${Object.keys(saved.newWords || {}).length ? ` · 새 단어 ${Object.keys(saved.newWords).length}개` : ''}${saved.ver !== VER ? ` <span class="faint">(v${saved.ver} 기준 — 지금은 v${VER}이라 옵션만 되살립니다)</span>` : ''}`;
+    $('resume').hidden = false;
+    $('resume-go').onclick = () => { $('resume').hidden = true; wizRestore(saved); };
+    $('resume-new').onclick = () => { $('resume').hidden = true; wizClear(); toast('저장한 분석을 지웠습니다 — 대상을 고르고 [분석]을 누르세요', 'info'); $('h-p1').focus(); };
+  } else if (q.get('auto') === '1') next();
 };
 </script>
 </body>

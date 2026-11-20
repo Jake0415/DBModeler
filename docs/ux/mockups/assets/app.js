@@ -551,7 +551,10 @@
      the dictionary list, the detail panel, the model's dictionary panel and the excel import all add to it; the request panel submits it */
   const bKey = () => 'dbm-basket-' + (window.ME ? ME.id : 'kim');
   window.getBasket = () => J(bKey(), { items: [], reason: '', at: '' });
-  window.saveBasket = b => { b.at = today() + ' ' + now().split(' ')[1]; S(bKey(), b); if (window.refreshTop) window.refreshTop(); document.dispatchEvent(new CustomEvent('basket')); };
+  window.saveBasket = b => { b.at = today() + ' ' + now().split(' ')[1]; S(bKey(), b); if (window.refreshTop) window.refreshTop(); basketBadge(); document.dispatchEvent(new CustomEvent('basket')); };
+  // the top-bar basket badge follows every save (no reload needed)
+  const basketBadge = () => { const a = document.getElementById('btn-basket'); if (!a) return; const n = getBasket().items.length; a.setAttribute('aria-label', `사전 바구니 ${n}건 — 열어서 품의 올리기`); a.title = `사전 바구니 ${n}건`; let d = a.querySelector('.dot'); if (!n) { if (d) d.remove(); return; } if (!d) { d = document.createElement('span'); d.className = 'dot'; a.appendChild(d); } d.textContent = n; };
+  window.addEventListener('storage', e => { if (e.key === bKey()) basketBadge(); });   // another tab changed the basket
   // add items; an item already in the basket (same id, or same kind + name for new ones) is skipped — returns [added, skipped]
   // two changes of the same item merge field by field (the later value wins); a different action on the same item is skipped and reported
   window.addToBasket = list => { const b = getBasket(); let a = 0, s = 0, m = 0;
@@ -812,7 +815,8 @@
     saveDict(dict); return n;
   };
   /* the role that is CURRENTLY selected (another tab may have switched it after this page loaded) */
-  window.liveRoleChanged = () => store.get('dbm-role', 'kim') !== ME.id;
+  // review mode (&audit=1) uses the role in the address and never saves it — compare against that, so actions work while reviewing (CL16)
+  window.liveRoleChanged = () => (AUDIT_RUN && qs.get('as') ? qs.get('as') : store.get('dbm-role', 'kim')) !== ME.id;
   // the account as saved right now — another tab may have taken a role or a system away since this page loaded
   window.freshUser = () => { try { const db = JSON.parse(store.get('dbm-users', 'null')); if (db) return db[ME.id] || null; } catch (e) {} return USERS[ME.id] || null; };
   window.liveCanEdit = area => { const u = freshUser(); return !!u && u.status !== 'stopped' && canUser(u, 'model.edit', { area }); };
@@ -1052,6 +1056,7 @@
     tag: '<path d="M12.59 2.59A2 2 0 0 0 11.17 2H4a2 2 0 0 0-2 2v7.17a2 2 0 0 0 .59 1.42l8.7 8.7a2.43 2.43 0 0 0 3.42 0l6.58-6.58a2.43 2.43 0 0 0 0-3.42z"/><circle cx="7.5" cy="7.5" r="1"/>',
     shield: '<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/>',
     list: '<path d="M3 12h.01"/><path d="M3 18h.01"/><path d="M3 6h.01"/><path d="M8 12h13"/><path d="M8 18h13"/><path d="M8 6h13"/>',
+    edit: '<path d="M12 20h9"/><path d="M16.4 3.6a2.1 2.1 0 1 1 3 3L7 19l-4 1 1-4Z"/>',
     star: '<path d="M11.5 2.8a.5.5 0 0 1 1 0l2.3 4.7 5.2.8a.5.5 0 0 1 .3.9l-3.8 3.6.9 5.2a.5.5 0 0 1-.8.6L12 16.1l-4.6 2.5a.5.5 0 0 1-.8-.6l.9-5.2-3.8-3.6a.5.5 0 0 1 .3-.9l5.2-.8z"/>',
     copy: '<rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>',
     refresh: '<path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/><path d="M8 16H3v5"/>',
@@ -1095,6 +1100,8 @@
   /* ---- screen map (mockup review tool): one registry for the per-screen info panel and the index map ----
      docs are relative to /mockups/ — serve.ps1 serves ../*.md (docs/ux) and ../../spec/*.md (docs/spec) read-only */
   const D = { flows: '../02-flows.md', erd: '../03-erd-editor.md', plan: '../06-ux-review-plan.md', excel: '../07-dict-excel-roundtrip.md', da: '../05-mockup-vs-da.md', meta: '../../spec/da-feature-spec/30-metadata-design.md', prio: '../../spec/da-feature-spec/20-priority.md', sws: '../../spec/da-feature-spec/22-sws-comparison.md', perf: '../../spec/da-feature-spec/23-performance-spike.md', guide: '../01-design-guide.md' };
+  // the dictionary screens, in groups (find · write | bring in | flow · history | reference) — one list for the top menu and the tab row
+  const DICT_TABS = [['dictionary.html', '통합 검색'], ['dict-grid.html', '화면 일괄 작성'], 0, ['excel-import.html', '엑셀 가져오기', ['uploads.html']], 0, ['candidates.html', '후보 큐'], ['dict-history.html', '변경 내역'], 0, ['domain-groups.html', '도메인 그룹 · 분류'], ['std-common.html', '공통표준 · 행정표준코드']];
   const SCREENS = [
     { file: 'home.html', ids: 'SC-55', name: '홈', menu: '홈', docs: [['02 §1 화면 목록', D.flows], ['06 §3 새 화면 명세', D.plan]], states: [['김모델(모델러·DA)', 'home.html?as=kim'], ['박설계(모델러)', 'home.html?as=park'], ['이현업(기관 담당자)', 'home.html?as=hyun']] },
     { file: 'dictionary.html', ids: 'SC-10 · PN-11 · PN-12', name: '사전 통합 검색 · 상세 · 등록 신청', menu: '사전', docs: [['02 §3.1~3.2', D.flows], ['30 MD-01~12 사전 규칙', D.meta], ['07 E6 검색', D.excel], ['23 §6-1 검색 숫자', D.perf]], states: [['기본(최근 변경)', 'dictionary.html'], ['도메인 신청', 'dictionary.html?req=domain'], ['편집용 내려받기', 'dictionary.html#download'], ['검색: 산출', 'dictionary.html?q=산출']] },
@@ -1292,7 +1299,7 @@
         if (!qq) {
           const bad = compOf(s).bad;
           const sn = s.snap ? '&snap=' + s.snap : '';
-          [['model.html?area=' + area + sn, '모델'], ['standardize.html?area=' + area, '표준 맞추기', bad, '작업본'], ['ddl.html?area=' + area + sn, 'DDL'], ['outputs.html?area=' + area + sn, '산출물']].forEach((l, j) => kidsOf.push(N('l:' + j, 'link', { href: l[0], html: `${l[1]}${l[2] ? ` <b>${l[2]}</b>` : ''}`, aria: l[1] + (l[2] ? ` 미준수 ${l[2]}` : '') + (l[3] && s.snap ? ', 작업본 기준' : '') })));
+          [['model.html?area=' + area + sn, '모델'], ['standardize.html?area=' + area + '&f=todo', '표준 맞추기', bad, '작업본'], ['ddl.html?area=' + area + sn, 'DDL'], ['outputs.html?area=' + area + sn, '산출물']].forEach((l, j) => kidsOf.push(N('l:' + j, 'link', { href: l[0], html: `${l[1]}${l[2] ? ` <b>${l[2]}</b>` : ''}`, aria: l[1] + (l[2] ? ` 미준수 ${l[2]}` : '') + (l[3] && s.snap ? ', 작업본 기준' : '') })));
           const vs = onM ? lv0.V : viewsOf(area), seeing = onM ? (lv0.view || 'all') : null;
           kidsOf.push(folder('f:views', '다이어그램', vs.map(v => { const n = v.id === 'all' ? s.E.length : (v.ents || []).length;
             return N('v:' + v.id, 'view', { view: v.id, selectable: true, html: `<span class="tn1">${esc(v.n)}</span><span class="tct">${n}</span>${v.id === seeing ? '<span class="tmeta">보는 중</span>' : ''}`, aria: `${v.n}, 엔터티 ${n}${v.id === 'all' ? ', 기본 보기' : ''}${v.id === seeing ? ', 보는 중' : ''}` }); }), { def: !!onM && seeing !== 'all' }));
@@ -1572,7 +1579,7 @@
         if (window.dispatchEvent(ev)) toast(msg, 'info'); return;
       }
       const term = r.term || r.dom || (e && r.ai != null && e.a[r.ai] ? e.a[r.ai].n : '');
-      const NAV = { open: `model.html?area=${r.area}${sn}`, std: `standardize.html?area=${r.area}`, ddl: `ddl.html?area=${r.area}${sn}${r.ent ? '&focus=' + r.ent : ''}`, outputs: `outputs.html?area=${r.area}${sn}`, hist: 'approvals.html', cand: 'candidates.html', dictopen: 'dictionary.html',
+      const NAV = { open: `model.html?area=${r.area}${sn}`, std: `standardize.html?area=${r.area}&f=todo`, ddl: `ddl.html?area=${r.area}${sn}${r.ent ? '&focus=' + r.ent : ''}`, outputs: `outputs.html?area=${r.area}${sn}`, hist: 'approvals.html', cand: 'candidates.html', dictopen: 'dictionary.html',
         dict: `dictionary.html?q=${encodeURIComponent(term)}`, dreq: `dictionary.html?q=${encodeURIComponent(term)}`, src: e && e.refArea ? `model.html?area=${e.refArea}&focus=${r.ent}` : '' };
       if (c in NAV) { if (c === 'dict' && window.openDictTab && document.getElementById('dict-q')) { openDictTab(term, true); return; } if (NAV[c]) go(NAV[c]); else toast('원본 영역을 찾지 못했습니다', 'danger'); return; }
       // object commands: the page with this area open runs them; otherwise the model screen opens and runs it
@@ -1672,12 +1679,12 @@
     // ---- collapse to the 56px icon column
     const btn = nav.querySelector('#tr-min');
     const syncMin = () => { const m = minned(); btn.innerHTML = `<i data-ic=${m ? 'right' : 'left'}></i><span>접기</span>`; btn.setAttribute('aria-label', m ? '모델 트리 펼치기' : '모델 트리 접기'); btn.setAttribute('aria-expanded', String(!m)); btn.setAttribute('aria-controls', 'tr-full'); btn.title = m ? '펼치기' : '접기'; if (m) app.style.removeProperty('--nav'); else { curW = 0; fit(); } };
-    btn.addEventListener('click', () => { app.classList.toggle('treemin'); store.set('dbm-tree-min', minned() ? '1' : '0'); syncMin(); window.dispatchEvent(new Event('resize')); });
+    btn.addEventListener('click', () => { app.classList.toggle('treemin'); store.set('dbm-tree-min-' + ME.id, minned() ? '1' : '0'); syncMin(); window.dispatchEvent(new Event('resize')); });
     // ---- [모델 | 사전] — the model screen's dictionary panel moves into this one column (12 §4.6)
     if (tabs) {
       const side = document.getElementById('side'); const dp = nav.querySelector('#tp-dict');
       dp.appendChild(side); side.classList.remove('closed'); document.body.classList.add('dict-in-tree');
-      const setTab = (v, focus, expand) => { ST.tab = v; save(); nav.querySelectorAll('[data-lt]').forEach(b => { const on = b.dataset.lt === v; b.setAttribute('aria-selected', on); b.tabIndex = on ? 0 : -1; }); nav.querySelector('#tp-model').hidden = v !== 'm'; dp.hidden = v !== 'd'; if (minned() && (focus || expand)) { app.classList.remove('treemin'); store.set('dbm-tree-min', '0'); syncMin(); } if (focus) (v === 'd' ? document.getElementById('dict-q') : qIn).focus(); };
+      const setTab = (v, focus, expand) => { ST.tab = v; save(); nav.querySelectorAll('[data-lt]').forEach(b => { const on = b.dataset.lt === v; b.setAttribute('aria-selected', on); b.tabIndex = on ? 0 : -1; }); nav.querySelector('#tp-model').hidden = v !== 'm'; dp.hidden = v !== 'd'; if (minned() && (focus || expand)) { app.classList.remove('treemin'); store.set('dbm-tree-min-' + ME.id, '0'); syncMin(); } if (focus) (v === 'd' ? document.getElementById('dict-q') : qIn).focus(); };
       nav.querySelector('.ltabs').addEventListener('click', e => { const b = e.target.closest('[data-lt]'); if (b) setTab(b.dataset.lt, true); });
       nav.querySelector('.ltabs').addEventListener('keydown', e => { if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') { e.preventDefault(); const v = ST.tab === 'm' ? 'd' : 'm'; setTab(v, false); nav.querySelector(`[data-lt="${v}"]`).focus(); } });
       document.addEventListener('keydown', e => { if (e.altKey && (e.key === '1' || e.key === '2')) { e.preventDefault(); setTab(e.key === '1' ? 'm' : 'd', true); } });
@@ -1723,15 +1730,7 @@
       <nav class="tmenu" aria-label="주 메뉴">
         <a class="tm${TAB === 'model' ? ' on' : ''}" href="system.html"${cur(TAB === 'model', 'system.html')}>모델</a>
         <span class="tmw"><button class="tm${TAB === 'dict' ? ' on' : ''}" type="button" data-menu-btn aria-expanded="false" aria-controls="mn-dict"${TAB === 'dict' ? ' aria-current="true"' : ''}>사전<i data-ic=down data-s=12></i></button><div class="menu" data-auto id="mn-dict">
-          <a class="mi${here('dictionary.html')}" href="dictionary.html">통합 검색</a>
-          <a class="mi${here('dict-grid.html')}" href="dict-grid.html">화면 일괄 작성</a>
-          <a class="mi${here('domain-groups.html')}" href="domain-groups.html">도메인 그룹 · 분류</a>
-          <a class="mi${here('std-common.html')}" href="std-common.html">공통표준 · 행정표준코드</a>
-          <a class="mi${here('excel-import.html')}" href="excel-import.html">엑셀 가져오기</a>
-          <a class="mi${here('uploads.html')}" href="uploads.html">업로드 이력</a>
-          <a class="mi${here('candidates.html')}" href="candidates.html">후보 큐${cq ? `<span class="mcount">${cq}</span>` : ''}</a>
-          <div class="sep"></div>
-          <a class="mi${here('dict-history.html')}" href="dict-history.html">변경 내역</a></div></span>
+          ${DICT_TABS.map(t => !t ? '<div class="sep"></div>' : `<a class="mi${here(t[0])}" href="${t[0]}">${t[1]}${t[0] === 'candidates.html' && cq ? `<span class="mcount">${cq}</span>` : ''}</a>` + (t[2] || []).map(s => `<a class="mi${here(s)}" href="${s}">${s === 'uploads.html' ? '업로드 이력' : s}</a>`).join('')).join('')}</div></span>
         <a class="tm${TAB === 'appr' ? ' on' : ''}" href="approvals.html" id="tm-appr"${cur(TAB === 'appr', 'approvals.html')} aria-label="결재함${qn0 ? ` 내 차례 ${qn0}건` : ''}${late ? ', 기한 넘김 있음' : ''}">결재함${qn0 ? `<span class="tcount">${qn0}</span>` : ''}${late ? '<span class="tlate" title="기한을 넘긴 결재가 있습니다"></span>' : ''}</a>
         ${canAdmin ? `<span class="tmw"><button class="tm${TAB === 'admin' ? ' on' : ''}" type="button" data-menu-btn aria-expanded="false" aria-controls="mn-admin"${TAB === 'admin' ? ' aria-current="true"' : ''}>관리<i data-ic=down data-s=12></i></button><div class="menu" data-auto id="mn-admin">
           <a class="mi${here('settings.html')}" href="settings.html">설정</a>
@@ -1739,7 +1738,7 @@
       </nav>
       <div class="spacer"></div>
       <button class="gsearch" id="gsearch" type="button" aria-haspopup="dialog" aria-label="전체 검색 (Ctrl+K)">${ICON.search}<span>검색</span><kbd>Ctrl K</kbd></button>
-      ${can('dict.request') ? (() => { const bn = getBasket().items.length; return `<a class="iconbtn" id="btn-basket" href="dictionary.html?basket=1" aria-label="사전 바구니 ${bn}건 — 열어서 품의 올리기" title="사전 바구니 ${bn}건">${ICON.basket}${bn ? `<span class="dot">${bn}</span>` : ''}</a>`; })() : ''}
+      ${can('dict.request') ? (() => { const bn = getBasket().items.length; return `<a class="iconbtn" id="btn-basket" href="dictionary.html?basket=1" aria-label="사전 바구니 ${bn}건 — 열어서 품의 올리기" title="사전 바구니 ${bn}건">${icon('basket', 16)}${bn ? `<span class="dot">${bn}</span>` : ''}</a>`; })() : ''}
       <button class="iconbtn" id="btn-bell" aria-label="알림 ${nUnread}건" aria-haspopup="true" aria-expanded="false">${ICON.bell}${nUnread ? `<span class="dot">${nUnread}</span>` : ''}</button>
       <button class="avatar btnlike" id="btn-user" aria-label="사용자 메뉴 · ${ME.name}" aria-haspopup="true" aria-expanded="false">${ME.name[0]}${store.get('dbm-seen-ver', '') !== PRODUCT.version ? '<span class="newdot" title="새 기능"></span>' : ''}</button>
       <div class="pop-menu npanel" id="pn-notif" role="dialog" aria-label="알림"></div>
@@ -1750,14 +1749,14 @@
     nav.className = 'mtree'; nav.setAttribute('aria-label', '모델 트리');
     const showTree = ['home', 'system', 'model'].includes(page);
     if (!showTree) app.classList.add('notree');
-    const tmin = store.get('dbm-tree-min', '');
+    const tmin = store.get('dbm-tree-min-' + ME.id, '');
     if (tmin === '1' || (tmin === '' && curFile() === 'model.html' && (document.documentElement.classList.contains('frame-1600') || Math.min(window.innerWidth, app.clientWidth || window.innerWidth) < 1920))) app.classList.add('treemin');
     app.insertBefore(nav, content);
     app.insertBefore(top, nav);
     document.querySelectorAll('.crumbs a[href="system.html"]').forEach(a => { if (a.textContent.trim() === '요구사항관리') a.textContent = curSys().name; });
     // the dictionary screens share one tab row under the header (01 v2 §5, D4) — they have no breadcrumb
     // three groups (review: find · write / bring in / flow · history) + the reference data at the end; upload history lives inside the excel group
-    { const DT = [['dictionary.html', '통합 검색'], ['dict-grid.html', '화면 일괄 작성'], 0, ['excel-import.html', '엑셀 가져오기', ['uploads.html']], 0, ['candidates.html', '후보 큐'], ['dict-history.html', '변경 내역'], 0, ['domain-groups.html', '도메인 그룹 · 분류'], ['std-common.html', '공통표준 · 행정표준코드']];
+    { const DT = DICT_TABS;
       const here = t => t && (t[0] === curFile() || (t[2] || []).includes(curFile()));
       const ph = DT.some(here) && document.querySelector('#content .page-header');
       if (ph && !document.querySelector('.dtabs')) ph.insertAdjacentHTML('afterend', `<nav class="tabs dtabs" aria-label="사전 화면">${DT.map(t => !t ? '<span class="dsep" aria-hidden="true"></span>' : `<a href="${t[0]}"${here(t) ? ' class="on" aria-current="page"' : ''}>${t[1]}</a>`).join('')}</nav>`); }
@@ -1771,7 +1770,7 @@
       <div class="overlay" id="mo-about" role="dialog" aria-modal="true" aria-labelledby="about-t"><div class="modal" style="width:520px">
         <div class="m-head"><div class="flex">${MARK(28)}<h3 id="about-t">제품 정보</h3><span class="grow"></span><button class="iconbtn" data-close="mo-about" aria-label="닫기" style="width:28px;height:28px">${ICON.x}</button></div></div>
         <div class="m-body">
-          <dl class="kv"><dt>제품</dt><dd><b>${PRODUCT.name}</b> — 웹 데이터 모델러 · 데이터 표준 사전</dd><dt>버전</dt><dd class="mono">${PRODUCT.version}</dd><dt>빌드</dt><dd class="mono">${PRODUCT.build} · ${PRODUCT.released}</dd><dt>배포 환경</dt><dd>${PRODUCT.env} <span class="badge b-success">최신 버전</span></dd><dt>사전 기준</dt><dd>${PRODUCT.dict}</dd><dt>기관</dt><dd>한국데이터진흥원</dd></dl>
+          <dl class="kv"><dt>제품</dt><dd><b>${PRODUCT.name}</b> — 웹 데이터 모델러 · 데이터 표준 사전</dd><dt>버전</dt><dd class="mono">${PRODUCT.version}</dd><dt>빌드</dt><dd class="mono">${PRODUCT.build} · ${PRODUCT.released}</dd><dt>배포 환경</dt><dd>${PRODUCT.env} <span class="badge b-success">최신 버전</span></dd><dt>사전 기준</dt><dd>공통표준 ${getCommonVer().ver} · 기관 사전 제정 ${getPub().cha}차</dd><dt>기관</dt><dd>한국데이터진흥원</dd></dl>
           <div class="section-t">릴리스 노트 · ${PRODUCT.version}</div>
           <ul class="caption" style="margin:0;padding-left:18px;line-height:22px"><li>산출물 화면: 테이블 정의서·준수검사·개인정보 컬럼 목록</li><li>모델: 표 보기(일괄편집·찾기/바꾸기), 모델 검토, 제약·인덱스, 서브타입·배타 관계</li><li>실시간 공동 편집, 내 편집만 되돌리기</li><li>알려진 제한: DBMS 비교(운영 DB 접속)는 다음 버전</li></ul>
           <div class="section-t">오픈소스 라이선스</div>
@@ -1903,7 +1902,10 @@
     box.appendChild(t);
     t.querySelectorAll('.act').forEach(b => { b.onclick = () => { t.remove(); acts[+b.dataset.ai].fn(); }; });
     const c = t.querySelector('.tclose'); if (c) c.onclick = () => t.remove();
-    if (type !== 'danger') setTimeout(() => t.remove(), action ? 8000 : 4000);
+    // usability E7: a toast with an action stays 12 s, and pauses while the pointer or focus is on it
+    if (type !== 'danger') { let left = acts.length ? 12000 : 4000, at = Date.now(), tm = setTimeout(() => t.remove(), left);
+      const pause = () => { clearTimeout(tm); left -= Date.now() - at; }, resume = () => { at = Date.now(); tm = setTimeout(() => t.remove(), Math.max(left, 1500)); };
+      t.addEventListener('mouseenter', pause); t.addEventListener('mouseleave', resume); t.addEventListener('focusin', pause); t.addEventListener('focusout', resume); }
   };
   window.flash = (msg, type) => { try { sessionStorage.setItem('dbm-flash', JSON.stringify([msg, type])); } catch (e) {} };
 
@@ -2014,6 +2016,25 @@
 
   document.addEventListener('DOMContentLoaded', () => {
     buildShell(); wire();
+    // usability D5: a screen opened with &ret=<screen> (e.g. from the term wizard) keeps a way back, even after the page rewrites its own address
+    try {
+      const rk = 'dbm-ret:' + curFile(), r0 = qs.get('ret');
+      if (r0 && /^[a-z-]+\.html(\?[\w=&.%-]*)?$/.test(r0)) sessionStorage.setItem(rk, r0);
+      const r = sessionStorage.getItem(rk), content = document.getElementById('content');
+      if (r && content && !r.startsWith(curFile())) {
+        const bn = document.createElement('div'); bn.className = 'banner info'; bn.setAttribute('role', 'status');
+        bn.innerHTML = `<span>하던 작업이 있습니다.</span> <a href="${r}">${r.startsWith('term-wizard.html') ? '용어 자동분석으로 돌아가기' : '이전 작업으로 돌아가기'}</a> <button class="btn sm ghost" type="button">닫기</button>`;
+        bn.querySelector('a').addEventListener('click', () => sessionStorage.removeItem(rk));
+        bn.querySelector('button').addEventListener('click', () => { sessionStorage.removeItem(rk); bn.remove(); });
+        content.prepend(bn);
+      }
+    } catch (e) { /* storage blocked: no way-back bar */ }
+    // review mode keeps its role while moving between screens (links drop ?as=&audit= otherwise and the saved role takes over)
+    if (AUDIT_RUN && qs.get('as')) document.addEventListener('click', e => {
+      const a = e.target.closest && e.target.closest('a[href]'); if (!a) return;
+      const h = a.getAttribute('href'); if (!/^[a-z-]+\.html/.test(h) || /[?&]as=/.test(h)) return;
+      const [p, hash] = h.split('#'); a.setAttribute('href', p + (p.includes('?') ? '&' : '?') + 'audit=1&as=' + qs.get('as') + (hash ? '#' + hash : ''));
+    }, true);
     if (location.hash) { const b = document.querySelector(`.tabs button[data-tab="${location.hash.slice(1)}"]`); if (b) b.click(); }
     if (window.pageInit) window.pageInit();
     updateNeeds();

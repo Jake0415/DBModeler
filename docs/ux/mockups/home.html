@@ -16,6 +16,13 @@
   .ok-line { font-size:12px; color:var(--fg-3); padding-top:8px; }
   .reasons { margin:8px 0 0; padding-left:20px; font-size:14px; line-height:28px; }
   .reasons li::marker { color:var(--fg-3); font-variant-numeric:tabular-nums; }
+  .reasons .rx { margin:0; padding-left:16px; list-style:disc; font-size:12px; line-height:22px; color:var(--fg-2); }
+  /* 내 결재 · 기한 넘김 (E8): the title column gives way, the full title stays in the tooltip */
+  #my-appr td.rt { max-width:0; width:100%; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:var(--fg-2); }
+  #my-appr .sec-h .end { display:flex; gap:8px; align-items:center; }
+  /* 사전 구축 순서 (E10) */
+  .bguide .bsteps { display:flex; flex-wrap:wrap; align-items:center; gap:6px 8px; margin:8px 0; padding:0; list-style:none; font-size:14px; }
+  .bguide .bsteps .ar { color:var(--fg-3); }
   .cols6 { display:grid; grid-template-columns:repeat(6, 1fr); gap:8px; align-items:end; height:96px; margin-top:12px; }
   .cols6 .c { display:flex; flex-direction:column; align-items:stretch; gap:4px; height:100%; justify-content:flex-end; font-size:12px; font-variant-numeric:tabular-nums; color:var(--fg-3); text-align:left; }
   .cols6 .c i { display:block; background:var(--border-strong); min-height:1px; }
@@ -49,13 +56,17 @@
 </div>
 </div>
 <script>
+// E8: roles that cannot edit models (기관 담당자 · DA · Admin without 모델러) get the model tree folded by default —
+// only while the viewer has not chosen (the tree's own [접기] keeps their choice in dbm-tree-min-<id>)
+if (!can('model.edit') && dbmStore.get('dbm-tree-min-' + ME.id, '') === '') document.getElementById('app').classList.add('treemin');
 window.pageInit = function () {
   const $ = id => document.getElementById(id);
   const docs = getDocs(), org = getOrg(), models = getModels();
   const GOAL = org.goal || 90, SLA = org.sla || 3;
   const T0 = MOCK_TODAY;
   $('today').textContent = `${T0.getMonth() + 1}/${T0.getDate()}(${'일월화수목금토'[T0.getDay()]})`;
-  $('dictver').textContent = `공통표준 2025.11 · 기관 사전 제정 ${getPub().cha}차`;
+  // one source for the common-standard edition (E1): getCommonVer() — the same value std-common.html shows
+  $('dictver').innerHTML = `<a href="std-common.html" title="공통표준 · 행정표준코드 화면 열기">공통표준 ${getCommonVer().ver}</a> · <a href="dict-history.html">기관 사전 제정 ${getPub().cha}차</a>`;
   const days = (a, b) => Math.max(0, Math.round(((b || T0) - a) / 864e5));
   const live = docs.filter(d => ['da', 'final'].includes(d.step));
   const lead = ME.has('admin') ? 'admin' : ME.has('da') ? 'da' : ME.has('owner') ? 'owner' : 'modeler';
@@ -163,14 +174,19 @@ window.pageInit = function () {
     const F = [['DA 승인 대기', 'da'], ['최종 승인 대기', 'final']].map(([l, s]) => { const x = docs.filter(d => d.step === s); return { l, n: x.length, a: x.length ? x.reduce((n, d) => n + docAge(d), 0) / x.length : 0 }; });
     F.push({ l: '완료', n: docs.filter(d => d.step === 'done').length, a: null }, { l: '반려·회수', n: docs.filter(d => docGroup(d) === 'fix').length, a: null });
     const fmax = Math.max(...F.map(f => f.n), 1); const worst0 = F.slice(0, 2).filter(f => f.n).sort((a, b) => b.a - a.a)[0]; const worst = worst0 && worst0.a >= SLA ? worst0 : null;
-    const R = new Map(); const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]); const add = (t, id) => { const k = esc(t).replace(/'[^']*'/g, '‘…’').replace(/\([^)]*\)/g, '').replace(/[A-Z]{1,3}-\d{4}(-\d{4})?/g, '…').replace(/\d+자/g, 'N자').trim(); if (!R.has(k)) R.set(k, new Set()); R.get(k).add(id); };
+    // reasons are grouped by pattern for counting, but each line shows the real text (actual domain · term names) and its document (E8 · CL24)
+    const R = new Map(); const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]); const add = (t, id) => { const k = String(t).replace(/['‘’][^'‘’]*['‘’]/g, '‘…’').replace(/\([^)]*\)/g, '').replace(/[A-Z]{1,3}-\d{4}(-\d{4})?/g, '…').replace(/\d+자/g, 'N자').trim(); if (!R.has(k)) R.set(k, new Map()); const g = R.get(k), key = t + '|' + id; if (!g.has(key)) g.set(key, { t: String(t), id }); };
     docs.forEach(d => (d.hist || []).forEach(h => { if (/반려|재검사 실패/.test(h.act || '') && h.why) add(h.why, d.id); }));
     live.filter(d => d.type === 'dict').forEach(d => { try { checkDictDoc(d).forEach(r => r.problems.forEach(p => add(p, d.id))); } catch (e) {} });
-    const top = [...R.entries()].map(([k, s]) => [k, s.size, [...s]]).sort((a, b) => b[1] - a[1]).slice(0, 5);
+    const top = [...R.entries()].map(([k, g]) => [k, new Set([...g.values()].map(x => x.id)).size, [...g.values()]]).sort((a, b) => b[1] - a[1]).slice(0, 5);
+    const docA = id => `<a class="mono" href="approvals.html?doc=${id}" title="${id} 결재 문서 열기">${id}</a>`;
+    const reasonLi = ([k, n, inst]) => { const texts = [...new Set(inst.map(x => x.t))];
+      if (texts.length === 1) return `<li>${esc(texts[0])} <span class="num muted">${n}건</span> ${[...new Set(inst.map(x => x.id))].slice(0, 3).map(docA).join(' ')}</li>`;
+      return `<li>${esc(k)} <span class="num muted">${n}건</span><ul class="rx">${inst.slice(0, 3).map(x => `<li>${esc(x.t)} ${docA(x.id)}</li>`).join('')}${inst.length > 3 ? `<li><a href="approvals.html?box=all">외 ${inst.length - 3}건 — 결재함에서 보기</a></li>` : ''}</ul></li>`; };
     stats = `<section class="sec"><div class="sec-h"><h2>결재 흐름</h2>${worst ? `<span class="end">${tag('err', `병목 ${worst.l.replace(' 대기', '')} ${worst.a.toFixed(1)}일`)}</span>` : ''}</div>
       <div style="max-width:640px;margin-top:8px">${F.map(f => `<div class="hbar"><span>${f.l}</span><span class="t"><i class="${f === worst ? 'hi' : ''}" style="width:${f.n / fmax * 100}%"></i></span><span class="v">${f.n}${f.a != null && f.n ? ' · ' + f.a.toFixed(1) + '일' : ''}</span></div>`).join('')}</div></section>
       <section class="sec"><div class="sec-h"><h2>막힘 사유</h2><a class="end" href="settings.html#rules">검수 기준</a></div>
-      ${top.length ? `<ol class="reasons">${top.map(([k, n, ids]) => `<li>${k} <span class="num muted">${n}건</span> ${ids.slice(0, 2).map(id => `<a class="mono" href="approvals.html?doc=${id}">${id.slice(-4)}</a>`).join(' ')}</li>`).join('')}</ol>` : '<div class="ok-line">막힌 신청이 없습니다.</div>'}</section>`;
+      ${top.length ? `<ol class="reasons">${top.map(reasonLi).join('')}</ol>` : '<div class="ok-line">막힌 신청이 없습니다.</div>'}</section>`;
     const stale = live.slice().sort((a, b) => docAge(b) - docAge(a)).slice(0, 5);
     staleS = `<section class="sec" id="stale"><div class="sec-h"><h2>오래 머무는 결재</h2><a class="end" href="approvals.html">결재함</a></div>
       <table class="tbl box"><tbody>${stale.map(d => `<tr><td><a class="mono" href="approvals.html?doc=${d.id}" title="${d.title}">${d.id}</a></td><td class="muted">${STEP_NAME[d.step]}</td><td class="r">${docLate(d) ? tag('err', docAge(d) + '일') : `<span class="num muted">${docAge(d)}일</span>`}</td></tr>`).join('') || '<tr><td class="muted">진행 중인 결재가 없습니다.</td></tr>'}</tbody></table></section>`;
@@ -181,11 +197,32 @@ window.pageInit = function () {
       <div class="cols6">${weeks.map(w => { const pub = pubD && pubD >= w.start && pubD <= w.end; return `<div class="c${pub ? ' pub' : ''}"><b>${w.n || ''}</b><i style="height:${w.n / wmax * 64}px"></i><span>${w.end.getMonth() + 1}/${w.end.getDate()}${pub ? ' 공표' : ''}</span></div>`; }).join('')}</div></section>`;
   }
 
+  /* ---- E8: roles without model editing see '내 결재 · 기한 넘김' first, where the (now folded) model tree used to lead ---- */
+  let apprS = '';
+  if (!can('model.edit')) {
+    const byLate = L => L.slice().sort((a, b) => (docLate(b) ? 1 : 0) - (docLate(a) ? 1 : 0) || docAge(b) - docAge(a));
+    const qq = byLate(q), oo = ME.has('admin') ? byLate(live.filter(docLate).filter(d => !q.includes(d))) : [];
+    const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+    const row = (d, who) => `<tr><td><a class="mono" href="approvals.html?doc=${d.id}">${d.id}</a></td><td class="rt" title="${esc(d.title || '')}">${esc(d.title || '')}</td><td class="muted u-nowrap">${who}</td><td class="r">${docLate(d) ? tag('err', `기한 넘김 ${docAge(d)}일`) : `<span class="num muted">${docAge(d)}일</span>`}</td></tr>`;
+    const rows = qq.slice(0, 5).map(d => row(d, '내 차례')).concat(oo.slice(0, Math.max(0, 5 - Math.min(5, qq.length))).map(d => row(d, `${STEP_NAME[d.step]} · 기관 전체`)));
+    const nLate = qq.filter(docLate).length + oo.length;
+    apprS = `<section class="sec" id="my-appr"><div class="sec-h"><h2>내 결재 · 기한 넘김</h2><span class="end">${nLate ? tag('err', `기한 넘김 ${nLate}`) : ''} <a href="approvals.html?box=queue">결재함</a></span></div>
+      ${rows.length ? `<table class="tbl box"><thead><tr><th>문서</th><th>제목</th><th>구분</th><th class="r">머문 일</th></tr></thead><tbody>${rows.join('')}</tbody></table>${qq.length + oo.length > rows.length ? `<div class="ok-line"><a href="approvals.html?box=queue">나머지 ${qq.length + oo.length - rows.length}건 결재함에서 보기</a></div>` : ''}` : '<div class="ok-line">내 차례 결재와 기한 넘긴 결재가 없습니다.</div>'}
+      <div class="ok-line">모델 편집 권한이 없어 왼쪽 모델 트리는 접어 두었습니다. 트리 아래 [접기] 단추로 펼칠 수 있습니다.</div></section>`;
+  }
+
+  /* ---- E10: dictionary build order for DA (dismissable per user) ---- */
+  const BG_KEY = 'dbm-home-buildguide-' + ME.id;
+  const guide = ME.has('da') && dbmStore.get(BG_KEY, '') !== '1' ? `<section class="sec" id="build-guide"><div class="card bguide"><div class="flex"><b>사전 구축 순서</b><span class="grow"></span><button class="btn ghost sm" id="bg-x" type="button">다시 보지 않기</button></div>
+    <ol class="bsteps"><li><a href="domain-groups.html">도메인그룹</a> ${tag('ok', '즉시 저장')}</li><li aria-hidden="true" class="ar">→</li><li><a href="domain-groups.html">분류</a> ${tag('run', '품의 후 반영')}</li><li aria-hidden="true" class="ar">→</li><li>단어 · 도메인 · 용어 <a href="dict-grid.html">화면 일괄 작성</a> → <a href="dictionary.html?basket=1">품의</a> ${tag('run', '품의 후 반영')}</li></ol>
+    <div class="caption muted">그룹은 DA가 바로 저장하고 감사 로그에 남습니다. 분류와 단어 · 도메인 · 용어는 결재가 끝나야 사전에 반영됩니다.</div></div></section>` : '';
+
   /* ---- layout by role: same frame, order differs ---- */
-  const left = lead === 'modeler' ? todo + areas : todo + areas + stats;
+  const left = lead === 'modeler' ? todo + areas : todo + guide + areas + stats;
   const right = lead === 'modeler' ? mine + cand : (lead === 'admin' || lead === 'owner' ? ledger + staleS + weeksS + (ME.has('modeler') ? mine : '') : ledger + mine + staleS + weeksS + cand);
   const lf = lead === 'admin' || lead === 'owner';
-  $('home').innerHTML = urgent + (lf ? `<div class="hl lf"><div>${right}</div><div>${left}</div></div>` : `<div class="hl"><div>${left}</div><div>${right}</div></div>`);
+  $('home').innerHTML = urgent + (lf ? `<div class="hl lf"><div>${apprS}${right}</div><div>${left}</div></div>` : `<div class="hl"><div>${apprS}${left}</div><div>${right}</div></div>`);
+  const bgx = $('bg-x'); if (bgx) bgx.onclick = () => { dbmStore.set(BG_KEY, '1'); $('build-guide').remove(); toast('사전 구축 순서 안내를 닫았습니다', 'info'); };
 };
 </script>
 </body>
