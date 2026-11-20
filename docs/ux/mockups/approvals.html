@@ -486,7 +486,7 @@ window.pageInit = function () {
     if (d.req === ME.id) { if (window.refreshTop) window.refreshTop(); document.dispatchEvent(new CustomEvent('basket')); }
     const ids = back.filter(it => it.id).map(it => it.id);
     if (ids.length) { const dict = getDict(); dict.forEach(x => { if (x.pending === d.id && ids.includes(x.id)) { delete x.pending; if (x.ver === 0 && x.st === '신청 중') x.st = '보완 필요'; } }); saveDict(dict); }
-    if (d.req !== ME.id) pushNotif({ to: [d.req], k: 'res', t: `${d.id} 항목 ${back.length}건이 반려되어 바구니로 돌아갔습니다`, m: back.map(it => `${it.name}: ${it.rejWhy}`).join(' · '), href: 'dictionary.html' });
+    if (d.req !== ME.id) pushNotif({ to: [d.req], k: 'res', t: `${d.id} 항목 ${back.length}건이 반려되어 바구니로 돌아갔습니다`, m: back.map(it => `${it.name}: ${it.rejWhy}`).join(' · '), href: 'dictionary.html?basket=1' });   // the notice opens the basket rows
     return n;
   }
   function act(kind, why, self) {

@@ -62,6 +62,14 @@
   .gfoot .cnt { display:flex; gap:12px; font-size:14px; color:var(--fg-2); font-variant-numeric:tabular-nums; }
   .bkn { margin-left:2px; min-width:18px; height:18px; padding:0 5px; border-radius:9999px; background:var(--ds-gray-1000); color:var(--on-ink); font:500 12px/18px var(--font-sans); }
   .bkn[hidden] { display:none; }
+  .khint { padding:8px 20px 0; flex:none; }
+  .khint[hidden], .vpane[hidden] { display:none; }
+  .vpane { flex:none; display:flex; flex-direction:column; gap:8px; max-height:300px; padding:10px 20px 12px; border-top:1px solid var(--border); }
+  .vhead { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .vscroll { min-height:0; overflow:auto; }
+  .vmsg { font-size:12px; line-height:18px; }
+  .bkseg { flex:none; }
+  .gfoot .btn[hidden] { display:none; }
 </style>
 </head>
 <body data-page="dict-grid">
@@ -79,15 +87,20 @@
     <div class="gtop">
       <div class="banner warning" id="ro-banner" hidden><i data-ic=lock></i><div class="grow"><b>읽기 전용</b> — 사전 신청 권한(사전 신청 · 엑셀 가져오기 · 후보 등록)이 없어 내용을 보기만 할 수 있습니다. 모델러 · DA 역할이 필요합니다. 관리자에게 권한을 요청하세요.</div></div>
       <div class="banner info" id="restore-banner" hidden><i data-ic=history></i><div class="grow" id="restore-t"></div><button class="btn sm" id="b-restore-clear">비우기</button></div>
+      <div class="banner info" id="bk-banner" hidden><i data-ic=basket></i><div class="grow" id="bk-t"></div>
+        <div class="seg bkseg" role="group" aria-label="바구니 항목 보기" id="bview"><button type="button" data-v="new">추가 항목</button><button type="button" data-v="edit">변경 항목</button></div>
+        <button class="btn sm" id="b-bk-reload">다시 불러오기</button></div>
       <div class="flowrow">
         <div class="seg" role="group" aria-label="작성 방식" id="mode">
           <button type="button" data-mode="new">신규 작성</button>
           <button type="button" data-mode="edit">기존 항목 고치기</button>
+          <button type="button" data-mode="basket">바구니 열기</button>
         </div>
-        <div class="flowline"><i data-ic=flow></i>표준화 담당자 흐름: 도메인분류 → 단어(형식단어) → 도메인 → 용어 순으로 쓰면 오류가 적습니다</div>
+        <div class="flowline"><i data-ic=flow></i>표준화 담당자 흐름: 도메인분류 → 단어(형식단어) → 도메인 → 용어 · 코드 순으로 쓰면 오류가 적습니다</div>
       </div>
     </div>
     <div class="tabs ktabs" id="ktabs" role="tablist" aria-label="종류"></div>
+    <div class="khint caption muted" id="khint" hidden></div>
 
     <div class="gbar" id="gbar">
       <button class="btn sm" id="b-add1"><i data-ic=plus></i>행 추가</button>
@@ -99,15 +112,21 @@
       <div class="srow">
         <input class="input" id="q" type="search" placeholder="이름 · 영문약어명 검색" aria-label="고칠 항목 검색">
         <select class="input" id="qk" aria-label="종류 거르기">
-          <option value="">전체 종류</option><option value="word">단어</option><option value="term">용어</option><option value="entity">엔터티 용어</option><option value="domain">도메인</option>
+          <option value="">전체 종류</option><option value="word">단어</option><option value="term">용어</option><option value="entity">엔터티 용어</option><option value="domain">도메인</option><option value="code">코드 · 코드값</option>
         </select>
         <button class="btn sm" id="b-pick"><i data-ic=plus></i>고칠 항목 추가</button>
-        <span class="caption muted">기관 사전의 승인된 항목만 고칠 수 있습니다 — 신청 중 · 공통 · 삭제 보관 제외. 코드값은 사전 화면에서 고칩니다.</span>
+        <span class="caption muted">기관 사전의 승인된 항목만 고칠 수 있습니다 — 신청 중 · 공통 · 삭제 보관 제외. 공통(행정표준) 코드는 원문이라 보기만 합니다.</span>
       </div>
       <div class="eres"><table class="tbl"><thead><tr><th class="ck"></th><th>ID</th><th>종류</th><th>이름</th><th>영문약어명</th><th class="r">사용처</th><th></th></tr></thead><tbody id="eres"></tbody></table></div>
     </div>
 
     <div class="gscroll"><table class="tbl grid" id="grid"><thead id="gh"></thead><tbody id="gb"></tbody></table></div>
+
+    <div class="vpane" id="vpane" hidden>
+      <div class="vhead"><span class="u-fw-600" id="v-title">코드값</span><button class="btn sm" id="b-vadd"><i data-ic=plus></i>값 추가</button><span class="caption muted">Tab · Enter · Ctrl+Enter · 빈 행 Delete는 위 표와 같습니다 · "01⇥문서" 줄을 복사해 붙여 넣으면 그 칸부터 채웁니다 · 앞자리 0은 그대로 보존</span></div>
+      <div class="vscroll"><table class="tbl grid" id="vgrid"><thead><tr><th class="c-no">#</th><th>값</th><th>이름</th><th>순서</th><th>사용</th><th><span class="sr-only">행 작업</span></th></tr></thead><tbody id="vb"></tbody></table></div>
+      <div class="vmsg" id="vmsg" role="status" aria-live="polite"></div>
+    </div>
 
     <div class="gfoot">
       <div class="cnt" id="cnt" role="status" aria-live="polite"></div>
@@ -119,6 +138,7 @@
 </div>
 </div>
 <datalist id="dl-dom"></datalist>
+<datalist id="dl-cdom"></datalist>
 <script>
 window.pageInit = function () {
   const $ = id => document.getElementById(id);
@@ -128,37 +148,74 @@ window.pageInit = function () {
   const qs = new URLSearchParams(location.search);
   const KEY = 'dbm-grid-' + ME.id;
   const RO = !can('dict.request');
-  const KINDS = ['class', 'word', 'domain', 'term', 'entity'];   // the officer's flow: class → word(format word) → domain → term
-  const KN = { class: '도메인분류', word: '단어', domain: '도메인', term: '용어', entity: '엔터티 용어' };
+  const KINDS = ['class', 'word', 'domain', 'term', 'entity', 'code'];   // the officer's flow: class → word(format word) → domain → term → code (decision Q5)
+  const KN = { class: '도메인분류', word: '단어', domain: '도메인', term: '용어', entity: '엔터티 용어', code: '코드 · 코드값' };
   const SUF = { 기본: '_M', 내역: '_D', 이력: '_H', 관계: '_R', 정보: '_I' }, SUFRE = /(기본|내역|이력|관계|정보)$/;
   const PHYS = { C: 'CHAR', V: 'VARCHAR2', N: 'NUMBER', D: 'DATE', T: 'TIMESTAMP' };
   const SEC = ['', '개인정보', '민감정보', '암호화 대상'];
-  const DEF = { word: { fmt: 'N' } };
+  const CTYPES = ['자체', '기관', '법정'];
+  const DEF = { word: { fmt: 'N', scope: '공통' }, term: { scope: '공통' }, entity: { scope: '공통' }, domain: { scope: '공통' }, code: { scope: '공통', ctype: '자체' } };
+  const COMMON_RO = '공통표준 원문 — 공통표준 관리에서 새 판 품의';
   const kindKey = d => d.kn === '엔터티 용어' ? 'entity' : d.k;
   let seq = 0; const nid = () => 'r' + Date.now().toString(36) + (seq++).toString(36);
   const blank = k => ({ rid: nid(), v: Object.assign({}, DEF[k] || {}) });
+  const emptyRows = () => { const o = {}; KINDS.forEach(k => { o[k] = []; }); return o; };
 
-  /* ---- state: per-user work in progress (auto-saved) ---- */
-  const fresh = () => ({ mode: 'new', tab: 'class', rows: { class: [], word: [], domain: [], term: [], entity: [] }, edit: [] });
+  /* ---- code values (sub-grid rows {rid, v, nm, ord, st:'Y'|'N'} ↔ item values {v, nm, ord, st:'사용'|'미사용'}) ---- */
+  const vblank = () => ({ rid: nid(), v: '', nm: '', ord: '', st: 'Y' });
+  const vFilled = x => !!(t(x.v) || t(x.nm));
+  const normVals = L => (L || []).filter(vFilled).map((x, i) => ({ v: t(x.v), nm: t(x.nm), ord: +t(x.ord) || i + 1, st: x.st === 'N' ? '미사용' : '사용' }));
+  const valRows = L => (L || []).map(x => ({ rid: nid(), v: String(x.v == null ? '' : x.v), nm: String(x.nm == null ? '' : x.nm), ord: x.ord == null ? '' : String(x.ord), st: x.st === '미사용' || x.st === 'N' ? 'N' : 'Y' }));
+  const domLen = dom => +(String(dom || '').match(/\d+$/) || [0])[0];
+  const valsText = json => { try { const L = JSON.parse(json || '[]'); return L.length ? L.map(x => `${x.v} ${x.nm}${x.st === '미사용' ? '(미사용)' : ''}`).join(', ') : '(없음)'; } catch (e) { return ''; } };
+  function valProbs(vals, dom) {   // per value row → problems on its cells
+    const m = new Map(), len = domLen(dom), L = (vals || []).filter(vFilled), cnt = {};
+    L.forEach(x => { const v = t(x.v); if (v) cnt[v] = (cnt[v] || 0) + 1; });
+    L.forEach(x => { const ps = [], v = t(x.v);
+      if (!v) ps.push({ f: 'v', lvl: 'block', msg: '값이 비어 있음' });
+      else { if (cnt[v] > 1) ps.push({ f: 'v', lvl: 'block', msg: `값 ${v} 중복` }); if (len && v.length !== len) ps.push({ f: 'v', lvl: 'block', msg: `도메인 ${dom} 길이 ${len}과 다름(${v.length}자)` }); }
+      if (!t(x.nm)) ps.push({ f: 'nm', lvl: 'block', msg: '이름이 비어 있음' });
+      if (t(x.ord) && !/^\d+$/.test(t(x.ord))) ps.push({ f: 'ord', lvl: 'warn', msg: '순서는 숫자로' });
+      if (ps.length) m.set(x.rid, ps); });
+    return m;
+  }
+  function valAgg(vals) {   // row-level problems checkItem does not raise (empty value names / empty values)
+    const L = (vals || []).filter(vFilled), out = [], noNm = L.filter(x => !t(x.nm)).map(x => t(x.v) || '?');
+    if (noNm.length) out.push({ f: 'vals', lvl: 'block', msg: `이름이 빈 코드값: ${noNm.join(', ')}` });
+    if (L.some(x => !t(x.v))) out.push({ f: 'vals', lvl: 'block', msg: '값이 빈 코드값이 있음' });
+    return out;
+  }
+  const forCheck = it => Object.assign({}, it, { vals: (it.vals || []).filter(x => x.v) });   // empty values are reported by valAgg, not as '' duplicates
+
+  /* ---- state: per-user work in progress (auto-saved) — v2 adds code rows, scope and the basket table ---- */
+  const fresh = () => ({ ver: 2, mode: 'new', tab: 'class', rows: emptyRows(), edit: [], vsel: '', bk: null });
   let S = fresh(), restored = 0;
-  try { const s = JSON.parse(dbmStore.get(KEY, 'null')); if (s && s.rows) { S = Object.assign(fresh(), s); KINDS.forEach(k => { S.rows[k] = S.rows[k] || []; }); S.edit = S.edit || []; } } catch (e) {}
-  const isEmpty = (k, r) => Object.entries(r.v).every(([f, v]) => !t(v) || (DEF[k] && DEF[k][f] === v));
+  try { const s = JSON.parse(dbmStore.get(KEY, 'null')); if (s && s.rows) { S = Object.assign(fresh(), s); S.rows = Object.assign(emptyRows(), s.rows); S.edit = S.edit || []; S.ver = 2; } } catch (e) {}
+  // older shape: rows without scope/ctype get the defaults · old edit rows get the fields EDIT_FIELDS gained since (적용 범위)
+  const migrate = set => { if (!set) return; KINDS.forEach(k => { set.rows[k] = set.rows[k] || []; set.rows[k].forEach(r => { Object.entries(DEF[k] || {}).forEach(([f, v]) => { if (r.v[f] == null) r.v[f] = v; }); if (k === 'code' && !r.vals) r.vals = []; }); });
+    const dict = getDict(); (set.edit || []).forEach(r => { const d = dict.find(x => x.id === r.id); (EDIT_FIELDS[r.k] || []).forEach(l => { if (!(l in r.orig)) { r.orig[l] = d ? curVal(d, l) : ''; r.cur[l] = r.orig[l]; } }); if (r.k === 'code' && !r.vals) r.vals = valRows(d && d.vals); }); };
+  const isEmpty = (k, r) => Object.entries(r.v).every(([f, v]) => !t(v) || (DEF[k] && DEF[k][f] === v)) && (k !== 'code' || !(r.vals || []).some(vFilled));
   const filledNew = () => KINDS.reduce((n, k) => n + S.rows[k].filter(r => !isEmpty(k, r)).length, 0);
-  restored = filledNew() + S.edit.length;
   const save = () => dbmStore.set(KEY, JSON.stringify(S));
+  // the working set: own rows (신규 작성 · 고치기) or the basket opened as a table (CL18)
+  const isBk = () => S.mode === 'basket' && !!S.bk;
+  const D = () => isBk() ? S.bk : S;
+  const R = () => D().rows, E = () => D().edit;
 
   /* ---- lookups ---- */
   const G = () => getGroups();
   const grpName = id => (G().groups.find(g => g.id === id) || {}).name || '';
   const grpId = n => (G().groups.find(g => g.id === n || g.name === n) || {}).id || '';
   const liveClasses = () => G().classes.filter(c => c.st === '사용');
-  const newClasses = () => S.rows.class.filter(r => t(r.v.name));
-  const batchWords = () => { const m = {}; S.rows.word.forEach(r => { const n = t(r.v.name); if (n) m[n] = t(r.v.abbr).toUpperCase(); }); return m; };
-  const batchFmt = () => new Set(S.rows.word.filter(r => t(r.v.name) && r.v.fmt === 'Y').map(r => t(r.v.name)));
-  // decomposition that also knows the words written in this session (splits an unknown chunk by new words)
+  const newClasses = () => R().class.filter(r => t(r.v.name));
+  const batchWords = () => { const m = {}; R().word.forEach(r => { const n = t(r.v.name); if (n) m[n] = t(r.v.abbr).toUpperCase(); }); return m; };
+  const batchFmt = () => new Set(R().word.filter(r => t(r.v.name) && r.v.fmt === 'Y').map(r => t(r.v.name)));
+  // decomposition that also knows the words written in this session — decompose(name, extra) only takes words that already have an abbreviation,
+  // so the page keeps its own split: a word written without its abbreviation still splits out (and is reported as '약어 미입력')
   function decomp(name) {
     const bw = batchWords(), keys = Object.keys(bw).sort((a, b) => b.length - a.length), parts = [];
-    decompose(name).parts.forEach(p => {
+    decompose(name, Object.keys(bw).filter(w => bw[w]).map(w => ({ name: w, abbr: bw[w] }))).parts.forEach(p => {
+      if (p.batch) { parts.push({ w: p.w, abbr: p.abbr, ok: true, nw: true }); return; }
       if (!p.unknown) { parts.push(bw[p.w] !== undefined && !p.ok ? { w: p.w, abbr: bw[p.w], ok: true, nw: true } : p); return; }
       let i = 0, unk = ''; const s = p.w;
       while (i < s.length) { const k = keys.find(w => s.startsWith(w, i)); if (k) { if (unk) { parts.push({ w: unk, unknown: true }); unk = ''; } parts.push({ w: k, abbr: bw[k], ok: true, nw: true }); i += k.length; } else { unk += s[i]; i++; } }
@@ -171,6 +228,11 @@ window.pageInit = function () {
   const domName = r => { const v = r.v; if (!t(v.cls) && !v.ty) return ''; return t(v.cls) + (v.ty || '') + ('CVN'.includes(v.ty || 'x') || !v.ty ? t(v.len) : '') + (v.ty === 'N' && t(v.sc) ? ',' + t(v.sc) : ''); };
   const physOf = r => { const v = r.v, ty = v.ty; if (!ty) return ''; if (ty === 'D' || ty === 'T') return PHYS[ty]; return `${PHYS[ty]}(${t(v.len) || '?'}${ty === 'N' && t(v.sc) ? ',' + t(v.sc) : ''})`; };
   const dgOf = r => { const n = t(r.v.cls); if (!n) return ''; const c = liveClasses().find(x => x.name === n); if (c) return grpName(c.group); const b = newClasses().find(x => t(x.v.name) === n); return b ? grpName(b.v.group) : ''; };
+  // code domains: 코드 · 여부 · 구분 domains known to the dictionary (incl. those existing codes use) + the ones written here
+  const codeDomains = () => [...knownDomains()].concat(getDict().filter(x => x.k === 'code' && x.dom).map(x => x.dom)).concat(R().domain.map(domName)).filter(d => /^(코드|여부|구분)/.test(d)).filter((d, i, a) => a.indexOf(d) === i).sort();
+  const scopeOpts = () => SCOPES();
+  const cScopeOpts = () => [['공통', '공통'], ['시스템', '시스템']];
+  const scopeCol = () => ({ f: 'scope', l: '적용 범위', t: 'sel', w: 's', opts: scopeOpts });
 
   /* ---- columns per kind (new) ---- */
   const COLS = {
@@ -179,14 +241,14 @@ window.pageInit = function () {
       { f: 'group', l: '도메인그룹', t: 'sel', w: 's', opts: () => [['', '선택']].concat(G().groups.filter(g => g.st === '사용').map(g => [g.id, g.name])) },
       { f: 'fw', l: '연결 형식단어', t: 'sel', w: 's', opts: () => [['', '선택']].concat(formatWords().map(w => [w, w])).concat([...batchFmt()].filter(w => !formatWords().includes(w)).map(w => [w, w + ' (작성 중)'])) },
       { f: 'desc', l: '설명', w: 'l' }],
-    word: [
+    word: [   // the format word ↔ class link is owned by the class (분류의 연결 형식단어) — no class column here
       { f: 'name', l: '단어명', w: 's' },
       { f: 'abbr', l: '영문약어명', w: 's', mono: 1, up: 1 },
       { f: 'eng', l: '영문명', w: 'm' },
       { f: 'fmt', l: '형식단어', t: 'sel', w: 'xs', opts: () => [['N', 'N'], ['Y', 'Y']] },
-      { f: 'cls', l: '도메인분류', t: 'sel', w: 'm', pf: ['fmt'], dis: r => r.v.fmt !== 'Y', opts: () => [['', '(나중에 연결)']].concat(liveClasses().map(c => [c.id, `${c.name} · ${grpName(c.group)}`])).concat(newClasses().map(r => ['new:' + t(r.v.name), t(r.v.name) + ' (작성 중)'])) },
       { f: 'syn', l: '이음동의어', w: 'm', ph: '쉼표로 구분' },
       { f: 'forbid', l: '금칙어', w: 'm', pf: ['syn'], ph: '쉼표로 구분' },
+      scopeCol(),
       { f: 'desc', l: '설명', w: 'l' }],
     domain: [
       { f: 'cls', l: '도메인분류', t: 'sel', w: 's', pf: [], opts: () => [['', '선택']].concat(liveClasses().map(c => [c.name, c.name])).concat(newClasses().filter(r => !liveClasses().some(c => c.name === t(r.v.name))).map(r => [t(r.v.name), t(r.v.name) + ' (작성 중)'])) },
@@ -198,16 +260,28 @@ window.pageInit = function () {
       { f: 'dg', l: '도메인그룹', calc: dgOf, w: 's' },
       { f: 'allow', l: '허용 값', w: 'm', mono: 1 },
       { f: 'sec', l: '보안 속성', t: 'sel', w: 's', opts: () => SEC.map(s => [s, s || '없음']) },
+      scopeCol(),
       { f: 'desc', l: '설명', w: 'l' }],
     term: [
       { f: 'name', l: '용어명', w: 'm' },
       { f: 'abbr', l: '영문약어명', w: 'm', mono: 1, up: 1, ph: '용어명에서 자동' },
       { f: 'dom', l: '도메인', w: 's', list: 'dl-dom' },
       { f: 'eng', l: '영문명', w: 'm' },
+      scopeCol(),
       { f: 'desc', l: '설명', w: 'l' }],
     entity: [
       { f: 'name', l: '엔터티명', w: 'm' },
       { f: 'abbr', l: '물리명', calc: r => entAbbr(r.v.name), w: 'm', mono: 1 },
+      scopeCol(),
+      { f: 'desc', l: '설명', w: 'l' }],
+    code: [   // one row per code group; its values are written in the sub-grid below
+      { f: 'name', l: '코드명(한글)', w: 'm' },
+      { f: 'abbr', l: '영문 코드명', w: 'm', mono: 1, up: 1 },
+      { f: 'dom', l: '도메인', w: 's', mono: 1, list: 'dl-cdom', ph: '코드C2' },
+      { f: 'scope', l: '적용 범위', t: 'sel', w: 's', opts: cScopeOpts },
+      { f: 'sys', l: '대상 시스템', t: 'sel', w: 's', dis: r => r.v.scope !== '시스템', opts: () => [['', '선택']].concat(SYSLIST.map(s => [s.code, s.name])) },
+      { f: 'ctype', l: '코드 타입', t: 'sel', w: 'xs', opts: () => CTYPES.map(x => [x, x]) },
+      { f: 'vals', l: '값 수', calc: r => { const n = (r.vals || []).filter(vFilled).length; return n ? n + '개' : ''; }, w: 'xs' },
       { f: 'desc', l: '설명', w: 'l' }]
   };
   /* ---- columns per kind (edit) = EDIT_FIELDS labels ---- */
@@ -216,6 +290,8 @@ window.pageInit = function () {
     if (l === '형식단어') { c.t = 'sel'; c.w = 'xs'; c.opts = () => [['N', 'N'], ['Y', 'Y']]; }
     if (l === '도메인그룹') { c.t = 'sel'; c.opts = () => G().groups.filter(g => g.st === '사용').map(g => [g.name, g.name]); }
     if (l === '보안 속성') { c.t = 'sel'; c.opts = () => SEC.map(s => [s, s || '없음']); }
+    if (l === '적용 범위') { c.t = 'sel'; c.opts = k === 'code' ? cScopeOpts : scopeOpts; }
+    if (l === '코드값') { c.w = 'xs'; c.sub = 1; c.calc = r => { const n = (r.vals || []).filter(vFilled).length; return n + '개'; }; }
     if (l === '도메인') c.list = 'dl-dom';
     return c;
   });
@@ -223,20 +299,35 @@ window.pageInit = function () {
   /* ---- rows → basket items ---- */
   function itemOf(k, r) {
     const v = r.v, base = { k, name: t(v.name), desc: t(v.desc), act: '추가' };
-    if (k === 'word') return Object.assign(base, { abbr: t(v.abbr).toUpperCase(), eng: t(v.eng), fmt: v.fmt || 'N', cls: v.fmt === 'Y' && v.cls ? String(v.cls).replace(/^new:/, '') : undefined, syn: split(v.syn), forbid: split(v.forbid) });
+    if (k !== 'class' && k !== 'code') base.scope = v.scope || '공통';
+    if (k === 'word') return Object.assign(base, { abbr: t(v.abbr).toUpperCase(), eng: t(v.eng), fmt: v.fmt || 'N', syn: split(v.syn), forbid: split(v.forbid) });
     if (k === 'term') return Object.assign(base, { abbr: t(v.abbr).toUpperCase(), dom: t(v.dom), eng: t(v.eng) });
     if (k === 'entity') return Object.assign(base, { abbr: entAbbr(v.name), dom: '엔터티 용어' });
     if (k === 'domain') return Object.assign(base, { name: domName(r), dg: dgOf(r), dom: physOf(r), allow: t(v.allow), sec: v.sec || '' });
     if (k === 'class') return Object.assign(base, { group: v.group || '', fw: v.fw || '' });
+    if (k === 'code') return Object.assign(base, { abbr: t(v.abbr).toUpperCase(), dom: t(v.dom), dg: '코드', scope: v.scope || '공통', sys: v.scope === '시스템' ? (v.sys || '') : undefined, ctype: v.ctype || '자체', vals: normVals(r.vals) });
   }
-  const curVal = (d, l) => { const v = d[FIELD_KEY[l] || l]; if (l === '형식단어') return v === 'Y' ? 'Y' : 'N'; return Array.isArray(v) ? v.join(', ') : v == null ? '' : String(v); };
+  function curVal(d, l) {
+    if (l === '코드값') return JSON.stringify(normVals(valRows(d.vals)));
+    const v = d[FIELD_KEY[l] || l];
+    if (l === '형식단어') return v === 'Y' ? 'Y' : 'N';
+    if (l === '적용 범위') return v || '공통';
+    return Array.isArray(v) ? v.join(', ') : v == null ? '' : String(v);
+  }
   const changed = r => (EDIT_FIELDS[r.k] || []).filter(l => (r.cur[l] ?? '') !== (r.orig[l] ?? ''));
-  const editable = d => d.src === '기관' && d.ver > 0 && !d.pending && d.st !== '삭제 보관' && ['word', 'term', 'entity', 'domain'].includes(kindKey(d));
-  function editRowOf(d) { const k = kindKey(d), orig = {}; (EDIT_FIELDS[k] || []).forEach(l => { orig[l] = curVal(d, l); }); return { rid: nid(), id: d.id, k, oname: d.name, use: d.use || 0, orig, cur: Object.assign({}, orig) }; }
+  const chgOf = r => { const c = {}; changed(r).forEach(l => { c[l] = l === '코드값' ? [JSON.parse(r.orig[l] || '[]'), JSON.parse(r.cur[l] || '[]')] : [r.orig[l] ?? '', l === '영문약어명' ? t(r.cur[l]).toUpperCase() : t(r.cur[l])]; }); return c; };
+  const KEDIT = ['word', 'term', 'entity', 'domain', 'code'];
+  const commonCode = d => d && d.k === 'code' && d.src === '공통';
+  const editable = d => d.src === '기관' && d.ver > 0 && !d.pending && d.st !== '삭제 보관' && KEDIT.includes(kindKey(d));
+  function editRowOf(d) { const k = kindKey(d), orig = {}; (EDIT_FIELDS[k] || []).forEach(l => { orig[l] = curVal(d, l); });
+    const r = { rid: nid(), id: d.id, k, oname: d.name, use: d.use || 0, orig, cur: Object.assign({}, orig) };
+    if (k === 'code') Object.assign(r, { vals: valRows(d.vals), dom: d.dom || '', abbr: d.abbr || '', sys: d.sys || '', ctype: d.ctype || '자체' });
+    return r; }
+  const vsync = r => { if (r.orig) r.cur['코드값'] = JSON.stringify(normVals(r.vals)); };   // an edit row's value list is compared as normalized JSON
 
   /* ---- validation ---- */
   let BATCH = [], ITEMS = {}; const PROBS = new Map();
-  // the page knows the words written in this session — re-judge term/entity word problems with them (checkItem's decompose can't split a new word out of an unknown chunk)
+  // the page knows the words written in this session — re-judge term/entity word problems with them (incl. a new word whose abbreviation is still empty)
   function fixTerm(k, it, ps) {
     const n = it.name, m = k === 'entity' ? n.match(SUFRE) : null, base = m ? n.slice(0, -m[1].length) : n, parts = decomp(base), unk = parts.filter(p => p.unknown);
     ps = ps.filter(p => !/^(미등록 단어|영문약어명은 단어 약어 조합|형식단어로 끝나지 않음)/.test(p.msg));
@@ -247,27 +338,43 @@ window.pageInit = function () {
     if (parts.some(p => p.nw && !p.abbr)) ps.push({ f: 'name', lvl: 'warn', msg: `작성 중인 단어의 영문약어명이 비어 있음: ${parts.filter(p => p.nw && !p.abbr).map(p => p.w).join(', ')}` });
     return ps;
   }
+  // a format word is linked from the class side now — a class row written here that names it counts; otherwise point to the class screen
+  function fixFmt(it, ps) {
+    return ps.flatMap(p => { if (p.f !== 'fmt' || !/^형식단어 — 연결할/.test(p.msg)) return [p];
+      if (R().class.some(r => t(r.v.fw) === it.name)) return [];
+      return [{ f: 'fmt', lvl: 'warn', msg: '형식단어 — 분류 연결은 도메인 그룹 · 분류 화면(또는 도메인분류 탭의 연결 형식단어)에서 합니다' }]; });
+  }
+  function codeProbs(it, r) {
+    const ps = checkItem(forCheck(it), { batch: BATCH.filter(b => b !== it), self: r.id }).concat(valAgg(r.vals));   // forCheck copies the item — leave the original out of the batch
+    if (!r.id) { const dom = t(it.dom); if (!dom) ps.push({ f: 'dom', lvl: 'block', msg: '도메인이 비어 있음' }); else if (!codeDomains().includes(dom)) ps.push({ f: 'dom', lvl: 'block', msg: `도메인 '${dom}'이 사전에 없음 — 코드 · 여부 · 구분 도메인을 고르세요` }); }
+    return ps;
+  }
   function editProbs(r) {
     const ch = changed(r); if (!ch.length) return [];
     const c = r.cur, k = r.k, nameL = EDIT_FIELDS[k][0], out = [];
-    const it = { k, name: t(c[nameL]), abbr: t(c['영문약어명']).toUpperCase(), eng: c['영문명'], dom: k === 'entity' ? '엔터티 용어' : k === 'domain' ? c['물리 타입'] : t(c['도메인']), fmt: c['형식단어'], syn: split(c['이음동의어']), forbid: split(c['금칙어']), dg: c['도메인그룹'], desc: c['설명'] };
+    const it = k === 'code' ? { k, name: t(c[nameL]), abbr: r.abbr, dom: r.dom, eng: c['영문명'], scope: c['적용 범위'], sys: r.sys, ctype: r.ctype, vals: normVals(r.vals), desc: c['설명'] }
+      : { k, name: t(c[nameL]), abbr: t(c['영문약어명']).toUpperCase(), eng: c['영문명'], dom: k === 'entity' ? '엔터티 용어' : k === 'domain' ? c['물리 타입'] : t(c['도메인']), fmt: c['형식단어'], syn: split(c['이음동의어']), forbid: split(c['금칙어']), dg: c['도메인그룹'], scope: c['적용 범위'], desc: c['설명'] };
     const fset = new Set(ch.map(l => l === nameL ? 'name' : (FIELD_KEY[l] || l)));
     if (ch.includes(nameL) && (k === 'term' || k === 'entity')) fset.add('abbr');
     if (fset.has('forbid')) fset.add('syn');   // checkItem reports synonym and forbidden-word clashes under 'syn'
-    let ps = checkItem(it, { batch: BATCH });
+    let ps = k === 'code' ? codeProbs(it, r) : checkItem(it, { batch: BATCH, self: r.id });
     if (k === 'term' || k === 'entity') ps = fixTerm(k, it, ps);
+    if (k === 'word') ps = fixFmt(it, ps);
     const had = new Set(split(r.orig['이음동의어']).concat(split(r.orig['금칙어'])));   // the item's own synonyms are not a clash with itself
     ps.forEach(p => { if (!fset.has(p.f)) return; if (p.f === 'syn') { const m = p.msg.match(/'([^']+)'/); if (m && had.has(m[1])) return; } if (p.msg.includes(`(${r.id})`)) return; if (p.f !== 'name' && p.msg.includes(`'${r.oname}'`)) return; if (p.f !== 'name' && p.msg.includes(` ${r.oname} `)) return; out.push(p); });
     if (ch.includes(nameL) && it.name) out.push({ f: 'name', lvl: 'warn', msg: `과거 이름으로 남습니다 · 사용처 ${r.use}곳 재검토` });
     return out;
   }
   function compute() {
+    const rows = R();
     // term abbr follows the name (after the 400ms analysis) until the user types their own
-    S.rows.term.forEach(r => { const nm = t(r.v.name); if (!r.abbrT && nm && r.an === nm) r.v.abbr = abbrOf(decomp(nm)); if (!r.abbrT && !nm) r.v.abbr = ''; });
+    rows.term.forEach(r => { const nm = t(r.v.name); if (!r.abbrT && nm && r.an === nm) r.v.abbr = abbrOf(decomp(nm)); if (!r.abbrT && !nm) r.v.abbr = ''; });
     BATCH = []; ITEMS = {};
-    KINDS.forEach(k => { ITEMS[k] = S.rows[k].map(r => isEmpty(k, r) ? null : itemOf(k, r)); ITEMS[k].forEach(it => it && BATCH.push(it)); });
-    KINDS.forEach(k => S.rows[k].forEach((r, i) => { const it = ITEMS[k][i]; let ps = it ? checkItem(it, { batch: BATCH }) : []; if (it && (k === 'term' || k === 'entity')) ps = fixTerm(k, it, ps); PROBS.set(r.rid, ps); }));
-    S.edit.forEach(r => PROBS.set(r.rid, editProbs(r)));
+    KINDS.forEach(k => { ITEMS[k] = rows[k].map(r => isEmpty(k, r) ? null : itemOf(k, r)); ITEMS[k].forEach(it => it && BATCH.push(it)); });
+    KINDS.forEach(k => rows[k].forEach((r, i) => { const it = ITEMS[k][i]; let ps = [];
+      if (it) { ps = k === 'code' ? codeProbs(it, r) : checkItem(it, { batch: BATCH }); if (k === 'term' || k === 'entity') ps = fixTerm(k, it, ps); if (k === 'word') ps = fixFmt(it, ps); }
+      PROBS.set(r.rid, ps); }));
+    E().forEach(r => PROBS.set(r.rid, editProbs(r)));
   }
   const nB = ps => ps.filter(p => p.lvl === 'block').length, nW = ps => ps.filter(p => p.lvl !== 'block').length;
   // a row's state: empty · sent · err · warn · ok · none (edit row without changes)
@@ -286,13 +393,26 @@ window.pageInit = function () {
     return tag('ok', '정상') + (edit ? ` <span class="caption muted">${changed(r).length}칸</span>` : '');
   }
 
+  /* ---- decision Q1: a word's new name / abbreviation travels to the terms built from it ---- */
+  const cascMemo = new Map();
+  function cascHTML(r) {
+    if (r.k !== 'word' || r.sent) return '';
+    const ch = changed(r); if (!ch.includes('단어명') && !ch.includes('영문약어명')) return '';
+    const chg = chgOf(r), mk = r.id + JSON.stringify([chg['단어명'], chg['영문약어명']]);
+    if (cascMemo.has(mk)) return cascMemo.get(mk);
+    const L = wordCascade(getDict().find(x => x.id === r.id), chg);
+    const html = !L.length ? '' : `<div class="anl"><span class="muted">이 단어를 쓰는 용어 ${L.length}건도 함께 바뀝니다 — 같은 신청에 자동으로 들어갑니다</span>${L.slice(0, 12).map(x => { const nm = x.chg['용어명'] || x.chg['엔터티명'], ab = x.chg['영문약어명'];
+      return `<span class="wchip">${esc(nm ? nm[0] + ' → ' + nm[1] : x.name)}${ab ? `<span class="mono">${esc(ab[0])} → ${esc(ab[1])}</span>` : ''}</span>`; }).join('')}${L.length > 12 ? `<span class="caption muted">외 ${L.length - 12}건</span>` : ''}</div>`;
+    cascMemo.set(mk, html); return html;
+  }
+
   /* ---- render ---- */
-  const isEdit = () => S.mode === 'edit';
+  const isEdit = () => S.mode === 'edit' || (isBk() && S.bk.view === 'edit');
   const curCols = () => isEdit() ? editCols(S.tab) : COLS[S.tab];
-  const curRows = () => isEdit() ? S.edit.filter(r => r.k === S.tab) : S.rows[S.tab];
+  const curRows = () => isEdit() ? E().filter(r => r.k === S.tab) : R()[S.tab];
   const valOf = (r, col) => (isEdit() ? r.cur[col.f] : r.v[col.f]) ?? '';
   const colOf = (cols, f) => cols.findIndex(c => !c.hide && (c.pf || [c.key || c.f]).includes(f));
-  const gb = $('gb'), gh = $('gh');
+  const gb = $('gb'), gh = $('gh'), vb = $('vb');
 
   function cellHTML(r, i, col, ci) {
     const cls = `cc w-${col.w || 'm'}`;
@@ -302,20 +422,32 @@ window.pageInit = function () {
     if (col.t === 'sel') { let o = col.opts(r); if (val && !o.some(x => x[0] === val)) o = o.concat([[val, val + ' (없음)']]); return `<td class="${cls}" data-c="${ci}"><select ${common}>${o.map(([v, l]) => `<option value="${esc(v)}"${v === val ? ' selected' : ''}>${esc(l)}</option>`).join('')}</select></td>`; }
     return `<td class="${cls}" data-c="${ci}"><input ${common} value="${esc(val)}"${col.list ? ` list="${col.list}"` : ''}${col.ph ? ` placeholder="${esc(col.ph)}"` : ''} autocomplete="off" spellcheck="false"></td>`;
   }
+  function drawBkBanner() {
+    const on = isBk(); $('bk-banner').hidden = !on; if (!on) return;
+    const B = S.bk, nN = KINDS.reduce((n, k) => n + B.rows[k].filter(r => r.bkey).length, 0), nE = B.edit.filter(r => r.bkey).length;
+    $('bk-t').innerHTML = (B.keys.length ? `<b>바구니 ${B.keys.length}건을 표로 열었습니다</b> — 고친 뒤 [바구니에 반영]` : '<b>바구니가 비어 있습니다</b> — 표에 새로 쓴 뒤 [바구니에 반영]하면 담깁니다')
+      + (B.skip ? ` · 표에 보이지 않는 ${B.skip}건(미사용 · 삭제 · 자동 연쇄 용어 변경 등)은 그대로 둡니다` : '');
+    document.querySelectorAll('#bview button').forEach(b => { const on2 = b.dataset.v === B.view; b.classList.toggle('on', on2); b.setAttribute('aria-pressed', on2); b.textContent = (b.dataset.v === 'new' ? '추가 항목 ' + nN : '변경 항목 ' + nE); });
+  }
   function render() {
-    const k = S.tab, edit = isEdit();
-    if (!edit && !S.rows[k].length) for (let n = 0; n < 3; n++) S.rows[k].push(blank(k));
+    const k = S.tab, edit = isEdit(), bk = isBk();
+    if (!edit && !R()[k].length) for (let n = 0; n < 3; n++) R()[k].push(blank(k));
     document.querySelectorAll('#mode button').forEach(b => { b.classList.toggle('on', b.dataset.mode === S.mode); b.setAttribute('aria-pressed', b.dataset.mode === S.mode); });
-    $('crumb').textContent = '기관 사전 · ' + (edit ? '기존 항목 고치기' : '신규 작성');
+    $('crumb').textContent = '기관 사전 · ' + (bk ? '바구니 표 편집' : edit ? '기존 항목 고치기' : '신규 작성');
     $('gbar').hidden = edit; $('esearch').hidden = !edit;
+    drawBkBanner();
+    $('khint').hidden = !(k === 'word' || k === 'code');
+    if (k === 'word') $('khint').innerHTML = '형식단어는 Y/N만 씁니다 — 분류 연결은 <a href="domain-groups.html">도메인 그룹 · 분류</a> 화면(또는 1번 도메인분류 탭의 연결 형식단어)에서 합니다';
+    if (k === 'code') $('khint').innerHTML = '코드 행을 고르면 아래 표에서 그 코드의 값을 씁니다 · 코드 하나(값 포함)가 바구니 1건입니다' + (edit ? ' · 공통(행정표준) 코드는 ' + COMMON_RO : '');
     if (edit) drawSearch();
-    $('dl-dom').innerHTML = [...knownDomains()].filter(d => !/^엔터티/.test(d)).concat(S.rows.domain.map(domName).filter(Boolean)).filter((d, i, a) => a.indexOf(d) === i).map(d => `<option value="${esc(d)}"></option>`).join('');
+    $('dl-dom').innerHTML = [...knownDomains()].filter(d => !/^엔터티/.test(d)).concat(R().domain.map(domName).filter(Boolean)).filter((d, i, a) => a.indexOf(d) === i).map(d => `<option value="${esc(d)}"></option>`).join('');
+    $('dl-cdom').innerHTML = codeDomains().map(d => `<option value="${esc(d)}"></option>`).join('');
     const cols = curCols(), rows = curRows(), ncol = cols.length + 3;
-    gh.innerHTML = `<tr><th>상태</th><th class="c-no">#</th>${cols.map(c => `<th>${esc(c.l)}${c.calc ? ' <span class="caption muted">자동</span>' : ''}</th>`).join('')}<th><span class="sr-only">행 작업</span></th></tr>`;
+    gh.innerHTML = `<tr><th>상태</th><th class="c-no">#</th>${cols.map(c => `<th>${esc(c.l)}${c.calc ? ` <span class="caption muted">${c.sub ? '아래 표' : '자동'}</span>` : ''}</th>`).join('')}<th><span class="sr-only">행 작업</span></th></tr>`;
     if (edit && k === 'class') gb.innerHTML = `<tr class="er"><td colspan="4">도메인분류는 이 화면에서 고치지 않습니다 — <a href="domain-groups.html">도메인 그룹 · 분류</a> 화면에서 고치세요.</td></tr>`;
     else if (edit && !rows.length) gb.innerHTML = `<tr class="er"><td colspan="4">위에서 검색해 고칠 ${KN[k]}을(를) 고르고 [고칠 항목 추가]를 누르세요. 사전 화면의 여러 항목 선택에서도 넘어옵니다.</td></tr>`;
-    else gb.innerHTML = rows.map((r, i) => `<tr class="gr${r.sent ? ' locked' : ''}" data-r="${i}"><td class="c-st" data-st></td><td class="c-no" tabindex="0" data-no="${i}" aria-label="${i + 1}행 선택">${i + 1}</td>${cols.map((c, ci) => cellHTML(r, i, c, ci)).join('')}<td class="c-act">${actHTML(r, edit)}</td></tr><tr class="mrow" data-m="${i}" hidden><td colspan="${ncol}"></td></tr>`).join('');
-    compute(); patch(); drawTabs(); drawFoot();
+    else gb.innerHTML = rows.map((r, i) => `<tr class="gr${r.sent ? ' locked' : ''}${k === 'code' && r.rid === S.vsel ? ' sel' : ''}" data-r="${i}"><td class="c-st" data-st></td><td class="c-no" tabindex="0" data-no="${i}" aria-label="${i + 1}행 선택">${i + 1}</td>${cols.map((c, ci) => cellHTML(r, i, c, ci)).join('')}<td class="c-act">${actHTML(r, edit)}</td></tr><tr class="mrow" data-m="${i}" hidden><td colspan="${ncol}"></td></tr>`).join('');
+    compute(); patch(); drawTabs(); drawFoot(); drawV();
   }
   function actHTML(r, edit) {
     if (RO) return '';
@@ -335,7 +467,7 @@ window.pageInit = function () {
         const mine = ps.filter(p => colOf(cols, p.f) === ci), bl = mine.some(p => p.lvl === 'block'), wn = !bl && mine.length > 0;
         td.classList.toggle('er', bl); td.classList.toggle('wn', wn);
         let title = mine.map(p => p.msg).join('\n');
-        if (edit) { const ch = (r.cur[col.f] ?? '') !== (r.orig[col.f] ?? ''); td.classList.toggle('chg', ch); if (ch) title = `원래 값: ${r.orig[col.f] || '(빈 값)'}` + (title ? '\n' + title : ''); }
+        if (edit) { const ch = (r.cur[col.f] ?? '') !== (r.orig[col.f] ?? ''); td.classList.toggle('chg', ch); if (ch) title = `원래 값: ${col.f === '코드값' ? valsText(r.orig[col.f]) : r.orig[col.f] || '(빈 값)'}` + (title ? '\n' + title : ''); }
         if (title) td.title = title; else td.removeAttribute('title');
         const inp = td.querySelector('.gi'); if (!inp) return;
         inp.setAttribute('aria-invalid', bl ? 'true' : 'false');
@@ -349,13 +481,14 @@ window.pageInit = function () {
         const n = t(r.v.name), m = k === 'entity' ? n.match(SUFRE) : null, parts = decomp(m ? n.slice(0, -m[1].length) : n);
         an = `<div class="anl"><span class="muted">단어 분석</span>${parts.map(p => p.unknown ? `<span class="wchip unk">${esc(p.w)} · 미등록</span>${RO ? '' : `<button class="btn sm ghost" data-addw="${esc(p.w)}"><i data-ic=plus></i>단어 탭에 추가</button>`}` : `<span class="wchip${p.nw ? ' nw' : ''}">${esc(p.w)}<span class="mono">${esc(p.abbr || '약어 미입력')}</span>${p.nw ? '· 작성 중' : !p.ok ? '· 승인 전' : ''}</span>`).join('')}${m ? `<span class="wchip">${m[1]}<span class="mono">${SUF[m[1]]}</span></span>` : ''}</div>`;
       }
+      if (edit && k === 'word') an = cascHTML(r);
       const html = (msgs ? `<div>${msgs}</div>` : '') + an;
       if (mr && mr._h !== html) { mr._h = html; mr.firstChild.innerHTML = html; }
       if (mr) { mr.hidden = !html; tr.classList.toggle('hasm', !!html); }
     });
   }
   function counts(k, edit) {
-    const rows = edit ? S.edit.filter(r => r.k === k) : S.rows[k], c = { n: 0, ok: 0, warn: 0, err: 0, sent: 0 };
+    const rows = edit ? E().filter(r => r.k === k) : R()[k], c = { n: 0, ok: 0, warn: 0, err: 0, sent: 0 };
     rows.forEach(r => { const s = stateOf(r, k, edit); if (s === 'empty') return; c.n++; if (c[s] !== undefined) c[s]++; });
     return c;
   }
@@ -364,14 +497,15 @@ window.pageInit = function () {
     $('ktabs').innerHTML = KINDS.map((k, i) => { const c = counts(k, edit); return `<button role="tab" data-k="${k}" class="${k === S.tab ? 'on' : ''}" aria-selected="${k === S.tab}"><span class="stepn">${i + 1}</span>${KN[k]}<span class="n">${c.n}</span>${c.err ? `<span class="terr">오류 ${c.err}</span>` : ''}</button>`; }).join('');
   }
   function drawFoot() {
-    const edit = isEdit(), T = { ok: 0, warn: 0, err: 0, sent: 0 };
-    KINDS.forEach(k => { const c = counts(k, edit); ['ok', 'warn', 'err', 'sent'].forEach(f => { T[f] += c[f]; }); });
-    $('cnt').innerHTML = `<span>${edit ? '변경 행 · ' : ''}정상 ${T.ok}</span><span>경고 ${T.warn}</span><span>오류 ${T.err}</span>${T.sent ? `<span>담김 ${T.sent}</span>` : ''}<span class="caption muted">5종 전체 기준 · 경고는 담을 수 있고 오류 행은 남습니다</span>`;
-    const n = T.ok + T.warn; $('b-send-t').textContent = `${edit ? '변경 행' : '정상 행'} 바구니에 담기 (${n})`;
-    $('b-send').disabled = RO || !n; $('b-clear').disabled = RO;
+    const edit = isEdit(), bk = isBk(), T = { ok: 0, warn: 0, err: 0, sent: 0 };
+    (bk ? [false, true] : [edit]).forEach(ed => KINDS.forEach(k => { const c = counts(k, ed); ['ok', 'warn', 'err', 'sent'].forEach(f => { T[f] += c[f]; }); }));
+    const n = T.ok + T.warn;
+    $('cnt').innerHTML = `<span>${bk ? '바구니 표 · ' : edit ? '변경 행 · ' : ''}정상 ${T.ok}</span><span>경고 ${T.warn}</span><span>오류 ${T.err}</span>${T.sent ? `<span>담김 ${T.sent}</span>` : ''}<span class="caption muted">${bk ? '추가 · 변경 전체 기준 · 오류 행은 바구니의 원래 내용을 그대로 둡니다' : '6종 전체 기준 · 경고는 담을 수 있고 오류 행은 남습니다'}</span>`;
+    $('b-send-t').textContent = bk ? `바구니에 반영 (${n})` : `${edit ? '변경 행' : '정상 행'} 바구니에 담기 (${n})`;
+    $('b-send').disabled = RO || (!bk && !n); $('b-clear').disabled = RO; $('b-clear').hidden = bk;
     const bn = getBasket().items.length; $('bk-n').hidden = !bn; $('bk-n').textContent = bn;
   }
-  function refresh() { save(); compute(); patch(); drawTabs(); drawFoot(); }
+  function refresh() { save(); compute(); patch(); drawTabs(); drawFoot(); drawBkBanner(); vpatch(); }
 
   /* ---- focus / keyboard ---- */
   const navList = () => [...gb.querySelectorAll('.gi')].filter(e => !e.disabled);
@@ -381,8 +515,8 @@ window.pageInit = function () {
     if (!el || el.disabled) el = [...gb.querySelectorAll(`.gi[data-r="${r}"]`)].find(e => !e.disabled);
     if (el) { el.focus(); if (el.select) el.select(); }
   }
-  function addRows(n, at) { const rows = S.rows[S.tab]; const add = Array.from({ length: n }, () => blank(S.tab)); if (at == null) rows.push(...add); else rows.splice(at, 0, ...add); save(); render(); }
-  function removeRow(i) { const rows = S.rows[S.tab]; rows.splice(i, 1); if (!rows.length) rows.push(blank(S.tab)); save(); render(); }
+  function addRows(n, at) { const rows = R()[S.tab]; const add = Array.from({ length: n }, () => blank(S.tab)); if (at == null) rows.push(...add); else rows.splice(at, 0, ...add); save(); render(); }
+  function removeRow(i) { const rows = R()[S.tab]; rows.splice(i, 1); if (!rows.length) rows.push(blank(S.tab)); save(); render(); }
 
   gb.addEventListener('keydown', e => {
     const el = e.target;
@@ -397,11 +531,17 @@ window.pageInit = function () {
     if (e.key === 'Enter') { e.preventDefault(); if (r + 1 < rows.length) focusCell(r + 1, c); else if (!edit && !RO) { addRows(1); focusCell(r + 1, c); } return; }
     if (e.key === 'Delete' && !edit && !RO && rows.length > 1 && isEmpty(S.tab, rows[r]) && (el.tagName === 'SELECT' || !el.value)) { e.preventDefault(); removeRow(r); focusCell(Math.min(r, curRows().length - 1), c); }
   });
+  // the code tab: the row in focus is the one whose values the sub-grid shows
+  gb.addEventListener('focusin', e => {
+    if (S.tab !== 'code') return; const tr = e.target.closest('tr.gr'); if (!tr) return;
+    const r = curRows()[+tr.dataset.r]; if (!r || r.rid === S.vsel) return;
+    S.vsel = r.rid; save(); gb.querySelectorAll('tr.gr').forEach(x => x.classList.toggle('sel', x === tr)); drawV();
+  });
   const timers = {};
   function afterSet(k, r, f, typed) {
     const v = r.v;
-    if (k === 'word' && f === 'fmt' && v.fmt !== 'Y') v.cls = '';
     if (k === 'domain' && f === 'ty') { if (v.ty === 'D' || v.ty === 'T') { v.len = ''; v.sc = ''; } if (v.ty !== 'N') v.sc = ''; }
+    if (k === 'code' && f === 'scope' && v.scope !== '시스템') v.sys = '';
     if (k === 'term' && f === 'abbr') r.abbrT = !!t(v.abbr);
     if ((k === 'term' || k === 'entity') && f === 'name') {
       if (!typed) r.an = t(v.name);
@@ -425,9 +565,9 @@ window.pageInit = function () {
     if (col.t === 'sel') {
       if (col.f === 'fmt' || col.f === '형식단어') v = /^(y|예|o|형식|true|1)$/i.test(v) ? 'Y' : 'N';
       else if (k === 'class' && col.f === 'group') v = grpId(v);
-      else if (k === 'word' && col.f === 'cls') { const c = liveClasses().find(x => x.id === v || x.name === v); v = c ? c.id : v ? 'new:' + v : ''; }
       else if (col.f === 'ty') v = v.slice(0, 1).toUpperCase();
       else if (col.f === 'sec' || col.f === '보안 속성') v = SEC.includes(v) ? v : '';
+      else { const o = col.opts(r), hit = o.find(x => x[0] === v || x[1] === v); v = hit ? hit[0] : (o[0] ? o[0][0] : ''); }   // scope · system · code type: value or label
     }
     if (col.up || col.f === '영문약어명') v = v.toUpperCase();
     if (isEdit()) { r.cur[col.f] = v; return; }
@@ -451,49 +591,191 @@ window.pageInit = function () {
     toast(`${n}행을 붙여 넣었습니다 — 칸마다 바로 검사했습니다`, 'info');
   });
   gb.addEventListener('click', e => {
-    const no = e.target.closest('.c-no'); if (no) { const tr = no.parentElement, on = !tr.classList.contains('sel'); gb.querySelectorAll('tr.gr.sel').forEach(x => x.classList.remove('sel')); tr.classList.toggle('sel', on); tr.setAttribute('aria-selected', on); return; }
+    const no = e.target.closest('.c-no'); if (no) { const tr = no.parentElement, on = !tr.classList.contains('sel'); gb.querySelectorAll('tr.gr.sel').forEach(x => x.classList.remove('sel')); tr.classList.toggle('sel', on); tr.setAttribute('aria-selected', on); if (S.tab === 'code') { const r = curRows()[+tr.dataset.r]; if (r) { S.vsel = r.rid; tr.classList.add('sel'); save(); drawV(); } } return; }
     const aw = e.target.closest('[data-addw]'); if (aw) { addWord(aw.dataset.addw); return; }
     const b = e.target.closest('[data-act]'); if (!b) return;
     const i = +b.closest('tr').dataset.r, r = curRows()[i], act = b.dataset.act;
     if (act === 'unlock') { unlock(r); return; }
-    if (isEdit()) { if (act === 'del') { S.edit.splice(S.edit.indexOf(r), 1); save(); render(); } return; }
-    if (act === 'dup') { const c = { rid: nid(), v: Object.assign({}, r.v), an: r.an, abbrT: r.abbrT }; S.rows[S.tab].splice(i + 1, 0, c); save(); render(); focusCell(i + 1, firstEd()); }
-    if (act === 'del') { const keep = JSON.stringify(r); S.rows[S.tab].splice(i, 1); const k = S.tab; if (!S.rows[k].length) S.rows[k].push(blank(k)); save(); render();
-      if (!isEmpty(k, r)) toast(`${i + 1}행을 지웠습니다`, 'info', { label: '실행 취소', fn: () => { S.rows[k].splice(i, 0, JSON.parse(keep)); save(); render(); } }); }
+    if (isEdit()) { if (act === 'del') { E().splice(E().indexOf(r), 1); save(); render(); } return; }
+    const rows = R()[S.tab];
+    if (act === 'dup') { const c = { rid: nid(), v: Object.assign({}, r.v), an: r.an, abbrT: r.abbrT }; if (r.vals) c.vals = valRows(normVals(r.vals)); rows.splice(i + 1, 0, c); save(); render(); focusCell(i + 1, firstEd()); }
+    if (act === 'del') { const keep = JSON.stringify(r); rows.splice(i, 1); const k = S.tab; if (!rows.length) rows.push(blank(k)); save(); render();
+      if (!isEmpty(k, r)) toast(`${i + 1}행을 지웠습니다${isBk() && r.bkey ? ' — [바구니에 반영]하면 바구니에서도 빠집니다' : ''}`, 'info', { label: '실행 취소', fn: () => { R()[k].splice(i, 0, JSON.parse(keep)); save(); render(); } }); }
   });
   function addWord(w) {
-    const rows = S.rows.word;
+    const rows = R().word;
     if (rows.some(r => t(r.v.name) === w)) { toast(`‘${w}’은(는) 단어 탭에 이미 있습니다`, 'info', { label: '단어 탭으로', fn: () => goWord(w) }); return; }
     const empty = rows.find(r => !r.sent && isEmpty('word', r)), row = empty || blank('word');
     row.v.name = w; row.v.abbr = ''; if (!empty) rows.push(row);
     refresh();
     toast(`단어 탭에 ‘${w}’ 행을 추가했습니다 — 영문약어명을 채우세요`, 'success', { label: '단어 탭으로', fn: () => goWord(w) });
   }
-  function goWord(w) { S.tab = 'word'; render(); const i = S.rows.word.findIndex(r => t(r.v.name) === w); if (i >= 0) focusCell(i, 1); }
+  function goWord(w) { S.tab = 'word'; render(); const i = R().word.findIndex(r => t(r.v.name) === w); if (i >= 0) focusCell(i, 1); }
   function unlock(r) {
     const b = getBasket(), before = b.items.length;
     if (r.id) b.items = b.items.filter(x => !(x.id === r.id && opOf(x) === '변경'));
     else { const it = itemOf(S.tab, r); b.items = b.items.filter(x => !(!x.id && x.k === it.k && x.name === it.name)); }
-    if (b.items.length !== before) saveBasket(b);
+    if (b.items.length !== before) { syncCascade(b); saveBasket(b); }
     r.sent = false; save(); render();
     toast(b.items.length !== before ? '바구니에서 뺐습니다 — 고친 뒤 다시 담으세요' : '바구니에 없던 행입니다(이미 신청했거나 비웠음) — 다시 고칠 수 있습니다', 'info');
+  }
+
+  /* ---- code values sub-grid (decision Q5) ---- */
+  const VC = [{ f: 'v', l: '값', w: 'xs', mono: 1 }, { f: 'nm', l: '이름', w: 'm' }, { f: 'ord', l: '순서', w: 'xs', mono: 1 }, { f: 'st', l: '사용', t: 'sel', w: 'xs', opts: () => [['Y', 'Y'], ['N', 'N']] }];
+  function selCode() {
+    if (S.tab !== 'code') return null;
+    const rows = curRows(); let r = rows.find(x => x.rid === S.vsel);
+    if (!r && rows.length) { r = rows[0]; S.vsel = r.rid; const tr = gb.querySelector('tr.gr[data-r="0"]'); if (tr) tr.classList.add('sel'); }
+    return r || null;
+  }
+  const vLock = r => RO || !!r.sent;
+  const codeDomOf = r => r.orig ? r.dom : t(r.v.dom);
+  function drawV() {
+    const P = $('vpane');
+    if (S.tab !== 'code' || (isEdit() && !curRows().length)) { P.hidden = true; return; }
+    P.hidden = false;
+    const r = selCode();
+    if (!r) { $('v-title').textContent = '코드값'; vb.innerHTML = '<tr class="er"><td colspan="6">위 표에서 코드 행을 고르면 그 코드의 값을 여기서 씁니다</td></tr>'; $('b-vadd').disabled = true; $('vmsg').innerHTML = ''; return; }
+    if (!r.vals) r.vals = [];
+    const lock = vLock(r);
+    if (!lock && !r.vals.length) for (let n = 0; n < 3; n++) r.vals.push(vblank());
+    $('b-vadd').disabled = lock;
+    vb.innerHTML = r.vals.map((x, i) => `<tr class="gr${lock ? ' locked' : ''}" data-vr="${i}"><td class="c-no">${i + 1}</td>${VC.map((c, ci) => {
+      const common = `class="gi${c.mono ? ' mono' : ''}" data-r="${i}" data-c="${ci}" aria-label="코드값 ${esc(c.l)} ${i + 1}행"${lock ? ' disabled' : ''}`;
+      if (c.t === 'sel') return `<td class="cc w-${c.w}" data-c="${ci}"><select ${common}>${c.opts().map(([v, l]) => `<option value="${v}"${v === x[c.f] ? ' selected' : ''}>${l}</option>`).join('')}</select></td>`;
+      return `<td class="cc w-${c.w}" data-c="${ci}"><input ${common} value="${esc(x[c.f])}" autocomplete="off" spellcheck="false"${c.f === 'v' ? ' placeholder="01"' : ''}></td>`; }).join('')}<td class="c-act">${lock ? '' : `<button class="btn sm ghost u-w-28 u-p-0 u-jc-c" data-vdel="${i}" aria-label="값 ${i + 1}행 삭제" title="값 행 삭제"><i data-ic=trash></i></button>`}</td></tr>`).join('');
+    vpatch();
+  }
+  function vpatch() {
+    if (S.tab !== 'code' || $('vpane').hidden) return;
+    const r = selCode(); if (!r || !r.vals) return;
+    const dom = codeDomOf(r), name = r.orig ? t(r.cur['코드명']) : t(r.v.name), m = valProbs(r.vals, dom), msgs = [];
+    $('v-title').textContent = `코드값 — ${name || '(코드명 없음)'} · ${dom ? '도메인 ' + dom + (domLen(dom) ? ` (길이 ${domLen(dom)})` : '') : '도메인 미지정'}`;
+    r.vals.forEach((x, i) => { const ps = m.get(x.rid) || [], tr = vb.querySelector(`tr[data-vr="${i}"]`); if (!tr) return;
+      VC.forEach((c, ci) => { const td = tr.querySelector(`td[data-c="${ci}"]`), mine = ps.filter(p => p.f === c.f), bl = mine.some(p => p.lvl === 'block');
+        td.classList.toggle('er', bl); td.classList.toggle('wn', !bl && mine.length > 0);
+        if (mine.length) td.title = mine.map(p => p.msg).join('\n'); else td.removeAttribute('title');
+        const inp = td.querySelector('.gi'); if (inp) { inp.setAttribute('aria-invalid', bl ? 'true' : 'false'); if (document.activeElement !== inp && inp.value !== x[c.f]) inp.value = x[c.f]; } });
+      ps.forEach(p => msgs.push(`<span class="msg ${p.lvl === 'block' ? 'er' : 'wn'}"><span class="ml">${i + 1}행 ${VC.find(c => c.f === p.f).l}</span>${esc(p.msg)}</span>`)); });
+    const n = r.vals.filter(vFilled).length;
+    $('vmsg').innerHTML = msgs.length ? msgs.join('') : `<span class="caption muted">${n ? `값 ${n}개 · 길이 · 중복 · 이름 정상` : '값을 쓰거나 "01⇥문서" 줄을 붙여 넣으세요'}${r.orig && r.cur['코드값'] !== r.orig['코드값'] ? ' · 바뀐 값은 코드값 변경(전후 목록)으로 신청됩니다' : ''}</span>`;
+  }
+  function vchanged(r) { vsync(r); refresh(); drawV(); }
+  function vfocus(i, c) { const el = vb.querySelector(`.gi[data-r="${i}"][data-c="${c}"]`) || vb.querySelector(`.gi[data-r="${i}"]`); if (el && !el.disabled) { el.focus(); if (el.select) el.select(); } }
+  vb.addEventListener('input', e => { const el = e.target; if (!el.classList.contains('gi')) return; const r = selCode(), x = r && r.vals[+el.dataset.r]; if (!x || vLock(r)) return; x[VC[+el.dataset.c].f] = el.value; vsync(r); refresh(); });
+  vb.addEventListener('keydown', e => {
+    const el = e.target; if (!el.classList.contains('gi')) return; const r = selCode(); if (!r) return;
+    const i = +el.dataset.r, c = +el.dataset.c, lock = vLock(r);
+    if (e.key === 'Tab') { const L = [...vb.querySelectorAll('.gi')].filter(x => !x.disabled), j = L.indexOf(el) + (e.shiftKey ? -1 : 1); if (j >= 0 && j < L.length) { e.preventDefault(); L[j].focus(); if (L[j].select) L[j].select(); } return; }
+    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); if (lock) return; r.vals.splice(i + 1, 0, vblank()); vchanged(r); vfocus(i + 1, 0); return; }
+    if (e.key === 'Enter') { e.preventDefault(); if (i + 1 >= r.vals.length) { if (lock) return; r.vals.push(vblank()); vchanged(r); } vfocus(i + 1, c); return; }
+    if (e.key === 'Delete' && !lock && r.vals.length > 1 && !vFilled(r.vals[i]) && (el.tagName === 'SELECT' || !el.value)) { e.preventDefault(); r.vals.splice(i, 1); vchanged(r); vfocus(Math.min(i, r.vals.length - 1), c); }
+  });
+  vb.addEventListener('paste', e => {
+    const el = e.target; if (!el.classList.contains('gi')) return; const r = selCode(); if (!r || vLock(r)) return;
+    const body = ((e.clipboardData || window.clipboardData).getData('text') || '').replace(/\r/g, '').replace(/\n+$/, ''); if (!/[\t\n]/.test(body)) return;
+    e.preventDefault();
+    const i0 = +el.dataset.r, c0 = +el.dataset.c; let i = i0, n = 0;
+    body.split('\n').forEach(line => { if (!r.vals[i]) r.vals.push(vblank()); const x = r.vals[i];
+      line.split('\t').forEach((val, j) => { const c = VC[c0 + j]; if (!c) return; const v = String(val).trim(); x[c.f] = c.f === 'st' ? (/^(n|미사용|0|false|아니오)$/i.test(v) ? 'N' : 'Y') : c.f === 'v' ? String(val).replace(/^\s+|\s+$/g, '') : v; });
+      i++; n++; });
+    vchanged(r); vfocus(i0, c0);
+    toast(`코드값 ${n}행을 붙여 넣었습니다 — 길이 · 중복을 바로 검사했습니다`, 'info');
+  });
+  vb.addEventListener('click', e => { const b = e.target.closest('[data-vdel]'); if (!b) return; const r = selCode(); if (!r || vLock(r)) return; r.vals.splice(+b.dataset.vdel, 1); if (!r.vals.length) r.vals.push(vblank()); vchanged(r); });
+  $('b-vadd').onclick = () => { const r = selCode(); if (!r || vLock(r)) return; r.vals.push(vblank()); vchanged(r); vfocus(r.vals.length - 1, 0); };
+
+  /* ---- CL18: the basket opened as a table ---- */
+  function rowFromItem(x) {
+    const k = x.k, r = { rid: nid(), bkey: x.key, v: Object.assign({}, DEF[k] || {}) }, v = r.v;
+    Object.assign(v, { name: x.name || '', desc: x.desc || '' });
+    if (k !== 'class' && k !== 'code') v.scope = x.scope || '공통';
+    if (k === 'word') Object.assign(v, { abbr: x.abbr || '', eng: x.eng || '', fmt: x.fmt === 'Y' ? 'Y' : 'N', syn: (x.syn || []).join(', '), forbid: (x.forbid || []).join(', ') });
+    if (k === 'term') Object.assign(v, { abbr: x.abbr || '', dom: x.dom || '', eng: x.eng || '' });
+    if (k === 'class') Object.assign(v, { group: x.group || '', fw: x.fw || '' });
+    if (k === 'domain') { const m = String(x.name || '').match(/^(.+?)([CVNDT])(\d*)(?:,(\d+))?$/); Object.assign(v, m ? { cls: m[1], ty: m[2], len: m[3] || '', sc: m[4] || '' } : { cls: x.name || '' }, { allow: x.allow || '', sec: x.sec || '' }); delete v.name; }
+    if (k === 'code') { Object.assign(v, { abbr: x.abbr || '', dom: x.dom || '', scope: x.scope === '시스템' ? '시스템' : '공통', sys: x.sys || '', ctype: x.ctype || '자체' }); r.vals = valRows(x.vals); }
+    if (k === 'term' || k === 'entity') r.an = v.name;
+    return r;
+  }
+  function loadBasket(view) {
+    const b = getBasket(); let fix = false;
+    b.items.forEach(x => { if (!x.key) { x.key = 'b' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5); fix = true; } });
+    if (fix) saveBasket(b);
+    const dict = getDict(), B = { rows: emptyRows(), edit: [], keys: [], at: b.at || '', view: view || 'new', skip: 0 };
+    b.items.forEach(x => {
+      const op = opOf(x);
+      if (op === '추가' && KINDS.includes(x.k)) { B.rows[x.k].push(rowFromItem(x)); B.keys.push(x.key); return; }
+      if (op === '변경' && !x.auto) {   // automatic term rows follow their word (syncCascade) — not shown
+        const d = dict.find(y => y.id === x.id), k = d && kindKey(d), F = EDIT_FIELDS[k] || [];
+        if (d && editable(d) && Object.keys(x.chg || {}).every(l => F.includes(l))) {
+          const r = editRowOf(d); r.bkey = x.key;
+          Object.entries(x.chg || {}).forEach(([l, pr]) => { const nv = pr[1];
+            if (l === '코드값') { r.vals = valRows(nv); r.cur[l] = JSON.stringify(normVals(r.vals)); }
+            else r.cur[l] = Array.isArray(nv) ? nv.join(', ') : String(nv == null ? '' : nv); });
+          B.edit.push(r); B.keys.push(x.key); return;
+        }
+      }
+      B.skip++;
+    });
+    if (!KINDS.some(k => B.rows[k].length) && B.edit.length) B.view = 'edit';
+    S.bk = B;
+    // a term whose abbreviation is exactly the word combination keeps following its name
+    B.rows.term.forEach(r => { r.abbrT = !!t(r.v.abbr) && t(r.v.abbr) !== abbrOf(decomp(t(r.v.name))); });
+    return B;
+  }
+  function enterBasket(force) {
+    const b = getBasket();
+    if (force || !S.bk || (S.bk.at || '') !== (b.at || '')) loadBasket(S.bk && S.bk.view);
+    S.mode = 'basket';
+    if (S.bk.view === 'edit' && S.tab === 'class') S.tab = 'word';
+  }
+  function reflect() {
+    if (RO || !isBk()) return;
+    compute();
+    const B = S.bk, built = new Map(), adds = []; let errN = 0;
+    KINDS.forEach(k => B.rows[k].forEach((r, i) => { const s = stateOf(r, k, false);
+      if (s === 'empty') { if (r.bkey) built.set(r.bkey, null); return; }
+      if (s === 'err') { errN++; if (r.bkey) built.set(r.bkey, 'keep'); return; }
+      const it = JSON.parse(JSON.stringify(ITEMS[k][i])); if (r.bkey) built.set(r.bkey, it); else adds.push(it); }));
+    B.edit.forEach(r => { const s = stateOf(r, r.k, true);
+      if (s === 'none') { if (r.bkey) built.set(r.bkey, null); return; }
+      if (s === 'err') { errN++; if (r.bkey) built.set(r.bkey, 'keep'); return; }
+      const it = { k: r.k, id: r.id, name: r.oname, act: '변경', chg: chgOf(r) }; if (r.bkey) built.set(r.bkey, it); else adds.push(it); });
+    const b = getBasket(); let upd = 0, rm = 0, add = 0, dup = 0;
+    b.items = b.items.flatMap(x => {
+      if (!B.keys.includes(x.key)) return [x];   // not shown in the table (미사용 · 삭제 · automatic rows · added elsewhere meanwhile) — untouched
+      const v = built.get(x.key);
+      if (v == null) { rm++; return []; }   // row deleted, emptied, or no change left
+      if (v === 'keep') return [x];
+      const o = Object.assign({}, x, v); if (o.act === '변경') delete o.auto; if (JSON.stringify(o) !== JSON.stringify(x)) upd++; return [o];
+    });
+    adds.forEach(it => { if (b.items.some(x => (it.id && x.id === it.id) || (!it.id && !x.id && x.k === it.k && x.name === it.name))) { dup++; return; } b.items.push(Object.assign({ key: 'b' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5) }, it)); add++; });
+    const before = b.items.length; syncCascade(b); const casc = b.items.length - before;
+    saveBasket(b);
+    loadBasket(B.view); save(); render();
+    toast(`바구니에 반영했습니다 — 고침 ${upd} · 새로 ${add} · 뺌 ${rm}${casc > 0 ? ` · 연쇄 용어 변경 ${casc}건 자동 추가` : casc < 0 ? ` · 연쇄 용어 변경 ${-casc}건 정리` : ''}${dup ? ` · 이미 있는 ${dup}건 건너뜀` : ''}${errN ? ` · 오류 ${errN}행은 바구니의 원래 내용 유지` : ''}`, 'success', { label: '바구니 열기', fn: () => { location.href = 'dictionary.html?basket=1'; } });
   }
 
   /* ---- send to the basket ---- */
   $('b-send').onclick = () => {
     if (RO) return;
+    if (isBk()) { reflect(); return; }
     compute();
     const edit = isEdit(), list = [];
     let errN = 0;
-    if (edit) S.edit.forEach(r => { const s = stateOf(r, r.k, true); if (s === 'err') errN++; if (s !== 'ok' && s !== 'warn') return; const chg = {}; changed(r).forEach(l => { chg[l] = [r.orig[l] ?? '', l === '영문약어명' ? t(r.cur[l]).toUpperCase() : t(r.cur[l])]; }); list.push([r, { k: r.k, id: r.id, name: r.oname, act: '변경', chg }]); });
+    if (edit) S.edit.forEach(r => { const s = stateOf(r, r.k, true); if (s === 'err') errN++; if (s !== 'ok' && s !== 'warn') return; list.push([r, { k: r.k, id: r.id, name: r.oname, act: '변경', chg: chgOf(r) }]); });
     else KINDS.forEach(k => S.rows[k].forEach((r, i) => { const s = stateOf(r, k, false); if (s === 'err') errN++; if (s !== 'ok' && s !== 'warn') return; list.push([r, JSON.parse(JSON.stringify(ITEMS[k][i]))]); }));
     if (!list.length) { toast(errN ? `담을 행이 없습니다 — 오류 ${errN}행을 먼저 고치세요` : '담을 행이 없습니다', 'info'); return; }
-    const [a, s] = addToBasket(edit ? list.map(x => x[1]) : orderItems(list.map(x => x[1])));
+    const before = getBasket().items.length;
+    const res = addToBasket(edit ? list.map(x => x[1]) : orderItems(list.map(x => x[1]))), [a, s] = res, merged = res.merged || 0;
+    const casc = getBasket().items.length - before - (a - merged);   // addToBasket → syncCascade adds the automatic term rows of changed words (decision Q1)
     list.forEach(x => { x[0].sent = true; });
     save(); render();
-    toast(`${a}건을 신청 바구니에 담았습니다${s ? ` · ${s}건은 이미 바구니에 있어 건너뜀` : ''}${errN ? ` · 오류 ${errN}행은 남겨 두었습니다` : ''}`, 'success', { label: '바구니 열기', fn: () => { location.href = 'dictionary.html?basket=1'; } });
+    toast(`${a}건을 신청 바구니에 담았습니다${merged ? `(이미 담긴 변경 ${merged}건은 칸별로 합침)` : ''}${casc > 0 ? ` · 이 단어를 쓰는 용어 변경 ${casc}건 자동 포함` : ''}${s ? ` · ${s}건은 이미 바구니에 있어 건너뜀` : ''}${errN ? ` · 오류 ${errN}행은 남겨 두었습니다` : ''}`, 'success', { label: '바구니 열기', fn: () => { location.href = 'dictionary.html?basket=1'; } });
   };
   $('b-clear').onclick = () => {
+    if (isBk()) return;
     const keep = JSON.stringify(S), edit = isEdit();
     if (edit) S.edit = []; else KINDS.forEach(k => { S.rows[k] = []; });
     save(); render();
@@ -501,15 +783,23 @@ window.pageInit = function () {
   };
 
   /* ---- mode · tabs · edit search ---- */
-  $('mode').onclick = e => { const b = e.target.closest('[data-mode]'); if (!b || b.dataset.mode === S.mode) return; S.mode = b.dataset.mode; if (S.mode === 'edit' && S.tab === 'class') S.tab = 'word'; save(); render(); };
+  $('mode').onclick = e => { const b = e.target.closest('[data-mode]'); if (!b || b.dataset.mode === S.mode) return;
+    if (b.dataset.mode === 'basket') enterBasket(); else S.mode = b.dataset.mode;
+    if (isEdit() && S.tab === 'class') S.tab = 'word'; save(); render(); };
+  $('bview').onclick = e => { const b = e.target.closest('[data-v]'); if (!b || !isBk() || b.dataset.v === S.bk.view) return; S.bk.view = b.dataset.v; if (S.bk.view === 'edit' && S.tab === 'class') S.tab = 'word'; save(); render(); };
+  $('b-bk-reload').onclick = () => { if (!isBk()) return; const keep = JSON.stringify(S.bk); enterBasket(true); save(); render();
+    toast('바구니를 다시 불러왔습니다 — 반영하지 않은 표의 고침은 버렸습니다', 'info', { label: '실행 취소', fn: () => { S.bk = JSON.parse(keep); save(); render(); } }); };
   $('ktabs').onclick = e => { const b = e.target.closest('[data-k]'); if (!b) return; S.tab = b.dataset.k; if (isEdit() && S.tab !== 'class') $('qk').value = S.tab; save(); render(); };
   $('ktabs').onkeydown = e => { if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return; e.preventDefault(); const i = KINDS.indexOf(S.tab), j = (i + (e.key === 'ArrowRight' ? 1 : KINDS.length - 1)) % KINDS.length; S.tab = KINDS[j]; save(); render(); const b = $('ktabs').querySelector(`[data-k="${S.tab}"]`); b && b.focus(); };
-  $('b-add1').onclick = () => { addRows(1); focusCell(S.rows[S.tab].length - 1, firstEd()); };
-  $('b-add5').onclick = () => { const n = S.rows[S.tab].length; addRows(5); focusCell(n, firstEd()); };
+  $('b-add1').onclick = () => { addRows(1); focusCell(R()[S.tab].length - 1, firstEd()); };
+  $('b-add5').onclick = () => { const n = R()[S.tab].length; addRows(5); focusCell(n, firstEd()); };
   function drawSearch() {
     const q = t($('q').value).toLowerCase(), kk = $('qk').value;
-    const L = getDict().filter(d => editable(d) && (!kk || kindKey(d) === kk) && (!q || d.name.toLowerCase().includes(q) || (d.abbr || '').toLowerCase().includes(q))).slice(0, 50);
-    $('eres').innerHTML = L.length ? L.map(d => { const added = S.edit.some(r => r.id === d.id); if (added) picked.delete(d.id); return `<tr><td class="ck"><input type="checkbox" data-pick="${d.id}" aria-label="${esc(d.name)} 선택"${added || picked.has(d.id) ? ' checked' : ''}${added || RO ? ' disabled' : ''}></td><td class="mono">${d.id}</td><td>${KN[kindKey(d)]}</td><td>${esc(d.name)}</td><td class="mono">${esc(d.abbr || '')}</td><td class="num">${d.use || 0}</td><td>${added ? tag('mine', '추가됨') : d.st !== '사용' ? tag('end', d.st) : ''}</td></tr>`; }).join('')
+    const hit = d => (!kk || kindKey(d) === kk) && (!q || d.name.toLowerCase().includes(q) || (d.abbr || '').toLowerCase().includes(q));
+    // common (행정표준) codes are listed read-only when codes are asked for — the reason says where they are changed
+    const L = getDict().filter(d => hit(d) && (editable(d) || (commonCode(d) && (kk === 'code' || q)))).slice(0, 50);
+    $('eres').innerHTML = L.length ? L.map(d => { const ro = !editable(d), added = E().some(r => r.id === d.id); if (added) picked.delete(d.id);
+      return `<tr><td class="ck"><input type="checkbox" data-pick="${d.id}" aria-label="${esc(d.name)} 선택"${added || picked.has(d.id) ? ' checked' : ''}${added || RO || ro ? ' disabled' : ''}></td><td class="mono">${d.id}</td><td>${KN[kindKey(d)]}</td><td>${esc(d.name)}</td><td class="mono">${esc(d.abbr || '')}</td><td class="num">${d.use || 0}</td><td>${ro ? `${tag('end', '읽기 전용')} <span class="caption muted">${COMMON_RO}</span>` : added ? tag('mine', '추가됨') : d.st !== '사용' ? tag('end', d.st) : ''}</td></tr>`; }).join('')
       : '<tr class="er"><td colspan="3">조건에 맞는 고칠 수 있는 항목이 없습니다 (신청 중 · 공통 · 삭제 보관 제외)</td></tr>';
     pickBtn();
   }
@@ -518,9 +808,9 @@ window.pageInit = function () {
   $('q').oninput = drawSearch; $('qk').onchange = drawSearch;
   $('eres').onchange = e => { const c = e.target.closest('[data-pick]'); if (!c) return; if (c.checked) picked.add(c.dataset.pick); else picked.delete(c.dataset.pick); pickBtn(); };
   function addEditIds(ids) {
-    const dict = getDict(), added = [], bad = [];
-    const why = d => !d ? '없음' : d.pending ? `${d.pending} 신청 중` : d.st === '삭제 보관' ? '삭제 보관' : d.src !== '기관' ? '공통 표준' : d.ver <= 0 ? '승인 전' : '이 화면에서 고치지 않는 종류';
-    ids.forEach(id => { const d = dict.find(x => x.id === id); if (!d || !editable(d)) { bad.push(`${id}(${why(d)})`); return; } if (S.edit.some(r => r.id === id)) return; const r = editRowOf(d); S.edit.push(r); added.push(r); });
+    const dict = getDict(), added = [], bad = [], list = E();
+    const why = d => !d ? '없음' : d.pending ? `${d.pending} 신청 중` : d.st === '삭제 보관' ? '삭제 보관' : commonCode(d) ? COMMON_RO : d.src !== '기관' ? '공통 표준' : d.ver <= 0 ? '승인 전' : '이 화면에서 고치지 않는 종류';
+    ids.forEach(id => { const d = dict.find(x => x.id === id); if (!d || !editable(d)) { bad.push(`${id}(${why(d)})`); return; } if (list.some(r => r.id === id)) return; const r = editRowOf(d); list.push(r); added.push(r); });
     return [added, bad];
   }
   $('b-pick').onclick = () => {
@@ -528,24 +818,29 @@ window.pageInit = function () {
     const [added] = addEditIds(ids); if (!added.length) return;
     if (!added.some(r => r.k === S.tab)) S.tab = added[0].k;
     save(); render();
-    toast(`${added.length}건을 고칠 행으로 넣었습니다 — 바꾼 칸만 변경 신청이 됩니다`, 'success');
+    toast(`${added.length}건을 고칠 행으로 넣었습니다 — 바꾼 칸만 변경 신청이 됩니다${isBk() ? ' · [바구니에 반영]하면 바구니에 더해집니다' : ''}`, 'success');
   };
   $('b-restore-clear').onclick = () => { const keep = JSON.stringify(S); S = fresh(); save(); $('restore-banner').hidden = true; render(); toast('이전에 쓰던 행을 비웠습니다', 'info', { label: '실행 취소', fn: () => { S = JSON.parse(keep); save(); render(); } }); };
   document.addEventListener('basket', drawFoot);
 
   /* ---- start ---- */
+  migrate(S); migrate(S.bk);
+  restored = filledNew() + S.edit.length;
   $('ro-banner').hidden = !RO;
   ['b-add1', 'b-add5'].forEach(id => { $(id).disabled = RO; });
   if (restored) { $('restore-t').textContent = `이전에 쓰던 ${restored}행을 불러왔습니다 — 자동 저장(이 브라우저 · ${ME.name})`; $('restore-banner').hidden = false; }
   if (qs.get('ids')) {   // ?ids=W-0102,T-0410 — preload rows to fix (the dictionary's multi-select can link here)
+    S.mode = 'edit';
     const [added, bad] = addEditIds(qs.get('ids').split(',').map(s => s.trim()).filter(Boolean));
-    S.mode = 'edit'; const first = added[0] || S.edit[S.edit.length - 1]; if (first) S.tab = first.k; else if (S.tab === 'class') S.tab = 'word';
+    const first = added[0] || S.edit[S.edit.length - 1]; if (first) S.tab = first.k; else if (S.tab === 'class') S.tab = 'word';
     if (bad.length) setTimeout(() => toast(`고칠 수 없는 항목은 넣지 않았습니다: ${bad.join(', ')}`, 'info'), 50);
   }
   if (qs.get('mode') === 'edit' || qs.get('mode') === 'new') S.mode = qs.get('mode');
+  if (qs.get('mode') === 'basket') enterBasket(true);
+  else if (S.mode === 'basket') enterBasket();   // reopened on the basket table: reload it if the basket changed meanwhile
   if (KINDS.includes(qs.get('tab'))) S.tab = qs.get('tab');
-  if (S.mode === 'edit' && S.tab === 'class' && S.edit.length) S.tab = S.edit[0].k;
-  if (S.mode === 'edit' && S.tab !== 'class') $('qk').value = S.tab;
+  if (isEdit() && S.tab === 'class') S.tab = E().length ? E()[0].k : 'word';
+  if (isEdit() && S.tab !== 'class') $('qk').value = S.tab;
   render();
 };
 </script>

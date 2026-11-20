@@ -394,6 +394,8 @@ select.input { padding-right:36px; }
 .search { position:relative; flex:0 0 360px; }
 .search .input { padding-left:30px; border-radius:var(--r-full); height:32px; }
 .search svg { position:absolute; left:9px; top:8px; color:var(--fg-3); }
+.search > i[data-ic] { position:absolute; left:9px; top:9px; display:flex; color:var(--fg-3); }
+.search > i[data-ic] svg { position:static; }
 /* filter selects and facets in tool rows: dashed rounded */
 .toolbar select.input, .fchip { height:32px; border:1px dashed var(--ds-gray-500); border-radius:var(--r-full); background:var(--surface); color:var(--fg-2); font-size:14px; padding:0 14px; }
 .toolbar select.input { box-shadow:none; }

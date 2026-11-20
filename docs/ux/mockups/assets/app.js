@@ -1,6 +1,8 @@
 /* NeoDB mockup shell & interactions (static, no backend) — v4 */
 (function () {
   window.__errs = []; window.addEventListener('error', e => window.__errs.push(e.message));   // mockup self-check (review scripts read this)
+  // 행정표준코드 seed (generated from the 공통표준 2025.11 workbook) — loaded synchronously while the page is parsed
+  if (!window.STD_CODES && document.readyState === 'loading') { const me = document.currentScript; document.write(`<script src="${me ? me.src.replace(/app\.js(\?.*)?$/, 'std-codes.js') : 'assets/std-codes.js'}"><\/script>`); }
   const store = {
     get(k, d) { try { return localStorage.getItem(k) ?? d; } catch (e) { return d; } },
     set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} },
@@ -72,6 +74,8 @@
     { id: 'cand.decide', g: '사전', n: '후보 큐 판단', roles: ['da'], scope: 'org' },
     { id: 'dict.publish', g: '사전', n: '사전 공표', roles: ['da'], scope: 'org' },
     { id: 'dict.purge', g: '사전', n: '삭제 보관 항목 영구 삭제', roles: ['da', 'admin'], scope: 'org' },
+    { id: 'dict.group', g: '사전', n: '도메인그룹 직접 관리', roles: ['da', 'admin'], scope: 'org', note: '결재 없이 기록 · 감사 로그. 분류는 품의' },
+    { id: 'dict.common', g: '사전', n: '공통표준 새 판 올리기(품의 작성)', roles: ['da', 'admin'], scope: 'org', note: '반영은 일반 품의(DA → 최종 승인)' },
     { id: 'excel.viewall', g: '사전', n: '다른 사람의 엑셀 업로드 묶음 보기', roles: ['da'], scope: 'org', note: '나머지는 자기 묶음만' },
     { id: 'appr.da', g: '결재', n: '1단계(DA) 승인 · 반려', roles: ['da'], scope: 'sys', note: '사전 신청은 기관 전체, 모델 확정은 담당 시스템만' },
     { id: 'appr.final', g: '결재', n: '최종 승인 · 반려', roles: ['owner'], scope: 'sys', note: '사전 신청은 기관 전체, 모델 확정은 담당 시스템만 · 신청자와 1단계 승인자는 최종 승인할 수 없다' },
@@ -506,7 +510,11 @@
     { id: 'W-0096', k: 'word', kn: '단어', src: '기관', st: '삭제 보관', name: '결과물품', abbr: 'RSLT_GDS', dom: '—', eng: '결과물로 통합', ver: 2, cha: 12, dt: '2026-11-05', use: 1, syn: [], forbid: [], old: [], delDoc: 'REQ-2026-0001', hist: [{ v: 'V0', at: '2026-11-05 10:00', act: '삭제 보관', doc: 'REQ-2026-0001', by: '이데이터', why: '결과물로 통합', diff: [] }] },
     { id: 'W-0211', k: 'word', kn: '단어', src: '공통', st: '사용', name: '검사', abbr: 'INSP', dom: '—', eng: 'inspection', ver: 1, cha: 3, dt: '2025-11-30', use: 6, syn: [], forbid: [], old: [], hist: [] }
   ];
-  window.getDict = () => J('dbm-dict', clone(DICT0));
+  // the 59 행정표준코드 (common codes) join the dictionary once — also into a dictionary already saved by an older mockup version
+  window.getDict = () => { const d = J('dbm-dict', clone(DICT0)); const sc = window.STD_CODES || [];
+    if (sc.length && !d.some(x => x.id === sc[0].id)) { d.push(...clone(sc)); try { localStorage.setItem('dbm-dict', JSON.stringify(d)); } catch (e) {} } return d; };
+  window.getCommonVer = () => J('dbm-common-ver', { ver: '2025.11', at: '2025-11-30', words: 3284, terms: 13176, domains: 129, codes: (window.STD_CODES || []).length, doc: '—' });
+  window.saveCommonVer = v => S('dbm-common-ver', v);
   window.saveDict = d => S('dbm-dict', d);
   const today = () => { const t = new Date(); return `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, '0')}-${String(t.getDate()).padStart(2, '0')}`; };
   /* ---- v7: dictionary apply is exact (S2) ----
@@ -514,10 +522,28 @@
      A change applies the changed FIELDS (not just the version); a missing target is a failure, never a new item. */
   const KIND_NAME = { word: '단어', term: '용어', domain: '도메인', code: '코드', entity: '엔터티 용어', class: '도메인분류' };
   window.KIND_NAME = KIND_NAME;
-  const FIELD = { 단어명: 'name', 용어명: 'name', 도메인명: 'name', 코드명: 'name', 엔터티명: 'name', 이름: 'name', 영문약어명: 'abbr', 약어: 'abbr', 도메인: 'dom', 설명: 'desc', 영문명: 'eng', '허용 값': 'allow', 사용상태: 'st', 이음동의어: 'syn', 금칙어: 'forbid', 도메인그룹: 'dg', 코드값: 'vals', '적용 범위': 'scope', 형식단어: 'fmt', '보안 속성': 'sec', '물리 타입': 'dom' };
+  const FIELD = { 단어명: 'name', 용어명: 'name', 도메인명: 'name', 코드명: 'name', 엔터티명: 'name', 이름: 'name', 영문약어명: 'abbr', 약어: 'abbr', 도메인: 'dom', 설명: 'desc', 영문명: 'eng', '허용 값': 'allow', 사용상태: 'st', 이음동의어: 'syn', 금칙어: 'forbid', 도메인그룹: 'dg', 코드값: 'vals', '적용 범위': 'scope', 형식단어: 'fmt', '보안 속성': 'sec', '물리 타입': 'dom', '대상 시스템': 'sys' };
   window.FIELD_KEY = FIELD;
   // editable fields per kind (DX-01 · G5: names too — the old name is kept as a past name; a domain's type/length is its name)
-  window.EDIT_FIELDS = { word: ['단어명', '영문약어명', '영문명', '형식단어', '설명', '이음동의어', '금칙어'], term: ['용어명', '영문약어명', '도메인', '영문명', '설명'], entity: ['엔터티명', '영문약어명', '영문명', '설명'], domain: ['도메인명', '물리 타입', '허용 값', '도메인그룹', '보안 속성', '설명'], code: ['코드명', '영문명', '설명', '적용 범위', '코드값'] };
+  window.EDIT_FIELDS = { word: ['단어명', '영문약어명', '영문명', '형식단어', '적용 범위', '설명', '이음동의어', '금칙어'], term: ['용어명', '영문약어명', '도메인', '영문명', '적용 범위', '설명'], entity: ['엔터티명', '영문약어명', '영문명', '적용 범위', '설명'], domain: ['도메인명', '물리 타입', '허용 값', '도메인그룹', '보안 속성', '적용 범위', '설명'], code: ['코드명', '영문명', '설명', '적용 범위', '대상 시스템', '코드값'] };
+  /* decision Q3: one agency dictionary; each item says where it applies — '기관 공통' or a system code (SYSLIST) */
+  window.SCOPES = () => [['공통', '기관 공통']].concat(SYSLIST.map(s => [s.code, s.name]));
+  window.scopeName = v => !v || v === '공통' || v === '기관 공통' ? '기관 공통' : (SYSLIST.find(s => s.code === v || s.name === v) || {}).name || v;
+  /* decision Q1: a word's new name / abbreviation travels to every term (and entity term) built from it — added to the SAME request as change rows */
+  window.wordCascade = (d, chg) => {
+    if (!d || d.k !== 'word' || !chg) return [];
+    const nn = chg['단어명'] ? String(chg['단어명'][1]).trim() : d.name, na = chg['영문약어명'] ? String(chg['영문약어명'][1]).trim() : d.abbr;
+    if (nn === d.name && na === d.abbr) return [];
+    return getDict().filter(x => x.k === 'term' && x.ver > 0 && x.st !== '삭제 보관' && x.src !== '공통').map(t => {
+      const ent = t.kn === '엔터티 용어', head = ent ? t.name.replace(/(기본|내역|이력|관계|정보)$/, '') : t.name, dc = decompose(head);
+      if (!dc.parts.some(p => p.w === d.name)) return null;
+      const name = dc.parts.map(p => p.w === d.name ? nn : p.w).join('') + (ent ? t.name.slice(head.length) : '');
+      const parts = t.abbr.split('_'), i = dc.parts.findIndex(p => p.w === d.name);
+      const abbr = parts.length >= dc.parts.length ? parts.map((p, j) => (j === i && p === d.abbr) ? na : p).join('_') : t.abbr.split(d.abbr).join(na);
+      const c = {}; if (name !== t.name) c[ent ? '엔터티명' : '용어명'] = [t.name, name]; if (abbr !== t.abbr) c['영문약어명'] = [t.abbr, abbr];
+      return Object.keys(c).length ? { k: ent ? 'entity' : 'term', id: t.id, name: t.name, act: '변경', chg: c, auto: d.id, from: `단어 ‘${d.name}’ 변경에 따름` } : null;
+    }).filter(Boolean);
+  };
   const opOf = it => it.act === '미사용' ? '미사용' : it.act === '삭제' ? '삭제' : (it.id && it.act !== '추가') ? '변경' : '추가';
   window.opOf = opOf;
 
@@ -530,9 +556,19 @@
   // two changes of the same item merge field by field (the later value wins); a different action on the same item is skipped and reported
   window.addToBasket = list => { const b = getBasket(); let a = 0, s = 0, m = 0;
     [].concat(list).forEach(it => { const same = b.items.find(x => (it.id && x.id === it.id) || (!it.id && !x.id && x.k === it.k && x.name === it.name));
-      if (same && it.id && opOf(same) === '변경' && opOf(it) === '변경') { same.chg = Object.assign({}, same.chg, it.chg); m++; return; }
+      if (same && it.id && opOf(same) === '변경' && opOf(it) === '변경') { same.chg = Object.assign({}, same.chg, it.chg); if (!it.auto) delete same.auto; m++; return; }
       if (same) { s++; return; } b.items.push(Object.assign({ key: 'b' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5) }, it)); a++; });
-    saveBasket(b); const r = [a + m, s]; r.merged = m; return r; };
+    syncCascade(b); saveBasket(b); const r = [a + m, s]; r.merged = m; return r; };
+  // decision Q1: keep the automatic term rows in step with the word rows of a basket (added, updated, or dropped with their word)
+  window.syncCascade = b => {
+    const words = b.items.filter(x => x.k === 'word' && opOf(x) === '변경' && x.chg && (x.chg['단어명'] || x.chg['영문약어명']));
+    b.items = b.items.filter(x => !x.auto || words.some(w => w.id === x.auto));   // the word row is gone → its automatic rows go too
+    words.forEach(w => { const d = getDict().find(x => x.id === w.id); wordCascade(d, w.chg).forEach(t => {
+      const ex = b.items.find(x => x.id === t.id);
+      if (!ex) b.items.push(Object.assign({ key: 'b' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5) }, t));
+      else if (ex.auto === w.id) ex.chg = t.chg;   // a row the user edited by hand (no auto) is left alone
+    }); });
+    return b; };
   /* ---- domain groups → classes (→ domains): groups are kept by the DA directly (recorded), classes go through the same request as domains (30 MD-02·03) ---- */
   const GROUPS0 = { groups: [
       { id: 'G1', name: '날짜', desc: '연월일 · 연월 · 일시 등 날짜와 시각', st: '사용', src: '공통' }, { id: 'G2', name: '번호', desc: '식별자 · 번호 · 일련번호', st: '사용', src: '공통' },
@@ -666,11 +702,21 @@
         if (same) res.problems.push(`같은 이름의 ${same.kn}이 이미 있음(${same.id} · ${same.src}) — 변경 신청으로`);
         const o = open.find(x => x.it.name === name && (!x.it.k || !k || x.it.k === k) && opOf(x.it) === '추가');
         if (o) res.problems.push(`${o.doc}에서 같은 이름을 신청 중`);
+      } else if (k === 'class') {
+        // decision Q7: a class change / unuse goes through the request; unuse is blocked while a domain uses the class
+        const g = getGroups(), c = g.classes.find(x => x.id === it.id);
+        if (!c) res.problems.push(`대상 분류 ${it.id}가 없음`);
+        else { if (c.src === '공통' && doc.kind !== 'common') res.problems.push('공통 분류는 기관에서 바꿀 수 없음');
+          const doms = [...knownDomains()].filter(n => new RegExp('^' + c.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\s?[CVNDT]\\d*(,\\d+)?$').test(n));   // 'ID V10' (a space in older names) counts too
+          if (op === '미사용' && doms.length) res.problems.push(`도메인 ${doms.length}개(${doms.slice(0, 3).join(', ')})가 쓰는 분류 — 미사용으로 바꿀 수 없음`);
+          const nn = it.chg && it.chg['분류명']; if (nn && doms.length) res.problems.push('도메인이 쓰는 분류는 이름을 바꿀 수 없음(도메인명이 분류명으로 시작)');
+          const fw = it.chg && it.chg['연결 형식단어']; if (fw && !formatWords().includes(String(fw[1])) && !(doc.items || []).some(o => o.k === 'word' && o.name === fw[1] && o.fmt === 'Y')) res.problems.push(`'${fw[1]}'은 형식단어가 아님`);
+          const gr = it.chg && it.chg['도메인그룹']; if (gr && !g.groups.some(x => x.id === gr[1] && x.st === '사용')) res.problems.push('사용 중인 도메인그룹을 고르세요'); }
       } else {
         const d = dict.find(x => x.id === it.id);
         if (!d) res.problems.push(`대상 항목 ${it.id}가 사전에 없음`);
         else {
-          if (d.src === '공통') res.problems.push('공통 표준은 기관에서 바꿀 수 없음');
+          if (d.src === '공통' && doc.kind !== 'common') res.problems.push('공통 표준은 기관에서 바꿀 수 없음(공통표준 새 판은 공통표준 관리에서 품의)');
           if (d.pending && d.pending !== doc.id && getDocs().some(x => x.id === d.pending && ['da', 'final'].includes(x.step))) res.problems.push(`${d.pending}에서 같은 항목을 신청 중`);
           if (op === '변경' && !Object.keys(it.chg || {}).length && !Object.keys(it.set || {}).length) res.problems.push('바뀌는 칸이 없음');
           if (op === '미사용' && d.st === '미사용') res.problems.push('이미 미사용');
@@ -682,7 +728,10 @@
           if (op === '변경' && nn) { const nv = String(nn[1][1]).trim(); if (dict.some(x => x.id !== d.id && x.k === d.k && x.name === nv && x.ver > 0)) res.problems.push(`새 이름 '${nv}'이 이미 있음`); }
           // the FINAL values of a change pass the same item rules as a new item (only for the fields that change; the item itself is excluded from duplicate checks)
           if (op === '변경' && it.chg) { const merged = mergedOf(d, it), kk = d.kn === '엔터티 용어' ? 'entity' : d.k, fields = Object.keys(it.chg).map(l => FIELD[l] || l);
-            checkItem(Object.assign({}, merged, { k: kk }), { self: d.id, batch: (doc.items || []).filter(o => o !== it && !o.rej) }).filter(p => p.lvl === 'block' && fields.includes(p.f === 'dom' ? 'dom' : p.f)).forEach(p => res.problems.push(p.msg)); }
+            // only problems the change INTRODUCES: a rule the stored item already broke (legacy abbreviation) is not blamed on this change
+            const sig = p => p.f + '|' + p.msg.replace(/[A-Z0-9_]+/g, '#'), batchO = (doc.items || []).filter(o => o !== it && !o.rej);
+            const before = new Set(checkItem(Object.assign({}, d, { k: kk }), { self: d.id }).filter(p => p.lvl === 'block').map(sig));
+            checkItem(Object.assign({}, merged, { k: kk }), { self: d.id, batch: batchO }).filter(p => p.lvl === 'block' && fields.includes(p.f) && !before.has(sig(p))).forEach(p => res.problems.push(p.msg)); }
         }
       }
       res.problems = [...new Set(res.problems)];
@@ -701,6 +750,15 @@
         const id = 'K' + String(g.classes.length + 1).padStart(2, '0') + Date.now().toString(36).slice(-2); g.classes.push({ id, name: it.name, group: it.group, fw: it.fw, desc: it.desc || '', st: '사용', src: '기관', doc: doc.id, why: it.why || '' }); saveGroups(g);
         ch.unshift({ at, item: it.name, kind: '도메인분류', act: '추가', ver: 'V1', doc: doc.id, by: ME.name, diff: `그룹 ${(g.groups.find(x => x.id === it.group) || {}).name || it.group} · 형식단어 ${it.fw}`, itemId: id, firstVer: true });
         applied.push(id); return;
+      }
+      if (k0 === 'class') {   // decision Q7: class change (분류명 · 연결 형식단어 · 도메인그룹 · 설명) / unuse through the request
+        const g = getGroups(), c = g.classes.find(x => x.id === it.id); if (!c) { failed.push([it.name, `대상 분류 ${it.id} 없음`]); return; }
+        const CF = { 분류명: 'name', '연결 형식단어': 'fw', 도메인그룹: 'group', 설명: 'desc' }, diff = [];
+        if (op === '미사용') { diff.push(['사용상태', c.st, '미사용']); c.st = '미사용'; }
+        else Object.entries(it.chg || {}).forEach(([l, v]) => { const key = CF[l] || l; diff.push([l, c[key] == null ? '' : c[key], v[1]]); c[key] = v[1]; });
+        c.ver = (c.ver || 1) + 1; c.doc = doc.id; (c.hist = c.hist || []).unshift({ v: 'V' + c.ver, at, act: op, doc: doc.id, by: ME.name, why: it.why || doc.reason, diff }); saveGroups(g);
+        ch.unshift({ at, item: c.name, kind: '도메인분류', act: op, ver: 'V' + c.ver, doc: doc.id, by: ME.name, diff: diff.map(x => `${x[0]}: ${x[1] || '(빈 값)'} → ${x[2]}`).join(' · '), fields: diff, itemId: c.id });
+        applied.push(c.id); return;
       }
       let d = it.id ? dict.find(x => x.id === it.id) : null;
       let diff = [], act = op;
@@ -733,7 +791,7 @@
         const clash = dict.find(x => x.name === it.name && x.k === k && x.ver > 0);
         if (clash) { failed.push([it.name, `같은 이름 ${clash.id} 이미 있음`]); return; }
         if (ph) { d = ph; d.ver = 1; d.st = '사용'; }
-        else { d = { id: (() => { const pre = k === 'word' ? 'W-' : k === 'domain' ? 'D-' : k === 'code' ? 'C-' : 'T-'; const seq = Math.max(+store.get('dbm-idseq', '500'), ...dict.map(x => +String(x.id).slice(2) || 0)) + 1; store.set('dbm-idseq', String(seq)); return pre + String(seq).padStart(4, '0'); })(), k, kn: KIND_NAME[k0] || '용어', src: '기관', st: '사용', name: it.name, abbr: it.abbr || '—', dom: k0 === 'entity' ? '엔터티 용어' : it.dom || '—', dg: it.dg, allow: it.allow, sec: it.sec, fmt: it.fmt, eng: it.eng || '', desc: it.desc || '', ver: 1, cha: null, dt: today(), use: 0, syn: it.syn || [], forbid: it.forbid || [], old: [], hist: [] };
+        else { d = { id: (() => { const pre = k === 'word' ? 'W-' : k === 'domain' ? 'D-' : k === 'code' ? 'C-' : 'T-'; const seq = Math.max(+store.get('dbm-idseq', '500'), ...dict.map(x => +String(x.id).slice(2) || 0)) + 1; store.set('dbm-idseq', String(seq)); return pre + String(seq).padStart(4, '0'); })(), k, kn: KIND_NAME[k0] || '용어', src: doc.kind === 'common' ? '공통' : '기관', st: '사용', name: it.name, abbr: it.abbr || '—', scope: it.scope || '공통', dom: k0 === 'entity' ? '엔터티 용어' : it.dom || '—', dg: it.dg, allow: it.allow, sec: it.sec, fmt: it.fmt, eng: it.eng || '', desc: it.desc || '', ver: 1, cha: doc.kind === 'common' ? doc.commonVer : null, dt: today(), use: 0, syn: it.syn || [], forbid: it.forbid || [], old: [], hist: [] };
           if (k === 'code') Object.assign(d, { vals: (it.vals || []).map(v => Object.assign({ st: '사용' }, v)), scope: it.scope || '공통', sys: it.sys, ctype: it.ctype || '자체' });
           dict.push(d); }
       }
@@ -743,6 +801,8 @@
       applied.push(d.id);
     });
     saveDict(dict); saveChanges(ch);
+    // decision Q2: a new common-standard edition is applied through a normal request — the edition becomes current when it is approved
+    if (doc.kind === 'common' && doc.commonVer) { const cv = getCommonVer(); saveCommonVer(Object.assign({}, cv, { ver: doc.commonVer, at, doc: doc.id, prev: cv.ver })); }
     return { applied: applied.length, failed };
   };
   /* reject / withdraw: release every pending marker that belongs to this document (MD-10 lifecycle) */
@@ -792,10 +852,13 @@
   window.decompose = (name, extra) => {
     const dict = getDict(); const open = openItems();
     const words = {};
-    (extra || []).forEach(x => { if (x && x.name && x.abbr) words[x.name] = { w: x.name, abbr: x.abbr, src: '작성 중', ok: true, batch: true }; });
     Object.entries(COMMON_WORDS).forEach(([w, ab]) => { words[w] = { w, abbr: ab, src: '공통', ok: true }; });
     dict.filter(x => x.k === 'word').forEach(x => { words[x.name] = { w: x.name, abbr: x.abbr, src: x.src, ok: x.ver > 0 && x.st === '사용', id: x.id }; });
     open.filter(o => o.it.k === 'word' && (o.it.act || '추가') === '추가').forEach(o => { if (!words[o.it.name]) words[o.it.name] = { w: o.it.name, abbr: o.it.abbr, src: '신청 중', ok: false, doc: o.doc }; else if (!words[o.it.name].ok) words[o.it.name].doc = o.doc; });
+    // words written together win over the stored ones: new words, and CHANGED words (their name / abbreviation after the change) — decision Q1
+    (extra || []).forEach(x => { if (!x) return; let w = x;
+      if (x.id && opOf(x) === '변경') { const d = dict.find(y => y.id === x.id); if (!d) return; w = mergedOf(d, x); if (w.name !== d.name) delete words[d.name]; }
+      if (w.name && w.abbr) words[w.name] = { w: w.name, abbr: w.abbr, src: '작성 중', ok: true, batch: true }; });
     const keys = Object.keys(words).sort((a, b) => b.length - a.length);
     const parts = []; let i = 0, unknown = '';
     while (i < name.length) { const k = keys.find(w => name.startsWith(w, i)); if (k) { if (unknown) { parts.push({ w: unknown, unknown: true }); unknown = ''; } parts.push(words[k]); i += k.length; } else { unknown += name[i]; i++; } }
@@ -1649,7 +1712,7 @@
     const nUnread = unread();
     const page = document.body.dataset.page;
     // v17 (11 §2.1): top menu = global moves; the active tab follows the screen family
-    const TAB = { system: 'model', model: 'model', dictionary: 'dict', excel: 'dict', candidates: 'dict', 'dict-grid': 'dict', 'domain-groups': 'dict', approvals: 'appr', settings: 'admin', audit: 'admin' }[page] || '';
+    const TAB = { system: 'model', model: 'model', dictionary: 'dict', excel: 'dict', candidates: 'dict', 'dict-grid': 'dict', 'domain-groups': 'dict', 'std-common': 'dict', approvals: 'appr', settings: 'admin', audit: 'admin' }[page] || '';
     const here = f => curFile() === f ? ' on" aria-current="page' : '';
     const cur = (on, f) => on ? (curFile() === f ? ' aria-current="page"' : ' aria-current="true"') : '';
     const qn0 = queueCount(), late = myQueue(getDocs()).some(d => docLate(d)), cq = candOpenCount();
@@ -1663,6 +1726,7 @@
           <a class="mi${here('dictionary.html')}" href="dictionary.html">통합 검색</a>
           <a class="mi${here('dict-grid.html')}" href="dict-grid.html">화면 일괄 작성</a>
           <a class="mi${here('domain-groups.html')}" href="domain-groups.html">도메인 그룹 · 분류</a>
+          <a class="mi${here('std-common.html')}" href="std-common.html">공통표준 · 행정표준코드</a>
           <a class="mi${here('excel-import.html')}" href="excel-import.html">엑셀 가져오기</a>
           <a class="mi${here('uploads.html')}" href="uploads.html">업로드 이력</a>
           <a class="mi${here('candidates.html')}" href="candidates.html">후보 큐${cq ? `<span class="mcount">${cq}</span>` : ''}</a>
@@ -1693,7 +1757,7 @@
     document.querySelectorAll('.crumbs a[href="system.html"]').forEach(a => { if (a.textContent.trim() === '요구사항관리') a.textContent = curSys().name; });
     // the dictionary screens share one tab row under the header (01 v2 §5, D4) — they have no breadcrumb
     // three groups (review: find · write / bring in / flow · history) + the reference data at the end; upload history lives inside the excel group
-    { const DT = [['dictionary.html', '통합 검색'], ['dict-grid.html', '화면 일괄 작성'], 0, ['excel-import.html', '엑셀 가져오기', ['uploads.html']], 0, ['candidates.html', '후보 큐'], ['dict-history.html', '변경 내역'], 0, ['domain-groups.html', '도메인 그룹 · 분류']];
+    { const DT = [['dictionary.html', '통합 검색'], ['dict-grid.html', '화면 일괄 작성'], 0, ['excel-import.html', '엑셀 가져오기', ['uploads.html']], 0, ['candidates.html', '후보 큐'], ['dict-history.html', '변경 내역'], 0, ['domain-groups.html', '도메인 그룹 · 분류'], ['std-common.html', '공통표준 · 행정표준코드']];
       const here = t => t && (t[0] === curFile() || (t[2] || []).includes(curFile()));
       const ph = DT.some(here) && document.querySelector('#content .page-header');
       if (ph && !document.querySelector('.dtabs')) ph.insertAdjacentHTML('afterend', `<nav class="tabs dtabs" aria-label="사전 화면">${DT.map(t => !t ? '<span class="dsep" aria-hidden="true"></span>' : `<a href="${t[0]}"${here(t) ? ' class="on" aria-current="page"' : ''}>${t[1]}</a>`).join('')}</nav>`); }

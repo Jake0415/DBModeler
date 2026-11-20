@@ -1,0 +1,466 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>공통표준 · 행정표준코드 · NeoDB 목업</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="assets/app.css">
+<script src="assets/app.js"></script>
+<style>
+  .sc-top { flex:none; }
+  .ed-card { display:flex; flex-wrap:wrap; align-items:center; gap:8px 20px; }
+  .ed-card .ed-t { font-size:16px; font-weight:600; }
+  .ed-card .ed-n { font-size:14px; color:var(--fg-2); }
+  .ed-card .ed-n b { font-weight:500; color:var(--fg); font-variant-numeric:tabular-nums; }
+  .ed-card .ed-sub { flex-basis:100%; font-size:12px; color:var(--fg-3); }
+  .scope { flex:1; display:flex; flex-direction:column; min-height:0; }
+  .tabs.ptabs { margin:0; padding:0 20px; flex:none; }
+  #pn-codes.on { display:flex; flex:1; min-height:0; }
+  .pane.sc.on { flex:1; overflow:auto; min-height:0; }
+  .pane.sc .wrap { padding:16px 20px 32px; display:flex; flex-direction:column; gap:16px; max-width:1240px; }
+  .tbl td.wrapc { white-space:normal; }
+  .cnt-n { font-variant-numeric:tabular-nums; }
+  .vals-tbl td, .vals-tbl th { height:32px; padding:0 10px; }
+  .raw { font:400 12px/18px var(--font-mono); background:var(--surface-2); border:1px solid var(--border); border-radius:var(--r-md); padding:8px 10px; white-space:pre-wrap; word-break:break-all; color:var(--fg-2); }
+  .tlist { list-style:none; margin:0; padding:0; }
+  .tlist li { padding:6px 0; border-bottom:1px solid var(--border); font-size:14px; display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+  .tlist li:last-child { border-bottom:0; }
+  .tlist .mono { font-size:12px; color:var(--fg-2); }
+  .card h3 { font-size:14px; font-weight:600; margin:0 0 4px; display:flex; align-items:center; gap:8px; }
+  .card h3 .sn { width:20px; height:20px; border-radius:50%; display:inline-grid; place-items:center; font:500 12px/1 var(--font-sans); background:var(--ds-gray-200); color:var(--fg); }
+  .card.dim { opacity:.6; }
+  .fpick { display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-top:12px; }
+  .fname { font:500 14px/20px var(--font-mono); }
+  .hchk { list-style:none; margin:12px 0 0; padding:0; font-size:14px; }
+  .hchk li { padding:3px 0; display:flex; gap:8px; align-items:center; }
+  .hchk .okk { color:var(--success); }
+  .diff-tbl td.chgc { white-space:normal; min-width:260px; font-size:13px; }
+  .diff-tbl td.chgc .arrow { color:var(--fg-3); padding:0 4px; }
+  .diff-tbl tr.cf td { background:var(--ds-amber-100); }
+  .diff-tbl td.ck, .diff-tbl th.ck { width:40px; padding-right:0; }
+  .probs { list-style:none; margin:8px 0 0; padding:0; font-size:12px; }
+  .probs li { padding:2px 0; }
+  .probs .blk { color:var(--danger-deep); } .probs .okk { color:var(--success); }
+  .line-pv { display:flex; align-items:center; gap:8px; flex-wrap:wrap; font-size:14px; }
+  .line-pv .st { padding:2px 10px; border-radius:9999px; box-shadow:inset 0 0 0 1px var(--ds-gray-400); }
+  .line-pv .st small { font-size:12px; color:var(--fg-3); margin-left:4px; }
+  .cflist { list-style:none; margin:8px 0 0; padding:0; font-size:14px; }
+  .cflist li { padding:6px 0; border-bottom:1px solid var(--border); }
+  .cflist li:last-child { border-bottom:0; }
+  .cflist .caption { display:block; }
+  .tbar { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin:12px 0 8px; }
+  .tbar .grow { flex:1; }
+  .why { font-size:12px; color:var(--fg-3); }
+  .sv-pv { font-size:12px; color:var(--fg-2); margin-top:6px; }
+</style>
+</head>
+<body data-page="std-common">
+<div id="app">
+<div id="content" class="page">
+  <div class="page-header">
+    <h1>공통표준 · 행정표준코드</h1>
+    <span class="badge b-common" id="sum"></span>
+    <div class="actions">
+      <a class="btn" href="dictionary.html?src=공통"><i data-ic=search></i>사전에서 공통 항목 보기</a>
+    </div>
+  </div>
+
+  <div class="pad u-pb-0 sc-top">
+    <div class="banner info u-mb-12"><i data-ic=info></i>
+      <div class="grow">공통표준은 기관이 고칠 수 없는 원문입니다. 새 판은 차이를 품의로 올려 DA · 최종 승인 뒤 반영합니다. 기관 항목과 충돌하는 건은 DA가 따로 정리합니다.</div>
+    </div>
+    <div class="card ed-card u-mb-12" id="ed-card" aria-label="현재 적용 판"></div>
+  </div>
+
+  <div class="scope" data-tabscope>
+    <nav class="tabs ptabs" aria-label="공통표준 화면">
+      <button data-tab="codes" class="on">행정표준코드 <span class="n" id="tn-codes"></span></button>
+      <button data-tab="new">새 판 반영 <span class="n" id="tn-new"></span></button>
+      <button data-tab="hist">적재 이력 <span class="n" id="tn-hist"></span></button>
+    </nav>
+
+    <!-- 1. 행정표준코드 -->
+    <div class="pane on" data-pane="codes" id="pn-codes">
+      <div class="page-body">
+        <div class="main">
+          <div class="toolbar">
+            <div class="search">
+              <i data-ic=search data-s=14></i>
+              <input class="input" id="q" type="search" placeholder="코드명 · 영문 · 연결 용어 검색" aria-label="코드명 · 영문 · 연결 용어 검색">
+            </div>
+            <select class="input u-w-200" id="f-org" aria-label="소관기관"></select>
+            <span class="seg" id="f-part" role="group" aria-label="원문 코드값"><button data-v="" class="on" aria-pressed="true">전체</button><button data-v="p" aria-pressed="false">원문 일부 <span class="n" id="n-part"></span></button><button data-v="f" aria-pressed="false">원문 전체 <span class="n" id="n-full"></span></button></span>
+          </div>
+          <div class="listhead" id="lh" aria-live="polite"></div>
+          <div class="scroll">
+            <table class="tbl">
+              <thead><tr><th>코드명</th><th>영문</th><th>도메인</th><th class="num">코드값 수</th><th>소관기관</th><th>제정차수</th><th class="num">연결 용어</th></tr></thead>
+              <tbody id="rows"></tbody>
+            </table>
+          </div>
+        </div>
+        <aside class="rpanel wide" id="pn-code" aria-label="행정표준코드 상세"></aside>
+      </div>
+    </div>
+
+    <!-- 2. 새 판 반영 -->
+    <div class="pane sc" data-pane="new" id="pn-new">
+      <div class="wrap">
+        <div id="nv-block"></div>
+        <div class="steps" id="nv-steps" aria-label="진행 단계"></div>
+
+        <section class="card" id="st1" aria-labelledby="st1-t">
+          <h3 id="st1-t"><span class="sn">1</span>원본 올리기</h3>
+          <div class="caption muted">행정안전부가 배포한 공공데이터 공통표준 엑셀을 고릅니다. 시트 이름 · 열 이름을 지금 판과 맞춰 봅니다.</div>
+          <div class="fpick">
+            <span id="pick-w"><button class="btn" id="b-pick"><i data-ic=upload></i>원본 파일 고르기</button></span>
+            <span class="fname" id="fname" hidden>공공데이터 공통표준(2026.05월).xlsx</span>
+            <span class="caption muted" id="fcap" hidden>목업: 예시 차이로 보여 줍니다</span>
+          </div>
+          <ul class="hchk" id="hchk" hidden></ul>
+        </section>
+
+        <section class="card" id="st2" aria-labelledby="st2-t">
+          <h3 id="st2-t"><span class="sn">2</span>판 비교 <span class="caption muted" id="st2-sub"></span></h3>
+          <div id="st2-body"><div class="caption muted">원본을 올리면 지금 판과 다른 항목이 여기에 나옵니다.</div></div>
+        </section>
+
+        <section class="card" id="st3" aria-labelledby="st3-t">
+          <h3 id="st3-t"><span class="sn">3</span>품의 올리기</h3>
+          <div id="st3-body"><div class="caption muted">비교 결과에서 반영할 항목을 고르면 품의를 올릴 수 있습니다.</div></div>
+        </section>
+      </div>
+    </div>
+
+    <!-- 3. 적재 이력 -->
+    <div class="pane sc" data-pane="hist" id="pn-hist">
+      <div class="wrap">
+        <div class="caption muted">공통표준을 처음 적재한 기록과, 새 판을 반영하려고 올린 품의입니다. 새 판은 최종 승인되는 순간 현재 판이 됩니다.</div>
+        <table class="tbl">
+          <thead><tr><th>판</th><th>구분</th><th>문서</th><th>상태</th><th>일시</th><th>올린 사람</th><th>내용</th></tr></thead>
+          <tbody id="h-rows"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- code value supplement (goes into the common-standard request on this page, not the basket) -->
+  <div class="overlay" id="mo-sv" role="dialog" aria-modal="true" aria-labelledby="sv-t"><div class="modal u-w-560">
+    <div class="m-head"><h3 id="sv-t">코드값 보완</h3></div>
+    <div class="m-body">
+      <div class="caption muted u-mb-12">공통 항목은 일반 바구니(기관 품의)로 바꿀 수 없습니다. 보완한 코드값은 이 화면의 <b>새 판 반영</b> 품의(공통표준 품의)에 함께 담겨 DA · 최종 승인 뒤 반영됩니다.</div>
+      <div class="field"><label>원문 허용값</label><div class="raw" id="sv-raw"></div></div>
+      <div class="field"><label for="sv-text">코드값 * <span class="caption muted">한 줄에 하나 — 값 : 이름</span></label><textarea class="input" id="sv-text" rows="8"></textarea>
+        <span class="help" id="sv-help"></span></div>
+      <div class="sv-pv" id="sv-pv" aria-live="polite"></div>
+      <ul class="probs" id="sv-probs"></ul>
+    </div>
+    <div class="m-foot"><button class="btn" data-close="mo-sv">취소</button><button class="btn primary" id="sv-go">새 판 반영에 담기</button></div></div></div>
+</div>
+</div>
+<script>
+window.pageInit = function () {
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  const fmtN = n => Number(n || 0).toLocaleString('ko-KR');
+  const NEW_VER = '2026.05', NEW_FILE = '공공데이터 공통표준(2026.05월).xlsx';
+  const CAN_COMMON = can('dict.common');
+  const RO_WHY = `공통표준 새 판 품의는 DA · 관리자만 작성합니다(지금 ${ME.name}) — 내용은 읽기만 할 수 있습니다`;
+  const AUDIT = new URLSearchParams(location.search).has('audit');
+  const KN = { word: '단어', term: '용어', domain: '도메인', code: '코드' };
+  const GTAG = { 신규: '<span class="badge b-info">신규</span>', 변경: '<span class="badge">변경</span>', 폐기: '<span class="badge b-end">폐기</span>' };
+
+  /* ---- deterministic SAMPLE of the 2026.05 edition vs the current one (mockup: the file is not really read) ---- */
+  const SAMPLE = [
+    { g: '신규', k: 'word', name: '탄소', abbr: 'CRBN', eng: 'carbon', desc: '탄소 배출 · 감축 관리에 쓰는 원소 이름' },
+    { g: '신규', k: 'word', name: '배출', abbr: 'EMSN', eng: 'emission', desc: '밖으로 내보냄' },
+    { g: '신규', k: 'word', name: '감축', abbr: 'RDCN', eng: 'reduction', desc: '덜어서 줄임' },
+    { g: '신규', k: 'word', name: '위탁', abbr: 'CNSG', eng: 'consignment', desc: '업무를 남에게 맡김' },
+    { g: '신규', k: 'word', name: '산출물', abbr: 'OTPT', eng: 'output', desc: '일의 결과로 나온 물건 · 문서' },   // same name as an agency word → conflict
+    { g: '신규', k: 'domain', name: '금액N18,2', abbr: 'AMT_N18_2', dom: '금액 · NUMERIC(18,2)', dg: '금액·수량', eng: 'amount with decimals', desc: '소수점 둘째 자리까지 쓰는 금액' },
+    { g: '신규', k: 'term', name: '탄소배출일자', abbr: 'CRBN_EMSN_YMD', dom: '연월일C8', eng: 'carbon emission date', desc: '탄소를 배출한 날짜' },
+    { g: '신규', k: 'term', name: '탄소배출구분코드', abbr: 'CRBN_EMSN_SE_CD', dom: '코드C2', eng: 'carbon emission type code', desc: '탄소 배출원 구분' },
+    { g: '신규', k: 'term', name: '탄소배출금액', abbr: 'CRBN_EMSN_AMT', dom: '금액N18,2', eng: 'carbon emission amount', desc: '배출권 거래 금액' },
+    { g: '신규', k: 'term', name: '감축금액', abbr: 'RDCN_AMT', dom: '금액N15', eng: 'reduction amount', desc: '감축으로 줄어든 금액' },
+    { g: '신규', k: 'term', name: '위탁여부', abbr: 'CNSG_YN', dom: '여부C1', eng: 'consignment flag', desc: '업무를 위탁했는지 여부' },
+    { g: '신규', k: 'term', name: '위탁시작일자', abbr: 'CNSG_BEGIN_YMD', dom: '연월일C8', eng: 'consignment start date', desc: '위탁을 시작한 날짜' },
+    { g: '신규', k: 'term', name: '요청부서명', abbr: 'REQ_DEPT_NM', dom: '명V200', eng: 'request department name', desc: '요청한 부서의 이름' },   // agency term with another domain → conflict
+    { g: '변경', k: 'term', id: 'T-0021', chg: { 설명: '금액 · 수량 등을 계산한 근거를 적은 내용' } },
+    { g: '변경', k: 'word', id: 'W-0210', chg: { 설명: '문서 · 물품을 받는 사람' } },
+    { g: '변경', k: 'domain', id: 'D-0002', chg: { 설명: '원 단위 금액(소수점 없음)' } },
+    { g: '폐기', k: 'term', id: 'T-0022' },
+    { g: '폐기', k: 'word', id: 'W-0003' },
+    { g: '변경', k: 'code', id: 'C-S006', add: [{ v: '3', nm: '제한경쟁' }, { v: '4', nm: '수의계약' }] },
+    { g: '변경', k: 'code', id: 'C-S001', add: [{ v: '003', nm: '부' }, { v: '004', nm: '모' }] }
+  ];
+  const supp = {};   // code-value supplements made on the 행정표준코드 tab: id → vals (kept while this page is open)
+  let loaded = false, picked = null, fG = '', fK = '';
+  let q = '', fOrg = '', fPart = '', sel = null;
+
+  const codes = () => getDict().filter(x => x.k === 'code' && x.ctype === '행정표준' && x.src === '공통');
+  const valsTxt = vs => (vs || []).map(v => `${v.v} ${v.nm}`).join(', ');
+  const openCommon = () => getDocs().filter(d => d.type === 'dict' && d.kind === 'common' && ['da', 'final'].includes(d.step));
+
+  /* ---- header: current edition ---- */
+  function drawHead() {
+    const cv = getCommonVer(), n = codes().length;
+    $('sum').textContent = `공통표준 ${cv.ver}`;
+    $('ed-card').innerHTML = `<span class="ed-t">공공데이터 공통표준 ${esc(cv.ver)}</span>
+      <span class="ed-n">단어 <b>${fmtN(cv.words)}</b></span><span class="ed-n">용어 <b>${fmtN(cv.terms)}</b></span><span class="ed-n">도메인 <b>${fmtN(cv.domains)}</b></span>
+      <span class="ed-n">행정표준코드 <b>${fmtN(cv.codes || n)}</b></span><span class="ed-n">적재 <b>${esc(String(cv.at || '').slice(0, 10))}</b></span>
+      ${cv.prev ? `<span class="ed-sub">이전 판 ${esc(cv.prev)} · 반영 문서 ${cv.doc && cv.doc !== '—' ? `<a href="approvals.html?doc=${esc(cv.doc)}">${esc(cv.doc)}</a>` : '—'} · 판 수치(단어 · 용어 수)는 반영 문서의 원본 기준이며 목업에서는 바뀌지 않습니다</span>` : '<span class="ed-sub">행정안전부 배포 원문을 시스템이 적재한 판입니다 · 행정표준코드는 용어 시트의 ‘행정표준코드명’ 열에서 뽑았습니다</span>'}`;
+  }
+
+  /* ---- 1. 행정표준코드 ---- */
+  function codeHit(c) { if (!q) return true; const s = [c.name, c.abbr, c.org, ...(c.terms || []).map(t => t.name + ' ' + t.abbr)].join(' ').toLowerCase(); return s.includes(q); }
+  function drawCodes() {
+    const all = codes();
+    if (!$('f-org').options.length) {
+      const orgs = [...new Set(all.map(c => c.org || '-'))].sort((a, b) => a === '-' ? 1 : b === '-' ? -1 : a.localeCompare(b, 'ko'));
+      $('f-org').innerHTML = '<option value="">소관기관 전체</option>' + orgs.map(o => `<option value="${esc(o)}">${o === '-' ? '(소관기관 표기 없음)' : esc(o)} · ${all.filter(c => (c.org || '-') === o).length}</option>`).join('');
+    }
+    $('n-part').textContent = all.filter(c => c.partial).length; $('n-full').textContent = all.filter(c => !c.partial).length;
+    const list = all.filter(c => codeHit(c) && (!fOrg || (c.org || '-') === fOrg) && (!fPart || (fPart === 'p' ? c.partial : !c.partial)));
+    $('rows').innerHTML = list.map(c => `<tr class="click${sel === c.id ? ' sel' : ''}" data-panel="pn-code" data-id="${c.id}">
+        <td><b>${esc(c.name)}</b>${c.pending ? ` ${tag('run', '신청 중')}` : ''}</td><td class="mono">${esc(c.abbr)}</td><td class="mono">${esc(c.dom)}</td>
+        <td class="num cnt-n">${(c.vals || []).length}${c.partial ? ' <span class="badge b-warning">원문 일부</span>' : ''}${supp[c.id] ? ' <span class="badge b-info">보완 담음</span>' : ''}</td>
+        <td>${c.org && c.org !== '-' ? esc(c.org) : '<span class="faint">—</span>'}</td><td class="muted">${esc(c.cha || '—')}</td><td class="num cnt-n">${(c.terms || []).length}</td></tr>`).join('')
+      || `<tr><td colspan="7"><div class="empty"><b>조건에 맞는 행정표준코드가 없습니다</b><span class="caption">검색어나 소관기관 · 원문 필터를 바꿔 보세요</span></div></td></tr>`;
+    $('lh').textContent = (q || fOrg || fPart) ? `${list.length}종 표시 (전체 ${all.length}종)` : `행정표준코드 ${all.length}종 · 원문 일부 ${all.filter(c => c.partial).length}종 · 연결 용어 ${all.reduce((s, c) => s + (c.terms || []).length, 0)}건`;
+    $('tn-codes').textContent = all.length;
+    if (sel) codePanel();
+  }
+  function codePanel() {
+    const c = codes().find(x => x.id === sel), p = $('pn-code'); if (!c) { sel = null; p.classList.remove('open'); return; }
+    const sv = supp[c.id], org = c.org && c.org !== '-' ? c.org : '소관기관';
+    const btnWhy = !CAN_COMMON ? RO_WHY : openCommon().length ? `공통표준 품의 ${openCommon()[0].id}가 결재 중이라 새로 담을 수 없습니다` : '';
+    p.innerHTML = `<div class="rp-head"><div class="t"><span class="badge b-common">공통</span><span class="badge">행정표준코드</span>${c.partial ? '<span class="badge b-warning">원문 일부</span>' : ''}<button class="iconbtn close u-w-28 u-h-28" data-close="pn-code" aria-label="닫기"><i data-ic=x></i></button></div>
+        <h2 class="u-mt-8">${esc(c.name)}</h2><div class="rp-sub">${esc(c.abbr)} · ${esc(c.id)}</div></div>
+      <div class="rp-body">
+        <dl class="kv"><dt>도메인</dt><dd class="mono">${esc(c.dom)}</dd><dt>소관기관</dt><dd>${esc(c.org && c.org !== '-' ? c.org : '—')}</dd><dt>제정차수</dt><dd>${esc(c.cha || '—')}</dd><dt>설명</dt><dd class="u-fw-400">${esc(c.desc || '—')}</dd></dl>
+        ${c.partial ? `<div class="banner warning u-mb-12"><i data-ic=warn></i><div class="grow"><b>소관기관 원본으로 보완 필요</b><div class="caption">원문은 값 일부만 싣습니다 — 소관기관(${esc(org)}) 원본으로 코드값을 채우는 변경 품의를 올리세요. 공통 항목이라 일반 바구니가 아니라 <b>새 판 반영</b>(공통표준 품의)에 담깁니다.</div></div></div>` : ''}
+        ${sv ? `<div class="banner info u-mb-12"><i data-ic=info></i><div class="grow">보완 코드값 ${sv.length}개를 새 판 반영에 담았습니다 — 품의를 올리면 결재 뒤 반영됩니다.</div><button class="btn sm" id="go-new">새 판 반영 보기</button></div>` : ''}
+        <div class="section-t">코드값 <span class="badge">${(c.vals || []).length}</span></div>
+        <table class="tbl vals-tbl"><thead><tr><th>값</th><th>이름</th><th class="num">순서</th><th>상태</th></tr></thead><tbody>
+          ${(c.vals || []).map(v => `<tr><td class="mono">${esc(v.v)}</td><td>${esc(v.nm)}</td><td class="num">${esc(v.ord)}</td><td>${v.st === '사용' ? tag('ok', '사용') : tag('end', esc(v.st))}</td></tr>`).join('')}</tbody></table>
+        <div class="section-t">원문 허용값 <span class="caption muted">용어 시트 ‘허용값’ 열 그대로</span></div>
+        <div class="raw">${esc(c.allowRaw || '—')}</div>
+        <div class="section-t">연결 용어 <span class="badge">${(c.terms || []).length}</span></div>
+        ${(c.terms || []).length ? `<ul class="tlist">${c.terms.map(t => `<li><a href="dictionary.html?q=${encodeURIComponent(t.name)}">${esc(t.name)}</a><span class="mono">${esc(t.abbr)}</span><span class="mono">${esc(t.dom)}</span></li>`).join('')}</ul>` : '<div class="caption muted">연결된 용어가 없습니다.</div>'}
+      </div>
+      <div class="rp-foot">${btnWhy ? `<span class="why grow">${esc(btnWhy)}</span>` : '<span class="grow"></span>'}
+        <span title="${esc(btnWhy)}"><button class="btn sm" id="b-sv"${btnWhy ? ' disabled' : ''}><i data-ic=plus data-s=12></i>코드값 보완 담기</button></span></div>`;
+    p.classList.add('open');
+    const b = $('b-sv'); if (b) b.onclick = () => openSv(c);
+    const g = $('go-new'); if (g) g.onclick = () => showTab('new');
+  }
+
+  /* ---- code value supplement modal ---- */
+  let svId = null;
+  const parseVals = txt => String(txt || '').split(/\n|,(?=\s*[^,:]+\s*:)/).map(s => s.trim()).filter(Boolean).map((s, i) => { const m = s.match(/^([^:]+?)\s*:\s*(.+)$/); return m ? { v: m[1].trim(), nm: m[2].trim(), ord: i + 1, st: '사용' } : { bad: s }; });
+  function svProblems(c, vs) {
+    const out = [], len = +(String(c.dom || '').match(/\d+$/) || [0])[0];
+    if (!vs.length) out.push('코드값이 없습니다');
+    vs.filter(v => v.bad).forEach(v => out.push(`‘${v.bad}’ — ‘값 : 이름’ 꼴이 아닙니다`));
+    const ok = vs.filter(v => !v.bad), dup = ok.map(v => v.v).filter((v, i, a) => a.indexOf(v) !== i);
+    if (dup.length) out.push(`코드값 중복: ${[...new Set(dup)].join(', ')}`);
+    if (len) { const bad = ok.filter(v => v.v.length !== len); if (bad.length) out.push(`도메인 ${c.dom} 길이 ${len}과 다른 값: ${bad.map(v => v.v).join(', ')}`); }
+    if (ok.length && valsTxt(ok) === valsTxt(c.vals)) out.push('지금 코드값과 같습니다 — 소관기관 원본의 값을 더하세요');
+    return out;
+  }
+  function svCheck() {
+    const c = codes().find(x => x.id === svId); if (!c) return;
+    const vs = parseVals($('sv-text').value), pr = svProblems(c, vs), ok = vs.filter(v => !v.bad);
+    const added = ok.filter(v => !(c.vals || []).some(o => o.v === v.v)).length;
+    $('sv-pv').textContent = ok.length ? `지금 ${(c.vals || []).length}개 → ${ok.length}개 (새 값 ${added}개)` : '';
+    $('sv-probs').innerHTML = pr.length ? pr.map(m => `<li class="blk">막힘 · ${esc(m)}</li>`).join('') : '<li class="okk">검사 통과 — 새 판 반영에 담을 수 있습니다</li>';
+    setBlock($('sv-go'), pr[0] || '');
+  }
+  function openSv(c) {
+    if (!CAN_COMMON) { toast(RO_WHY, 'danger'); return; }
+    svId = c.id; $('sv-t').textContent = `코드값 보완 — ${c.name}`;
+    $('sv-raw').textContent = c.allowRaw || '—';
+    $('sv-text').value = (supp[c.id] || c.vals || []).map(v => `${v.v} : ${v.nm}`).join('\n');
+    $('sv-help').textContent = `소관기관(${c.org && c.org !== '-' ? c.org : '—'}) 원본의 값을 모두 적으세요 · 도메인 ${c.dom}`;
+    $('mo-sv').classList.add('open'); setTimeout(() => $('sv-text').focus(), 0); svCheck();
+  }
+  $('sv-text').addEventListener('input', svCheck);
+  $('sv-go').onclick = () => {
+    const c = codes().find(x => x.id === svId); if (!c || !CAN_COMMON) return;
+    const vs = parseVals($('sv-text').value); if (svProblems(c, vs).length) return;
+    supp[c.id] = vs; if (picked) picked.add('변경:' + c.id);
+    $('mo-sv').classList.remove('open');
+    drawCodes(); drawNew();
+    toast(`‘${esc(c.name)}’ 코드값 ${vs.length}개를 새 판 반영에 담았습니다 — 일반 바구니가 아니라 공통표준 품의로 올라갑니다`, 'success', { label: '새 판 반영 보기', fn: () => showTab('new') });
+  };
+
+  /* ---- 2. 새 판 반영: rows from the SAMPLE resolved against the live dictionary ---- */
+  function buildRows() {
+    const dict = getDict(), live = x => x.ver > 0 && x.st !== '삭제 보관', rows = [];
+    const sampleCodeIds = SAMPLE.filter(s => s.k === 'code').map(s => s.id);
+    const src = SAMPLE.concat(Object.keys(supp).filter(id => !sampleCodeIds.includes(id)).map(id => ({ g: '변경', k: 'code', id, add: [], fromSupp: true })));
+    src.forEach(s => {
+      if (s.g === '신규') {
+        if (dict.some(x => x.k === s.k && x.name === s.name && x.src === '공통' && live(x))) return;   // already applied
+        const org = dict.find(x => x.k === s.k && x.name === s.name && x.src !== '공통' && live(x));
+        const now = s.k === 'term' ? `${s.abbr} · ${s.dom}` : s.k === 'domain' ? `${s.dom}` : s.abbr;
+        rows.push({ key: '신규:' + s.k + ':' + s.name, g: '신규', k: s.k, name: s.name, s, org, cur: '—', next: esc(now),
+          item: Object.assign({ k: s.k, name: s.name, abbr: s.abbr, eng: s.eng, desc: s.desc, act: '추가', src: '공통' }, s.dom && s.k !== 'domain' ? { dom: s.dom } : {}, s.k === 'domain' ? { dom: s.dom, dg: s.dg } : {}) });
+        return;
+      }
+      const d = dict.find(x => x.id === s.id); if (!d || !live(d)) return;
+      if (s.g === '폐기') {
+        if (d.st === '미사용') return;
+        rows.push({ key: '폐기:' + d.id, g: '폐기', k: d.k, name: d.name, d, cur: esc(d.st), next: '미사용', item: { k: d.k, id: d.id, name: d.name, act: '미사용', why: `공통표준 ${NEW_VER} 폐기` } });
+        return;
+      }
+      if (s.k === 'code') {
+        const base = d.vals || [], nv = supp[d.id] || base.concat((s.add || []).filter(a => !base.some(b => b.v === a.v))).map((v, i) => Object.assign({ st: '사용' }, v, { ord: i + 1 }));
+        if (valsTxt(nv) === valsTxt(base)) return;
+        const plus = nv.filter(v => !base.some(b => b.v === v.v)).map(v => `+${esc(v.v)} ${esc(v.nm)}`).join(', ');
+        rows.push({ key: '변경:' + d.id, g: '변경', k: 'code', name: d.name, d, supp: !!supp[d.id], cur: `코드값 ${base.length}개`, next: `코드값 ${nv.length}개${plus ? ` <span class="caption muted">(${plus})</span>` : ''}`,
+          item: { k: 'code', id: d.id, name: d.name, act: '변경', chg: { 코드값: [base, nv] } } });
+        return;
+      }
+      const chg = {}; Object.entries(s.chg || {}).forEach(([l, v]) => { const old = d[FIELD_KEY[l] || l]; if (String(old == null ? '' : old) !== String(v)) chg[l] = [old == null ? '' : old, v]; });
+      if (!Object.keys(chg).length) return;
+      rows.push({ key: '변경:' + d.id, g: '변경', k: d.k, name: d.name, d, cur: Object.entries(chg).map(([l, v]) => `${esc(l)}: ${esc(v[0] || '(빈 값)')}`).join('<br>'), next: Object.entries(chg).map(([l, v]) => `${esc(l)}: ${esc(v[1])}`).join('<br>'), item: { k: d.k, id: d.id, name: d.name, act: '변경', chg } });
+    });
+    rows.forEach(r => { r.use = r.d ? usageOf(r.d).n : 0; r.conflict = !!r.org; });
+    return rows;
+  }
+  const blockedWhy = () => {
+    const cv = getCommonVer(), oc = openCommon();
+    if (cv.ver >= NEW_VER) return { kind: 'done', msg: `공통표준 ${NEW_VER}는 이미 현재 판입니다(반영 문서 ${cv.doc || '—'}).` };
+    if (oc.length) return { kind: 'open', doc: oc[0], msg: `공통표준 품의 ${oc[0].id}(${STEP_NAME[oc[0].step]} 차례)가 진행 중입니다 — 끝날 때까지 새 품의를 올릴 수 없습니다.` };
+    if (!CAN_COMMON) return { kind: 'ro', msg: RO_WHY };
+    return null;
+  };
+  function drawNew() {
+    const blk = blockedWhy(), rows = loaded ? buildRows() : [];
+    if (loaded && !picked) picked = new Set(rows.filter(r => !r.conflict).map(r => r.key));
+    if (picked) rows.forEach(r => { if (r.conflict) picked.delete(r.key); });
+    $('nv-block').innerHTML = blk ? `<div class="banner ${blk.kind === 'ro' ? 'violet' : 'warning'}"><i data-ic=${blk.kind === 'ro' ? 'lock' : 'warn'}></i><div class="grow">${esc(blk.msg)}${blk.kind === 'ro' ? ' 원본 비교는 볼 수 있지만 항목 고르기와 품의 올리기는 막혀 있습니다.' : ''}</div>${blk.kind === 'open' ? `<a class="btn sm" href="approvals.html?doc=${esc(blk.doc.id)}">품의 보기</a>` : ''}</div>` : '';
+    const nSel = picked ? rows.filter(r => picked.has(r.key)).length : 0;
+    const stepN = !loaded ? 1 : nSel ? 3 : 2;
+    $('nv-steps').innerHTML = [['원본 올리기', 1], ['판 비교', 2], ['품의 올리기', 3]].map(([t, n], i) => `${i ? '<span class="step-sep"></span>' : ''}<span class="step${n < stepN ? ' done' : n === stepN ? ' cur' : ''}"><span class="n">${n}</span>${t}</span>`).join('');
+    // step 1
+    const pickWhy = blk && blk.kind !== 'ro' ? blk.msg : '';   // read-only users may still look at the comparison
+    $('b-pick').disabled = !!pickWhy; $('pick-w').title = pickWhy;
+    $('b-pick').innerHTML = `<i data-ic=upload></i>${loaded ? '다시 고르기' : '원본 파일 고르기'}`;
+    $('fname').hidden = $('fcap').hidden = $('hchk').hidden = !loaded;
+    if (loaded) {
+      const cv = getCommonVer(), nw = rows.filter(r => r.g === '신규'), cnt = k => nw.filter(r => r.k === k).length;
+      $('hchk').innerHTML = [`판 표기 ${NEW_VER} — 지금 판 ${esc(cv.ver)}보다 새 판`, '시트 3개(단어 · 용어 · 도메인) — 지금 판과 같음', '열 이름 일치 — 용어 시트 ‘행정표준코드명’ · ‘허용값’ 열 포함',
+        `행 수 — 단어 ${fmtN(cv.words + cnt('word'))} · 용어 ${fmtN(cv.terms + cnt('term'))} · 도메인 ${fmtN(cv.domains + cnt('domain'))}`].map(t => `<li><span class="okk">✓</span>${t}</li>`).join('');
+    }
+    // step 2
+    $('st2').classList.toggle('dim', !loaded); $('st3').classList.toggle('dim', !loaded);
+    $('tn-new').textContent = loaded ? rows.length : '';
+    if (!loaded) { $('st2-sub').textContent = ''; $('st2-body').innerHTML = '<div class="caption muted">원본을 올리면 지금 판과 다른 항목이 여기에 나옵니다.</div>'; $('st3-body').innerHTML = '<div class="caption muted">비교 결과에서 반영할 항목을 고르면 품의를 올릴 수 있습니다.</div>'; return; }
+    const by = (g, k) => rows.filter(r => r.g === g && (!k || r.k === k)).length;
+    $('st2-sub').textContent = `${getCommonVer().ver} → ${NEW_VER} · 차이 ${rows.length}건`;
+    const vis = rows.filter(r => (!fG || r.g === fG) && (!fK || r.k === fK));
+    const ro = !!blk, selVis = vis.filter(r => !r.conflict), allOn = selVis.length && selVis.every(r => picked.has(r.key)), someOn = selVis.some(r => picked.has(r.key));
+    const cf = rows.filter(r => r.conflict);
+    const seg = (id, list, cur) => `<span class="seg" id="${id}" role="group">${list.map(([v, t, n]) => `<button data-v="${v}" class="${cur === v ? 'on' : ''}" aria-pressed="${cur === v}">${t}${n != null ? ` <span class="n">${n}</span>` : ''}</button>`).join('')}</span>`;
+    $('st2-body').innerHTML = `
+      <div class="caption muted">신규 단어 ${by('신규', 'word')} · 신규 용어 ${by('신규', 'term')} · 신규 도메인 ${by('신규', 'domain')} · 변경 ${by('변경') - by('변경', 'code')} · 폐기 ${by('폐기')} · 행정표준코드 변경 ${by('변경', 'code')}${Object.keys(supp).length ? ` (소관기관 원본 보완 ${Object.keys(supp).length} 포함)` : ''}</div>
+      ${cf.length ? `<div class="banner warning u-mt-12"><i data-ic=warn></i><div class="grow"><b>기관 항목과 충돌 ${cf.length}건 — DA 처리 목록</b>
+        <div class="caption">같은 이름의 기관 항목이 약어 · 도메인을 다르게 씁니다. 공통으로 올릴 수 없어 이번 품의에서 빠집니다 — DA가 기관 항목을 미사용 · 이름 변경으로 먼저 정리한 뒤 다음 품의에 담으세요.</div>
+        <ul class="cflist">${cf.map(r => `<li><b>${esc(r.name)}</b> <span class="caption muted">${KN[r.k]}</span> — 기관 <span class="mono">${esc(r.org.abbr)}${r.k === 'term' ? ' · ' + esc(r.org.dom) : ''}</span> (${esc(r.org.id)}) ↔ 공통 새 판 <span class="mono">${esc(r.s.abbr)}${r.k === 'term' ? ' · ' + esc(r.s.dom) : ''}</span>
+          <a href="dictionary.html?q=${encodeURIComponent(r.name)}">사전에서 열기</a></li>`).join('')}</ul></div></div>` : ''}
+      <div class="tbar">
+        ${seg('f-g', [['', '전체 구분'], ['신규', '신규', by('신규')], ['변경', '변경', by('변경')], ['폐기', '폐기', by('폐기')]], fG)}
+        ${seg('f-k', [['', '전체 종류'], ['word', '단어'], ['term', '용어'], ['domain', '도메인'], ['code', '코드']], fK)}
+        <span class="grow"></span><span class="caption muted">고른 항목 <b>${nSel}</b> / ${rows.length - cf.length}</span>
+      </div>
+      <div class="scroll u-p-0"><table class="tbl diff-tbl">
+        <thead><tr><th class="ck"><input type="checkbox" id="ck-all" aria-label="보이는 항목 모두 고르기"${allOn ? ' checked' : ''}${ro ? ' disabled' : ''}></th><th>구분</th><th>종류</th><th>이름</th><th>지금</th><th>새 판</th><th>영향</th></tr></thead>
+        <tbody>${vis.map(r => `<tr class="${r.conflict ? 'cf' : ''}">
+          <td class="ck"><input type="checkbox" data-ck="${esc(r.key)}" aria-label="${esc(r.name)} 고르기"${picked.has(r.key) ? ' checked' : ''}${ro || r.conflict ? ' disabled' : ''}${r.conflict ? ' title="기관 항목과 충돌 — DA가 먼저 정리해야 합니다"' : ''}></td>
+          <td>${GTAG[r.g]}</td><td>${KN[r.k]}</td>
+          <td><b>${esc(r.name)}</b>${r.d ? ` <span class="caption muted mono">${esc(r.d.id)}</span>` : ''}${r.supp ? ' <span class="badge b-info">원본 보완</span>' : ''}</td>
+          <td class="chgc muted">${r.cur}</td><td class="chgc">${r.next}</td>
+          <td>${r.conflict ? '<span class="badge b-warning">기관 충돌</span>' : ''}${r.use ? ` <span class="caption">모델 ${r.use}곳</span>` : ''}${!r.conflict && !r.use ? '<span class="faint">—</span>' : ''}</td></tr>`).join('') || '<tr><td colspan="7" class="muted">조건에 맞는 차이가 없습니다.</td></tr>'}</tbody>
+      </table></div>
+      ${rows.some(r => r.g === '폐기' && r.use) ? '<div class="caption muted u-mt-8">폐기 항목은 지우지 않고 미사용으로 바꿉니다. 모델에서 쓰는 곳은 그대로 두고 다음 표준 맞추기에서 다시 검토합니다.</div>' : ''}`;
+    const ca = $('ck-all'); if (ca) ca.indeterminate = !allOn && someOn;
+    // step 3
+    drawSubmit(rows, blk);
+  }
+  function chosenItems(rows) { return orderItems(rows.filter(r => picked && picked.has(r.key)).map(r => JSON.parse(JSON.stringify(r.item)))); }
+  let reason = '';
+  function drawSubmit(rows, blk) {
+    const items = chosenItems(rows), line = lineFor('dict');
+    const probe = { type: 'dict', req: ME.id, hist: [], kind: 'common' };
+    const res = items.length ? checkDictDoc({ id: '(작성 중)', items, kind: 'common' }) : [];
+    const bad = res.filter(r => r.problems.length);
+    const why = blk ? blk.msg : !items.length ? '반영할 항목을 하나 이상 고르세요' : bad.length ? `검사에서 막힌 항목 ${bad.length}건이 있습니다` : '';
+    $('st3-body').innerHTML = `
+      <div class="field u-mt-8"><label for="nv-reason">품의 사유 *</label><textarea class="input" id="nv-reason" rows="3" placeholder="예: 행정안전부 공공데이터 공통표준 ${NEW_VER} 개정 반영"${blk ? ' disabled' : ''}>${esc(reason)}</textarea></div>
+      <div class="field"><label>결재선</label><div class="line-pv">${['<span class="st">올림 <small>' + esc(ME.name) + '</small></span>'].concat(line.map(s => `<span class="st">${esc(STEP_NAME[s])} <small>${esc(approversFor(probe, s).filter(u => s !== 'final' || u.id !== ME.id).map(u => u.name).join(' · ') || '승인자 없음')}</small></span>`)).join('<span class="faint">→</span>')}</div>
+        <span class="help">공통표준 품의도 일반 사전 품의와 같은 결재선을 탑니다. 최종 승인되면 공통 항목이 반영되고 현재 판이 ${NEW_VER}로 바뀝니다.</span></div>
+      <div class="caption muted">담기는 항목 ${items.length}건 — 신규 ${items.filter(i => opOf(i) === '추가').length} · 변경 ${items.filter(i => opOf(i) === '변경').length} · 미사용 ${items.filter(i => opOf(i) === '미사용').length}</div>
+      ${bad.length ? `<div class="banner danger u-mt-8"><i data-ic=warn></i><div class="grow"><b>검사에서 막힌 항목 ${bad.length}건</b><ul class="probs">${bad.map(r => `<li class="blk">${esc(r.name)} · ${r.problems.map(esc).join(' · ')}</li>`).join('')}</ul></div></div>` : items.length && !blk ? '<ul class="probs"><li class="okk">검사 통과 — 품의를 올릴 수 있습니다</li></ul>' : ''}
+      <div class="u-flex u-gap-8 u-mt-12">
+        <span class="grow"></span>${why ? `<span class="why">${esc(why)}</span>` : ''}
+        <span title="${esc(why)}"><button class="btn primary" id="b-submit" data-needs="nv-reason" data-needs-msg="품의 사유를 입력해야 올릴 수 있습니다"${why ? ' disabled' : ''}>품의 올리기</button></span>
+      </div>`;
+    if (why) setBlock($('b-submit'), why);
+    $('nv-reason').addEventListener('input', e => { reason = e.target.value; });
+    $('b-submit').onclick = submit;
+  }
+  function submit() {
+    if (!AUDIT && liveRoleChanged()) { staleRoleToast(); return; }
+    const blk = blockedWhy(); if (blk) { toast(esc(blk.msg), 'danger'); drawNew(); return; }
+    const r = ($('nv-reason').value || '').trim(); if (!r) { toast('품의 사유를 입력하세요', 'danger'); $('nv-reason').focus(); return; }
+    const items = chosenItems(buildRows()); if (!items.length) return;
+    const res = checkDictDoc({ id: '(작성 중)', items, kind: 'common' }).filter(x => x.problems.length);
+    if (res.length) { toast(`검사에서 막힌 항목 ${res.length}건 — 목록을 확인하세요`, 'danger'); drawNew(); return; }
+    const n = items.length;
+    const out = createDoc({ type: 'dict', kind: 'common', commonVer: NEW_VER, title: `공통표준 ${NEW_VER} 반영 — ${n}건`, n, reason: r, items, cc: [], file: NEW_FILE });
+    if (!out.doc) { toast(`다른 품의에서 신청 중인 항목이 있어 올리지 못했습니다: ${esc((out.conflict || []).join(', '))}`, 'danger'); drawNew(); return; }
+    pushAudit({ act: '공통표준 새 판 품의', target: `${out.doc.id} 공통표준 ${NEW_VER} — ${n}건`, why: r, doc: out.doc.id });
+    location.href = `approvals.html?new=1&doc=${out.doc.id}`;
+  }
+
+  /* ---- 3. 적재 이력 ---- */
+  function drawHist() {
+    const cv = getCommonVer(), docs = getDocs().filter(d => d.type === 'dict' && d.kind === 'common');
+    const st = d => d.step === 'done' ? tag('ok', '반영됨') : d.step === 'rejected' ? tag('err', '반려됨') : d.step === 'withdrawn' ? tag('end', '회수됨') : tag('run', `${STEP_NAME[d.step]} 차례`);
+    const rows = docs.map(d => `<tr><td class="mono">${esc(d.commonVer || '—')}</td><td>새 판 품의</td><td><a href="approvals.html?doc=${esc(d.id)}">${esc(d.id)}</a></td><td>${st(d)}</td><td class="muted">${esc(d.submittedAt || d.date || '—')}</td>
+        <td>${esc((Object.values(USERS).find(u => u.id === d.req) || {}).name || d.req)}</td><td class="wrapc">${esc(d.title)}${d.applied ? ` <span class="caption muted">· 반영 ${d.applied.applied}건${d.applied.failed && d.applied.failed.length ? ` · 실패 ${d.applied.failed.length}건` : ''}</span>` : ''}</td></tr>`);
+    rows.push(`<tr><td class="mono">2025.11</td><td>초기 적재</td><td class="faint">—</td><td>${cv.ver === '2025.11' ? tag('ok', '현재 판') : tag('end', '이전 판')}</td><td class="muted">2025-11-30</td><td>시스템</td>
+      <td class="wrapc">단어 3,284 · 용어 13,176 · 도메인 129 · 행정표준코드 ${codes().length || 59} <span class="caption muted">(용어 시트 ‘행정표준코드명’에서 뽑음)</span></td></tr>`);
+    $('h-rows').innerHTML = rows.join('');
+    $('tn-hist').textContent = rows.length;
+  }
+
+  /* ---- wiring ---- */
+  function showTab(t) { const b = document.querySelector(`.ptabs button[data-tab="${t}"]`); if (b) b.click(); }
+  $('rows').addEventListener('click', e => { const tr = e.target.closest('tr[data-id]'); if (!tr) return; sel = tr.dataset.id; codePanel(); });
+  $('pn-code').addEventListener('click', e => { if (e.target.closest('[data-close="pn-code"]')) { sel = null; document.querySelectorAll('#rows tr.sel').forEach(r => r.classList.remove('sel')); } });
+  $('q').addEventListener('input', e => { q = e.target.value.trim().toLowerCase(); drawCodes(); });
+  $('f-org').addEventListener('change', e => { fOrg = e.target.value; drawCodes(); });
+  $('f-part').addEventListener('click', e => { const b = e.target.closest('button[data-v]'); if (!b) return; $('f-part').querySelectorAll('button').forEach(x => { x.classList.toggle('on', x === b); x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); }); fPart = b.dataset.v; drawCodes(); });
+  $('b-pick').onclick = () => { const bw = blockedWhy(); if (bw && bw.kind !== 'ro') return; const again = loaded; loaded = true; picked = null; drawNew(); toast(again ? '원본을 다시 읽었습니다 — 고른 항목을 처음 상태로 되돌렸습니다' : `${NEW_FILE} — 머리글 검사 통과 · 판 비교를 만들었습니다`, 'success'); };
+  $('st2-body').addEventListener('click', e => {
+    const b = e.target.closest('.seg button[data-v]');
+    if (b) { if (b.closest('#f-g')) fG = b.dataset.v; else fK = b.dataset.v; drawNew(); return; }
+  });
+  $('st2-body').addEventListener('change', e => {
+    if (!picked || blockedWhy()) return;
+    if (e.target.id === 'ck-all') { const rows = buildRows().filter(r => (!fG || r.g === fG) && (!fK || r.k === fK) && !r.conflict); rows.forEach(r => e.target.checked ? picked.add(r.key) : picked.delete(r.key)); drawNew(); return; }
+    const k = e.target.dataset.ck; if (k) { e.target.checked ? picked.add(k) : picked.delete(k); drawNew(); }
+  });
+  const qs0 = new URLSearchParams(location.search);
+  drawHead(); drawCodes(); drawNew(); drawHist();
+  if (qs0.get('sel') && codes().some(c => c.id === qs0.get('sel'))) { sel = qs0.get('sel'); drawCodes(); }
+  if (['new', 'hist'].includes(qs0.get('tab'))) showTab(qs0.get('tab'));
+};
+</script>
+</body>
+</html>
