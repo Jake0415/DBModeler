@@ -211,6 +211,8 @@ MDFCN_ID
 <script>
 window.pageInit = function () {
   const q = new URLSearchParams(location.search), $ = id => document.getElementById(id);
+  // script-driven moves keep the review role (&audit=1&as=) like the shell does for plain links (go() is the stepper here, so: nav)
+  const nav = u => { const as = q.has('audit') && q.get('as'); if (as && !/[?&]as=/.test(u)) u += (u.includes('?') ? '&' : '?') + 'audit=1&as=' + as; location.href = u; };
   const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
   const MODELS = getModels();
   const AREA = MODELS[q.get('area')] ? q.get('area') : defArea();
@@ -226,6 +228,7 @@ window.pageInit = function () {
   const isCtx = r => !!CENT && r.e === CE && (CA ? (r.a === CA || r.cur.n === CA || (r.entRow && CA === r.ent)) : r.entRow);
   $('back').href = backUrl;
   $('to-std').href = `standardize.html?area=${AREA}&f=todo${CENT ? '&e=' + encodeURIComponent(CE) + (CA ? '&a=' + encodeURIComponent(CA) : '') : ''}`;
+  if (q.get('from') !== 'standardize') $('to-std').textContent = '표준 맞추기 열기';   // "돌아가기" only when we came from there (model · tree entries open it fresh)
   if (CENT) { $('ctx').hidden = false; $('ctx-back').href = backUrl; $('ctx-t').innerHTML = `모델의 <b>${esc(CENT.n)}${CA && CA !== CENT.n ? '.' + esc(CA) : ''}</b>에서 왔습니다 — ② 분석 결과에서 이 행을 표시합니다.`; }
 
   // permission & lock: ①–③ are analysis only (anyone); ④·⑤ change the dictionary queue / the model (CX12-28 pattern)
@@ -481,7 +484,7 @@ window.pageInit = function () {
 
   // ---------- ① 대상 선택 ----------
   $('o-area').innerHTML = Object.entries(MODELS).map(([id, m]) => `<option value="${id}" ${id === AREA ? 'selected' : ''}>${esc(m.name)} · v${m.ver}</option>`).join('');
-  $('o-area').onchange = e => { location.href = `term-wizard.html?area=${e.target.value}`; };
+  $('o-area').onchange = e => { nav(`term-wizard.html?area=${e.target.value}${q.get('from') ? '&from=' + encodeURIComponent(q.get('from')) : ''}`); };
   const pre = (q.get('ents') || '').split(',').filter(Boolean);
   const own = model.E.filter(e => !e.ref);
   $('o-ents').innerHTML = own.map(e => { const todo = e.a.filter(a => !['ok', 'ex', 'na'].includes(a.s)).length + (e.p === '—' ? 1 : 0);
@@ -627,14 +630,14 @@ window.pageInit = function () {
   $('g-basket').onclick = () => { if (!guard()) return; const C = gChecked().filter(it => !it.unk); if (!C.length) return;
     const [a, s] = addToBasket(C.map(toItem)); C.forEach(it => { regSel[it.key] = false; });
     drawReg(); wizSave();
-    toast(`바구니에 ${a}건 담았습니다${s ? ` · 이미 있던 ${s}건 제외` : ''} — 분석은 저장돼 있어 돌아오면 이어서 합니다`, 'success', { label: '바구니 보기', fn: () => { location.href = `dictionary.html?basket=1&ret=${encodeURIComponent(RET)}`; } }); };
+    toast(`바구니에 ${a}건 담았습니다${s ? ` · 이미 있던 ${s}건 제외` : ''} — 분석은 저장돼 있어 돌아오면 이어서 합니다`, 'success', { label: '바구니 보기', fn: () => { nav(`dictionary.html?basket=1&ret=${encodeURIComponent(RET)}`); } }); };
   // D5: the way back from the basket / candidate queue (the receiving screens show it from &ret=)
   const RET = `term-wizard.html?area=${AREA}&resume=1${CENT ? '&e=' + encodeURIComponent(CE) + (CA ? '&a=' + encodeURIComponent(CA) : '') : ''}`;
   document.querySelectorAll('#p4 a[href="dictionary.html"], #p4 a[href="candidates.html"]').forEach(a => { a.href = a.getAttribute('href') + (a.getAttribute('href') === 'dictionary.html' ? '?basket=1&' : '?') + 'ret=' + encodeURIComponent(RET); });
   $('g-cand').onclick = () => { if (!guard()) return; const C = gChecked(); if (!C.length) return; let n = 0;
     C.forEach(it => { it.locs.forEach(r => { addCandidate({ t: it.k === 'word' ? '단어' : '용어', name: it.name, abbr: it.abbr || '' }, { area: AREA, e: r.e, ent: r.ent, attr: r.a }); n++; }); regSel[it.key] = false; });
     drawReg(); wizSave();
-    toast(`후보 큐에 ${C.length}건(발생 위치 ${n}곳)을 등록했습니다 — DA가 검토합니다 · 분석은 저장돼 있어 돌아오면 이어서 합니다`, 'success', { label: '후보 큐 보기', fn: () => { location.href = `candidates.html?ret=${encodeURIComponent(RET)}`; } }); };
+    toast(`후보 큐에 ${C.length}건(발생 위치 ${n}곳)을 등록했습니다 — DA가 검토합니다 · 분석은 저장돼 있어 돌아오면 이어서 합니다`, 'success', { label: '후보 큐 보기', fn: () => { nav(`candidates.html?ret=${encodeURIComponent(RET)}`); } }); };
   $('g-req').onclick = () => { if (!guard()) return; const C = gChecked().filter(it => !it.unk); if (!C.length) return;
     $('rq-t').textContent = `바로 신청 (${C.length}건)`; $('rq-list').innerHTML = orderItems(C.map(toItem)).map(i => `<span class="badge">${KN[i.k]} ${esc(i.name)}</span>`).join(' ') + (gChecked().some(it => it.unk) ? '<div class="caption muted u-mt-8">미등록 단어는 신청에서 빠집니다(후보 큐로 보내세요).</div>' : '');
     $('mo-req').classList.add('open'); $('mo-req')._opener = $('g-req'); updateNeeds(); setTimeout(() => $('rq-why').focus(), 0); };
@@ -650,7 +653,7 @@ window.pageInit = function () {
     if (res.conflict) { toast(`이미 진행 중인 신청과 겹칩니다 — ${res.conflict.join(', ')}. 그 항목은 선택에서 빼고 다시 신청하세요`, 'danger'); return; }
     lastDoc = { id: res.doc.id, n: items.length }; C.forEach(it => { regSel[it.key] = false; }); $('rq-why').value = '';
     refreshAlts();   // words/terms in the new request now read as 신청 중
-    toast(`${res.dup ? '같은 신청이 이미 있습니다' : '결재 문서를 만들었습니다'} — ${res.doc.id} (${items.length}건) · ⑤에서 이 용어를 쓰는 항목은 ‘신청 중’으로 반영됩니다`, 'success', { label: '결재함에서 보기', fn: () => { location.href = `approvals.html?doc=${res.doc.id}`; } });
+    toast(`${res.dup ? '같은 신청이 이미 있습니다' : '결재 문서를 만들었습니다'} — ${res.doc.id} (${items.length}건) · ⑤에서 이 용어를 쓰는 항목은 ‘신청 중’으로 반영됩니다`, 'success', { label: '결재함에서 보기', fn: () => { nav(`approvals.html?doc=${res.doc.id}`); } });
     drawReg();
   };
 

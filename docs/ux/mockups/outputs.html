@@ -61,7 +61,7 @@
           <div class="field"><label for="o-fmt">형식</label><select class="input" id="o-fmt"></select></div>
         </div>
         <div class="field"><label for="o-tpl">양식</label><select class="input" id="o-tpl"><option>기관 양식 (KDA 산출물 양식 v2)</option><option>기본 양식</option></select></div>
-        <label class="flex caption u-mb-12"><input type="checkbox" checked> 표지에 버전·확정일·승인자 넣기</label>
+        <label class="flex caption u-mb-12"><input type="checkbox" id="o-cover" checked> 표지에 버전·확정일·승인자 넣기</label>
         <div class="section-t">미리보기</div>
         <div class="prev" id="o-prev"></div>
         <div class="banner u-mt-12" id="o-note"><i data-ic=info></i><div>공식 산출물은 <b>확정본</b>으로만 만듭니다. 작업 중 버전은 모든 시트에 ‘초안’ 표시가 붙습니다.</div></div>
@@ -86,7 +86,14 @@ window.pageInit = function () {
   // area + versions from the documents (CX12-32): confirmed copies are official, the working version is a draft
   const AREA = getModels()[qp.get('area')] ? qp.get('area') : defArea(); const L = modelLock(AREA);
   $('crumb-area').textContent = L.model.name; { const cl = document.getElementById('crumb-link'); if (cl) cl.href = `model.html?area=${AREA}`; }
+  { const c = document.querySelector('.crumbs a'); if (c) c.textContent = sysOfArea(AREA) || curSys().name; }   // the area's own system (markup had a fixed ‘요구사항관리’)
+  { const dl = document.querySelector('.ocard[data-k="ddl"] a'); if (dl) dl.setAttribute('href', `ddl.html?area=${AREA}`); }   // the DDL card keeps the area (it opened the default area before)
+  // ‘최근 만든 산출물’ sample rows belong to 요구사항 · 프로젝트 — other areas start empty
+  if (AREA !== 'rq') $('recent').innerHTML = '<tr class="er first"><td colspan="5" class="caption muted u-tc">이 업무 영역에서 만든 산출물이 아직 없습니다 — 왼쪽 카드를 고르고 [만들기(시연)]을 누르세요</td></tr>';
+  // ‘내려받기 시연’ is a toast only — never jump the page to ‘#’
+  $('recent').addEventListener('click', e => { if (e.target.closest('a[href="#"]')) e.preventDefault(); });
   const done = getDocs().filter(x => x.type === 'model' && x.area === AREA && x.step === 'done').sort((a, b) => b.ver - a.ver);
+  { const cc = document.querySelector('.ocard[data-k="chg"] .caption'); if (cc) cc.textContent = `버전 간 엔터티·속성·관계 변경 내역${done.length ? ` (v${done[0].ver} → v${L.model.ver})` : ' — 이전 확정본이 생기면 만듭니다'}`; }   // was a fixed (v4 → v5)
   const reviewHidden = L.state === 'review' && L.doc && !canSeeDoc(L.doc);   // the version under review: requester + approvers only
   const ents = modelOf(AREA, L.model.ver).E.filter(e => !e.ref).length;
   $('o-scope').innerHTML = `<option>업무 영역 · ${L.model.name} (${ents})</option><option>선택한 테이블</option>`;
@@ -110,6 +117,12 @@ window.pageInit = function () {
     const C = compOf(m); P.cmp = ['표준 준수검사 결과', `요약 · 준수율 ${C.rate}% (미준수 ${C.bad}, 예외 ${C.ex}, 신청 중 ${C.req}, 비대상 ${C.na}) — 모델 화면과 같은 계산`, ['엔터티', '대상', '미준수', '예외', '비대상', '준수율'], E.slice(0, 6).map(e => { const c = compOf({ E: [e] }); return [e.n, String(c.tot), String(c.bad), String(c.ex), String(c.na), c.rate + '%']; })];
     const terms = {}; E.forEach(e => e.a.filter(a => a.s === 'ok').forEach(a => { terms[a.n] = terms[a.n] || [a.n, a.p, a.dom || '—', 0]; terms[a.n][3]++; }));
     const tl = Object.values(terms).sort((a, b) => b[3] - a[3]); P.term = ['용어 사용 현황', `표준 용어 ${tl.length}`, ['용어', '물리명', '도메인', '사용 위치 수'], tl.slice(0, 6).map(r => [r[0], r[1], r[2], String(r[3])])];
+    // 개인정보 · 모델 검토 previews from the same model (they showed 요구사항 sample rows on every area)
+    const secL = []; E.forEach(e => e.a.filter(a => a.sec).forEach(a => secL.push([`${e.p}.${a.p}`, a.sec, a.enc || '없음', a.secSrc || (a.dom ? '도메인 상속' : '직접 지정')])));
+    P.sec = ['개인정보 컬럼 목록', `개인정보 ${secL.length} · 암호화 ${secL.filter(r => r[2] !== '없음').length}`, ['테이블.컬럼', '개인정보', '암호화', '출처'], secL.slice(0, 6)];
+    const revL = []; (m.R || []).forEach(r => { if (r.k === 'mn') { const a = m.E.find(x => x.id === r.f), b = m.E.find(x => x.id === r.t); if (a && b) revL.push(['관계', `${a.n} ↔ ${b.n}`, 'M:N 미해소']); } });
+    E.forEach(e => { if (!e.a.some(a => a.pk)) revL.push(['식별자', e.n, '식별자 없음']); e.a.forEach(a => { if (!a.edit && (a.t === '—' || a.p === '—')) revL.push(['물리 정보', `${e.n}.${a.n}`, a.t === '—' ? '타입 미정' : '물리명 미정']); }); });
+    P.rev = ['모델 검토 결과', revL.length ? `확인 필요 ${revL.length}` : '확인할 항목 없음', ['구분', '위치', '내용'], revL.slice(0, 6)];
     const prev = verDoc() ? getModelData(AREA, verDoc().ver - 1) : (done[0] && (done[0].model || getModelData(AREA, done[0].ver)));
     const df = prev ? (modelDiff(prev, m) || []) : null; P.chg = ['변경 이력', df ? `직전 확정본 대비 ${df.length}건` : '비교할 이전 확정본 없음', ['구분', '대상', '변경'], (df || []).slice(0, 6).map(r => [r[0], r[1], `${r[2]} → ${r[3]}`])];
   }
@@ -119,7 +132,7 @@ window.pageInit = function () {
     $('o-fmt').innerHTML = FMT[k].map(f => `<option>${f}</option>`).join('');
     const [t, cap, h, rows] = P[k];
     document.getElementById('o-title').textContent = t;
-    document.getElementById('o-prev').innerHTML = `<div class="ph">${cap}</div><table><thead><tr>${h.map(x => `<th>${x}</th>`).join('')}</tr></thead><tbody>${rows.map(r => `<tr>${r.map(c => `<td>${c}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
+    document.getElementById('o-prev').innerHTML = `<div class="ph">${cap}</div><table><thead><tr>${h.map(x => `<th>${x}</th>`).join('')}</tr></thead><tbody>${rows.map(r => `<tr>${r.map(c => `<td>${c}</td>`).join('')}</tr>`).join('') || `<tr><td colspan="${h.length}" class="caption muted">해당 항목이 없습니다</td></tr>`}</tbody></table>`;
     document.querySelectorAll('.ocard').forEach(c => c.classList.toggle('on', c.dataset.k === k));
   };
   document.getElementById('cards').addEventListener('click', e => { const c = e.target.closest('.ocard'); if (c && !e.target.closest('a')) show(c.dataset.k); });
@@ -132,9 +145,10 @@ window.pageInit = function () {
     $('o-go').disabled = true; $('o-prog').textContent = `${cur === 'erd' && d ? '서버에서 공식 ERD를 그리는 중' : '만드는 중'}… (${d ? `v${d.ver} 확정본` : '작업본 초안'})`;
     setTimeout(() => { $('o-go').disabled = false; $('o-prog').textContent = '다운로드 시연(목업) — 실제 파일은 만들지 않습니다';
       const fname = `${L.model.name}_${t}_${d ? 'v' + d.ver : '초안'}.${f}`;
+      $('recent').querySelectorAll('tr.er').forEach(r => r.remove());
       $('recent').insertAdjacentHTML('afterbegin', `<tr><td class="mono">${nowStr()}</td><td>${t}${cur === 'erd' && d ? ' (공식)' : ''}</td><td>${L.model.name} · ${d ? `v${d.ver} 확정본` : `v${L.model.ver} 초안`}</td><td>${ME.name}</td><td><a href="#" data-toast="다운로드 시연(목업) — 받을 파일: ${fname}" data-toast-type="info">내려받기 시연</a></td></tr>`);
       // D9: a demo — say which file the product would create, not that a file was downloaded
-      toast(`다운로드 시연(목업) — 생성할 파일: <b>${fname}</b> · ${d ? `공식(v${d.ver} 확정본 · ${d.id})` : `초안(v${L.model.ver}, 모든 시트에 초안 표시)`}`, 'success'); }, 1200);
+      toast(`다운로드 시연(목업) — 생성할 파일: <b>${fname}</b> · ${d ? `공식(v${d.ver} 확정본 · ${d.id})` : `초안(v${L.model.ver}, 모든 시트에 초안 표시)`} · ${$('o-tpl').value.replace(/ \(.*\)$/, '')}${$('o-cover').checked ? ' · 표지 포함' : ''}`, 'success'); }, 1200);
   };
   if (!done.length) $('o-note').innerHTML = '<i data-ic=info></i><div>이 업무 영역에는 아직 <b>확정본</b>이 없어 공식 산출물을 만들 수 없습니다. 작업 중 버전은 모든 시트에 ‘초안’ 표시가 붙습니다.</div>';
   show(new URLSearchParams(location.search).get('k') || 'tbl');

@@ -68,7 +68,8 @@ window.pageInit = function () {
     panel();
   }
   function panel() {
-    const c = C.find(x => x.id === sel); if (!c) { $('cd-name').textContent = '후보를 고르세요'; $('cd-body').innerHTML = ''; $('cd-foot').innerHTML = ''; return; }
+    const c = C.find(x => x.id === sel); $('cd-type').hidden = $('cd-st').hidden = !c;   // the badges kept the last candidate's kind/state on an empty filter
+    if (!c) { $('cd-abbr').textContent = ''; $('cd-name').textContent = '후보를 고르세요'; $('cd-body').innerHTML = ''; $('cd-foot').innerHTML = ''; return; }
     const st = candState(c);
     $('cd-type').textContent = c.t + ' 후보'; $('cd-st').textContent = st; $('cd-st').className = 'badge ' + ST_BADGE[st];
     $('cd-name').textContent = c.name; $('cd-abbr').textContent = c.abbr ? '제안 약어 ' + c.abbr : '제안 약어 없음 — 전환할 때 정합니다';
@@ -87,7 +88,8 @@ window.pageInit = function () {
     const lk = $('c-link'); if (lk) lk.onclick = () => { if (liveRoleChanged()) { staleRoleToast(); return; } const all = getCands(); all.find(y => y.id === c.id).doc = op.doc; saveCands(all); notify(c, `${op.doc}에 연결`); toast(`${c.name} 후보를 ${op.doc}에 연결했습니다`, 'success'); draw(); };
     $('crej-t').textContent = `후보 반려 · ${c.name}`;
     document.querySelector('#mo-crej .m-body .caption').innerHTML = `발생 위치 ${c.loc.length}곳의 요청자 <b>${reqs(c).map(u => USERS[u] ? USERS[u].name : u).join(' · ')}</b>에게 앱 알림이 갑니다. 해당 속성은 미준수로 남습니다.`;
-    if (c.sim) { $('cstd-to').innerHTML = `<option>${c.sim[0]} ${c.sim[1]} (${c.sim[2]} 단어)</option>`; $('cstd-msg').value = `‘${c.name}’ 대신 같은 뜻의 ${c.sim[2]} 표준 ‘${c.sim[0]}(${c.sim[1]})’를 쓰세요. 표준 맞추기에서 바로 바꿀 수 있습니다.`; }
+    if (c.sim) { $('cstd-to').innerHTML = `<option>${c.sim[0]} ${c.sim[1]} (${c.sim[2]} 단어)</option>`; $('cstd-msg').value = `‘${c.name}’ 대신 같은 뜻의 ${c.sim[2]} 표준 ‘${c.sim[0]}(${c.sim[1]})’를 쓰세요. 표준 맞추기에서 바로 바꿀 수 있습니다.`;
+      document.querySelector('#mo-cstd .m-body > .caption').textContent = `요청자 ${reqs(c).length}명 · 발생 위치 ${c.loc.length}곳에 ‘${c.sim[0]}${josa(c.sim[0], '으로/로').slice(c.sim[0].length)} 바꾸기’ 제안이 붙습니다.`; }   // was a fixed '수령자 → 수신자' sentence
   }
   const notify = (c, label) => pushNotif({ to: reqs(c), k: 'cand', t: `후보 ‘${c.name}’ — ${label}`, m: `${ME.name} 처리`, href: `candidates.html?c=${c.id}` });
   const close = (label, why) => { if (liveRoleChanged()) { staleRoleToast(); return; } const all = getCands(); const c = all.find(y => y.id === sel); c.closed = label; c.closedWhy = why; saveCands(all); notify(c, label); pushAudit({ act: `후보 ${label}`, target: c.name, why }); toast(`${c.name}: ${label} — 요청자 ${reqs(c).length}명에게 알림`, label === '반려' ? 'danger' : 'info'); draw(); };

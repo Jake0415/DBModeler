@@ -33,8 +33,7 @@
 window.pageInit = function () {
   const $ = id => document.getElementById(id);
   let f = '', sel = new URLSearchParams(location.search).get('b');
-  const docs = getDocs();
-  const docOf = id => docs.find(d => d.id === id);
+  const docOf = id => getDocs().find(d => d.id === id);   // read live — the batch state is live, a page-load copy of the documents showed '반영됨' next to 'DA 승인'
   const stateOf = batchState;            // one state function shared with the excel screen (CL10-02)
   const vis = canSeeBatch;
   const expired = b => b.token && ['임시 저장', '보완'].includes(stateOf(b)) && (b.token.policy !== getPolicy().ver || b.token.dict !== dictRev());               // same visibility for the list, the ?b= deep link and file actions (CX9-09)

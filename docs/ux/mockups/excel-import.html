@@ -197,7 +197,12 @@ window.pageInit = function () {
     'D-NAMERULE': '도메인명은 분류+타입+길이로 만듭니다(예: 금액N15) — 도메인명 칸을 고치거나 비워 두면 계산합니다', 'CV-DUP': '한 코드 안에서 코드값은 한 번만 — 다른 값으로 바꾸세요',
     'CV-LEN': '코드값 길이를 코드 도메인 길이에 맞추세요(코드C1 → 1자리)' };
   // the same composition rule as the approval check: a new term built on a word that is not approved yet waits (CL12-15)
-  const judgePre = r => { if (r.st !== 'new' || kind !== '용어') return r; const dc = decompose(r.name); if (dc.pending.length) { const p = dc.pending[0]; r.st = 'pre'; r.why = `단어 ‘${p.w}’ 승인 후 재검증${p.doc ? `(${p.doc})` : ''}`; r.doc = p.doc; r.word = p.w; } return r; };
+  const judgePre = r => { if (r.st !== 'new' || kind !== '용어') return r; const dc = decompose(r.name);
+    // the term abbreviation is a calculated value: recompute it from today's dictionary (the full common standard changed e.g. 시작 BEGIN → BGNG),
+    // otherwise step 5 showed '신규' rows that the approval re-check then blocked
+    if (!dc.pending.length && !dc.unknown.length && dc.abbr) r.abbr = dc.abbr;
+    else if (dc.unknown.length) { r.st = 'err'; r.rule = r.rule || null; r.why = `미등록 단어: ${dc.unknown.map(p => p.w).join(', ')} — 단어부터 등록하세요`; return r; }
+    if (dc.pending.length) { const p = dc.pending[0]; r.st = 'pre'; r.why = `단어 ‘${p.w}’ 승인 후 재검증${p.doc ? `(${p.doc})` : ''}`; r.doc = p.doc; r.word = p.w; } return r; };
   // initial load (empty organisation dictionary): new rows only, no baseline, recorded as 초기 적재 (CL12-18)
   const INIT_ROWS = [
     { r: 2, st: 'new', name: '요구사항상태구분', abbr: 'DEMND_MATER_STTS_SE', dom: '코드C2', desc: '요구사항 진행 상태 구분', why: '신규(초기 적재)' },
@@ -367,7 +372,7 @@ window.pageInit = function () {
   $('kinds').addEventListener('click', e => { const k = e.target.closest('.kindcard'); if (!k || k.dataset.k === kind) return;
     if (B) { toast(`${B.id}는 ${B.kind} 묶음이라 종류를 바꿀 수 없습니다 — 새 업로드로 시작하세요`, 'info'); return; }
     kind = k.dataset.k; ROWS = seedRows(); applyScope(); undoStack = []; sel = null; filt = ''; ruleF = '';
-    if (file) { file = false; $('filecard').hidden = true; toast(`종류를 ${k.textContent}(으)로 바꿨습니다 — 그 양식 파일을 다시 선택하세요`, 'info'); }
+    if (file) { file = false; $('filecard').hidden = true; toast(`종류를 ${josa(kind === '코드' ? '코드값' : '표준' + kind, '으로/로')} 바꿨습니다 — 그 양식 파일을 다시 선택하세요`, 'info'); }
     drawKind(); render(); });
   // ---- step 2
   $('pick').onclick = () => { file = true; $('big-err').hidden = true; $('filecard').hidden = false; drawKind(); render(); };
@@ -408,7 +413,7 @@ window.pageInit = function () {
     if (!r) { $('pn-row').innerHTML = '<div class="rp-body"><div class="caption muted u-p-24 u-tc">이 조건에 맞는 행이 없습니다 — 필터를 바꾸세요</div></div>'; return; } sel = r.r;
     const s = ST[r.st];
     const K = KC[kind], inDict = r.id || (kind === '코드' && CG[r.grp] && CG[r.grp].id && ['same', 'chg'].includes(r.st));
-    const idLine = kind === '코드' ? `${CG[r.grp] && CG[r.grp].id ? CG[r.grp].id + ' · ' : '새 코드 · '}${r.grp} · 값 ${r.v} <span class="caption faint">(코드+코드값으로 짝짓기 · 도메인 ${(CG[r.grp] || {}).dom || '—'})</span>` : (r.id || `(없음 — ${kind === '용어' ? '이름+약어' : kind + '명'}으로 짝짓기)`);
+    const idLine = kind === '코드' ? `${CG[r.grp] && CG[r.grp].id ? CG[r.grp].id + ' · ' : '새 코드 · '}${r.grp} · 값 ${r.v} <span class="caption faint">(코드+코드값으로 짝짓기 · 도메인 ${(CG[r.grp] || {}).dom || '—'})</span>` : (r.id || `(없음 — ${kind === '용어' ? '이름+약어로' : kind + '명으로'} 짝짓기)`);
     let body = `<div class="section-t">값 비교</div><table class="tbl three"><thead><tr><th>항목</th><th>${inDict ? '현재 사전' : '—'}</th><th>파일</th></tr></thead><tbody>${K.cmp.map(f => `<tr><td>${K.lbl[f]}</td><td>${inDict ? ((r.old && r.old[f]) || r[f]) : '—'}</td><td>${r[f] == null ? '' : r[f]}</td></tr>`).join('')}<tr><td>${kind === '코드' ? '짝' : '항목 ID'}</td><td class="mono" colspan="2">${idLine}</td></tr></tbody></table>`;
     if (r.st === 'conflict') body = `<div class="section-t">칸 단위 3방향 비교 · ${r.three.field}</div><table class="tbl three"><tbody><tr><td>내려받은 값 (V3)</td><td>${r.three.base}</td></tr><tr><td>현재 사전 (V4)</td><td>${r.three.cur}</td></tr><tr><td>파일 값</td><td>${r.three.file}</td></tr></tbody></table>
       <div class="caption muted" style="margin:8px 0">같은 칸을 서로 고쳤습니다. 다른 칸끼리였다면 자동으로 합칩니다.</div>

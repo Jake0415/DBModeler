@@ -88,8 +88,8 @@
 
   <!-- SC-41 system -->
   <div class="pane set-wrap" data-pane="sys">
-    <div class="flex u-mb-12"><select class="input u-w-240" data-nodirty aria-label="시스템 고르기"><option>요구사항관리 · RQMS</option><option>통합ERP · ERP</option></select><span class="grow"></span><button class="btn sm"><i data-ic=plus></i>시스템 추가</button></div>
-    <div class="set-row"><div class="l"><b>대상 DBMS</b><span>타입 매핑·이름 길이·예약어 정책</span></div><div class="field-row"><div class="field"><label>DBMS</label><select class="input"><option>Oracle</option><option>PostgreSQL</option><option>Tibero</option><option>MySQL / MariaDB</option></select></div><div class="field"><label>버전 · 기본 스키마</label><input class="input mono" value="19c · RQMS"></div></div></div>
+    <div class="flex u-mb-12"><select class="input u-w-240" id="sys-pick" data-nodirty aria-label="설정할 시스템 고르기"></select><span class="caption muted" id="sys-desc"></span><span class="grow"></span><button class="btn sm" data-toast="시스템 추가: 이름 · 코드 · DBMS · 기본 스키마를 입력하는 창이 열립니다(목업)" data-toast-type="info"><i data-ic=plus></i>시스템 추가</button></div>
+    <div class="set-row"><div class="l"><b>대상 DBMS</b><span>타입 매핑·이름 길이·예약어 정책</span></div><div class="field-row"><div class="field"><label for="sys-dbms">DBMS</label><select class="input" id="sys-dbms"><option>Oracle</option><option>PostgreSQL</option><option>Tibero</option><option>MySQL / MariaDB</option></select></div><div class="field"><label for="sys-ver">버전 · 기본 스키마</label><input class="input mono" id="sys-ver" value="19c · RQMS"></div></div></div>
     <div class="set-row"><div class="l"><b>명명 템플릿</b><span>표준 물리명과 분류어 접미로 이름 생성</span></div>
       <div>
         <div class="field"><label>테이블</label><input class="input mono" value="%(EntityStdName)%(ClassSuffix)"></div>
@@ -118,8 +118,8 @@
         <div class="flex u-mt-8"><button class="btn sm" data-toast="사전에서 표준 용어를 골라 시스템 컬럼을 추가합니다(목업)" data-toast-type="info"><i data-ic=plus></i>용어로 추가</button><label class="flex caption"><input type="checkbox" checked> 논리 모델에는 표시하지 않음</label><label class="flex caption"><input type="checkbox" checked> 코드성 테이블(_R)은 등록 컬럼만</label></div>
       </div></div>
     <div class="set-row"><div class="l"><b>모델 확정 최종 승인</b><span>이 시스템의 업무 영역별 모델 확정에 기관 담당자 승인 추가</span><span class="lastchg" data-last="결재선"></span></div><div id="fin-model"></div></div>
-    <div class="set-row"><div class="l"><b>업무 영역</b></div><div><span class="badge">요구사항 · 프로젝트</span> <span class="badge">리스크</span> <button class="btn ghost sm"><i data-ic=plus></i>추가</button></div></div>
-    <div class="banner warning u-mt-16"><i data-ic=warn></i><div class="grow">DBMS나 명명 템플릿을 바꾸면 컬럼 <b class="mono">74</b>개의 타입·이름을 다시 점검해야 합니다. 저장 전에 영향 목록을 확인하세요.</div><button class="btn sm">영향 미리보기</button></div>
+    <div class="set-row"><div class="l"><b>업무 영역</b><span>새 영역은 시스템 홈에서 만듭니다</span></div><div class="flex u-wrap"><span id="sys-areas" class="flex u-wrap"></span><a class="btn ghost sm" id="sys-area-add" href="system.html#new"><i data-ic=plus></i>추가</a><span class="caption muted" id="sys-area-hint"></span></div></div>
+    <div class="banner warning u-mt-16"><i data-ic=warn></i><div class="grow">DBMS나 명명 템플릿을 바꾸면 컬럼 <b class="mono">74</b>개의 타입·이름을 다시 점검해야 합니다. 저장 전에 영향 목록을 확인하세요.</div><button class="btn sm" data-toast="영향 미리보기: 타입·이름이 바뀌는 컬럼 74개를 업무 영역별로 보여 줍니다(목업)" data-toast-type="info">영향 미리보기</button></div>
   </div>
 
   <!-- SC-42 users -->
@@ -156,8 +156,26 @@
   <!-- SC-43 rules -->
   <div class="pane set-wrap" data-pane="rules">
     <div class="banner u-mb-12"><i data-ic=info></i><div class="grow" id="pol-head"></div></div>
-    <div class="flex u-mb-12"><span class="chip on" data-group="rk">단어</span><span class="chip" data-group="rk">도메인</span><span class="chip" data-group="rk">용어</span><span class="chip" data-group="rk">코드</span></div>
-    <table class="tbl"><thead><tr><th>필드</th><th>필수</th><th>최대 길이</th><th>허용 문자</th><th>위반 시</th></tr></thead><tbody>
+    <div class="flex u-mb-12" id="rk-chips"><span class="chip on" data-group="rk" data-rk="word" role="button" tabindex="0">단어</span><span class="chip" data-group="rk" data-rk="domain" role="button" tabindex="0">도메인</span><span class="chip" data-group="rk" data-rk="term" role="button" tabindex="0">용어</span><span class="chip" data-group="rk" data-rk="code" role="button" tabindex="0">코드</span></div>
+    <table class="tbl"><thead><tr><th>필드</th><th>필수</th><th>최대 길이</th><th>허용 문자</th><th>위반 시</th></tr></thead>
+    <tbody data-rk-body="domain" hidden>
+      <tr><td>도메인명</td><td><i data-ic=check></i><span class="sr-only">필수</span></td><td class="mono">—</td><td>분류어 + 타입 축약 + 길이 (예: 연월일C8)</td><td><span class="badge b-danger">차단</span></td></tr>
+      <tr><td>데이터 타입 · 길이</td><td><i data-ic=check></i><span class="sr-only">필수</span></td><td class="mono">—</td><td>시스템 타입 매핑에 있는 타입</td><td><span class="badge b-danger">차단</span></td></tr>
+      <tr><td>도메인그룹 · 분류</td><td><i data-ic=check></i><span class="sr-only">필수</span></td><td class="mono">—</td><td>사전에 있는 그룹 · 분류</td><td><span class="badge b-danger">차단</span></td></tr>
+      <tr><td>설명</td><td></td><td class="mono">1000자</td><td>제한 없음</td><td><span class="badge b-warning">경고</span></td></tr>
+    </tbody>
+    <tbody data-rk-body="term" hidden>
+      <tr><td>용어명</td><td><i data-ic=check></i><span class="sr-only">필수</span></td><td class="mono">—</td><td>사전에 있는 단어로만 조합</td><td><span class="badge b-danger">차단</span></td></tr>
+      <tr><td>영문약어명</td><td><i data-ic=check></i><span class="sr-only">필수</span></td><td class="mono">30자</td><td>구성 단어 약어를 _로 이은 값</td><td><span class="badge b-danger">차단</span></td></tr>
+      <tr><td>도메인</td><td><i data-ic=check></i><span class="sr-only">필수</span></td><td class="mono">—</td><td>마지막 단어(분류어)에 맞는 도메인</td><td><span class="badge b-danger">차단</span></td></tr>
+      <tr><td>설명</td><td></td><td class="mono">1000자</td><td>제한 없음</td><td><span class="badge b-warning">경고</span></td></tr>
+    </tbody>
+    <tbody data-rk-body="code" hidden>
+      <tr><td>코드값</td><td><i data-ic=check></i><span class="sr-only">필수</span></td><td class="mono">도메인 길이</td><td>도메인 허용 값 규칙</td><td><span class="badge b-danger">차단</span></td></tr>
+      <tr><td>코드값명</td><td><i data-ic=check></i><span class="sr-only">필수</span></td><td class="mono">100자</td><td>한글·영문·숫자</td><td><span class="badge b-danger">차단</span></td></tr>
+      <tr><td>정렬 순서</td><td></td><td class="mono">—</td><td>숫자</td><td><span class="badge b-warning">경고</span></td></tr>
+    </tbody>
+    <tbody data-rk-body="word">
       <tr><td>단어명</td><td><i data-ic=check></i><span class="sr-only">필수</span></td><td class="mono">—</td><td>한글·영문·숫자</td><td><span class="badge b-danger">차단</span></td></tr>
       <tr><td><label for="pol-wd">단어 영문약어명</label></td><td><i data-ic=check></i><span class="sr-only">필수</span></td><td><span class="numf"><span class="flex mono"><input class="input mono n3" id="pol-wd" type="number" min="2" max="10" step="1" value="6" aria-describedby="pol-wd-r pol-wd-e">자</span><span class="rng" id="pol-wd-r">허용 2~10 · 단위 자</span><span class="ferr" id="pol-wd-e" role="alert"></span></span></td><td>영문 대문자·숫자</td><td><span class="badge b-danger">차단</span></td></tr>
       <tr><td>영문명</td><td></td><td class="mono">100자</td><td>영문·공백</td><td><span class="badge b-warning">경고</span></td></tr>
@@ -190,7 +208,9 @@
 </div>
 <script>
 window.pageInit = function () {
-  if (!can('settings')) { location.replace('error.html?code=403&need=Admin&what=설정'); return; }
+  // review mode (&audit=1&as=) carries its role into the 403 page, so it reports the reviewed role, not the saved one
+  const auQ = (() => { const s = new URLSearchParams(location.search); return s.has('audit') && s.get('as') ? '&audit=1&as=' + s.get('as') : ''; })();
+  if (!can('settings')) { location.replace('error.html?code=403&need=Admin&what=설정' + auQ); return; }
   // every incoming hash opens its tab — callers use #rules · #sys (also #system · #perms · #users · #org · #auth) (E4)
   const HASH_TAB = { org: 'org', sys: 'sys', system: 'sys', users: 'users', user: 'users', auth: 'users', perms: 'perms', rules: 'rules', policy: 'rules', exclude: 'rules' };
   const openHash = () => { const t = HASH_TAB[location.hash.slice(1)]; const b = t && document.querySelector(`.tabs button[data-tab="${t}"]`); if (b && !b.classList.contains('on')) b.click(); };
@@ -202,13 +222,32 @@ window.pageInit = function () {
   const checkNum = id => { const d = NUM.find(x => x[0] === id); const m = numErr(d[0], d[1], d[2], d[3]); $(id + '-e').textContent = m; if (m) $(id).setAttribute('aria-invalid', 'true'); else $(id).removeAttribute('aria-invalid'); return m; };
   NUM.forEach(([id]) => { $(id).addEventListener('input', () => checkNum(id)); $(id).addEventListener('blur', () => checkNum(id)); });
   // approval-line settings and the validation policy are saved to the state layer and read by new documents / validations (CX12-34)
-  const org = getOrg(); const areas = getModels();
+  const org = getOrg(); const areas = getAllModels();   // every system's areas — the system picker below shows one system at a time
   $('org-goal').value = org.goal || 90; $('org-sla').value = org.sla || 3;
   $('fin-dict').checked = org.finalDict; const fdT = () => { $('fin-dict-t').textContent = $('fin-dict').checked ? `사용 · 기관 담당자 역할 ${Object.values(USERS).filter(u => u.roles.includes('owner')).length}명` : '사용 안 함 — DA 승인으로 반영'; }; fdT(); $('fin-dict').onchange = fdT;
-  $('fin-model').innerHTML = Object.entries(areas).map(([id, m]) => `<label class="flex u-mb-4"><input type="checkbox" data-fm="${id}" ${org.finalModel[id] !== false ? 'checked' : ''}> ${m.name}</label>`).join('');
+  $('fin-model').innerHTML = Object.entries(areas).map(([id, m]) => `<label class="flex u-mb-4" data-fm-sys="${m.system || 'RQMS'}"><input type="checkbox" data-fm="${id}" ${org.finalModel[id] !== false ? 'checked' : ''}> ${m.name}</label>`).join('');
+  // SC-41: the system picker drives the system tab (schema · areas · model final approval); it does not change the top-bar system
+  $('sys-pick').innerHTML = SYSLIST.map(s => `<option value="${s.code}">${s.name} · ${s.code}</option>`).join('');
+  $('sys-pick').value = curSys().code;
+  const drawSys = () => {
+    const s = SYSLIST.find(x => x.code === $('sys-pick').value) || SYSLIST[0];
+    $('sys-desc').textContent = s.desc || '';
+    $('sys-ver').value = `${String(s.db || '').replace(/^\S+\s*/, '')} · ${s.schema}`;
+    $('sys-dbms').value = String(s.db || 'Oracle').split(' ')[0];
+    const mine = Object.entries(areas).filter(([, m]) => (m.system || 'RQMS') === s.code);
+    $('sys-areas').innerHTML = mine.map(([, m]) => `<span class="badge">${m.name}</span>`).join(' ') || '<span class="caption muted">업무 영역이 없습니다</span>';
+    document.querySelectorAll('[data-fm-sys]').forEach(l => { l.hidden = l.dataset.fmSys !== s.code; });
+    const here = s.code === curSys().code;   // a new area is made in the system chosen in the top bar
+    $('sys-area-add').hidden = !here; $('sys-area-hint').textContent = here ? '' : `상단 바에서 ${josa(s.name, '을/를')} 고른 뒤 시스템 홈에서 추가합니다`;
+  };
+  $('sys-pick').onchange = drawSys; drawSys();
   const pol = getPolicy();
   const drawPol = () => { const p = getPolicy(); $('pol-head').innerHTML = `<b>검수 기준 v${p.ver}</b> · 적용 ${p.at} · ${p.by}`; $('pol-hist').innerHTML = p.hist.map(h => `<tr><td class="mono">v${h.ver}</td><td class="mono">${h.at}</td><td>${h.by}</td><td class="caption">${h.what}</td></tr>`).join(''); };
   drawPol(); $('pol-wd').value = pol.wordAbbr || 6;
+  // SC-43: the kind chips switch the field table (word · domain · term · code); app.js keeps the chip highlight
+  const showRk = k => document.querySelectorAll('[data-rk-body]').forEach(b => { b.hidden = b.dataset.rkBody !== k; });
+  $('rk-chips').addEventListener('click', e => { const c = e.target.closest('[data-rk]'); if (c) showRk(c.dataset.rk); });
+  $('rk-chips').addEventListener('keydown', e => { const c = e.target.closest('[data-rk]'); if (c && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); c.click(); } });
   // dirty tracking for the tabs saved together (기관·시스템·검수 기준); 사용자·역할 saves per user in its panel
   const DT = { org: '기관 설정', sys: '시스템 설정', rules: '검수 기준' };
   // only fields with a real save path count (결재선 · 운영 목표 · 단어 약어 길이); the rest of the mock form is not stored
@@ -253,10 +292,12 @@ window.pageInit = function () {
     const o = getOrg(); const before = JSON.stringify(o); o.finalDict = $('fin-dict').checked; document.querySelectorAll('[data-fm]').forEach(c => { o.finalModel[c.dataset.fm] = c.checked; });
     const g0 = o.goal || 90, s0 = o.sla || 3, g1 = +$('org-goal').value, s1 = +$('org-sla').value;   // already validated above — never auto-corrected
     const goalChg = g0 !== g1 || s0 !== s1; o.goal = g1; o.sla = s1;
-    const lineChg = JSON.stringify(Object.assign({}, JSON.parse(before), { goal: 0, sla: 0 })) !== JSON.stringify(Object.assign({}, o, { goal: 0, sla: 0 }));
+    // compare the effective approval line (an area missing from finalModel means 'on'), so a goal-only save never logs a line change
+    const effLine = m => JSON.stringify([!!m.finalDict, Object.keys(areas).map(a => (m.finalModel || {})[a] !== false)]);
+    const lineChg = effLine(JSON.parse(before)) !== effLine(o);
     saveOrg(o);
-    const changes = []; if (goalChg) { changes.push(`운영 목표: 준수율 ${g0}% → ${g1}% · 결재 기한 ${s0}일 → ${s1}일`); pushAudit({ act: '설정 변경 — 운영 목표', target: '기관·시스템 설정', why: changes[changes.length - 1] }); }
-    if (lineChg) { changes.push(`결재선: 사전 최종 승인 ${o.finalDict ? '켬' : '끔'} · 모델 최종 승인 ${Object.entries(o.finalModel).map(([a, v]) => (areas[a] ? areas[a].name : a) + ' ' + (v ? '켬' : '끔')).join(', ')}`); pushAudit({ act: '설정 변경 — 결재선', target: '기관·시스템 설정', why: changes[changes.length - 1] }); }
+    const changes = []; if (goalChg) { changes.push(`운영 목표: ${[g0 !== g1 ? `준수율 ${g0}% → ${g1}%` : '', s0 !== s1 ? `결재 기한 ${s0}일 → ${s1}일` : ''].filter(Boolean).join(' · ')}`); pushAudit({ act: '설정 변경 — 운영 목표', target: '기관·시스템 설정', why: changes[changes.length - 1] }); }
+    if (lineChg) { const fmChg = Object.entries(o.finalModel).filter(([a, v]) => ((JSON.parse(before).finalModel || {})[a] !== false) !== v).map(([a, v]) => (areas[a] ? areas[a].name : a) + ' ' + (v ? '켬' : '끔')); changes.push(`결재선: 사전 최종 승인 ${o.finalDict ? '켬' : '끔'}${fmChg.length ? ` · 모델 최종 승인 ${fmChg.join(', ')}` : ''}`); pushAudit({ act: '설정 변경 — 결재선', target: '기관·시스템 설정', why: changes[changes.length - 1] }); }
     const p = getPolicy(); const wd = +$('pol-wd').value;
     if (wd !== (p.wordAbbr || 6)) { const nv = { ver: p.ver + 1, at: today2(), by: ME.name, wordAbbr: wd, hist: [{ ver: p.ver + 1, at: today2(), by: ME.name, what: `단어 영문약어명 ${p.wordAbbr || 6}자 → ${wd}자` }].concat(p.hist) }; savePolicy(nv); pushAudit({ act: `검수 기준 v${nv.ver}`, target: '검수 기준', why: nv.hist[0].what }); changes.push(`검수 기준 v${nv.ver}`); drawPol(); }
     toast(changes.length ? `저장했습니다 — ${changes.join(' · ')}. 다음 신청부터 적용되고 감사 로그에 남았습니다` : names.length ? `저장했습니다 — ${names.join(', ')}` : '바뀐 설정이 없습니다', changes.length || names.length ? 'success' : 'info');

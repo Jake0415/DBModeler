@@ -176,7 +176,7 @@ window.pageInit = function () {
     L.forEach(x => { const v = t(x.v); if (v) cnt[v] = (cnt[v] || 0) + 1; });
     L.forEach(x => { const ps = [], v = t(x.v);
       if (!v) ps.push({ f: 'v', lvl: 'block', msg: '값이 비어 있음' });
-      else { if (cnt[v] > 1) ps.push({ f: 'v', lvl: 'block', msg: `값 ${v} 중복` }); if (len && v.length !== len) ps.push({ f: 'v', lvl: 'block', msg: `도메인 ${dom} 길이 ${len}과 다름(${v.length}자)` }); }
+      else { if (cnt[v] > 1) ps.push({ f: 'v', lvl: 'block', msg: `값 ${v} 중복` }); if (len && v.length !== len) ps.push({ f: 'v', lvl: 'block', msg: `도메인 ${dom} 길이 ${len}자와 다름(${v.length}자)` }); }
       if (!t(x.nm)) ps.push({ f: 'nm', lvl: 'block', msg: '이름이 비어 있음' });
       if (t(x.ord) && !/^\d+$/.test(t(x.ord))) ps.push({ f: 'ord', lvl: 'warn', msg: '순서는 숫자로' });
       if (ps.length) m.set(x.rid, ps); });
@@ -502,8 +502,8 @@ window.pageInit = function () {
     const cols = curCols(), rows = curRows(), ncol = cols.length + 3;
     $('dls').innerHTML = cols.map((c, ci) => c.cb ? `<datalist id="dlc-${ci}">${optsOf(c, rows[0]).filter(o => o[0] !== '').map(o => { const m = String(o[1]).match(/ \((작성 중|바구니)\)$/); return `<option value="${esc(baseL(o[1]))}">${m ? m[1] : ''}</option>`; }).join('')}</datalist>` : '').join('');
     gh.innerHTML = `<tr><th>상태</th><th class="c-no">#</th>${cols.map(c => `<th>${esc(c.l)}${c.calc ? ` <span class="caption muted">${c.sub ? '아래 표' : '자동'}</span>` : ''}</th>`).join('')}<th><span class="sr-only">행 작업</span></th></tr>`;
-    if (edit && k === 'class') gb.innerHTML = `<tr class="er"><td colspan="4">도메인분류는 이 화면에서 고치지 않습니다 — <a href="domain-groups.html">도메인 그룹 · 분류</a> 화면에서 고치세요.</td></tr>`;
-    else if (edit && !rows.length) gb.innerHTML = `<tr class="er"><td colspan="4">위에서 검색해 고칠 ${KN[k]}을(를) 고르고 [고칠 항목 추가]를 누르세요. 사전 화면의 여러 항목 선택에서도 넘어옵니다.</td></tr>`;
+    if (edit && k === 'class') gb.innerHTML = `<tr class="er"><td colspan="${ncol}">도메인분류는 이 화면에서 고치지 않습니다 — <a href="domain-groups.html">도메인 그룹 · 분류</a> 화면에서 고치세요.</td></tr>`;
+    else if (edit && !rows.length) gb.innerHTML = `<tr class="er"><td colspan="${ncol}">위에서 검색해 고칠 ${KN[k]}${josa(KN[k], '을/를').slice(KN[k].length)} 고르고 [고칠 항목 추가]를 누르세요. 사전 화면의 여러 항목 선택에서도 넘어옵니다.</td></tr>`;
     else gb.innerHTML = rows.map((r, i) => `<tr class="gr${r.sent ? ' locked' : ''}${k === 'code' && r.rid === S.vsel ? ' sel' : ''}" data-r="${i}"><td class="c-st" data-st></td><td class="c-no" tabindex="0" data-no="${i}" aria-label="${i + 1}행 선택">${i + 1}</td>${cols.map((c, ci) => cellHTML(r, i, c, ci)).join('')}<td class="c-act">${actHTML(r, edit)}</td></tr><tr class="mrow" data-m="${i}" hidden><td colspan="${ncol}"></td></tr>`).join('');
     compute(); patch(); drawTabs(); drawFoot(); drawV();
   }
@@ -530,7 +530,7 @@ window.pageInit = function () {
         const inp = td.querySelector('.gi'); if (!inp) return;
         inp.setAttribute('aria-invalid', bl ? 'true' : 'false');
         if (col.dis) inp.disabled = RO || !!r.sent || col.dis(r);
-        const v = col.cb ? dispOf(col, r, valOf(r, col)) : String(valOf(r, col)); if (document.activeElement !== inp && inp.value !== v) inp.value = v;
+        const v = col.cb ? dispOf(col, r, valOf(r, col)) : String(valOf(r, col)); if ((document.activeElement !== inp || (!edit && k === 'term' && col.f === 'abbr' && !r.abbrT)) && inp.value !== v) inp.value = v;   // the auto abbreviation also fills the cell the user has already tabbed into (it stayed blank)
         if (!edit && k === 'term' && col.f === 'dom') { const ph = r.dsug || ''; if (inp.placeholder !== ph) inp.placeholder = ph; }
       });
       tr.querySelector('[data-st]').innerHTML = statusHTML(r, k, edit);
@@ -931,7 +931,7 @@ window.pageInit = function () {
     const L = getDict().filter(d => hit(d) && (editable(d) || (commonCode(d) && (kk === 'code' || q)))).slice(0, 50);
     $('eres').innerHTML = L.length ? L.map(d => { const ro = !editable(d), added = E().some(r => r.id === d.id); if (added) picked.delete(d.id);
       return `<tr><td class="ck"><input type="checkbox" data-pick="${d.id}" aria-label="${esc(d.name)} 선택"${added || picked.has(d.id) ? ' checked' : ''}${added || RO || ro ? ' disabled' : ''}></td><td class="mono">${d.id}</td><td>${KN[kindKey(d)]}</td><td>${esc(d.name)}</td><td class="mono">${esc(d.abbr || '')}</td><td class="num">${d.use || 0}</td><td>${ro ? `${tag('end', '읽기 전용')} <span class="caption muted">${COMMON_RO}</span>` : added ? tag('mine', '추가됨') : d.st !== '사용' ? tag('end', d.st) : ''}</td></tr>`; }).join('')
-      : '<tr class="er"><td colspan="3">조건에 맞는 고칠 수 있는 항목이 없습니다 (신청 중 · 공통 · 삭제 보관 제외)</td></tr>';
+      : '<tr class="er"><td colspan="7">조건에 맞는 고칠 수 있는 항목이 없습니다 (신청 중 · 공통 · 삭제 보관 제외)</td></tr>';
     pickBtn();
   }
   const picked = new Set();
@@ -956,7 +956,8 @@ window.pageInit = function () {
 
   /* ---- start ---- */
   migrate(S); migrate(S.bk);
-  restored = filledNew() + S.edit.length;
+  // rows already sent to the basket are not 'unfinished work'; opening the basket table (?mode=basket) is not about those rows either
+  restored = qs.get('mode') === 'basket' ? 0 : KINDS.reduce((n, k) => n + S.rows[k].filter(r => !isEmpty(k, r) && !r.sent).length, 0) + S.edit.filter(r => !r.sent).length;
   $('ro-banner').hidden = !RO;
   ['b-add1', 'b-add5'].forEach(id => { $(id).disabled = RO; });
   if (restored) { $('restore-t').textContent = `이전에 쓰던 ${restored}행을 불러왔습니다 — 자동 저장(이 브라우저 · ${ME.name})`; $('restore-banner').hidden = false; }
@@ -972,7 +973,7 @@ window.pageInit = function () {
   if (KINDS.includes(qs.get('tab'))) S.tab = qs.get('tab');
   if (isEdit() && S.tab === 'class') S.tab = E().length ? E()[0].k : 'word';
   if (isEdit() && S.tab !== 'class') $('qk').value = S.tab;
-  render();
+  save(); render();   // rows preloaded from ?ids= were lost when the user left before typing anything
 };
 </script>
 </body>

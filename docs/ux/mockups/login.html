@@ -55,18 +55,18 @@ window.pageInit = function () {
   const from = q.get('from') || '';
   const safe = /^[a-z-]+\.html(\?[^#]*)?(#.*)?$/i.test(from) ? from : '';
   $('lg-banner').innerHTML = q.get('fail') ? '<div class="banner danger u-mb-12"><i data-ic=warn></i><div>SSO 인증에 실패했습니다. 다시 시도하거나 기관 IT 지원(내선 1234)에 문의하세요. <span class="mono caption">오류 ID E-20261118-SSO1</span></div></div>'
-    : q.get('expired') ? `<div class="banner info u-mb-12"><i data-ic=info></i><div>세션이 만료됐습니다. 편집 중이던 내용은 이 브라우저에 보관돼 있고, 로그인하면 <b>${safe ? ((SCREENS.find(s => s.file === safe.split(/[?#]/)[0]) || {}).name || safe.split('?')[0]).split('(')[0].trim() : '홈'}</b> 화면으로 돌아가 이어서 작업합니다.</div></div>` : '';
+    : q.get('expired') ? `<div class="banner info u-mb-12"><i data-ic=info></i><div>세션이 만료됐습니다. 편집 중이던 내용은 이 브라우저에 보관돼 있고, 로그인하면 <b>${safe ? ((SCREENS.find(s => s.file === safe.split(/[?#]/)[0]) || {}).name || safe.split('?')[0]).split(/[(·—]/)[0].trim() : '홈'}</b> 화면으로 돌아가 이어서 작업합니다.</div></div>` : '';
   const A = getAuth();
   if (q.get('revoked')) $('lg-banner').innerHTML = '<div class="banner info u-mb-12"><i data-ic=info></i><div>계정 상태나 비밀번호가 바뀌어 로그아웃됐습니다. 다시 로그인하세요.</div></div>';
   // a successful sign-in starts a new session (its time is what later revocations compare with)
-  const go = id => { const u = USERS[id]; u.last = new Date().toTimeString().slice(0, 5); saveUsers(); dbmStore.set('dbm-role', id); dbmStore.set('dbm-sess-at', String(Date.now())); const start = { '결재함': 'approvals.html' }[dbmStore.get('dbm-start', '')] || 'home.html'; location.href = safe || start; };
+  const go = id => { const u = USERS[id]; u.last = new Date().toTimeString().slice(0, 5); saveUsers(); dbmStore.set('dbm-role', id); dbmStore.set('dbm-sess-at', String(Date.now())); const la = dbmStore.get('dbm-last-area', ''); const start = { '결재함': 'approvals.html', '최근 업무 영역': la ? `model.html?area=${encodeURIComponent(la)}` : 'model.html' }[dbmStore.get('dbm-start', '')] || 'home.html'; /* 마이페이지 › 환경 › 시작 화면 */ location.href = safe || start; };
   const err = (m, el) => { $('lg-err').textContent = m; if (el) { el.setAttribute('aria-invalid', 'true'); el.setAttribute('aria-describedby', 'lg-err'); el.focus(); } };
   const ssoOnly = A.mode === 'sso', ssoBtn = A.mode !== 'local';
   if (ssoOnly) { $('lg-sub').textContent = '기관 통합 인증(SSO)으로 로그인합니다.'; $('lg-form').hidden = true; }
   $('lg-sso').innerHTML = ssoBtn ? `${ssoOnly ? '' : '<div class="lg-sep">또는</div>'}<button class="btn${ssoOnly ? ' primary' : ''}" id="lg-sso-go" type="button">사내 SSO로 로그인 <span class="caption muted" style="margin-left:6px">${A.ssoProto}</span></button>${ssoOnly ? '<button class="btn ghost sm" id="lg-break" type="button" style="margin-top:12px;height:28px;font-size:13px">SSO 장애 · 관리자 비상 로그인</button>' : ''}` : '';
   $('lg-help').innerHTML = ssoOnly ? 'SSO에 문제가 있으면 기관 IT 지원(내선 1234)에 문의하세요.' : `비밀번호를 ${A.lockFails}번 틀리면 ${A.lockMin}분 동안 잠깁니다. 비밀번호를 잊었으면 관리자에게 초기화를 요청하세요(내선 1234).`;
   // SSO (mock): the IdP decides who the user is; a stopped account is refused, the local lock is left as it is
-  const sg = $('lg-sso-go'); if (sg) sg.onclick = () => { const u = Object.values(USERS).find(x => x.id === ME.id) || Object.values(USERS)[0]; if (u.status === 'stopped') { err('사용이 중지된 계정입니다. 관리자에게 문의하세요'); return; } toast(`SSO 인증 화면으로 이동합니다(목업) — IdP가 확인한 ${u.name}(으)로 로그인`, 'info'); setTimeout(() => go(u.id), 600); };
+  const sg = $('lg-sso-go'); if (sg) sg.onclick = () => { const u = Object.values(USERS).find(x => x.id === ME.id) || Object.values(USERS)[0]; if (u.status === 'stopped') { err('사용이 중지된 계정입니다. 관리자에게 문의하세요'); return; } toast(`SSO 인증 화면으로 이동합니다(목업) — IdP가 확인한 ${u.name} 계정으로 로그인`, 'info'); setTimeout(() => go(u.id), 600); };
   let breakGlass = false;
   const br = $('lg-break'); if (br) br.onclick = () => { breakGlass = true; $('lg-form').hidden = false; br.hidden = true; $('lg-sub').textContent = 'SSO 장애 때 지정된 관리자만 ID · 비밀번호로 로그인합니다. 사용 기록이 남고 다른 관리자에게 알림이 갑니다.'; $('lg-form').insertAdjacentHTML('afterbegin', '<div class="field"><label for="lg-why">비상 로그인 사유 *</label><input class="input" id="lg-why" placeholder="예: SSO 서버 응답 없음(11/19 09:10)"></div>'); $('lg-why').focus(); };
   let pending = null;

@@ -103,7 +103,7 @@ window.pageInit = function () {
   }
   if (ME.has('modeler')) {
     const bad = myAreas.filter(a => a.L.state === 'edit' && a.C.bad > 0); const nb = bad.reduce((n, a) => n + a.C.bad, 0);
-    T.push({ w: 60 + nb, t: '미준수 · 내 업무 영역', n: nb, old: null, st: '', go: bad.length ? ['표준 맞추기', `standardize.html?area=${bad[0].id}`] : ['업무 영역', '#areas'] });
+    T.push({ w: 60 + nb, t: '미준수 · 내 업무 영역', n: nb, old: null, st: '', go: bad.length ? ['표준 맞추기', `standardize.html?area=${bad[0].id}&f=todo`] : ['업무 영역', '#areas'] });
     const blk = [...new Set(myAreas.filter(a => a.L.state === 'edit').flatMap(a => a.open))];
     if (blk.length) T.push({ w: 70, t: '확정 전 완료할 연결 신청', n: blk.length, old: null, st: '', go: [blk[0], `approvals.html?doc=${blk[0]}`] });
   }
@@ -131,7 +131,7 @@ window.pageInit = function () {
       const next = a.L.state === 'review' ? `<a href="approvals.html?doc=${a.L.doc.id}">${a.L.doc.id}</a> ${docLate(a.L.doc) ? tag('err', docAge(a.L.doc) + '일') : `<span class="muted">${STEP_NAME[a.L.doc.step]} ${docAge(a.L.doc)}일</span>`}`
         : a.L.state === 'confirmed' ? `<a href="model.html?area=${a.id}">다음 버전 시작</a>`
         : !a.ents ? `<a href="model.html?area=${a.id}">모델 시작</a>`
-        : a.C.bad ? `<a href="standardize.html?area=${a.id}">표준 맞추기</a>`
+        : a.C.bad ? `<a href="standardize.html?area=${a.id}&f=todo">표준 맞추기</a>`
         : a.open.length ? `<span class="muted">${a.open.join(', ')} 완료 후 확정</span>` : `<a href="model.html?area=${a.id}">확정 신청</a>`;
       return `<tr><td><a href="model.html?area=${a.id}">${a.m.name}</a></td><td class="muted">${a.sys} <span class="faint">${a.dbms}</span></td><td>${a.L.state === 'review' ? tag('run', '검토') : a.L.state === 'confirmed' ? tag('ok', '확정') : `<span class="muted">${a.stage}</span>`}</td><td class="r"><span class="num">${a.C.rate}%</span><span class="mbar${below ? ' bad' : ''}"><i style="width:${a.C.rate}%"></i><b style="left:${GOAL}%"></b></span></td><td class="r num">${a.C.bad || '—'}</td><td>${next}</td></tr>`; }).join('') || '<tr class="er first"><td colspan="6" class="muted">담당 업무 영역이 없습니다.</td></tr>'}</tbody></table>
     <div class="ok-line">막대의 세로 눈금은 목표 준수율 ${GOAL}%입니다.</div></section>`;

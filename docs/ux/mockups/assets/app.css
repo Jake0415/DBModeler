@@ -727,3 +727,11 @@ td[contenteditable="true"]:focus { outline:2px solid var(--focus); background:va
 .u-fs-12 { font-size:12px !important; } .u-fs-14 { font-size:14px !important; } .u-fs-16 { font-size:16px !important; } .u-fw-400 { font-weight:400 !important; } .u-fw-500 { font-weight:500 !important; } .u-fw-600 { font-weight:600 !important; } .u-lh-20 { line-height:20px !important; } .u-lh-22 { line-height:22px !important; }
 .u-tc { text-align:center !important; } .u-tr { text-align:right !important; }
 .u-bg { background:var(--surface) !important; } .u-bg2 { background:var(--surface-2) !important; } .u-bb { border-bottom:1px solid var(--border) !important; } .u-r-md { border-radius:var(--r-md) !important; } .u-op-50 { opacity:.5 !important; }
+
+/* tree filter menu: the class chips stay on one line (they wrapped one letter per line in a 150px menu) */
+#mn-tf { min-width:280px; }
+#mn-tf .mi .seg { flex-shrink:0; }
+#mn-tf .seg button { white-space:nowrap; }
+
+/* the review panel (목업 › 화면 정보) takes its own column instead of covering the page's bottom bars and buttons */
+body.scr-on #content { margin-right:380px; }

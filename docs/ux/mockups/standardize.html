@@ -61,7 +61,7 @@
       <div class="caption u-mb-8" id="na-list"></div>
       <div class="field"><label for="na-kind">구분</label><select class="input" id="na-kind"><option>연계·이관용 임시 컬럼</option><option>외부 시스템 소유 컬럼</option><option>기타</option></select></div>
       <div class="field"><label for="na-why">사유 * <span class="faint">모델 확정 결재에서 DA가 검토합니다</span></label><textarea class="input" id="na-why" rows="2"></textarea></div>
-      <label class="flex caption"><input type="checkbox"> 같은 이름 패턴을 <a href="settings.html#rules">표준 제외 규칙</a>에 추가 신청</label>
+      <label class="flex caption"><input type="checkbox" id="na-rule"> 같은 이름 패턴을 <a href="settings.html#rules">표준 제외 규칙</a>에 추가 신청</label>
     </div>
     <div class="m-foot"><button class="btn" data-close="mo-na">취소</button><button class="btn primary" id="na-go" data-needs="na-why">비대상 지정</button></div></div></div>
   <div class="overlay" id="mo-ex" role="dialog" aria-modal="true" aria-labelledby="sx-t"><div class="modal"><div class="m-head"><h3 id="sx-t">예외로 유지</h3></div>
@@ -85,13 +85,16 @@ window.pageInit = function () {
   const AREA = getModels()[q.get('area')] ? q.get('area') : defArea();
   const LK = modelLock(AREA), VER = LK.model.ver;
   $('crumb-area').textContent = `${LK.model.name} · v${VER}`;
+  { const c = document.querySelector('.crumbs a'); if (c) c.textContent = sysOfArea(AREA); }   // the system of THIS area (was a fixed ‘요구사항관리’ in the markup)
+  // script-driven moves keep the review role (&audit=1&as=) like the shell does for plain links
+  const go = u => { const as = q.has('audit') && q.get('as'); if (as && !/[?&]as=/.test(u)) u += (u.includes('?') ? '&' : '?') + 'audit=1&as=' + as; location.href = u; };
   // context from the model (D4): &e=<entity id>&a=<attribute name> → that row is highlighted; every way back focuses the entity
   const CE = q.get('e') || '', CA = q.get('a') || '';
   const backUrl = `model.html?area=${AREA}${CE ? '&focus=' + encodeURIComponent(CE) : ''}`;
   $('back').href = backUrl;
   $('to-wiz').href = `term-wizard.html?area=${AREA}&from=standardize${CE ? '&e=' + encodeURIComponent(CE) + (CA ? '&a=' + encodeURIComponent(CA) : '') : ''}`;
   const ANALYZED = `분석 ${nowStr()} · 사전 기준 현재(제정 ${getPub().cha}차 + 승인 반영분)`;   // shown at the right of the filter row (the header keeps room for the title and the wizard entry)
-  if (q.get('from') === 'import') { const imp = J2('dbm-import-last'); $('from-import').hidden = false; $('from-import-t').innerHTML = `<b>DDL 가져오기가 끝나 자동으로 열었습니다.</b> ${imp && imp.area === AREA ? `가져온 ${imp.tables}개 테이블·${imp.cols}개 컬럼을 ‘${LK.model.name}’ 영역 v${VER}로 만들고 분석했습니다.` : '가져온 구조를 분석했습니다.'}`; }
+  if (q.get('from') === 'import') { const imp = J2('dbm-import-last'); $('from-import').hidden = false; $('from-import-t').innerHTML = `<b>DDL 가져오기가 끝나 자동으로 열었습니다.</b> ${imp && imp.area === AREA ? `가져온 ${imp.tables}개 테이블·${imp.cols}개 컬럼을 ‘${LK.model.name}’ 영역 v${VER}${imp.dst === 'cur' ? '에 추가하고' : '로 만들고'} 분석했습니다.` : '가져온 구조를 분석했습니다.'}`; }
   function J2(k) { try { return JSON.parse(dbmStore.get(k, 'null')); } catch (e) { return null; } }
 
   // ---- analysis from the working model + dictionary + open requests (CX13-04 · CL12-38) ----
@@ -223,7 +226,9 @@ window.pageInit = function () {
   const mark = (kind, why) => { const C = summary().C; const keys = C.map(tr => rowOf(tr)); keys.forEach(r => { local[r.key] = { st: kind, why }; handoff[kind].push(Object.assign(idOf(r), { why })); });
     draw(); toast(`${keys.length}건을 ${kind === 'ex' ? '예외로 기록' : '비대상으로 지정'}했습니다. 아래 줄의 [적용]을 누르면 사유와 함께 모델에 반영됩니다`, 'violet', { label: '실행 취소', fn: () => { keys.forEach(r => { delete local[r.key]; handoff[kind] = handoff[kind].filter(x => x.key !== r.key); }); draw(); toast(`${keys.length}건을 되돌렸습니다`, 'info'); } }); };
   $('sx-go').onclick = () => { const w = $('sx-why').value.trim(); $('mo-ex').classList.remove('open'); $('sx-why').value = ''; mark('ex', w); };
-  $('na-go').onclick = () => { const w = $('na-why').value.trim(); $('mo-na').classList.remove('open'); $('na-why').value = ''; mark('na', w); };
+  $('na-go').onclick = () => { const w = $('na-why').value.trim(), rule = $('na-rule').checked; $('mo-na').classList.remove('open'); $('na-why').value = ''; $('na-rule').checked = false;
+    const kind = $('na-kind').value; mark('na', `${kind} · ${w}`);
+    if (rule) setTimeout(() => toast('같은 이름 패턴의 표준 제외 규칙 추가도 함께 신청했습니다 — DA가 [설정 › 표준 제외 규칙]에서 검토합니다', 'info'), 400); };   // the checkbox and 구분 were read by nothing before
   $('sd-apply').addEventListener('click', () => {
     const s = summary();
     const R = (l, n) => `<tr><td>　${l}</td><td class="num mono">${n}</td></tr>`;
@@ -255,7 +260,7 @@ window.pageInit = function () {
     // candidates are registered for real, with their location (CX13-03)
     s.cand.forEach(([r]) => addCandidate({ t: '단어', name: r.word, abbr: '' }, { area: AREA, e: r.e, ent: r.ent, attr: r.a }));
     try { sessionStorage.setItem('dbm-apply', JSON.stringify({ area: AREA, ver: VER, rows: rowsOut, ex: handoff.ex, na: handoff.na, doc: docId, req: s.req.length, cand: s.cand.length })); } catch (e) {}
-    location.href = backUrl;
+    go(backUrl);
   };
   draw();
   // ?f= opens a filter (D1): f=todo with no to-do rows falls back to 전체 and says so

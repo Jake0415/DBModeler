@@ -17,7 +17,7 @@
     <h1>가져오기</h1>
     
     <div class="actions">
-      <span class="seg"><button>엑셀 정의서</button><button class="on">DDL</button></span>
+      <span class="seg"><button id="src-xls" aria-disabled="true" title="엑셀 테이블 정의서 → ERD 초안은 다음 단계 후보입니다">엑셀 정의서</button><button class="on" aria-pressed="true">DDL</button></span>
     </div>
   </div>
   <div class="page-body">
@@ -45,6 +45,15 @@
 <script>
 window.pageInit = function () {
   const $ = id => document.getElementById(id);
+  const q = new URLSearchParams(location.search);
+  // script-driven moves keep the review role (&audit=1&as=) like the shell does for plain links
+  const go = u => { const as = q.has('audit') && q.get('as'); if (as && !/[?&]as=/.test(u)) u += (u.includes('?') ? '&' : '?') + 'audit=1&as=' + as; location.href = u; };
+  // the area we came from (model ⋯ › 가져오기): the way back and the "add to existing" choice follow it
+  const FROM = getModels()[q.get('area')] ? q.get('area') : null;
+  { const c = document.querySelector('.crumbs a'); if (c) c.textContent = curSys().name; }   // was a fixed ‘요구사항관리’
+  if (FROM) $('cancel').setAttribute('href', `model.html?area=${FROM}`);
+  // the seg used to have a dead ‘엑셀 정의서’ button: say plainly it is not here yet and keep DDL selected
+  $('src-xls').onclick = ev => { ev.preventDefault(); ev.stopPropagation(); toast('엑셀 테이블 정의서 → ERD 초안 가져오기는 다음 단계 후보입니다 — 지금은 DDL로 가져오세요. 사전(용어)용 엑셀은 [사전 › 엑셀 가져오기]입니다', 'info'); };
   const SAMPLE = `CREATE TABLE RQMS.RQRM_D ( -- 요구사항내역
   DEMND_MATER_ID   VARCHAR2(10) NOT NULL, -- 요구사항ID
   RQRM_NM          VARCHAR2(100), -- 요구사항명
@@ -111,15 +120,18 @@ ALTER TABLE RQMS.RQRM_D ADD CONSTRAINT RQRM_D_FK1 FOREIGN KEY (PRJ_ID) REFERENCE
   $('ex-file').onclick = () => { $('ddl').value = SAMPLE; preview(); };
   $('ex-bad').onclick = () => { $('ddl').value = 'SELECT * FROM RQMS.RQRM_D;'; preview(); };
   $('parse').onclick = preview;
-  document.querySelectorAll('[name=dst]').forEach(r => r.onchange = () => { $('newname-f').style.display = r.value === 'new' && r.checked ? '' : 'none'; });
+  // the area list only matters for "기존 업무 영역에 추가" — greyed out otherwise; the area we came from is preselected when it can take edits
+  const syncDst = () => { const v = document.querySelector('[name=dst]:checked').value; $('newname-f').style.display = v === 'new' ? '' : 'none'; $('dst-area').disabled = v !== 'cur'; };
+  if (FROM && modelLock(FROM).state === 'edit') $('dst-area').value = FROM;
+  document.querySelectorAll('[name=dst]').forEach(r => r.onchange = syncDst); syncDst();
   $('go').onclick = () => {
     if (!parsed || !parsed.tables.length || !canImport) return;
     if (liveRoleChanged()) { staleRoleToast(); return; }
     const dst = document.querySelector('[name=dst]:checked').value; const st = toModel(); let area;
     if (dst === 'new') { const nm = $('newname').value.trim(); if (!nm) { toast('새 업무 영역 이름을 입력하세요', 'danger'); $('newname').focus(); return; } area = addArea(nm, st); }
     else { area = $('dst-area').value; const L = modelLock(area); if (L.state !== 'edit') { toast('그 업무 영역은 지금 편집할 수 없습니다', 'danger'); return; } const cur = modelOf(area, L.model.ver); const base = cur.E.length; st.E.forEach((x, i) => { x.id = 'imp' + Date.now() % 10000 + i; x.x += 900; x.px += 900; }); const map = {}; parsed.tables.forEach((tb, i) => { map['i' + i] = st.E[i].id; }); st.R.forEach(r => { r.f = map[r.f]; r.t = map[r.t]; }); const old = getModelData(area, L.model.ver); setModelData(area, L.model.ver, Object.assign({}, cur, { E: cur.E.concat(st.E), R: cur.R.concat(st.R), rev: ((old && old.rev) || 0) + 1 })); }
-    dbmStore.set('dbm-import-last', JSON.stringify({ area, tables: parsed.tables.length, cols: parsed.tables.reduce((n, x) => n + x.cols.length, 0) }));
-    location.href = `standardize.html?area=${area}&from=import`;
+    dbmStore.set('dbm-import-last', JSON.stringify({ area, dst, tables: parsed.tables.length, cols: parsed.tables.reduce((n, x) => n + x.cols.length, 0) }));
+    go(`standardize.html?area=${area}&from=import`);
   };
   $('ddl').value = SAMPLE; preview();
 };

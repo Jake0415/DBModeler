@@ -37,6 +37,7 @@
   .chgrow { display:grid; grid-template-columns:96px 1fr; gap:8px; align-items:start; margin-bottom:8px; }
   .chgrow.mod .input { border-color:var(--ds-blue-700); box-shadow:0 0 0 1px var(--ds-blue-700); }
   .chgrow .cur { grid-column:2; font-size:12px; color:var(--fg-3); margin-top:-4px; }
+  #dl-menu { width:340px; } #dl-menu .mi { flex-direction:column; align-items:flex-start; gap:2px; text-align:left; }   /* title over its caption (the shared .mi row squeezed the title to ~90px) */
   .tl { border-left:2px solid var(--border); margin-left:6px; padding-left:14px; }
   .tl .ev { position:relative; padding-bottom:14px; }
   .tl .ev::before { content:''; position:absolute; left:-21px; top:4px; width:10px; height:10px; border-radius:50%; background:var(--surface); border:2px solid var(--ds-gray-1000); }
@@ -227,6 +228,7 @@
 <script>
 window.pageInit = function () {
   const $ = id => document.getElementById(id);
+  const jo = (w, p) => josa(String(w), p).slice(String(w).length);   // the particle only (‘견학일자’를, not ‘견학일자’을)
   const q0 = new URLSearchParams(location.search);
   // dictionary items (mock): versions, history, synonyms, forbidden words, past names
   // ?empty=1 — a fresh installation: only the common standard is loaded, the organisation dictionary is empty (T1 start, read-only sample)
@@ -266,16 +268,23 @@ window.pageInit = function () {
   // DX-02: rows that can go into a bulk action — organisation items, not common, not already in an open request, not V0
   const pickable = it => it.src === '기관' && !it.pending && it.st !== '삭제 보관' && it.ver > 0;
   const picked = new Set();
+  // empty search with no condition = 'recent changes'; the source chips and 원본 폐기 포함 are conditions too (공통 only used to show 0 rows)
+  const TODAY = new Date(window.MOCK_TODAY || new Date()); TODAY.setHours(23, 59, 59);   // the mockup's today (app.js) — was a fixed 2026-11-18
+  const isRecent = () => !$('q').value.trim() && !showAll && !kind && srcs.size === 2 && !stFilter && !$('fdisc').checked && !['dg', 'since', 'flen', 'fdom', 'fscope'].some(id => $(id).value);
   const lenOf = it => { const m = String(it.dom || '').match(/(\d+)/); return m ? +m[1] : null; };
   function list() {
     const qs = $('q').value.trim(), dg = $('dg').value, since = +$('since').value, flen = $('flen').value, fdom = $('fdom').value, disc = $('fdisc').checked;
     const kd = knownDomains();
     let L = I.map(it => ({ it, m: isShort(qs) ? (it.name.startsWith(qs) || it.abbr.toUpperCase().startsWith(qs.toUpperCase()) ? { t: it.name.startsWith(qs) ? '' : '약어' } : null) : match(it, qs) }))
-      .filter(x => x.m && (!kind || x.it.k === kind) && srcs.has(x.it.src) && (!stFilter || (stFilter === '신청 중' ? (x.it.st === '신청 중' || x.it.pending) : stFilter === '내 신청 중' ? myPend(x.it) : x.it.st === stFilter)) && (!dg || x.it.dg === dg) && (!since || (new Date('2026-11-18') - new Date(x.it.dt)) / 864e5 <= since)
+      .filter(x => x.m && (!kind || x.it.k === kind) && srcs.has(x.it.src) && (!stFilter || (stFilter === '신청 중' ? (x.it.st === '신청 중' || x.it.pending) : stFilter === '내 신청 중' ? myPend(x.it) : x.it.st === stFilter)) && (!dg || x.it.dg === dg) && (!since || (TODAY - new Date(x.it.dt)) / 864e5 <= since)
         && (!flen || (lenOf(x.it) != null && lenOf(x.it) >= +flen.split('-')[0] && lenOf(x.it) <= +flen.split('-')[1])) && (!fdom || (x.it.k === 'term' && (fdom === 'y' ? kd.has(x.it.dom) : !kd.has(x.it.dom)))) && (disc || !x.it.disc) && scopeOk(x.it) && (x.it.st !== '삭제 보관' || stFilter === '삭제 보관' || qs));
-    if (!qs && !showAll && !kind && !dg && !since && !stFilter && !flen && !fdom && !$('fscope').value) L = L.filter(x => x.it.src === '기관').sort((a, b) => b.it.dt.localeCompare(a.it.dt)).slice(0, 8);   // empty search = recent changes
+    if (isRecent()) L = L.filter(x => x.it.src === '기관').sort((a, b) => b.it.dt.localeCompare(a.it.dt)).slice(0, 8);   // empty search = recent changes
     // forbidden-word hits go to the top with the standard to use instead
-    L.sort((a, b) => (b.m.t === '금칙어') - (a.m.t === '금칙어'));
+    // then exact name/abbr → prefix → contains (same rank: shorter name first), so the wanted item never falls behind the 500-row cap
+    if (qs) { const up = qs.toUpperCase();
+      const rank = x => { const it = x.it; if (x.m.t === '금칙어') return 0; if (it.name === qs || String(it.abbr).toUpperCase() === up) return 1; if (it.name.startsWith(qs) || String(it.abbr).toUpperCase().startsWith(up)) return 2; return 3; };
+      L.forEach(x => { x.r = rank(x); }); L.sort((a, b) => a.r - b.r || a.it.name.length - b.it.name.length); }
+    else L.sort((a, b) => (b.m.t === '금칙어') - (a.m.t === '금칙어'));
     return L;
   }
   const CAP = 500;   // the full common standard is 16,000+ items: draw the first 500 rows, the count shows the rest
@@ -292,8 +301,8 @@ window.pageInit = function () {
     if ($('fdisc').checked) act.push(['fdisc', '원본 폐기 포함']);
     $('f-n').hidden = !act.length; $('f-n').textContent = act.length;
     const chipsHtml = act.length ? `<span class="fchips">${act.map(([k, l]) => `<button class="fchip" data-clear="${k}" aria-label="${l} 조건 지우기">${l}<i data-ic=x data-s=12></i></button>`).join('')}<button class="btn ghost sm" data-clear="all">모두 지우기</button></span>` : '';
-    const recent = !qs && !showAll && !kind && !$('dg').value && !$('since').value && !stFilter && !$('flen').value && !$('fdom').value && !$('fscope').value;
-    $('lh').innerHTML = `<b class="u-fg">${L.length}건</b> · ${recent ? (EMPTY ? '기관 사전이 비어 있어 공통표준만 보입니다' : '검색어가 없어 <b>기관 사전 최근 변경</b>을 보여 줍니다 <button class="btn ghost sm" id="show-all">전체 보기</button>') : qs ? `‘${qs}’ 검색${isCho(qs) ? ' (초성)' : isShort(qs) ? ' — <b>2글자 이하는 앞부분 일치</b>로 찾습니다' : ''}${L.length >= 1000 ? ' · <b>1,000건 이상 — 검색어를 더 입력하세요</b>' : ''}` : '필터 결과'}${L.length > CAP ? ` · <b>앞 ${CAP}건만 표시 — 검색어나 종류 · 필터로 좁히세요</b>` : ''} ${chipsHtml} <span class="grow"></span> <kbd>↑</kbd><kbd>↓</kbd> 이동 <kbd>Enter</kbd> 열기`;
+    const recent = isRecent();
+    $('lh').innerHTML = `<b class="u-fg">${L.length}건</b> · ${recent ? (EMPTY ? '기관 사전이 비어 있어 공통표준만 보입니다' : '검색어가 없어 <b>기관 사전 최근 변경</b>을 보여 줍니다 <button class="btn ghost sm" id="show-all">전체 보기</button>') : qs ? `‘${qs}’ 검색${isCho(qs) ? ' (초성)' : isShort(qs) ? ' — <b>2글자 이하는 앞부분 일치</b>로 찾습니다' : ''}${L.length >= 1000 ? ' · <b>1,000건 이상 — 검색어를 더 입력하세요</b>' : ''}` : showAll && !kind && !act.length ? '전체 사전(원본 폐기 · V0 삭제 보관 제외)' : '필터 결과'}${L.length > CAP ? ` · <b>앞 ${CAP}건만 표시 — 검색어나 종류 · 필터로 좁히세요</b>` : ''} ${chipsHtml} <span class="grow"></span> <kbd>↑</kbd><kbd>↓</kbd> 이동 <kbd>Enter</kbd> 열기`;
     const orgN = L.filter(x => x.it.src === '기관').length;   // only organisation items go into the editable file (CX12-05)
     $('dl-n').textContent = orgN ? `기관 ${orgN}건(공통 ${L.length - orgN}건은 참고 시트) · 숨김 열(항목 ID·버전·기준본)` : '이 검색 결과에는 편집할 기관 항목이 없습니다 — 공통표준은 기관에서 편집할 수 없습니다';
     $('dl-menu').querySelector('[data-dl="filter"]').disabled = !orgN;
@@ -328,7 +337,8 @@ window.pageInit = function () {
   function related(it) {
     const dict = getDict().filter(x => x.ver > 0 || x.pending), out = [];
     const st = x => x.st === '미사용' ? '미사용' : x.st === '삭제 보관' ? '삭제 보관' : '';
-    if (it.k === 'word') dict.filter(x => x.k === 'term' && decompose(x.name).parts.some(p => p.w === it.name)).forEach(x => out.push({ x, rel: '이 단어를 쓰는 용어', why: st(it) ? `단어가 ${st(it)} — 용어 재검토` : (x.abbr !== '—' && !x.abbr.split('_').includes(it.abbr) ? `약어 ${it.abbr}가 용어 약어에 없음` : '') }));
+    // word: name prefilter first — decomposing all 13,000+ common terms made a word's detail take ~5 s
+    if (it.k === 'word') dict.filter(x => x.k === 'term' && x.name.includes(it.name) && decompose(x.name).parts.some(p => p.w === it.name)).forEach(x => out.push({ x, rel: '이 단어를 쓰는 용어', why: st(it) ? `단어가 ${st(it)} — 용어 재검토` : (x.abbr !== '—' && !x.abbr.split('_').includes(it.abbr) ? `약어 ${it.abbr}가 용어 약어에 없음` : '') }));
     if (it.k === 'domain') dict.filter(x => x.k === 'term' && x.dom === it.name).forEach(x => out.push({ x, rel: '이 도메인의 용어', why: st(it) ? `도메인이 ${st(it)}` : '' }));
     if (it.k === 'code') dict.filter(x => x.k === 'term' && x.dom === it.dom && /코드$/.test(x.name)).forEach(x => out.push({ x, rel: '같은 도메인의 코드 용어', why: '' }));
     if (it.k === 'term' && it.kn !== '엔터티 용어') {
@@ -337,8 +347,8 @@ window.pageInit = function () {
     }
     return out;
   }
-  function relHtml(it) {
-    const L = related(it); if (!L.length) return '<div class="caption muted">연관 항목이 없습니다.</div>';
+  function relHtml(it, L) {
+    L = L || related(it); if (!L.length) return '<div class="caption muted">연관 항목이 없습니다.</div>';
     const noDom = it.k === 'term' && L.some(r => r.rel === '도메인' && r.why);
     const cand = noDom ? getDict().filter(x => x.k === 'domain' && x.name.startsWith(String(it.dom).replace(/[A-Z]\d.*$/, ''))).slice(0, 3) : [];
     return `<div class="flex u-mb-8"><span class="caption muted">재검토 ${L.filter(r => r.why).length}건</span><span class="grow"></span><button class="btn ghost sm" id="rel-diag"><i data-ic=refresh data-s=12></i>재진단</button></div>
@@ -347,22 +357,23 @@ window.pageInit = function () {
   }
   function detail() {
     const it = I.find(x => x.id === sel); const p = $('pn-detail'); if (!it) { p.innerHTML = ''; p.classList.remove('open'); return; }
-    const common = it.src === '공통';
+    const common = it.src === '공통', REL = related(it);   // computed once per draw (count + table)
     const hist = it.hist.length ? `<div class="tl">${it.hist.map(h => `<div class="ev"><div class="flex"><b>${h.v}</b><span class="badge">${h.act}</span><span class="grow"></span><span class="caption mono">${h.at}</span></div><div class="caption muted">${h.by}${h.doc !== '—' ? ` · <a href="approvals.html?doc=${h.doc}">${h.doc}</a>` : ''}${h.why ? ' · 사유: ' + h.why : ''}</div>${h.diff.length ? `<table class="tbl u-mt-4"><thead><tr><th>칸</th><th>이전</th><th>이후</th></tr></thead><tbody>${h.diff.map(d => `<tr><td>${d[0]}</td><td><span class="old-v">${d[1] === '' ? '(빈 문자열)' : d[1] == null ? '(NULL)' : d[1]}</span></td><td>${d[2]}</td></tr>`).join('')}</tbody></table>` : ''}<button class="btn ghost sm" data-toast="${it.name}_${h.v}.xlsx — 그 버전의 값" data-toast-type="info">이 버전 엑셀</button></div>`).join('')}</div>` : '<div class="caption muted">이력이 없습니다.</div>';
     p.innerHTML = `<div class="rp-head"><div class="t"><span class="badge ${common ? 'b-common' : 'b-org'}">${it.src}</span><span class="badge">${it.kn}</span><span class="badge ${it.st === '사용' ? 'b-success' : it.st === '신청 중' ? 'b-info' : ''}">${it.st}</span><button class="iconbtn close u-w-28 u-h-28" data-close="pn-detail" aria-label="닫기"><i data-ic=x></i></button></div>
-        <h2 class="u-mt-8">${it.name}</h2><div class="rp-sub">${it.abbr} · ${it.eng || ''} · <span class="mono">${it.id}</span></div></div>
+        <h2 class="u-mt-8">${it.name}</h2><div class="rp-sub">${[it.abbr, it.eng].filter(x => x && x !== '—').join(' · ')} · <span class="mono">${it.id}</span></div></div>
       <div class="rp-body">
         ${common ? '<div class="banner u-mb-12"><i data-ic=info></i><div><b>공통 표준</b> — 읽기 전용입니다. 기관에서 바꿀 수 없습니다.</div></div>' : ''}
         <dl class="kv"><dt>영문약어명</dt><dd class="mono">${it.abbr}</dd><dt>도메인 / 형식</dt><dd class="mono">${it.dom}</dd>${it.allow ? `<dt>허용 값</dt><dd class="mono">${it.allow}</dd>` : ''}<dt>이음동의어</dt><dd>${it.syn.join(', ') || '—'}</dd><dt>금칙어</dt><dd>${it.forbid.join(', ') || '—'}</dd>${it.old.length ? `<dt>과거 이름</dt><dd>${it.old.join(', ')}</dd>` : ''}<dt>설명</dt><dd>${it.desc || it.eng || '—'}</dd>
-          <dt>항목 버전</dt><dd class="mono">${it.ver ? 'V' + it.ver : '— (미승인)'}</dd><dt>제정차수</dt><dd class="mono">${it.cha ? it.cha + '차' + (common ? ' (공통 원문)' : '') : '—'}</dd><dt>변경일</dt><dd class="mono">${it.dt}</dd></dl>
+          <dt>항목 버전</dt><dd class="mono">${it.ver ? 'V' + it.ver : '— (미승인)'}</dd><dt>제정차수</dt><dd class="mono">${it.cha ? String(it.cha) + (/차/.test(String(it.cha)) ? '' : '차') + (common ? ' (공통 원문)' : '') : '—'}</dd><dt>변경일</dt><dd class="mono">${it.dt}</dd></dl>
         ${it.k === 'code' && it.ctype === '행정표준' ? `<div class="banner${it.partial ? ' warning' : ''} u-mb-8"><i data-ic=${it.partial ? 'warn' : 'info'}></i><div class="grow"><b>행정표준코드</b> · 소관기관 ${it.org || '—'} · 제정 ${it.cha || '—'}${it.partial ? '<div class="caption">원문 일부 — 공통표준 원문(허용값)이 코드값을 일부만 싣습니다. 소관기관 원본으로 보완하려면 공통표준 · 행정표준코드 화면에서 새 판 품의로 올립니다.</div>' : ''}<div class="caption muted">연결 용어 ${(it.terms || []).map(t => `<a href="dictionary.html?q=${encodeURIComponent(t.name)}">${t.name}</a>`).join(', ') || '—'}</div></div><a class="btn sm" href="std-common.html?code=${it.id}">원문 보기</a></div>` : ''}${it.k === 'code' ? `<div class="section-t">코드값 <span class="badge">${(it.vals || []).length}</span>${it.partial ? ' <span class="badge b-warning">원문 일부</span>' : ''} <span class="caption muted">${it.scope || '공통'}${it.sys ? ' · ' + it.sys : ''} · ${it.ctype || '자체'} 코드</span></div><table class="tbl box u-mb-12"><thead><tr><th>값</th><th>이름</th><th class="num">순서</th><th>상태</th></tr></thead><tbody>${(it.vals || []).map(v => `<tr><td class="mono">${v.v}</td><td>${v.nm}</td><td class="num">${v.ord || ''}</td><td>${v.st === '미사용' ? '<span class="badge">미사용</span>' : '<span class="badge b-success">사용</span>'}</td></tr>`).join('') || '<tr class="er"><td colspan="4" class="caption muted">코드값이 없습니다</td></tr>'}</tbody></table>` : ''}
-        <div class="tabs"><button class="on" data-tab="hist">이력 <span class="n">${it.hist.length}</span></button><button data-tab="rel">연관 <span class="n">${related(it).length}</span></button><button data-tab="use">사용처 <span class="n">${it.use}</span></button><button data-tab="req">진행 중 신청 <span class="n">${it.pending ? 1 : 0}</span></button></div>
+        <div class="tabs"><button class="on" data-tab="hist">이력 <span class="n">${it.hist.length}</span></button><button data-tab="rel">연관 <span class="n">${REL.length}</span></button><button data-tab="use">사용처 <span class="n">${it.use}</span></button><button data-tab="req">진행 중 신청 <span class="n">${it.pending ? 1 : 0}</span></button></div>
         <div class="pane on" data-pane="hist">${hist}</div>
-        <div class="pane" data-pane="rel">${relHtml(it)}</div>
+        <div class="pane" data-pane="rel">${relHtml(it, REL)}</div>
         <div class="pane" data-pane="use">${usageHtml(it)}</div>
         <div class="pane" data-pane="req">${it.pending ? `<div class="banner info"><i data-ic=info></i><div class="grow"><b>${it.pending}</b> 진행 중 — 같은 항목의 새 신청은 막힙니다(MD-10). 신청 내용은 누구나 읽을 수 있습니다.</div><a class="btn sm" href="approvals.html?doc=${it.pending}">신청 내용 보기</a></div>` : '<div class="caption muted">진행 중 신청이 없습니다.</div>'}</div>
       </div>
-      <div class="rp-foot">${common ? `<span class="caption muted">공통 표준은 신청할 수 없습니다</span><span class="grow"></span><button class="btn sm" id="copy-new" title="이 항목 값으로 새 기관 항목 신청을 시작합니다"><i data-ic=copy data-s=12></i>복사해서 신규</button>`
+      <div class="rp-foot">${!can('dict.request') && it.st !== '삭제 보관' ? '<span class="caption muted">조회 전용 — 사전 품의(변경 · 미사용 · 삭제 · 복사해서 신규)는 모델러 · DA만 올릴 수 있습니다</span>'   // review: the footer actions used to stay live for read-only roles
+        : common ? `<span class="caption muted">공통 표준은 신청할 수 없습니다</span><span class="grow"></span><button class="btn sm" id="copy-new" title="이 항목 값으로 새 기관 항목 신청을 시작합니다"><i data-ic=copy data-s=12></i>복사해서 신규</button>`
         : it.st === '삭제 보관' ? (can('dict.purge') ? `<span class="caption muted">V0 삭제 보관 — 복원 없음</span><span class="grow"></span><button class="btn sm danger" id="purge">영구 삭제</button>` : '<span class="caption muted">V0 삭제 보관 — 영구 삭제는 DA·Admin</span>')
         : it.pending ? `<span class="caption muted">${it.pending} 진행 중이라 새 신청 불가</span><span class="grow"></span><button class="btn sm" id="copy-new"><i data-ic=copy data-s=12></i>복사해서 신규</button>`
         : `<button class="btn sm" id="del-req"${usageOf(it).n > 0 ? ` disabled title="모델 ${usageOf(it).n}곳에서 쓰는 중 — 삭제할 수 없습니다(미사용을 쓰세요)"` : ''}>삭제 담기</button><button class="btn sm" id="copy-new"><i data-ic=copy data-s=12></i>복사해서 신규</button><span class="grow"></span>${it.st === '사용' ? '<button class="btn sm" id="unuse-req">미사용 담기</button>' : ''}<button class="btn primary sm" id="chg-req">변경 담기</button>`}</div>`;
@@ -388,6 +399,9 @@ window.pageInit = function () {
     if (k === 'all') clearAll(); else if (k === 'src') { srcs = new Set(['공통', '기관']); document.querySelectorAll('[data-src]').forEach(x => x.classList.add('on')); } else if (k === 'st') { stFilter = ''; document.querySelectorAll('[data-st]').forEach(x => x.classList.remove('on')); } else if (k === 'fdisc') $('fdisc').checked = false; else $(k).value = '';
     sel = null; draw(); const nc = document.querySelector('#lh [data-clear]'); (nc || $('f-btn')).focus(); });
   $('q').addEventListener('input', () => { showAll = false; sel = null; draw(); });
+  $('q-help-b').onclick = () => toast($('q-help-b').title, 'info');   // the help button used to do nothing on click (title only)
+  // the result line promises ↑↓ · Enter: from the search box ↓ moves into the list, Enter opens the first row
+  $('q').addEventListener('keydown', e => { const r = $('rows').querySelector('tr[data-id]'); if (!r) return; if (e.key === 'ArrowDown') { e.preventDefault(); r.focus(); } else if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); r.click(); } });
   ['dg', 'since', 'flen', 'fdom', 'fscope', 'fdisc'].forEach(id => $(id).onchange = () => { sel = null; draw(); });
   document.querySelector('.toolbar').addEventListener('click', e => {
     const k = e.target.closest('[data-kind]'); if (k) { kind = k.dataset.kind; sel = null; draw(); const nb = document.querySelector(`#kind-chips [data-kind="${kind}"]`); if (nb) nb.focus(); return; }
@@ -413,6 +427,8 @@ window.pageInit = function () {
   });
   if (location.hash === '#download') setTimeout(() => $('b-dl').click(), 200);
   if (location.hash === '#publish' && can('dict.publish')) setTimeout(() => $('b-pub').click(), 200);   // from the change history's [공표]
+  // consume the hash: publishing reloads the page, and a kept #publish reopened the modal on the fresh page
+  if (/^#(download|publish)$/.test(location.hash)) history.replaceState(null, '', location.pathname + location.search);
   // publish (DA, W1 minimal)
   if (can('dict.publish')) $('b-pub').hidden = false;
   let pubTarget = '';
@@ -428,7 +444,7 @@ window.pageInit = function () {
     $('pub-t').textContent = `제정 ${pub.cha + 1}차 공표`;
     $('pub-sum').innerHTML = `<div class="mline"><span><b>${by.추가}</b>추가</span><span><b>${by.변경}</b>변경</span><span><b>${by.미사용}</b>미사용</span></div>
       <div class="caption muted u-mt-8">직전 공표: 제정 ${pub.cha}차 · ${pub.at} · ${pub.by} — 그 뒤 승인된 <b>항목 ${Object.keys(last).length}개</b>(변경 기록 ${ch.length}건${noId ? ` · 그중 항목 ID 없는 집계 기록 ${noId}건은 차수만 기록` : ''})가 대상입니다. 진행 중 신청은 포함하지 않습니다. <a href="dict-history.html?unpub=1">대상 목록 보기</a></div>`;
-    $('pub-why').value = ''; $('mo-pub').classList.add('open');
+    $('pub-why').value = ''; $('mo-pub').classList.add('open'); setTimeout(() => $('pub-why').focus(), 0);
     setBlock($('pub-go'), Object.keys(last).length ? '' : '직전 공표 이후 승인된 변경이 없어 공표할 수 없습니다');
   };
   $('pub-go').onclick = () => {
@@ -470,7 +486,7 @@ window.pageInit = function () {
       if (op === '변경') { const ks = Object.keys(it.chg || {}), diff = ks.length ? ks.map(k => `<div class="caption"><b>${k}</b> <span class="old-v">${hx(fmtV(it.chg[k][0]))}</span> → ${hx(fmtV(it.chg[k][1]))}</div>`).join('') : '<span class="caption u-warning">바꾼 칸이 없습니다 — [고치기]</span>';
         if (it.auto) return R(i, '변경 · 자동', it.name, `<div class="caption muted">${hx(it.from || '단어 변경에 따름')}</div>${diff}`, d.pending ? `<span class="badge b-warning">${d.pending} 진행 중</span>` : '<span class="badge b-info">함께 반영</span>', '<span class="caption muted" title="단어 행을 빼면 함께 빠집니다">자동</span>', 'u-bg2');
         return R(i, `변경 · ${d.kn || ''}`, it.name, diff + back, ks.length ? `<span class="badge b-success">칸 ${ks.length}</span>` : '<span class="badge b-warning">확인</span>', ic('data-edit', i, it.name, '고치기', 'edit') + del); }
-      const body = it.k === 'code' ? `<span class="mono">${hx(it.abbr)}</span> · 코드값 ${(it.vals || []).length}개` : it.k === 'class' ? `그룹 ${hx((getGroups().groups.find(g => g.id === it.group) || {}).name || it.group || '')} · 형식단어 ${hx(it.fw || '')}` : `<span class="mono">${hx(it.abbr || '')}</span>${it.dom && it.k !== 'word' ? ` · <span class="mono">${hx(it.dom)}</span>` : ''}${it.scope && it.scope !== '공통' ? ` · ${hx(scopeName(it.scope))} 전용` : ''}`;
+      const body = it.k === 'code' ? `<span class="mono">${hx(it.abbr)}</span> · 코드값 ${(it.vals || []).length}개` : it.k === 'class' ? `그룹 ${hx((getGroups().groups.find(g => g.id === it.group) || {}).name || (it.group ? it.group + ' (없는 그룹 — 고쳐 담으세요)' : ''))} · 형식단어 ${hx(it.fw || '')}` : `<span class="mono">${hx(it.abbr || '')}</span>${it.dom && it.k !== 'word' ? ` · <span class="mono">${hx(it.dom)}</span>` : ''}${it.scope && it.scope !== '공통' ? ` · ${hx(scopeName(it.scope))} 전용` : ''}`;
       return R(i, `신규 · ${KN(it)}`, it.name, `<div class="caption">${body}</div>${it.dep ? `<div class="caption muted">함께 올린 ${hx(it.dep.join(' · '))} 다음에 판정</div>` : ''}${it.from || it.src ? `<div class="caption faint">${hx(it.from || it.src)}</div>` : ''}${back}`,
         similar(it) ? '<span class="badge b-warning">약어 중복 사유</span>' : '<span class="caption muted">통과</span>', (['term', 'word', 'entity', 'code', 'domain', 'class'].includes(it.k) ? ic('data-edit', i, it.name, '폼으로 불러와 고치기', 'edit') : '') + del);
     }).join('');
@@ -511,7 +527,7 @@ window.pageInit = function () {
     // G5: renames and domain type changes say what they touch
     const note = (l, v) => { if (FIELD_KEY[l] === 'name') { const clash = getDict().some(x => x.id !== d.id && x.k === d.k && x.name === v && x.ver > 0); const rule = d.k === 'domain' ? checkItem({ k: 'domain', name: v, dg: d.dg }).filter(p => p.lvl === 'block' && !/사전에 있음|신청 중/.test(p.msg)).map(p => p.msg) : [];
         const casc = d.k === 'word' ? wordCascade(d, { 단어명: [d.name, v] }) : [];
-        return clash ? `'${v}'은 이미 있습니다` : rule.length ? rule.join(' · ') : `‘${d.name}’은 과거 이름으로 남아 검색됩니다${usageOf(d).n ? ` · 사용처 ${usageOf(d).n}곳은 재검토 대상(모델은 자동으로 바뀌지 않음)` : ''}${casc.length ? ` · 이 단어를 쓰는 용어 ${casc.length}건(${casc.slice(0, 3).map(c => c.name).join(', ')}${casc.length > 3 ? ' …' : ''})의 이름도 같은 품의에 함께 담깁니다` : ''}`; }
+        return clash ? `'${v}'은 이미 있습니다` : rule.length ? rule.join(' · ') : `‘${d.name}’${jo(d.name, '은/는')} 과거 이름으로 남아 검색됩니다${usageOf(d).n ? ` · 사용처 ${usageOf(d).n}곳은 재검토 대상(모델은 자동으로 바뀌지 않음)` : ''}${casc.length ? ` · 이 단어를 쓰는 용어 ${casc.length}건(${casc.slice(0, 3).map(c => c.name).join(', ')}${casc.length > 3 ? ' …' : ''})의 이름도 같은 품의에 함께 담깁니다` : ''}`; }
       if (l === '영문약어명' && d.k === 'word') { const casc = wordCascade(d, { 영문약어명: [d.abbr, v] }); return casc.length ? `이 단어를 쓰는 용어 ${casc.length}건의 영문약어명도 같은 품의에 함께 담깁니다 — 예: ${casc.slice(0, 2).map(c => `${c.chg['영문약어명'] ? c.chg['영문약어명'][0] + ' → ' + c.chg['영문약어명'][1] : c.name}`).join(', ')}` : ''; }
       if (l === '물리 타입' || l === '도메인') return d.use ? `사용처 ${d.use}곳의 타입이 바뀝니다 — 승인 뒤 모델에서 재검토` : '';
       if (l === '형식단어') return v === 'Y' ? '형식단어가 되면 도메인분류와 연결할 수 있습니다(도메인 그룹 · 분류 화면)' : '형식단어를 해제하면 이 단어로 끝나는 용어는 ‘형식단어로 끝나지 않음’ 경고를 받습니다';
@@ -525,7 +541,7 @@ window.pageInit = function () {
       if (!Object.keys(chg).length) { toast('바뀐 칸이 없습니다', 'info'); return; }
       if (chg['코드값']) { const p = chg['코드값'][1], dup = p.map(x => x.v).filter((x, i, a) => a.indexOf(x) !== i); if (dup.length) { toast(`코드값 중복: ${[...new Set(dup)].join(', ')}`, 'danger'); return; } }
       const rowNow = queue.find(x => x.id === d.id && opOf(x) === '변경');
-      if (rowNow) rowNow.chg = chg; else { const other = queue.find(x => x.id === d.id); if (other) { toast(`‘${d.name}’은 이미 바구니에 ${opOf(other)}(으)로 있습니다 — 먼저 빼세요`, 'info'); return; } queue.push({ key: 'b' + Date.now().toString(36), k: kk, id: d.id, name: d.name, act: '변경', chg }); }
+      if (rowNow) rowNow.chg = chg; else { const other = queue.find(x => x.id === d.id); if (other) { toast(`‘${d.name}’${jo(d.name, '은/는')} 이미 바구니에 ${opOf(other)}(으)로 있습니다 — 먼저 빼세요`, 'info'); return; } queue.push({ key: 'b' + Date.now().toString(36), k: kk, id: d.id, name: d.name, act: '변경', chg }); }
       const nCasc = d.k === 'word' ? wordCascade(d, chg).length : 0;
       formDirty = false; drawQueue(); show(lastKind); toast(`‘${d.name}’ 변경 — 칸 ${Object.keys(chg).length}개를 바구니에 반영했습니다${nCasc ? ` · 이 단어를 쓰는 용어 ${nCasc}건도 함께 담김` : ''}`);
     };
@@ -534,7 +550,7 @@ window.pageInit = function () {
   // DX-10: copy an item into a new request form (the name is selected for the user to change)
   function copyNew(d) {
     const kk = kindKey(d); openPanel(); setChip(kk); show(kk);
-    if (kk === 'term') { $('tm-name').value = d.name; $('tm-desc').value = d.desc || ''; analyse(); }
+    if (kk === 'term') { $('tm-name').value = d.name; $('tm-desc').value = d.desc || ''; analyse(); if (d.dom) setTmDom(d.dom); }
     else if (kk === 'word') { $('wd-name').value = d.name; $('wd-abbr').value = d.abbr; $('wd-eng').value = d.eng || ''; }
     else if (kk === 'entity') { $('en-name').value = d.name; $('en-desc').value = d.desc || ''; anEntity(); }
     else if (kk === 'code') { $('cd-name').value = d.name; $('cd-abbr').value = d.abbr; $('cd-dom').value = d.dom; $('cd-scope').value = d.scope || '공통'; $('cd-vals').value = fmtLines(d.vals); chkCode(); }
@@ -551,15 +567,26 @@ window.pageInit = function () {
     if (it.k === 'term' && (!it.abbr || it.abbr === '—')) return fail('분해 후보를 골라 약어를 정하세요', 'tm-name');
     if (it.k === 'entity' && (!it.abbr || it.abbr.includes('?'))) return fail('엔터티명을 단어로 분해할 수 없습니다 — 모르는 단어를 먼저 담으세요', 'en-name');
     if (it.k === 'code') { if (!it.abbr) return fail('영문 코드명을 입력하세요', 'cd-abbr'); const bad = codeProblems(it); if (bad.length) return fail(bad[0], 'cd-vals'); }
-    if (queue.some(q => q.name === it.name && q.k === it.k)) { toast(`‘${it.name}’은 이미 바구니에 있습니다`, 'info'); return; }
+    if (queue.some(q => q.name === it.name && q.k === it.k)) { toast(`‘${it.name}’${jo(it.name, '은/는')} 이미 바구니에 있습니다`, 'info'); return; }
     const ex = getDict().find(x => x.name === it.name && (x.k === it.k || (it.k === 'entity' && x.k === 'term')) && x.ver > 0);
-    if (ex) return fail(`‘${it.name}’은 이미 ${ex.src} 사전에 있습니다(${ex.id}) — ${ex.src === '기관' ? '[변경 담기]를 쓰세요' : '공통 표준을 쓰세요'}`);
+    if (ex) return fail(`‘${it.name}’${jo(it.name, '은/는')} 이미 ${ex.src} 사전에 있습니다(${ex.id}) — ${ex.src === '기관' ? '[변경 담기]를 쓰세요' : '공통 표준을 쓰세요'}`);
     const op = openItems().find(x => x.it.name === it.name && opOf(x.it) === '추가');
-    if (op) return fail(`‘${it.name}’은 ${op.doc}에서 신청 중입니다 — 그 신청 내용을 열어 보세요(읽기 전용)`);
+    if (op) return fail(`‘${it.name}’${jo(it.name, '은/는')} ${op.doc}에서 신청 중입니다 — 그 신청 내용을 열어 보세요(읽기 전용)`);
     ['tm-name', 'wd-name', 'wd-abbr', 'dm-len', 'en-name', 'cd-name', 'cd-vals'].forEach(id => $(id) && $(id).setAttribute('aria-invalid', 'false'));
     if (['word', 'term', 'entity', 'domain'].includes(it.k) && !it.scope) it.scope = $('rq-scope').value || '공통';   // decision Q3
-    queue.push(Object.assign({ key: 'b' + Date.now().toString(36) + Math.random().toString(36).slice(2, 4), act: '추가' }, it)); formDirty = false; drawQueue(); toast(`‘${it.name}’을 바구니에 담았습니다${it.scope && it.scope !== '공통' ? ` · 적용 범위 ${scopeName(it.scope)}` : ''}`);
+    queue.push(Object.assign({ key: 'b' + Date.now().toString(36) + Math.random().toString(36).slice(2, 4), act: '추가' }, it)); formDirty = false; resetForm(it.k); drawQueue(); toast(`‘${it.name}’${jo(it.name, '을/를')} 바구니에 담았습니다${it.scope && it.scope !== '공통' ? ` · 적용 범위 ${scopeName(it.scope)}` : ''}`);
   };
+  // after [바구니에 담기] the form empties for the next item (the values used to stay, and a second press said 'already in the basket')
+  function resetForm(k) {
+    const F = { word: ['wd-name', 'wd-abbr', 'wd-eng', 'wd-syn', 'wd-forbid', 'wd-desc', 'wd-err'], term: ['tm-name', 'tm-abbr', 'tm-desc'], entity: ['en-name', 'en-desc'], code: ['cd-name', 'cd-abbr', 'cd-vals'] }[k] || [];
+    F.forEach(id => { const el = $(id); if (!el) return; if ('value' in el && el.tagName !== 'DIV') el.value = ''; else el.textContent = ''; });
+    if (k === 'word') { $('wd-sim').hidden = true; $('wd-fmt').value = 'N'; $('wd-fmt').onchange(); }
+    if (k === 'term') { analysed = ''; $('tm-cands').innerHTML = ''; $('tm-n').textContent = '—'; }
+    if (k === 'entity') $('en-res').textContent = '—';
+    if (k === 'code') chkCode();
+    if (k === 'domain') upd();
+    const f = panel.querySelector('.rq-form:not([hidden]) input:not([readonly])'); if (f) f.focus();
+  }
   // DX-06: entity term — the last word is an entity class word (기본 · 내역 · 이력 · 관계 · 정보) and decides the physical suffix
   const ENT_SFX = { 기본: 'M', 내역: 'D', 이력: 'H', 관계: 'R', 정보: 'I' };
   // DX-09: a word already in the basket counts for analysis (it will be judged together in the same request)
@@ -570,7 +597,7 @@ window.pageInit = function () {
     const last = Object.keys(ENT_SFX).find(s => n.endsWith(s) && n.length > s.length);
     const head = last ? n.slice(0, -last.length) : n, dc = withBasket(decompose(head));
     const abbr = dc.parts.map(p => p.abbr || '?').join('_') + (last ? '_' + ENT_SFX[last] : '');
-    $('en-res').innerHTML = `${dc.parts.map(p => p.unknown ? `<b class="u-danger">${p.w}?</b>` : p.basket ? `<span class="u-accent">${p.w}(바구니)</span>` : p.ok ? p.w : `<span class="u-warning">${p.w}(승인 전)</span>`).join(' + ')}${last ? ` + <b>${last}</b> <span class="caption muted">엔터티 분류어 → _${ENT_SFX[last]}</span>` : ' <span class="badge b-warning">엔터티 분류어로 끝나지 않음</span>'}<div class="u-mt-4">물리명 <b class="mono">${abbr}</b> · 도메인 없음(엔터티 용어)</div>${dc.unknown.length ? `<div class="caption u-danger u-mt-4">‘${dc.unknown.map(p => p.w).join(', ')}’은 사전에 없는 단어 — 단어를 같은 바구니에 먼저 담으면 함께 판정합니다</div>` : ''}`;
+    $('en-res').innerHTML = `${dc.parts.map(p => p.unknown ? `<b class="u-danger">${p.w}?</b>` : p.basket ? `<span class="u-accent">${p.w}(바구니)</span>` : p.ok ? p.w : `<span class="u-warning">${p.w}(승인 전)</span>`).join(' + ')}${last ? ` + <b>${last}</b> <span class="caption muted">엔터티 분류어 → _${ENT_SFX[last]}</span>` : ' <span class="badge b-warning">엔터티 분류어로 끝나지 않음</span>'}<div class="u-mt-4">물리명 <b class="mono">${abbr}</b> · 도메인 없음(엔터티 용어)</div>${dc.unknown.length ? `<div class="caption u-danger u-mt-4">‘${dc.unknown.map(p => p.w).join(', ')}’${jo(dc.unknown.map(p => p.w).join(', '), '은/는')} 사전에 없는 단어 — 단어를 같은 바구니에 먼저 담으면 함께 판정합니다</div>` : ''}`;
     return { abbr, ok: !dc.unknown.length };
   }
   let etimer = null; $('en-name').addEventListener('input', () => { clearTimeout(etimer); etimer = setTimeout(anEntity, 400); });
@@ -579,7 +606,7 @@ window.pageInit = function () {
   const codeProblems = it => { const out = [], len = +(String(it.dom).match(/\d+$/) || [0])[0], vals = it.vals || [];
     if (!vals.length) out.push('코드값을 한 줄에 하나씩 입력하세요');
     const dup = vals.map(v => v.v).filter((v, i, a) => a.indexOf(v) !== i); if (dup.length) out.push(`코드값 중복: ${[...new Set(dup)].join(', ')}`);
-    const bad = len ? vals.filter(v => v.v.length !== len) : []; if (bad.length) out.push(`도메인 ${it.dom}(길이 ${len})과 다른 값: ${bad.map(v => v.v).join(', ')}`);
+    const bad = len ? vals.filter(v => v.v.length !== len) : []; if (bad.length) out.push(`도메인 ${it.dom}(길이 ${len}자)와 다른 값: ${bad.map(v => v.v).join(', ')}`);
     if (vals.some(v => !v.nm)) out.push('이름이 없는 코드값이 있습니다');
     return out; };
   const codeItem = () => ({ k: 'code', name: $('cd-name').value.trim(), abbr: $('cd-abbr').value.trim().toUpperCase(), dom: $('cd-dom').value, scope: $('cd-scope').value, sys: $('cd-scope').value === '시스템' ? $('cd-sys').value : undefined, ctype: $('cd-type').value, vals: parseVals($('cd-vals').value) });
@@ -597,10 +624,12 @@ window.pageInit = function () {
     const dc = withBasket(decompose(n));
     const parts = dc.parts.map(p => p.unknown ? `<b class="u-danger">${p.w}?</b>` : p.basket ? `<span class="u-accent">${p.w}(바구니)</span>` : p.ok ? p.w : `<span class="u-warning">${p.w}(승인 전${p.doc ? ' · ' + p.doc : ''})</span>`).join(' + ');
     $('tm-n').textContent = dc.ok ? '후보 1' : '확인 필요';
-    $('tm-cands').innerHTML = `<div class="cand on"><input type="radio" checked aria-label="분해 결과"><div class="grow">${parts}</div><span class="mono">${dc.ok ? dc.abbr : '—'}</span>${dc.ok ? (dc.sus ? '<span class="badge b-warning">? 의심 · 1음절</span>' : '<i data-ic=check></i>') : dc.unknown.length ? '<span class="badge b-danger">미등록 단어</span>' : '<span class="badge b-warning">구성 단어 승인 전</span>'}</div>${!dc.ok ? `<div class="caption u-mt-4">${dc.unknown.length ? `‘${dc.unknown.map(p => p.w).join(', ')}’은 사전에 없는 단어입니다 — 단어부터 신청하세요.` : `‘${dc.pending.map(p => p.w).join(', ')}’ 단어가 아직 승인 전입니다 — 승인 뒤 다시 분석됩니다.`}</div>` : ''}`;
+    $('tm-cands').innerHTML = `<div class="cand on"><input type="radio" checked aria-label="분해 결과"><div class="grow">${parts}</div><span class="mono">${dc.ok ? dc.abbr : '—'}</span>${dc.ok ? (dc.sus ? '<span class="badge b-warning">? 의심 · 1음절</span>' : '<i data-ic=check></i>') : dc.unknown.length ? '<span class="badge b-danger">미등록 단어</span>' : '<span class="badge b-warning">구성 단어 승인 전</span>'}</div>${!dc.ok ? `<div class="caption u-mt-4">${dc.unknown.length ? `‘${dc.unknown.map(p => p.w).join(', ')}’${jo(dc.unknown.map(p => p.w).join(', '), '은/는')} 사전에 없는 단어입니다 — 단어부터 신청하세요.` : `‘${dc.pending.map(p => p.w).join(', ')}’ 단어가 아직 승인 전입니다 — 승인 뒤 다시 분석됩니다.`}</div>` : ''}`;
     $('tm-abbr').value = dc.ok ? dc.abbr : ''; $('tm-abbr-h').textContent = dc.ok ? `구성 단어 약어를 _로 결합 · ${dc.abbr.length}/30자` : '분석이 끝나야 정해집니다';
-    $('tm-dom').value = domGuess(n);
+    setTmDom(domGuess(n));
   }
+  // a domain that is not in the short list (e.g. a common-standard 번호V15 brought back from the basket) is added instead of leaving the select blank
+  function setTmDom(v) { const s = $('tm-dom'); if (v && ![...s.options].some(o => o.value === v)) s.insertAdjacentHTML('beforeend', `<option>${hx(v)}</option>`); s.value = v; }
   let atimer = null;
   $('tm-name').addEventListener('input', () => { analysed = ''; $('tm-n').textContent = '분석 중…'; $('tm-abbr').value = ''; clearTimeout(atimer); atimer = setTimeout(analyse, 500); });
   // the chosen decomposition decides the abbreviation (CL9-17)
@@ -617,13 +646,13 @@ window.pageInit = function () {
     // a new row goes back into its form for editing (it leaves the basket until [바구니에 담기] again)
     queue.splice(+ed.dataset.edit, 1); drawQueue(); setChip(it.k); show(it.k);
     // review fix: every field comes back (nothing silently lost on re-edit)
-    if (it.k === 'term') { $('tm-name').value = it.name; $('tm-desc').value = it.desc || ''; analyse(); if (it.dom) $('tm-dom').value = it.dom; }
+    if (it.k === 'term') { $('tm-name').value = it.name; $('tm-desc').value = it.desc || ''; analyse(); if (it.dom) setTmDom(it.dom); }
     else if (it.k === 'word') { $('wd-name').value = it.name; $('wd-abbr').value = it.abbr || ''; $('wd-eng').value = it.eng || ''; $('wd-fmt').value = it.fmt || 'N'; $('wd-fmt').onchange(); $('wd-cls').value = it.cls || ''; $('wd-syn').value = (it.syn || []).join(', '); $('wd-forbid').value = (it.forbid || []).join(', '); $('wd-desc').value = it.desc || ''; }
     else if (it.k === 'entity') { $('en-name').value = it.name; $('en-desc').value = it.desc || ''; anEntity(); }
     else if (it.k === 'code') { $('cd-name').value = it.name; $('cd-abbr').value = it.abbr; $('cd-dom').value = it.dom; $('cd-scope').value = it.scope || '공통'; if (it.sys) $('cd-sys').value = it.sys; $('cd-type').value = it.ctype || '자체'; $('cd-vals').value = fmtLines(it.vals); chkCode(); }
     else if (it.k === 'domain') { const g = getGroups().groups.find(x => x.name === it.dg); if (g) { $('dm-grp').value = g.id; fillCls(); } const m = String(it.name).match(/^(.+?)([CVNDT])(\d*)(?:,(\d+))?$/); if (m) { $('dm-fw').value = m[1]; $('dm-type').value = m[2]; $('dm-len').value = m[3] || ''; $('dm-sc').value = m[4] || ''; } $('dm-allow').value = it.allow || ''; $('dm-sec').value = it.sec || '없음'; $('dm-desc').value = it.desc || ''; upd(); }
     else if (it.k === 'class') { queue.push(it); drawQueue(); location.href = 'domain-groups.html'; return; }
-    formDirty = true; toast(`‘${it.name}’을 폼으로 불러왔습니다 — 고친 뒤 [바구니에 담기]`, 'info');
+    formDirty = true; toast(`‘${it.name}’${jo(it.name, '을/를')} 폼으로 불러왔습니다 — 고친 뒤 [바구니에 담기]`, 'info');
   });
   $('q-body').addEventListener('input', e => { if (e.target.id === 'dup-why') { dupWhy = e.target.value; updateNeeds(); persist(); }
     const w = e.target.dataset.why; if (w !== undefined) { queue[+w].why = e.target.value; setBlock($('rq-go'), queueBlock()); persist(); } });
@@ -669,8 +698,8 @@ window.pageInit = function () {
     const ld = e.target.closest('[data-dr-load]'), mg = e.target.closest('[data-dr-merge]'), dl = e.target.closest('[data-dr-del]');
     if (dl) { saveDrafts(L.filter(x => x.id !== dl.dataset.drDel)); drawDrafts(); toast('초안을 지웠습니다', 'info'); return; }
     const d = L.find(x => x.id === (ld || mg || {}).dataset?.[ld ? 'drLoad' : 'drMerge']); if (!d) return;
-    if (ld) { if (queue.length) { const name = `자동 보관 · ${nowStr()}`; L.unshift({ id: 'dr' + Date.now(), name, at: nowStr(), reason: $('rq-why').value, items: JSON.parse(JSON.stringify(queue)) }); }
-      queue.splice(0, queue.length, ...JSON.parse(JSON.stringify(d.items))); $('rq-why').value = d.reason || ''; saveDrafts(L.filter(x => x.id !== d.id)); toast(`초안 ‘${d.name}’을 불러왔습니다${L.length > getDrafts().length - 1 && queue.length ? '' : ''} — 지금 바구니는 초안으로 보관했습니다`, 'info'); }
+    if (ld) { const had = queue.length; if (had) { const name = `자동 보관 · ${nowStr()}`; L.unshift({ id: 'dr' + Date.now(), name, at: nowStr(), reason: $('rq-why').value, items: JSON.parse(JSON.stringify(queue)) }); }
+      queue.splice(0, queue.length, ...JSON.parse(JSON.stringify(d.items))); $('rq-why').value = d.reason || ''; saveDrafts(L.filter(x => x.id !== d.id)); toast(`초안 ‘${d.name}’${jo(d.name, '을/를')} 불러왔습니다${had ? ' — 지금 바구니는 초안으로 보관했습니다' : ''}`, 'info'); }
     else { const [a, s] = addToBasket(d.items.map(x => { const o = Object.assign({}, x); delete o.key; return o; })); queue.splice(0, queue.length, ...getBasket().items); toast(`초안 ‘${d.name}’에서 ${a}건을 합쳤습니다${s ? ` · 중복 ${s}건 제외` : ''}`, 'info'); }
     drMenu(false); drawQueue(); });
   $('dr-save').onclick = () => {
@@ -706,7 +735,7 @@ window.pageInit = function () {
   ['same-f', 'same-m', 'same-v', 'same-find'].forEach(id => { $(id).addEventListener('input', samePrev); $(id).addEventListener('change', samePrev); });
   $('same-go').onclick = () => { if ($('same-go').disabled) return; const f = $('same-f').value, rows = samePrev(); let n = 0, skip = 0;
     rows.forEach(([d, a, b]) => { const ex = queue.find(x => x.id === d.id); if (ex && opOf(ex) !== '변경') { skip++; return; } if (ex) ex.chg = Object.assign({}, ex.chg, { [f]: [a, b] }); else queue.push({ key: 'b' + Date.now().toString(36) + n, k: kindKey(d), id: d.id, name: d.name, act: '변경', chg: { [f]: [a, b] } }); n++; });
-    $('mo-same').classList.remove('open'); picked.clear(); drawQueue(); draw(); openPanel(); toast(`${f}을(를) ${n}건 바꾸는 변경을 바구니에 담았습니다${skip ? ` · 미사용 · 삭제로 담긴 ${skip}건 제외` : ''}`, 'success'); };
+    $('mo-same').classList.remove('open'); picked.clear(); drawQueue(); draw(); openPanel(); toast(`${f}${jo(f, '을/를')} ${n}건 바꾸는 변경을 바구니에 담았습니다${skip ? ` · 미사용 · 삭제로 담긴 ${skip}건 제외` : ''}`, 'success'); };
   // DX-20: saved searches (per user)
   const ssKey = 'dbm-saved-search-' + ME.id, getSS = () => { try { return JSON.parse(dbmStore.get(ssKey, '[]')); } catch (e) { return []; } }, setSS = v => dbmStore.set(ssKey, JSON.stringify(v));
   const ssMenu = open => { $('ss-menu').classList.toggle('open', open); $('ss-btn').setAttribute('aria-expanded', open); };
@@ -717,7 +746,7 @@ window.pageInit = function () {
   document.addEventListener('click', e => { if (!e.target.closest('#ss-menu, #ss-btn')) ssMenu(false); });
   $('ss-menu').addEventListener('click', e => { e.stopPropagation(); const L = getSS();
     const a = e.target.closest('[data-ss]'), lk = e.target.closest('[data-ss-link]'), dl = e.target.closest('[data-ss-del]');
-    if (e.target.id === 'ss-add') { const nm = $('ss-name').value.trim() || ($('q').value.trim() || '검색') + ' · ' + nowStr(); L.unshift({ name: nm, c: condState() }); setSS(L.slice(0, 20)); drawSS(); toast(`검색 ‘${nm}’을 저장했습니다`, 'success'); return; }
+    if (e.target.id === 'ss-add') { const nm = $('ss-name').value.trim() || ($('q').value.trim() || '검색') + ' · ' + nowStr(); L.unshift({ name: nm, c: condState() }); setSS(L.slice(0, 20)); drawSS(); toast(`검색 ‘${nm}’${jo(nm, '을/를')} 저장했습니다`, 'success'); return; }
     if (dl) { L.splice(+dl.dataset.ssDel, 1); setSS(L); drawSS(); return; }
     if (lk) { const u = location.origin + location.pathname + '?' + new URLSearchParams(L[+lk.dataset.ssLink].c); try { navigator.clipboard.writeText(u); } catch (er) {} toast('검색 링크를 복사했습니다 — 같은 조건으로 열립니다', 'success'); return; }
     if (a) { applyCond(L[+a.dataset.ss].c); sel = null; ssMenu(false); draw(); } });
@@ -762,7 +791,8 @@ window.pageInit = function () {
   if (q0.get('redo')) {
     const d = getDocs().find(x => x.id === q0.get('redo'));
     if (d && d.req === ME.id && ['rejected', 'withdrawn'].includes(d.step)) {
-      if (queue.length) { const L = getDrafts(); L.unshift({ id: 'dr' + Date.now(), name: `자동 보관 · ${nowStr()}`, at: nowStr(), reason: getBasket().reason || '', items: JSON.parse(JSON.stringify(queue)) }); saveDrafts(L); toast('보완 신청을 열면서 지금 바구니는 초안으로 보관했습니다', 'info'); }
+      // a rejection already returned the items to the basket — archiving those as a draft only made a duplicate
+      if (queue.length && !queue.every(q => String(q.back || '').includes(d.id))) { const L = getDrafts(); L.unshift({ id: 'dr' + Date.now(), name: `자동 보관 · ${nowStr()}`, at: nowStr(), reason: getBasket().reason || '', items: JSON.parse(JSON.stringify(queue)) }); saveDrafts(L); toast('보완 신청을 열면서 지금 바구니는 초안으로 보관했습니다', 'info'); }
       queue.length = 0; (d.items || []).forEach(it => { const o = JSON.parse(JSON.stringify(it)); delete o.rej; delete o.rejWhy; if (o.k === 'chg') o.k = (getDict().find(x => x.id === o.id) || {}).k; queue.push(Object.assign({ key: 'b' + Math.random().toString(36).slice(2, 7) }, o)); });
       $('rq-why').value = d.reason || ''; drawQueue();
       const last = (d.hist || []).slice(-1)[0];
@@ -774,7 +804,7 @@ window.pageInit = function () {
   applyCond(Object.fromEntries(q0.entries()));   // DX-20: conditions from the URL (reload · back · shared link)
   if (BK.reason && !$('rq-why').value) $('rq-why').value = BK.reason;
   // usability B2: from the badge / [바구니 열기] the basket comes first; the entry forms fold behind one button (open when the basket is empty)
-  const basketFirst = on => { panel.classList.toggle('bk-first', on); $('bk-newform').hidden = !on; if (on) setTimeout(() => { const t = $('q-body'); if (t) t.closest('table').scrollIntoView({ block: 'start' }); }, 30); };
+  const basketFirst = on => { panel.classList.toggle('bk-first', on); $('bk-newform').hidden = !on; if (on) setTimeout(() => { const t = $('q-body'); if (t) { const tb = t.closest('table'); (tb.previousElementSibling || tb).scrollIntoView({ block: 'start' }); } }, 30); };   // scroll to the '바구니 n' heading: aligning the table itself let the sticky header (offset by the panel padding) cover the first row
   $('bk-newform').onclick = () => { basketFirst(false); const f = panel.querySelector('.rq-form:not([hidden]) input, .rq-form:not([hidden]) textarea'); if (f) f.focus(); };
   if (q0.get('basket') === '1') { openPanel(); basketFirst(queue.length > 0); }
   $('b-req').addEventListener('click', () => setTimeout(() => basketFirst(queue.length > 0 && !document.querySelector('#pn-request .rq-form[data-rq="chg"]:not([hidden])')), 0));
@@ -783,20 +813,20 @@ window.pageInit = function () {
   $('rq-final').style.display = lineFor('dict').includes('final') ? '' : 'none';
   let candId = null;
   if (q0.get('cand')) { const c = getCands().find(x => x.id === q0.get('cand')); if (c) { candId = c.id; $('pn-detail').classList.remove('open'); panel.classList.add('open'); if (c.t === '단어') { panel.querySelector('[data-rq="word"].chip').click(); $('wd-name').value = c.name; $('wd-abbr').value = c.abbr || ''; } else { $('tm-name').value = c.name; analyse(); }
-    panel.querySelector('.rp-body').insertAdjacentHTML('afterbegin', `<div class="banner info u-mb-12"><i data-ic=flag></i><div><b>후보 ‘${c.name}’을 ${c.t} 신청으로 전환</b> — 발생 위치 ${c.loc.length}곳. 값을 확인하고 [바구니에 담기] 후 신청하면 후보가 이 신청에 연결됩니다.</div></div>`); $('rq-why').value = `후보 큐 ${c.loc.length}곳 발생 — ${c.name}`; } }
+    panel.querySelector('.rp-body').insertAdjacentHTML('afterbegin', `<div class="banner info u-mb-12"><i data-ic=flag></i><div><b>후보 ‘${c.name}’${jo(c.name, '을/를')} ${c.t} 신청으로 전환</b> — 발생 위치 ${c.loc.length}곳. 값을 확인하고 [바구니에 담기] 후 신청하면 후보가 이 신청에 연결됩니다.</div></div>`); $('rq-why').value = `후보 큐 ${c.loc.length}곳 발생 — ${c.name}`; } }
   // V0 permanent delete (30 v1.2 ⑦): DA·Admin, references block it, the exact name and a reason confirm it, a separate log records it
   function purge(it) {
     if (liveRoleChanged()) { staleRoleToast(); return; }
-    if (it.use > 0) { toast(`‘${it.name}’은 아직 ${it.use}곳에서 참조 중이라 영구 삭제할 수 없습니다 — 참조를 먼저 정리하세요`, 'danger'); return; }
+    if (it.use > 0) { toast(`‘${it.name}’${jo(it.name, '은/는')} 아직 ${it.use}곳에서 참조 중이라 영구 삭제할 수 없습니다 — 참조를 먼저 정리하세요`, 'danger'); return; }
     const box = document.createElement('div'); box.className = 'banner danger'; box.style.margin = '8px 0';
-    box.innerHTML = `<i data-ic=warn></i><div class="grow"><b>영구 삭제 — 되돌릴 수 없습니다.</b> 항목과 개별 이력이 지워지고, 결재 기록과 삭제 로그만 남습니다.<div class="field u-mt-8"><label for="pg-name">확인하려면 이름 ‘${it.name}’을 그대로 입력하세요</label><input class="input" id="pg-name"></div><div class="field"><label for="pg-why">사유 *</label><input class="input" id="pg-why"></div><div class="flex"><span class="grow"></span><button class="btn sm danger" id="pg-go" disabled>영구 삭제</button></div></div>`;
+    box.innerHTML = `<i data-ic=warn></i><div class="grow"><b>영구 삭제 — 되돌릴 수 없습니다.</b> 항목과 개별 이력이 지워지고, 결재 기록과 삭제 로그만 남습니다.<div class="field u-mt-8"><label for="pg-name">확인하려면 이름 ‘${it.name}’${jo(it.name, '을/를')} 그대로 입력하세요</label><input class="input" id="pg-name"></div><div class="field"><label for="pg-why">사유 *</label><input class="input" id="pg-why"></div><div class="flex"><span class="grow"></span><button class="btn sm danger" id="pg-go" disabled>영구 삭제</button></div></div>`;
     $('pn-detail').querySelector('.rp-body').prepend(box);
     const chk = () => { $('pg-go').disabled = !($('pg-name').value === it.name && $('pg-why').value.trim()); };
     $('pg-name').oninput = chk; $('pg-why').oninput = chk;
     $('pg-go').onclick = () => { const dict = getDict(); const i = dict.findIndex(x => x.id === it.id); if (i < 0) return; dict.splice(i, 1); saveDict(dict);
       const log = JSON.parse(dbmStore.get('dbm-purge', '[]')); const ld = new Date(); log.unshift({ at: `${ld.getFullYear()}-${String(ld.getMonth() + 1).padStart(2, '0')}-${String(ld.getDate()).padStart(2, '0')} ${String(ld.getHours()).padStart(2, '0')}:${String(ld.getMinutes()).padStart(2, '0')}`, id: it.id, name: it.name, kind: it.kn, who: ME.name, why: $('pg-why').value.trim(), doc: it.delDoc || '—' }); dbmStore.set('dbm-purge', JSON.stringify(log));
       pushAudit({ act: '영구 삭제', target: `${it.name} (${it.id})`, why: $('pg-why').value.trim(), doc: it.delDoc });
-      flash(`‘${it.name}’을 영구 삭제했습니다 — 삭제 로그와 감사 로그에 기록`, 'success'); location.reload(); };
+      flash(`‘${it.name}’${jo(it.name, '을/를')} 영구 삭제했습니다 — 삭제 로그와 감사 로그에 기록`, 'success'); location.reload(); };
   }
   draw();
 };

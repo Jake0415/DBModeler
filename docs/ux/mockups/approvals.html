@@ -52,6 +52,7 @@
   /* DX-21 stats */
   #stats { padding:16px 20px; }
   #tb[hidden], #listwrap[hidden], #stats[hidden] { display:none !important; }
+  #stats .tbl :is(th, td) { white-space:normal; }   /* 1600: the 8-column requester table fits its grid cell */
   .stats-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(360px, 1fr)); gap:16px 24px; }
   .statbar { display:block; width:100%; min-width:80px; height:6px; border:0; border-radius:3px; background:var(--surface-2); appearance:none; -webkit-appearance:none; overflow:hidden; }
   .statbar::-webkit-progress-bar { background:var(--surface-2); border-radius:3px; }
@@ -133,6 +134,8 @@ window.pageInit = function () {
   const q = new URLSearchParams(location.search);
   let docs = getDocs();
   const nameOf = id => USERS[id] ? USERS[id].name : id;
+  // review mode (&audit=1&as=) keeps its role when a toast button or undo moves to another screen (app.js only rewrites <a> clicks)
+  const go = h => { location.href = h + (q.has('audit') && q.get('as') && !/[?&]as=/.test(h) ? (h.includes('?') ? '&' : '?') + 'audit=1&as=' + q.get('as') : ''); };
   const inQueue = d => canActOn(d);   // role for the step + (model documents) the system in charge — RBAC (15)
   const BOX = {
     queue: ['대기함', d => inQueue(d)],
@@ -166,7 +169,8 @@ window.pageInit = function () {
   function drawBoxes() {
     $('boxes').innerHTML = Object.entries(BOX).filter(([k]) => k !== 'all' && (k !== 'queue' || ME.has('da') || ME.has('owner'))).map(([k, [l, f]]) => `<button type="button" aria-pressed="${box === k}" class="${box === k ? 'on' : ''}" data-box="${k}">${l} <span class="n">${docs.filter(f).length}</span></button>`).join('')
       + (canStats ? `<button type="button" aria-pressed="${box === 'stats'}" class="${box === 'stats' ? 'on' : ''}" data-box="stats">${icon('table', 12)} 집계</button>` : '');
-    $('boxhint').textContent = box === 'queue' ? (ME.has('da') || ME.has('owner') ? `지금 내 역할(${ME.roles.filter(r => r === 'da' || r === 'owner').map(r => ROLE_NAME[r]).join('·')}) 차례인 문서만` : '결재 역할이 없습니다') : box === 'mine' ? '내가 신청한 문서 · 회수·보완' : '참조로 지정된 문서 · 조회 전용';
+    $('boxhint').textContent = box === 'queue' ? (ME.has('da') || ME.has('owner') ? `지금 내 역할(${ME.roles.filter(r => r === 'da' || r === 'owner').map(r => ROLE_NAME[r]).join('·')}) 차례인 문서만` : '결재 역할이 없습니다') : box === 'mine' ? '내가 신청한 문서 · 회수·보완' : box === 'all' ? '볼 수 있는 전체 문서 — 대기함 · 내 신청 · 참조함에 없는 문서도 함께 보입니다' : '참조로 지정된 문서 · 조회 전용';
+    $('boxhint').hidden = box !== 'all';   // the 'all' list has no box button — say what is listed
   }
   function list() {
     if (!BOX[box]) return [];   // the stats view has no document list
@@ -267,7 +271,7 @@ window.pageInit = function () {
   const failSet = d => { const s = new Set(); if (!['da', 'final'].includes(d.step)) return s;   /* finished documents are not re-checked (they would report themselves as duplicates) */
     try { const R = checkDictDoc(withMarks(d)); if (R.length === (d.items || []).length) R.forEach((r, i) => { if (r.problems.length) s.add(i); }); } catch (e) {} return s; };
   function applyIF() {
-    const p = $('pn-doc'); const L = p.querySelectorAll('.it-row'); let shown = 0;
+    const p = $('pn-doc'); const L = p.querySelectorAll('.it-row[data-name]'); let shown = 0;   // item rows only — the impact tab's rows are not filtered
     L.forEach(r => { const q = IF.q.trim(); const ok = (IF.f === 'all' || r.dataset[IF.f] === '1') && (!q || r.dataset.name.includes(q)); r.hidden = !ok; if (ok) shown++; });
     p.querySelectorAll('[data-itf]').forEach(b => { const on = b.dataset.itf === IF.f; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); });
     const m = $('itf-m'); if (m) m.textContent = shown === L.length ? '' : `${L.length}건 중 ${shown}건 표시`;
@@ -584,7 +588,7 @@ window.pageInit = function () {
     const keys = [...new Set([...Object.keys(before), ...Object.keys(after)])].filter(k => before[k] !== after[k]);
     if (keys.some(k => localStorage.getItem(k) !== (after[k] === undefined ? null : after[k]))) { toast('그사이 다른 화면에서 바뀐 내용이 있어 되돌리지 않았습니다', 'danger'); return; }
     keys.forEach(k => before[k] === undefined ? localStorage.removeItem(k) : localStorage.setItem(k, before[k]));
-    location.href = `approvals.html?doc=${did}`;
+    go(`approvals.html?doc=${did}`);
   };
   // queue decisions show ONE toast: the result message is captured and merged into the "next document" toast
   let captured = null, realToast = null;
@@ -637,7 +641,7 @@ window.pageInit = function () {
       if (d.type === 'model' && linkedReqs(d).some(x => x.live)) {
         // the step that confirms the model (final, or DA without a final step) needs every linked request completed
         const completes = !(d.step === 'da' && hasFinal(d));
-        if (completes) { const lv = linkedReqs(d).filter(x => x.live).map(x => x.doc ? x.doc.id : x.at); const first = linkedReqs(d).find(x => x.live && x.doc); toast(`연결된 용어 신청이 아직 진행 중이라 확정할 수 없습니다. ${[...new Set(lv)].join(', ')}. 먼저 처리하거나 신청자에게 보완을 요청하세요`, 'danger', first ? { label: `${first.doc.id} 열기`, fn: () => { location.href = `approvals.html?doc=${first.doc.id}`; } } : undefined); return; }
+        if (completes) { const lv = linkedReqs(d).filter(x => x.live).map(x => x.doc ? x.doc.id : x.at); const first = linkedReqs(d).find(x => x.live && x.doc); toast(`연결된 용어 신청이 아직 진행 중이라 확정할 수 없습니다. ${[...new Set(lv)].join(', ')}. 먼저 처리하거나 신청자에게 보완을 요청하세요`, 'danger', first ? { label: `${first.doc.id} 열기`, fn: () => go(`approvals.html?doc=${first.doc.id}`) } : undefined); return; }
         if (!(self ? $('self-ack') : $('apr-ack')).checked) { toast('진행 중인 연결 용어 신청을 확인했다고 표시해야 승인할 수 있습니다', 'danger'); return; }
       }
       // re-check the SUBMITTED snapshot (not the area's shared cache) before approving a model confirmation (MD-20)
@@ -660,7 +664,7 @@ window.pageInit = function () {
         toast(fin.length ? `DA 승인. 최종 승인 담당자 ${fin.length}명에게 알렸습니다${backTxt}` : 'DA 승인. 이 시스템을 맡은 최종 승인자가 없어 결재가 멈춰 있습니다 — Admin에게 담당 지정을 요청하세요', fin.length ? 'info' : 'danger');
       } else if (d.type === 'model') {
         notifyReq(`${d.id} 최종 승인. v${d.ver} 확정본`, d.title);
-        toast(`${was === 'da' ? 'DA 승인으로 완료' : '최종 승인'}. v${d.ver}이 확정본이 됐습니다. 모델 화면에서 다음 작업 버전을 시작할 수 있습니다`, 'success', { label: '확정본 보기', fn: () => location.href = `model.html?area=${d.area}&snap=${d.id}` });
+        toast(`${was === 'da' ? 'DA 승인으로 완료' : '최종 승인'}. 확정본(v${d.ver})이 만들어졌습니다. 모델 화면에서 다음 작업 버전을 시작할 수 있습니다`, 'success', { label: '확정본 보기', fn: () => go(`model.html?area=${d.area}&snap=${d.id}`) });
       } else {
         // each submitted item is applied to the dictionary (new V1 / version +1, pending cleared, one change row per item)
         const res = applyDictDoc(d);
@@ -685,14 +689,14 @@ window.pageInit = function () {
     } else if (kind === 'withdraw') {
       addHist(d, { act: '회수', why }); d.step = 'withdrawn'; saveDocs(docs);
       const rel = releaseDoc(d);
-      toast(d.type === 'model' ? '회수했습니다. 업무 영역 잠금이 풀려 다시 편집할 수 있습니다' : `회수했습니다${rel ? ` · 사전 항목 ${rel}건의 '진행 중'을 풀었습니다` : ''}`, 'info', d.type === 'model' ? { label: '모델 열기', fn: () => location.href = `model.html?area=${d.area}` } : { label: '보완해서 다시 신청', fn: () => location.href = d.batch ? `excel-import.html?resume=${d.batch}` : d.kind === 'std' ? `standardize.html?area=${d.area || 'rq'}&redo=${d.id}` : `dictionary.html?redo=${d.id}` });
+      toast(d.type === 'model' ? '회수했습니다. 업무 영역 잠금이 풀려 다시 편집할 수 있습니다' : `회수했습니다${rel ? ` · 사전 항목 ${rel}건의 '진행 중'을 풀었습니다` : ''}`, 'info', d.type === 'model' ? { label: '모델 열기', fn: () => go(`model.html?area=${d.area}`) } : { label: '보완해서 다시 신청', fn: () => go(d.batch ? `excel-import.html?resume=${d.batch}` : d.kind === 'std' ? `standardize.html?area=${d.area || 'rq'}&redo=${d.id}` : `dictionary.html?redo=${d.id}`) });
     }
     // decided from the queue → the next document opens; undo restores the state before the decision
     if ((kind === 'approve' || kind === 'reject') && box === 'queue') {
       releaseToast();
       const next = list()[0]; const did = d.id; const left = docs.filter(BOX.queue[1]).length;
       sel = next ? next.id : null;
-      const tail = next ? `${next.id}을 열었습니다` : left ? `필터에 맞는 대기 문서가 없습니다 · 남은 대기 ${left}건` : '대기함을 모두 처리했습니다';
+      const tail = next ? `다음 문서(${next.id})를 열었습니다` : left ? `필터에 맞는 대기 문서가 없습니다 · 남은 대기 ${left}건` : '대기함을 모두 처리했습니다';
       const tok = ++undoTok; const after = snapStore();
       toast(`${captured ? captured[0].replace(/[.。]?$/, '') : did + ' 처리'} · ${tail}`, captured && captured[1] === 'danger' ? 'danger' : 'info', { label: '되돌리기', fn: undoFn(before, after, tok, did) });
       captured = null;

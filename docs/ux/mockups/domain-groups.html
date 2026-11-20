@@ -136,7 +136,7 @@ window.pageInit = function () {
   const NOT_DA = '도메인그룹 직접 관리 권한(DA · Admin)이 필요합니다';
   const COMMON_RO = '공통(행안부) 표준은 읽기 전용입니다';
   const COMMON_CLS = '공통표준 원문 — 공통표준 관리에서 새 판 품의';
-  const NO_REQ = '사전 신청 권한(dict.request)이 없습니다';
+  const NO_REQ = '사전 신청 권한이 없습니다 — 모델러 · DA만 신청할 수 있습니다';
   const GUIDE_KEY = 'dbm-dg-guide-off';
   let q = '', fSrc = '', fSt = '', sel = null, open = null;   // sel = {t:'g'|'c'|'p', id}
   let cMode = null;   // class panel inline form: null | 'chg' | 'unuse' (for sel.id)
@@ -198,6 +198,10 @@ window.pageInit = function () {
           <td class="nm cn">${esc(p.it.name)}</td><td class="mono">${esc(p.it.fw || '—')}</td><td class="muted">${esc(p.it.desc || '')}</td><td>${srcTag('기관')}</td><td>${pendTag(p)}${p.doc ? ` <span class="caption muted mono">${esc(p.doc)}</span>` : ''}</td>
           <td class="num faint">—</td><td class="num faint">0</td><td class="num faint">0</td></tr>`));
     });
+    // a pending class whose group no longer exists (e.g. a basket row from before the group list changed) was counted in the summary but drawn nowhere
+    const orphan = M.pend.filter(p => !M.g.groups.some(gr => gr.id === p.it.group) && (!fSrc || fSrc === '기관') && (!fSt || fSt === '신청') && (hit(p.it.name) || hit(p.it.fw)));
+    if (orphan.length) rows.push(`<tr class="grp off"><td class="nm"><span class="gname">그룹을 찾을 수 없음</span></td><td class="faint">—</td><td class="muted" colspan="6">이 분류가 가리키는 그룹(${[...new Set(orphan.map(p => esc(p.it.group || '없음')))].join(', ')})이 없습니다 — 바구니에서 빼거나 다른 그룹으로 다시 신청하세요</td></tr>`,
+      ...orphan.map(p => `<tr class="click pend${sel && sel.t === 'p' && sel.id === p.key ? ' sel' : ''}" data-panel="pn-detail" data-t="p" data-id="${esc(p.key)}"><td class="nm cn">${esc(p.it.name)}</td><td class="mono">${esc(p.it.fw || '—')}</td><td class="muted">${esc(p.it.desc || '')}</td><td>${srcTag('기관')}</td><td>${pendTag(p)}${p.doc ? ` <span class="caption muted mono">${esc(p.doc)}</span>` : ''}</td><td class="num faint">—</td><td class="num faint">0</td><td class="num faint">0</td></tr>`));
     $('rows').innerHTML = rows.join('') || `<tr><td colspan="8"><div class="empty"><b>조건에 맞는 그룹 · 분류가 없습니다</b><span class="caption">검색어나 출처 · 상태 필터를 바꿔 보세요</span></div></td></tr>`;
     const tg = M.g.groups.length, tc = M.g.classes.length;
     $('lh').textContent = (q || fSrc || fSt) ? `그룹 ${nG}개 · 분류 ${nC}개 표시 (전체 그룹 ${tg} · 분류 ${tc})` : `그룹 ${tg}개 · 분류 ${tc}개${M.pend.length ? ` · 신청 중 · 바구니 분류 ${M.pend.length}개` : ''}${Object.keys(M.chgOf).length ? ` · 변경 · 미사용 신청 중 · 바구니 ${Object.keys(M.chgOf).length}개` : ''}`;
@@ -518,7 +522,7 @@ window.pageInit = function () {
   const gaddWhy = CAN_GROUP ? '' : NOT_DA;
   $('b-gadd').disabled = !CAN_GROUP; $('gadd-w').title = gaddWhy;
   $('b-gadd').onclick = () => { if (CAN_GROUP) openGroup(null); };
-  $('b-cadd').disabled = !CAN_REQ; $('cadd-w').title = CAN_REQ ? '' : '사전 신청 권한(dict.request)이 없습니다';
+  $('b-cadd').disabled = !CAN_REQ; $('cadd-w').title = CAN_REQ ? '' : NO_REQ;
   $('b-cadd').onclick = () => { const s = sel && sel.t === 'g' ? sel.id : sel && sel.t === 'c' ? (getGroups().classes.find(c => c.id === sel.id) || {}).group : null; openClass(s); };
   $('rows').addEventListener('click', e => {
     const tw = e.target.closest('[data-tw]');

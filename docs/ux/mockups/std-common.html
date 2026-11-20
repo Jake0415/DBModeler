@@ -266,7 +266,7 @@ window.pageInit = function () {
     vs.filter(v => v.bad).forEach(v => out.push(`‘${v.bad}’ — ‘값 : 이름’ 꼴이 아닙니다`));
     const ok = vs.filter(v => !v.bad), dup = ok.map(v => v.v).filter((v, i, a) => a.indexOf(v) !== i);
     if (dup.length) out.push(`코드값 중복: ${[...new Set(dup)].join(', ')}`);
-    if (len) { const bad = ok.filter(v => v.v.length !== len); if (bad.length) out.push(`도메인 ${c.dom} 길이 ${len}과 다른 값: ${bad.map(v => v.v).join(', ')}`); }
+    if (len) { const bad = ok.filter(v => v.v.length !== len); if (bad.length) out.push(`도메인 ${c.dom} 길이 ${len}자와 다른 값: ${bad.map(v => v.v).join(', ')}`); }
     if (ok.length && valsTxt(ok) === valsTxt(c.vals)) out.push('지금 코드값과 같습니다 — 소관기관 원본의 값을 더하세요');
     return out;
   }
@@ -358,8 +358,11 @@ window.pageInit = function () {
     }
     // step 2
     $('st2').classList.toggle('dim', !loaded); $('st3').classList.toggle('dim', !loaded);
-    $('tn-new').textContent = loaded ? rows.length : '';
-    if (!loaded) { $('st2-sub').textContent = ''; $('st2-body').innerHTML = '<div class="caption muted">원본을 올리면 지금 판과 다른 항목이 여기에 나옵니다.</div>'; $('st3-body').innerHTML = '<div class="caption muted">비교 결과에서 반영할 항목을 고르면 품의를 올릴 수 있습니다.</div>'; return; }
+    const nSupp = Object.keys(supp).length;
+    $('tn-new').textContent = loaded ? rows.length : nSupp || '';
+    // supplements made on the code tab were invisible here until a file was picked (the toast's [새 판 반영 보기] led to an empty step)
+    const suppHtml = nSupp ? `<div class="banner info u-mb-8"><i data-ic=info></i><div class="grow">행정표준코드 원본 보완 <b>${nSupp}건</b>(${Object.keys(supp).map(id => esc((getDict().find(x => x.id === id) || {}).name || id)).join(', ')})이 담겨 있습니다 — 원본을 올리면 비교 결과에 함께 나오고 같은 품의로 올라갑니다. 목업: 이 화면을 떠나면 비워집니다.</div></div>` : '';
+    if (!loaded) { $('st2-sub').textContent = ''; $('st2-body').innerHTML = suppHtml + '<div class="caption muted">원본을 올리면 지금 판과 다른 항목이 여기에 나옵니다.</div>'; $('st3-body').innerHTML = '<div class="caption muted">비교 결과에서 반영할 항목을 고르면 품의를 올릴 수 있습니다.</div>'; return; }
     const by = (g, k) => rows.filter(r => r.g === g && (!k || r.k === k)).length;
     $('st2-sub').textContent = `${getCommonVer().ver} → ${NEW_VER} · 차이 ${rows.length}건`;
     const vis = rows.filter(r => (!fG || r.g === fG) && (!fK || r.k === fK));
@@ -458,7 +461,9 @@ window.pageInit = function () {
   });
   const qs0 = new URLSearchParams(location.search);
   drawHead(); drawCodes(); drawNew(); drawHist();
-  if (qs0.get('sel') && codes().some(c => c.id === qs0.get('sel'))) { sel = qs0.get('sel'); drawCodes(); }
+  // ?sel= (this page) and ?code= (the dictionary detail's [원문 보기]) both open the code — ?code= used to open nothing
+  const pre = qs0.get('sel') || qs0.get('code');
+  if (pre && codes().some(c => c.id === pre)) { sel = pre; drawCodes(); const r = document.querySelector(`#content tbody tr[data-id="${pre}"], #content tbody tr[data-c="${pre}"]`); if (r) r.scrollIntoView({ block: 'center' }); }
   if (['new', 'hist'].includes(qs0.get('tab'))) showTab(qs0.get('tab'));
 };
 </script>

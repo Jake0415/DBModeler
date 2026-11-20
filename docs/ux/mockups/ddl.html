@@ -36,7 +36,6 @@
       </div>
       <div class="scroll" style="padding:0 20px 20px">
         <div class="codeblock" id="sql"></div>
-        </div>
       </div>
     </div>
     <aside class="rpanel wide" id="pn-cmp">
@@ -79,6 +78,17 @@ window.pageInit = function () {
   const label = snapHidden ? `${snapDoc.id} 결재 중 · 열람 제한` : !snapDoc && view.hidden ? view.label : snapDoc ? `v${snapDoc.ver} ${snapDoc.step === 'done' ? '확정본' : '제출 사본'} · ${snapDoc.id}` : L.state === 'confirmed' ? `v${L.model.ver} 확정본` : L.state === 'review' ? `v${L.model.ver} 검토 중 사본` : `v${L.model.ver} 작업본(미확정)`;
   $('crumb-area').textContent = L.model.name; $('vbadge').textContent = label; $('vbadge').className = 'badge ' + (L.state === 'edit' && !snapDoc ? 'b-warning' : 'b-success');
   $('back').href = `model.html?area=${AREA}${snapDoc ? '&snap=' + snapDoc.id : ''}`;
+  { const c = document.querySelector('.crumbs a'); if (c) c.textContent = sysOfArea(AREA) || curSys().name; }   // the area's own system (markup had a fixed ‘요구사항관리’)
+  { const sy = SYSLIST.find(s => s.name === sysOfArea(AREA)) || curSys(); document.querySelector('.page-header h1').title = `${sy.db} · 스키마 ${sy.schema}`;
+    // DBMS 비교 (sample, later phase): the selects name this system/version; the sample rows are 요구사항관리's — other areas say there is no comparison yet
+    const cmp = $('pn-cmp'), sels = cmp.querySelectorAll('select');
+    sels[0].innerHTML = `<option>운영 · ${sy.schema}@prod (${sy.db})</option><option>개발 · ${sy.schema}@dev</option>`;
+    sels[1].innerHTML = `<option>v${L.model.ver} ${L.state === 'edit' ? '작업본' : L.state === 'review' ? '검토 중 사본' : '확정본'}</option>${L.model.base ? `<option>v${L.model.base} 확정본</option>` : ''}`;
+    if (AREA !== 'rq') { cmp.querySelector('.mline').innerHTML = '<span><b>—</b>모델에만</span><span><b>—</b>DB에만</span><span><b>—</b>다름</span>';
+      cmp.querySelector('tbody').innerHTML = `<tr class="er"><td colspan="4" class="caption muted">${sy.schema} 운영 DB 접속이 아직 등록되지 않아 비교 결과가 없습니다 — Admin이 [시스템 설정]에서 접속 정보를 등록하면 비교합니다.</td></tr>`;
+      cmp.querySelectorAll('.rp-foot .btn').forEach(b => { b.disabled = true; b.removeAttribute('data-toast'); }); }
+    else { const ab = cmp.querySelector('.rp-foot .btn.primary'); ab.removeAttribute('data-toast');
+      ab.onclick = () => { $('preset').value = 'alter'; draw(); $('pn-cmp').classList.remove('open'); $('pn-gateb').classList.add('open'); toast('변경분(ALTER) 프리셋으로 바꿨습니다 — 미리보기에서 확인하고 내려받으세요', 'info'); }; } }
   const ents = src.E.filter(e => !e.ref);
   if (snapHidden || (!snapDoc && view.hidden)) setTimeout(() => toast(snapHidden ? '결재 중인 제출본은 품의자와 결재 담당자만 볼 수 있습니다' : `${josa('v' + L.model.ver, '은/는')} 결재 중이라 확정본 v${L.model.base}의 DDL을 보여 줍니다`, 'info'), 300);
   window.treeData = () => ({ area: AREA, E: src.E, R: src.R, mode: 'P', ver: snapDoc ? 'snap:' + snapDoc.id : 'v' + view.ver, label, ro: true, snap: snapDoc ? snapDoc.id : null });
