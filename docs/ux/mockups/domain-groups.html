@@ -1,0 +1,385 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>도메인 그룹 · 분류 · NeoDB 목업</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="assets/app.css">
+<script src="assets/app.js"></script>
+<style>
+  .fcount { margin-left:4px; min-width:18px; height:18px; padding:0 5px; border-radius:9999px; background:var(--ds-gray-1000); color:var(--on-ink); font:500 12px/18px var(--font-sans); }
+  .tw { display:inline-flex; align-items:center; justify-content:center; width:24px; height:24px; border:0; background:none; border-radius:4px; color:var(--fg-2); cursor:pointer; padding:0; vertical-align:middle; }
+  .tw:hover { background:var(--ds-gray-100); color:var(--fg); }
+  .tw.sp { visibility:hidden; }
+  tr.grp td { background:var(--surface-2); }
+  tr.grp .gname { font-weight:600; }
+  td.cn { padding-left:44px; }
+  tr.pend td { color:var(--fg-2); }
+  tr.off td.nm, tr.off td.nm b { color:var(--fg-3); }
+  .cnt-n { font-variant-numeric:tabular-nums; }
+  .dlist { display:flex; flex-wrap:wrap; gap:6px; }
+  .dlist a, .dlist span.d { font:500 12px/22px var(--font-mono); padding:0 8px; border-radius:9999px; box-shadow:inset 0 0 0 1px var(--ds-gray-400); color:var(--fg); text-decoration:none; }
+  .dlist a:hover { box-shadow:inset 0 0 0 1px var(--ds-gray-700); }
+  .dlist span.d { color:var(--fg-3); }
+  .logl { list-style:none; margin:0; padding:0; }
+  .logl li { padding:8px 0; border-bottom:1px solid var(--border); font-size:14px; }
+  .logl li:last-child { border-bottom:0; }
+  .logl .meta { font-size:12px; color:var(--fg-3); }
+  .probs { list-style:none; margin:8px 0 0; padding:0; font-size:12px; }
+  .probs li { padding:2px 0; }
+  .probs .blk { color:var(--danger-deep); } .probs .wrn { color:var(--ds-amber-900); } .probs .okk { color:var(--success); }
+  .dg-steps b { font-weight:600; }
+  .rp-foot .why { font-size:12px; color:var(--fg-3); }
+  .cntr { font-size:12px; color:var(--fg-3); margin-left:auto; }
+  .cntr.over { color:var(--danger-deep); }
+</style>
+</head>
+<body data-page="domain-groups">
+<div id="app">
+<div id="content" class="page">
+  <div class="page-header">
+    <h1>도메인 그룹 · 분류</h1>
+    <span class="badge" id="sum"></span>
+    <div class="actions">
+      <a class="btn" href="dictionary.html?basket=1" id="b-basket"><i data-ic=basket></i>바구니<span class="fcount" id="bk-n" hidden></span></a>
+      <span id="gadd-w"><button class="btn" id="b-gadd"><i data-ic=plus></i>그룹 추가</button></span>
+      <span id="cadd-w"><button class="btn primary" id="b-cadd"><i data-ic=plus></i>분류 추가 신청</button></span>
+    </div>
+  </div>
+
+  <div class="pad u-pb-0" id="guide" hidden>
+    <div class="banner info"><i data-ic=info></i>
+      <div class="grow dg-steps"><b>사전 구축 순서</b>: ① 도메인그룹 ② 도메인분류(형식단어 연결) ③ 단어 ④ 도메인 ⑤ 용어 — 화면 일괄 작성에서 ②~⑤를 한 번에 쓸 수 있습니다.
+        <div class="caption muted u-mt-4">도메인그룹은 DA가 직접 관리하고(결재 없음 · 사유와 함께 기록), 도메인분류는 도메인과 같은 결재로 등록됩니다. 공통(행안부) 그룹·분류는 읽기 전용입니다.</div></div>
+      <a class="btn sm" href="dict-grid.html">화면 일괄 작성</a>
+      <button class="iconbtn sm" id="guide-x" aria-label="안내 닫기" title="안내 닫기"><i data-ic=x></i></button>
+    </div>
+  </div>
+
+  <div class="page-body">
+    <div class="main">
+      <div class="toolbar">
+        <div class="search">
+          <i data-ic=search data-s=14></i>
+          <input class="input" id="q" type="search" placeholder="그룹 · 분류 · 형식단어 검색" aria-label="그룹 · 분류 · 형식단어 검색">
+        </div>
+        <span class="seg" id="f-src" role="group" aria-label="출처"><button data-v="" class="on">전체</button><button data-v="공통">공통</button><button data-v="기관">기관</button></span>
+        <span class="seg" id="f-st" role="group" aria-label="상태"><button data-v="" class="on">전체 상태</button><button data-v="사용">사용</button><button data-v="미사용">미사용</button><button data-v="신청">신청 중 · 바구니</button></span>
+        <span class="grow"></span>
+        <button class="btn ghost sm" id="x-open">모두 펼치기</button>
+        <button class="btn ghost sm" id="x-close">모두 접기</button>
+      </div>
+      <div class="listhead" id="lh" aria-live="polite"></div>
+      <div class="scroll">
+        <table class="tbl" id="tbl">
+          <thead><tr><th>그룹 / 분류</th><th>연결 형식단어</th><th>설명</th><th>출처</th><th>상태</th><th class="num">분류 수</th><th class="num">도메인 수</th><th class="num">용어 수</th></tr></thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+    </div>
+    <aside class="rpanel" id="pn-detail" aria-label="그룹 · 분류 상세"></aside>
+  </div>
+
+  <!-- group add / edit (DA, direct, recorded) -->
+  <div class="overlay" id="mo-group" role="dialog" aria-modal="true" aria-labelledby="mg-t"><div class="modal u-w-560">
+    <div class="m-head"><h3 id="mg-t">도메인그룹 추가</h3></div>
+    <div class="m-body">
+      <div class="caption muted u-mb-12">결재 없이 바로 반영됩니다. 변경 사유는 그룹 변경 기록과 감사 로그에 남습니다.</div>
+      <div class="field"><label for="g-name">그룹명 *</label><input class="input" id="g-name" maxlength="40"><span class="help" id="g-name-h">기관 안에서 겹치지 않는 이름 — 예: 날짜, 번호, 금액·수량</span></div>
+      <div class="field"><label for="g-desc" class="u-flex">설명 * <span class="cntr" id="g-cnt">0/500</span></label><textarea class="input" id="g-desc" rows="3"></textarea></div>
+      <div class="field"><label for="g-why">변경 사유 *</label><input class="input" id="g-why" placeholder="예: 기관 사전 초기 구성, 공통표준 개정 반영"></div>
+      <ul class="probs" id="g-probs"></ul>
+    </div>
+    <div class="m-foot"><button class="btn" data-close="mo-group">취소</button><button class="btn primary" id="g-go" data-needs="g-name g-desc g-why" data-needs-msg="그룹명 · 설명 · 변경 사유를 입력해야 저장할 수 있습니다">저장</button></div></div></div>
+
+  <!-- group unuse / reuse -->
+  <div class="overlay" id="mo-gst" role="dialog" aria-modal="true" aria-labelledby="ms-t"><div class="modal u-w-560">
+    <div class="m-head"><h3 id="ms-t">그룹 미사용</h3></div>
+    <div class="m-body">
+      <div id="ms-sum" class="u-mb-12"></div>
+      <div class="field"><label for="s-why">변경 사유 *</label><input class="input" id="s-why"></div>
+    </div>
+    <div class="m-foot"><button class="btn" data-close="mo-gst">취소</button><button class="btn primary" id="s-go" data-needs="s-why" data-needs-msg="변경 사유를 입력해야 저장할 수 있습니다">저장</button></div></div></div>
+
+  <!-- class request (goes to the basket, approved with domains) -->
+  <div class="overlay" id="mo-class" role="dialog" aria-modal="true" aria-labelledby="mc-t"><div class="modal u-w-560">
+    <div class="m-head"><h3 id="mc-t">도메인분류 추가 신청</h3></div>
+    <div class="m-body">
+      <div class="caption muted u-mb-12">분류는 도메인과 같은 결재로 등록됩니다. 바구니에 담아 도메인 신청과 함께 올리면 분류 → 도메인 순서로 반영됩니다.</div>
+      <div class="field-row">
+        <div class="field"><label for="c-name">분류명 *</label><input class="input" id="c-name" maxlength="20" placeholder="예: 연월"><span class="help" id="c-name-h">도메인명 = 분류명 + 타입 + 길이 — 예: 연월C6</span></div>
+        <div class="field"><label for="c-group">도메인그룹 *</label><select class="input" id="c-group"></select></div>
+      </div>
+      <div class="field"><label for="c-fw">연결 형식단어 *</label><select class="input" id="c-fw"></select>
+        <span class="help" id="c-fw-h"></span></div>
+      <div class="field"><label for="c-desc">설명</label><textarea class="input" id="c-desc" rows="2"></textarea></div>
+      <ul class="probs" id="c-probs" aria-live="polite"></ul>
+    </div>
+    <div class="m-foot"><button class="btn" data-close="mo-class">취소</button><button class="btn primary" id="c-go" data-needs="c-name" data-needs-msg="분류명을 입력하세요"><i data-ic=basket></i>바구니에 담기</button></div></div></div>
+</div>
+</div>
+<script>
+window.pageInit = function () {
+  const $ = id => document.getElementById(id);
+  const jo = (w, pair) => `‘${esc(w)}’${josa(String(w), pair).slice(String(w).length)}`;
+  const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  const IS_DA = ME.has('da');
+  const CAN_REQ = can('dict.request');
+  const NOT_DA = '도메인그룹은 DA가 직접 관리합니다';
+  const COMMON_RO = '공통(행안부) 표준은 읽기 전용입니다';
+  const GUIDE_KEY = 'dbm-dg-guide-off';
+  let q = '', fSrc = '', fSt = '', sel = null, open = null;   // sel = {t:'g'|'c'|'p', id}
+
+  /* ---- derived data ---- */
+  const parseDom = n => { const m = String(n).match(/^(.+?)([CVNDT])(\d*)(?:,(\d+))?$/); return m ? m[1].trim() : null; };
+  function model() {
+    const g = getGroups(), dict = getDict();
+    const domItems = dict.filter(x => x.k === 'domain' && x.st !== '삭제 보관');
+    const domNames = [...knownDomains()].filter(n => parseDom(n));
+    const terms = dict.filter(x => x.k === 'term' && x.st !== '삭제 보관');
+    const byClass = {};
+    g.classes.forEach(c => { const ds = domNames.filter(n => parseDom(n) === c.name); byClass[c.id] = { doms: ds, items: domItems.filter(d => ds.includes(d.name)), terms: terms.filter(t => ds.includes(t.dom)) }; });
+    // pending classes: in my basket, or in an open (DA/final) request
+    const bk = getBasket().items.filter(it => it.k === 'class');
+    const op = openItems().filter(x => x.it.k === 'class');
+    const pend = bk.map(it => ({ src: 'basket', it, key: 'b:' + (it.key || it.name) })).concat(op.map(x => ({ src: 'open', it: x.it, doc: x.doc, key: 'o:' + x.doc + ':' + x.it.name })));
+    const byGroup = {};
+    g.groups.forEach(gr => { const cs = g.classes.filter(c => c.group === gr.id); const ds = [...new Set(cs.flatMap(c => byClass[c.id].doms).concat(domItems.filter(d => d.dg === gr.name).map(d => d.name)))];
+      byGroup[gr.id] = { classes: cs, live: cs.filter(c => c.st === '사용'), doms: ds, items: domItems.filter(d => ds.includes(d.name)), terms: terms.filter(t => ds.includes(t.dom)), pend: pend.filter(p => p.it.group === gr.id) }; });
+    return { g, byClass, byGroup, pend };
+  }
+  const srcTag = s => `<span class="badge ${s === '공통' ? 'b-common' : 'b-org'}">${esc(s)}</span>`;
+  const stTag = s => s === '사용' ? tag('ok', '사용') : tag('end', s);
+  const pendTag = p => p.src === 'basket' ? '<span class="badge b-info">바구니</span>' : tag('run', '신청 중');
+
+  /* ---- tree table ---- */
+  function hit(s) { return !q || String(s || '').toLowerCase().includes(q); }
+  function draw() {
+    const M = model(); if (!open) open = new Set(M.g.groups.map(x => x.id));
+    const rows = []; let nG = 0, nC = 0;
+    M.g.groups.forEach(gr => {
+      const B = M.byGroup[gr.id];
+      const gHit = hit(gr.name) || hit(gr.desc);
+      const cOk = c => (!fSrc || c.src === fSrc) && (!fSt || (fSt === '신청' ? false : c.st === fSt)) && (gHit || hit(c.name) || hit(c.fw) || hit(c.desc));
+      const pOk = p => (!fSrc || fSrc === '기관') && (!fSt || fSt === '신청') && (gHit || hit(p.it.name) || hit(p.it.fw));
+      const cs = B.classes.filter(cOk), ps = B.pend.filter(pOk);
+      const selfOk = (!fSrc || gr.src === fSrc) && (!fSt || gr.st === fSt) && gHit;
+      if (!selfOk && !cs.length && !ps.length) return;
+      nG++; nC += cs.length;
+      const isOpen = open.has(gr.id) || !!q || fSt === '신청';
+      const has = B.classes.length + B.pend.length > 0;
+      rows.push(`<tr class="click grp${gr.st !== '사용' ? ' off' : ''}${sel && sel.t === 'g' && sel.id === gr.id ? ' sel' : ''}" data-panel="pn-detail" data-t="g" data-id="${gr.id}"${has ? ` aria-expanded="${isOpen}"` : ''}>
+        <td class="nm"><button class="tw${has ? '' : ' sp'}" data-tw="${gr.id}" aria-label="${esc(gr.name)} ${isOpen ? '접기' : '펼치기'}" tabindex="${has ? 0 : -1}"><i data-ic=${isOpen ? 'down' : 'right'} data-s=14></i></button><span class="gname">${esc(gr.name)}</span></td>
+        <td class="faint">—</td><td class="muted">${esc(gr.desc)}</td><td>${srcTag(gr.src)}</td><td>${stTag(gr.st)}${B.pend.length ? ` <span class="caption muted">+신청 ${B.pend.length}</span>` : ''}</td>
+        <td class="num cnt-n">${B.classes.length}</td><td class="num cnt-n">${B.doms.length}</td><td class="num cnt-n">${B.terms.length}</td></tr>`);
+      if (!isOpen) return;
+      cs.forEach(c => { const C = M.byClass[c.id];
+        rows.push(`<tr class="click${c.st !== '사용' ? ' off' : ''}${sel && sel.t === 'c' && sel.id === c.id ? ' sel' : ''}" data-panel="pn-detail" data-t="c" data-id="${c.id}">
+          <td class="nm cn">${esc(c.name)}</td><td class="mono">${esc(c.fw)}</td><td class="muted">${esc(c.desc || '')}</td><td>${srcTag(c.src)}</td><td>${stTag(c.st)}</td>
+          <td class="num faint">—</td><td class="num cnt-n">${C.doms.length}</td><td class="num cnt-n">${C.terms.length}</td></tr>`); });
+      ps.forEach(p => rows.push(`<tr class="click pend${sel && sel.t === 'p' && sel.id === p.key ? ' sel' : ''}" data-panel="pn-detail" data-t="p" data-id="${esc(p.key)}">
+          <td class="nm cn">${esc(p.it.name)}</td><td class="mono">${esc(p.it.fw || '—')}</td><td class="muted">${esc(p.it.desc || '')}</td><td>${srcTag('기관')}</td><td>${pendTag(p)}${p.doc ? ` <span class="caption muted mono">${esc(p.doc)}</span>` : ''}</td>
+          <td class="num faint">—</td><td class="num faint">0</td><td class="num faint">0</td></tr>`));
+    });
+    $('rows').innerHTML = rows.join('') || `<tr><td colspan="8"><div class="empty"><b>조건에 맞는 그룹 · 분류가 없습니다</b><span class="caption">검색어나 출처 · 상태 필터를 바꿔 보세요</span></div></td></tr>`;
+    const tg = M.g.groups.length, tc = M.g.classes.length;
+    $('lh').textContent = (q || fSrc || fSt) ? `그룹 ${nG}개 · 분류 ${nC}개 표시 (전체 그룹 ${tg} · 분류 ${tc})` : `그룹 ${tg}개 · 분류 ${tc}개${M.pend.length ? ` · 신청 중 · 바구니 분류 ${M.pend.length}개` : ''}`;
+    $('sum').textContent = `공통 그룹 ${M.g.groups.filter(x => x.src === '공통').length} · 기관 그룹 ${M.g.groups.filter(x => x.src === '기관').length}`;
+    const n = getBasket().items.length; $('bk-n').hidden = !n; $('bk-n').textContent = n;
+    if (sel) panel(M);
+  }
+
+  /* ---- detail panel ---- */
+  const domList = (names, items, none) => names.length ? `<div class="dlist">${names.map(n => { const it = items.find(d => d.name === n); return it ? `<a href="dictionary.html?sel=${it.id}" title="사전에서 ${esc(n)} 열기">${esc(n)}</a>` : `<span class="d" title="목업 시드 이름 — 사전 항목으로 연결되어 있지 않습니다">${esc(n)}</span>`; }).join('')}</div>${names.some(n => !items.find(d => d.name === n)) ? '<div class="caption faint u-mt-4">흐린 이름은 목업 시드의 도메인 이름 목록에만 있는 항목입니다(사전 상세 없음).</div>' : ''}` : `<div class="caption muted">${none}</div>`;
+  const logList = list => list.length ? `<ul class="logl">${list.map(e => `<li><b>${esc(e.act)}</b> · ${esc(e.target)}<div>${esc(e.why || '—')}</div><div class="meta">${esc(e.at)} · ${esc(e.who)}</div></li>`).join('')}</ul>` : '<div class="caption muted">변경 기록이 없습니다.</div>';
+  const head = (badges, title, sub) => `<div class="rp-head"><div class="t">${badges}<button class="iconbtn close u-w-28 u-h-28" data-close="pn-detail" aria-label="닫기"><i data-ic=x></i></button></div><h2 class="u-mt-8">${esc(title)}</h2>${sub ? `<div class="caption muted">${sub}</div>` : ''}</div>`;
+
+  function groupBlock(gr, B) {   // why a group action is not possible (null = allowed)
+    const r = { edit: null, unuse: null, name: null };
+    if (!IS_DA) { r.edit = r.unuse = NOT_DA; }
+    else if (gr.src === '공통') { r.edit = r.unuse = COMMON_RO; }
+    if (B.classes.length || B.doms.length) r.name = `분류 ${B.classes.length}개 · 도메인 ${B.doms.length}개가 이 그룹 이름으로 묶여 있어 이름은 바꿀 수 없습니다(도메인의 도메인그룹 값이 이름으로 저장됨) — 설명만 고칠 수 있습니다`;
+    if (!r.unuse && gr.st === '사용') {
+      if (B.live.length) r.unuse = `사용 중인 분류 ${B.live.length}개(${B.live.map(c => c.name).join(', ')})가 있어 미사용으로 바꿀 수 없습니다 — 분류를 먼저 정리하세요`;
+      else if (B.pend.length) r.unuse = `신청 중 · 바구니 분류 ${B.pend.length}개(${B.pend.map(p => p.it.name).join(', ')})가 이 그룹을 가리킵니다`;
+    }
+    return r;
+  }
+  function panel(M) {
+    M = M || model(); const p = $('pn-detail');
+    if (sel.t === 'g') {
+      const gr = M.g.groups.find(x => x.id === sel.id); if (!gr) { sel = null; p.classList.remove('open'); return; }
+      const B = M.byGroup[gr.id], blk = groupBlock(gr, B);
+      const log = (M.g.log || []).filter(e => e.gid === gr.id || e.target === gr.name || String(e.target).split(' → ').includes(gr.name));
+      p.innerHTML = head(`${srcTag(gr.src)}<span class="badge">도메인그룹</span>${stTag(gr.st)}`, gr.name, gr.id) + `<div class="rp-body">
+        ${gr.src === '공통' ? `<div class="banner u-mb-12"><i data-ic=info></i><div><b>공통 표준(행안부)</b> — 읽기 전용입니다. 기관에서 바꿀 수 없습니다.</div></div>` : ''}
+        <dl class="kv"><dt>설명</dt><dd>${esc(gr.desc)}</dd><dt>분류</dt><dd>${B.classes.length}개 (사용 ${B.live.length})</dd><dt>도메인</dt><dd>${B.doms.length}개</dd><dt>용어</dt><dd>${B.terms.length}개</dd></dl>
+        <div class="section-t">분류 <span class="badge">${B.classes.length + B.pend.length}</span></div>
+        ${B.classes.length || B.pend.length ? `<ul class="logl">${B.classes.map(c => `<li><b>${esc(c.name)}</b> <span class="caption muted">↔ 형식단어</span> <span class="mono">${esc(c.fw)}</span> ${c.st !== '사용' ? stTag(c.st) : ''}</li>`).join('')}${B.pend.map(x => `<li><b>${esc(x.it.name)}</b> <span class="caption muted">↔ 형식단어</span> <span class="mono">${esc(x.it.fw)}</span> ${pendTag(x)}</li>`).join('')}</ul>` : '<div class="caption muted">분류가 없습니다.</div>'}
+        <div class="section-t">도메인 <span class="badge">${B.doms.length}</span></div>${domList(B.doms, B.items, '이 그룹에 속한 도메인이 아직 없습니다.')}
+        <div class="section-t">변경 기록 <span class="caption muted">결재 없이 반영 · 사유 필수</span></div>${logList(log)}
+      </div>
+      <div class="rp-foot">${blk.edit || blk.unuse ? `<span class="why grow">${esc(blk.edit || blk.unuse)}</span>` : '<span class="grow"></span>'}
+        <span title="${esc(blk.edit || '')}"><button class="btn sm" id="g-edit"${blk.edit ? ' disabled' : ''}><i data-ic=pen data-s=12></i>수정</button></span>
+        ${gr.st === '사용' ? `<span title="${esc(blk.unuse || '')}"><button class="btn sm danger" id="g-unuse"${blk.unuse ? ' disabled' : ''}>미사용</button></span>` : `<span title="${esc(blk.edit || '')}"><button class="btn sm" id="g-reuse"${blk.edit ? ' disabled' : ''}>다시 사용</button></span>`}</div>`;
+      const e = $('g-edit'); if (e) e.onclick = () => openGroup(gr);
+      const u = $('g-unuse'); if (u) u.onclick = () => openGst(gr, '미사용');
+      const r = $('g-reuse'); if (r) r.onclick = () => openGst(gr, '사용');
+    } else if (sel.t === 'c') {
+      const c = M.g.classes.find(x => x.id === sel.id); if (!c) { sel = null; p.classList.remove('open'); return; }
+      const C = M.byClass[c.id], gr = M.g.groups.find(x => x.id === c.group) || { name: c.group };
+      const unuseWhy = c.src === '공통' ? COMMON_RO : C.doms.length ? `도메인 ${C.doms.length}개(${C.doms.slice(0, 4).join(', ')}${C.doms.length > 4 ? ' 외' : ''})가 이 분류를 써서 미사용으로 바꿀 수 없습니다` : '분류 미사용은 W2 — 결재 반영(applyDictDoc)이 아직 분류 미사용을 처리하지 않습니다';
+      const log = (M.g.log || []).filter(e => e.target === c.name);
+      p.innerHTML = head(`${srcTag(c.src)}<span class="badge">도메인분류</span>${stTag(c.st)}`, c.name, `${esc(gr.name)} 그룹 · ${c.id}`) + `<div class="rp-body">
+        ${c.src === '공통' ? `<div class="banner u-mb-12"><i data-ic=info></i><div><b>공통 표준(행안부)</b> — 읽기 전용입니다.</div></div>` : ''}
+        <dl class="kv"><dt>도메인그룹</dt><dd>${esc(gr.name)}</dd><dt>연결 형식단어</dt><dd class="mono">${esc(c.fw)}</dd><dt>도메인명 규칙</dt><dd>분류명 + 타입 + 길이 <span class="caption muted mono">예: ${esc(c.name)}C8 · ${esc(c.name)}V100</span></dd><dt>설명</dt><dd>${esc(c.desc || '—')}</dd>${c.doc ? `<dt>등록 문서</dt><dd><a href="approvals.html?doc=${esc(c.doc)}">${esc(c.doc)}</a></dd>` : ''}</dl>
+        <div class="caption muted u-mb-12">용어의 끝 단어가 <b>${esc(c.fw)}</b>이면 이 분류의 도메인(${esc(c.name)}…)을 써야 합니다.</div>
+        <div class="section-t">도메인 <span class="badge">${C.doms.length}</span></div>${domList(C.doms, C.items, '이 분류로 만든 도메인이 아직 없습니다.')}
+        <div class="section-t">이 분류의 도메인을 쓰는 용어 <span class="badge">${C.terms.length}</span></div>
+        ${C.terms.length ? `<div class="dlist">${C.terms.slice(0, 20).map(t => `<a href="dictionary.html?sel=${t.id}">${esc(t.name)}</a>`).join('')}</div>${C.terms.length > 20 ? `<div class="caption muted u-mt-4">외 ${C.terms.length - 20}개</div>` : ''}` : '<div class="caption muted">없음</div>'}
+        ${log.length ? `<div class="section-t">기록</div>${logList(log)}` : ''}
+      </div>
+      <div class="rp-foot"><span class="why grow">${esc(unuseWhy)}</span><span title="${esc(unuseWhy)}"><button class="btn sm" disabled>분류 미사용 신청</button></span></div>`;
+    } else {
+      const x = M.pend.find(y => y.key === sel.id); if (!x) { sel = null; p.classList.remove('open'); return; }
+      const gr = M.g.groups.find(g => g.id === x.it.group) || { name: x.it.group };
+      p.innerHTML = head(`${srcTag('기관')}<span class="badge">도메인분류</span>${pendTag(x)}`, x.it.name, x.src === 'basket' ? '내 바구니에 담김 — 아직 신청 전' : `${esc(x.doc)} 결재 중`) + `<div class="rp-body">
+        <dl class="kv"><dt>도메인그룹</dt><dd>${esc(gr.name)}</dd><dt>연결 형식단어</dt><dd class="mono">${esc(x.it.fw || '—')}</dd><dt>설명</dt><dd>${esc(x.it.desc || '—')}</dd><dt>작업</dt><dd>${esc(x.it.act || '추가')}</dd></dl>
+        <div class="banner info"><i data-ic=info></i><div>${x.src === 'basket' ? '도메인 신청과 함께 결재하면 분류 → 도메인 순서대로 반영됩니다. 같은 이름의 분류는 다시 담을 수 없습니다.' : '최종 승인되면 분류가 등록되고 이 그룹 아래 ‘사용’으로 바뀝니다. 진행 중에는 같은 이름의 새 신청이 막힙니다.'}</div></div>
+      </div>
+      <div class="rp-foot"><span class="grow"></span>${x.src === 'basket' ? '<a class="btn sm" href="dictionary.html?basket=1"><i data-ic=basket data-s=12></i>바구니 열기</a>' : `<a class="btn sm" href="approvals.html?doc=${esc(x.doc)}">신청 내용 보기</a>`}</div>`;
+    }
+    p.classList.add('open');
+  }
+
+  /* ---- group save (DA direct; every change logged with a reason) ---- */
+  function record(g, act, target, why, gid) {
+    g.log = g.log || []; g.log.unshift({ at: nowStr(), who: ME.name, act, target, why, gid });
+    saveGroups(g); pushAudit({ act: '도메인그룹 ' + act.replace(/^그룹 /, ''), target, why });
+  }
+  const guardDA = () => { if (liveRoleChanged()) { staleRoleToast(); return false; } if (!IS_DA) { toast(NOT_DA, 'danger'); return false; } return true; };
+  let gEdit = null;
+  function openGroup(gr) {
+    gEdit = gr ? gr.id : null;
+    $('mg-t').textContent = gr ? `도메인그룹 수정 — ${gr.name}` : '도메인그룹 추가';
+    $('g-name').value = gr ? gr.name : ''; $('g-desc').value = gr ? gr.desc : ''; $('g-why').value = '';
+    const M = model(), blk = gr ? groupBlock(gr, M.byGroup[gr.id]) : {};
+    $('g-name').disabled = !!(gr && blk.name);
+    $('g-name-h').textContent = gr && blk.name ? blk.name : '기관 안에서 겹치지 않는 이름 — 예: 날짜, 번호, 금액·수량';
+    $('mo-group').classList.add('open'); setTimeout(() => (gr && blk.name ? $('g-desc') : $('g-name')).focus(), 0); gCheck();
+  }
+  function gProblems() {
+    const g = getGroups(), name = $('g-name').value.trim(), desc = $('g-desc').value.trim(), out = [];
+    const cur = gEdit && g.groups.find(x => x.id === gEdit);
+    if (name && g.groups.some(x => x.id !== gEdit && x.name.toLowerCase() === name.toLowerCase())) out.push(`같은 이름의 그룹 ${jo(name, '이/가')} 있습니다`);
+    if (name && /[<>]/.test(name)) out.push('그룹명에 < > 를 쓸 수 없습니다');
+    if (desc.length > 500) out.push(`설명은 500자 이내 — 지금 ${desc.length}자`);
+    if (cur && cur.name === name && cur.desc === desc) out.push('바뀐 내용이 없습니다');
+    return out;
+  }
+  function gCheck() {
+    const n = $('g-desc').value.trim().length; $('g-cnt').textContent = `${n}/500`; $('g-cnt').classList.toggle('over', n > 500);
+    const pr = gProblems(); $('g-probs').innerHTML = pr.map(m => `<li class="blk">${esc(m)}</li>`).join('');
+    setBlock($('g-go'), pr[0] || '');
+  }
+  ['g-name', 'g-desc', 'g-why'].forEach(id => $(id).addEventListener('input', gCheck));
+  $('g-go').onclick = () => {
+    if (!guardDA() || gProblems().length) return;
+    const g = getGroups(), name = $('g-name').value.trim(), desc = $('g-desc').value.trim(), why = $('g-why').value.trim();
+    if (!gEdit) {
+      const id = 'G' + (Math.max(0, ...g.groups.map(x => +String(x.id).replace(/\D/g, '') || 0)) + 1);
+      g.groups.push({ id, name, desc, st: '사용', src: '기관' }); record(g, '그룹 추가', name, why, id); sel = { t: 'g', id }; open.add(id);
+      toast(`도메인그룹 ${jo(name, '을/를')} 추가했습니다 — 변경 기록에 남겼습니다`);
+    } else {
+      const gr = g.groups.find(x => x.id === gEdit); if (!gr) return;
+      const M = model(); if (gr.name !== name && groupBlock(gr, M.byGroup[gr.id]).name) { toast('사용 중인 그룹은 이름을 바꿀 수 없습니다', 'danger'); return; }
+      if (gr.src === '공통') { toast(COMMON_RO, 'danger'); return; }
+      const parts = []; if (gr.name !== name) parts.push(`이름 ${gr.name} → ${name}`); if (gr.desc !== desc) parts.push('설명');
+      const target = gr.name !== name ? `${gr.name} → ${name}` : gr.name;
+      gr.name = name; gr.desc = desc; record(g, '그룹 수정(' + parts.join(' · ') + ')', target, why, gr.id);
+      toast(`도메인그룹 ${jo(name, '을/를')} 수정했습니다`);
+    }
+    $('mo-group').classList.remove('open'); draw();
+  };
+
+  let gSt = null;
+  function openGst(gr, to) {
+    gSt = { id: gr.id, to };
+    $('ms-t').textContent = to === '미사용' ? `그룹 미사용 — ${gr.name}` : `그룹 다시 사용 — ${gr.name}`;
+    $('ms-sum').innerHTML = to === '미사용' ? `<div class="banner warning"><i data-ic=warn></i><div>미사용 그룹에는 새 분류를 신청할 수 없습니다. 분류가 없는 그룹만 미사용으로 바꿀 수 있습니다.</div></div>` : '<div class="caption muted">다시 사용하면 이 그룹에 분류를 신청할 수 있습니다.</div>';
+    $('s-why').value = ''; $('mo-gst').classList.add('open'); setTimeout(() => $('s-why').focus(), 0); updateNeeds();
+  }
+  $('s-go').onclick = () => {
+    if (!guardDA() || !gSt) return;
+    const g = getGroups(), gr = g.groups.find(x => x.id === gSt.id), why = $('s-why').value.trim(); if (!gr || !why) return;
+    if (gSt.to === '미사용') { const blk = groupBlock(gr, model().byGroup[gr.id]).unuse; if (blk) { toast(esc(blk), 'danger'); $('mo-gst').classList.remove('open'); draw(); return; } }   // re-check at execution time
+    gr.st = gSt.to; record(g, gSt.to === '미사용' ? '그룹 미사용' : '그룹 다시 사용', gr.name, why, gr.id);
+    toast(`도메인그룹 ‘${esc(gr.name)}’ → ${gSt.to}`); $('mo-gst').classList.remove('open'); draw();
+  };
+
+  /* ---- class request → basket ---- */
+  function fillClassForm(groupId) {
+    const g = getGroups(), live = g.groups.filter(x => x.st === '사용');
+    $('c-group').innerHTML = live.map(x => `<option value="${x.id}"${x.id === groupId ? ' selected' : ''}>${esc(x.name)}${x.src === '공통' ? ' (공통)' : ''}</option>`).join('');
+    const bkw = getBasket().items.filter(it => it.k === 'word' && it.fmt === 'Y').map(it => it.name);
+    const fws = [...new Set(formatWords().concat(bkw))];
+    $('c-fw').innerHTML = '<option value="">형식단어 고르기</option>' + fws.map(w => { const c = classOfFw(w); return `<option value="${esc(w)}">${esc(w)}${c ? ` — 분류 ‘${esc(c.name)}’에 연결됨` : bkw.includes(w) && !formatWords().includes(w) ? ' — 바구니의 새 단어' : ' — 연결 안 됨'}</option>`; }).join('');
+    const free = fws.filter(w => !classOfFw(w));
+    $('c-fw-h').innerHTML = `${free.length ? `연결 안 된 형식단어 ${free.length}개: ${free.map(esc).join(', ')}.` : '모든 형식단어가 이미 분류에 연결되어 있습니다.'} 필요한 단어가 목록에 없으면 단어를 <b>형식단어 Y</b>로 먼저 신청하세요 — <a href="dictionary.html?basket=1">단어 신청 열기</a> (같은 바구니에 담아 함께 결재하면 단어 → 분류 순서로 반영)`;
+  }
+  const cItem = () => ({ k: 'class', name: $('c-name').value.trim(), group: $('c-group').value, fw: $('c-fw').value, desc: $('c-desc').value.trim(), act: '추가' });
+  function cCheck() {
+    const it = cItem(), pr = it.name ? checkItem(it, { batch: getBasket().items }) : [];
+    const c = it.fw && classOfFw(it.fw); if (c) pr.push({ f: 'fw', msg: `${jo(it.fw, '은/는')} 이미 분류 ‘${c.name}’에 연결됨 — 형식단어 하나에 분류 하나가 원칙입니다(용어 검사가 첫 분류만 봄)`, lvl: 'warn' });
+    if (it.name && /\d|[CVNDT]$/.test(it.name)) pr.push({ f: 'name', msg: '분류명이 숫자나 타입 글자(C·V·N·D·T)로 끝나면 도메인명 해석이 어긋날 수 있습니다', lvl: 'warn' });
+    if (it.name) $('c-name-h').textContent = `도메인명 = 분류명 + 타입 + 길이 — 예: ${it.name}C8, ${it.name}V100`;
+    const blk = pr.filter(x => x.lvl === 'block');
+    $('c-probs').innerHTML = !it.name ? '' : pr.length ? pr.map(x => `<li class="${x.lvl === 'block' ? 'blk' : 'wrn'}">${x.lvl === 'block' ? '막힘' : '주의'} · ${esc(x.msg)}</li>`).join('') : '<li class="okk">검사 통과 — 바구니에 담을 수 있습니다</li>';
+    setBlock($('c-go'), !CAN_REQ ? '사전 신청 권한이 없습니다' : blk.length ? blk[0].msg : '');
+  }
+  function openClass(groupId) { fillClassForm(groupId); $('c-name').value = ''; $('c-desc').value = ''; $('c-probs').innerHTML = ''; $('mo-class').classList.add('open'); setTimeout(() => $('c-name').focus(), 0); cCheck(); }
+  ['c-name', 'c-desc'].forEach(id => $(id).addEventListener('input', cCheck)); ['c-group', 'c-fw'].forEach(id => $(id).addEventListener('change', cCheck));
+  $('c-go').onclick = () => {
+    if (liveRoleChanged()) { staleRoleToast(); return; }
+    const it = cItem(); if (!CAN_REQ || checkItem(it, { batch: getBasket().items }).some(x => x.lvl === 'block')) return;
+    const [a] = addToBasket([it]);
+    $('mo-class').classList.remove('open');
+    if (!a) { toast(`분류 ${jo(it.name, '은/는')} 이미 바구니에 있습니다`, 'info'); return; }
+    sel = null; draw();
+    toast(`분류 ${jo(it.name, '을/를')} 바구니에 담았습니다 — 도메인 신청과 함께 결재하면 순서대로 반영됩니다`, 'success', { label: '바구니 열기', fn: () => { location.href = 'dictionary.html?basket=1'; } });
+  };
+
+  /* ---- wiring ---- */
+  const gaddWhy = IS_DA ? '' : NOT_DA;
+  $('b-gadd').disabled = !IS_DA; $('gadd-w').title = gaddWhy;
+  $('b-gadd').onclick = () => { if (IS_DA) openGroup(null); };
+  $('b-cadd').disabled = !CAN_REQ; $('cadd-w').title = CAN_REQ ? '' : '사전 신청 권한(dict.request)이 없습니다';
+  $('b-cadd').onclick = () => { const s = sel && sel.t === 'g' ? sel.id : sel && sel.t === 'c' ? (getGroups().classes.find(c => c.id === sel.id) || {}).group : null; openClass(s); };
+  $('rows').addEventListener('click', e => {
+    const tw = e.target.closest('[data-tw]');
+    if (tw) { e.stopPropagation(); const id = tw.dataset.tw; open.has(id) ? open.delete(id) : open.add(id); draw(); const b = document.querySelector(`[data-tw="${id}"]`); if (b) b.focus(); return; }
+    const tr = e.target.closest('tr[data-t]'); if (!tr) return;
+    sel = { t: tr.dataset.t, id: tr.dataset.id }; panel();
+  });
+  $('rows').addEventListener('keydown', e => {   // ← → fold / unfold a group row
+    const tr = e.target.closest('tr.grp'); if (!tr || !['ArrowLeft', 'ArrowRight'].includes(e.key)) return;
+    e.preventDefault(); const id = tr.dataset.id; if (e.key === 'ArrowRight') open.add(id); else open.delete(id); draw(); const r = document.querySelector(`tr.grp[data-id="${id}"]`); if (r) r.focus();
+  });
+  $('pn-detail').addEventListener('click', e => { if (e.target.closest('[data-close="pn-detail"]')) { sel = null; document.querySelectorAll('#rows tr.sel').forEach(r => r.classList.remove('sel')); } });
+  $('q').addEventListener('input', e => { q = e.target.value.trim().toLowerCase(); draw(); });
+  [['f-src', v => { fSrc = v; }], ['f-st', v => { fSt = v; }]].forEach(([id, set]) => $(id).addEventListener('click', e => { const b = e.target.closest('button[data-v]'); if (!b) return; $(id).querySelectorAll('button').forEach(x => { x.classList.toggle('on', x === b); x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); }); set(b.dataset.v); draw(); }));
+  $('x-open').onclick = () => { open = new Set(getGroups().groups.map(x => x.id)); draw(); };
+  $('x-close').onclick = () => { open = new Set(); draw(); };
+  document.addEventListener('basket', () => draw());
+  // first-run helper for the standardization officer (dismiss is remembered per browser)
+  if (dbmStore.get(GUIDE_KEY, '') !== '1' || new URLSearchParams(location.search).get('guide') === '1') $('guide').hidden = false;
+  $('guide-x').onclick = () => { $('guide').hidden = true; dbmStore.set(GUIDE_KEY, '1'); };
+  const qs0 = new URLSearchParams(location.search);
+  if (qs0.get('sel')) { const id = qs0.get('sel'), g = getGroups(); if (g.groups.some(x => x.id === id)) sel = { t: 'g', id }; else if (g.classes.some(x => x.id === id)) sel = { t: 'c', id }; }
+  draw();
+};
+</script>
+</body>
+</html>

@@ -512,12 +512,12 @@
   /* ---- v7: dictionary apply is exact (S2) ----
      item operation is explicit: 추가 (new) · 변경 (existing id) · 미사용 (existing id).
      A change applies the changed FIELDS (not just the version); a missing target is a failure, never a new item. */
-  const KIND_NAME = { word: '단어', term: '용어', domain: '도메인', code: '코드', entity: '엔터티 용어' };
+  const KIND_NAME = { word: '단어', term: '용어', domain: '도메인', code: '코드', entity: '엔터티 용어', class: '도메인분류' };
   window.KIND_NAME = KIND_NAME;
-  const FIELD = { 단어명: 'name', 용어명: 'name', 이름: 'name', 영문약어명: 'abbr', 약어: 'abbr', 도메인: 'dom', 설명: 'desc', 영문명: 'eng', '허용 값': 'allow', 사용상태: 'st', 이음동의어: 'syn', 금칙어: 'forbid', 도메인그룹: 'dg', 코드값: 'vals', '적용 범위': 'scope' };
+  const FIELD = { 단어명: 'name', 용어명: 'name', 도메인명: 'name', 코드명: 'name', 엔터티명: 'name', 이름: 'name', 영문약어명: 'abbr', 약어: 'abbr', 도메인: 'dom', 설명: 'desc', 영문명: 'eng', '허용 값': 'allow', 사용상태: 'st', 이음동의어: 'syn', 금칙어: 'forbid', 도메인그룹: 'dg', 코드값: 'vals', '적용 범위': 'scope', 형식단어: 'fmt', '보안 속성': 'sec', '물리 타입': 'dom' };
   window.FIELD_KEY = FIELD;
-  // editable fields per kind (DX-01: a change row may carry any number of them)
-  window.EDIT_FIELDS = { word: ['영문약어명', '영문명', '설명', '이음동의어', '금칙어'], term: ['영문약어명', '도메인', '영문명', '설명'], entity: ['영문약어명', '영문명', '설명'], domain: ['허용 값', '도메인그룹', '설명'], code: ['영문명', '설명', '적용 범위', '코드값'] };
+  // editable fields per kind (DX-01 · G5: names too — the old name is kept as a past name; a domain's type/length is its name)
+  window.EDIT_FIELDS = { word: ['단어명', '영문약어명', '영문명', '형식단어', '설명', '이음동의어', '금칙어'], term: ['용어명', '영문약어명', '도메인', '영문명', '설명'], entity: ['엔터티명', '영문약어명', '영문명', '설명'], domain: ['도메인명', '물리 타입', '허용 값', '도메인그룹', '보안 속성', '설명'], code: ['코드명', '영문명', '설명', '적용 범위', '코드값'] };
   const opOf = it => it.act === '미사용' ? '미사용' : it.act === '삭제' ? '삭제' : (it.id && it.act !== '추가') ? '변경' : '추가';
   window.opOf = opOf;
 
@@ -530,14 +530,92 @@
   window.addToBasket = list => { const b = getBasket(); let a = 0, s = 0;
     [].concat(list).forEach(it => { const same = b.items.find(x => (it.id && x.id === it.id) || (!it.id && !x.id && x.k === it.k && x.name === it.name)); if (same) { s++; return; } b.items.push(Object.assign({ key: 'b' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5) }, it)); a++; });
     saveBasket(b); return [a, s]; };
+  /* ---- domain groups → classes (→ domains): groups are kept by the DA directly (recorded), classes go through the same request as domains (30 MD-02·03) ---- */
+  const GROUPS0 = { groups: [
+      { id: 'G1', name: '날짜', desc: '연월일 · 연월 · 일시 등 날짜와 시각', st: '사용', src: '공통' }, { id: 'G2', name: '번호', desc: '식별자 · 번호 · 일련번호', st: '사용', src: '공통' },
+      { id: 'G3', name: '명칭', desc: '이름 · 명 · 내용 등 문자 서술', st: '사용', src: '공통' }, { id: 'G4', name: '코드', desc: '코드 · 여부 · 구분 등 정해진 값', st: '사용', src: '기관' },
+      { id: 'G5', name: '금액·수량', desc: '금액 · 수량 · 율 등 숫자', st: '사용', src: '기관' }],
+    classes: [
+      { id: 'K01', name: '연월일', group: 'G1', fw: '일자', st: '사용', src: '공통' }, { id: 'K02', name: '일시', group: 'G1', fw: '일시', st: '사용', src: '공통' },
+      { id: 'K03', name: 'ID', group: 'G2', fw: 'ID', st: '사용', src: '공통' }, { id: 'K04', name: '번호', group: 'G2', fw: '번호', st: '사용', src: '공통' }, { id: 'K05', name: '일련번호', group: 'G2', fw: '순번', st: '사용', src: '공통' },
+      { id: 'K06', name: '명', group: 'G3', fw: '명', st: '사용', src: '공통' }, { id: 'K07', name: '내용', group: 'G3', fw: '내용', st: '사용', src: '공통' },
+      { id: 'K08', name: '코드', group: 'G4', fw: '코드', st: '사용', src: '기관' }, { id: 'K09', name: '여부', group: 'G4', fw: '여부', st: '사용', src: '기관' }, { id: 'K10', name: '구분', group: 'G4', fw: '구분', st: '사용', src: '기관' },
+      { id: 'K11', name: '금액', group: 'G5', fw: '금액', st: '사용', src: '기관' }, { id: 'K12', name: '수량', group: 'G5', fw: '수량', st: '사용', src: '기관' }],
+    log: [{ at: '2026-11-03 10:00', who: '이데이터', act: '그룹 추가', target: '금액·수량', why: '기관 사전 초기 구성' }] };
+  window.getGroups = () => J('dbm-groups', clone(GROUPS0));
+  window.saveGroups = g => S('dbm-groups', g);
+  // format words: the last word of a class decides which domains a term may use (형식단어 → 도메인분류)
+  window.formatWords = () => { const g = getGroups(); return [...new Set(g.classes.filter(c => c.st === '사용').map(c => c.fw).concat(getDict().filter(x => x.k === 'word' && x.fmt === 'Y' && x.ver > 0 && x.st === '사용').map(x => x.name)))]; };
+  window.classOfFw = fw => getGroups().classes.find(c => c.fw === fw && c.st === '사용');
+  /* ---- one item check for every screen (form, screen grid, excel, submit): problems = [{f: field, msg, lvl: 'block' | 'warn'}] ----
+     ctx.batch = the other rows being written together (a new word in the same batch is a known word) */
+  window.checkItem = (it, ctx = {}) => {
+    const out = [], dict = getDict(), batch = (ctx.batch || []).filter(b => b !== it), pol = getPolicy(), B = (f, msg) => out.push({ f, msg, lvl: 'block' }), Wn = (f, msg) => out.push({ f, msg, lvl: 'warn' });
+    const name = (it.name || '').trim(), k = it.k, live = x => x.ver > 0 && x.st !== '삭제 보관';
+    const openNew = openItems().filter(x => opOf(x.it) === '추가');
+    if (!name) { B('name', '이름이 비어 있음'); return out; }
+    if (/\s/.test(name) && k !== 'class') B('name', '이름에 공백이 있음');
+    const sameKind = x => x.k === k || (k === 'entity' && x.k === 'term');
+    if (dict.some(x => sameKind(x) && x.name === name && live(x))) B('name', `같은 이름이 사전에 있음(${dict.find(x => sameKind(x) && x.name === name && live(x)).id}) — 변경으로`);
+    else if (openNew.some(x => x.it.name === name && (!x.it.k || x.it.k === k))) B('name', `${openNew.find(x => x.it.name === name).doc}에서 같은 이름을 신청 중`);
+    if (batch.some(b => b.k === k && (b.name || '').trim() === name)) B('name', '같이 작성 중인 행과 이름이 겹침');
+    const forb = dict.find(x => x.k === 'word' && (x.forbid || []).includes(name)); if (forb) B('name', `금칙어 — '${forb.name}'을(를) 쓰세요`);
+    const abbr = (it.abbr || '').trim();
+    if (k === 'word') {
+      const lim = pol.wordAbbr || 6;
+      if (!abbr) B('abbr', '영문약어명이 비어 있음');
+      else { if (!/^[A-Z][A-Z0-9]*$/.test(abbr)) B('abbr', '영문약어명은 대문자 · 숫자, 숫자로 시작 불가'); if (abbr.length > lim) B('abbr', `영문약어명 ${lim}자 초과(검수 기준 v${pol.ver})`);
+        const same = dict.find(x => x.k === 'word' && x.abbr === abbr && x.name !== name && live(x)) || batch.find(b => b.k === 'word' && b.abbr === abbr && b.name !== name);
+        if (same) B('abbr', `약어 ${abbr}를 '${same.name}'이(가) 씀`);
+        else { const sim = dict.find(x => x.k === 'word' && live(x) && x.abbr !== abbr && abbr.length >= 3 && (x.abbr.startsWith(abbr.slice(0, 4)) || abbr.startsWith(x.abbr.slice(0, 4)))); if (sim) Wn('abbr', `비슷한 약어 ${sim.name} ${sim.abbr} — 다르면 중복 허용 사유`); } }
+      if (it.fmt === 'Y' && !it.cls && !classOfFw(name)) Wn('fmt', '형식단어 — 연결할 도메인분류를 고르면 도메인 등록 때 바로 씁니다');
+      [...(it.syn || []), ...(it.forbid || [])].forEach(s => { if (dict.some(x => x.k === 'word' && live(x) && (x.name === s || (x.syn || []).includes(s) || (x.forbid || []).includes(s)))) B('syn', `동의어 · 금칙어 '${s}'가 다른 단어와 겹침`); });
+    }
+    if (k === 'term' || k === 'entity') {
+      const dc = decompose(k === 'entity' ? name.replace(/(기본|내역|이력|관계|정보)$/, '') : name, batch.filter(b => b.k === 'word'));
+      const unk = dc.parts.filter(p => p.unknown).map(p => p.w), pend = dc.parts.filter(p => !p.unknown && !p.ok && !batch.some(b => b.k === 'word' && b.name === p.w)).map(p => p.w);
+      if (unk.length) B('name', `미등록 단어: ${unk.join(', ')} — 단어를 같이 작성하세요`);
+      if (pend.length) Wn('name', `승인 전 단어: ${pend.join(', ')}`);
+      if (dc.sus) Wn('name', '1음절 분해 의심 — 단어 구성을 확인하세요');
+      const want = dc.parts.map(p => p.abbr || '?').join('_') + (k === 'entity' ? (({ 기본: '_M', 내역: '_D', 이력: '_H', 관계: '_R', 정보: '_I' })[(name.match(/(기본|내역|이력|관계|정보)$/) || [])[1]] || '') : '');
+      if (abbr && !unk.length && abbr !== want) B('abbr', `영문약어명은 단어 약어 조합 ${want}여야 함`);
+      if (abbr.length > 30) B('abbr', `영문약어명 ${abbr.length}자 — 30자 초과(대상 DBMS)`);
+      if (k === 'term') { const dom = (it.dom || '').trim(); if (!dom) B('dom', '도메인이 비어 있음'); else if (!knownDomains().has(dom) && !batch.some(b => b.k === 'domain' && b.name === dom)) B('dom', `도메인 '${dom}'이 사전에 없음`);
+        const last = dc.parts.slice(-1)[0], fws = formatWords().concat(batch.filter(b => b.k === 'word' && b.fmt === 'Y').map(b => b.name)); if (last && !fws.includes(last.w)) Wn('name', `형식단어로 끝나지 않음(끝 단어 '${last.w}')`);
+        else if (last && dom) { const c = classOfFw(last.w); if (c && !dom.startsWith(c.name) && !dom.startsWith(last.w)) Wn('dom', `끝 단어 '${last.w}'의 분류는 '${c.name}' — 도메인 ${dom}과 다름`); } }
+      if (k === 'entity' && !/(기본|내역|이력|관계|정보)$/.test(name)) Wn('name', '엔터티 분류어(기본 · 내역 · 이력 · 관계 · 정보)로 끝나지 않음');
+    }
+    if (k === 'domain') {
+      const m = name.match(/^(.+?)([CVNDT])(\d*)(?:,(\d+))?$/);
+      if (!m) B('name', '도메인명은 분류명 + 타입(C/V/N/D/T) + 길이[,소수점] — 예: 금액N15, 금액N18,2');
+      else { const [, cls, ty, len, sc] = m; if ('CVN'.includes(ty) && !len) B('name', `${ty} 타입은 길이가 필요`); if (sc && ty !== 'N') B('name', '소수점은 N 타입만'); if ('DT'.includes(ty) && len) B('name', `${ty} 타입은 길이를 쓰지 않음`);
+        const c = getGroups().classes.find(x => x.name === cls && x.st === '사용') || batch.find(b => b.k === 'class' && b.name === cls);
+        if (!c) B('name', `도메인분류 '${cls}'가 없음 — 분류를 같이 작성하세요`);
+        else if (it.dg && c.group && getGroups().groups.find(g => g.id === c.group) && getGroups().groups.find(g => g.id === c.group).name !== it.dg) B('dg', `분류 '${cls}'의 그룹은 '${getGroups().groups.find(g => g.id === c.group).name}'`); }
+    }
+    if (k === 'class') {
+      if (getGroups().classes.some(x => x.name === name && x.st === '사용')) B('name', '같은 이름의 분류가 있음');
+      if (!it.fw) B('fw', '연결 형식단어가 비어 있음'); else if (!formatWords().includes(it.fw) && !batch.some(b => b.k === 'word' && b.name === it.fw && b.fmt === 'Y')) B('fw', `'${it.fw}'은 형식단어가 아님`);
+      if (!it.group || !getGroups().groups.some(g => g.id === it.group && g.st === '사용')) B('group', '도메인그룹을 고르세요');
+    }
+    if (k === 'code') {
+      const vals = it.vals || [], len = +(String(it.dom || '').match(/\d+$/) || [0])[0];
+      if (!abbr) B('abbr', '영문 코드명이 비어 있음');
+      if (!vals.length) B('vals', '코드값이 없음');
+      const dup = vals.map(v => v.v).filter((v, i, a) => a.indexOf(v) !== i); if (dup.length) B('vals', `코드값 중복: ${[...new Set(dup)].join(', ')}`);
+      if (len) { const bad = vals.filter(v => String(v.v).length !== len); if (bad.length) B('vals', `도메인 ${it.dom} 길이 ${len}과 다른 값: ${bad.map(v => v.v).join(', ')}`); }
+      if (it.scope === '시스템' && !it.sys) B('scope', '시스템 코드인데 대상 시스템이 없음');
+    }
+    return out;
+  };
   /* named drafts: park a basket, start another, come back later (DX-03) */
   const dKey = () => 'dbm-drafts-' + (window.ME ? ME.id : 'kim');
   window.getDrafts = () => J(dKey(), [{ id: 'dr1', name: '리스크 영역 용어 정리(작성 중)', at: '2026-11-18 17:40', reason: '리스크 관리 화면 개편', items: [{ key: 'bs1', k: 'term', name: '리스크대응완료일자', abbr: 'RISK_RSPNS_CMPTN_YMD', dom: '연월일C8', act: '추가' }, { key: 'bs2', k: 'word', name: '완화', abbr: 'MTGT', eng: 'mitigation', act: '추가' }] }]);
   window.saveDrafts = d => S(dKey(), d);
   /* DX-09: dependency order inside one request — new words, then domains, then terms / entity terms / codes; a term that uses a word added in the same request says so */
-  window.orderItems = items => { const rank = it => opOf(it) !== '추가' ? 4 : ({ word: 0, domain: 1, term: 2, entity: 2, code: 3 })[it.k] ?? 2;
+  window.orderItems = items => { const rank = it => opOf(it) !== '추가' ? 4 : ({ word: 0, class: 0.5, domain: 1, term: 2, entity: 2, code: 3 })[it.k] ?? 2;
     const out = items.slice().sort((a, b) => rank(a) - rank(b));
-    out.forEach(it => { delete it.dep; if (opOf(it) === '추가' && (it.k === 'term' || it.k === 'entity')) { const ws = decompose(it.name).parts.map(p => p.w); const dep = out.filter(o => o !== it && o.k === 'word' && opOf(o) === '추가' && ws.includes(o.name)).map(o => o.name);
+    out.forEach(it => { delete it.dep; if (opOf(it) === '추가' && (it.k === 'term' || it.k === 'entity')) { const ws = decompose(it.name, out.filter(o => o.k === 'word' && opOf(o) === '추가')).parts.map(p => p.w); const dep = out.filter(o => o !== it && o.k === 'word' && opOf(o) === '추가' && ws.includes(o.name)).map(o => o.name);
       const dd = out.find(o => o.k === 'domain' && opOf(o) === '추가' && o.name === it.dom); if (dd) dep.push(dd.name); if (dep.length) it.dep = dep; } });
     return out; };
   const kindOf = it => it.k && it.k !== 'chg' ? it.k : null;
@@ -555,6 +633,8 @@
       const forbid = dict.find(x => x.k === 'word' && (x.forbid || []).some(f => f && name.includes(f)));
       if (forbid && op !== '미사용') res.problems.push(`금칙어 '${forbid.forbid.find(f => name.includes(f))}' 포함 — '${forbid.name}' 사용`);
       if (it.rej) { res.problems = []; res.skip = '항목 반려'; out.push(res); return; }   // DX-12: a rejected item is no longer judged
+      // the shared item check (same rules as the form, the screen grid and the excel validation); the rest below adds doc-level checks
+      if (op === '추가') checkItem(Object.assign({}, it, { k: k || it.k }), { batch: (doc.items || []).filter(o => o !== it && !o.rej && opOf(o) === '추가') }).filter(p => p.lvl === 'block' && !/신청 중|사전에 있음/.test(p.msg)).forEach(p => res.problems.push(p.msg));
       if (op === '추가' && k === 'code') {
         const vals = it.vals || [], len = +(String(it.dom || '').match(/\d+$/) || [0])[0];
         if (!vals.length) res.problems.push('코드값이 없음');
@@ -565,10 +645,9 @@
       if (op === '추가' && (k === 'term' || k === 'entity')) {
         if (it.dom && !knownDomains().has(it.dom)) res.problems.push(`도메인 '${it.dom}'이 사전에 없음`);
         if ((it.abbr || '').length > 30) res.problems.push(`영문약어명 ${it.abbr.length}자 — 30자 초과(대상 DBMS 기준)`);
-        { const dc = decompose(name); const inDoc = w => (doc.items || []).some(o => o.k === 'word' && o.name === w && !o.rej);
+        { const dc = decompose(name, (doc.items || []).filter(o => o.k === 'word' && !o.rej && opOf(o) === '추가')); const inDoc = w => (doc.items || []).some(o => o.k === 'word' && o.name === w && !o.rej);
           const pend = dc.pending.filter(p => !inDoc(p.w)); if (pend.length) res.problems.push(`구성 단어 미승인: ${pend.map(p => p.w + (p.doc ? `(${p.doc} 진행 중)` : '')).join(', ')}`);
-          const unk = dc.unknown.filter(p => !inDoc(p.w)); if (unk.length) res.problems.push(`미등록 단어: ${unk.map(p => p.w).join(', ')} — 같은 신청에 단어를 함께 넣으세요`);
-          if (it.abbr && dc.ok && !unk.length && it.abbr !== dc.abbr && k === 'term') res.problems.push(`영문약어명 ${it.abbr} ≠ 단어 약어 조합 ${dc.abbr}`); }
+          /* unknown words and the abbreviation rule come from checkItem above */ }
       }
       if (op === '추가') {
         if (k === 'word' && !(it.abbr || '').trim()) res.problems.push('영문약어명이 비어 있음');
@@ -587,8 +666,13 @@
           if (op === '미사용' && d.st === '미사용') res.problems.push('이미 미사용');
           if (op === '삭제' && (d.use || 0) > 0) res.problems.push(`모델 ${d.use}곳에서 쓰는 중 — 삭제할 수 없음(미사용을 쓰세요)`);
           if (op === '삭제' && d.st === '삭제 보관') res.problems.push('이미 삭제 보관');
+          // G5: a renamed item must not collide; a domain rename re-checks the naming rule
+          const nn = it.chg && Object.entries(it.chg).find(([l]) => FIELD[l] === 'name');
+          if (op === '변경' && nn) { const nv = String(nn[1][1]).trim(); if (dict.some(x => x.id !== d.id && x.k === d.k && x.name === nv && x.ver > 0)) res.problems.push(`새 이름 '${nv}'이 이미 있음`);
+            if (d.k === 'domain') checkItem({ k: 'domain', name: nv, dg: d.dg }).filter(p => p.lvl === 'block' && !/사전에 있음/.test(p.msg)).forEach(p => res.problems.push(p.msg)); }
         }
       }
+      res.problems = [...new Set(res.problems)];
       out.push(res);
     });
     return out;
@@ -599,6 +683,12 @@
     items.forEach(it => {
       if (it.rej) return;   // DX-12: items the approver rejected are not applied (they went back to the requester's basket)
       const op = opOf(it), k0 = kindOf(it) || 'term', k = k0 === 'entity' ? 'term' : k0;
+      if (k0 === 'class' && op === '추가') {   // G3: a domain class lives in the group store (it travels with the domain request)
+        const g = getGroups(); if (g.classes.some(c => c.name === it.name && c.st === '사용')) { failed.push([it.name, '같은 분류가 이미 있음']); return; }
+        const id = 'K' + String(g.classes.length + 1).padStart(2, '0') + Date.now().toString(36).slice(-2); g.classes.push({ id, name: it.name, group: it.group, fw: it.fw, desc: it.desc || '', st: '사용', src: '기관', doc: doc.id, why: it.why || '' }); saveGroups(g);
+        ch.unshift({ at, item: it.name, kind: '도메인분류', act: '추가', ver: 'V1', doc: doc.id, by: ME.name, diff: `그룹 ${(g.groups.find(x => x.id === it.group) || {}).name || it.group} · 형식단어 ${it.fw}`, itemId: id, firstVer: true });
+        applied.push(id); return;
+      }
       let d = it.id ? dict.find(x => x.id === it.id) : null;
       let diff = [], act = op;
       if (op === '삭제') {
@@ -618,7 +708,7 @@
         Object.entries(it.chg || {}).forEach(([label, v]) => { const key = FIELD[label] || label; const nv = Array.isArray(d[key]) && typeof v[1] === 'string' ? v[1].split(/\s*,\s*/).filter(Boolean) : v[1];
           diff.push([label, show(d[key]), show(nv)]); d[key] = nv; });
         Object.entries(it.set || {}).forEach(([key, v]) => { if (diff.some(x => (FIELD[x[0]] || x[0]) === key)) return; diff.push([key, d[key] == null ? '' : d[key], v]); d[key] = v; });
-        if (FIELD[Object.keys(it.chg || {})[0]] === 'name' && diff[0]) d.old = (d.old || []).concat([diff[0][1]]);
+        { const nd = diff.find(x => FIELD[x[0]] === 'name'); if (nd && nd[1]) d.old = (d.old || []).concat([nd[1]]); }   // the previous name stays searchable as a past name
         d.ver += 1;
       } else {
         // a placeholder created by the document itself (e.g. 엔터티 용어 '신청 중', ver 0) becomes V1; anything else with the same name is a conflict
@@ -626,7 +716,7 @@
         const clash = dict.find(x => x.name === it.name && x.k === k && x.ver > 0);
         if (clash) { failed.push([it.name, `같은 이름 ${clash.id} 이미 있음`]); return; }
         if (ph) { d = ph; d.ver = 1; d.st = '사용'; }
-        else { d = { id: (() => { const pre = k === 'word' ? 'W-' : k === 'domain' ? 'D-' : k === 'code' ? 'C-' : 'T-'; const seq = Math.max(+store.get('dbm-idseq', '500'), ...dict.map(x => +String(x.id).slice(2) || 0)) + 1; store.set('dbm-idseq', String(seq)); return pre + String(seq).padStart(4, '0'); })(), k, kn: KIND_NAME[k0] || '용어', src: '기관', st: '사용', name: it.name, abbr: it.abbr || '—', dom: k0 === 'entity' ? '엔터티 용어' : it.dom || '—', dg: it.dg, eng: it.eng || '', desc: it.desc || '', ver: 1, cha: null, dt: today(), use: 0, syn: it.syn || [], forbid: it.forbid || [], old: [], hist: [] };
+        else { d = { id: (() => { const pre = k === 'word' ? 'W-' : k === 'domain' ? 'D-' : k === 'code' ? 'C-' : 'T-'; const seq = Math.max(+store.get('dbm-idseq', '500'), ...dict.map(x => +String(x.id).slice(2) || 0)) + 1; store.set('dbm-idseq', String(seq)); return pre + String(seq).padStart(4, '0'); })(), k, kn: KIND_NAME[k0] || '용어', src: '기관', st: '사용', name: it.name, abbr: it.abbr || '—', dom: k0 === 'entity' ? '엔터티 용어' : it.dom || '—', dg: it.dg, allow: it.allow, sec: it.sec, fmt: it.fmt, eng: it.eng || '', desc: it.desc || '', ver: 1, cha: null, dt: today(), use: 0, syn: it.syn || [], forbid: it.forbid || [], old: [], hist: [] };
           if (k === 'code') Object.assign(d, { vals: (it.vals || []).map(v => Object.assign({ st: '사용' }, v)), scope: it.scope || '공통', sys: it.sys, ctype: it.ctype || '자체' });
           dict.push(d); }
       }
@@ -681,9 +771,11 @@
 
   /* ---- word decomposition for analysis (term names → standard words). Common words are seeded here for the mockup ---- */
   const COMMON_WORDS = { 요구사항: 'DEMND_MATER', 프로젝트: 'PRJ', 제출: 'SBMT', 일자: 'YMD', 명: 'NM', ID: 'ID', 코드: 'CD', 결과: 'RSLT', 내용: 'CN', 이력: 'HIST', 순번: 'SN', 상태: 'STTS', 우선순위: 'PRIOR', 부서: 'DEPT', 요청: 'REQ', 고객: 'CUST', 금액: 'AMT', 수주: 'WINCON', 기본: 'M', 승인: 'APRV', 완료: 'CMPTN', 리스크: 'RISK', 등급: 'GRD', 대응: 'RSPNS', 발주처: 'ORDR_OFC', 종료: 'END', 유형: 'TYPE', 구분: 'SE', 번호: 'NO', 여부: 'YN', 일시: 'DT', 등록: 'REG', 수정: 'MDFCN', 자: 'R', 물품: 'GOODS', 사원: 'EMP', 팀원: 'TMBR', 투입: 'INPT', 시작: 'BEGIN', 역할: 'ROLE', 구성: 'CMPS', 내역: 'D', 날짜: 'DATE' };
-  window.decompose = name => {
+  // extra = words being written together (basket · screen grid · same request): they count as known words for the split (MD-14)
+  window.decompose = (name, extra) => {
     const dict = getDict(); const open = openItems();
     const words = {};
+    (extra || []).forEach(x => { if (x && x.name && x.abbr) words[x.name] = { w: x.name, abbr: x.abbr, src: '작성 중', ok: true, batch: true }; });
     Object.entries(COMMON_WORDS).forEach(([w, ab]) => { words[w] = { w, abbr: ab, src: '공통', ok: true }; });
     dict.filter(x => x.k === 'word').forEach(x => { words[x.name] = { w: x.name, abbr: x.abbr, src: x.src, ok: x.ver > 0 && x.st === '사용', id: x.id }; });
     open.filter(o => o.it.k === 'word' && (o.it.act || '추가') === '추가').forEach(o => { if (!words[o.it.name]) words[o.it.name] = { w: o.it.name, abbr: o.it.abbr, src: '신청 중', ok: false, doc: o.doc }; else if (!words[o.it.name].ok) words[o.it.name].doc = o.doc; });
@@ -1537,7 +1629,7 @@
     const nUnread = unread();
     const page = document.body.dataset.page;
     // v17 (11 §2.1): top menu = global moves; the active tab follows the screen family
-    const TAB = { system: 'model', model: 'model', dictionary: 'dict', excel: 'dict', candidates: 'dict', approvals: 'appr', settings: 'admin', audit: 'admin' }[page] || '';
+    const TAB = { system: 'model', model: 'model', dictionary: 'dict', excel: 'dict', candidates: 'dict', 'dict-grid': 'dict', 'domain-groups': 'dict', approvals: 'appr', settings: 'admin', audit: 'admin' }[page] || '';
     const here = f => curFile() === f ? ' on" aria-current="page' : '';
     const cur = (on, f) => on ? (curFile() === f ? ' aria-current="page"' : ' aria-current="true"') : '';
     const qn0 = queueCount(), late = myQueue(getDocs()).some(d => docLate(d)), cq = candOpenCount();
@@ -1549,6 +1641,8 @@
         <a class="tm${TAB === 'model' ? ' on' : ''}" href="system.html"${cur(TAB === 'model', 'system.html')}>모델</a>
         <span class="tmw"><button class="tm${TAB === 'dict' ? ' on' : ''}" type="button" data-menu-btn aria-expanded="false" aria-controls="mn-dict"${TAB === 'dict' ? ' aria-current="true"' : ''}>사전<i data-ic=down data-s=12></i></button><div class="menu" data-auto id="mn-dict">
           <a class="mi${here('dictionary.html')}" href="dictionary.html">통합 검색</a>
+          <a class="mi${here('dict-grid.html')}" href="dict-grid.html">화면 일괄 작성</a>
+          <a class="mi${here('domain-groups.html')}" href="domain-groups.html">도메인 그룹 · 분류</a>
           <a class="mi${here('excel-import.html')}" href="excel-import.html">엑셀 가져오기</a>
           <a class="mi${here('uploads.html')}" href="uploads.html">업로드 이력</a>
           <a class="mi${here('candidates.html')}" href="candidates.html">후보 큐${cq ? `<span class="mcount">${cq}</span>` : ''}</a>
@@ -1577,7 +1671,7 @@
     app.insertBefore(top, nav);
     document.querySelectorAll('.crumbs a[href="system.html"]').forEach(a => { if (a.textContent.trim() === '요구사항관리') a.textContent = curSys().name; });
     // the dictionary screens share one tab row under the header (01 v2 §5, D4) — they have no breadcrumb
-    { const DT = [['dictionary.html', '통합 검색'], ['excel-import.html', '엑셀 가져오기'], ['uploads.html', '업로드 이력'], ['candidates.html', '후보 큐'], ['dict-history.html', '변경 내역']];
+    { const DT = [['dictionary.html', '통합 검색'], ['dict-grid.html', '화면 일괄 작성'], ['domain-groups.html', '도메인 그룹 · 분류'], ['excel-import.html', '엑셀 가져오기'], ['uploads.html', '업로드 이력'], ['candidates.html', '후보 큐'], ['dict-history.html', '변경 내역']];
       const ph = DT.some(([f]) => f === curFile()) && document.querySelector('#content .page-header');
       if (ph && !document.querySelector('.dtabs')) ph.insertAdjacentHTML('afterend', `<nav class="tabs dtabs" aria-label="사전 화면">${DT.map(([f, l]) => `<a href="${f}"${f === curFile() ? ' class="on" aria-current="page"' : ''}>${l}</a>`).join('')}</nav>`); }
     drawTree(nav);

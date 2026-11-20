@@ -70,7 +70,7 @@
           <div class="menu fpop" id="f-pop" role="dialog" aria-label="상세 필터">
             <div class="frow"><span class="fl">출처</span><span class="fv"><button class="chip on" data-src="공통">공통</button><button class="chip on" data-src="기관">기관</button></span></div>
             <div class="frow"><span class="fl">상태</span><span class="fv"><button class="chip" data-st="신청 중">신청 중</button><button class="chip" data-st="내 신청 중">내 신청 중</button><button class="chip" data-st="보완 필요">보완 필요</button><button class="chip" data-st="미사용">미사용</button></span></div>
-            <div class="frow"><label class="fl" for="dg">도메인그룹</label><select class="input" id="dg"><option value="">전체</option><option>날짜</option><option>번호</option><option>명칭</option><option>코드</option><option>금액·수량</option></select></div>
+            <div class="frow"><label class="fl" for="dg">도메인그룹</label><select class="input" id="dg"><option value="">전체</option></select></div>
             <div class="frow"><label class="fl" for="since">변경일</label><select class="input" id="since"><option value="">전체</option><option value="7">최근 7일</option><option value="30">최근 30일</option></select></div>
             <div class="frow"><label class="fl" for="flen">길이</label><select class="input" id="flen"><option value="">전체</option><option value="0-10">10 이하</option><option value="11-100">11~100</option><option value="101-99999">101 이상</option></select></div>
             <div class="frow"><label class="fl" for="fdom">도메인 연결</label><select class="input" id="fdom"><option value="">전체</option><option value="y">연결됨</option><option value="n">연결 없음·사전에 없음</option></select></div>
@@ -83,7 +83,7 @@
       <div class="listhead" id="lh" aria-live="polite"></div>
       <div class="bulkbar" id="bulk" hidden role="region" aria-label="선택한 항목 일괄 처리">
         <b id="bulk-n"></b><span class="caption muted">기관 항목만 고를 수 있습니다 · 진행 중 신청이 있는 항목은 제외</span><span class="grow"></span>
-        <button class="btn sm" id="bk-chg">변경 담기</button><button class="btn sm" id="bk-same">같은 값 일괄 변경…</button><button class="btn sm" id="bk-unuse">미사용 담기</button><button class="btn sm" id="bk-del">삭제 담기</button><button class="btn ghost sm" id="bk-clear">선택 해제</button>
+        <button class="btn sm" id="bk-grid">표에서 고치기</button><button class="btn sm" id="bk-chg">변경 담기</button><button class="btn sm" id="bk-same">같은 값 일괄 변경…</button><button class="btn sm" id="bk-unuse">미사용 담기</button><button class="btn sm" id="bk-del">삭제 담기</button><button class="btn ghost sm" id="bk-clear">선택 해제</button>
       </div>
       <div class="scroll">
         <table class="tbl">
@@ -127,29 +127,33 @@
         </div>
         <div class="rq-form" data-rq="domain" hidden>
           <div class="field-row">
-            <div class="field"><label for="dm-grp">도메인그룹 *</label><select class="input" id="dm-grp"><option>날짜</option><option>번호</option><option>명칭</option><option selected>코드</option><option>금액·수량</option></select></div>
-            <div class="field"><label for="dm-fw">형식단어 * <span class="faint">도메인 이름의 앞부분</span></label><select class="input" id="dm-fw"><option>코드</option><option>여부</option><option>구분</option></select></div>
+            <div class="field"><label for="dm-grp">도메인그룹 *</label><select class="input" id="dm-grp"></select></div>
+            <div class="field"><label for="dm-fw">도메인분류 * <span class="faint">도메인 이름의 앞부분 · 연결 형식단어</span></label><select class="input" id="dm-fw"></select><span class="help">분류가 없으면 <a href="domain-groups.html">도메인 그룹 · 분류</a>에서 신청</span></div>
           </div>
           <div class="field-row">
-            <div class="field"><label for="dm-type">논리 타입 *</label><select class="input" id="dm-type"><option value="C">문자(고정) · C</option><option value="V">문자(가변) · V</option><option value="N">숫자 · N</option><option value="T">일시 · T</option></select></div>
+            <div class="field"><label for="dm-type">논리 타입 *</label><select class="input" id="dm-type"><option value="C">문자(고정) · C</option><option value="V">문자(가변) · V</option><option value="N">숫자 · N</option><option value="D">날짜 · D</option><option value="T">일시 · T</option></select></div>
             <div class="field"><label for="dm-len">길이 *</label><input class="input mono" id="dm-len" value="3"></div>
-            <div class="field"><label>소수점</label><input class="input mono" value="" placeholder="—" disabled aria-label="소수점"></div>
+            <div class="field"><label for="dm-sc">소수점 <span class="faint">N만</span></label><input class="input mono" id="dm-sc" value="" placeholder="—"></div>
           </div>
           <div class="card u-bg2 u-mb-12">
             <div class="caption muted">자동 생성 · 형식단어 + 축약명 + 길이 (<a href="settings.html#sys">데이터타입 매핑</a>)</div>
             <div class="flex"><b class="mono" id="dm-name" style="font-size:15px">코드C3</b><span class="caption faint">· Oracle <span class="mono" id="dm-phys">CHAR(3)</span> · PostgreSQL <span class="mono" id="dm-pg">CHAR(3)</span></span><span class="grow"></span><span class="badge b-success" id="dm-dup">중복 없음</span></div>
           </div>
           <div class="field-row">
-            <div class="field"><label>허용 값 범위 · 포맷</label><input class="input mono" value="[A-Z0-9]{3}"></div>
+            <div class="field"><label for="dm-allow">허용 값 범위 · 포맷</label><input class="input mono" id="dm-allow" value="[A-Z0-9]{3}"></div>
             <div class="field"><label for="dm-sec">보안 속성</label><select class="input" id="dm-sec"><option>없음</option><option>개인정보</option><option>개인정보 · 암호화(양방향)</option><option>개인정보 · 암호화(단방향)</option></select><span class="help">이 도메인을 쓰는 속성이 상속합니다</span></div>
           </div>
-          <div class="field"><label>설명</label><textarea class="input" rows="2">3자리 영숫자 코드</textarea></div>
+          <div class="field"><label for="dm-desc">설명</label><textarea class="input" id="dm-desc" rows="2">3자리 영숫자 코드</textarea></div>
+          <div class="caption u-danger u-mb-8" id="dm-err"></div>
           <div class="flex"><span class="grow"></span><button class="btn" id="add-domain">목록에 추가</button></div>
         </div>
         <div class="rq-form" data-rq="word" hidden>
           <div class="field-row"><div class="field"><label for="wd-name">단어명 *</label><input class="input" id="wd-name" value=""></div><div class="field"><label for="wd-abbr">영문약어명 * <span class="faint" id="wd-lim">6자 이내</span></label><input class="input mono" id="wd-abbr" value=""></div></div>
-          <div class="field-row"><div class="field"><label for="wd-eng">영문명</label><input class="input" id="wd-eng" value=""></div><div class="field"><label for="wd-fmt">형식단어</label><select class="input" id="wd-fmt"><option>아니오</option><option>예</option></select></div></div>
-          <div class="field"><label for="wd-syn">동의어 · 금칙어</label><input class="input" id="wd-syn" value="" placeholder="쉼표로 구분 — 신청 문서에 함께 담깁니다"></div>
+          <div class="field-row"><div class="field"><label for="wd-eng">영문명</label><input class="input" id="wd-eng" value=""></div><div class="field"><label for="wd-fmt">형식단어</label><select class="input" id="wd-fmt"><option value="N">아니오</option><option value="Y">예 — 용어의 끝에 오는 분류어</option></select></div></div>
+          <div class="field" id="wd-cls-f" hidden><label for="wd-cls">연결할 도메인분류 <span class="faint">형식단어가 끝에 오는 용어는 이 분류의 도메인만 씁니다</span></label><select class="input" id="wd-cls"></select></div>
+          <div class="field-row"><div class="field"><label for="wd-syn">이음동의어 <span class="faint">쉼표로 구분 · 검색하면 이 단어로 안내</span></label><input class="input" id="wd-syn" value=""></div><div class="field"><label for="wd-forbid">금칙어 <span class="faint">쓰면 안 되는 표기</span></label><input class="input" id="wd-forbid" value=""></div></div>
+          <div class="field"><label for="wd-desc">설명</label><input class="input" id="wd-desc" value=""></div>
+          <div class="caption u-danger u-mb-8" id="wd-err"></div>
           <div class="banner warning" id="wd-sim" hidden><i data-ic=warn></i><div id="wd-sim-t"></div></div>
           <div class="flex u-mt-8"><span class="grow"></span><button class="btn" id="add-word">목록에 추가</button></div>
         </div>
@@ -165,6 +169,7 @@
         <div class="flex"><span class="grow"></span><button class="btn" id="add-term">목록에 추가</button></div>
         </div>
         <div class="hr"></div>
+        <div class="caption muted u-mt-8">여러 건을 한 번에 쓰려면 <a href="dict-grid.html">화면 일괄 작성</a> — 표에서 쓰고 정상 행만 이 바구니로 보냅니다.</div>
         <div class="section-t">바구니 <span class="badge" id="q-n">0</span> <span class="caption muted">자동 저장 · 신청하면 이 목록 그대로 결재 문서가 됩니다 · 단어 → 도메인 → 용어 순으로 정렬</span></div>
         <table class="tbl"><thead><tr><th>구분</th><th>이름</th><th>약어 · 내용</th><th>검사</th><th></th></tr></thead><tbody id="q-body"></tbody></table>
         <div class="banner warning u-mt-8" id="rq-warn" hidden><i data-ic=warn></i><div class="grow" id="rq-warn-t"></div></div>
@@ -217,6 +222,7 @@ window.pageInit = function () {
   const EMPTY = q0.get('empty') === '1';
   const I = EMPTY ? getDict().filter(x => x.src === '공통') : getDict();
   if (EMPTY) document.querySelector('.page-header').insertAdjacentHTML('afterend', `<div class="pad u-pb-0"><div class="banner info"><i data-ic=info></i><div class="grow"><b>기관 사전이 비어 있습니다</b> — 설치 직후 상태(예시 · 저장 안 함). 공통표준 ${I.length}건(목업 시드)은 바로 검색해 쓸 수 있습니다. 기관 단어·용어는 엑셀 초기 적재나 등록 신청으로 시작하세요.</div><a class="btn sm primary" href="excel-import.html?mode=init">엑셀로 초기 적재</a><a class="btn sm" href="dictionary.html">실제 사전으로</a></div></div>`);   // v6: items come from the shared state layer (approvals update versions/pending) — the literal below is only the old seed
+  $('dg').insertAdjacentHTML('beforeend', getGroups().groups.map(g => `<option>${g.name}</option>`).join(''));   // groups come from the group store (domain-groups.html)
   const pub = getPub();
   $('dictver').textContent = `공통표준 2025.11 · 기관 사전 제정 ${pub.cha}차 (${pub.at.slice(5, 10).replace('-', '/')} 공표)`;
   // Korean initial-consonant search
@@ -465,14 +471,24 @@ window.pageInit = function () {
   // DX-01: the change form — every editable field of the item with its current value; changed fields are highlighted and only they go into the request
   function openChg(d, row) {
     if (!d) return; const kk = kindKey(d), F = EDIT_FIELDS[kk] || ['설명'];
-    const cur = l => { const v = d[FIELD_KEY[l] || l]; return l === '코드값' ? fmtLines(v) : Array.isArray(v) ? v.join(', ') : v == null ? '' : String(v); };
+    const cur = l => { const v = l === '형식단어' ? (d.fmt || 'N') : d[FIELD_KEY[l] || l]; return l === '코드값' ? fmtLines(v) : Array.isArray(v) ? v.join(', ') : v == null ? '' : String(v); };
     const ex = row || queue.find(x => x.id === d.id && opOf(x) === '변경');
     const val = l => ex && ex.chg && ex.chg[l] ? (l === '코드값' ? fmtLines(ex.chg[l][1]) : Array.isArray(ex.chg[l][1]) ? ex.chg[l][1].join(', ') : ex.chg[l][1]) : cur(l);
     const doms = [...knownDomains()].filter(x => !/엔터티/.test(x));
     $('chg-body').innerHTML = `<div class="banner info u-mb-12"><i data-ic=info></i><div class="grow"><b>${d.name}</b> <span class="caption muted">${d.kn} · ${d.id} · V${d.ver}</span><div class="caption">바꾸고 싶은 칸만 고치세요 — 바뀐 칸만 신청에 담깁니다.</div></div></div>
-      ${F.map((l, i) => `<div class="chgrow" data-l="${l}"><label for="cf-${i}" class="caption">${l}</label>${l === '설명' || l === '코드값' ? `<textarea class="input${l === '코드값' ? ' mono' : ''}" id="cf-${i}" rows="${l === '코드값' ? 5 : 2}">${val(l)}</textarea>` : l === '도메인' ? `<select class="input mono" id="cf-${i}">${(doms.includes(val(l)) ? doms : [val(l)].concat(doms)).map(o => `<option${o === val(l) ? ' selected' : ''}>${o}</option>`).join('')}</select>` : l === '적용 범위' ? `<select class="input" id="cf-${i}">${['공통', '시스템'].map(o => `<option${o === val(l) ? ' selected' : ''}>${o}</option>`).join('')}</select>` : `<input class="input${l === '영문약어명' ? ' mono' : ''}" id="cf-${i}" value="${val(l)}">`}<div class="cur">지금: ${cur(l).replace(/\n/g, ' · ') || '(빈 값)'}</div></div>`).join('')}
+      ${F.map((l, i) => `<div class="chgrow" data-l="${l}"><label for="cf-${i}" class="caption">${l}</label>${l === '설명' || l === '코드값' ? `<textarea class="input${l === '코드값' ? ' mono' : ''}" id="cf-${i}" rows="${l === '코드값' ? 5 : 2}">${val(l)}</textarea>` : l === '도메인' ? `<select class="input mono" id="cf-${i}">${(doms.includes(val(l)) ? doms : [val(l)].concat(doms)).map(o => `<option${o === val(l) ? ' selected' : ''}>${o}</option>`).join('')}</select>` : l === '적용 범위' ? `<select class="input" id="cf-${i}">${['공통', '시스템'].map(o => `<option${o === val(l) ? ' selected' : ''}>${o}</option>`).join('')}</select>`
+        : l === '형식단어' ? `<select class="input" id="cf-${i}">${[['N', '아니오'], ['Y', '예']].map(([v, t]) => `<option value="${v}"${v === (val(l) || 'N') ? ' selected' : ''}>${t}</option>`).join('')}</select>`
+        : l === '보안 속성' ? `<select class="input" id="cf-${i}">${['', '없음', '개인정보', '개인정보 · 암호화(양방향)', '개인정보 · 암호화(단방향)'].map(o => `<option value="${o}"${o === val(l) ? ' selected' : ''}>${o || '(지정 안 함)'}</option>`).join('')}</select>`
+        : l === '도메인그룹' ? `<select class="input" id="cf-${i}">${getGroups().groups.filter(g => g.st === '사용').map(g => g.name).concat(val(l) && !getGroups().groups.some(g => g.name === val(l)) ? [val(l)] : []).map(o => `<option${o === val(l) ? ' selected' : ''}>${o}</option>`).join('')}</select>`
+        : `<input class="input${/영문약어명|물리 타입|도메인명/.test(l) ? ' mono' : ''}" id="cf-${i}" value="${val(l)}">`}<div class="cur">지금: ${cur(l).replace(/\n/g, ' · ') || '(빈 값)'}</div><div class="cur u-warning" data-msg="${i}"></div></div>`).join('')}
       <div class="flex"><button class="btn ghost sm" id="cf-cancel">닫기</button><span class="grow"></span><span class="caption muted" id="cf-n"></span><button class="btn" id="cf-ok">바구니에 반영</button></div>`;
-    const mark = () => { let n = 0; F.forEach((l, i) => { const v = $('cf-' + i).value.trim(), m = v !== cur(l).trim(); $('chg-body').querySelector(`[data-l="${l}"]`).classList.toggle('mod', m); if (m) n++; }); $('cf-n').textContent = n ? `바뀐 칸 ${n}개` : '바뀐 칸 없음'; formDirty = n > 0; return n; };
+    // G5: renames and domain type changes say what they touch
+    const note = (l, v) => { if (FIELD_KEY[l] === 'name') { const clash = getDict().some(x => x.id !== d.id && x.k === d.k && x.name === v && x.ver > 0); const rule = d.k === 'domain' ? checkItem({ k: 'domain', name: v, dg: d.dg }).filter(p => p.lvl === 'block' && !/사전에 있음|신청 중/.test(p.msg)).map(p => p.msg) : [];
+        return clash ? `'${v}'은 이미 있습니다` : rule.length ? rule.join(' · ') : `‘${d.name}’은 과거 이름으로 남아 검색됩니다${d.use ? ` · 사용처 ${d.use}곳은 재검토 대상이 됩니다(모델은 자동으로 바뀌지 않음)` : ''}`; }
+      if (l === '물리 타입' || l === '도메인') return d.use ? `사용처 ${d.use}곳의 타입이 바뀝니다 — 승인 뒤 모델에서 재검토` : '';
+      if (l === '형식단어') return v === 'Y' ? '형식단어가 되면 도메인분류와 연결할 수 있습니다(도메인 그룹 · 분류 화면)' : '형식단어를 해제하면 이 단어로 끝나는 용어는 ‘형식단어로 끝나지 않음’ 경고를 받습니다';
+      return ''; };
+    const mark = () => { let n = 0; F.forEach((l, i) => { const v = $('cf-' + i).value.trim(), m = v !== cur(l).trim(); $('chg-body').querySelector(`[data-l="${l}"]`).classList.toggle('mod', m); $('chg-body').querySelector(`[data-msg="${i}"]`).textContent = m ? note(l, v) : ''; if (m) n++; }); $('cf-n').textContent = n ? `바뀐 칸 ${n}개` : '바뀐 칸 없음'; formDirty = n > 0; return n; };
     $('chg-body').oninput = mark; $('chg-body').onchange = mark; mark();
     $('cf-cancel').onclick = () => { formDirty = false; show(lastKind); };
     $('cf-ok').onclick = () => {
@@ -562,10 +578,8 @@ window.pageInit = function () {
   document.querySelector('#pn-request [data-rq="term"]').addEventListener('click', e => { if (e.target.closest('.cand')) setTimeout(() => { $('tm-abbr').value = pickAbbr(); }, 0); });
   $('add-term').onclick = () => { if (analysed !== $('tm-name').value.trim() || !$('tm-abbr').value) { toast('용어명을 바꾼 뒤 분석이 끝나지 않았거나 분해할 수 없습니다 — 분석 결과를 확인하세요', 'danger'); return; } add0(); };
   const add0 = () => add({ k: 'term', name: $('tm-name').value.trim(), abbr: pickAbbr(), dom: $('tm-dom').value, desc: $('tm-desc').value.trim(), from: '분해: ' + ((document.querySelector('#pn-request [data-rq="term"] .cand.on .grow') || {}).textContent || '') });
-  $('add-word').onclick = () => add({ k: 'word', name: $('wd-name').value.trim(), abbr: $('wd-abbr').value.trim().toUpperCase(), eng: $('wd-eng').value.trim(), syn: $('wd-syn').value.split(',').map(s => s.trim()).filter(Boolean) });
   // similar-standard banner from the same rule as the duplicate-reason check (CL12-11)
   ['wd-name', 'wd-abbr'].forEach(id => $(id).addEventListener('input', () => { const it = { k: 'word', name: $('wd-name').value.trim(), abbr: $('wd-abbr').value.trim().toUpperCase() }; const sm = it.abbr.length >= 3 && I.find(x => x.k === 'word' && x.abbr !== it.abbr && (x.abbr.startsWith(it.abbr.slice(0, 4)) || it.abbr.startsWith(x.abbr.slice(0, 4)))); $('wd-sim').hidden = !sm; if (sm) $('wd-sim-t').innerHTML = `비슷한 표준이 있습니다: <b>${sm.name} ${sm.abbr}</b>(${sm.src}). 같은 뜻이면 기존 단어를 쓰세요. 다르면 바구니에서 중복 허용 사유를 적습니다.`; }));
-  $('add-domain').onclick = () => add({ k: 'domain', name: $('dm-name').textContent, abbr: '', dom: $('dm-phys').textContent, dupOk: $('dm-dup').classList.contains('b-success') });
   $('q-body').addEventListener('click', e => {
     const d = e.target.closest('[data-del]'); if (d) { queue.splice(+d.dataset.del, 1); drawQueue(); return; }
     const ed = e.target.closest('[data-edit]'); if (!ed) return; const it = queue[+ed.dataset.edit];
@@ -663,18 +677,34 @@ window.pageInit = function () {
     if (a) { applyCond(L[+a.dataset.ss].c); sel = null; ssMenu(false); draw(); } });
   document.addEventListener('basket', () => { if (getBasket().items.length !== queue.length) { queue.splice(0, queue.length, ...getBasket().items); } });
   drawQueue();
-  const MAP = { C: ['CHAR', 'CHAR'], V: ['VARCHAR2', 'VARCHAR'], N: ['NUMBER', 'NUMERIC'], T: ['DATE', 'TIMESTAMP'] };
+  const MAP = { C: ['CHAR', 'CHAR'], V: ['VARCHAR2', 'VARCHAR'], N: ['NUMBER', 'NUMERIC'], D: ['DATE', 'DATE'], T: ['TIMESTAMP', 'TIMESTAMP'] };
+  // G1: group → class from the dictionary's domain classes (the class name is the front of the domain name)
+  const GR = getGroups();
+  $('dm-grp').innerHTML = GR.groups.filter(g => g.st === '사용').map(g => `<option value="${g.id}"${g.name === '코드' ? ' selected' : ''}>${g.name}</option>`).join('');
+  const fillCls = () => { const g = $('dm-grp').value; $('dm-fw').innerHTML = GR.classes.filter(c => c.group === g && c.st === '사용').map(c => `<option value="${c.name}">${c.name} · 형식단어 ${c.fw}</option>`).join('') || '<option value="">(이 그룹에 분류 없음)</option>'; };
+  const domItem = () => { const cls = $('dm-fw').value, ty = $('dm-type').value, len = $('dm-len').value.trim(), sc = $('dm-sc').value.trim();
+    const name = cls + ty + ('DT'.includes(ty) ? '' : len + (sc && ty === 'N' ? ',' + sc : ''));
+    const phys = ty === 'D' || ty === 'T' ? MAP[ty][0] : `${MAP[ty][0]}(${len}${sc && ty === 'N' ? ',' + sc : ''})`;
+    return { k: 'domain', name, abbr: '', dom: phys, pg: ty === 'D' || ty === 'T' ? MAP[ty][1] : `${MAP[ty][1]}(${len}${sc && ty === 'N' ? ',' + sc : ''})`, dg: (GR.groups.find(g => g.id === $('dm-grp').value) || {}).name, allow: $('dm-allow').value.trim(), sec: $('dm-sec').value, desc: $('dm-desc').value.trim() }; };
   const upd = () => {
-    const fw = $('dm-fw').value, ty = $('dm-type').value, len = $('dm-len').value.trim();
-    const okLen = ty === 'T' || /^[1-9]\d*$/.test(len);
-    const nm = fw + ty + (ty === 'T' ? '' : len);
-    $('dm-name').textContent = okLen ? nm : '—';
-    $('dm-phys').textContent = !okLen ? '—' : ty === 'T' ? 'DATE' : `${MAP[ty][0]}(${len})`;
-    $('dm-pg').textContent = !okLen ? '—' : ty === 'T' ? 'TIMESTAMP' : `${MAP[ty][1]}(${len})`;
-    const dup = getDict().some(x => x.k === 'domain' && x.name === nm) || knownDomains().has(nm); const b = $('dm-dup');
-    b.textContent = !okLen ? '길이는 1 이상 정수' : dup ? '이미 있음 · 기존 도메인 사용' : '중복 없음'; b.className = 'badge ' + (!okLen ? 'b-danger' : dup ? 'b-warning' : 'b-success');
+    $('dm-sc').disabled = $('dm-type').value !== 'N'; $('dm-len').disabled = 'DT'.includes($('dm-type').value);
+    const it = domItem(), probs = checkItem(it, { batch: queue }).filter(p => p.lvl === 'block');
+    $('dm-name').textContent = it.name; $('dm-phys').textContent = it.dom; $('dm-pg').textContent = it.pg;
+    const dup = probs.some(p => /사전에 있음|신청 중/.test(p.msg)); const b = $('dm-dup');
+    b.textContent = probs.length ? (dup ? '이미 있음 · 기존 도메인 사용' : '규칙 확인') : '중복 없음 · 규칙 통과'; b.className = 'badge ' + (probs.length ? (dup ? 'b-warning' : 'b-danger') : 'b-success');
+    $('dm-err').textContent = probs.map(p => p.msg).join(' · ');
   };
-  ['dm-fw', 'dm-type', 'dm-len'].forEach(id => { const el = $(id); el.addEventListener('input', upd); el.addEventListener('change', upd); });
+  $('dm-grp').addEventListener('change', () => { fillCls(); upd(); });
+  ['dm-fw', 'dm-type', 'dm-len', 'dm-sc'].forEach(id => { const el = $(id); el.addEventListener('input', upd); el.addEventListener('change', upd); });
+  fillCls(); upd();
+  // G2: word — format word links to a class; synonyms and forbidden words are separate
+  $('wd-cls').innerHTML = '<option value="">(나중에 분류를 만들 때 연결)</option>' + GR.classes.filter(c => c.st === '사용').map(c => `<option value="${c.id}">${c.name} · ${(GR.groups.find(g => g.id === c.group) || {}).name} (지금 형식단어 ${c.fw})</option>`).join('');
+  $('wd-fmt').onchange = () => { $('wd-cls-f').hidden = $('wd-fmt').value !== 'Y'; };
+  const wordItem = () => ({ k: 'word', name: $('wd-name').value.trim(), abbr: $('wd-abbr').value.trim().toUpperCase(), eng: $('wd-eng').value.trim(), fmt: $('wd-fmt').value, cls: $('wd-fmt').value === 'Y' ? $('wd-cls').value || undefined : undefined, syn: $('wd-syn').value.split(',').map(s => s.trim()).filter(Boolean), forbid: $('wd-forbid').value.split(',').map(s => s.trim()).filter(Boolean), desc: $('wd-desc').value.trim() });
+  ['wd-name', 'wd-abbr', 'wd-syn', 'wd-forbid'].forEach(id => $(id).addEventListener('input', () => { const p = checkItem(wordItem(), { batch: queue }).filter(x => x.lvl === 'block' && $('wd-name').value.trim()); $('wd-err').textContent = p.map(x => x.msg).join(' · '); }));
+  $('add-word').onclick = () => { const p = checkItem(wordItem(), { batch: queue }).filter(x => x.lvl === 'block'); if (p.length) { toast(p[0].msg, 'danger'); return; } add(wordItem()); };
+  $('add-domain').onclick = () => { const it = domItem(), p = checkItem(it, { batch: queue }).filter(x => x.lvl === 'block'); if (p.length) { toast(p[0].msg, 'danger'); return; } add(it); };
+  $('bk-grid').onclick = () => { location.href = 'dict-grid.html?mode=edit&ids=' + [...picked].join(','); };
   if (q0.get('req') === 'domain') { $('pn-detail').classList.remove('open'); panel.classList.add('open'); panel.querySelector('[data-rq="domain"].chip').click(); }
   // ?redo=REQ-… : re-request after rejection/withdrawal starts from the submitted items and reason (CL10-03)
   if (q0.get('redo')) {
