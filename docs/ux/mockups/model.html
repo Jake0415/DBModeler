@@ -721,6 +721,8 @@ window.pageInit = function () {
     return out;
   }
   // PK columns stay together at the top: the array order is the canvas · DDL · definition-sheet order
+  // a role column name that no other column of the entity already uses (원고객번호 → 원고객번호2 · ORG_X → ORG_X_2)
+  function uniqCol(e, n, p) { let i = 1, nn = n, pp = p; while (e.a.some(x => x.n === nn || x.p === pp)) { i++; nn = n + i; pp = p + '_' + i; } return [nn, pp]; }
   function placeAttr(e, a, atEnd) { const i = e.a.indexOf(a); if (i >= 0) e.a.splice(i, 1); const k = e.a.filter(x => x.pk).length; e.a.splice(a.pk || !atEnd ? k : e.a.length, 0, a); }
   // a relation whose FK must be role-named (name clash, or a second relation into the same child) gets a group,
   // so the shared FK rule (fkOf) pairs its columns by fkp instead of by name
@@ -739,8 +741,9 @@ window.pageInit = function () {
       if (c.a.some(fkMatch(r, a))) return;
       const clash = c.a.some(x => x.n === a.n), idr = r.k === 'id';
       if (clash && !r.g) ensureGroup(r, e, c, a);
-      const x = { n: clash ? '원' + a.n : a.n, p: clash ? 'ORG_' + a.p : a.p, t: a.t, dom: domOf(a), fk: 1, fkp: a.p, pk: idr ? 1 : 0, nn: idr ? 1 : 0, s: clash ? 'comb' : a.s };
-      if (r.g) x.fkg = r.g; placeAttr(c, x, true); n++; if (idr) n += pkSpread(c, x, seen); });
+      const [un, up] = clash ? uniqCol(c, '원' + a.n, 'ORG_' + a.p) : [a.n, a.p];
+      const x = { n: un, p: up, t: a.t, dom: domOf(a), fk: 1, fkp: a.p, pk: idr ? 1 : 0, nn: idr || relOf(r).opt === 'must' ? 1 : 0, s: clash ? 'comb' : a.s };   // a waiting FK follows the relation's optionality (post-review C9)
+      if (r.g) x.fkg = r.g; placeAttr(c, x, true); n++; syncUk(r); if (idr) n += pkSpread(c, x, seen); });
     return n;
   }
   // a child FK kept as a plain column: it no longer carries the parent's key — out of the PK as well, into the plain group
@@ -930,7 +933,7 @@ window.pageInit = function () {
   function consRows(e) {
     if (e.p === '—') return '<div class="banner warning"><i data-ic=warn></i><div>테이블 물리명이 정해지지 않아 제약조건 이름을 만들 수 없습니다 — 게이트 A 경고</div></div>';
     const pk = e.a.filter(a => a.pk).map(a => a.p);
-    const fks = R.filter(r => r.t === e.id && r.f !== r.t && r.k !== 'mn').map(r => { const par = ent(r.f), f = fkOf(r, E); return f.st === 'ok' ? { n: f.name, c: f.cols.join(', '), note: `→ ${par.p}` } : { n: f.st === 'ex' ? 'FK 제외' : 'FK 누락', c: '—', note: f.why, warn: f.st === 'miss' }; });
+    const fks = R.filter(r => r.t === e.id && r.k !== 'mn').map(r => { const par = ent(r.f), f = fkOf(r, E); return f.st === 'ok' ? { n: f.name, c: f.cols.join(', '), note: `→ ${par.p}${r.f === r.t ? ' (재귀)' : ''}${r.del && r.del !== 'none' ? ' · ON DELETE ' + (r.del === 'cascade' ? 'CASCADE' : 'SET NULL') : ''}` } : { n: f.st === 'ex' ? 'FK 제외' : 'FK 누락', c: '—', note: f.why, warn: f.st === 'miss' }; });
     let rows = `<tr><td><span class="badge">PK</span></td><td class="mono">${e.p}_PK</td><td class="mono">${pk.join(', ')}</td><td class="faint">인덱스 자동</td></tr>`;
     rows += (e.uk || []).map((c, i) => `<tr><td><span class="badge">UK</span></td><td class="mono">${e.p}_UK${i + 1}</td><td class="mono">${c}</td><td></td></tr>`).join('');
     rows += fks.map(f => `<tr><td><span class="badge ${f.warn ? 'b-warning' : 'b-info'}">FK</span></td><td class="${f.c === '—' ? '' : 'mono'}">${f.n}</td><td class="mono">${f.c}</td><td class="${f.c === '—' ? 'caption' : 'mono faint'}">${f.note}</td></tr>`).join('');
@@ -1346,8 +1349,9 @@ window.pageInit = function () {
     if (ev.ctrlKey && k === 'y') { redoFn(); ev.preventDefault(); return; }
     if (ev.ctrlKey || ev.metaKey) return;
     const inCanvas = singleKeys() && (document.activeElement === document.body || cv.contains(document.activeElement));
-    if (inCanvas && k === 'v') setTool('select'); else if (inCanvas && k === 'e') setTool('entity'); else if (inCanvas && k === 'r') { if (typeof sel === 'string' && ent(sel) && canEdit()) childPicker(sel); else setTool('rel'); }   // keyboard path: a selected entity is the parent
+    if (inCanvas && k === 'v') setTool('select'); else if (inCanvas && k === 'e') setTool('entity'); else if (inCanvas && k === 'r') { if (!canEdit()) guard(); else if (typeof sel === 'string' && ent(sel)) childPicker(sel); else setTool('rel'); }   // read-only: the reason, never the tool mode (post-review CL10)   // keyboard path: a selected entity is the parent
     else if (inCanvas && k === 'm') setTool('memo');
+    else if (ev.key === 'Escape' && rolePending && document.querySelector('.pop[aria-label="역할명"]')) { rolePending(); }
     else if (ev.key === 'Escape') { document.querySelectorAll('.pop').forEach(p => p.remove()); $('expmenu').classList.remove('open'); closeGrid(); setTool('select'); }
     else if (ev.key === 'Enter' && sel) { addAttr(); ev.preventDefault(); }
     else if (ev.key === 'Delete' && sel) { if (!guard()) askDelete(sel); }
@@ -1406,15 +1410,22 @@ window.pageInit = function () {
     sel = null; selRel = r; render(); showRP(); relPanel(r);
   });
   // extra actions of the relation panel (exclusive group · M:N) — bound every time the panel is drawn
+  // M:N → a cross entity built from the two parents' real keys (post-review C8): name = both names + 관계, PK = both PKs
+  function mnPlan(r) { const a = ent(r.f), b = ent(r.t); if (!a || !b) return null; const base = s => s.replace(/(기본|내역|이력|정보)$/, ''), stem = p => p.replace(/_(M|D|H|C|R|L)$/, '');
+    let n = base(a.n) + base(b.n) + '관계', p = stem(a.p) + '_' + stem(b.p) + '_R'; let i = 2; while (E.some(e => e.n === n || e.p === p)) { n = base(a.n) + base(b.n) + '관계' + i; p = stem(a.p) + '_' + stem(b.p) + '_R' + i; i++; }
+    return { n, p, cols: [...a.a.filter(k => k.pk), ...b.a.filter(k => k.pk)].map(k => k.n), wait: [a, b].filter(e => !e.a.some(k => k.pk)).map(e => e.n) }; }
   function relExtras(r) {
     const xo = $('xor-off'); if (xo) xo.onclick = () => { if (guard()) return; snap(); const g = r.xg; R.forEach(x => { if (x.xg === g) delete x.xg; }); render(); relPanel(r); toast('배타 관계를 해제했습니다', 'info'); };
     const go = $('mn-go'); if (go) go.onclick = () => {
-      if (guard()) return; snap();
-      R.splice(R.indexOf(r), 1); const a = box(r.f), b = box(r.t);
-      E.push({ id: 'rr', n: '요구사항리스크관계', p: 'RQRM_RISK_R', c: 'A', x: (a.x + b.x) / 2 + 300, y: (a.y + b.y) / 2, px: (a.x + b.x) / 2 + 320, py: (a.y + b.y) / 2, a: [{ n: '요구사항ID', p: 'DEMND_MATER_ID', t: 'VARCHAR2(10)', pk: 1, fk: 1, nn: 1, s: 'ok' }, { n: '리스크ID', p: 'RISK_ID', t: 'VARCHAR2(10)', pk: 1, fk: 1, nn: 1, s: 'ok' }] });
-      R.push({ f: r.f, t: 'rr', k: 'id', name: '' }, { f: r.t, t: 'rr', k: 'id', name: '' });
-      if (curView !== 'all') { const v = vCur(); (v.ents = v.ents || []).push('rr'); }
-      selRel = null; sel = 'rr'; render(); showRP(); toast('M:N을 해소했습니다 — 교차 엔터티 ‘요구사항리스크관계’(식별 관계)');
+      if (guard()) return; const pl = mnPlan(r); if (!pl) return;
+      if (pl.wait.length) { toast(`${pl.wait.join(', ')}에 식별자가 없어 해소할 수 없습니다 — 식별자를 먼저 정하세요`, 'info'); return; }
+      snap(); R.splice(R.indexOf(r), 1); const a = box(r.f), b = box(r.t), id = 'x' + Date.now().toString(36);
+      const x = { id, n: pl.n, p: pl.p, c: 'A', x: (a.x + b.x) / 2 + 300, y: (a.y + b.y) / 2, px: (a.x + b.x) / 2 + 320, py: (a.y + b.y) / 2, a: [] };
+      const rels = [r.f, r.t].map((pid, j) => { const g = 'g' + id + j; ent(pid).a.filter(k => k.pk).forEach(k => { const [n, p] = x.a.some(y => y.n === k.n || y.p === k.p) ? uniqCol(x, '원' + k.n, 'ORG_' + k.p) : [k.n, k.p]; x.a.push({ n, p, t: k.t, dom: domOf(k), pk: 1, fk: 1, fkg: g, fkp: k.p, nn: 1, s: k.s === 'ex' ? 'ok' : k.s || 'ok' }); });
+        return { f: pid, t: id, k: 'id', name: '', g, card: '0n', opt: 'must', del: 'none' }; });
+      E.push(x); R.push(...rels);
+      if (curView !== 'all') { const v = vCur(); (v.ents = v.ents || []).push(id); }
+      selRel = null; sel = id; render(); showRP(); toast(`M:N을 해소했습니다 — 교차 엔터티 ‘${hx(pl.n)}’ · 식별 관계 2개 · PK ${x.a.length}개`, 'success', undoAction()); agLive('M:N 해소');
     };
   }
   $('b-layout').onclick = () => {
@@ -1656,6 +1667,7 @@ window.pageInit = function () {
   });
   // ---- relations (18): connect without asking · set in the panel · delete by condition — FE mockup behaviour
   let selRel = null;   // the relation shown in the right panel (an entity selection clears it)
+  let rolePending = null;   // an open role popover's cancel — a global Esc goes there too
   const KCARD = { '0n': '0개 이상', '1n': '1개 이상', '01': '0~1개', '1': '정확히 1개' };
   const KOPT = { must: '반드시 있다', may: '없어도 된다' };
   const DELS = { none: '자식이 있으면 막기 (기본 · NO ACTION)', cascade: '자식 행도 지우기 (CASCADE)', setnull: '자식의 FK를 비우기 (SET NULL)' };
@@ -1665,19 +1677,27 @@ window.pageInit = function () {
   function relOf(r) { return { card: r.card || (r.k === 'one' ? '1' : '0n'), opt: r.k === 'id' ? 'must' : (r.opt || (relCols(r).some(a => a.nn) ? 'must' : 'may')), del: r.del || 'none' }; }
   // older relations get an FK group when their columns are unambiguous — delete / convert then work on the group only
   function normalizeGroups() {
+    // post-review C7: each parent key column must have exactly one unclaimed candidate, otherwise the relation stays ungrouped (paired in the panel by the modeler)
     R.forEach((r, i) => { if (r.g || r.k === 'mn') return; const p = ent(r.f), c = ent(r.t); if (!p || !c) return; const pk = p.a.filter(k => k.pk); if (!pk.length) return;
-      const cols = pk.map(k => c.a.find(x => x.fk && !x.fkg && fkMatch(r, k)(x))); if (!cols.every(Boolean) || new Set(cols).size !== cols.length) return;
-      r.g = 'g' + i + '_' + Date.now().toString(36); r.gAuto = 1; cols.forEach((x, j) => { x.fkg = r.g; x.fkp = pk[j].p; }); });
+      const cand = pk.map(k => c.a.filter(x => x.fk && !x.fkg && fkMatch(r, k)(x))); if (cand.some(l => l.length !== 1)) return;
+      const cols = cand.map(l => l[0]); if (new Set(cols).size !== cols.length) return;
+      r.g = 'ga_' + r.f + '_' + r.t + '_' + i; r.gAuto = 1; cols.forEach((x, j) => { x.fkg = r.g; x.fkp = pk[j].p; }); });   // a stable id: the same on every load, so comparisons pair it
   }
-  // 1:1 without identification is kept unique by a UK on the FK columns
-  function syncUk(r) { const c = ent(r.t); if (!c) return 0; const cols = relCols(r).map(a => a.p).join(', ');
-    if (relOf(r).card === '1' && r.k !== 'id' && cols) { c.uk = c.uk || []; if (r.uk && r.uk !== cols) c.uk = c.uk.filter(x => x !== r.uk); if (!c.uk.includes(cols)) c.uk.push(cols); r.uk = cols; return 1; }
+  // 1:1 and 0..1 are kept unique by a UK on the FK columns — unless the child PK is exactly those columns (identifying 1:1 with no other key column)
+  function syncUk(r) { const c = ent(r.t); if (!c) return 0; const rc = relCols(r), cols = rc.map(a => a.p).join(', ');
+    const pkOnly = c.a.filter(a => a.pk).every(a => rc.includes(a));
+    if (['1', '01'].includes(relOf(r).card) && cols && !pkOnly) { c.uk = c.uk || []; if (r.uk && r.uk !== cols) c.uk = c.uk.filter(x => x !== r.uk); if (!c.uk.includes(cols)) c.uk.push(cols); r.uk = cols; return 1; }
     if (r.uk) { c.uk = (c.uk || []).filter(x => x !== r.uk); delete r.uk; return -1; } return 0; }
-  // a cascade travels along identifying relations — the path is shown before the user picks it
-  function cascadeChain(r, seen = new Set()) { const out = []; if (seen.has(r.t)) return out; seen.add(r.t); const c = ent(r.t); if (!c) return out; out.push(c.n);
-    R.filter(x => x.f === r.t && x.f !== x.t && x.del === 'cascade').forEach(x => out.push(...cascadeChain(x, seen))); return out; }
-  // tables under the cascade that still say ‘막기’ — their rows make the whole delete fail
-  function cascadeBlockers(r) { const names = new Set(cascadeChain(r)); return R.filter(x => x.f !== x.t && x.k !== 'mn' && (x.del || 'none') === 'none' && names.has((ent(x.f) || {}).n)).map(x => ent(x.t).n); }
+  // SET NULL needs every FK column of this relation to accept NULL — not a PK, not NOT NULL (post-review C3)
+  const nullable = r => relOf(r).opt === 'may' && relCols(r).every(a => !a.pk && !a.nn);
+  // a cascade travels only along real FK constraints (fkOf ok) marked CASCADE — entity ids, not names (post-review C10 · CL7)
+  const liveFk = x => x.f !== x.t && x.k !== 'mn' && fkOf(x, E).st === 'ok';
+  function cascadeChain(r, seen = new Set()) { const out = []; if (seen.has(r.t) || !liveFk(r)) return out; seen.add(r.t); out.push(r.t);
+    R.filter(x => x.f === r.t && x.del === 'cascade' && liveFk(x)).forEach(x => out.push(...cascadeChain(x, seen))); return out; }
+  // ‘막기’ FKs that make deleting the parent row fail: under the cascade, and the parent's other children (siblings)
+  function cascadeBlockers(r) { const ids = new Set(cascadeChain(r)), under = [], sib = [];
+    R.forEach(x => { if (x === r || !liveFk(x) || (x.del || 'none') !== 'none') return; if (ids.has(x.f)) under.push(x.t); else if (x.f === r.f) sib.push(x.t); });
+    return { under: [...new Set(under)], sib: [...new Set(sib)] }; }
   // connect: no questions — the parent key becomes the child FK; ask only for a role name when names clash
   function makeRel(fId, tId, kind) {
     const parent = ent(fId), child = ent(tId); if (!parent || !child || guard()) return;
@@ -1686,20 +1706,23 @@ window.pageInit = function () {
     const g = 'g' + Date.now().toString(36); snap();
     const r = { f: fId, t: tId, k: self ? 'nonid' : kind, name: self ? '상위' : '', g, card: one ? '1' : '0n', opt: self ? 'may' : 'must', del: 'none' };   // resolution R4: child needs its parent (FK NOT NULL) by default · recursive top rows have none
     R.push(r); selRel = r; sel = null;
-    if (kind === 'mn') { render(); showRP(); toast(`${parent.n} ↔ ${child.n} M:N 관계를 만들었습니다 — 관계 패널의 [M:N 해소]로 교차 엔터티를 만드세요`, 'info', undoAction()); return; }
+    if (kind === 'mn') { render(); showRP(); toast(`${parent.n} ↔ ${child.n} M:N 관계를 만들었습니다 — 관계 패널의 [M:N 해소]로 교차 엔터티를 만드세요`, 'info', undoAction()); agLive('M:N 관계 생성 · 해소 필요'); return; }
     const pk = parent.a.filter(a => a.pk);
-    if (!pk.length) { render(); showRP(); toast(`‘${parent.n}’에 식별자가 없어 FK를 만들지 않았습니다(FK 대기) — 식별자를 정하면 FK가 채워집니다`, 'info', { label: '식별자 지정', fn: () => { selRel = null; focusEnt(parent.id); } }); return; }
+    if (!pk.length) { render(); showRP(); toast(`‘${parent.n}’에 식별자가 없어 FK를 만들지 않았습니다(FK 대기) — 식별자를 정하면 FK가 채워집니다`, 'info', [undoAction(), { label: '식별자 지정', fn: () => { selRel = null; focusEnt(parent.id); } }]); agLive('관계 생성 · FK 대기'); return; }
     const added = [], clashes = [];
-    pk.forEach(k => { const clash = self || child.a.some(a => a.n === k.n);
-      const x = { n: self ? '상위' + k.n : clash ? '원' + k.n : k.n, p: self ? 'UPR_' + k.p : clash ? 'ORG_' + k.p : k.p, t: k.t, dom: domOf(k), fk: 1, fkg: g, fkp: k.p, pk: idr ? 1 : 0, nn: self ? 0 : 1, s: clash ? 'comb' : (k.s === 'ex' ? 'ok' : k.s || 'ok') };
+    pk.forEach(k => { const clash = self || child.a.some(a => a.n === k.n || a.p === k.p);
+      const [un, up] = self ? uniqCol(child, '상위' + k.n, 'UPR_' + k.p) : clash ? uniqCol(child, '원' + k.n, 'ORG_' + k.p) : [k.n, k.p];   // post-review C6: a third role gets ORG_X_3, never a duplicate
+      const x = { n: un, p: up, t: k.t, dom: domOf(k), fk: 1, fkg: g, fkp: k.p, pk: idr ? 1 : 0, nn: self ? 0 : 1, s: clash ? 'comb' : (k.s === 'ex' ? 'ok' : k.s || 'ok') };
       placeAttr(child, x, true); added.push(x); if (clash) clashes.push(x); if (idr) pkSpread(child, x); });
     if (one && !idr) syncUk(r);
     render(); showRP();
-    toast(`${parent.n} → ${child.n} 관계 · FK ${added.length}개 추가${idr ? ' (자식 식별자)' : ''}${one && !idr ? ' · 1:1 보장 UK' : ''}`, 'success', undoAction()); agLive(`관계 생성 · FK ${added.length}개 추가`);
-    if (clashes.length) rolePop(r, clashes);
+    const msg = `${parent.n} → ${child.n} 관계 · FK ${added.length}개 추가${idr ? ' (자식 식별자)' : ''}${r.uk ? ' · 1:1 보장 UK' : ''}`;
+    if (clashes.length) { agLive('관계 미리 만듦 · 역할명을 정하세요'); rolePop(r, clashes, msg); return; }   // post-review C5: the success toast waits for the role confirmation
+    toast(msg, 'success', undoAction()); agLive(`관계 생성 · FK ${added.length}개 추가`);
   }
   // role names: suggested and selected — Enter keeps what is in the box, typing replaces it · Esc / 취소 takes the new relation back (resolution R2)
-  function rolePop(r, cols) {
+  function rolePop(r, cols, msg) {
+    const hid = histIds[histIds.length - 1];   // the snapshot taken just before this relation — renaming joins it, cancelling drops it
     const c = ent(r.t), node = $('n-' + r.t); if (!c || !node) return;
     const b = node.getBoundingClientRect(), cr = cv.getBoundingClientRect();
     const p = document.createElement('div'); p.className = 'pop'; p.setAttribute('role', 'dialog'); p.setAttribute('aria-label', '역할명');
@@ -1709,9 +1732,16 @@ window.pageInit = function () {
       cols.map((x, i) => `<div class="field u-mt-8"><label for="role-${i}">부모 ${hx(x.fkp)}을 받는 컬럼</label><input class="input" id="role-${i}" value="${hx(x.n)}"><span class="help mono">${hx(x.p)}</span></div>`).join('') +
       `<div class="flex"><button class="btn sm ghost" data-no>연결 취소 (Esc)</button><span class="grow"></span><button class="btn sm primary" data-ok>확정 (Enter)</button></div>`;
     cv.appendChild(p); const first = p.querySelector('input'); first.focus(); first.select();
-    const done = () => { const vals = cols.map((x, i) => p.querySelector('#role-' + i).value.trim()); if (vals.some((v, i) => v && v !== cols[i].n)) { snap(); vals.forEach((v, i) => { if (v && v !== cols[i].n) { cols[i].n = v; cols[i].s = 'comb'; } }); render(); toast('역할명을 정했습니다 — 표준 맞추기에서 용어를 확인하세요', 'info', undoAction()); } p.remove(); };
-    const cancel = () => { p.remove(); const back = $('n-' + r.f); undo(); selRel = null; render(); showRP(); document.querySelectorAll('.toast').forEach(t => t.remove()); toast('연결을 취소했습니다 — 모델은 그대로입니다', 'info'); agLive('관계 연결 취소'); if (back) back.focus && back.focus(); };
-    p.addEventListener('keydown', ev => { ev.stopPropagation(); if (ev.key === 'Enter') { ev.preventDefault(); done(); } else if (ev.key === 'Escape') { ev.preventDefault(); cancel(); } });
+    const fresh = () => histIds[histIds.length - 1] === hid && R.includes(r);   // nothing else was edited since the relation was made
+    rolePending = () => cancel();
+    const done = () => { p.remove(); rolePending = null; const vals = cols.map((x, i) => p.querySelector('#role-' + i).value.trim()); let named = 0;
+      vals.forEach((v, i) => { if (v && v !== cols[i].n && !cols.some((y, j) => j !== i && y.n === v) && !ent(r.t).a.some(y => y !== cols[i] && y.n === v)) { cols[i].n = v; cols[i].s = 'comb'; named++; } });
+      dirty = true; render(); showRP(); toast(msg + (named ? ' · 역할명 ' + named + '개 — 표준 맞추기에서 용어를 확인하세요' : ''), 'success', undoAction()); agLive('관계 생성 · 역할명 확정'); };   // one snapshot: Ctrl+Z takes back the relation and its names together
+    const cancel = () => { p.remove(); rolePending = null;
+      if (fresh()) { const s = hist.pop(); histIds.pop(); restore(JSON.parse(s)); dirty = true; }   // drop only this relation's own snapshot — never redo-able, never someone else's edit
+      selRel = null; render(); showRP(); toast(R.includes(r) ? '역할명 창을 닫았습니다 — 관계는 남아 있습니다(Ctrl+Z로 되돌리기)' : '연결을 취소했습니다 — 모델은 그대로입니다', 'info'); agLive('관계 연결 취소');
+      const back = $('n-' + r.f); if (back) { back.tabIndex = -1; back.focus(); } };
+    p.addEventListener('keydown', ev => { ev.stopPropagation(); if (ev.key === 'Enter' && ev.target.tagName === 'INPUT') { ev.preventDefault(); done(); } else if (ev.key === 'Escape') { ev.preventDefault(); cancel(); } });
     p.querySelector('[data-ok]').onclick = done; p.querySelector('[data-no]').onclick = cancel;
     const tw = p.querySelector('[data-twin]'); if (tw) tw.onclick = ev => { ev.preventDefault(); const keep = twin; cancel(); const again = R.find(x => x.f === keep.f && x.t === keep.t && x.name === keep.name); if (again) { selRel = again; sel = null; render(); showRP(); } };
   }
@@ -1719,17 +1749,19 @@ window.pageInit = function () {
   function childPicker(fId) {
     const parent = ent(fId); if (!parent || guard()) return; document.querySelectorAll('.pop').forEach(x => x.remove());
     const p = document.createElement('div'); p.className = 'pop'; p.setAttribute('role', 'dialog'); p.setAttribute('aria-label', '관계 만들기'); p.style.left = '16px'; p.style.top = '52px'; p.style.width = '320px';
-    p.innerHTML = `<b>${hx(parent.n)} → 자식 고르기</b><div class="caption muted u-mt-4">유형: ${({ nonid: '1:N 비식별', id: '1:N 식별', one: '1:1', mn: 'M:N' })[relType]} · 자기 자신을 고르면 재귀</div><input class="input u-mt-8" type="text" aria-label="자식 엔터티 찾기" placeholder="이름으로 거르기"><div class="vlist" role="listbox" aria-label="자식 엔터티"></div><div class="flex"><button class="btn sm" data-no>취소 (Esc)</button></div>`;
+    p.innerHTML = `<b>${hx(parent.n)} → 자식 고르기</b><div class="caption muted u-mt-4">유형: ${({ nonid: '1:N 비식별', id: '1:N 식별', one: '1:1', mn: 'M:N' })[relType]} · 자기 자신을 고르면 재귀</div><input class="input u-mt-8" type="text" role="combobox" aria-expanded="true" aria-controls="cp-list" aria-autocomplete="list" aria-label="자식 엔터티 찾기" placeholder="이름으로 거르기"><div class="vlist" id="cp-list" role="listbox" aria-label="자식 엔터티"></div><div class="flex"><button class="btn sm" data-no>취소 (Esc)</button></div>`;
     cv.appendChild(p); const inp = p.querySelector('input'), list = p.querySelector('.vlist'); let idx = 0;
     const items = () => VE().filter(e => !e.ref && e.n.includes(inp.value.trim()));
-    const draw = () => { const L = items(); idx = Math.min(idx, Math.max(0, L.length - 1)); list.innerHTML = L.map((e, i) => `<div role="option" class="ac-opt${i === idx ? ' on' : ''}" aria-selected="${i === idx}" data-e="${e.id}">${hx(e.n)}${e.id === fId ? ' <span class="faint">(재귀)</span>' : ''}</div>`).join('') || '<div class="caption muted">맞는 엔터티가 없습니다</div>'; };
+    const draw = () => { const L = items(); idx = Math.min(idx, Math.max(0, L.length - 1)); list.innerHTML = L.map((e, i) => `<div role="option" id="cp-o${i}" class="ac-opt${i === idx ? ' on' : ''}" aria-selected="${i === idx}" data-e="${e.id}">${hx(e.n)}${e.id === fId ? ' <span class="faint">(재귀)</span>' : ''}</div>`).join('') || '<div class="caption muted">맞는 엔터티가 없습니다</div>';
+      if (L.length) inp.setAttribute('aria-activedescendant', 'cp-o' + idx); else inp.removeAttribute('aria-activedescendant'); };
+    const close = () => { p.remove(); const n = $('n-' + fId); if (n) { n.tabIndex = -1; n.focus(); } };   // focus goes back to the parent entity
     const pick = id => { p.remove(); if (id === fId) { makeRel(fId, fId, 'nonid'); return; } makeRel(fId, id, relType); };
     inp.addEventListener('input', () => { idx = 0; draw(); });
     p.addEventListener('keydown', ev => { ev.stopPropagation(); const L = items();
       if (ev.key === 'ArrowDown') { idx = Math.min(idx + 1, L.length - 1); draw(); ev.preventDefault(); } else if (ev.key === 'ArrowUp') { idx = Math.max(idx - 1, 0); draw(); ev.preventDefault(); }
-      else if (ev.key === 'Enter' && L[idx]) { ev.preventDefault(); pick(L[idx].id); } else if (ev.key === 'Escape') p.remove(); });
+      else if (ev.key === 'Enter' && L[idx]) { ev.preventDefault(); pick(L[idx].id); } else if (ev.key === 'Escape') close(); });
     list.addEventListener('click', ev => { const o = ev.target.closest('[data-e]'); if (o) pick(o.dataset.e); });
-    p.querySelector('[data-no]').onclick = () => p.remove(); draw(); inp.focus();
+    p.querySelector('[data-no]').onclick = close; draw(); inp.focus();
   }
   // the relation panel: model (name · type · cardinality/optionality · FK pairs) · DB (ON DELETE, physical) · danger zone
   function relPanel(r) {
@@ -1739,26 +1771,28 @@ window.pageInit = function () {
     const pkList = p.a.filter(a => a.pk);
     const pairRows = pkList.map((k, i) => { const x = cols.find(a => a.fkp === k.p) || cols.find(a => !a.fkp && fkMatch(r, k)(a)) || (cols.length === pkList.length && !cols[i].fkp ? cols[i] : null);   // a grouped column without fkp pairs by position
       return `<tr><td><span class="mono">${hx(k.p)}</span><span class="sub2">${hx(k.n)}</span></td><td class="faint">→</td><td>${ro ? (x ? `<span class="mono">${hx(x.p)}</span><span class="sub2">${hx(x.n)}</span>` : '<span class="u-warning">없음 · FK 누락</span>') :
-        `<select class="input mono" data-rmap="${hx(k.p)}" aria-label="${hx(k.n)}을(를) 받을 ${hx(c.n)} 컬럼"><option value="">(없음 — FK 누락)</option>${c.a.map((a, i) => a.edit || (self && a === k) ? '' : `<option value="${i}"${x === a ? ' selected' : ''}>${hx(a.p)} · ${hx(a.n)}</option>`).join('')}</select>`}</td></tr>`; }).join('');
-    const chain = st.del === 'cascade' ? cascadeChain(r) : [], blockers = st.del === 'cascade' ? [...new Set(cascadeBlockers(r))] : [];
+        `<select class="input mono" data-rmap="${hx(k.p)}" aria-label="${hx(k.n)}을(를) 받을 ${hx(c.n)} 컬럼"><option value="">(없음 — FK 누락)</option>${c.a.map((a, i) => { if (a.edit || (self && a === k)) return ''; const other = a.fk && a.fkg && a.fkg !== r.g ? R.find(y => y.g === a.fkg) : null, twinPair = a.fkg === r.g && a.fkp && a.fkp !== k.p;
+          return `<option value="${i}"${x === a ? ' selected' : ''}${(other || twinPair) && x !== a ? ' disabled' : ''}>${hx(a.p)} · ${hx(a.n)}${other ? ` (${hx(ent(other.f).n)} 관계의 FK)` : twinPair ? ` (${hx(a.fkp)}의 짝)` : ''}</option>`; }).join('')}</select>`}</td></tr>`; }).join('');
+    const eNm = id => hx((ent(id) || {}).n || id);
+    const chain = st.del === 'cascade' ? cascadeChain(r) : [], bl = st.del === 'cascade' ? cascadeBlockers(r) : { under: [], sib: [] };
     $('rp-body').innerHTML = `
       <div class="relhd"><b>${hx(p.n)}</b><svg width="96" height="14" aria-hidden="true"><path d="M2,7 H94" stroke="var(--fg-2)" stroke-width="1.2" ${ident || r.k === 'one' ? '' : 'stroke-dasharray="5 4"'} marker-start="${st.opt === 'may' ? 'url(#m-one0)' : 'url(#m-one)'}" marker-end="${r.k === 'mn' ? 'url(#m-many)' : ({ '0n': 'url(#m-many0)', '1n': 'url(#m-many)', '01': 'url(#m-one0)', '1': 'url(#m-one)' })[st.card]}"/></svg><b>${hx(c.n)}</b>${r.xg ? '<span class="badge">배타</span>' : ''}</div>
-      ${ro ? '<div class="caption muted u-mb-8">조회 전용 — 결재 중 · 확정본 · 권한이 없으면 관계를 고칠 수 없습니다.</div>' : ''}
+      ${ro ? `<div class="caption muted u-mb-8">조회 전용 — ${c.ref ? '참조 엔터티의 관계는 원본 영역에서 고칩니다' : review ? '결재 중인 제출본이라 고칠 수 없습니다' : confirmed ? '확정본이라 고칠 수 없습니다 · 새 버전에서 고치세요' : '이 영역을 고칠 권한이 없습니다'}.</div>` : ''}
       <div class="section-t">모델</div>
       <div class="field"><label for="rel-name">관계명 (동사구)</label><input class="input" id="rel-name" value="${hx(r.name || '')}" placeholder="예: ${hx(p.n.replace(/(기본|내역|이력)$/, ''))}이(가) ${hx(c.n.replace(/(기본|내역|이력)$/, ''))}을(를) 가진다"${D}></div>
       ${r.k === 'mn' ? '' : `<div class="field"><label id="rel-k-l">유형</label><div class="seg" role="group" aria-labelledby="rel-k-l"><button type="button" data-rk="nonid" aria-pressed="${!ident}"${!ident ? ' class="on"' : ''}${D || (self ? ' disabled title="재귀 관계는 비식별입니다"' : '')}>비식별</button><button type="button" data-rk="id" aria-pressed="${ident}"${ident ? ' class="on"' : ''}${D || (self ? ' disabled title="재귀 관계는 비식별입니다"' : '')}>식별</button></div><span class="help">식별: FK가 ${hx(c.n)}의 식별자(PK)에 들어가고 손자까지 이어집니다</span></div>
       <div class="field"><label id="rel-cs-l">카디널리티 · 선택성</label>
         <div class="relsent" aria-labelledby="rel-cs-l">${hx(p.n)} 1개는 ${hx(c.n)}을(를) <select class="input" data-rcard aria-label="자식 쪽 개수"${D}>${Object.entries(KCARD).map(([v, l]) => `<option value="${v}"${st.card === v ? ' selected' : ''}>${l}</option>`).join('')}</select> 가진다</div>
         <div class="relsent">${hx(c.n)} 1개는 ${hx(p.n)}이(가) <select class="input" data-ropt aria-label="부모 쪽 필수 여부"${D || (ident ? ' disabled title="식별 관계는 부모가 반드시 있습니다"' : '')}>${Object.entries(KOPT).map(([v, l]) => `<option value="${v}"${st.opt === v ? ' selected' : ''}>${l}</option>`).join('')}</select></div>
-        <span class="help">부모 쪽 값이 FK 컬럼의 필수(NOT NULL)를 정합니다${ident ? ' · 식별 관계는 반드시 있음으로 고정' : ''}${st.card === '1' && !ident ? ' · 1:1은 FK에 UK를 붙여 보장합니다' : ''}</span></div>
-      <div class="field"><label>FK 짝 <span class="faint">— 부모 식별자 → ${hx(c.n)} 컬럼</span></label>${pkList.length ? `<table class="tbl box"><tbody>${pairRows}</tbody></table>` : `<div class="banner warning"><i data-ic=warn></i><div class="grow"><b>FK 대기</b> — ${hx(p.n)}에 식별자가 없습니다. 식별자를 정하면 FK가 채워집니다. <a href="#" id="rel-gopk">식별자 지정</a></div></div>`}
-        <span class="help">${f.st === 'ok' ? `FK 반영 · <span class="mono">${hx(f.name)}</span>` : f.st === 'ex' ? 'FK 제외 · ' + hx(f.why) : f.st === 'miss' ? `<span class="u-warning">FK 누락 · ${hx(f.why)}</span>` : ''}</span></div>`}
+        <span class="help">부모 쪽 값이 FK 컬럼의 필수(NOT NULL)를 정합니다${ident ? ' · 식별 관계는 반드시 있음으로 고정' : ''}${r.uk ? ' · 자식 쪽 최대 1개는 FK에 UK를 붙여 보장합니다' : ''}${['1', '1n'].includes(st.card) ? ' · 자식 쪽 ‘최소 1개’는 FK로 강제할 수 없는 업무 규칙입니다' : ''}</span></div>
+      <div class="field"><label>FK 짝 <span class="faint">— 부모 식별자 → ${hx(c.n)} 컬럼</span></label>${pkList.length ? `<table class="tbl box"><tbody>${pairRows}</tbody></table>` : `<div class="banner warning"><i data-ic=warn></i><div class="grow"><b>FK 대기</b> — ${hx(p.n)}에 식별자가 없습니다. 식별자를 정하면 FK가 채워집니다.${ro ? '' : ' <a href="#" id="rel-gopk">식별자 지정</a>'}</div></div>`}
+        <span class="help">${!pkList.length ? '' : f.st === 'ok' ? `FK 반영 · <span class="mono">${hx(f.name)}</span>` : f.st === 'ex' ? 'FK 제외 · ' + hx(f.why) : f.st === 'miss' ? `<span class="u-warning">FK 누락 · ${hx(f.why)}</span>` : ''}</span></div>`}
       ${r.xg ? `<div class="flex u-mb-8"><span class="caption muted">배타 관계 묶음 — 한 행은 둘 중 하나와만 관계를 가집니다</span><span class="grow"></span><button class="btn sm" id="xor-off"${D}>배타 해제</button></div>` : ''}
-      ${r.k === 'mn' ? `<div class="banner warning"><i data-ic=warn></i><div class="grow"><b>M:N 해소 필요</b><div class="caption">교차 엔터티 제안: <b>요구사항리스크관계</b> <span class="mono">RQRM_RISK_R</span> · 식별 관계(PK = 두 FK)</div></div></div><div class="flex u-mt-8 u-mb-8"><span class="grow"></span><button class="btn primary sm" id="mn-go"${D}>미리보기 후 해소</button></div>` : ''}
+      ${r.k === 'mn' ? (pl => `<div class="banner warning"><i data-ic=warn></i><div class="grow"><b>M:N 해소 필요</b><div class="caption">교차 엔터티 제안: <b>${hx(pl.n)}</b> <span class="mono">${hx(pl.p)}</span> · 식별 관계 2개 · PK = ${pl.cols.map(hx).join(', ') || '—'}${pl.wait.length ? `<br><span class="u-warning">${pl.wait.map(hx).join(', ')}에 식별자가 없어 아직 해소할 수 없습니다</span>` : ''}</div></div></div><div class="flex u-mt-8 u-mb-8"><span class="grow"></span><button class="btn primary sm" id="mn-go"${D || (pl.wait.length ? ' disabled' : '')}>교차 엔터티로 해소</button></div>`)(mnPlan(r)) : ''}
       ${r.k === 'mn' ? '' : `<details class="reldb"${mode === 'P' || st.del !== 'none' ? ' open' : ''}><summary><b>DB 반영 (물리)</b> <span class="caption muted">${st.del === 'none' ? '부모 행을 지울 때: 막기' : DELS[st.del]}</span></summary>
-        <div class="field u-mt-8"><label for="rel-ondel">부모 행을 지울 때 (ON DELETE)</label><select class="input" id="rel-ondel"${D}>${Object.entries(DELS).map(([v, l]) => `<option value="${v}"${st.del === v ? ' selected' : ''}${v === 'setnull' && st.opt === 'must' ? ' disabled' : ''}>${l}${v === 'setnull' && st.opt === 'must' ? ' — FK가 필수라 쓸 수 없음' : ''}</option>`).join('')}</select>
+        <div class="field u-mt-8"><label for="rel-ondel">부모 행을 지울 때 (ON DELETE)</label><select class="input" id="rel-ondel"${D}>${Object.entries(DELS).map(([v, l]) => `<option value="${v}"${st.del === v ? ' selected' : ''}${v === 'setnull' && !nullable(r) && st.del !== 'setnull' ? ' disabled' : ''}>${l}${v === 'setnull' && !nullable(r) ? ' — FK가 필수라 쓸 수 없음' : ''}</option>`).join('')}</select>
           <span class="help">운영 DB에서 ${hx(p.n)} 행을 지울 때 ${hx(c.n)} 행을 어떻게 할지입니다. DDL의 FOREIGN KEY … ON DELETE에만 들어가고, 모델 편집에는 영향이 없습니다. Oracle은 ‘막기’를 따로 쓰지 않습니다(NO ACTION).</span></div>
-        ${chain.length ? `<div class="banner warning u-mb-8"><i data-ic=warn></i><div class="grow">${hx(p.n)} 1행을 지우면 <b>${chain.length}개 테이블</b>의 행이 함께 지워집니다: ${chain.map(hx).join(' → ')}${blockers.length ? `<div class="caption u-mt-4">${blockers.map(hx).join(', ')}은(는) ‘막기’라 행이 있으면 삭제 전체가 실패합니다.</div>` : ''}</div></div>` : ''}
+        ${chain.length ? `<div class="banner warning u-mb-8"><i data-ic=warn></i><div class="grow">${hx(p.n)} 1행을 지우면 <b>${chain.length}개 테이블</b>의 참조 행이 함께 지워집니다: ${chain.map(eNm).join(', ')}${bl.under.length ? `<div class="caption u-mt-4">그 아래 ${bl.under.map(eNm).join(', ')}은(는) ‘막기’라 참조 행이 남아 있으면 삭제 전체가 실패할 수 있습니다.</div>` : ''}${bl.sib.length ? `<div class="caption u-mt-4">이 관계와 별도로 ${hx(p.n)} 행 삭제를 막는 관계: ${bl.sib.map(id => hx(p.n) + ' → ' + eNm(id)).join(', ')} (막기)</div>` : ''}</div></div>` : ''}
         <dl class="kv"><dt>FK 제약 이름</dt><dd class="mono">${hx(f.name || '—')}</dd><dt>FK 인덱스</dt><dd>${f.st === 'ok' ? '자동으로 만듦' : '—'}</dd>${r.uk ? `<dt>1:1 보장</dt><dd class="mono">UK (${hx(r.uk)})</dd>` : ''}</dl></details>`}
       <div class="reldanger"><button class="btn sm danger" id="rel-del"${D}><i data-ic=trash data-s=12></i>모델에서 관계 삭제</button><span class="caption muted">Delete · 컬럼을 남길지 고릅니다 · DB 행은 바뀌지 않음</span></div>
       <div id="rel-pend"></div>`;
@@ -1788,17 +1822,17 @@ window.pageInit = function () {
         <ul class="ag-imp"><li>${hx(c.n)} · FK ${cols.length}개 (${cols.map(a => hx(a.n)).join(', ')})가 ${toId ? '식별자(PK) · 필수가 됩니다' : '식별자에서 빠집니다'}</li>
         ${grand.length ? `<li>손자 ${grand.length}개 테이블의 FK가 ${toId ? '늘어납니다' : '줄어듭니다'} (${grand.map(hx).join(', ')})</li>` : ''}
         ${!toId && !leftPk ? `<li class="u-warning">${hx(c.n)}에 식별자가 남지 않습니다 — 적용 후 식별자를 정하세요</li>` : ''}
-        ${!toId && relOf(r).card === '1' ? '<li>1:1을 지키도록 FK에 UK를 붙입니다</li>' : ''}${toId && r.uk ? '<li>1:1 보장 UK는 PK가 대신하므로 지웁니다</li>' : ''}</ul>
+        ${!toId && relOf(r).card === '1' ? '<li>1:1을 지키도록 FK에 UK를 붙입니다</li>' : ''}${toId && r.del === 'setnull' ? '<li>FK가 PK가 되어 비울 수 없으므로 ON DELETE를 ‘막기’로 바꿉니다</li>' : ''}</ul>
         <div class="flex u-mt-8"><button class="btn sm ghost" data-rk-no>취소 (Esc)</button><span class="grow"></span><button class="btn sm primary" data-rk-go>적용</button></div></div></div>`;
       const back = () => { box.innerHTML = ''; const b = $('rp-body').querySelector(`[data-rk="${r.k === 'id' ? 'id' : 'nonid'}"]`); if (b) b.focus(); };
       box.querySelector('[data-rk-no]').onclick = back; box.querySelector('[data-rk-go]').onclick = () => relSetKind(r, k, true);
       box.onkeydown = ev => { if (ev.key === 'Escape') { ev.stopPropagation(); back(); } };
-      box.querySelector('[data-rk-go]').focus(); return;
+      const go = box.querySelector('[data-rk-go]'); go.disabled = true; setTimeout(() => { go.disabled = false; }, 300); box.querySelector('[data-rk-no]').focus(); return;   // post-review CL8: same safety as the delete band
     }
     snap(); const toId = k === 'id', cols = relCols(r); let down = 0;
     cols.forEach(a => { if (!toId) pkReach(c, a).forEach(([g, x]) => { const i = g.a.indexOf(x); if (i >= 0) { g.a.splice(i, 1); down++; } });
       a.pk = toId ? 1 : 0; a.nn = toId || relOf(r).opt === 'must' ? 1 : 0; placeAttr(c, a, true); if (toId) down += pkSpread(c, a); });
-    r.k = toId ? 'id' : (relOf(r).card === '1' ? 'one' : 'nonid'); if (toId) { r.opt = 'must'; } syncUk(r);
+    r.k = toId ? 'id' : (relOf(r).card === '1' ? 'one' : 'nonid'); if (toId) { r.opt = 'must'; if (r.del === 'setnull') r.del = 'none'; } syncUk(r);
     relAfter(r, toId ? `식별 관계로 바꿨습니다 — FK ${cols.length}개가 식별자 · 필수가 됐습니다${down ? ` · 손자 엔터티에 FK ${down}개 추가` : ''}` : `비식별 관계로 바꿨습니다 — FK ${cols.length}개를 식별자에서 뺐습니다${down ? ` · 손자 엔터티의 FK ${down}개 정리` : ''}`);
   }
   function relSetCard(r, v) {
@@ -1812,16 +1846,22 @@ window.pageInit = function () {
     relAfter(r, `${ent(r.t).n}에는 ${ent(r.f).n}이(가) ${KOPT[v]} — FK ${v === 'must' ? '필수(NOT NULL)' : '비워 둘 수 있음'}${note}`);
   }
   function relSetDel(r, v) {
-    if (guard()) return; if (v === 'setnull' && relOf(r).opt === 'must') { toast('FK가 필수라 비울 수 없습니다 — 선택성을 ‘없어도 된다’로 바꾸세요', 'info'); render(); return; }
+    if (guard()) return; if (v === 'setnull' && !nullable(r)) { toast('FK가 필수라 비울 수 없습니다 — 선택성을 ‘없어도 된다’로 바꾸세요', 'info'); render(); return; }
     snap(); r.del = v; relAfter(r, `부모 행을 지울 때: ${DELS[v]} — DDL에만 반영됩니다`);
   }
   function relMap(r, pkP, val) {
-    if (guard()) return; const c = ent(r.t), p = ent(r.f); snap();
+    if (guard()) return; const c = ent(r.t), p = ent(r.f), x = val === '' ? null : c.a[+val];
+    // post-review C2 · CL5: a column that belongs to another relation, or already pairs another key of this one, is not taken silently
+    if (x && x.fk && x.fkg && x.fkg !== r.g) { const o = R.find(y => y.g === x.fkg); toast(`${x.n}은(는) ${o ? ent(o.f).n + ' → ' + ent(o.t).n : '다른'} 관계의 FK입니다 — 그 관계에서 짝을 먼저 푸세요`, 'info'); render(); return; }
+    if (x && x.fkg === r.g && x.fkp && x.fkp !== pkP) { toast(`${x.n}은(는) 이미 ${x.fkp}의 짝입니다 — 한 컬럼은 부모 키 하나만 받습니다`, 'info'); render(); return; }
+    snap(); let gn = 0;
     if (!r.g) ensureGroup(r, p, c, null);
     const pkL = p.a.filter(a => a.pk), gc = c.a.filter(a => a.fk && a.fkg === r.g); if (gc.length === pkL.length) gc.forEach((a, i) => { if (!a.fkp) a.fkp = pkL[i].p; });   // older group columns learn their pair first
-    const prev = c.a.find(a => a.fk && a.fkg === r.g && a.fkp === pkP); if (prev) { delete prev.fk; delete prev.fkg; delete prev.fkp; if (prev.pk && r.k === 'id') prev.pk = 0; }
-    if (val !== '') { const x = c.a[+val]; if (x) { x.fk = 1; x.fkg = r.g; x.fkp = pkP; if (r.k === 'id') { x.pk = 1; x.nn = 1; placeAttr(c, x); } else x.nn = relOf(r).opt === 'must' ? 1 : 0; } }
-    syncUk(r); const f = fkOf(r, E); relAfter(r, f.st === 'ok' ? `FK 짝을 맞췄습니다 · ${f.cols.join(', ')} → ${p.p}` : `FK 짝을 바꿨습니다 — 아직 ${f.why || '누락'}`);
+    const prev = c.a.find(a => a.fk && a.fkg === r.g && a.fkp === pkP);
+    if (prev && prev !== x) { if (prev.pk && r.k === 'id') { pkReach(c, prev).forEach(([g, y]) => { const i = g.a.indexOf(y); if (i >= 0) { g.a.splice(i, 1); gn++; } }); prev.pk = 0; placeAttr(c, prev, true); } delete prev.fk; delete prev.fkg; delete prev.fkp; }
+    if (x && x !== prev) { x.fk = 1; x.fkg = r.g; x.fkp = pkP; if (r.k === 'id') { const was = x.pk; x.pk = 1; x.nn = 1; placeAttr(c, x); if (!was) gn += pkSpread(c, x); } else x.nn = relOf(r).opt === 'must' ? 1 : 0; }
+    syncUk(r); if (r.del === 'setnull' && !nullable(r)) r.del = 'none'; const f = fkOf(r, E);
+    if (gn) toast(`손자 엔터티의 FK ${gn}개도 함께 맞췄습니다`, 'info'); relAfter(r, f.st === 'ok' ? `FK 짝을 맞췄습니다 · ${f.cols.join(', ')} → ${p.p}` : `FK 짝을 바꿨습니다 — 아직 ${f.why || '누락'}`);
   }
   // delete by condition (18 · condition table): ask only when columns are involved; the buttons say what happens
   function relDelete(r) {
@@ -1838,7 +1878,7 @@ window.pageInit = function () {
     const box = $('rel-pend'); if (!box) return;
     box.innerHTML = `<div class="banner warning ag-pend" role="group" aria-label="관계 삭제 확인"><i data-ic=warn></i><div class="grow"><b>모델에서 ${hx(ent(r.f).n)} → ${hx(c.n)} 관계를 삭제합니다</b>
       <div class="caption muted">관계와 FK 제약을 모델에서 뺍니다. 운영 DB의 행은 바뀌지 않습니다(ON DELETE와 다름).</div>
-      <ul class="ag-imp"><li>${hx(c.n)} · 이 관계의 컬럼 ${cols.length}개 (${cols.map(a => hx(a.n) + (a.pk ? ' PK' : '')).join(', ')})</li>${gt.length ? `<li>컬럼을 지우면 손자 ${gt.length}개 테이블 · 컬럼 ${grand.length}개도 정리 (${gt.map(hx).join(', ')})</li>` : ''}<li>DDL: FK 제약 1개 줄어듦${r.uk ? ' · 1:1 보장 UK 1개 줄어듦' : ''}</li></ul>
+      <ul class="ag-imp"><li>${hx(c.n)} · 이 관계의 컬럼 ${cols.length}개 (${cols.map(a => hx(a.n) + (a.pk ? ' PK' : '')).join(', ')})</li>${gt.length ? `<li>컬럼을 지우면 손자 ${gt.length}개 테이블 · 컬럼 ${grand.length}개도 정리 (${gt.map(hx).join(', ')})</li>` : ''}<li>DDL: ${fkOf(r, E).st === 'ok' ? 'FK 제약 1개 줄어듦' : 'FK 제약 변화 없음(지금 FK가 ' + (fkOf(r, E).st === 'ex' ? '제외' : '누락') + ' 상태)'}${r.uk ? ' · 보장 UK 1개 줄어듦' : ''}</li>${ident && !otherPk ? `<li class="u-warning">컬럼을 지우면 ${hx(c.n)}에 식별자가 남지 않습니다</li>` : ''}</ul>
       <details class="u-mt-4"><summary class="caption">자세히</summary><div class="caption">${cols.map(a => `${hx(c.n)}.${hx(a.n)} <span class="mono">${hx(a.p)}</span>`).concat(grand.map(([g, x]) => `${hx(g.n)}.${hx(x.n)} <span class="mono">${hx(x.p)}</span>`)).join('<br>')}</div></details>
       <div class="caption u-mt-8">컬럼을 어떻게 할까요?</div>
       <div class="flex u-col u-mt-4">${O.map(([v, l], i) => `<button class="btn sm u-w-full${v === 'del' ? ' danger' : i === 0 ? ' primary' : ''}" data-rd="${v}">${l}</button>`).join('')}<button class="btn sm ghost u-w-full" data-rd="cancel">취소 (Esc)</button></div></div></div>`;
@@ -1855,7 +1895,8 @@ window.pageInit = function () {
     if (r.uk) c.uk = (c.uk || []).filter(x => x !== r.uk);
     R.splice(R.indexOf(r), 1); selRel = null; render(); showRP();
     touched.forEach(id => { const el = $('n-' + id); if (el) { el.classList.add('thl'); setTimeout(() => el.classList.remove('thl'), 2000); } });
-    toast(`${p.n} → ${c.n} 관계를 삭제했습니다${cols.length ? opt === 'del' ? ` · 컬럼 ${n + gn}개 정리${gn ? `(손자 ${gn}개 포함)` : ''}` : ident && opt === 'keep' ? ` · 컬럼 ${cols.length}개는 자식의 식별자로 남김` : ` · 컬럼 ${cols.length}개는 일반 컬럼으로 남김` : ''}`, 'info', undoAction());
+    toast(`${p.n} → ${c.n} 관계를 삭제했습니다${cols.length ? opt === 'del' ? ` · 컬럼 ${n + gn}개 정리${gn ? `(손자 ${gn}개 포함)` : ''}` : ident && opt === 'keep' ? ` · 컬럼 ${cols.length}개는 자식의 식별자로 남김` : ` · 컬럼 ${cols.length}개는 일반 컬럼으로 남김` : ''}`, 'info',
+      [undoAction(), cols.length && opt !== 'del' && !(ident && opt === 'keep') ? { label: '이 컬럼도 지우기', fn: () => { if (guard()) return; snap(); cols.forEach(a => { const i = c.a.indexOf(a); if (i >= 0) c.a.splice(i, 1); }); render(); toast(`남긴 컬럼 ${cols.length}개를 지웠습니다`, 'info', undoAction()); } } : null]);   // post-review CL9: the kept columns are one click from gone
     agLive('관계 삭제됨');
   }
 

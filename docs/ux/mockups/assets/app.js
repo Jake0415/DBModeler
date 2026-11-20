@@ -249,7 +249,7 @@
       const have = cc ? cc.filter(x => x && x.p !== '—').length : 0;
       return { st: 'miss', why: r.f === r.t ? '재귀 관계 — 역할명 FK 컬럼 지정 필요' : !c.a.some(a => a.fk) ? 'FK 컬럼 없음' : have ? `부모 PK ${pk.length}개 중 ${have}개만 대응 — 나머지 컬럼 지정 필요` : 'FK 컬럼 이름이 부모 PK와 다름(역할명) — 대응 컬럼 지정 필요' };
     }
-    return { st: 'ok', cols: cc.map(a => a.p), pcols: pk.map(a => a.p), ref: !!p.ref, name: `${c.p}_${p.p}_FK${r.g && !r.gAuto ? '_' + String(r.g).slice(-2).toUpperCase() : ''}` };   // a group added only to tidy older data (gAuto) never renames the constraint
+    return { st: 'ok', cols: cc.map(a => a.p), pcols: pk.map(a => a.p), ref: !!p.ref, name: `${c.p}_${p.p}_FK${r.g && !r.gAuto && cc.some((a, i) => a.p !== pk[i].p) ? '_' + String(r.g).slice(-2).toUpperCase() : ''}` };   // only a role-named FK (a second relation into the same child) needs a suffix · a tidy-up group (gAuto) never renames
   };
   /* constraints and indexes of a table (PK · UK · FK · FK index · explicit index) */
   window.consOf = (e, E, R) => {
@@ -690,16 +690,31 @@
     a.E.forEach(e => { if (!eb.has(e.id)) out.push(e.ref ? ['참조 해제', `${e.n} ${e.p}`, refTxt(e), '—'] : ['삭제', `${e.n} ${e.p}`, `엔터티 · 속성 ${e.a.length}`, '—']); });
     b.E.forEach(e => { const o = ea.get(e.id); if (!o || !e.ref) return; if ((o.refVer || 0) !== (e.refVer || 0)) out.push(['참조 갱신', `${e.n} ${e.p}`, refTxt(o), refTxt(e)]); });
     // relations (18): structure changes are rows of the main table; ON DELETE / 1:1 UK change how the operating DB behaves — flagged 'db'
-    const relK = r => r.g || `${r.f}>${r.t}>${r.name || ''}`, eN = id => (eb.get(id) || ea.get(id) || {}).n || id;
+    // a relation is the same one by its FK group; copies saved before groups existed fall back to parent › child › name, then parent › child when only one is left
+    const eN = id => (eb.get(id) || ea.get(id) || {}).n || id;
     const KN = { nonid: '1:N 비식별', id: '1:N 식별', one: '1:1', mn: 'M:N' }, DN = { none: '막기', cascade: 'CASCADE', setnull: 'SET NULL' };
-    const ra = new Map((a.R || []).map(r => [relK(r), r])), rb = new Map((b.R || []).map(r => [relK(r), r]));
-    (b.R || []).forEach(r => { const o = ra.get(relK(r)), nm = `${eN(r.f)} → ${eN(r.t)}`;
-      if (!o) { out.push(['관계 추가', nm, '—', KN[r.k] || r.k]); if (r.del && r.del !== 'none') out.push(['DB 동작', `${nm} · 부모 행 삭제 시`, '—', DN[r.del], 'db']); return; }
-      if (o.k !== r.k) out.push(['관계 변경', nm, KN[o.k] || o.k, KN[r.k] || r.k]);
-      if ((o.opt || '') !== (r.opt || '') && r.opt) out.push(['관계 변경', `${nm} · 부모 쪽`, o.opt === 'may' ? '없어도 됨' : '반드시', r.opt === 'may' ? '없어도 됨' : '반드시']);
+    const CN = { '0n': '0개 이상', '1n': '1개 이상', '01': '0~1개', '1': '정확히 1개' }, cardOf = r => r.card || (r.k === 'one' ? '1' : '0n');
+    const pair = new Map(), left = new Set(a.R || []);
+    const take = (r, test) => { if (pair.has(r)) return; const o = [...left].filter(test); if (o.length === 1) { pair.set(r, o[0]); left.delete(o[0]); } };
+    (b.R || []).forEach(r => r.g && take(r, o => o.g === r.g));
+    (b.R || []).forEach(r => take(r, o => !o.g && o.f === r.f && o.t === r.t && (o.name || '') === (r.name || '')));
+    (b.R || []).forEach(r => take(r, o => !o.g && o.f === r.f && o.t === r.t));
+    (b.R || []).forEach(r => take(r, o => o.f === r.f && o.t === r.t && (o.name || '') === (r.name || '')));
+    // effective values, computed the same way the panel does (older copies have no opt: the FK columns' NOT NULL decides)
+    const colsOf = (m, r) => { const c = (m.E || []).find(e => e.id === r.t); return c && r.g ? c.a.filter(x => x.fk && x.fkg === r.g) : []; };
+    const optOf = (m, r) => r.k === 'id' ? 'must' : r.opt || (colsOf(m, r).some(x => x.nn) ? 'must' : 'may');
+    const mapOf = (m, r) => colsOf(m, r).map(x => `${x.fkp || '?'}→${x.p}`).sort().join(', ');
+    const shape = k => k === 'one' ? 'nonid' : k;   // 1:N ↔ 1:1 (non-identifying) is the cardinality row, not a type change
+    (b.R || []).forEach(r => { const o = pair.get(r), nm = `${eN(r.f)} → ${eN(r.t)}`;
+      if (!o) { out.push(['관계 추가', nm, '—', KN[r.k] || r.k]); if (r.del && r.del !== 'none') out.push(['DB 동작', `${nm} · 부모 행 삭제 시`, '—', DN[r.del], 'db']); if (r.uk) out.push(['DB 동작', `${nm} · 보장 UK`, '—', r.uk, 'db']); return; }
+      if (shape(o.k) !== shape(r.k)) out.push(['관계 변경', nm, KN[o.k] || o.k, KN[r.k] || r.k]);
+      if ((o.name || '') !== (r.name || '')) out.push(['관계 변경', `${nm} · 관계명`, o.name || '—', r.name || '—']);
+      if (cardOf(o) !== cardOf(r)) out.push(['관계 변경', `${nm} · 자식 쪽 개수`, CN[cardOf(o)], CN[cardOf(r)]]);
+      const oo = optOf(a, o), ro = optOf(b, r); if (oo !== ro) out.push(['관계 변경', `${nm} · 부모 쪽`, oo === 'may' ? '없어도 됨' : '반드시', ro === 'may' ? '없어도 됨' : '반드시']);
+      const om = mapOf(a, o), rm = mapOf(b, r); if (om && rm && om !== rm) out.push(['관계 변경', `${nm} · FK 짝`, om, rm]);
       if ((o.del || 'none') !== (r.del || 'none')) out.push(['DB 동작', `${nm} · 부모 행 삭제 시`, DN[o.del || 'none'], DN[r.del || 'none'], 'db']);
-      if ((o.uk || '') !== (r.uk || '')) out.push(['DB 동작', `${nm} · 1:1 보장 UK`, o.uk || '—', r.uk || '—', 'db']); });
-    (a.R || []).forEach(r => { if (!rb.has(relK(r))) out.push(['관계 삭제', `${eN(r.f)} → ${eN(r.t)}`, KN[r.k] || r.k, '—']); });
+      if ((o.uk || '') !== (r.uk || '')) out.push(['DB 동작', `${nm} · 보장 UK`, o.uk || '—', r.uk || '—', 'db']); });
+    left.forEach(r => { const nm = `${eN(r.f)} → ${eN(r.t)}`; out.push(['관계 삭제', nm, KN[r.k] || r.k, '—']); if (r.uk) out.push(['DB 동작', `${nm} · 보장 UK`, r.uk, '—', 'db']); });
     // layout only (12 §3.2): positions · views · placement · hidden lines — listed apart, flagged with a 5th field
     const moved = b.E.filter(e => { const o = ea.get(e.id); return o && (o.x !== e.x || o.y !== e.y || o.px !== e.px || o.py !== e.py); });
     if (moved.length) out.push(['배치', '위치 이동', '—', `${moved.length}개 · ${moved.slice(0, 4).map(e => e.n).join(', ')}${moved.length > 4 ? ' …' : ''}`, 'layout']);
@@ -1644,9 +1659,10 @@
     const marks = { success: 'check', info: 'info', danger: 'err', violet: 'info' };
     const t = document.createElement('div');
     t.className = 'toast'; if (type === 'danger') t.setAttribute('role', 'alert'); else t.setAttribute('role', 'status');
-    t.innerHTML = `<span style="color:${colors[type || 'success']};display:flex;margin-top:2px">${icon(marks[type || 'success'])}</span><div class="tx">${msg}</div>${action ? `<button class="act">${action.label}</button>` : ''}${type === 'danger' || action ? `<button class="tclose" aria-label="닫기">${icon('x')}</button>` : ''}`;
+    const acts = action ? [].concat(action).filter(Boolean) : [];   // one action, or a list (e.g. 실행 취소 + 이 컬럼도 지우기)
+    t.innerHTML = `<span style="color:${colors[type || 'success']};display:flex;margin-top:2px">${icon(marks[type || 'success'])}</span><div class="tx">${msg}</div>${acts.map((a, i) => `<button class="act" data-ai="${i}">${a.label}</button>`).join('')}${type === 'danger' || acts.length ? `<button class="tclose" aria-label="닫기">${icon('x')}</button>` : ''}`;
     box.appendChild(t);
-    if (action) t.querySelector('.act').onclick = () => { t.remove(); action.fn(); };
+    t.querySelectorAll('.act').forEach(b => { b.onclick = () => { t.remove(); acts[+b.dataset.ai].fn(); }; });
     const c = t.querySelector('.tclose'); if (c) c.onclick = () => t.remove();
     if (type !== 'danger') setTimeout(() => t.remove(), action ? 8000 : 4000);
   };
