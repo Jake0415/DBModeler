@@ -10,6 +10,7 @@
 <script src="assets/app.js"></script>
 <style>
   :root { --p-hong:#de1d8d; --p-park:#0a72ef; }
+  .side .dict-more { padding:8px 12px; }
   .side .dict-item { padding:8px 12px; border-bottom:1px solid var(--border); font-size:13px; cursor:grab; }
   .side .dict-item:hover { background:var(--surface-2); }
   .side .dict-item .l1 { display:flex; gap:6px; align-items:center; }
@@ -395,8 +396,9 @@ window.pageInit = function () {
   const DOMS = { '연월일C8': 'CHAR(8)', '명V100': 'VARCHAR2(100)', 'ID V10': 'VARCHAR2(10)', '코드C2': 'CHAR(2)', '여부C1': 'CHAR(1)' };
   const SYS_COLS = [['등록일시', 'REG_DT', 'DATE'], ['등록자ID', 'REGR_ID', 'VARCHAR2(20)'], ['수정일시', 'MDFCN_DT', 'DATE'], ['수정자ID', 'MDFR_ID', 'VARCHAR2(20)']];
   const tagCls = t => t === '공통' ? 'b-common' : t === '신청 중' ? 'b-info' : 'b-org';
-  const renderDict = () => { const v = ($('dict-q').value || '').trim(); const L = TERMS.map((t, i) => [t, i]).filter(([t]) => !v || t.n.includes(v) || t.p.includes(v.toUpperCase()));
-    $('dict').innerHTML = L.map(([t, i]) => `<div class="dict-item" draggable="true" data-ti="${i}"><div class="l1"><b>${t.n}</b><span class="badge ${tagCls(t.tag)}">${t.tag}${t.doc ? ' · ' + t.doc : ''}</span>${t.sec ? '<span class="badge b-danger" style="height:16px">개인정보</span>' : ''}</div><div class="l2">${t.p} · ${t.d}</div></div>`).join('') || `<div class="caption muted" style="padding:12px">‘${v}’에 맞는 표준 용어가 없습니다 — 아래 [후보 등록]으로 후보 큐에 올리세요.</div>`; };
+  const renderDict = () => { const v = ($('dict-q').value || '').trim(); const A = TERMS.map((t, i) => [t, i]).filter(([t]) => !v || t.n.includes(v) || t.p.includes(v.toUpperCase())), L = A.slice(0, 80);   // 13,000+ common terms: draw the first 80, the rest by typing
+    $('dict').innerHTML = L.map(([t, i]) => `<div class="dict-item" draggable="true" data-ti="${i}"><div class="l1"><b>${t.n}</b><span class="badge ${tagCls(t.tag)}">${t.tag}${t.doc ? ' · ' + t.doc : ''}</span>${t.sec ? '<span class="badge b-danger" style="height:16px">개인정보</span>' : ''}</div><div class="l2">${t.p} · ${t.d}</div></div>`).join('') || `<div class="caption muted" style="padding:12px">‘${v}’에 맞는 표준 용어가 없습니다 — 아래 [후보 등록]으로 후보 큐에 올리세요.</div>`;
+    if (A.length > L.length) $('dict').insertAdjacentHTML('beforeend', `<div class="caption muted dict-more">${A.length.toLocaleString()}건 중 ${L.length}건 — 이름이나 약어를 더 입력하세요</div>`); };
   renderDict(); $('dict-q').addEventListener('input', renderDict);
   $('dict-cand').onclick = () => {
     const v = ($('dict-q').value || '').trim(); if (!v) { toast('후보로 올릴 단어를 검색창에 입력하세요', 'info'); return; }
@@ -1178,11 +1180,11 @@ window.pageInit = function () {
   let acEl = null, acIdx = 0;
   function showAC(inp) {
     if (acEl) acEl.remove();
-    const v = inp.value.trim(); const list = TERMS.filter(t => !v || t.n.includes(v));
+    const v = inp.value.trim(); const hit = []; for (let i = 0; i < TERMS.length && hit.length < 30; i++) if (!v || TERMS[i].n.includes(v)) hit.push(i); const list = hit.map(i => TERMS[i]);   // first 30 matches (13,000+ terms)
     acEl = document.createElement('div'); acEl.className = 'acl';
     const r = inp.getBoundingClientRect(), c = cv.getBoundingClientRect();
     acEl.style.left = (r.left - c.left) + 'px'; acEl.style.top = (r.bottom - c.top + 4) + 'px';
-    acEl.innerHTML = list.map((t, i) => `<div class="o ${i === acIdx ? 'on' : ''}" data-ti="${TERMS.indexOf(t)}"><span>${t.n} <span class="badge ${tagCls(t.tag)}" style="height:16px">${t.tag}</span></span><span class="m">${t.d}</span><span class="m" style="grid-column:1/3">${t.p}${t.sec ? ' · 개인정보' : ''}</span></div>`).join('') +
+    acEl.innerHTML = list.map((t, i) => `<div class="o ${i === acIdx ? 'on' : ''}" data-ti="${hit[i]}"><span>${t.n} <span class="badge ${tagCls(t.tag)}" style="height:16px">${t.tag}</span></span><span class="m">${t.d}</span><span class="m" style="grid-column:1/3">${t.p}${t.sec ? ' · 개인정보' : ''}</span></div>`).join('') +
       (v ? `<div class="o" data-new="1" style="border-top:1px solid var(--border)"><span>＋ ‘${v}’ 그대로 입력 (미매핑)</span></div>` : '');
     cv.appendChild(acEl);
   }

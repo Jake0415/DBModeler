@@ -3,6 +3,8 @@
   window.__errs = []; window.addEventListener('error', e => window.__errs.push(e.message));   // mockup self-check (review scripts read this)
   // 행정표준코드 seed (generated from the 공통표준 2025.11 workbook) — loaded synchronously while the page is parsed
   if (!window.STD_CODES && document.readyState === 'loading') { const me = document.currentScript; document.write(`<script src="${me ? me.src.replace(/app\.js(\?.*)?$/, 'std-codes.js') : 'assets/std-codes.js'}"><\/script>`); }
+  // the full common standard (words · terms · domains) — same way, kept in memory only (see commonAll)
+  if (!window.STD_COMMON && document.readyState === 'loading') { const me = document.currentScript; document.write(`<script src="${me ? me.src.replace(/app\.js(\?.*)?$/, 'std-common.js') : 'assets/std-common.js'}"><\/script>`); }
   const store = {
     get(k, d) { try { return localStorage.getItem(k) ?? d; } catch (e) { return d; } },
     set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} },
@@ -489,15 +491,15 @@
     { id: 'T-0388', k: 'term', kn: '용어', src: '기관', st: '사용', name: '요구사항상태코드', abbr: 'DEMND_MATER_STTS_CD', dom: '코드C1', dg: '코드', eng: 'requirement status code', desc: '요구사항 진행 상태', ver: 1, cha: 12, dt: '2026-11-03', use: 3, syn: [], forbid: [], old: [], hist: [] },
     { id: 'T-0101', k: 'term', kn: '용어', src: '기관', st: '사용', name: '요구사항ID', abbr: 'DEMND_MATER_ID', dom: 'ID V10', dg: '번호', eng: 'requirement id', desc: '요구사항 식별자', ver: 1, cha: 12, dt: '2026-11-03', use: 6, syn: [], forbid: [], old: [], hist: [] },
     { id: 'T-0425', k: 'term', kn: '용어', src: '기관', st: '사용', name: '산출물제출자명', abbr: 'DLVRBL_SBMTR_NM', dom: '명V100', dg: '명칭', eng: 'submitter name', desc: '제출자 이름', ver: 1, cha: 12, dt: '2026-11-12', use: 1, syn: [], forbid: [], old: [], hist: [] },
-    { id: 'T-0201', k: 'term', kn: '용어', src: '기관', st: '사용', name: '수주금액', abbr: 'WINCON_AMT', dom: '금액N15', dg: '금액·수량', eng: 'contract amount', desc: '계약 수주 금액(부가세 포함)', ver: 4, cha: 12, dt: '2026-11-16', use: 1, syn: [], forbid: [], old: [], hist: [{ v: 'V4', at: '2026-11-16 15:10', act: '변경', doc: 'REQ-2026-0008', by: '이데이터', why: '부가세 포함 명시', diff: [['설명', '수주한 금액', '계약 수주 금액(부가세 포함)']] }] },
+    { id: 'T-0201', k: 'term', kn: '용어', src: '기관', st: '사용', name: '수주금액', abbr: 'WINCON_AMT', dom: '금액N15', dg: '금액', eng: 'contract amount', desc: '계약 수주 금액(부가세 포함)', ver: 4, cha: 12, dt: '2026-11-16', use: 1, syn: [], forbid: [], old: [], hist: [{ v: 'V4', at: '2026-11-16 15:10', act: '변경', doc: 'REQ-2026-0008', by: '이데이터', why: '부가세 포함 명시', diff: [['설명', '수주한 금액', '계약 수주 금액(부가세 포함)']] }] },
     { id: 'T-0233', k: 'term', kn: '용어', src: '기관', st: '사용', name: '요청고객명', abbr: 'REQ_CUST_NM', dom: '명V100', dg: '명칭', eng: 'request customer name', desc: '요청 고객 이름', ver: 1, cha: 12, dt: '2026-11-03', use: 1, syn: [], forbid: [], old: [], hist: [] },
     { id: 'T-0415', k: 'term', kn: '용어', src: '기관', st: '사용', name: '산출물유형코드', abbr: 'DLVRBL_TYPE_CD', dom: '코드C2', dg: '코드', eng: '산출물 유형 구분', ver: 2, cha: 12, dt: '2026-11-15', use: 1, syn: [], forbid: [], old: ['산출물구분코드'],
       hist: [{ v: 'V2', at: '2026-11-15 09:10', act: '변경', doc: 'REQ-2026-0005', by: '김모델 → 이현업', why: '구분 → 유형으로 통일', diff: [['용어명', '산출물구분코드', '산출물유형코드'], ['영문약어명', 'DLVRBL_SE_CD', 'DLVRBL_TYPE_CD']] }, { v: 'V1', at: '2026-11-03 10:00', act: '초기 적재', doc: '—', by: '이데이터', why: '', diff: [] }] },
     { id: 'T-0430', k: 'term', kn: '엔터티 용어', src: '기관', st: '신청 중', name: '산출물기본', abbr: 'DLVRBL_M', dom: '엔터티 용어', eng: '산출물 기본 정보 테이블', ver: 0, cha: null, dt: '2026-11-17', use: 1, syn: [], forbid: [], old: [], pending: 'REQ-2026-0013', hist: [] },
     { id: 'T-0021', k: 'term', kn: '용어', src: '공통', st: '사용', name: '산출근거내용', abbr: 'CALC_BASIS_CN', dom: '내용V1000', dg: '명칭', eng: '산출 근거 설명', ver: 1, cha: 3, dt: '2025-11-30', use: 0, syn: [], forbid: [], old: [], hist: [] },
-    { id: 'T-0022', k: 'term', kn: '용어', src: '공통', st: '사용', name: '산출일자', abbr: 'PRDC_YMD', dom: '연월일C8', dg: '날짜', eng: '산출한 날짜', ver: 1, cha: 3, dt: '2025-11-30', use: 0, syn: [], forbid: [], old: [], hist: [] },
+    { id: 'T-0022', k: 'term', kn: '용어', src: '공통', st: '사용', name: '산출일자', abbr: 'PRDC_YMD', dom: '연월일C8', dg: '날짜/시간', eng: '산출한 날짜', ver: 1, cha: 3, dt: '2025-11-30', use: 0, syn: [], forbid: [], old: [], hist: [] },
     { id: 'D-0031', k: 'domain', kn: '도메인', src: '기관', st: '사용', name: '코드C2', abbr: 'CD_C2', dom: '코드 · CHAR(2)', dg: '코드', eng: '2자리 코드', allow: '[A-Z]{2}', ver: 1, cha: 12, dt: '2026-11-17', use: 9, syn: [], forbid: [], old: [], pending: 'REQ-2026-0010', hist: [] },
-    { id: 'D-0002', k: 'domain', kn: '도메인', src: '공통', st: '사용', name: '금액N15', abbr: 'AMT_N15', dom: '금액 · NUMERIC(15)', dg: '금액·수량', eng: '금액', ver: 1, cha: 3, dt: '2025-11-30', use: 4, syn: [], forbid: [], old: [], hist: [] },
+    { id: 'D-0002', k: 'domain', kn: '도메인', src: '공통', st: '사용', name: '금액N15', abbr: 'AMT_N15', dom: '금액 · NUMERIC(15)', dg: '금액', eng: '금액', ver: 1, cha: 3, dt: '2025-11-30', use: 4, syn: [], forbid: [], old: [], hist: [] },
     { id: 'W-0099', k: 'word', kn: '단어', src: '기관', st: '미사용', name: '산출서', abbr: 'CALC_DOC', dom: '—', eng: '산출물로 통합', ver: 2, cha: 12, dt: '2026-10-02', use: 0, syn: [], forbid: [], old: [], hist: [{ v: 'V2', at: '2026-10-02 14:20', act: '미사용', doc: 'REQ-2026-0001', by: '이데이터', why: '산출물로 통합', diff: [['사용상태', '사용', '미사용']] }] },
     { id: 'W-0003', k: 'word', kn: '단어', src: '공통', st: '사용', name: '산출내역', abbr: 'CALC_DTLS', dom: '—', eng: 'calculation details', ver: 1, cha: 3, dt: '2025-11-30', use: 0, syn: [], forbid: [], old: [], hist: [] },
     { id: 'C-0005', k: 'code', kn: '코드', src: '기관', st: '사용', name: '산출물유형', abbr: 'DLVRBL_TYPE', dom: '코드C2', dg: '코드', eng: '문서·코드·모델·기타', scope: '시스템', sys: 'RQMS', ctype: '자체', ver: 1, cha: 12, dt: '2026-11-17', use: 1, syn: [], forbid: [], old: [], hist: [],
@@ -511,11 +513,32 @@
     { id: 'W-0211', k: 'word', kn: '단어', src: '공통', st: '사용', name: '검사', abbr: 'INSP', dom: '—', eng: 'inspection', ver: 1, cha: 3, dt: '2025-11-30', use: 6, syn: [], forbid: [], old: [], hist: [] }
   ];
   // the 59 행정표준코드 (common codes) join the dictionary once — also into a dictionary already saved by an older mockup version
+  /* the full common standard (공통표준 2025.11: words 3,284 · terms 13,176 · domains 129, assets/std-common.js) is too big for localStorage (~5MB):
+     it is expanded once per page and kept in memory. localStorage keeps the organisation items and only the common items that changed (same id = override). */
+  const CHIST = why => [{ v: 'V1', at: '2025-11-30', act: '공통표준 적재', doc: '—', by: '시스템', why: why || '공공데이터 공통표준(2025.11)', diff: [] }];
+  const pad = (n, w) => String(n).padStart(w, '0');
+  const SC_ = () => window.STD_COMMON || { D: [], W: [], T: [] };
+  const domGroup = () => { if (domGroup.m) return domGroup.m; const m = {}; SC_().D.forEach(r => { m[r[2]] = r[0]; }); return (domGroup.m = m); };
+  // one compact row → one dictionary item (fresh objects every call: the pristine copy for overrides is rebuilt from the row)
+  const expandCommon = (k, i) => { const S0 = SC_();
+    if (k === 'W') { const r = S0.W[i]; return { id: 'W-C' + pad(i + 1, 4), k: 'word', kn: '단어', src: '공통', st: r[9] ? '미사용' : '사용', name: r[0], abbr: r[1] || '—', dom: '—', eng: r[2], desc: r[3], fmt: r[4] ? 'Y' : 'N', cls: r[5], ver: 1, cha: r[8], dt: '2025-11-30', use: 0, syn: r[6].slice(), forbid: r[7].slice(), old: [], disc: r[9] ? 1 : undefined, hist: CHIST() }; }
+    if (k === 'T') { const r = S0.T[i]; return { id: 'T-C' + pad(i + 1, 5), k: 'term', kn: '용어', src: '공통', st: r[8] ? '미사용' : '사용', name: r[0], abbr: r[1] || '—', dom: r[3] || '—', dg: domGroup()[r[3]] || '', eng: '', desc: r[2], allow: r[4], codeRef: r[6], ver: 1, cha: r[7], dt: '2025-11-30', use: 0, syn: r[5].slice(), forbid: [], old: [], disc: r[8] ? 1 : undefined, hist: CHIST() }; }
+    const r = S0.D[i]; return { id: 'D-C' + pad(i + 1, 3), k: 'domain', kn: '도메인', src: '공통', st: r[10] ? '미사용' : '사용', name: r[2], abbr: '—', dom: `${r[1]} · ${r[4]}${r[5] !== '' ? '(' + r[5] + (r[6] !== '' ? ',' + r[6] : '') + ')' : ''}`, dg: r[0], cls: r[1], type: r[4], len: r[5], scale: r[6], unit: r[7], allow: r[8], store: r[11], show: r[12], eng: '', desc: r[3], ver: 1, cha: r[9], dt: '2025-11-30', use: 0, syn: [], forbid: [], old: [], hist: CHIST() }; };
+  const CREF = id => { const m = /^([WTD])-C(\d+)$/.exec(id || ''); return m ? [m[1], +m[2] - 1] : null; };
+  let CMN = null;   // { list: every common item (shared objects), view: { raw, list } = the ones not overridden or shadowed by a stored item }
+  const commonAll = () => { if (CMN) return CMN; const S0 = SC_(), list = [];
+    ['W', 'T', 'D'].forEach(k => S0[k].forEach((r, i) => list.push(expandCommon(k, i)))); return (CMN = { list, view: null }); };
   window.getDict = () => { const d = J('dbm-dict', clone(DICT0)); const sc = window.STD_CODES || [];
-    if (sc.length && !d.some(x => x.id === sc[0].id)) { d.push(...clone(sc)); try { localStorage.setItem('dbm-dict', JSON.stringify(d)); } catch (e) {} } return d; };
-  window.getCommonVer = () => J('dbm-common-ver', { ver: '2025.11', at: '2025-11-30', words: 3284, terms: 13176, domains: 129, codes: (window.STD_CODES || []).length, doc: '—' });
+    if (sc.length && !d.some(x => x.id === sc[0].id)) { d.push(...clone(sc)); try { localStorage.setItem('dbm-dict', JSON.stringify(d)); } catch (e) {} }
+    const C = commonAll(); if (!C.list.length) return d;
+    const raw = store.get('dbm-dict', '');
+    if (!C.view || C.view.raw !== raw) { const ids = new Set(d.map(x => x.id)), names = new Set(d.map(x => x.k + '|' + x.name));
+      C.view = { raw, list: C.list.filter(x => !ids.has(x.id) && !names.has(x.k + '|' + x.name)) }; }   // a stored item with the same name (older seed) wins
+    return d.concat(C.view.list); };
+  window.getCommonVer = () => J('dbm-common-ver', { ver: '2025.11', at: '2025-11-30', words: SC_().W.length || 3284, terms: SC_().T.length || 13176, domains: SC_().D.length || 129, codes: (window.STD_CODES || []).length, doc: '—' });
   window.saveCommonVer = v => S('dbm-common-ver', v);
-  window.saveDict = d => S('dbm-dict', d);
+  // a common item is stored only when it differs from the workbook row (changed by a common-edition request, or used/flagged)
+  window.saveDict = d => S('dbm-dict', d.filter(x => { const c = CREF(x.id); return !c || !SC_()[c[0]][c[1]] || JSON.stringify(x) !== JSON.stringify(expandCommon(c[0], c[1])); }));
   const today = () => { const t = new Date(); return `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, '0')}-${String(t.getDate()).padStart(2, '0')}`; };
   /* ---- v7: dictionary apply is exact (S2) ----
      item operation is explicit: 추가 (new) · 변경 (existing id) · 미사용 (existing id).
@@ -574,21 +597,37 @@
     return b; };
   /* ---- domain groups → classes (→ domains): groups are kept by the DA directly (recorded), classes go through the same request as domains (30 MD-02·03) ---- */
   const GROUPS0 = { groups: [
-      { id: 'G1', name: '날짜', desc: '연월일 · 연월 · 일시 등 날짜와 시각', st: '사용', src: '공통' }, { id: 'G2', name: '번호', desc: '식별자 · 번호 · 일련번호', st: '사용', src: '공통' },
-      { id: 'G3', name: '명칭', desc: '이름 · 명 · 내용 등 문자 서술', st: '사용', src: '공통' }, { id: 'G4', name: '코드', desc: '코드 · 여부 · 구분 등 정해진 값', st: '사용', src: '기관' },
-      { id: 'G5', name: '금액·수량', desc: '금액 · 수량 · 율 등 숫자', st: '사용', src: '기관' }],
+      { id: 'G1', name: '날짜/시간', desc: '연월일 · 연월 · 일시 등 날짜와 시각', st: '사용', src: '공통' }, { id: 'G2', name: '번호', desc: '식별자 · 번호 · 일련번호', st: '사용', src: '공통' },
+      { id: 'G3', name: '명칭', desc: '이름 · 명 · 내용 등 문자 서술', st: '사용', src: '공통' }, { id: 'G4', name: '코드', desc: '코드 · 여부 · 구분 등 정해진 값', st: '사용', src: '공통' },
+      { id: 'G5', name: '금액', desc: '금액 · 가격 · 비용 · 요금', st: '사용', src: '공통' }, { id: 'G6', name: '수량', desc: '수 · 순서 · 면적 · 좌표 등 숫자', st: '사용', src: '공통' }],
     classes: [
       { id: 'K01', name: '연월일', group: 'G1', fw: '일자', st: '사용', src: '공통' }, { id: 'K02', name: '일시', group: 'G1', fw: '일시', st: '사용', src: '공통' },
       { id: 'K03', name: 'ID', group: 'G2', fw: 'ID', st: '사용', src: '공통' }, { id: 'K04', name: '번호', group: 'G2', fw: '번호', st: '사용', src: '공통' }, { id: 'K05', name: '일련번호', group: 'G2', fw: '순번', st: '사용', src: '공통' },
       { id: 'K06', name: '명', group: 'G3', fw: '명', st: '사용', src: '공통' }, { id: 'K07', name: '내용', group: 'G3', fw: '내용', st: '사용', src: '공통' },
       { id: 'K08', name: '코드', group: 'G4', fw: '코드', st: '사용', src: '기관' }, { id: 'K09', name: '여부', group: 'G4', fw: '여부', st: '사용', src: '기관' }, { id: 'K10', name: '구분', group: 'G4', fw: '구분', st: '사용', src: '기관' },
-      { id: 'K11', name: '금액', group: 'G5', fw: '금액', st: '사용', src: '기관' }, { id: 'K12', name: '수량', group: 'G5', fw: '수량', st: '사용', src: '기관' }],
-    log: [{ at: '2026-11-03 10:00', who: '이데이터', act: '그룹 추가', target: '금액·수량', why: '기관 사전 초기 구성' }] };
-  window.getGroups = () => J('dbm-groups', clone(GROUPS0));
+      { id: 'K11', name: '금액', group: 'G5', fw: '금액', st: '사용', src: '기관' }, { id: 'K12', name: '수량', group: 'G6', fw: '수량', st: '사용', src: '기관' }],
+    log: [{ at: '2026-11-03 10:00', who: '이데이터', act: '그룹 추가', target: '금액', why: '기관 사전 초기 구성' }] };
+  // the common standard's own groups and classes (from the domain sheet) join once; existing groups · classes of the same name are kept
+  window.getGroups = () => { const g = J('dbm-groups', clone(GROUPS0)); const D = SC_().D;
+    if (D.length && g.common !== SC_().ver + '/g4') {
+      // an older mockup state used its own group names: take the common standard's (날짜 → 날짜/시간, 금액·수량 → 금액 + 수량)
+      const REN = { '날짜': '날짜/시간', '금액·수량': '금액' };
+      Object.entries(REN).forEach(([o, n]) => { const og = g.groups.find(x => x.name === o); if (!og) return; const ng = g.groups.find(x => x.name === n);
+        if (!ng) { og.name = n; return; } g.classes.forEach(c => { if (c.group === og.id) c.group = ng.id; }); g.groups = g.groups.filter(x => x !== og); });
+      if (!g.groups.some(x => x.name === '수량')) g.groups.push({ id: 'G6', name: '수량', desc: '수 · 순서 · 면적 · 좌표 등 숫자', st: '사용', src: '공통' });
+      const qg = g.groups.find(x => x.name === '수량'); g.classes.forEach(c => { if (c.name === '수량') c.group = qg.id; });
+      try { const sd = JSON.parse(localStorage.getItem('dbm-dict') || 'null'); if (sd && sd.some(x => REN[x.dg])) { sd.forEach(x => { if (REN[x.dg]) x.dg = /^수량/.test(x.dom || x.name) ? '수량' : REN[x.dg]; }); localStorage.setItem('dbm-dict', JSON.stringify(sd)); } } catch (e) {}
+      D.forEach(r => { let gr = g.groups.find(x => x.name === r[0]); if (!gr) { gr = { id: 'GC' + (g.groups.length + 1), name: r[0], desc: '공통표준 도메인그룹', st: '사용', src: '공통' }; g.groups.push(gr); } else gr.src = '공통';
+        const same = g.classes.find(c => c.name === r[1]); if (same && same.src === '공통') same.group = gr.id;   // a common class sits in its common group
+        if (!same) g.classes.push({ id: 'KC' + pad(g.classes.length + 1, 2), name: r[1], group: gr.id, fw: r[1], st: '사용', src: '공통' }); });
+      g.common = SC_().ver + '/g4'; S('dbm-groups', g); }
+    return g; };
   window.saveGroups = g => S('dbm-groups', g);
   // format words: the last word of a class decides which domains a term may use (형식단어 → 도메인분류)
   window.formatWords = () => { const g = getGroups(); return [...new Set(g.classes.filter(c => c.st === '사용').map(c => c.fw).concat(getDict().filter(x => x.k === 'word' && x.fmt === 'Y' && x.ver > 0 && x.st === '사용').map(x => x.name)))]; };
-  window.classOfFw = fw => getGroups().classes.find(c => c.fw === fw && c.st === '사용');
+  // a format word's class: the class that names it, else the class the word itself points at (common words carry 도메인분류)
+  window.classOfFw = fw => { const g = getGroups(), c = g.classes.find(x => x.fw === fw && x.st === '사용'); if (c) return c;
+    const w = wordIndex().map[fw]; return w && w.cls ? g.classes.find(x => x.name === w.cls && x.st === '사용') : undefined; };
   /* ---- one item check for every screen (form, screen grid, excel, submit): problems = [{f: field, msg, lvl: 'block' | 'warn'}] ----
      ctx.batch = the other rows being written together (a new word in the same batch is a known word) */
   window.checkItem = (it, ctx = {}) => {
@@ -853,19 +892,29 @@
   /* ---- word decomposition for analysis (term names → standard words). Common words are seeded here for the mockup ---- */
   const COMMON_WORDS = { 요구사항: 'DEMND_MATER', 프로젝트: 'PRJ', 제출: 'SBMT', 일자: 'YMD', 명: 'NM', ID: 'ID', 코드: 'CD', 결과: 'RSLT', 내용: 'CN', 이력: 'HIST', 순번: 'SN', 상태: 'STTS', 우선순위: 'PRIOR', 부서: 'DEPT', 요청: 'REQ', 고객: 'CUST', 금액: 'AMT', 수주: 'WINCON', 기본: 'M', 승인: 'APRV', 완료: 'CMPTN', 리스크: 'RISK', 등급: 'GRD', 대응: 'RSPNS', 발주처: 'ORDR_OFC', 종료: 'END', 유형: 'TYPE', 구분: 'SE', 번호: 'NO', 여부: 'YN', 일시: 'DT', 등록: 'REG', 수정: 'MDFCN', 자: 'R', 물품: 'GOODS', 사원: 'EMP', 팀원: 'TMBR', 투입: 'INPT', 시작: 'BEGIN', 역할: 'ROLE', 구성: 'CMPS', 내역: 'D', 날짜: 'DATE' };
   // extra = words being written together (basket · screen grid · same request): they count as known words for the split (MD-14)
+  // stored words by name (+ longest-first keys), rebuilt only when the saved dictionary changes
+  let WIX = null;
+  function wordIndex() { const raw = store.get('dbm-dict', '') + '|' + (window.STD_COMMON ? 1 : 0); if (WIX && WIX.raw === raw) return WIX;
+    const map = {}; Object.entries(COMMON_WORDS).forEach(([w, ab]) => { map[w] = { w, abbr: ab, src: '공통', ok: true }; });
+    getDict().forEach(x => { if (x.k === 'word') map[x.name] = { w: x.name, abbr: x.abbr, src: x.src, ok: x.ver > 0 && x.st === '사용', id: x.id, cls: x.cls, fmt: x.fmt }; });
+    return (WIX = { raw, map, keys: Object.keys(map).sort((a, b) => b.length - a.length) }); }
+  // every name decompose() can return as one word (stored words + words in open requests) — a quick pre-check for callers that try many chunks
+  window.wordNames = () => { const s = new Set(Object.keys(wordIndex().map)); openItems().forEach(o => { if (o.it.k === 'word' && (o.it.act || '추가') === '추가') s.add(o.it.name); }); return s; };
   window.decompose = (name, extra) => {
-    const dict = getDict(); const open = openItems();
-    const words = {};
-    Object.entries(COMMON_WORDS).forEach(([w, ab]) => { words[w] = { w, abbr: ab, src: '공통', ok: true }; });
-    dict.filter(x => x.k === 'word').forEach(x => { words[x.name] = { w: x.name, abbr: x.abbr, src: x.src, ok: x.ver > 0 && x.st === '사용', id: x.id }; });
-    open.filter(o => o.it.k === 'word' && (o.it.act || '추가') === '추가').forEach(o => { if (!words[o.it.name]) words[o.it.name] = { w: o.it.name, abbr: o.it.abbr, src: '신청 중', ok: false, doc: o.doc }; else if (!words[o.it.name].ok) words[o.it.name].doc = o.doc; });
+    const open = openItems();
+    // stored words (3,300+ with the common standard) come from a cached index; requests in progress and the batch sit on top
+    const base = wordIndex(), ov = {}, gone = new Set();
+    const cur = n => Object.prototype.hasOwnProperty.call(ov, n) ? ov[n] : gone.has(n) ? undefined : base.map[n];
+    open.filter(o => o.it.k === 'word' && (o.it.act || '추가') === '추가').forEach(o => { const c = cur(o.it.name); if (!c) ov[o.it.name] = { w: o.it.name, abbr: o.it.abbr, src: '신청 중', ok: false, doc: o.doc }; else if (!c.ok) ov[o.it.name] = Object.assign({}, c, { doc: o.doc }); });
     // words written together win over the stored ones: new words, and CHANGED words (their name / abbreviation after the change) — decision Q1
     (extra || []).forEach(x => { if (!x) return; let w = x;
-      if (x.id && opOf(x) === '변경') { const d = dict.find(y => y.id === x.id); if (!d) return; w = mergedOf(d, x); if (w.name !== d.name) delete words[d.name]; }
-      if (w.name && w.abbr) words[w.name] = { w: w.name, abbr: w.abbr, src: '작성 중', ok: true, batch: true }; });
-    const keys = Object.keys(words).sort((a, b) => b.length - a.length);
+      if (x.id && opOf(x) === '변경') { const d = getDict().find(y => y.id === x.id); if (!d) return; w = mergedOf(d, x); if (w.name !== d.name) { gone.add(d.name); delete ov[d.name]; } }
+      if (w.name && w.abbr) ov[w.name] = { w: w.name, abbr: w.abbr, src: '작성 중', ok: true, batch: true }; });
+    const okeys = Object.keys(ov).sort((a, b) => b.length - a.length);
     const parts = []; let i = 0, unknown = '';
-    while (i < name.length) { const k = keys.find(w => name.startsWith(w, i)); if (k) { if (unknown) { parts.push({ w: unknown, unknown: true }); unknown = ''; } parts.push(words[k]); i += k.length; } else { unknown += name[i]; i++; } }
+    while (i < name.length) { const k1 = okeys.find(w => name.startsWith(w, i)), k2 = base.keys.find(w => !gone.has(w) && name.startsWith(w, i));
+      const k = !k1 ? k2 : !k2 ? k1 : (k2.length > k1.length ? k2 : k1);
+      if (k) { if (unknown) { parts.push({ w: unknown, unknown: true }); unknown = ''; } parts.push(cur(k)); i += k.length; } else { unknown += name[i]; i++; } }
     if (unknown) parts.push({ w: unknown, unknown: true });
     const unk = parts.filter(p => p.unknown), pend = parts.filter(p => !p.unknown && !p.ok);
     return { parts, unknown: unk, pending: pend, abbr: parts.map(p => p.abbr || '?').join('_'), ok: !unk.length && !pend.length, sus: parts.some(p => !p.unknown && p.w.length === 1 && !['명', '자'].includes(p.w)) };

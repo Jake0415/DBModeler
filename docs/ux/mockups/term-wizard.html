@@ -244,7 +244,9 @@ window.pageInit = function () {
   // one word = decompose() of the exact chunk returns a single known part (common words + dictionary + words in open requests)
   const wcache = {};
   const MW = {};   // 모델 표준 단어: words learned from attributes the model already judges standard (e.g. ERP 직급 ↔ JBGD)
+  const WN = wordNames();   // with the full common standard (3,300 words) most chunks are ruled out without a full decompose
   const known0 = s => {
+    if (!(s in wcache) && !WN.has(s)) wcache[s] = null;
     if (!(s in wcache)) { const d = decompose(s); wcache[s] = d.parts.length === 1 && !d.parts[0].unknown && d.parts[0].w === s ? d.parts[0] : null; }
     return wcache[s] || (MW[s] ? { w: s, abbr: MW[s], src: '모델', ok: true } : null);
   };
