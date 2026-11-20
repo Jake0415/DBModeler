@@ -120,12 +120,14 @@ window.pageInit = function () {
         return; }
       lines.push(`<span class="kw">CREATE TABLE</span> ${SCH}.${esc(e.p)} (`);
       e.a.filter(a => !a.edit).forEach(a => { const bad = a.p === '—' || !ascii(a.p); lines.push(`<span class="${bad ? 'warn' : ''}">  ${esc(a.p)}${' '.repeat(Math.max(1, 20 - a.p.length))}${esc(a.t)}${a.def ? ' <span class="kw">DEFAULT</span> ' + esc(a.def) : ''}${a.nn || a.pk ? ' <span class="kw">NOT NULL</span>' : ''},${bad ? ' <span class="cm">-- 오류: 물리명 없음·무효</span>' : a.s === 'ex' ? ' <span class="cm">-- <i data-ic=warn data-s=12></i> 예외: ' + esc(a.exReason || '') + '</span>' : ''}</span>`); });
-      const pk = e.a.filter(a => a.pk).map(a => a.p); lines.push(pk.length ? `  <span class="kw">CONSTRAINT</span> ${esc(e.p)}_PK <span class="kw">PRIMARY KEY</span> (${pk.join(', ')})` : '  <span class="cm">-- <i data-ic=warn data-s=12></i> PK 없음</span>'); lines.push(');');
+      const pk = e.a.filter(a => a.pk).map(a => a.p); lines.push(pk.length ? `  <span class="kw">CONSTRAINT</span> ${esc(e.p)}_PK <span class="kw">PRIMARY KEY</span> (${pk.join(', ')})${(e.uk || []).length ? ',' : ''}` : '  <span class="cm">-- <i data-ic=warn data-s=12></i> PK 없음</span>');
+      (e.uk || []).forEach((u, i, A) => lines.push(`  <span class="kw">CONSTRAINT</span> ${esc(e.p)}_UK${i + 1} <span class="kw">UNIQUE</span> (${esc(u)})${i < A.length - 1 ? ',' : ''}`));   // UKs (1:1 relations keep theirs here)
+      lines.push(');');
       if (cm) { lines.push(`<span class="kw">COMMENT ON TABLE</span> ${SCH}.${esc(e.p)} <span class="kw">IS</span> <span class="str">'${esc(e.n)}'</span>;`); e.a.filter(a => !a.edit && a.p !== '—').forEach(a => lines.push(colComment(e, a))); }
     });
     // FK from the same rule as the model tree and the right panel (12 §4.1): ok → constraint, ex → reason, miss → warning
     if (fk && !alter) src.R.forEach(r => { const p = src.E.find(x => x.id === r.f), c = ents.find(x => x.id === r.t); if (!p || !c || !target.includes(c)) return; const f = fkOf(r, src.E);
-      if (f.st === 'ok') lines.push(`<span class="kw">ALTER TABLE</span> ${SCH}.${esc(c.p)} <span class="kw">ADD CONSTRAINT</span> ${esc(f.name)} <span class="kw">FOREIGN KEY</span> (${f.cols.join(', ')}) <span class="kw">REFERENCES</span> ${SCH}.${esc(p.p)} (${f.pcols.join(', ')});`);
+      if (f.st === 'ok') lines.push(`<span class="kw">ALTER TABLE</span> ${SCH}.${esc(c.p)} <span class="kw">ADD CONSTRAINT</span> ${esc(f.name)} <span class="kw">FOREIGN KEY</span> (${f.cols.join(', ')}) <span class="kw">REFERENCES</span> ${SCH}.${esc(p.p)} (${f.pcols.join(', ')})${r.del === 'cascade' ? ' <span class="kw">ON DELETE CASCADE</span>' : r.del === 'setnull' ? ' <span class="kw">ON DELETE SET NULL</span>' : ''};`);   // 막기 = no clause (Oracle NO ACTION)
       else if (f.st === 'ex') lines.push(`<span class="cm">-- FK 제외: ${esc(nm(c))} → ${esc(nm(p))} · ${esc(f.why)}</span>`);
       else if (f.st === 'miss') { lines.push(`<span class="cm">-- <i data-ic=warn data-s=12></i> FK 누락: ${esc(nm(c))} → ${esc(nm(p))} · ${esc(f.why)}</span>`); warn.push(`${c.n} → ${p.n}: FK 누락 · ${f.why}`); } });
     $('sql').innerHTML = lines.map((l, i) => `<div class="ln ${l.includes('-- 오류:') ? 'warn' : ''}"><i>${i + 1}</i>${l}</div>`).join('');

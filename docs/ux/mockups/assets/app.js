@@ -249,7 +249,7 @@
       const have = cc ? cc.filter(x => x && x.p !== '—').length : 0;
       return { st: 'miss', why: r.f === r.t ? '재귀 관계 — 역할명 FK 컬럼 지정 필요' : !c.a.some(a => a.fk) ? 'FK 컬럼 없음' : have ? `부모 PK ${pk.length}개 중 ${have}개만 대응 — 나머지 컬럼 지정 필요` : 'FK 컬럼 이름이 부모 PK와 다름(역할명) — 대응 컬럼 지정 필요' };
     }
-    return { st: 'ok', cols: cc.map(a => a.p), pcols: pk.map(a => a.p), ref: !!p.ref, name: `${c.p}_${p.p}_FK${r.g ? '_' + String(r.g).slice(-2).toUpperCase() : ''}` };
+    return { st: 'ok', cols: cc.map(a => a.p), pcols: pk.map(a => a.p), ref: !!p.ref, name: `${c.p}_${p.p}_FK${r.g && !r.gAuto ? '_' + String(r.g).slice(-2).toUpperCase() : ''}` };   // a group added only to tidy older data (gAuto) never renames the constraint
   };
   /* constraints and indexes of a table (PK · UK · FK · FK index · explicit index) */
   window.consOf = (e, E, R) => {
@@ -689,6 +689,17 @@
     b.E.forEach(e => { if (!ea.has(e.id)) out.push(e.ref ? ['참조 추가', `${e.n} ${e.p}`, '—', refTxt(e)] : ['추가', `${e.n} ${e.p}`, '—', `엔터티 · 속성 ${e.a.length}`]); });
     a.E.forEach(e => { if (!eb.has(e.id)) out.push(e.ref ? ['참조 해제', `${e.n} ${e.p}`, refTxt(e), '—'] : ['삭제', `${e.n} ${e.p}`, `엔터티 · 속성 ${e.a.length}`, '—']); });
     b.E.forEach(e => { const o = ea.get(e.id); if (!o || !e.ref) return; if ((o.refVer || 0) !== (e.refVer || 0)) out.push(['참조 갱신', `${e.n} ${e.p}`, refTxt(o), refTxt(e)]); });
+    // relations (18): structure changes are rows of the main table; ON DELETE / 1:1 UK change how the operating DB behaves — flagged 'db'
+    const relK = r => r.g || `${r.f}>${r.t}>${r.name || ''}`, eN = id => (eb.get(id) || ea.get(id) || {}).n || id;
+    const KN = { nonid: '1:N 비식별', id: '1:N 식별', one: '1:1', mn: 'M:N' }, DN = { none: '막기', cascade: 'CASCADE', setnull: 'SET NULL' };
+    const ra = new Map((a.R || []).map(r => [relK(r), r])), rb = new Map((b.R || []).map(r => [relK(r), r]));
+    (b.R || []).forEach(r => { const o = ra.get(relK(r)), nm = `${eN(r.f)} → ${eN(r.t)}`;
+      if (!o) { out.push(['관계 추가', nm, '—', KN[r.k] || r.k]); if (r.del && r.del !== 'none') out.push(['DB 동작', `${nm} · 부모 행 삭제 시`, '—', DN[r.del], 'db']); return; }
+      if (o.k !== r.k) out.push(['관계 변경', nm, KN[o.k] || o.k, KN[r.k] || r.k]);
+      if ((o.opt || '') !== (r.opt || '') && r.opt) out.push(['관계 변경', `${nm} · 부모 쪽`, o.opt === 'may' ? '없어도 됨' : '반드시', r.opt === 'may' ? '없어도 됨' : '반드시']);
+      if ((o.del || 'none') !== (r.del || 'none')) out.push(['DB 동작', `${nm} · 부모 행 삭제 시`, DN[o.del || 'none'], DN[r.del || 'none'], 'db']);
+      if ((o.uk || '') !== (r.uk || '')) out.push(['DB 동작', `${nm} · 1:1 보장 UK`, o.uk || '—', r.uk || '—', 'db']); });
+    (a.R || []).forEach(r => { if (!rb.has(relK(r))) out.push(['관계 삭제', `${eN(r.f)} → ${eN(r.t)}`, KN[r.k] || r.k, '—']); });
     // layout only (12 §3.2): positions · views · placement · hidden lines — listed apart, flagged with a 5th field
     const moved = b.E.filter(e => { const o = ea.get(e.id); return o && (o.x !== e.x || o.y !== e.y || o.px !== e.px || o.py !== e.py); });
     if (moved.length) out.push(['배치', '위치 이동', '—', `${moved.length}개 · ${moved.slice(0, 4).map(e => e.n).join(', ')}${moved.length > 4 ? ' …' : ''}`, 'layout']);
