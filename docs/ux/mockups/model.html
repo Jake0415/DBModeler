@@ -253,7 +253,8 @@
       <div class="scroll" id="dict"></div>
       <div style="padding:10px 12px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:6px">
         <div class="caption muted">용어를 엔터티에 끌어 놓으면 속성으로 추가됩니다</div>
-        <div class="flex"><button class="btn sm grow" id="dict-cand" title="검색어를 단어 후보로 등록 — 선택한 속성이 발생 위치가 됩니다">후보 등록</button><a class="btn sm grow" href="excel-import.html">엑셀 가져오기</a></div>
+        <div class="flex"><button class="btn sm grow" id="dict-cand" title="검색어를 단어 후보로 등록 — 선택한 속성이 발생 위치가 됩니다">후보 등록</button><button class="btn sm grow" id="dict-bk" title="검색어를 용어 신청으로 내 바구니에 담습니다 — 사전 화면에서 한 번에 신청">바구니에 담기</button></div>
+        <div class="flex u-mt-4"><a class="btn sm grow" href="excel-import.html">엑셀 가져오기</a><a class="btn sm grow" id="dict-wiz" href="term-wizard.html"><i data-ic=wand data-s=12></i>용어 자동분석</a></div>
       </div>
     </div>
 
@@ -396,6 +397,19 @@ window.pageInit = function () {
     const e = sel && ent(sel); const c = addCandidate({ t: '단어', name: v, abbr: '' }, { area: AREA, e: e ? e.id : null, ent: e ? e.n : LOCK.model.name, attr: e ? (e.a.find(a => a.s === 'unreg' || a.s === 'comb') || {}).n || v : v });
     toast(`‘${v}’을 단어 후보로 등록했습니다 — 발생 위치 ${c.loc.length}곳 · DA가 후보 큐에서 처리합니다`, 'violet', { label: '후보 큐 열기', fn: () => location.href = `candidates.html?c=${c.id}` });
     $('c-cand').textContent = candOpenCount();
+  };
+  // DX-17: a modeler with request rights puts the term straight into the request basket (no candidate queue round trip)
+  $('dict-wiz').onclick = ev => { ev.preventDefault(); location.href = `term-wizard.html?area=${AREA}${typeof sel === 'string' && ent(sel) ? '&ents=' + sel : ''}&from=model`; };   // built on click: AREA is defined further down
+  $('dict-bk').onclick = () => {
+    const v = ($('dict-q').value || '').trim(); if (!v) { toast('담을 용어를 검색창에 입력하세요', 'info'); return; }
+    if (!can('dict.request')) { toast('사전 신청 권한이 없습니다 — [후보 등록]을 쓰세요', 'info'); return; }
+    if (TERMS.some(t => t.n === v)) { toast(`‘${v}’은 이미 사전에 있습니다 — 끌어다 놓아 쓰세요`, 'info'); return; }
+    const dc = decompose(v), last = dc.parts.slice(-1)[0] || {};
+    const dom = { 일자: '연월일C8', 명: '명V100', ID: 'ID V10', 코드: '코드C2', 여부: '여부C1', 내용: '내용V1000', 금액: '금액N15', 순번: '일련번호N10', 일시: '일시T' }[last.w] || '명V100';
+    const e = sel && ent(sel), items = [{ k: 'term', name: v, abbr: dc.abbr.includes('?') ? '' : dc.abbr, dom, act: '추가', from: `모델 ${LOCK.model.name}${e ? ' › ' + e.n : ''}` }];
+    const [a, s] = addToBasket(items);
+    const unk = dc.unknown.map(p => p.w);
+    toast(a ? `‘${v}’${josa(v, '을/를').slice(v.length)} 바구니에 담았습니다${unk.length ? ` — 모르는 단어 ${unk.join(', ')}는 사전 화면에서 약어를 정해 함께 담으세요` : ''} · 바구니 ${getBasket().items.length}건` : `‘${v}’은 이미 바구니에 있습니다${s ? '' : ''}`, a ? 'success' : 'info', { label: '바구니 열기', fn: () => location.href = 'dictionary.html?basket=1' });
   };
 
   // ---- business area: seed structure comes from the shared state layer (app.js modelSeed)
@@ -1567,10 +1581,10 @@ window.pageInit = function () {
       done.push(x.key);    });
     (applied.ex || []).forEach(x => { const a = findAttr(x); if (a) { a.s = 'ex'; a.exReason = x.why; delete a.cand; done.push(x.key); } else miss.push(x.key); });
     (applied.na || []).forEach(x => { const a = findAttr(x); if (a) { a.s = 'na'; a.naReason = x.why; done.push(x.key); } else miss.push(x.key); });
-    setTimeout(() => toast(`표준 맞추기 반영 — 모델 변경 ${done.length}건${miss.length ? ` · <b>찾지 못해 적용 못 함 ${miss.length}건</b>(${miss.join(', ')})` : ''}${applied.doc ? ` · 용어 신청 ${applied.doc}(${applied.req}건)` : ''}${applied.cand ? ` · 후보 발생 위치 ${applied.cand}건 등록` : ''}${applied.doc ? ' · 실행 취소해도 용어 신청은 남습니다(결재함에서 회수)' : ''}`, miss.length ? 'danger' : 'success', undoAction()), 300);
+    setTimeout(() => toast(`${applied.from === 'term-wizard' ? '용어 자동분석' : '표준 맞추기'} 반영 — 모델 변경 ${done.length}건${miss.length ? ` · <b>찾지 못해 적용 못 함 ${miss.length}건</b>(${miss.join(', ')})` : ''}${applied.doc ? ` · 용어 신청 ${applied.doc}(${applied.req}건)` : ''}${applied.cand ? ` · 후보 발생 위치 ${applied.cand}건 등록` : ''}${applied.doc ? ' · 실행 취소해도 용어 신청은 남습니다(결재함에서 회수)' : ''}`, miss.length ? 'danger' : 'success', undoAction()), 300);
   } else if (applied) {
     // the area changed state (locked / other version) between standardize and here: keep the hand-off, say why
-    setTimeout(() => toast(`표준 맞추기 결과를 반영하지 않았습니다 — ${applied.area !== AREA ? '다른 업무 영역' : applied.ver !== VER ? `v${applied.ver}용 결과(지금 v${VER})` : '이 영역은 지금 편집할 수 없음'}. 선택은 보존돼 있으니 표준 맞추기에서 다시 적용하세요`, 'danger'), 300);
+    setTimeout(() => toast(`${applied.from === 'term-wizard' ? '용어 자동분석' : '표준 맞추기'} 결과를 반영하지 않았습니다 —${applied.area !== AREA ? '다른 업무 영역' : applied.ver !== VER ? `v${applied.ver}용 결과(지금 v${VER})` : '이 영역은 지금 편집할 수 없음'}. 선택은 보존돼 있으니 표준 맞추기에서 다시 적용하세요`, 'danger'), 300);
   }
   $('ver').textContent = `v${VER} 작업 중`;
   const bdoc = getDocs().find(x => x.type === 'model' && x.area === AREA && x.ver === BASE && x.step === 'done');

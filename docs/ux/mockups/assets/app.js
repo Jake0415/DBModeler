@@ -496,7 +496,10 @@
     { id: 'D-0002', k: 'domain', kn: '도메인', src: '공통', st: '사용', name: '금액N15', abbr: 'AMT_N15', dom: '금액 · NUMERIC(15)', dg: '금액·수량', eng: '금액', ver: 1, cha: 3, dt: '2025-11-30', use: 4, syn: [], forbid: [], old: [], hist: [] },
     { id: 'W-0099', k: 'word', kn: '단어', src: '기관', st: '미사용', name: '산출서', abbr: 'CALC_DOC', dom: '—', eng: '산출물로 통합', ver: 2, cha: 12, dt: '2026-10-02', use: 0, syn: [], forbid: [], old: [], hist: [{ v: 'V2', at: '2026-10-02 14:20', act: '미사용', doc: 'REQ-2026-0001', by: '이데이터', why: '산출물로 통합', diff: [['사용상태', '사용', '미사용']] }] },
     { id: 'W-0003', k: 'word', kn: '단어', src: '공통', st: '사용', name: '산출내역', abbr: 'CALC_DTLS', dom: '—', eng: 'calculation details', ver: 1, cha: 3, dt: '2025-11-30', use: 0, syn: [], forbid: [], old: [], hist: [] },
-    { id: 'C-0005', k: 'code', kn: '코드', src: '기관', st: '사용', name: '산출물유형', abbr: 'DLVRBL_TYPE', dom: '코드C2', dg: '코드', eng: '문서·코드·모델·기타', ver: 1, cha: 12, dt: '2026-11-17', use: 1, syn: [], forbid: [], old: [], hist: [] },
+    { id: 'C-0005', k: 'code', kn: '코드', src: '기관', st: '사용', name: '산출물유형', abbr: 'DLVRBL_TYPE', dom: '코드C2', dg: '코드', eng: '문서·코드·모델·기타', scope: '시스템', sys: 'RQMS', ctype: '자체', ver: 1, cha: 12, dt: '2026-11-17', use: 1, syn: [], forbid: [], old: [], hist: [],
+      vals: [{ v: '01', nm: '문서', ord: 1, st: '사용' }, { v: '02', nm: '코드', ord: 2, st: '사용' }, { v: '03', nm: '모델', ord: 3, st: '사용' }, { v: '99', nm: '기타', ord: 4, st: '사용' }] },
+    { id: 'C-0006', k: 'code', kn: '코드', src: '기관', st: '사용', name: '요구사항상태', abbr: 'DEMND_MATER_STTS', dom: '코드C1', dg: '코드', eng: '요구사항 진행 상태', scope: '공통', ctype: '자체', ver: 2, cha: 12, dt: '2026-11-10', use: 3, syn: [], forbid: [], old: [], hist: [],
+      vals: [{ v: 'R', nm: '접수', ord: 1, st: '사용' }, { v: 'A', nm: '분석', ord: 2, st: '사용' }, { v: 'D', nm: '개발', ord: 3, st: '사용' }, { v: 'C', nm: '완료', ord: 4, st: '사용' }, { v: 'X', nm: '취소', ord: 5, st: '미사용' }] },
     { id: 'W-0210', k: 'word', kn: '단어', src: '공통', st: '사용', name: '수신자', abbr: 'RCVR', dom: '—', eng: 'receiver', ver: 1, cha: 3, dt: '2025-11-30', use: 3, syn: ['수취인'], forbid: ['수령인'], old: [], hist: [] },
     // V0 (삭제 보관) samples: one still referenced (permanent delete blocked), one free to purge
     { id: 'W-0097', k: 'word', kn: '단어', src: '기관', st: '삭제 보관', name: '산출근거문서', abbr: 'CALC_BSDC', dom: '—', eng: '산출근거로 통합', ver: 3, cha: 12, dt: '2026-11-05', use: 0, syn: [], forbid: [], old: [], delDoc: 'REQ-2026-0001', hist: [{ v: 'V0', at: '2026-11-05 10:00', act: '삭제 보관', doc: 'REQ-2026-0001', by: '이데이터', why: '산출근거로 통합', diff: [] }] },
@@ -509,13 +512,37 @@
   /* ---- v7: dictionary apply is exact (S2) ----
      item operation is explicit: 추가 (new) · 변경 (existing id) · 미사용 (existing id).
      A change applies the changed FIELDS (not just the version); a missing target is a failure, never a new item. */
-  const KIND_NAME = { word: '단어', term: '용어', domain: '도메인', code: '코드' };
-  const FIELD = { 단어명: 'name', 용어명: 'name', 이름: 'name', 영문약어명: 'abbr', 약어: 'abbr', 도메인: 'dom', 설명: 'desc', 영문명: 'eng', '허용 값': 'allow', 사용상태: 'st' };
+  const KIND_NAME = { word: '단어', term: '용어', domain: '도메인', code: '코드', entity: '엔터티 용어' };
+  window.KIND_NAME = KIND_NAME;
+  const FIELD = { 단어명: 'name', 용어명: 'name', 이름: 'name', 영문약어명: 'abbr', 약어: 'abbr', 도메인: 'dom', 설명: 'desc', 영문명: 'eng', '허용 값': 'allow', 사용상태: 'st', 이음동의어: 'syn', 금칙어: 'forbid', 도메인그룹: 'dg', 코드값: 'vals', '적용 범위': 'scope' };
   window.FIELD_KEY = FIELD;
-  const opOf = it => it.act === '미사용' ? '미사용' : (it.id && it.act !== '추가') ? '변경' : '추가';
+  // editable fields per kind (DX-01: a change row may carry any number of them)
+  window.EDIT_FIELDS = { word: ['영문약어명', '영문명', '설명', '이음동의어', '금칙어'], term: ['영문약어명', '도메인', '영문명', '설명'], entity: ['영문약어명', '영문명', '설명'], domain: ['허용 값', '도메인그룹', '설명'], code: ['영문명', '설명', '적용 범위', '코드값'] };
+  const opOf = it => it.act === '미사용' ? '미사용' : it.act === '삭제' ? '삭제' : (it.id && it.act !== '추가') ? '변경' : '추가';
+  window.opOf = opOf;
+
+  /* ---- DX-02·03·17: the request basket — one per user, kept across pages and reloads (a server draft in the product) ----
+     the dictionary list, the detail panel, the model's dictionary panel and the excel import all add to it; the request panel submits it */
+  const bKey = () => 'dbm-basket-' + (window.ME ? ME.id : 'kim');
+  window.getBasket = () => J(bKey(), { items: [], reason: '', at: '' });
+  window.saveBasket = b => { b.at = today() + ' ' + now().split(' ')[1]; S(bKey(), b); if (window.refreshTop) window.refreshTop(); document.dispatchEvent(new CustomEvent('basket')); };
+  // add items; an item already in the basket (same id, or same kind + name for new ones) is skipped — returns [added, skipped]
+  window.addToBasket = list => { const b = getBasket(); let a = 0, s = 0;
+    [].concat(list).forEach(it => { const same = b.items.find(x => (it.id && x.id === it.id) || (!it.id && !x.id && x.k === it.k && x.name === it.name)); if (same) { s++; return; } b.items.push(Object.assign({ key: 'b' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5) }, it)); a++; });
+    saveBasket(b); return [a, s]; };
+  /* named drafts: park a basket, start another, come back later (DX-03) */
+  const dKey = () => 'dbm-drafts-' + (window.ME ? ME.id : 'kim');
+  window.getDrafts = () => J(dKey(), [{ id: 'dr1', name: '리스크 영역 용어 정리(작성 중)', at: '2026-11-18 17:40', reason: '리스크 관리 화면 개편', items: [{ key: 'bs1', k: 'term', name: '리스크대응완료일자', abbr: 'RISK_RSPNS_CMPTN_YMD', dom: '연월일C8', act: '추가' }, { key: 'bs2', k: 'word', name: '완화', abbr: 'MTGT', eng: 'mitigation', act: '추가' }] }]);
+  window.saveDrafts = d => S(dKey(), d);
+  /* DX-09: dependency order inside one request — new words, then domains, then terms / entity terms / codes; a term that uses a word added in the same request says so */
+  window.orderItems = items => { const rank = it => opOf(it) !== '추가' ? 4 : ({ word: 0, domain: 1, term: 2, entity: 2, code: 3 })[it.k] ?? 2;
+    const out = items.slice().sort((a, b) => rank(a) - rank(b));
+    out.forEach(it => { delete it.dep; if (opOf(it) === '추가' && (it.k === 'term' || it.k === 'entity')) { const ws = decompose(it.name).parts.map(p => p.w); const dep = out.filter(o => o !== it && o.k === 'word' && opOf(o) === '추가' && ws.includes(o.name)).map(o => o.name);
+      const dd = out.find(o => o.k === 'domain' && opOf(o) === '추가' && o.name === it.dom); if (dd) dep.push(dd.name); if (dep.length) it.dep = dep; } });
+    return out; };
   const kindOf = it => it.k && it.k !== 'chg' ? it.k : null;
   /* items currently in an open (DA/final) document — used for duplicate checks before a doc exists in the dictionary */
-  window.openItems = (exceptDoc) => getDocs().filter(d => d.type === 'dict' && ['da', 'final'].includes(d.step) && d.id !== exceptDoc).flatMap(d => (d.items || []).map(it => ({ doc: d.id, it })));
+  window.openItems = (exceptDoc) => getDocs().filter(d => d.type === 'dict' && ['da', 'final'].includes(d.step) && d.id !== exceptDoc).flatMap(d => (d.items || []).filter(it => !it.rej).map(it => ({ doc: d.id, it })));   // an item the approver rejected (DX-12) went back to the basket and no longer blocks a new request
   /* checkDictDoc: the same judgement for the approval screen's check tab, the final-approval re-check, and submit */
   window.checkDictDoc = doc => {
     const dict = getDict(), out = [];
@@ -527,10 +554,21 @@
       // shared business rules — the same set the excel validation and the dictionary form use (CL12-26)
       const forbid = dict.find(x => x.k === 'word' && (x.forbid || []).some(f => f && name.includes(f)));
       if (forbid && op !== '미사용') res.problems.push(`금칙어 '${forbid.forbid.find(f => name.includes(f))}' 포함 — '${forbid.name}' 사용`);
-      if (op === '추가' && k === 'term') {
+      if (it.rej) { res.problems = []; res.skip = '항목 반려'; out.push(res); return; }   // DX-12: a rejected item is no longer judged
+      if (op === '추가' && k === 'code') {
+        const vals = it.vals || [], len = +(String(it.dom || '').match(/\d+$/) || [0])[0];
+        if (!vals.length) res.problems.push('코드값이 없음');
+        const dup = vals.map(v => v.v).filter((v, i, a) => a.indexOf(v) !== i); if (dup.length) res.problems.push(`코드값 중복: ${[...new Set(dup)].join(', ')}`);
+        if (len) { const bad = vals.filter(v => String(v.v).length !== len); if (bad.length) res.problems.push(`도메인 ${it.dom} 길이 ${len}과 다른 코드값: ${bad.map(v => v.v).join(', ')}`); }
+        if (it.scope === '시스템' && !it.sys) res.problems.push('시스템 코드인데 대상 시스템이 없음');
+      }
+      if (op === '추가' && (k === 'term' || k === 'entity')) {
         if (it.dom && !knownDomains().has(it.dom)) res.problems.push(`도메인 '${it.dom}'이 사전에 없음`);
         if ((it.abbr || '').length > 30) res.problems.push(`영문약어명 ${it.abbr.length}자 — 30자 초과(대상 DBMS 기준)`);
-        if (it.dom !== '엔터티' && it.dom !== '엔터티 용어') { const dc = decompose(name); const pend = dc.pending.filter(p => !(doc.items || []).some(o => o.k === 'word' && o.name === p.w)); if (pend.length) res.problems.push(`구성 단어 미승인: ${pend.map(p => p.w + (p.doc ? `(${p.doc} 진행 중)` : '')).join(', ')}`); }
+        { const dc = decompose(name); const inDoc = w => (doc.items || []).some(o => o.k === 'word' && o.name === w && !o.rej);
+          const pend = dc.pending.filter(p => !inDoc(p.w)); if (pend.length) res.problems.push(`구성 단어 미승인: ${pend.map(p => p.w + (p.doc ? `(${p.doc} 진행 중)` : '')).join(', ')}`);
+          const unk = dc.unknown.filter(p => !inDoc(p.w)); if (unk.length) res.problems.push(`미등록 단어: ${unk.map(p => p.w).join(', ')} — 같은 신청에 단어를 함께 넣으세요`);
+          if (it.abbr && dc.ok && !unk.length && it.abbr !== dc.abbr && k === 'term') res.problems.push(`영문약어명 ${it.abbr} ≠ 단어 약어 조합 ${dc.abbr}`); }
       }
       if (op === '추가') {
         if (k === 'word' && !(it.abbr || '').trim()) res.problems.push('영문약어명이 비어 있음');
@@ -547,6 +585,8 @@
           if (d.pending && d.pending !== doc.id && getDocs().some(x => x.id === d.pending && ['da', 'final'].includes(x.step))) res.problems.push(`${d.pending}에서 같은 항목을 신청 중`);
           if (op === '변경' && !Object.keys(it.chg || {}).length && !Object.keys(it.set || {}).length) res.problems.push('바뀌는 칸이 없음');
           if (op === '미사용' && d.st === '미사용') res.problems.push('이미 미사용');
+          if (op === '삭제' && (d.use || 0) > 0) res.problems.push(`모델 ${d.use}곳에서 쓰는 중 — 삭제할 수 없음(미사용을 쓰세요)`);
+          if (op === '삭제' && d.st === '삭제 보관') res.problems.push('이미 삭제 보관');
         }
       }
       out.push(res);
@@ -557,15 +597,26 @@
     const dict = getDict(), ch = getChanges(), at = today() + ' ' + now().split(' ')[1];
     const items = doc.items || [], applied = [], failed = [];
     items.forEach(it => {
-      const op = opOf(it), k = kindOf(it) || 'term';
+      if (it.rej) return;   // DX-12: items the approver rejected are not applied (they went back to the requester's basket)
+      const op = opOf(it), k0 = kindOf(it) || 'term', k = k0 === 'entity' ? 'term' : k0;
       let d = it.id ? dict.find(x => x.id === it.id) : null;
       let diff = [], act = op;
+      if (op === '삭제') {
+        if (!d) { failed.push([it.name, `대상 ${it.id} 없음`]); return; }
+        diff = [['사용상태', d.st, '삭제 보관']]; d.st = '삭제 보관'; d.delDoc = doc.id; act = '삭제 보관';
+        d.dt = today(); if (d.pending === doc.id) delete d.pending;
+        d.hist = d.hist || []; d.hist.unshift({ v: 'V0', at, act, doc: doc.id, by: ME.name, why: it.why || doc.reason, diff });
+        ch.unshift({ at, item: d.name, kind: d.kn, act, ver: 'V0', doc: doc.id, by: ME.name, diff: '사용상태 → 삭제 보관', fields: diff, itemId: d.id });
+        applied.push(d.id); return;
+      }
       if (op === '미사용') {
         if (!d) { failed.push([it.name, `대상 ${it.id} 없음`]); return; }
         diff = [['사용상태', d.st, '미사용']]; d.st = '미사용'; d.ver += 1;
       } else if (op === '변경') {
         if (!d) { failed.push([it.name, `대상 ${it.id} 없음`]); return; }
-        Object.entries(it.chg || {}).forEach(([label, v]) => { const key = FIELD[label] || label; diff.push([label, d[key] == null ? '' : d[key], v[1]]); d[key] = v[1]; });
+        const show = x => Array.isArray(x) ? x.map(y => typeof y === 'object' ? `${y.v} ${y.nm}${y.st === '미사용' ? '(미사용)' : ''}` : y).join(', ') : x == null ? '' : x;
+        Object.entries(it.chg || {}).forEach(([label, v]) => { const key = FIELD[label] || label; const nv = Array.isArray(d[key]) && typeof v[1] === 'string' ? v[1].split(/\s*,\s*/).filter(Boolean) : v[1];
+          diff.push([label, show(d[key]), show(nv)]); d[key] = nv; });
         Object.entries(it.set || {}).forEach(([key, v]) => { if (diff.some(x => (FIELD[x[0]] || x[0]) === key)) return; diff.push([key, d[key] == null ? '' : d[key], v]); d[key] = v; });
         if (FIELD[Object.keys(it.chg || {})[0]] === 'name' && diff[0]) d.old = (d.old || []).concat([diff[0][1]]);
         d.ver += 1;
@@ -575,7 +626,9 @@
         const clash = dict.find(x => x.name === it.name && x.k === k && x.ver > 0);
         if (clash) { failed.push([it.name, `같은 이름 ${clash.id} 이미 있음`]); return; }
         if (ph) { d = ph; d.ver = 1; d.st = '사용'; }
-        else { d = { id: (() => { const pre = k === 'word' ? 'W-' : k === 'domain' ? 'D-' : k === 'code' ? 'C-' : 'T-'; const seq = Math.max(+store.get('dbm-idseq', '500'), ...dict.map(x => +String(x.id).slice(2) || 0)) + 1; store.set('dbm-idseq', String(seq)); return pre + String(seq).padStart(4, '0'); })(), k, kn: KIND_NAME[k] || '용어', src: '기관', st: '사용', name: it.name, abbr: it.abbr || '—', dom: it.dom || '—', eng: it.eng || '', desc: it.desc || '', ver: 1, cha: null, dt: today(), use: 0, syn: [], forbid: [], old: [], hist: [] }; dict.push(d); }
+        else { d = { id: (() => { const pre = k === 'word' ? 'W-' : k === 'domain' ? 'D-' : k === 'code' ? 'C-' : 'T-'; const seq = Math.max(+store.get('dbm-idseq', '500'), ...dict.map(x => +String(x.id).slice(2) || 0)) + 1; store.set('dbm-idseq', String(seq)); return pre + String(seq).padStart(4, '0'); })(), k, kn: KIND_NAME[k0] || '용어', src: '기관', st: '사용', name: it.name, abbr: it.abbr || '—', dom: k0 === 'entity' ? '엔터티 용어' : it.dom || '—', dg: it.dg, eng: it.eng || '', desc: it.desc || '', ver: 1, cha: null, dt: today(), use: 0, syn: it.syn || [], forbid: it.forbid || [], old: [], hist: [] };
+          if (k === 'code') Object.assign(d, { vals: (it.vals || []).map(v => Object.assign({ st: '사용' }, v)), scope: it.scope || '공통', sys: it.sys, ctype: it.ctype || '자체' });
+          dict.push(d); }
       }
       d.dt = today(); if (d.pending === doc.id) delete d.pending;
       d.hist = d.hist || []; d.hist.unshift({ v: 'V' + d.ver, at, act, doc: doc.id, by: ME.name, why: it.why || doc.reason, diff });
@@ -756,7 +809,7 @@
   window.NOTIFY_KINDS = [['appr', '결재 요청 (내 차례)', 'must'], ['res', '내 신청 결과 (승인·반려·회수)', 'opt'], ['cc', '참조', ''], ['cand', '후보 등록·처리 결과', ''], ['job', '긴 작업 완료 (엑셀 검증·산출물)', ''], ['rev', '표준 재검토 가능 · 공동 편집 충돌', '']];
   window.getNotifyPref = uid => J('dbm-notify-' + uid, {});
   window.saveNotifyPref = (uid, p) => S('dbm-notify-' + uid, p);
-  window.pushNotif = n => { if (n.to && n.k !== 'sys') { n = Object.assign({}, n, { to: n.to.filter(u => { const p = getNotifyPref(u)[n.k]; return !p || p.app !== false; }) }); if (!n.to.length) return; } const all = J('dbm-notifs', []); all.unshift(Object.assign({ id: 'd' + Date.now() + Math.random().toString(36).slice(2, 5), at: now() }, n)); S('dbm-notifs', all.slice(0, 50)); };
+  window.pushNotif = n => { if (n.to && n.k !== 'sys') { n = Object.assign({}, n, { to: n.to.filter(u => { const p = getNotifyPref(u)[n.k]; return !p || p.app !== false; }) }); if (!n.to.length) return; } const all = J('dbm-notifs', []); n = Object.assign({}, n, { t: txt(n.t), m: txt(n.m) }); /* user-typed reasons are text, never markup */ all.unshift(Object.assign({ id: 'd' + Date.now() + Math.random().toString(36).slice(2, 5), at: now() }, n)); S('dbm-notifs', all.slice(0, 50)); };
 
   /* ---- notifications ---- */
   const NOTIFS0 = [
@@ -824,6 +877,11 @@
     tag: '<path d="M12.59 2.59A2 2 0 0 0 11.17 2H4a2 2 0 0 0-2 2v7.17a2 2 0 0 0 .59 1.42l8.7 8.7a2.43 2.43 0 0 0 3.42 0l6.58-6.58a2.43 2.43 0 0 0 0-3.42z"/><circle cx="7.5" cy="7.5" r="1"/>',
     shield: '<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/>',
     list: '<path d="M3 12h.01"/><path d="M3 18h.01"/><path d="M3 6h.01"/><path d="M8 12h13"/><path d="M8 18h13"/><path d="M8 6h13"/>',
+    star: '<path d="M11.5 2.8a.5.5 0 0 1 1 0l2.3 4.7 5.2.8a.5.5 0 0 1 .3.9l-3.8 3.6.9 5.2a.5.5 0 0 1-.8.6L12 16.1l-4.6 2.5a.5.5 0 0 1-.8-.6l.9-5.2-3.8-3.6a.5.5 0 0 1 .3-.9l5.2-.8z"/>',
+    copy: '<rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>',
+    refresh: '<path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/><path d="M8 16H3v5"/>',
+    wand: '<path d="m15 4 5 5"/><path d="M14 5 3 16l5 5L19 10"/><path d="M8 3v2"/><path d="M4 7h2"/><path d="M19 15v2"/><path d="M17 19h2"/>',
+    basket: '<path d="M5 11 9 4"/><path d="m19 11-4-7"/><path d="M2 11h20"/><path d="m3.5 11 1.6 7.4a2 2 0 0 0 2 1.6h9.8a2 2 0 0 0 2-1.6l1.7-7.4"/>',
     help: '<circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/>'
   };
   window.icon = (n, s = 16) => `<svg class="ic${s === 12 ? ' s12' : ''}" width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${s === 12 ? 2 : 1.5}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${LU[n] || ''}</svg>`;

@@ -1,0 +1,653 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>용어 자동분석 · NeoDB 목업</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="assets/app.css">
+<script src="assets/app.js"></script>
+<style>
+/* 단계 표시줄: 기존 .steps/.step 부품을 버튼으로 — 지나온 단계는 눌러서 돌아간다 */
+.tw-steps { list-style:none; margin:0; padding:0; }
+.tw-steps button.step { border:0; background:none; padding:4px 2px; font:inherit; color:inherit; cursor:pointer; display:flex; align-items:center; gap:6px; }
+.tw-steps button.step:disabled { cursor:default; }
+.tw-steps button.step:focus-visible { outline:2px solid var(--focus); outline-offset:2px; border-radius:4px; }
+.tw-pane { display:none; } .tw-pane.on { display:block; }
+#p3.tw-pane.on { display:grid; }
+.tw-h { font-size:16px; line-height:24px; font-weight:600; letter-spacing:-.3px; margin:0 0 4px; }
+.tw-h:focus { outline:none; }
+/* ① 대상 선택 */
+.tw-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(360px, 1fr)); gap:16px; align-items:start; }
+.tw-ents { max-height:420px; overflow:auto; border:1px solid var(--ds-gray-400); border-radius:var(--r-md); padding:4px 12px; }
+.tw-ents label { display:flex; gap:8px; align-items:center; min-height:32px; font-size:14px; border-bottom:1px solid var(--border); }
+.tw-ents label:last-child { border-bottom:0; }
+.tw-ents .n { margin-left:auto; font-size:12px; color:var(--fg-3); font-variant-numeric:tabular-nums; }
+.tw-glabel { font-size:14px; color:var(--fg-2); }
+.tw-radios { display:flex; flex-wrap:wrap; gap:16px; min-height:32px; align-items:center; }
+.tw-radios label { display:flex; gap:6px; align-items:center; font-size:14px; }
+.tw-sub { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+/* ② 결과 표 */
+.tw-why { white-space:normal !important; min-width:240px; font-size:12px; line-height:16px; color:var(--fg-2); padding-top:6px !important; padding-bottom:6px !important; }
+.tw-tbl tr[tabindex]:focus-visible td { box-shadow:inset 0 0 0 2px var(--focus); }
+.tw-tbl tr.cur td { background:var(--ds-blue-100); }
+.tw-cv { display:flex; flex-direction:column; line-height:18px; padding:6px 0; } .tw-cv s { color:var(--fg-3); } .tw-cv b { font-weight:600; }
+/* ③ 단어 구성 */
+#p3 { grid-template-columns:320px 1fr; height:100%; min-height:0; }
+.tw-list { border-right:1px solid var(--border); overflow:auto; min-height:0; display:flex; flex-direction:column; }
+.tw-list .tw-lhead { padding:12px 16px; border-bottom:1px solid var(--border); display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+.tw-list ul { list-style:none; margin:0; padding:0; }
+.tw-list li button { display:flex; flex-direction:column; align-items:flex-start; gap:2px; width:100%; border:0; border-bottom:1px solid var(--border); background:var(--surface); padding:8px 16px; text-align:left; font:400 14px/20px var(--font-sans); color:var(--fg); cursor:pointer; }
+.tw-list li button:hover { background:var(--surface-2); }
+.tw-list li button[aria-current="true"] { background:var(--ds-blue-100); box-shadow:inset 2px 0 0 var(--ds-blue-700); }
+.tw-list li button:focus-visible { outline:2px solid var(--focus); outline-offset:-2px; }
+.tw-list li .l2 { display:flex; gap:6px; align-items:center; font-size:12px; color:var(--fg-2); }
+.tw-detail { overflow:auto; min-height:0; padding:20px; }
+.tw-parts { display:flex; flex-wrap:wrap; gap:4px; align-items:center; }
+.tw-parts .plus { color:var(--fg-3); font-size:12px; }
+.tw-alt { display:grid; grid-template-columns:20px 1fr auto; gap:4px 12px; align-items:start; padding:10px 12px; border:1px solid var(--ds-gray-400); border-radius:var(--r-md); margin-bottom:8px; cursor:pointer; }
+.tw-alt:hover { background:var(--surface-2); }
+.tw-alt.on { border-color:var(--ds-blue-700); box-shadow:inset 0 0 0 1px var(--ds-blue-700); }
+.tw-alt input { margin-top:4px; }
+.tw-alt .meta { font-size:12px; line-height:16px; color:var(--fg-2); }
+.tw-alt .sc { font:500 14px var(--font-mono); font-variant-numeric:tabular-nums; }
+button.badge.tw-pb { border:0; cursor:pointer; font:500 12px/16px var(--font-sans); }
+button.badge.tw-pb:focus-visible { outline:2px solid var(--focus); outline-offset:1px; }
+button.badge.tw-pb[aria-pressed="true"] { outline:2px solid var(--ds-gray-1000); outline-offset:1px; }
+.tw-unk { outline:1px dashed var(--ds-amber-700); outline-offset:-1px; }
+.tw-edit { border:1px solid var(--ds-gray-400); border-radius:var(--r-md); padding:12px; margin-top:8px; background:var(--surface-2); }
+.tw-edit .row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+.tw-edit .input { width:200px; }
+.tw-legend { display:flex; flex-wrap:wrap; gap:8px; align-items:center; font-size:12px; color:var(--fg-2); }
+/* ④·⑤ */
+.tw-bar { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin:12px 0; }
+.rp-foot .btn[hidden] { display:none; }
+.tw-done { border:1px solid var(--ds-green-400); border-radius:var(--r-md); padding:16px; margin-top:16px; }
+</style>
+</head>
+<body data-page="model">
+<div id="app">
+<div id="content" class="page">
+  <div class="page-header">
+    <nav class="crumbs" aria-label="경로"><a id="crumb-sys" href="system.html"></a><span class="sl" aria-hidden="true">/</span><a id="back" href="model.html"><span id="crumb-area"></span></a><span class="sl" aria-hidden="true">/</span></nav>
+    <h1>용어 자동분석</h1>
+    <span class="badge" id="scope"></span>
+    <div class="actions"><span class="caption muted">모델 → 용어 → 모델</span><a class="btn sm" id="to-std" href="standardize.html">표준 맞추기</a></div>
+  </div>
+  <div id="ro-slot"></div>
+  <div class="toolbar">
+    <ol class="steps tw-steps" id="steps" aria-label="자동분석 단계"></ol>
+    <span class="grow"></span>
+    <span class="caption muted"><span class="mono">Ctrl+Enter</span> 다음 단계 · 표에서 <span class="mono">↑↓</span> 이동 · <span class="mono">Enter</span> 단어 구성</span>
+  </div>
+  <div class="page-body">
+    <div class="main">
+      <div class="scroll" id="sc">
+
+        <!-- ① 대상 선택 -->
+        <section class="tw-pane pad" id="p1" aria-labelledby="h-p1">
+          <h2 class="tw-h" id="h-p1" tabindex="-1">① 대상 선택</h2>
+          <div class="caption muted u-mb-16">분석할 업무 영역·테이블과 이름을 읽는 규칙을 정합니다. 모델은 이 단계에서 바뀌지 않습니다.</div>
+          <div class="tw-grid">
+            <div class="card">
+              <div class="field"><label for="o-area">업무 영역</label><select class="input" id="o-area"></select></div>
+              <div class="flex u-mb-8"><span class="tw-glabel" id="lb-ents">테이블(엔터티)</span><span class="caption muted" id="ents-n"></span><span class="grow"></span><button class="btn sm ghost" id="ents-all">모두 선택</button><button class="btn sm ghost" id="ents-none">모두 해제</button></div>
+              <div class="tw-ents" id="o-ents" role="group" aria-labelledby="lb-ents"></div>
+              <label class="flex caption u-mt-12"><input type="checkbox" id="o-entrow" checked> 테이블명(엔터티 용어)도 분석</label>
+            </div>
+            <div class="card">
+              <div class="tw-sub">
+                <div class="field" role="radiogroup" aria-labelledby="lb-basis"><span class="tw-glabel" id="lb-basis">분석 기준</span>
+                  <div class="tw-radios"><label><input type="radio" name="basis" value="n" checked> 논리명</label><label><input type="radio" name="basis" value="p"> 물리명</label></div></div>
+                <div class="field" role="radiogroup" aria-labelledby="lb-range"><span class="tw-glabel" id="lb-range">대상 범위</span>
+                  <div class="tw-radios"><label><input type="radio" name="range" value="todo" checked> 미준수만</label><label><input type="radio" name="range" value="all"> 전체</label></div></div>
+                <div class="field"><label for="o-max">항목당 최대 결과 수</label><select class="input" id="o-max"><option value="3">3개</option><option value="5" selected>5개</option><option value="10">10개</option></select></div>
+                <div class="field"><label for="o-prio">우선순위</label><select class="input" id="o-prio"><option value="long">긴 단어 우선</option><option value="common">공통표준 우선</option><option value="org">기관 우선</option></select></div>
+                <div class="field"><label for="o-conn">단어 연결자 <span class="faint">물리명</span></label><input class="input mono" id="o-conn" value="_" maxlength="2"></div>
+                <div class="field"><label for="o-strip">제외 문자 <span class="faint">띄어 써서 나열 · 공백은 ‘공백’</span></label><input class="input mono" id="o-strip" value="공백 ( ) - ."></div>
+              </div>
+              <div class="field"><label for="o-suffix">Suffix 목록 <span class="faint">테이블명 끝 단어 = 물리명 접미 · 한 줄에 하나</span></label><textarea class="input mono" id="o-suffix" rows="3">기본 = _M
+내역 = _D
+이력 = _H</textarea></div>
+              <div class="field u-mb-0"><label for="o-na">표준 비대상 규칙 <span class="faint">물리명·논리명 패턴(* 와일드카드) · 맞으면 자동으로 비대상</span></label><textarea class="input mono" id="o-na" rows="5">*_TMP
+FILLER*
+REG_DT
+REG_ID
+MDFCN_DT
+MDFCN_ID
+등록일시
+수정일시</textarea>
+                <span class="help">설정의 <a href="settings.html#rules">표준 제외 규칙</a>을 기본값으로 가져옵니다. 여기서 고친 규칙은 이번 분석에만 씁니다.</span></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ② 분석 결과 -->
+        <section class="tw-pane" id="p2" aria-labelledby="h-p2">
+          <div class="pad u-pb-0">
+            <h2 class="tw-h" id="h-p2" tabindex="-1">② 분석 결과</h2>
+            <div class="mline" id="r-sum"></div>
+          </div>
+          <div class="toolbar" id="r-chips" role="group" aria-label="상태로 거르기"></div>
+          <table class="tbl tw-tbl flat" id="r-tbl">
+            <thead><tr><th><input type="checkbox" id="r-all" aria-label="보이는 행 중 처리할 수 있는 행 모두 포함"></th><th>상태</th><th>테이블</th><th>현재 이름</th><th>현재 물리명</th><th>최적 후보 용어</th><th>약어(물리명)</th><th>도메인</th><th class="num">점수</th><th>근거</th><th><span class="sr-only">단어 구성</span></th></tr></thead>
+            <tbody id="r-rows"></tbody>
+          </table>
+        </section>
+
+        <!-- ③ 단어 구성 -->
+        <section class="tw-pane" id="p3" aria-labelledby="h-p3">
+          <div class="tw-list">
+            <div class="tw-lhead"><h2 class="tw-h u-m-0" id="h-p3" tabindex="-1">③ 단어 구성</h2><span class="grow"></span>
+              <span class="seg" role="group" aria-label="목록 범위"><button id="l-inc" class="on" aria-pressed="true">포함한 항목</button><button id="l-all" aria-pressed="false">전체</button></span></div>
+            <ul id="l-items" aria-label="분석 항목"></ul>
+          </div>
+          <div class="tw-detail" id="d-box"></div>
+        </section>
+
+        <!-- ④ 용어 등록 -->
+        <section class="tw-pane pad" id="p4" aria-labelledby="h-p4">
+          <h2 class="tw-h" id="h-p4" tabindex="-1">④ 용어 등록</h2>
+          <div class="caption muted u-mb-8">②에서 포함한 항목의 선택한 분해로 계산합니다. 사전에 이미 있는 용어는 할 일이 없습니다.</div>
+          <div class="mline" id="g-sum"></div>
+          <div class="tw-bar">
+            <b class="u-fs-14" id="g-n" aria-live="polite"></b><span class="grow"></span>
+            <button class="btn sm" id="g-basket"><i data-ic=plus></i>신청 바구니에 담기</button>
+            <button class="btn sm" id="g-cand">후보 큐로</button>
+            <button class="btn sm" id="g-req">바로 신청</button>
+          </div>
+          <table class="tbl box">
+            <thead><tr><th><input type="checkbox" id="g-all" aria-label="처리할 수 있는 항목 모두 선택"></th><th>구분</th><th>이름</th><th>약어</th><th>도메인</th><th>쓰는 곳</th><th>상태</th></tr></thead>
+            <tbody id="g-rows"></tbody>
+          </table>
+          <div class="caption muted u-mt-8">바구니는 <a href="dictionary.html">표준 사전</a>의 [신청 바구니]에서 이어서 신청합니다. 후보 큐는 DA가 검토합니다(<a href="candidates.html">후보 큐</a>).</div>
+        </section>
+
+        <!-- ⑤ 모델 반영 -->
+        <section class="tw-pane pad" id="p5" aria-labelledby="h-p5">
+          <h2 class="tw-h" id="h-p5" tabindex="-1">⑤ 모델 반영</h2>
+          <div class="caption muted u-mb-8">체크한 행만 작업 버전에 반영합니다. 신청 중인 용어는 ‘신청 중’ 상태로, 미등록 단어가 남은 항목은 이름만 맞추고 미등록으로 남습니다.</div>
+          <div class="mline" id="m-sum"></div>
+          <table class="tbl box">
+            <thead><tr><th><input type="checkbox" id="m-all" aria-label="모두 반영"></th><th>테이블</th><th>논리명</th><th>물리명</th><th>타입</th><th>반영 뒤 상태</th></tr></thead>
+            <tbody id="m-rows"></tbody>
+          </table>
+          <div class="tw-bar"><span class="caption muted" id="m-note"></span><span class="grow"></span><button class="btn sm" id="m-go">모델에 반영</button></div>
+          <div id="m-done"></div>
+        </section>
+
+      </div>
+      <div class="rp-foot u-bg">
+        <span class="caption muted" id="foot-note"></span><span class="grow"></span>
+        <button class="btn" id="prev">이전</button><button class="btn primary" id="next">다음</button>
+      </div>
+    </div>
+  </div>
+  <datalist id="lex"></datalist>
+  <div class="overlay" id="mo-req" role="dialog" aria-modal="true" aria-labelledby="rq-t"><div class="modal"><div class="m-head"><h3 id="rq-t">바로 신청</h3></div>
+    <div class="m-body">
+      <div class="caption u-mb-8" id="rq-list"></div>
+      <div class="field"><label for="rq-why">신청 사유 * <span class="faint">결재 문서 1건으로 만들어집니다</span></label><textarea class="input" id="rq-why" rows="3"></textarea></div>
+      <div class="caption muted">같은 신청 안에서 새 단어 → 용어 순서로 정렬합니다. 신청 뒤 ⑤에서 이 용어를 쓰는 항목은 ‘신청 중’으로 반영됩니다.</div>
+    </div>
+    <div class="m-foot"><button class="btn" data-close="mo-req">취소</button><button class="btn primary" id="rq-go" data-needs="rq-why">신청</button></div></div></div>
+</div>
+</div>
+<script>
+window.pageInit = function () {
+  const q = new URLSearchParams(location.search), $ = id => document.getElementById(id);
+  const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+  const MODELS = getModels();
+  const AREA = MODELS[q.get('area')] ? q.get('area') : defArea();
+  const LK = modelLock(AREA), VER = LK.model.ver, MNAME = LK.model.name;
+  const model = modelOf(AREA, VER);
+  $('crumb-sys').textContent = curSys().name;
+  $('crumb-area').textContent = `${MNAME} · v${VER}`;
+  $('back').href = `model.html?area=${AREA}`;
+  $('to-std').href = `standardize.html?area=${AREA}`;
+
+  // permission & lock: ①–③ are analysis only (anyone); ④·⑤ change the dictionary queue / the model (CX12-28 pattern)
+  const canEdit = can('model.edit', { area: AREA });
+  const readOnly = !canEdit || LK.state !== 'edit';
+  const roWhy = !canEdit ? (ME.has('modeler') ? `내 담당 시스템에 ${josa(sysOfArea(AREA), '이/가')} 없어 등록·반영은 할 수 없습니다` : '용어 등록·모델 반영은 모델러 역할만 할 수 있습니다') : `${LK.doc ? LK.doc.id + ' ' : ''}${LK.state === 'review' ? '확정 결재 중' : '확정본'}이라 모델을 고칠 수 없습니다`;
+  if (readOnly) $('ro-slot').innerHTML = `<div class="pad u-pb-0"><div class="banner info"><i data-ic=info></i><div class="grow"><b>분석만 가능</b> — ${roWhy}. ①~③(분석·단어 구성)은 볼 수 있고 ④ 용어 등록·⑤ 모델 반영은 막혀 있습니다.${!canEdit && ME.has('modeler') ? ` <a href="mypage.html?req=sys&sys=${encodeURIComponent(sysOfArea(AREA))}">담당 시스템 추가 요청</a>` : ''}</div><a class="btn sm" href="model.html?area=${AREA}">모델로</a></div></div>`;
+
+  // ---------- dictionary lookups ----------
+  const dict = getDict();
+  const termIn = name => dict.find(x => (x.k === 'term' || x.k === 'entity') && x.name === name && x.ver > 0 && x.st === '사용');
+  const openTerm = name => openItems().find(x => x.it.name === name && (x.it.act || '추가') === '추가' && x.it.k !== 'word');
+  const newWords = {};   // 새 단어로 지정한 조각 (③) → 약어
+  const SUGGEST = { 수령자: 'RCPNT', 수령: 'RCPT', 검수: 'INSPCT', 일: 'DD', 영문: 'ENG', 생년월일: 'BRDT', 성별: 'SEX', 직급: 'JBGD', 근태: 'DCLZ', 휴가: 'VCTN', 급여: 'SLRY', 가족: 'FMLY', 교육: 'EDU', 자격증: 'CRTFCT', 발령: 'APNT', 관계: 'REL', 이메일: 'EML', 주소: 'ADDR', 전화번호: 'TELNO', 시간: 'HR', 일수: 'DCNT' };
+  const suggest = w => { const c = getCands().find(x => x.name === w); return (c && c.abbr) || SUGGEST[w] || ''; };
+  // one word = decompose() of the exact chunk returns a single known part (common words + dictionary + words in open requests)
+  const wcache = {};
+  const MW = {};   // 모델 표준 단어: words learned from attributes the model already judges standard (e.g. ERP 직급 ↔ JBGD)
+  const known0 = s => {
+    if (!(s in wcache)) { const d = decompose(s); wcache[s] = d.parts.length === 1 && !d.parts[0].unknown && d.parts[0].w === s ? d.parts[0] : null; }
+    return wcache[s] || (MW[s] ? { w: s, abbr: MW[s], src: '모델', ok: true } : null);
+  };
+  const wordInfo = s => newWords[s] != null ? { w: s, abbr: newWords[s], src: '새 단어', ok: false, isNew: true } : known0(s);
+  // align a standard name with its physical tokens (known words must agree; one unknown chunk between known ones is learned)
+  // adj (last pass): two unknown chunks in a row are allowed when both are two syllables (결제+조건 ↔ STLM_CND)
+  const align = (n, T, adj) => { const go = (i, j, pu) => { if (j === T.length) return i === n.length ? [] : null;
+    for (let L = n.length - i; L >= 1; L--) { const c = n.slice(i, i + L), wi = known0(c);
+      if (wi) { if (wi.abbr === T[j]) { const r = go(i + L, j + 1, 0); if (r) return [[c, T[j], false]].concat(r); } continue; }
+      if (pu && !(adj && pu === 2 && L === 2)) continue; const r = go(i + L, j + 1, L === 2 ? 2 : 1); if (r) return [[c, T[j], true]].concat(r); }
+    return null; }; return go(0, 0, false); };
+  (() => { const all = getAllModels(), items = [];
+    Object.keys(all).forEach(ar => { const m = modelOf(ar, all[ar].ver); (m.E || []).forEach(e => { if (!e.ref && e.p && e.p !== '—' && !e.st) items.push([e.n, e.p]); (e.a || []).forEach(a => { if (a.s === 'ok' && a.p && a.p !== '—') items.push([a.n, a.p]); }); }); });
+    for (let pass = 0; pass < 3; pass++) items.forEach(([n, p]) => { const sol = n.length <= 16 ? align(n, p.split('_'), pass === 2) : null; if (sol) sol.forEach(([w, t, u]) => { if (u && w.length > 1 && !MW[w]) MW[w] = t; }); });
+  })();
+  const part = wi => ({ w: wi.w, abbr: wi.abbr, src: wi.src, doc: wi.doc, id: wi.id, kind: wi.isNew ? 'new' : wi.ok ? 'word' : (wi.doc || wi.src === '신청 중') ? 'pend' : 'bad' });
+  const unkPart = (w, abbr) => ({ w, abbr: abbr || '', kind: 'unk' });
+  // abbreviation → words (physical-name basis and the word search list): harvested from the dictionary, every model's names and candidates
+  let REV = null;
+  const rev = () => {
+    if (REV) return REV; REV = {};
+    const add = p => { if (!p || p.unknown || !p.abbr || p.abbr === '?') return; const l = REV[p.abbr] = REV[p.abbr] || []; if (!l.some(x => x.w === p.w)) l.push(p); };
+    dict.filter(x => x.k === 'word').forEach(x => add(wordInfo(x.name)));
+    Object.keys(MW).forEach(w => add(known0(w)));
+    const all = getAllModels(); Object.keys(all).forEach(ar => { const m = modelOf(ar, all[ar].ver); (m.E || []).forEach(e => { decompose(e.n).parts.forEach(add); (e.a || []).forEach(a => decompose(a.n).parts.forEach(add)); }); });
+    return REV;
+  };
+  const lexWords = () => { const m = {}; Object.values(rev()).flat().forEach(p => { m[p.w] = p; }); Object.keys(newWords).forEach(w => { m[w] = wordInfo(w); }); return Object.values(m).sort((a, b) => a.w.localeCompare(b.w, 'ko')); };
+
+  // domain from the last word (분류어) — F-05: the reason is shown with the guess
+  const DOM_BY_LAST = [['전화번호', '전화번호V20'], ['일자', '연월일C8'], ['일시', '일시T'], ['년월', '연월C6'], ['명', '명V100'], ['ID', 'ID V10'], ['코드', '코드C2'], ['금액', '금액N15'], ['내용', '내용V1000'], ['순번', '일련번호N10'], ['여부', '여부C1'], ['번호', '번호V20'], ['수량', '수량N15'], ['시간', '시간N7'], ['일수', '일수N5'], ['주소', '주소V200'], ['이메일', '이메일V100'], ['율', '율N5'], ['단가', '금액N18'], ['액', '금액N15']];
+  const DOMT = { '연월일C8': 'CHAR(8)', '명V100': 'VARCHAR2(100)', 'ID V10': 'VARCHAR2(10)', '코드C2': 'CHAR(2)', '코드C1': 'CHAR(1)', '내용V1000': 'VARCHAR2(1000)', '금액N15': 'NUMBER(15)', '일련번호N10': 'NUMBER(10)', '여부C1': 'CHAR(1)', '일시T': 'DATE', '번호V20': 'VARCHAR2(20)', '수량N15': 'NUMBER(15,3)', '시간N7': 'NUMBER(7,2)', '일수N5': 'NUMBER(5,1)', '주소V200': 'VARCHAR2(200)', '이메일V100': 'VARCHAR2(100)', '율N5': 'NUMBER(5,2)', '연월C6': 'CHAR(6)', '전화번호V20': 'VARCHAR2(20)', '금액N18': 'NUMBER(18,2)' };
+  const CLASS_FIX = [['일', '일자'], ['시각', '일시'], ['NO', '번호']];   // 끝 조각 → 분류어 보정 후보
+
+  // ---------- options ----------
+  const radio = n => (document.querySelector(`input[name=${n}]:checked`) || {}).value;
+  function readOpt() {
+    const suffix = {}; $('o-suffix').value.split('\n').forEach(l => { const m = l.split('='); if (m.length === 2 && m[0].trim() && m[1].trim()) suffix[m[0].trim()] = m[1].trim(); });
+    const strip = $('o-strip').value.split(/\s+/).filter(Boolean).map(t => t === '공백' ? ' ' : t);
+    return { basis: radio('basis'), range: radio('range'), max: +$('o-max').value, prio: $('o-prio').value, conn: $('o-conn').value || '_', suffix, strip,
+      na: $('o-na').value.split('\n').map(s => s.trim()).filter(Boolean), ents: [...document.querySelectorAll('#o-ents input:checked')].map(c => c.value), entRows: $('o-entrow').checked };
+  }
+  const glob = p => new RegExp('^' + p.replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*') + '$', 'i');
+  const ruleOf = (r, o) => o.na.find(p => { const re = glob(p); return (r.cur.p && r.cur.p !== '—' && re.test(r.cur.p)) || re.test(r.cur.n); });
+
+  // ---------- decomposition alternatives (DX-14) ----------
+  function segs(s) {
+    const memo = {};
+    const go = (i, prevUnk) => {
+      const k = i + '|' + prevUnk; if (memo[k]) return memo[k];
+      if (i >= s.length) return (memo[k] = [[]]);
+      const out = [];
+      for (let j = s.length; j > i; j--) { const wi = wordInfo(s.slice(i, j)); if (wi) go(j, false).forEach(r => { if (out.length < 60) out.push([part(wi)].concat(r)); }); }
+      if (!prevUnk) for (let j = i + 1; j <= s.length; j++) { const u = s.slice(i, j); if (wordInfo(u)) continue; go(j, true).forEach(r => { if (out.length < 60) out.push([unkPart(u)].concat(r)); }); }   // an unknown chunk always ends at a known word or the end
+      return (memo[k] = out);
+    };
+    return go(0, false);
+  }
+  // the area's own convention wins: standard attributes ending in the same 분류어 → their domain/type (ERP 코드 → 코드V10)
+  const AREA_DOM = {}, AREA_T = {};
+  model.E.forEach(e => (e.a || []).forEach(a => { if (a.s !== 'ok' || !a.dom) return; const hit = DOM_BY_LAST.find(([w]) => a.n.endsWith(w)); if (hit) { const m = AREA_DOM[hit[0]] = AREA_DOM[hit[0]] || {}; m[a.dom] = (m[a.dom] || 0) + 1; } if (a.t && a.t !== '—') AREA_T[a.dom] = AREA_T[a.dom] || a.t; }));
+  const domGuess = (term, r) => { const hit = DOM_BY_LAST.find(([w]) => term.endsWith(w)); if (r.cur.s === 'ok' && r.cur.dom) return { dom: r.cur.dom, w: hit ? hit[0] : '' };
+    if (hit && AREA_DOM[hit[0]]) { const [d, n] = Object.entries(AREA_DOM[hit[0]]).sort((a, b) => b[1] - a[1])[0]; return { dom: d, w: hit[0], conv: n }; }
+    return hit ? { dom: hit[1], w: hit[0] } : { dom: '', w: '' }; };
+  function mkAlt(parts, r, o, fix) {
+    const ab = parts.map(p => p.abbr || '?');
+    if (r.entRow && parts.length) { const last = parts[parts.length - 1]; const sx = last.kind !== 'unk' && o.suffix[last.w]; if (sx) ab[ab.length - 1] = sx.replace(/^[_\W]+/, ''); }
+    let term = parts.map(p => p.w).join(''), phys = ab.join(o.conn);
+    const unk = parts.filter(p => p.kind === 'unk'), pend = parts.filter(p => p.kind === 'pend'), bad = parts.filter(p => p.kind === 'bad'), nw = parts.filter(p => p.kind === 'new');
+    const known = parts.filter(p => p.kind !== 'unk');
+    // 1음절 의심: a one-syllable word, except 명 and 자 right after a known word (제출+자 = 제출자)
+    const sus = parts.filter((p, i) => p.kind !== 'unk' && p.w.length === 1 && p.w !== '명' && !(p.w === '자' && i > 0 && parts[i - 1].kind !== 'unk'));
+    const have = !unk.length ? termIn(term) : null, open = !unk.length && !have ? openTerm(term) : null;
+    if (have) phys = have.abbr;
+    const dg = r.entRow ? { dom: '엔터티 용어', w: '' } : have && have.dom ? { dom: have.dom, w: '' } : domGuess(term, r);
+    let score = 100 - 30 * unk.length - 4 * unk.reduce((n, p) => n + p.w.length - 1, 0) - 15 * sus.length - 8 * pend.length - 25 * bad.length - 5 * nw.length - (o.prio === 'long' ? 3 : 1) * Math.max(0, parts.length - 1) - (fix ? 4 : 0) + (have ? 5 : 0);
+    if (o.prio === 'common') score += 3 * known.filter(p => p.src === '공통').length;
+    if (o.prio === 'org') score += 3 * known.filter(p => p.src === '기관').length;
+    score = Math.max(0, Math.min(100, Math.round(score)));
+    const why = [];
+    if (!unk.length && !pend.length && !bad.length && !nw.length) why.push(`단어 ${known.length}개 모두 일치`);
+    unk.forEach(p => why.push(`미등록 ‘${p.w}’`));
+    nw.forEach(p => why.push(`새 단어 ‘${p.w}’`));
+    pend.forEach(p => why.push(`승인 대기 ‘${p.w}’${p.doc ? ' ' + p.doc : ''}`));
+    bad.forEach(p => why.push(`사용 불가 단어 ‘${p.w}’(${p.src === '기관' ? '미사용·삭제' : '사용 불가'})`));
+    sus.forEach(p => why.push(`1음절 ‘${p.w}’ 의심`));
+    if (fix) why.push(`끝 ${fix}`);
+    if (have) why.push(`사전 용어 ${have.id}`); else if (open) why.push(`신청 중 ${open.doc}`);
+    if (dg.w) why.push(`끝 단어 ${dg.w}→${dg.dom}${dg.conv ? `(이 영역 표준 속성 ${dg.conv}개 관례)` : ''}`); else if (!r.entRow && !have && !unk.length) why.push('분류어 없음 — 도메인 직접 지정');
+    return { parts, term, phys, score, unk, pend, bad, nw, sus, have, open, dom: dg.dom, t: r.entRow ? '' : (AREA_T[dg.dom] || DOMT[dg.dom] || (r.cur.t !== '—' ? r.cur.t : '')), fix, why: why.join(' · ') };
+  }
+  function altsOf(r, o) {
+    let list = [];
+    if (o.basis === 'p') {
+      if (!r.cur.p || r.cur.p === '—') return [];
+      let combos = [[]];
+      r.cur.p.split(o.conn).filter(Boolean).forEach(t => {
+        const cs = (rev()[t] || []).filter(p => !newWords[p.w]).map(part).concat(Object.keys(newWords).filter(w => newWords[w] === t).map(w => part(wordInfo(w))));
+        const opts = cs.length ? cs : [unkPart(t, t)];
+        const nx = []; combos.forEach(c => opts.forEach(x => { if (nx.length < 40) nx.push(c.concat([x])); })); combos = nx;
+      });
+      list = combos.map(ps => mkAlt(ps, r, o, null));
+    } else {
+      let nm = r.cur.n; o.strip.forEach(ch => { nm = nm.split(ch).join(''); });
+      list = segs(nm).map(ps => mkAlt(ps, r, o, null));
+      CLASS_FIX.forEach(([f, t]) => { if (nm.endsWith(f) && !nm.endsWith(t) && wordInfo(t)) segs(nm.slice(0, -f.length) + t).forEach(ps => list.push(mkAlt(ps, r, o, `‘${f}’→분류어 ‘${t}’ 보정`))); });
+    }
+    const seen = new Set();
+    return list.sort((a, b) => b.score - a.score).filter(a => { const k = a.parts.map(p => p.w + ':' + p.kind).join('+'); if (seen.has(k)) return false; seen.add(k); return true; });
+  }
+  // a hand-edited decomposition is re-judged when words change (새 단어 지정·해제)
+  const rejudge = (parts) => parts.map(p => { const wi = wordInfo(p.w); return wi ? part(wi) : unkPart(p.w, p.kind === 'unk' ? p.abbr : ''); });
+
+  // ---------- state ----------
+  let O = null, rows = [], step = 1, maxStep = 1, cur = 0, listAll = false, editPart = null, filter = '', applied = null, lastDoc = null;
+  const ST = { std: ['b-success', '이미 표준'], comb: ['b-info', '조합 가능'], unk: ['b-warning', '미등록 단어 포함'], sus: ['b-danger', '1음절 의심'], na: ['', '비대상'], ex: ['b-ex', '예외'] };
+  const actionable = r => ['comb', 'unk', 'sus'].includes(r.st) || (r.st === 'std' && r.needApply) || (r.st === 'na' && r.auto);
+  function judge(r) {
+    const c = r.choice;
+    if (r.cur.s === 'na') { r.st = 'na'; r.auto = false; return; }
+    if (r.cur.s === 'ex') { r.st = 'ex'; return; }
+    if (r.rule) { r.st = 'na'; r.auto = true; return; }
+    if (r.cur.s === 'ok') { r.st = 'std'; r.needApply = false; return; }
+    if (c && c.have) { r.st = 'std'; r.needApply = true; return; }
+    r.st = !c || c.unk.length || c.bad.length ? 'unk' : c.sus.length ? 'sus' : 'comb';
+  }
+  function analyze() {
+    O = readOpt(); const out = [];
+    model.E.forEach(e => {
+      if (e.ref || !O.ents.includes(e.id)) return;
+      if (O.entRows) out.push({ key: `${e.n}.${e.n}`, e: e.id, ent: e.n, a: e.n, entRow: true, cur: { n: e.n, p: e.p, t: '', dom: '', s: e.p === '—' ? 'comb' : e.st ? 'req' : 'ok', reqDoc: e.reqDoc } });
+      e.a.forEach(a => { if (a.edit) return; out.push({ key: `${e.n}.${a.orig || a.n}`, e: e.id, ent: e.n, a: a.orig || a.n, cur: { n: a.n, p: a.p, t: a.t, dom: a.dom || '', s: a.s, why: a.exReason || a.naReason, reqDoc: a.reqDoc } }); });
+    });
+    rows = out.filter(r => O.range === 'all' || !['ok', 'ex', 'na'].includes(r.cur.s) || !!ruleOf(r, O));
+    rows.forEach(r => { r.rule = r.entRow ? null : ruleOf(r, O); r.alts = altsOf(r, O); r.choice = r.alts[0] || null; judge(r); r.inc = actionable(r) && (r.st !== 'std' || r.needApply); });
+    cur = 0; filter = ''; applied = null;
+  }
+  function refreshAlts() {   // after 새 단어 지정: recompute every row, keep each row's choice (same parts) or its hand edit
+    wcache && Object.keys(wcache).forEach(k => delete wcache[k]); REV = null;
+    rows.forEach(r => {
+      const was = r.choice; r.alts = altsOf(r, O);
+      if (was) { const sig = was.parts.map(p => p.w).join('+'); const same = r.alts.find(a => a.parts.map(p => p.w).join('+') === sig); r.choice = same || mkAlt(rejudge(was.parts), r, O, was.fix); if (!same) { r.choice.custom = true; r.alts.unshift(r.choice); } }
+      else r.choice = r.alts[0] || null;
+      const before = r.st; judge(r); if (before !== r.st && actionable(r) && !['std'].includes(r.st)) r.inc = r.inc || before === 'unk';
+    });
+    $('lex').innerHTML = lexWords().map(p => `<option value="${esc(p.w)}">${esc(p.abbr)} · ${esc(p.src || '')}</option>`).join('');
+  }
+
+  // ---------- rendering helpers ----------
+  const SRC_CLS = { 공통: 'b-success', 기관: 'b-info', 모델: 'b-org', '새 단어': 'b-violet' };
+  const chipOf = (p, i, btn) => {
+    const cls = p.kind === 'unk' ? 'b-warning tw-unk' : p.kind === 'pend' ? '' : p.kind === 'bad' ? 'b-danger' : SRC_CLS[p.src] || 'b-info';
+    const lbl = p.kind === 'unk' ? `(미등록) ${esc(p.w)}` : p.kind === 'pend' ? `${esc(p.w)} · 신청 중` : p.kind === 'new' ? `${esc(p.w)} · 새 단어` : esc(p.w);
+    const t = `${p.kind === 'unk' ? '미등록 조각' : p.kind === 'new' ? '새 단어' : p.kind === 'pend' ? '승인 대기 단어' : p.kind === 'bad' ? '사용 불가 단어' : (p.src || '') + ' 단어'}${p.abbr ? ' · ' + p.abbr : ''}`;
+    return btn ? `<button class="badge ${cls} tw-pb" data-pi="${i}" aria-pressed="${editPart === i}" title="${esc(t)}" aria-label="${esc(p.w)} — ${esc(t)} · 고치기">${lbl}</button>` : `<span class="badge ${cls}" title="${esc(t)}">${lbl}</span>`;
+  };
+  const partsHtml = (ps, btn) => `<span class="tw-parts">${ps.map((p, i) => (i ? '<span class="plus" aria-hidden="true">+</span>' : '') + chipOf(p, i, btn)).join('')}</span>`;
+  const susBadge = a => a && a.sus.length ? ` <span class="badge b-danger">1음절 의심</span>` : '';
+  const two = (c, n, mono) => (!n || n === c) ? `<span class="${mono ? 'mono' : ''}">${esc(c || '—')}</span>` : `<span class="tw-cv ${mono ? 'mono' : ''}">${c && c !== '—' ? `<s><span class="sr-only">현재 </span>${esc(c)}</s>` : '<span class="faint">—</span>'}<b><span class="sr-only">바뀜 </span>${esc(n)}</b></span>`;
+
+  // ---------- stepper ----------
+  const STEPS = ['대상 선택', '분석 결과', '단어 구성', '용어 등록', '모델 반영'];
+  function drawSteps() {
+    $('steps').innerHTML = STEPS.map((s, i) => { const n = i + 1, st = n === step ? 'cur' : n < step || n <= maxStep ? 'done' : '';
+      return `${i ? '<li class="step-sep" aria-hidden="true"></li>' : ''}<li><button class="step ${st}" data-go="${n}" ${n > maxStep && n !== step ? 'disabled' : ''} ${n === step ? 'aria-current="step"' : ''}><span class="n">${n}</span>${s}</button></li>`; }).join('');
+  }
+  function go(n, focus = true) {
+    if (n > 1 && !rows.length && step === 1) return;
+    step = n; maxStep = Math.max(maxStep, n);
+    document.querySelectorAll('.tw-pane').forEach(p => p.classList.toggle('on', p.id === 'p' + n));
+    $('sc').scrollTop = 0;
+    drawSteps();
+    $('prev').disabled = n === 1;
+    $('next').hidden = n === 5;
+    $('next').textContent = n === 1 ? '분석' : '다음';
+    if (n === 2) drawResult(); if (n === 3) drawWords(); if (n === 4) drawReg(); if (n === 5) drawApply();
+    footNote();
+    if (focus) $('h-p' + n).focus();
+  }
+  function footNote() {
+    const inc = rows.filter(r => r.inc).length;
+    $('foot-note').textContent = step === 1 ? `테이블 ${readOpt().ents.length}개 선택 · [분석]을 누르면 결과를 계산합니다` : `분석 ${rows.length}건 · 포함 ${inc}건 · ${O.basis === 'p' ? '물리명' : '논리명'} 기준`;
+  }
+  function next() {
+    if (step === 1) {
+      if (!readOpt().ents.length) { toast('분석할 테이블을 하나 이상 고르세요', 'danger'); return; }
+      const had = rows.length; analyze(); refreshAlts();
+      if (!rows.length) { toast(O.range === 'todo' ? '선택한 테이블에 미준수 항목이 없습니다 — 대상 범위를 [전체]로 바꿔 다시 분석하세요' : '분석할 속성이 없습니다', 'info'); return; }
+      maxStep = 2; if (had) toast('조건이 바뀌어 다시 분석했습니다 — 단어 구성 선택은 새로 계산됐습니다', 'info');
+    }
+    if (step < 5) go(step + 1);
+  }
+  $('next').onclick = next;
+  $('prev').onclick = () => step > 1 && go(step - 1);
+  $('steps').addEventListener('click', e => { const b = e.target.closest('[data-go]'); if (!b || b.disabled) return; const n = +b.dataset.go; if (n === step) return; if (n > 1 && !rows.length) return; go(n); });
+  document.addEventListener('keydown', e => {
+    if (document.querySelector('.overlay.open')) return;
+    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); if (step < 5) next(); }
+  });
+
+  // ---------- ① 대상 선택 ----------
+  $('o-area').innerHTML = Object.entries(MODELS).map(([id, m]) => `<option value="${id}" ${id === AREA ? 'selected' : ''}>${esc(m.name)} · v${m.ver}</option>`).join('');
+  $('o-area').onchange = e => { location.href = `term-wizard.html?area=${e.target.value}`; };
+  const pre = (q.get('ents') || '').split(',').filter(Boolean);
+  const own = model.E.filter(e => !e.ref);
+  $('o-ents').innerHTML = own.map(e => { const todo = e.a.filter(a => !['ok', 'ex', 'na'].includes(a.s)).length + (e.p === '—' ? 1 : 0);
+    return `<label><input type="checkbox" value="${e.id}" ${!pre.length || pre.includes(e.id) ? 'checked' : ''}> ${esc(e.n)} <span class="mono faint">${esc(e.p)}</span><span class="n">속성 ${e.a.length}${todo ? ` · 미준수 ${todo}` : ''}</span></label>`; }).join('') || '<div class="caption muted u-p-16">이 업무 영역에 테이블이 없습니다</div>';
+  const entsN = () => { $('ents-n').textContent = `${document.querySelectorAll('#o-ents input:checked').length}/${own.length}`; if (step === 1) footNote(); };
+  $('o-ents').addEventListener('change', entsN);
+  $('ents-all').onclick = () => { document.querySelectorAll('#o-ents input').forEach(c => { c.checked = true; }); entsN(); };
+  $('ents-none').onclick = () => { document.querySelectorAll('#o-ents input').forEach(c => { c.checked = false; }); entsN(); };
+  if (q.get('basis') === 'p') document.querySelector('input[name=basis][value=p]').checked = true;
+  if (q.get('range') === 'all') document.querySelector('input[name=range][value=all]').checked = true;
+  $('scope').textContent = `테이블 ${own.length}개 · 속성 ${own.reduce((n, e) => n + e.a.length, 0)}개`;
+
+  // ---------- ② 분석 결과 ----------
+  function drawResult() {
+    const cnt = k => rows.filter(r => r.st === k).length;
+    $('r-sum').innerHTML = `<span><b>${rows.length}</b>분석</span>` + Object.keys(ST).map(k => `<span><b>${cnt(k)}</b>${ST[k][1]}</span>`).join('') + `<span><b>${rows.filter(r => r.inc).length}</b>포함</span>`;
+    $('r-chips').innerHTML = [['', '전체', rows.length]].concat(Object.keys(ST).map(k => [k, ST[k][1], cnt(k)])).map(([k, l, n]) => `<button class="chip ${filter === k ? 'on' : ''}" data-f="${k}" aria-pressed="${filter === k}">${l} <span class="n">${n}</span></button>`).join('') + '<span class="grow"></span><span class="caption muted">체크한 행이 ④ 용어 등록·⑤ 모델 반영 대상 · 행을 열어 분해 대안 확인</span>';
+    $('r-rows').innerHTML = rows.map((r, i) => { if (filter && r.st !== filter) return ''; const c = r.choice, s = ST[r.st], can = actionable(r);
+      return `<tr tabindex="0" data-i="${i}" class="${r.st === 'na' || r.st === 'ex' ? 'row-mute' : ''}"><td><input type="checkbox" data-inc="${i}" ${r.inc ? 'checked' : ''} ${can ? '' : 'disabled'} aria-label="${esc(r.ent)}.${esc(r.a)} 포함"></td>`
+        + `<td><span class="badge ${s[0]}">${s[1]}</span>${r.st === 'std' && r.needApply ? '<span class="sub2">사전에 있음 · 모델 반영 필요</span>' : ''}</td>`
+        + `<td>${esc(r.ent)}${r.entRow ? ' <span class="muted">· 테이블명</span>' : ''}</td><td>${esc(r.cur.n)}</td><td class="mono">${esc(r.cur.p)}</td>`
+        + `<td>${c ? esc(c.term) + susBadge(c) : '<span class="faint">후보 없음</span>'}</td><td class="mono">${c ? esc(c.phys) : ''}</td><td class="mono">${c && c.dom ? esc(c.dom) : '<span class="faint">—</span>'}</td><td class="num mono">${c ? c.score : ''}</td>`
+        + `<td class="tw-why">${r.st === 'na' ? (r.auto ? `비대상 규칙 <b class="mono">${esc(r.rule)}</b> 일치` : `비대상 — ${esc(r.cur.why || '')}`) : r.st === 'ex' ? `예외 — ${esc(r.cur.why || '')}` : r.st === 'std' && !r.needApply ? '모델에서 표준 판정' + (c ? ` · ${esc(c.why)}` : '') : c ? esc(c.why) : '분해 후보 없음' + (O.basis === 'p' ? ' — 물리명 없음' : '')}</td>`
+        + `<td><button class="btn sm ghost" data-open3="${i}">대안 ${r.alts.length}</button></td></tr>`; }).join('') || '<tr class="er none"><td colspan="11">이 상태의 항목이 없습니다</td></tr>';
+    syncAll();
+  }
+  function syncAll() { const v = [...document.querySelectorAll('#r-rows input[data-inc]:not(:disabled)')]; const on = v.filter(c => c.checked).length; $('r-all').disabled = !v.length; $('r-all').checked = !!v.length && on === v.length; $('r-all').indeterminate = on > 0 && on < v.length; footNote(); }
+  $('r-chips').addEventListener('click', e => { const b = e.target.closest('[data-f]'); if (!b) return; filter = b.dataset.f; drawResult(); const nb = document.querySelector(`#r-chips [data-f="${filter}"]`); nb && nb.focus(); });
+  $('r-rows').addEventListener('change', e => { const c = e.target.closest('[data-inc]'); if (!c) return; rows[+c.dataset.inc].inc = c.checked; drawResultSum(); syncAll(); });
+  const drawResultSum = () => { const el = $('r-sum').lastElementChild; if (el) el.innerHTML = `<b>${rows.filter(r => r.inc).length}</b>포함`; };
+  $('r-all').onchange = e => { document.querySelectorAll('#r-rows input[data-inc]:not(:disabled)').forEach(c => { c.checked = e.target.checked; rows[+c.dataset.inc].inc = c.checked; }); drawResultSum(); syncAll(); };
+  const open3 = i => { cur = i; if (!rows[i].inc) listAll = true; editPart = null; go(3, false); const b = document.querySelector(`#l-items [data-li="${i}"]`); b && b.focus(); };
+  $('r-rows').addEventListener('click', e => { const b = e.target.closest('[data-open3]'); if (b) open3(+b.dataset.open3); });
+  $('r-rows').addEventListener('keydown', e => {
+    const tr = e.target.closest('tr[data-i]'); if (!tr || e.target !== tr) return;
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); const sib = e.key === 'ArrowDown' ? tr.nextElementSibling : tr.previousElementSibling; sib && sib.focus(); }
+    else if (e.key === 'Enter') { e.preventDefault(); open3(+tr.dataset.i); }
+    else if (e.key === ' ') { e.preventDefault(); const c = tr.querySelector('input[data-inc]'); if (c && !c.disabled) { c.checked = !c.checked; c.dispatchEvent(new Event('change', { bubbles: true })); } }
+  });
+
+  // ---------- ③ 단어 구성 ----------
+  const listRows = () => rows.map((r, i) => [r, i]).filter(([r]) => listAll || r.inc);
+  function drawWords() {
+    const L = listRows();
+    if (!L.some(([, i]) => i === cur)) cur = L.length ? L[0][1] : cur;
+    $('l-inc').classList.toggle('on', !listAll); $('l-inc').setAttribute('aria-pressed', !listAll); $('l-all').classList.toggle('on', listAll); $('l-all').setAttribute('aria-pressed', listAll);
+    $('l-items').innerHTML = L.map(([r, i]) => `<li><button data-li="${i}" aria-current="${i === cur}"><span>${esc(r.ent)}.${esc(r.entRow ? '(테이블명)' : r.cur.n)}</span><span class="l2"><span class="badge ${ST[r.st][0]}">${ST[r.st][1]}</span>${r.choice ? `<span class="mono">${esc(r.choice.phys)}</span>` : ''}${r.inc ? '' : '<span class="faint">· 미포함</span>'}</span></button></li>`).join('') || '<li class="caption muted u-p-16">포함한 항목이 없습니다 — [전체]를 누르세요</li>';
+    drawDetail();
+  }
+  function drawDetail() {
+    const r = rows[cur]; if (!r) { $('d-box').innerHTML = '<div class="empty">항목을 고르세요</div>'; return; }
+    const c = r.choice, max = O.max;
+    const shown = r.alts.slice(0, max); if (c && !shown.includes(c)) shown.unshift(c);
+    const ep = c && editPart != null ? c.parts[editPart] : null;
+    $('d-box').innerHTML = `<div class="flex u-mb-4"><h3 class="u-fs-16 u-fw-600 u-m-0">${esc(r.ent)}${r.entRow ? ' · 테이블명' : ' . ' + esc(r.cur.n)}</h3><span class="badge ${ST[r.st][0]}">${ST[r.st][1]}</span>${r.st === 'sus' ? '' : susBadge(c)}<span class="grow"></span>
+        <label class="flex caption"><input type="checkbox" id="d-inc" ${r.inc ? 'checked' : ''} ${actionable(r) ? '' : 'disabled'}> ④·⑤에 포함</label></div>
+      <div class="caption muted u-mb-16">현재 물리명 <span class="mono">${esc(r.cur.p)}</span>${r.cur.t ? ` · 타입 <span class="mono">${esc(r.cur.t)}</span>` : ''} · ${O.basis === 'p' ? '물리명' : '논리명'} 기준 · 대안 ${r.alts.length}개 중 ${Math.min(max, r.alts.length)}개 표시(최대 결과 수 ${max})</div>
+      <div class="tw-legend u-mb-12"><span>범례</span><span class="badge b-success">공통표준 단어</span><span class="badge b-info">기관 단어</span><span class="badge b-org" title="모델에서 이미 표준으로 판정된 이름에서 읽은 단어">모델 표준 단어</span><span class="badge">신청 중</span><span class="badge b-violet">새 단어</span><span class="badge b-warning tw-unk">(미등록)</span><span class="badge b-danger">사용 불가·1음절 의심</span></div>
+      <div role="radiogroup" aria-label="분해 대안">${shown.map((a, k) => { const idx = r.alts.indexOf(a); return `<label class="tw-alt ${a === c ? 'on' : ''}"><input type="radio" name="alt" value="${idx}" ${a === c ? 'checked' : ''} aria-label="대안 ${k + 1}: ${esc(a.parts.map(p => (p.kind === 'unk' ? '미등록 ' : '') + p.w).join(' + '))} · 점수 ${a.score}">
+          <span>${partsHtml(a.parts, false)}<span class="meta u-mt-4 u-flex u-gap-8 u-wrap"><span>${esc(a.term)}</span><span class="mono">${esc(a.phys)}</span><span class="mono">${esc(a.dom || '도메인 미정')}</span>${a.custom ? '<span class="badge">직접 고침</span>' : ''}</span><span class="meta">${esc(a.why)}</span></span>
+          <span class="sc" title="점수">${a.score}</span></label>`; }).join('') || '<div class="empty">분해 대안이 없습니다 — 물리명이 없으면 논리명 기준으로 분석하세요</div>'}</div>
+      ${c ? `<div class="section-t u-mt-16">선택한 분해 고치기</div><div class="caption muted u-mb-8">조각을 눌러 다른 단어로 바꾸거나, 미등록 조각을 새 단어로 지정합니다. 새 단어는 같은 조각이 있는 모든 항목에 적용됩니다.</div>
+      ${partsHtml(c.parts, true)}
+      ${ep ? `<div class="tw-edit" id="d-edit"><div class="caption u-mb-8"><b>‘${esc(ep.w)}’</b> ${ep.kind === 'unk' ? '— 사전에 없는 조각입니다' : ep.kind === 'new' ? `— 새 단어(약어 ${esc(ep.abbr)})` : `— ${esc(ep.src || '')} 단어 ${esc(ep.abbr || '')}`}${ep.w.length === 1 && ep.kind !== 'unk' ? ' · <span class="u-danger">1음절 단어 — 앞뒤 조각과 합친 단어인지 확인</span>' : ''}</div>
+        <div class="row u-mb-8"><label class="caption" for="d-word">다른 단어로 바꾸기</label><input class="input" id="d-word" list="lex" placeholder="단어 검색" autocomplete="off"><button class="btn sm" id="d-swap">바꾸기</button></div>
+        ${ep.kind === 'unk' || ep.kind === 'new' ? `<div class="row"><label class="caption" for="d-abbr">새 단어 약어</label><input class="input mono" id="d-abbr" value="${esc(ep.kind === 'new' ? ep.abbr : suggest(ep.w))}" placeholder="예: RCPNT"><button class="btn sm" id="d-new">${ep.kind === 'new' ? '약어 바꾸기' : '새 단어로 지정'}</button>${ep.kind === 'new' ? '<button class="btn sm ghost" id="d-unnew">새 단어 지정 취소</button>' : ''}<span class="caption muted">제안 약어는 후보 큐·유사 사례에서 가져옵니다</span></div>` : ''}
+        <div class="row u-mt-8"><button class="btn sm ghost" id="d-close">닫기</button></div></div>` : ''}` : ''}`;
+  }
+  $('l-inc').onclick = () => { listAll = false; drawWords(); };
+  $('l-all').onclick = () => { listAll = true; drawWords(); };
+  $('l-items').addEventListener('click', e => { const b = e.target.closest('[data-li]'); if (!b) return; cur = +b.dataset.li; editPart = null; drawWords(); const nb = document.querySelector(`#l-items [data-li="${cur}"]`); nb && nb.focus(); });
+  $('l-items').addEventListener('keydown', e => {
+    const b = e.target.closest('[data-li]'); if (!b || !['ArrowDown', 'ArrowUp'].includes(e.key)) return; e.preventDefault();
+    const li = e.key === 'ArrowDown' ? b.parentElement.nextElementSibling : b.parentElement.previousElementSibling; const nb = li && li.querySelector('[data-li]'); if (!nb) return;
+    cur = +nb.dataset.li; editPart = null; drawWords(); const f = document.querySelector(`#l-items [data-li="${cur}"]`); f && f.focus();
+  });
+  const pick = (r, a) => { r.choice = a; judge(r); if (actionable(r) && r.st !== 'std') r.inc = r.inc || false; };
+  $('d-box').addEventListener('change', e => {
+    const r = rows[cur];
+    if (e.target.name === 'alt') { pick(r, r.alts[+e.target.value]); editPart = null; drawWords(); const f = document.querySelector('#d-box input[name=alt]:checked'); f && f.focus(); return; }
+    if (e.target.id === 'd-inc') { r.inc = e.target.checked; drawWords(); }
+  });
+  $('d-box').addEventListener('click', e => {
+    const r = rows[cur]; const c = r && r.choice; if (!c) return;
+    const pb = e.target.closest('[data-pi]'); if (pb) { const i = +pb.dataset.pi; editPart = editPart === i ? null : i; drawDetail(); const f = $('d-word') || document.querySelector(`#d-box [data-pi="${i}"]`); f && f.focus(); return; }
+    if (e.target.id === 'd-close') { const i = editPart; editPart = null; drawDetail(); const f = document.querySelector(`#d-box [data-pi="${i}"]`); f && f.focus(); return; }
+    if (e.target.id === 'd-swap') {
+      const w = $('d-word').value.trim(); if (!w) { $('d-word').focus(); return; }
+      const wi = wordInfo(w); if (!wi) { toast(`‘${esc(w)}’${josa(w, '은/는').slice(w.length)} 사전·공통표준에 없는 단어입니다 — 미등록 조각이면 [새 단어로 지정]을 쓰세요`, 'danger'); return; }
+      const ps = c.parts.slice(); ps[editPart] = part(wi); const a = mkAlt(ps, r, O, c.fix); a.custom = true; r.alts.unshift(a); pick(r, a);
+      toast(`‘${esc(c.parts[editPart].w)}’ → ‘${esc(w)}’로 바꿨습니다 · ${esc(a.term)} ${esc(a.phys)}`, 'success'); editPart = null; drawWords(); return;
+    }
+    if (e.target.id === 'd-new') {
+      const ab = $('d-abbr').value.trim().toUpperCase(); if (!/^[A-Z][A-Z0-9_]*$/.test(ab)) { toast('약어는 영문 대문자·숫자·_ 로 입력하세요', 'danger'); $('d-abbr').focus(); return; }
+      const w = c.parts[editPart].w; newWords[w] = ab; refreshAlts();
+      const hit = rows.filter(x => x.choice && x.choice.parts.some(p => p.w === w && p.kind === 'new')).length;
+      toast(`‘${esc(w)}’${josa(w, '을/를').slice(w.length)} 새 단어(${ab})로 지정했습니다 — 이 조각이 있는 ${hit}개 항목에 반영 · ④에서 단어 신청 항목으로 나옵니다`, 'success'); editPart = null; drawWords(); return;
+    }
+    if (e.target.id === 'd-unnew') { const w = c.parts[editPart].w; delete newWords[w]; refreshAlts(); toast(`‘${esc(w)}’ 새 단어 지정을 취소했습니다`, 'info'); editPart = null; drawWords(); }
+  });
+  $('d-box').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.ctrlKey && (e.target.id === 'd-word' || e.target.id === 'd-abbr')) { e.preventDefault(); (e.target.id === 'd-word' ? $('d-swap') : $('d-new')).click(); } if (e.key === 'Escape' && editPart != null) { editPart = null; drawDetail(); } });
+
+  // ---------- ④ 용어 등록 ----------
+  const KN = { word: '단어', term: '용어', entity: '엔터티 용어' };
+  let regSel = {};   // name → checked
+  function regItems() {
+    const words = {}, terms = {}, unk = {}, blocked = []; let have = 0;
+    rows.filter(r => r.inc && r.choice && ['comb', 'unk', 'sus', 'std'].includes(r.st)).forEach(r => { const c = r.choice;
+      c.parts.forEach(p => { if (p.kind === 'new') (words[p.w] = words[p.w] || { k: 'word', name: p.w, abbr: p.abbr, dom: '—', locs: [] }).locs.push(r); if (p.kind === 'unk') (unk[p.w] = unk[p.w] || { k: 'word', name: p.w, abbr: suggest(p.w), dom: '—', unk: true, locs: [] }).locs.push(r); });
+      if (c.have) { have++; return; }
+      if (c.unk.length || c.bad.length) { blocked.push(r); return; }
+      const k = r.entRow ? 'entity' : 'term';
+      (terms[c.term] = terms[c.term] || { k, name: c.term, abbr: c.phys, dom: c.dom, locs: [] }).locs.push(r);
+    });
+    const list = Object.values(words).concat(Object.values(terms), Object.values(unk));
+    const basket = getBasket().items, cands = getCands();
+    list.forEach(it => { it.key = it.k + ':' + it.name; const op = openItems().find(x => x.it.name === it.name && (x.it.act || '추가') === '추가'); it.open = op && op.doc; it.inBasket = basket.some(x => x.k === it.k && x.name === it.name); const cd = cands.find(x => x.name === it.name); it.cand = cd ? candState(cd) : ''; if (!(it.key in regSel)) regSel[it.key] = !it.open && !it.inBasket && !it.cand; });
+    return { list, blocked, have };
+  }
+  function drawReg() {
+    const { list, blocked, have } = regItems();
+    $('g-sum').innerHTML = `<span><b>${list.filter(x => x.k === 'word' && !x.unk).length}</b>새 단어</span><span><b>${list.filter(x => x.k !== 'word').length}</b>새 용어</span><span><b>${list.filter(x => x.unk).length}</b>미등록 단어(후보만)</span><span><b>${have}</b>사전에 있음 — 할 일 없음</span>${blocked.length ? `<span><b>${blocked.length}</b>용어 신청 불가(미등록·사용 불가 단어 남음)</span>` : ''}`;
+    $('g-rows').innerHTML = list.map(it => { const st = it.open ? tag('run', `신청 중 · ${it.open}`) : it.inBasket ? tag('mine', '바구니에 있음') : it.cand ? tag('', `후보 ${it.cand}`) : it.unk ? tag('warn', '미등록 — 후보만 가능') : tag('', '등록 전');
+      return `<tr class="${it.open ? 'row-mute' : ''}"><td><input type="checkbox" data-g="${esc(it.key)}" ${regSel[it.key] && !it.open ? 'checked' : ''} ${it.open ? 'disabled' : ''} aria-label="${esc(it.name)} 선택"></td><td>${it.unk ? '미등록 단어' : KN[it.k]}</td><td>${esc(it.name)}${it.k !== 'word' ? `<span class="sub2">${partsHtml(it.locs[0].choice.parts, false)}</span>` : ''}</td><td class="mono">${esc(it.abbr || '—')}</td><td class="mono">${esc(it.dom || '—')}</td><td class="wrap caption">${it.locs.slice(0, 3).map(r => `${esc(r.ent)}.${esc(r.entRow ? '테이블명' : r.cur.n)}`).join(', ')}${it.locs.length > 3 ? ` 외 ${it.locs.length - 3}곳` : ''}</td><td>${st}</td></tr>`; }).join('')
+      || `<tr class="er done"><td colspan="7"><span class="et">등록할 단어·용어가 없습니다</span>${have ? `포함한 항목의 용어 ${have}개는 이미 사전에 있습니다. ` : ''}⑤에서 모델에 반영하세요.</td></tr>`;
+    gSync();
+  }
+  const gChecked = () => { const { list } = regItems(); return list.filter(it => regSel[it.key] && !it.open); };
+  function gSync() {
+    const C = gChecked(), boxes = [...document.querySelectorAll('#g-rows input[data-g]:not(:disabled)')], on = boxes.filter(b => b.checked).length;
+    $('g-all').disabled = !boxes.length; $('g-all').checked = !!boxes.length && on === boxes.length; $('g-all').indeterminate = on > 0 && on < boxes.length;
+    $('g-n').innerHTML = C.length ? `${C.length}건 선택` : '<span class="muted u-fw-400">처리할 항목을 고르세요</span>';
+    const reqable = C.filter(it => !it.unk);
+    if (readOnly) { ['g-basket', 'g-cand'].forEach(id => { $(id).disabled = true; $(id).title = roWhy; }); setBlock($('g-req'), roWhy); }
+    else { setBlock($('g-basket'), !reqable.length ? (C.length ? '미등록 단어는 바구니·신청 대신 후보 큐로 보냅니다' : '') : ''); $('g-basket').disabled = !reqable.length; $('g-cand').disabled = !C.length; setBlock($('g-req'), ''); $('g-req').disabled = !reqable.length; }
+  }
+  $('g-rows').addEventListener('change', e => { const c = e.target.closest('[data-g]'); if (!c) return; regSel[c.dataset.g] = c.checked; gSync(); });
+  $('g-all').onchange = e => { document.querySelectorAll('#g-rows input[data-g]:not(:disabled)').forEach(c => { c.checked = e.target.checked; regSel[c.dataset.g] = c.checked; }); gSync(); };
+  const FROM = `자동분석 · ${MNAME}`;
+  const toItem = it => ({ k: it.k, name: it.name, abbr: it.abbr, dom: it.dom, act: '추가', from: FROM });
+  const guard = () => { if (readOnly) { toast(roWhy, 'danger'); return false; } if (liveRoleChanged()) { staleRoleToast(); return false; } return true; };
+  $('g-basket').onclick = () => { if (!guard()) return; const C = gChecked().filter(it => !it.unk); if (!C.length) return;
+    const [a, s] = addToBasket(C.map(toItem)); C.forEach(it => { regSel[it.key] = false; });
+    toast(`신청 바구니에 ${a}건 담았습니다${s ? ` · 이미 있던 ${s}건 제외` : ''}`, 'success', { label: '바구니 보기', fn: () => { location.href = 'dictionary.html?basket=1'; } }); drawReg(); };
+  $('g-cand').onclick = () => { if (!guard()) return; const C = gChecked(); if (!C.length) return; let n = 0;
+    C.forEach(it => { it.locs.forEach(r => { addCandidate({ t: it.k === 'word' ? '단어' : '용어', name: it.name, abbr: it.abbr || '' }, { area: AREA, e: r.e, ent: r.ent, attr: r.a }); n++; }); regSel[it.key] = false; });
+    toast(`후보 큐에 ${C.length}건(발생 위치 ${n}곳)을 등록했습니다 — DA가 검토합니다`, 'success', { label: '후보 큐 보기', fn: () => { location.href = 'candidates.html'; } }); drawReg(); };
+  $('g-req').onclick = () => { if (!guard()) return; const C = gChecked().filter(it => !it.unk); if (!C.length) return;
+    $('rq-t').textContent = `바로 신청 (${C.length}건)`; $('rq-list').innerHTML = orderItems(C.map(toItem)).map(i => `<span class="badge">${KN[i.k]} ${esc(i.name)}</span>`).join(' ') + (gChecked().some(it => it.unk) ? '<div class="caption muted u-mt-8">미등록 단어는 신청에서 빠집니다(후보 큐로 보내세요).</div>' : '');
+    $('mo-req').classList.add('open'); $('mo-req')._opener = $('g-req'); updateNeeds(); setTimeout(() => $('rq-why').focus(), 0); };
+  $('rq-go').onclick = () => {
+    if ($('rq-go').disabled || !guard()) return;
+    const C = gChecked().filter(it => !it.unk); const items = orderItems(C.map(toItem));
+    const res = createDoc({ type: 'dict', kind: 'std', area: AREA, ver: VER, title: `용어 자동분석 신청 ${items.length}건 (${MNAME})`, n: items.length, reason: $('rq-why').value.trim(), cc: [], items, key: `auto:${AREA}:v${VER}:${items.map(i => i.name).join(',')}` });
+    $('mo-req').classList.remove('open');
+    if (res.conflict) { toast(`이미 진행 중인 신청과 겹칩니다 — ${res.conflict.join(', ')}. 그 항목은 선택에서 빼고 다시 신청하세요`, 'danger'); return; }
+    lastDoc = { id: res.doc.id, n: items.length }; C.forEach(it => { regSel[it.key] = false; }); $('rq-why').value = '';
+    refreshAlts();   // words/terms in the new request now read as 신청 중
+    toast(`${res.dup ? '같은 신청이 이미 있습니다' : '결재 문서를 만들었습니다'} — ${res.doc.id} (${items.length}건) · ⑤에서 이 용어를 쓰는 항목은 ‘신청 중’으로 반영됩니다`, 'success', { label: '결재함에서 보기', fn: () => { location.href = `approvals.html?doc=${res.doc.id}`; } });
+    drawReg();
+  };
+
+  // ---------- ⑤ 모델 반영 (standardize.html → model.html hand-off: sessionStorage 'dbm-apply') ----------
+  let mSel = {};
+  function applyRows() {
+    const out = [];
+    rows.forEach(r => {
+      if (r.st === 'na' && r.auto) { if (r.inc) out.push({ r, kind: 'na', why: `자동분석 비대상 규칙 ${r.rule}`, res: { s: 'na', label: '비대상' } }); return; }
+      if (!r.inc || !r.choice || !['comb', 'unk', 'sus', 'std'].includes(r.st)) return;
+      const c = r.choice; const physOk = !c.unk.length && !c.phys.includes('?');
+      const newN = r.entRow ? r.cur.n : c.term, newP = physOk ? c.phys : r.cur.p, newT = r.entRow ? '' : (physOk && c.t ? c.t : r.cur.t);
+      const have = c.have || termIn(c.term), op = !have && !c.unk.length ? openTerm(c.term) : null;
+      const res = have ? { s: 'ok', label: '표준', proc: '용어 적용' } : op ? { s: 'req', label: `신청 중 · ${op.doc}`, proc: '신청 중 용어로 맞춤', wait: op.doc } : (c.unk.length || c.bad.length) ? { s: 'unreg', label: '미등록 유지', proc: '이름만 맞춤' } : { s: 'comb', label: '조합 가능(신청 전)', proc: '이름만 맞춤' };
+      if (newN === r.cur.n && newP === r.cur.p && newT === r.cur.t && (res.s === r.cur.s || (res.s === 'unreg' && r.cur.s === 'unreg'))) return;
+      out.push({ r, kind: 'row', newN, newP, newT, res });
+    });
+    out.forEach(x => { if (!(x.r.key in mSel)) mSel[x.r.key] = true; });
+    return out;
+  }
+  const RES_TAG = { ok: 'ok', req: 'run', unreg: 'warn', comb: 'mine', na: 'end' };
+  function drawApply() {
+    const L = applyRows(); const on = L.filter(x => mSel[x.r.key]);
+    const n = s => on.filter(x => x.res.s === s).length;
+    $('m-sum').innerHTML = `<span><b>${on.length}</b>반영할 행</span><span><b>${n('ok')}</b>표준</span><span><b>${n('req')}</b>신청 중</span><span><b>${n('comb') + n('unreg')}</b>이름만 맞춤(미등록·신청 전)</span><span><b>${n('na')}</b>비대상</span><span><b>${L.length - on.length}</b>제외</span>`;
+    $('m-rows').innerHTML = L.map(x => { const r = x.r;
+      return `<tr class="${mSel[r.key] ? '' : 'row-mute'}"><td><input type="checkbox" data-m="${esc(r.key)}" ${mSel[r.key] ? 'checked' : ''} ${applied ? 'disabled' : ''} aria-label="${esc(r.ent)}.${esc(r.a)} 반영"></td><td>${esc(r.ent)}${r.entRow ? ' <span class="muted">· 테이블명</span>' : ''}</td>`
+        + (x.kind === 'na' ? `<td>${esc(r.cur.n)}</td><td class="mono">${esc(r.cur.p)}</td><td class="mono">${esc(r.cur.t || '')}</td><td>${tag('end', '비대상')}<span class="sub2">${esc(x.why)}</span></td>`
+          : `<td>${two(r.cur.n, x.newN)}${r.entRow && x.r.choice.term !== r.cur.n ? `<span class="sub2">테이블 이름은 모델에서 바꿉니다(제안 ${esc(x.r.choice.term)})</span>` : ''}</td><td>${two(r.cur.p, x.newP, true)}</td><td>${two(r.cur.t, x.newT, true)}</td><td>${tag(RES_TAG[x.res.s], x.res.label)}</td>`) + '</tr>'; }).join('')
+      || '<tr class="er done"><td colspan="6"><span class="et">반영할 변경이 없습니다</span>포함한 항목이 이미 모델과 같습니다. ②에서 포함할 항목을 고르세요.</td></tr>';
+    const all = [...document.querySelectorAll('#m-rows input[data-m]')]; const k = all.filter(c => c.checked).length;
+    $('m-all').disabled = !all.length || !!applied; $('m-all').checked = !!all.length && k === all.length; $('m-all').indeterminate = k > 0 && k < all.length;
+    $('m-note').textContent = on.some(x => x.res.s !== 'na' && x.newP !== x.r.cur.p && x.r.cur.p !== '—') ? '물리명이 바뀌는 행은 다음 DDL 출력에서 변경분(ALTER)으로 나갑니다' : '';
+    $('m-go').classList.toggle('primary', !applied);
+    if (applied) { $('m-go').disabled = true; }
+    else if (readOnly) setBlock($('m-go'), roWhy);
+    else { setBlock($('m-go'), ''); $('m-go').disabled = !on.length; }
+  }
+  $('m-rows').addEventListener('change', e => { const c = e.target.closest('[data-m]'); if (!c) return; mSel[c.dataset.m] = c.checked; drawApply(); const f = document.querySelector(`#m-rows [data-m="${CSS.escape(c.dataset.m)}"]`); f && f.focus(); });
+  $('m-all').onchange = e => { applyRows().forEach(x => { mSel[x.r.key] = e.target.checked; }); drawApply(); $('m-all').focus(); };
+  $('m-go').onclick = () => {
+    if ($('m-go').disabled || !guard()) return;
+    const now = modelLock(AREA);
+    if (now.state !== 'edit' || now.model.ver !== VER || !can('model.edit', { area: AREA })) { toast(`지금은 반영할 수 없습니다 — ${now.doc && now.state !== 'edit' ? `${now.doc.id} ${STEP_NAME[now.doc.step]}` : `작업 버전이 v${now.model.ver}로 바뀜`}`, 'danger', { label: '새로고침', fn: () => location.reload() }); return; }
+    const on = applyRows().filter(x => mSel[x.r.key]); if (!on.length) return;
+    const rowsOut = on.filter(x => x.kind === 'row').map(x => ({ key: x.r.key, e: x.r.e, a: x.r.a, proc: x.res.proc, wait: x.res.wait, term: x.r.entRow ? undefined : x.newN, phys: x.newP !== x.r.cur.p ? x.newP : undefined, dom: x.r.choice.dom, t: x.newT && x.newT !== x.r.cur.t ? x.newT : undefined, entRow: !!x.r.entRow }));
+    const na = on.filter(x => x.kind === 'na').map(x => ({ key: x.r.key, e: x.r.e, a: x.r.a, why: x.why }));
+    try { sessionStorage.setItem('dbm-apply', JSON.stringify({ area: AREA, ver: VER, rows: rowsOut, ex: [], na, doc: lastDoc ? lastDoc.id : null, req: lastDoc ? lastDoc.n : 0, cand: 0, from: 'term-wizard' })); } catch (e) {}
+    const c = s => on.filter(x => x.res.s === s).length;
+    applied = { ok: c('ok') + c('comb') + c('unreg'), std: c('ok'), name: c('comb') + c('unreg'), req: c('req'), na: c('na'), skip: applyRows().length - on.length };
+    drawApply();
+    $('m-done').innerHTML = `<div class="tw-done" role="status"><div class="flex u-mb-8"><i data-ic=check></i><b>모델 반영을 준비했습니다</b></div>
+      <div class="mline"><span><b>${applied.ok}</b>반영(표준 ${applied.std} · 이름만 ${applied.name})</span><span><b>${applied.req}</b>신청 중</span><span><b>${applied.na}</b>비대상 제외</span><span><b>${applied.skip}</b>선택 안 함</span></div>
+      <div class="caption muted u-mb-12">모델 화면을 열면 작업 버전 v${VER}에 한 번에 반영되고, 토스트의 [실행 취소]로 되돌릴 수 있습니다.${lastDoc ? ` 용어 신청 ${lastDoc.id}는 되돌려도 남습니다(결재함에서 회수).` : ''}</div>
+      <a class="btn primary" id="m-view" href="model.html?area=${AREA}">모델에서 보기</a></div>`;
+    $('m-view').focus();
+  };
+
+  // ---------- start ----------
+  entsN(); go(1, false);
+  if (q.get('auto') === '1') next();
+};
+</script>
+</body>
+</html>

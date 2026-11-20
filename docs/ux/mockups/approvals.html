@@ -24,6 +24,21 @@
   #rows td:nth-child(3) { white-space:normal; }
   .items-t { table-layout:fixed; width:100%; } .items-t td, .items-t th { white-space:normal; overflow-wrap:anywhere; vertical-align:top; }
   .items-t col.c1 { width:34px; } .items-t col.c2 { width:92px; } .items-t col.c4 { width:26%; }
+  /* DX-12 per-item reject */
+  .items-t tr.rej > td { background:var(--ds-red-100); }
+  .items-t tr.rej > td:nth-child(3) b { text-decoration:line-through; color:var(--fg-2); }
+  .rej-f { display:flex; gap:4px; margin-top:4px; } .rej-f .input { flex:1; min-width:0; height:28px; font-size:12px; }
+  .rej-why { color:var(--danger-deep); }
+  /* DX-21 stats */
+  #stats { padding:16px 20px; }
+  #tb[hidden], #listwrap[hidden], #stats[hidden] { display:none !important; }
+  .stats-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(360px, 1fr)); gap:16px 24px; }
+  .statbar { display:block; width:100%; min-width:80px; height:6px; border:0; border-radius:3px; background:var(--surface-2); appearance:none; -webkit-appearance:none; overflow:hidden; }
+  .statbar::-webkit-progress-bar { background:var(--surface-2); border-radius:3px; }
+  .statbar::-webkit-progress-value { background:var(--ink); border-radius:3px; }
+  .statbar::-moz-progress-bar { background:var(--ink); border-radius:3px; }
+  .statbar.err::-webkit-progress-value { background:var(--danger); } .statbar.err::-moz-progress-bar { background:var(--danger); }
+  .statbar.ok::-webkit-progress-value { background:var(--success); } .statbar.ok::-moz-progress-bar { background:var(--success); }
 </style>
 </head>
 <body data-page="approvals">
@@ -36,18 +51,20 @@
   <div class="page-body">
     <div class="main">
       <div class="pad u-pb-0" id="new-banner" hidden></div>
-      <div class="toolbar">
+      <div class="toolbar" id="tb">
         <select class="input" id="f-type" style="width:160px;" aria-label="문서 유형"><option value="">문서 유형: 전체</option><option value="dict">사전 신청</option><option value="model">모델 확정</option></select>
         <select class="input u-w-150" id="f-step" aria-label="단계"><option value="">단계: 전체</option><option value="da">DA 승인</option><option value="final">최종 승인</option><option value="done">완료</option><option value="rejected">반려됨</option><option value="withdrawn">회수됨</option></select>
         <div class="search" style="flex-basis:280px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input class="input" id="f-q" placeholder="신청번호·제목·요청자" aria-label="신청번호·제목·요청자 검색"></div>
         <span class="grow"></span><span class="caption muted" id="boxhint" hidden></span>
       </div>
-      <div class="scroll" style="padding:16px 20px">
+      <div class="scroll" style="padding:16px 20px" id="listwrap">
         <table class="tbl">
           <thead><tr><th>신청번호</th><th>유형</th><th>제목</th><th>요청자</th><th>현재 단계</th><th class="r">머문 일</th><th class="r">건수</th><th>신청일</th></tr></thead>
           <tbody id="rows"></tbody>
         </table>
       </div>
+      <!-- DX-21 신청·결재 집계 (사전 신청) -->
+      <div class="scroll" id="stats" hidden></div>
     </div>
     <aside class="rpanel" id="pn-doc" data-tabscope aria-label="결재 문서"></aside>
   </div>
@@ -103,26 +120,85 @@ window.pageInit = function () {
     cc: ['참조함', d => (d.cc || []).includes(ME.id)],
     all: ['전체', d => canSeeDoc(d)]
   };
+  // DX-21: the stats view is for the people who oversee approvals (DA · 기관 담당자 · Admin)
+  const canStats = can('appr.viewall') || can('settings');
+  // DX-11: anyone who can read the dictionary may open an in-progress dictionary request read-only (model documents keep their rule)
+  const roView = d => !!d && !canSeeDoc(d) && d.type === 'dict' && inReview(d) && can('dict.view');
+  const canView = d => canSeeDoc(d) || roView(d);
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+  // 'M/D HH:mm' (seed · nowStr) or 'YYYY-MM-DD HH:mm' (submittedAt) → ms. a M/D date in the future means last year
+  const parseAt = s => { const t = String(s || '').trim(); let m = t.match(/^(\d{4})-(\d{1,2})-(\d{1,2})(?:\s+(\d{1,2}):(\d{2}))?/);
+    if (m) return new Date(+m[1], +m[2] - 1, +m[3], +(m[4] || 0), +(m[5] || 0)).getTime();
+    m = t.match(/^(\d{1,2})\/(\d{1,2})(?:\s+(\d{1,2}):(\d{2}))?/);
+    if (m) { const n = new Date(); const x = new Date(n.getFullYear(), +m[1] - 1, +m[2], +(m[3] || 0), +(m[4] || 0)); if (x.getTime() > n.getTime() + 864e5) x.setFullYear(n.getFullYear() - 1); return x.getTime(); }
+    return NaN; };
   let box = q.get('box') || (ME.has('da') || ME.has('owner') ? 'queue' : 'mine');
   if (box === 'queue' && !(ME.has('da') || ME.has('owner'))) box = 'mine';
+  if (box === 'stats' && !canStats) box = 'mine';
+  if (!BOX[box] && box !== 'stats') box = 'mine';
   let sel = null;
+  // the box a deep-linked document belongs to; someone else's request opened read-only stays in the current list (DX-11)
+  const boxFor = d => { if (BOX[box] && BOX[box][1](d)) return box; return BOX.queue[1](d) ? 'queue' : BOX.mine[1](d) ? 'mine' : BOX.cc[1](d) ? 'cc' : canSeeDoc(d) ? 'all' : (BOX[box] ? box : 'mine'); };
   const stepRole = s => s === 'da' ? 'DA' : s === 'final' ? '기관 담당자' : '';
   const stBadge = d => docTag(d);
   const ageCell = d => ['da', 'final'].includes(d.step) ? (docLate(d) ? `<span class="num u-danger">${icon('err', 12)} ${docAge(d)}일<span class="sr-only"> 기한 넘김</span></span>` : `<span class="num">${docAge(d)}일</span>`) : '<span class="faint">—</span>';
 
   function drawBoxes() {
-    $('boxes').innerHTML = Object.entries(BOX).filter(([k]) => k !== 'all' && (k !== 'queue' || ME.has('da') || ME.has('owner'))).map(([k, [l, f]]) => `<button type="button" aria-pressed="${box === k}" class="${box === k ? 'on' : ''}" data-box="${k}">${l} <span class="n">${docs.filter(f).length}</span></button>`).join('');
+    $('boxes').innerHTML = Object.entries(BOX).filter(([k]) => k !== 'all' && (k !== 'queue' || ME.has('da') || ME.has('owner'))).map(([k, [l, f]]) => `<button type="button" aria-pressed="${box === k}" class="${box === k ? 'on' : ''}" data-box="${k}">${l} <span class="n">${docs.filter(f).length}</span></button>`).join('')
+      + (canStats ? `<button type="button" aria-pressed="${box === 'stats'}" class="${box === 'stats' ? 'on' : ''}" data-box="stats">${icon('table', 12)} 집계</button>` : '');
     $('boxhint').textContent = box === 'queue' ? (ME.has('da') || ME.has('owner') ? `지금 내 역할(${ME.roles.filter(r => r === 'da' || r === 'owner').map(r => ROLE_NAME[r]).join('·')}) 차례인 문서만` : '결재 역할이 없습니다') : box === 'mine' ? '내가 신청한 문서 · 회수·보완' : '참조로 지정된 문서 · 조회 전용';
   }
   function list() {
+    if (!BOX[box]) return [];   // the stats view has no document list
     const ft = $('f-type').value, fs = $('f-step').value, fq = $('f-q').value.trim();
     return docs.filter(BOX[box][1]).filter(d => (!ft || d.type === ft) && (!fs || d.step === fs) && (!fq || (d.id + d.title + nameOf(d.req)).includes(fq))).map((d, i) => [d, i]).sort((a, b) => ((inQueue(b[0]) ? 1 : 0) - (inQueue(a[0]) ? 1 : 0)) || ((['da', 'final'].includes(b[0].step) ? docAge(b[0]) : -1) - (['da', 'final'].includes(a[0].step) ? docAge(a[0]) : -1)) || a[1] - b[1]).map(x => x[0]);
   }
   function drawRows() {
+    const st = box === 'stats';
+    $('tb').hidden = st; $('listwrap').hidden = st; $('stats').hidden = !st;
+    if (st) { drawStats(); return; }
     const L = list();
     $('rows').innerHTML = L.length ? L.map(d => `<tr aria-selected="${sel === d.id}" class="click ${sel === d.id ? 'sel' : ''} ${['done', 'withdrawn', 'rejected'].includes(d.step) ? 'dim' : ''}" data-id="${d.id}" tabindex="0"><td class="mono">${d.id}</td><td class="muted">${d.type === 'model' ? '모델 확정' : '사전 신청'}</td><td>${d.title}</td><td>${nameOf(d.req)}${d.req === ME.id ? ' <span class="muted">(나)</span>' : ''}</td><td>${box === 'queue' ? docTag(d) : stBadge(d)}</td><td class="r">${ageCell(d)}</td><td class="num">${d.n}</td><td class="num muted">${d.date}</td></tr>`).join('')
       : `<tr class="er ${box === 'queue' && !docs.filter(BOX.queue[1]).length ? 'done' : 'none'}"><td colspan="8" style="padding:16px 12px" class="caption muted">${box === 'queue' && docs.filter(BOX.queue[1]).length ? `<span class="et">필터에 맞는 대기 문서가 없습니다</span>대기 ${docs.filter(BOX.queue[1]).length}건이 필터에 가려져 있습니다.` : box === 'queue' ? (docs.some(d => d.hist && d.hist.some(h => h.who === ME.name)) ? '<span class="et">처리할 결재를 모두 마쳤습니다</span><a href="approvals.html?box=mine">내 신청 보기</a>' : '<span class="et">지금 처리할 결재가 없습니다</span>새 신청이 들어오면 알림으로 알려 드립니다.') : '<span class="et">조건에 맞는 문서가 없습니다</span>'} ${($('f-type').value || $('f-step').value || $('f-q').value) ? '<button class="btn sm ghost" id="f-clear">필터 지우기</button>' : ''}</td></tr>`;
     const c = $('f-clear'); if (c) c.onclick = () => { $('f-type').value = ''; $('f-step').value = ''; $('f-q').value = ''; drawRows(); };
+  }
+  /* DX-21 신청·결재 집계 — dictionary requests only; period by request date */
+  let period = 'month';
+  const PERIOD = { week: '이번 주', month: '이번 달', all: '전체' };
+  const dur = ms => ms < 36e5 ? `${Math.max(1, Math.round(ms / 6e4))}분` : ms < 48 * 36e5 ? `${(ms / 36e5).toFixed(1)}시간` : `${(ms / 864e5).toFixed(1)}일`;
+  function drawStats() {
+    const now = new Date(); let from = -Infinity;
+    if (period === 'week') { const s = new Date(now.getFullYear(), now.getMonth(), now.getDate()); s.setDate(s.getDate() - ((s.getDay() + 6) % 7)); from = s.getTime(); }
+    if (period === 'month') from = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+    const all = getDocs().filter(d => d.type === 'dict');
+    const D = all.filter(d => { const t = parseAt(d.submittedAt || d.date); return period === 'all' || (!isNaN(t) && t >= from); });
+    const ST = [['live', '진행 중', d => ['da', 'final'].includes(d.step), ''], ['done', '완료', d => d.step === 'done', 'ok'], ['rejected', '반려', d => d.step === 'rejected', 'err'], ['withdrawn', '회수', d => d.step === 'withdrawn', '']];
+    const cnt = ST.map(s => [s, D.filter(s[2]).length]);
+    const items = D.reduce((n, d) => n + (+d.n || (d.items || []).length || 0), 0);
+    const itemRej = D.reduce((n, d) => n + (d.items || []).filter(it => it.rej).length, 0);
+    // processing time: request → last history entry, for finished documents with a parsable history
+    const times = D.filter(d => ['done', 'rejected', 'withdrawn'].includes(d.step) && (d.hist || []).length).map(d => parseAt(d.hist[d.hist.length - 1].at) - parseAt(d.submittedAt || d.date)).filter(x => isFinite(x) && x >= 0);
+    const avg = times.length ? dur(times.reduce((a, b) => a + b, 0) / times.length) : '—';
+    // reject reasons: whole-document rejections (history) + per-item rejections (item reason)
+    const R = {};
+    const addR = (txt, kind) => { const k = String(txt || '').replace(/<[^>]*>/g, '').trim().slice(0, 60) || '(사유 없음)'; R[k] = R[k] || { n: 0, kinds: new Set() }; R[k].n++; R[k].kinds.add(kind); };
+    D.forEach(d => { (d.hist || []).filter(h => h.act === '반려').forEach(h => addR(h.why, '문서 반려')); (d.items || []).filter(it => it.rej).forEach(it => addR(it.rejWhy, '항목 반려')); });
+    const topR = Object.entries(R).sort((a, b) => b[1].n - a[1].n).slice(0, 5);
+    // per requester
+    const P = {}; D.forEach(d => { const p = P[d.req] = P[d.req] || { n: 0, live: 0, done: 0, rejected: 0, withdrawn: 0, items: 0 }; p.n++; p[docGroup(d) === 'live' ? 'live' : d.step]++; p.items += +d.n || 0; });
+    const PL = Object.entries(P).sort((a, b) => b[1].n - a[1].n); const maxP = Math.max(1, ...PL.map(x => x[1].n));
+    const pct = n => D.length ? Math.round(n * 100 / D.length) : 0;
+    $('stats').innerHTML = `<div class="u-flex u-gap-12 u-wrap u-mb-12">
+        <div class="seg" role="group" aria-label="집계 기간">${Object.entries(PERIOD).map(([k, l]) => `<button type="button" data-period="${k}" aria-pressed="${period === k}" class="${period === k ? 'on' : ''}">${l}</button>`).join('')}</div>
+        <span class="caption muted">사전 신청 ${D.length}건 · 신청일 기준${period !== 'all' ? ` · 전체 ${all.length}건 중` : ''}</span></div>
+      <div class="mline">${cnt.map(([s, n]) => `<span><b>${n}</b>${s[1]}</span>`).join('')}<span><b>${items}</b>항목</span><span><b>${itemRej}</b>항목 반려</span><span><b>${avg}</b>평균 처리 시간</span></div>
+      ${!D.length ? `<div class="banner">${icon('info')}<div>${PERIOD[period]}에 들어온 사전 신청이 없습니다. 기간을 넓혀 보세요.</div></div>` : `<div class="stats-grid">
+        <section aria-labelledby="st-s"><div class="section-t" id="st-s">상태별</div><table class="tbl"><thead><tr><th>상태</th><th class="r">건수</th><th>비율</th><th class="r">%</th></tr></thead><tbody>${cnt.map(([s, n]) => `<tr><td>${s[1]}</td><td class="num">${n}</td><td><progress class="statbar ${s[3]}" max="${D.length}" value="${n}" aria-label="${s[1]} ${pct(n)}%"></progress></td><td class="num muted">${pct(n)}%</td></tr>`).join('')}</tbody></table>
+          <div class="caption muted u-mt-8">평균 처리 시간: 끝난 문서 ${times.length}건의 신청 → 마지막 처리(승인·반려·회수) 시각 차이</div></section>
+        <section aria-labelledby="st-r"><div class="section-t" id="st-r">반려 사유 상위 ${topR.length ? `<span class="mono muted">${topR.length}</span>` : ''}</div>${topR.length ? `<table class="tbl"><thead><tr><th>사유</th><th>구분</th><th class="r">횟수</th></tr></thead><tbody>${topR.map(([k, v]) => `<tr><td class="wrap">${esc(k)}</td><td class="muted u-nowrap">${[...v.kinds].join(' · ')}</td><td class="num">${v.n}</td></tr>`).join('')}</tbody></table>` : '<div class="caption muted">이 기간에 반려가 없습니다.</div>'}</section>
+        <section aria-labelledby="st-p"><div class="section-t" id="st-p">요청자별</div><table class="tbl"><thead><tr><th>요청자</th><th class="r">전체</th><th class="r">진행 중</th><th class="r">완료</th><th class="r">반려</th><th class="r">회수</th><th class="r">항목</th><th>비중</th></tr></thead><tbody>${PL.map(([id, p]) => `<tr><td>${esc(nameOf(id))}${id === ME.id ? ' <span class="muted">(나)</span>' : ''}</td><td class="num">${p.n}</td><td class="num">${p.live}</td><td class="num">${p.done}</td><td class="num">${p.rejected ? `<span class="u-danger">${p.rejected}</span>` : 0}</td><td class="num">${p.withdrawn}</td><td class="num">${p.items}</td><td><progress class="statbar" max="${maxP}" value="${p.n}" aria-label="${esc(nameOf(id))} ${p.n}건"></progress></td></tr>`).join('')}</tbody></table></section>
+      </div>`}`;
+    $('stats').querySelectorAll('[data-period]').forEach(b => b.onclick = () => { period = b.dataset.period; drawStats(); const nb = $('stats').querySelector(`[data-period="${period}"]`); if (nb) nb.focus(); });
   }
   function line(d) {
     const h = d.hist || [];
@@ -138,17 +214,38 @@ window.pageInit = function () {
       ${hasFinal(d) ? `<div class="al-step ${cls('final')}">${pt(cls('final'))}<div><b>최종 승인 (기관 담당자)</b><div class="caption muted">${who(fH, 'final') || (d.type === 'model' ? '시스템 설정: 모델 확정 최종 승인 사용(신청 당시)' : '기관 설정: 사전 신청 최종 승인 사용(신청 당시)')}</div></div></div>` : '<div class="al-step skip"><span class="pt"></span><div><b>최종 승인 · 사용 안 함</b><div class="caption muted">신청 당시 설정에 따라 DA 승인으로 완료됩니다</div></div></div>'}
     </div>`;
   }
-  const KN = { word: '단어', term: '용어', domain: '도메인', code: '코드' };
-  const opOf = it => it.act === '미사용' ? '미사용' : (it.id && it.act !== '추가') ? '변경' : '추가';
+  const KN = { word: '단어', term: '용어', domain: '도메인', code: '코드', entity: '엔터티 용어' };
+  // opOf: the shared one from app.js (추가 · 변경 · 미사용 · 삭제)
+  /* DX-12 per-item reject: marks live on this page until the approver approves (then they are written to the items) */
+  const MARKS = {};          // docId → { itemIndex: reason }
+  let editRej = null;        // { id, i } — the row whose inline reason form is open
+  const markable = d => !!d && d.type === 'dict' && inQueue(d) && (d.items || []).length > 0;
+  const marksOf = d => (d && MARKS[d.id]) || {};
+  const newMarks = d => Object.keys(marksOf(d)).length;
+  // the document as the checks should see it: marked items count as rejected
+  const withMarks = d => { const m = marksOf(d); if (!Object.keys(m).length) return d; return Object.assign({}, d, { items: d.items.map((it, i) => m[i] != null ? Object.assign({}, it, { rej: true, rejWhy: m[i] }) : it) }); };
+  const rejTotal = d => (withMarks(d).items || []).filter(it => it.rej).length;
+  const allRejected = d => d.type === 'dict' && (d.items || []).length > 0 && rejTotal(d) === d.items.length;
+  const itemTotal = d => d.sample ? d.n : ((d.items || []).length || d.n);
   // the rows the requester actually submitted (S1): op · fields before/after · per-row choice and reason
   function itemRows(d) {
     const L = d.items || [];
     if (!L.length) return `<div class="banner danger">${icon('err')}<div>이 문서에는 반영할 항목이 없습니다. 승인해도 사전이 바뀌지 않습니다. 반려 후 항목을 담아 다시 신청해야 합니다.</div></div>`;
-    return `<table class="tbl items-t"><colgroup><col class="c1"><col class="c2"><col><col class="c4"><col></colgroup><thead><tr><th>${d.batch ? '행' : '#'}</th><th>구분</th><th>항목</th><th>약어 · 도메인</th><th>바뀌는 칸 / 선택·사유</th></tr></thead><tbody>${L.map((it, i) => {
+    const mk = marksOf(d), canMk = markable(d);
+    const prior = L.filter(it => it.rej).length;
+    const head = canMk ?`<div class="caption muted u-mb-8">일부 항목만 문제가 있으면 행마다 <b>[이 항목 반려]</b>로 빼고 나머지를 승인할 수 있습니다. 반려한 항목은 반영하지 않고 신청자 바구니로 돌려보냅니다.</div>` : prior ? `<div class="caption muted u-mb-8">항목 ${prior}건은 결재 중 반려돼 반영하지 않습니다(신청자 바구니로 돌아감).</div>` : '';
+    return head + `<table class="tbl items-t"><colgroup><col class="c1"><col class="c2"><col><col class="c4"><col></colgroup><thead><tr><th>${d.batch ? '행' : '#'}</th><th>구분</th><th>항목</th><th>약어 · 도메인</th><th>바뀌는 칸 / 선택·사유</th></tr></thead><tbody>${L.map((it, i) => {
       const op = opOf(it);
-      const fields = it.chg ? Object.entries(it.chg).map(([k, v]) => `${k}: <span class="diff-old">${v[0] || '(빈 값)'}</span> → <span class="diff-new">${v[1]}</span>`).join('<br>') : '';
+      const fv = x => Array.isArray(x) ? x.map(y => typeof y === 'object' ? `${y.v} ${y.nm}${y.st === '미사용' ? '(미사용)' : ''}` : y).join(', ') : x;   // code values arrive as objects
+      const fields = it.chg ? Object.entries(it.chg).map(([k, v]) => `${k}: <span class="diff-old">${esc(fv(v[0])) || '(빈 값)'}</span> → <span class="diff-new">${esc(fv(v[1]))}</span>`).join('<br>') : '';
       const extra = [it.pick ? `분해 후보 선택: <b>${it.pick}</b>` : '', it.why ? `사유: ${it.why}` : '', it.warn ? `${icon('warn', 12)} 경고 확인: ${it.warn}` : '', it.from ? `<span class="faint">${it.from}</span>` : ''].filter(Boolean).join('<br>');
-      return `<tr><td class="mono">${it.row || i + 1}</td><td class="muted">${KN[it.k] || '항목'} ${op}</td><td><b>${it.name}</b>${it.id ? ` <span class="mono faint">${it.id}</span>` : ''}</td><td class="mono">${it.abbr || ''}${it.dom ? ' · ' + it.dom : ''}</td><td class="caption wrap">${fields}${fields && extra ? '<br>' : ''}${extra || (fields ? '' : '—')}</td></tr>`; }).join('')}</tbody></table>
+      const marked = mk[i] != null;
+      const rejCell = it.rej ? `<div class="u-mt-4">${tag('err', '반려')} <span class="rej-why">${esc(it.rejWhy || '')}</span>${it.rejBy ? ` <span class="faint">${esc(it.rejBy)}${it.rejStep ? ' · ' + it.rejStep : ''}</span>` : ''}</div>`
+        : marked ? `<div class="u-mt-4">${tag('err', '반려')} <span class="rej-why">${esc(mk[i])}</span> <button type="button" class="btn sm ghost" data-unrej="${i}" aria-label="${esc(it.name)} 반려 취소">반려 취소</button></div>`
+        : canMk && editRej && editRej.id === d.id && editRej.i === i ? `<div class="rej-f"><input class="input" id="rej-in" maxlength="80" placeholder="반려 사유 (필수)" aria-label="${esc(it.name)} 반려 사유"><button type="button" class="btn sm danger" data-rej-ok="${i}">반려</button><button type="button" class="btn sm ghost" data-rej-no="${i}">취소</button></div>`
+        : canMk ? `<div class="u-mt-4"><button type="button" class="btn sm ghost" data-rej="${i}" aria-label="${esc(it.name)} 항목 반려">${icon('x', 12)} 이 항목 반려</button></div>` : '';
+      const dep = it.dep && it.dep.length ? `<div class="caption muted u-mt-4">함께 신청한 단어 ${it.dep.map(esc).join(' · ')}에 의존</div>` : '';
+      return `<tr class="${it.rej || marked ? 'rej' : ''}"><td class="mono">${it.row || i + 1}</td><td class="muted">${KN[it.k] || '항목'} ${op}</td><td><b>${it.name}</b>${it.id ? ` <span class="mono faint">${it.id}</span>` : ''}${dep}</td><td class="mono">${it.abbr || ''}${it.dom ? ' · ' + it.dom : ''}</td><td class="caption wrap">${fields}${fields && extra ? '<br>' : ''}${extra || (fields ? '' : '—')}${rejCell}</td></tr>`; }).join('')}</tbody></table>
       ${d.sample ? `<div class="banner warning u-mt-8">${icon('warn')}<div>목업 시드: 이 문서는 ${d.n}건 중 <b>대표 ${L.length}행만</b> 담고 있습니다. 승인하면 이 ${L.length}행만 반영됩니다.</div></div>` : ''}`;
   }
   // check tab: same judgement as the final-approval re-check (checkDictDoc)
@@ -159,11 +256,11 @@ window.pageInit = function () {
     }
     // finished documents show what the approval applied. re-checking them against today's dictionary would only report themselves as duplicates
     if (d.step === 'done') { const a = d.applied || {}; return `<div class="banner">${icon('check')}<div>최종 승인 때 검사를 통과해 반영했습니다. 반영 ${a.applied != null ? a.applied : (d.items || []).length}건${a.failed && a.failed.length ? ` · 실패 ${a.failed.length}건(${a.failed.map(f => f.join(': ')).join(', ')})` : ''}. 반영 뒤 바뀐 내용은 <a href="dict-history.html">사전 변경 내역</a>에서 확인하세요.</div></div>`; }
-    const R = checkDictDoc(d);
+    const R = checkDictDoc(withMarks(d));   // DX-12: rejected (or marked) items are skipped
     if (!R.length) return '<div class="caption muted">검사할 항목이 없습니다.</div>';
     const pol = getPolicy(); const pv = `<div class="caption muted u-mb-8">검수 기준: 신청 시점 v${d.policyVer || '—'} · 현재 v${pol.ver}${d.policyVer && d.policyVer !== pol.ver ? '. <b class="u-warning">신청 뒤 기준이 바뀌어 현재 기준으로 다시 검사합니다</b>' : ''}</div>`;
     const n = R.filter(r => r.problems.length).length;
-    return pv + `<table class="tbl"><thead><tr><th>항목</th><th>구분</th><th>현재 사전 기준</th></tr></thead><tbody>${R.map(r => `<tr><td>${r.name}</td><td>${r.op}</td><td>${r.problems.length ? tag('err', r.problems.length + '건') + ' <span class="caption">' + r.problems.join(' / ') + '</span>' : tag('ok', '통과')}</td></tr>`).join('')}</tbody></table><div class="caption ${n ? '' : 'muted'} u-mt-8">${n ? `<b class="u-danger">${n}건 실패</b>. DA 승인과 최종 승인 모두 이 검사를 다시 하며, 실패가 있으면 승인하지 않고 이력에 남깁니다. 반려해 보완을 요청하세요.` : '승인할 때마다(DA·최종) 현재 사전 기준으로 다시 검사합니다.'}</div>`;
+    return pv + `<table class="tbl"><thead><tr><th>항목</th><th>구분</th><th>현재 사전 기준</th></tr></thead><tbody>${R.map(r => `<tr><td>${r.name}</td><td>${r.op}</td><td>${r.skip ? `<span class="caption muted">검사 제외 · ${r.skip}</span>` : r.problems.length ? tag('err', r.problems.length + '건') + ' <span class="caption">' + r.problems.join(' / ') + '</span>' : tag('ok', '통과')}</td></tr>`).join('')}</tbody></table><div class="caption ${n ? '' : 'muted'} u-mt-8">${n ? `<b class="u-danger">${n}건 실패</b>. DA 승인과 최종 승인 모두 이 검사를 다시 하며, 실패가 있으면 승인하지 않고 이력에 남깁니다. 반려해 보완을 요청하세요.` : '승인할 때마다(DA·최종) 현재 사전 기준으로 다시 검사합니다.'}</div>`;
   }
   function items(d) {
     if (d.kind === 'excel') { const b = batchOf(d.batch) || { counts: {}, file: '—', id: '—' }; const c = b.counts || {}; const s = d.sub || {   /* frozen in the document at submit (S1) */ new: c.new || 0, chg: c.chg || 0, pick: c.pick || 0, conflict: 0, unuse: 0, hold: (c.waitDiff || 0) + (c.pre || 0), ex: (c.err || 0) + (c.same || 0) }; return `<div class="mline"><span><b>${s.new}</b>신규</span><span><b>${s.chg + s.conflict}</b>변경</span><span><b>${s.pick}</b>후보 확정</span><span><b>${s.unuse}</b>미사용</span></div>
@@ -213,8 +310,9 @@ window.pageInit = function () {
       else if (lv) parts.push(`<button class="sumlink" data-go="items">진행 중 연결 신청 ${lv}건</button>`);
       parts.push(fail ? `<button class="sumlink err" data-go="check">검사 실패 ${fail}건</button>` : '<span>검사 통과</span>');
     } else {
-      parts.push(`<span>확인할 항목 <b>${d.n}</b>건</span>`);
-      let f = 0; try { f = checkDictDoc(d).filter(r => r.problems.length).length; } catch (e) {}
+      const rj = rejTotal(d);
+      parts.push(`<span>확인할 항목 <b>${d.n}</b>건${rj ? ` <span class="muted">· 반려 ${rj}</span>` : ''}</span>`);
+      let f = 0; try { f = checkDictDoc(withMarks(d)).filter(r => r.problems.length).length; } catch (e) {}
       parts.push(f ? `<button class="sumlink err" data-go="check">검사 실패 ${f}건</button>` : '<span>검사 통과</span>');
     }
     parts.push(`<span>${docAge(d)}일째${docLate(d) ? ' · <b class="u-danger">기한 넘김</b>' : ''}</span>`);
@@ -237,8 +335,8 @@ window.pageInit = function () {
     $('de-f').onsubmit = e => {
       e.preventDefault(); const v = $('de-q').value.trim().toUpperCase(); if (!v) { $('de-q').focus(); return; }
       const d = docs.find(x => x.id.toUpperCase() === v);
-      if (!d || !canSeeDoc(d)) { $('de-m').textContent = `${v} 신청을 찾을 수 없거나 볼 수 없습니다.`; $('de-q').select(); return; }
-      sel = d.id; if (!BOX[box][1](d)) box = BOX.queue[1](d) ? 'queue' : BOX.mine[1](d) ? 'mine' : BOX.cc[1](d) ? 'cc' : 'all';
+      if (!d || !canView(d)) { $('de-m').textContent = `${v} 신청을 찾을 수 없거나 볼 수 없습니다.`; $('de-q').select(); return; }
+      sel = d.id; box = boxFor(d);
       drawBoxes(); drawRows(); panel(); const h = document.querySelector('#pn-doc .rp-head h2'); if (h) { h.tabIndex = -1; h.focus(); }
     };
   }
@@ -249,13 +347,21 @@ window.pageInit = function () {
     if (!d) { p.classList.remove('open'); return; }
     p.classList.add('open');
     // deep links follow the same visibility rule as the lists (CL9-22)
-    if (!canSeeDoc(d)) { deadEnd(p, d.id, '열람 권한이 없습니다', inReview(d) ? '결재 중인 문서는 품의자와 이 문서의 결재 담당자만 볼 수 있습니다. 결재가 끝나면 참조자 · 결재 역할도 볼 수 있습니다.' : `이 결재 문서는 신청자 · 참조자 · 결재 역할(DA · 기관 담당자)만 볼 수 있습니다. 지금 역할: ${ME.roles.map(r => ROLE_NAME[r]).join('·') || '조회만'}`); return; }
+    if (!canView(d)) { deadEnd(p, d.id, '열람 권한이 없습니다', inReview(d) ? '결재 중인 문서는 품의자와 이 문서의 결재 담당자만 볼 수 있습니다. 결재가 끝나면 참조자 · 결재 역할도 볼 수 있습니다.' : `이 결재 문서는 신청자 · 참조자 · 결재 역할(DA · 기관 담당자)만 볼 수 있습니다. 지금 역할: ${ME.roles.map(r => ROLE_NAME[r]).join('·') || '조회만'}`); return; }
     const mine = d.req === ME.id, live = ['da', 'final'].includes(d.step);
-    const hist = [{ at: d.date, who: nameOf(d.req), act: '신청', why: d.reason }].concat(d.hist || []);
+    const ro = roView(d);   // DX-11: someone else's request — read-only, no decisions
+    // comments (DX-11) sit in the history in time order; they have no approval effect
+    const hist = [{ at: d.date, who: nameOf(d.req), act: '신청', why: d.reason }].concat(d.hist || [])
+      .concat((d.comments || []).map(c => ({ at: c.at, who: c.who, act: '의견', why: esc(c.txt), cm: true })))
+      .map((h, i) => [h, i]).sort((a, b) => { const x = parseAt(a[0].at), y = parseAt(b[0].at); return (isNaN(x) || isNaN(y) || x === y) ? a[1] - b[1] : x - y; }).map(x => x[0]);
     let right = '';
     const blockLv = d.type === 'model' && !(d.step === 'da' && hasFinal(d)) ? [...new Set(linkedReqs(d).filter(x => x.live).map(x => x.doc ? x.doc.id : x.at))] : [];
+    const nm = newMarks(d), okN = itemTotal(d) - rejTotal(d);
     if (inQueue(d) && blockLv.length) right = `<div class="foot-zone"><span class="caption u-danger">${icon('err', 12)} ${blockLv.join(', ')} 완료 전에는 확정할 수 없습니다</span><button class="btn danger" data-open="mo-reject">반려</button><button class="btn primary" disabled aria-disabled="true" title="연결 용어 신청이 끝나야 확정할 수 있습니다">${mine ? '자기 승인' : '승인'}</button></div>`;
-    else if (inQueue(d)) right = `<div class="foot-zone"><span class="zl">${stepRole(d.step)}로서</span><button class="btn danger" data-open="mo-reject">반려</button><button class="btn primary" id="btn-apr">${mine ? '자기 승인' : '승인'}</button></div>`;
+    // DX-12: every item rejected → it is an ordinary whole-document rejection
+    else if (inQueue(d) && allRejected(d)) right = `<div class="foot-zone"><span class="caption muted">모든 항목을 반려해 문서 반려로 처리합니다</span><button class="btn danger" data-open="mo-reject" id="btn-rejall">문서 반려 (항목 ${d.items.length}건)</button></div>`;
+    else if (inQueue(d)) right = `<div class="foot-zone"><span class="zl">${stepRole(d.step)}로서</span><button class="btn danger" data-open="mo-reject">${nm ? '문서 전체 반려' : '반려'}</button><button class="btn primary" id="btn-apr">${nm ? (mine ? `자기 승인 ${okN}건 · ${nm}건 반려` : `${okN}건 승인 · ${nm}건 반려`) : (mine ? '자기 승인' : '승인')}</button></div>`;
+    else if (ro) right = `<span class="caption muted">읽기 전용 · 지금은 <b>${stepRole(d.step)}</b> 차례입니다</span>`;
     else if (d.step === 'done') right = `<div class="foot-zone"><span class="caption muted">완료${(d.hist || []).length ? ' · ' + d.hist[d.hist.length - 1].at + ' ' + d.hist[d.hist.length - 1].who : ''}</span>${d.type === 'model' ? `<a class="btn primary" href="model.html?area=${d.area}&snap=${d.id}">v${d.ver} 확정본 보기</a>` : ''}</div>`;
     else if (live) right = `<span class="caption muted">지금은 <b>${stepRole(d.step)}</b> 차례입니다${ME.has(d.step === 'da' ? 'da' : 'owner') ? '' : ' · 내 역할로는 조회만 가능'}</span>`;
     else right = `<span class="caption muted">${STEP_NAME[d.step]}. 더 처리할 일이 없습니다</span>`;
@@ -269,12 +375,14 @@ window.pageInit = function () {
         ${d.type === 'model' ? `<div class="linkrow"><a href="model.html?area=${d.area}&snap=${d.id}">${icon('ext')}v${d.ver} 모델 보기</a><button data-open="mo-diff">${icon('compare')}v${d.ver - 1} 대비 변경</button><a href="outputs.html?k=tbl&area=${d.area}${d.step === 'done' ? '&snap=' + d.id : ''}">${icon('file')}산출물</a></div>` : d.batch ? `<div class="linkrow">${canSeeBatch(batchOf(d.batch)) ? `<a href="uploads.html?b=${d.batch}">${icon('upload')}업로드 ${d.batch}</a>` : `<span class="caption muted">업로드 ${d.batch}: 원본 파일은 올린 사람과 DA만 볼 수 있습니다</span>`}</div>` : ''}
       </div>
       <div class="rp-body">
+        ${ro ? `<div class="banner info u-mb-12">${icon('info')}<div><b>다른 사람의 신청 — 읽기 전용</b> · 같은 항목은 이 결재가 끝난 뒤 신청할 수 있습니다. 의견은 [처리 이력]에서 남길 수 있습니다.</div></div>` : ''}
         ${line(d)}
         <div class="section-t">신청 사유</div><div>${d.reason}</div>
         <div class="tabs u-mt-12"><button class="on" data-tab="items">항목 <span class="n">${d.n}</span></button><button data-tab="check">검사 결과</button><button data-tab="hist">처리 이력 <span class="n">${hist.length}</span></button></div>
         <div class="pane on" data-pane="items">${items(d)}</div>
         <div class="pane" data-pane="check">${checks(d)}</div>
-        <div class="pane" data-pane="hist"><table class="tbl"><tbody>${hist.map(h => `<tr><td class="mono u-nowrap">${h.at}</td><td>${h.who}</td><td>${h.act}${h.self ? ' <span class="muted">(자기 승인)</span>' : ''}</td><td class="caption">${h.why || ''}</td></tr>`).join('')}</tbody></table></div>
+        <div class="pane" data-pane="hist"><table class="tbl"><tbody>${hist.map(h => `<tr><td class="mono u-nowrap">${h.at}</td><td>${h.who}</td><td>${h.cm ? `${icon('pen', 12)} 의견` : h.act}${h.self ? ' <span class="muted">(자기 승인)</span>' : ''}</td><td class="caption">${h.why || ''}</td></tr>`).join('')}</tbody></table>
+          ${d.type === 'dict' && live ? `<form class="u-flex u-gap-8 u-mt-12" id="cm-f" autocomplete="off"><input class="input u-flex-1" id="cm-in" maxlength="200" placeholder="의견 (결재에는 영향 없음 · 신청자에게 알림)" aria-label="의견"><button class="btn sm" type="submit">의견 남기기</button></form>` : ''}</div>
       </div>
       <div class="rp-foot">${left || (inQueue(d) ? KBD : '')}<span class="grow"></span>${right}</div>`;
     p.querySelectorAll('[data-go]').forEach(b => b.onclick = () => { const tb = p.querySelector(`.tabs [data-tab="${b.dataset.go}"]`); if (tb) { tb.click(); tb.focus(); } });
@@ -285,13 +393,52 @@ window.pageInit = function () {
       pending = { id: d.id, step: d.step };   // the dialog is bound to THIS document and step (CX4-01)
       const live = linkedReqs(d).filter(x => x.live); const ackTxt = `진행 중인 용어 신청 ${live.length}건(${[...new Set(live.map(x => x.doc ? x.doc.id : x.at))].join(', ')})을 확인했습니다. 반려되면 확정본에서 다시 맞춰야 합니다`;
       ['apr', 'self'].forEach(k => { $(k + '-ack-w').hidden = !live.length; $(k + '-ack').checked = false; $(k + '-ack-t').textContent = ackTxt; });
-      if (mine) { $('self-step').textContent = `${d.id} · ${stepRole(d.step)}`; $('self-why').value = ''; $('mo-self').classList.add('open'); $('mo-self')._opener = a; $('self-why').focus(); }
-      else { $('apr-sum').innerHTML = `<b>${d.id}</b> ${d.title}${d.batch ? ` · ${d.n}건` : ''}<br>${d.step === 'da' && hasFinal(d) ? '승인하면 최종 승인(기관 담당자)으로 넘어갑니다.' : '승인하면 ' + (d.type === 'model' ? '<b>확정본</b>이 되고, 모델 화면에서 다음 작업 버전을 시작할 수 있습니다.' : '사전에 <b>반영</b>되고 각 항목의 버전이 올라갑니다.')}`; $('apr-note').value = ''; $('mo-apr').classList.add('open'); $('mo-apr')._opener = a; }
+      if (mine) { $('self-step').textContent = `${d.id} · ${stepRole(d.step)}${nm ? ` (항목 ${nm}건 반려 · ${okN}건 승인)` : ''}`; $('self-why').value = ''; $('mo-self').classList.add('open'); $('mo-self')._opener = a; $('self-why').focus(); }
+      else { $('apr-sum').innerHTML = `<b>${d.id}</b> ${d.title}${d.batch ? ` · ${d.n}건` : ''}<br>${d.step === 'da' && hasFinal(d) ? '승인하면 최종 승인(기관 담당자)으로 넘어갑니다.' : '승인하면 ' + (d.type === 'model' ? '<b>확정본</b>이 되고, 모델 화면에서 다음 작업 버전을 시작할 수 있습니다.' : '사전에 <b>반영</b>되고 각 항목의 버전이 올라갑니다.')}${nm ? `<br><b class="u-danger">항목 ${nm}건 반려</b> — 반영하지 않고 신청자(${nameOf(d.req)}) 바구니로 돌려보냅니다. 나머지 ${okN}건을 승인합니다.` : ''}`; $('apr-note').value = ''; $('mo-apr').classList.add('open'); $('mo-apr')._opener = a; }
       updateNeeds();
     };
     const wd = $('btn-wd'); if (wd) wd.onclick = () => { pending = { id: d.id, step: d.step }; $('wd-t').textContent = `회수 · ${d.id}`; $('mo-wd').classList.add('open'); $('mo-wd')._opener = wd; $('wd-why').focus(); updateNeeds(); };
     const rj = p.querySelector('[data-open="mo-reject"]'); if (rj) rj.addEventListener('click', () => { pending = { id: d.id, step: d.step }; $('rej-t').textContent = `반려 · ${d.id}`; });
+    // all items rejected: the per-item reasons become the rejection opinion (editable)
+    const ra = $('btn-rejall'); if (ra) ra.addEventListener('click', () => { const w = withMarks(d).items.map(it => `${it.name}: ${it.rejWhy || ''}`).join(' · '); $('rej-why').value = `항목 전체 반려 — ${w}`; updateNeeds(); });
+    // DX-11 comment: appended to the document, shown in the history, no effect on the approval
+    const cf = $('cm-f'); if (cf) cf.onsubmit = e => {
+      e.preventDefault(); const txt = $('cm-in').value.trim(); if (!txt) { $('cm-in').focus(); return; }
+      if (liveRoleChanged()) { staleRoleToast(); return; }
+      docs = getDocs(); const x = docs.find(y => y.id === d.id);
+      if (!x || !canView(x)) { toast('문서를 다시 확인하세요. 결재가 끝났거나 볼 수 없습니다', 'danger'); drawRows(); panel(); return; }
+      x.comments = (x.comments || []).concat([{ at: nowStr(), who: ME.name, whoId: ME.id, txt }]); saveDocs(docs);
+      if (x.req !== ME.id) pushNotif({ to: [x.req], k: 'res', t: `${x.id}에 의견이 달렸습니다`, m: `${ME.name} · ${txt.slice(0, 60)}`, href: `approvals.html?box=mine&doc=${x.id}` });
+      toast('의견을 남겼습니다. 처리 이력에 보이며 결재에는 영향이 없습니다', 'success');
+      panel(); const hb = document.querySelector('#pn-doc .tabs [data-tab="hist"]'); if (hb) hb.click(); const ci = $('cm-in'); if (ci) ci.focus();
+    };
   }
+  // DX-12 inline per-item reject (one delegated listener; the panel is re-rendered keeping its scroll)
+  function repaint(focusSel) {
+    const body = document.querySelector('#pn-doc .rp-body'); const top = body ? body.scrollTop : 0;
+    panel(); const nb = document.querySelector('#pn-doc .rp-body'); if (nb) nb.scrollTop = top;
+    const f = focusSel && document.querySelector('#pn-doc ' + focusSel); if (f) f.focus();
+  }
+  function confirmRej(i) {
+    const d = docs.find(x => x.id === sel); const inp = $('rej-in'); if (!d || !inp) return;
+    const why = inp.value.trim(); if (!why) { toast('반려 사유를 입력해야 합니다', 'danger'); inp.focus(); return; }
+    (MARKS[d.id] = MARKS[d.id] || {})[i] = why; editRej = null;
+    repaint(`[data-unrej="${i}"]`);
+  }
+  $('pn-doc').addEventListener('click', e => {
+    const d = docs.find(x => x.id === sel); if (!d) return;
+    const b = e.target.closest('[data-rej], [data-unrej], [data-rej-ok], [data-rej-no]'); if (!b) return;
+    if (!markable(d)) { toast('지금 역할로는 이 문서의 항목을 반려할 수 없습니다', 'danger'); return; }
+    if (b.dataset.rej != null) { editRej = { id: d.id, i: +b.dataset.rej }; repaint('#rej-in'); }
+    else if (b.dataset.unrej != null) { const m = MARKS[d.id] || {}; delete m[+b.dataset.unrej]; repaint(`[data-rej="${b.dataset.unrej}"]`); }
+    else if (b.dataset.rejOk != null) confirmRej(+b.dataset.rejOk);
+    else if (b.dataset.rejNo != null) { const i = editRej ? editRej.i : +b.dataset.rejNo; editRej = null; repaint(`[data-rej="${i}"]`); }
+  });
+  $('pn-doc').addEventListener('keydown', e => {
+    if (e.target.id !== 'rej-in') return;
+    if (e.key === 'Enter') { e.preventDefault(); confirmRej(editRej ? editRej.i : -1); }
+    else if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); const i = editRej ? editRej.i : -1; editRej = null; repaint(`[data-rej="${i}"]`); }
+  });
   let pending = null;
   // undo for the mock: the whole state layer before the decision (a real server would reverse the step)
   const snapStore = () => { const o = {}; Object.keys(localStorage).filter(k => k.startsWith('dbm-')).forEach(k => { o[k] = localStorage.getItem(k); }); return o; };
@@ -308,6 +455,34 @@ window.pageInit = function () {
   let captured = null, realToast = null;
   const captureToast = () => { captured = null; realToast = window.toast; window.toast = (m, type) => { if (!captured || type === 'danger') captured = [m, type]; }; };
   const releaseToast = () => { if (realToast) { window.toast = realToast; realToast = null; } };
+  // DX-12: write the page marks into the document (it.rej · rejWhy · rejBy · rejStep) and record one history line
+  function markRejected(d) {
+    const mk = MARKS[d.id] || {}; delete MARKS[d.id]; editRej = null;
+    const back = Object.keys(mk).map(Number).filter(i => d.items && d.items[i] && !d.items[i].rej).map(i => Object.assign(d.items[i], { rej: true, rejWhy: mk[i], rejBy: ME.name, rejStep: stepRole(d.step) }));
+    if (back.length) addHist(d, { act: `항목 ${back.length}건 반려`, why: back.map(it => `${it.name}: ${esc(it.rejWhy)}`).join(' · '), step: d.step });
+    return back;
+  }
+  // rejected items go back to the REQUESTER's basket (per-user key, written directly — addToBasket is for the current user),
+  // their '진행 중' markers in the dictionary are released, and the requester is told
+  function returnRejected(d, back) {
+    const k = 'dbm-basket-' + d.req; let b = null;
+    try { b = JSON.parse(localStorage.getItem(k) || 'null'); } catch (e) {}
+    if (!b || !Array.isArray(b.items)) b = { items: [], reason: '', at: '' };
+    let n = 0;
+    back.forEach(it => {
+      const c = JSON.parse(JSON.stringify(it)); ['rej', 'rejWhy', 'rejBy', 'rejStep', 'dep', 'row'].forEach(f => delete c[f]);
+      if (b.items.some(x => (c.id && x.id === c.id) || (!c.id && !x.id && x.k === c.k && x.name === c.name))) return;
+      b.items.push(Object.assign({ key: 'b' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5) }, c, { back: `${d.id} 항목 반려: ${it.rejWhy}` })); n++;
+    });
+    if (!b.reason) b.reason = d.reason || '';
+    const t = new Date(); b.at = `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, '0')}-${String(t.getDate()).padStart(2, '0')} ${nowStr().split(' ')[1]}`;
+    try { localStorage.setItem(k, JSON.stringify(b)); } catch (e) {}
+    if (d.req === ME.id) { if (window.refreshTop) window.refreshTop(); document.dispatchEvent(new CustomEvent('basket')); }
+    const ids = back.filter(it => it.id).map(it => it.id);
+    if (ids.length) { const dict = getDict(); dict.forEach(x => { if (x.pending === d.id && ids.includes(x.id)) { delete x.pending; if (x.ver === 0 && x.st === '신청 중') x.st = '보완 필요'; } }); saveDict(dict); }
+    if (d.req !== ME.id) pushNotif({ to: [d.req], k: 'res', t: `${d.id} 항목 ${back.length}건이 반려되어 바구니로 돌아갔습니다`, m: back.map(it => `${it.name}: ${it.rejWhy}`).join(' · '), href: 'dictionary.html' });
+    return n;
+  }
   function act(kind, why, self) {
     const before = snapStore();
     // the user this page was opened with must still be the selected user (another tab may have switched. CX9-06)
@@ -333,16 +508,21 @@ window.pageInit = function () {
       // re-check the SUBMITTED snapshot (not the area's shared cache) before approving a model confirmation (MD-20)
       if (d.type === 'model') { const bad = (d.model ? modelBad(d.model) : (d.snap ? d.snap.bad : 0)) + reqEnded(d.model).length; if (bad > 0) { addHist(d, { act: '재검사 실패. 승인 취소', why: `제출 모델 미준수 ${bad}건`, step: d.step }); saveDocs(docs); toast(`재검사 실패. 제출된 모델에 미준수 ${bad}건이 있어 승인하지 않았습니다. 이력에 남겼습니다`, 'danger'); drawRows(); panel(); return; } }
       // dictionary documents: same checks before the final step applies anything
-      if (d.type === 'dict' && ['da', 'final'].includes(d.step)) { const bad = checkDictDoc(d).filter(r => r.problems.length); if (bad.length) { addHist(d, { act: '재검사 실패. 승인 취소', why: bad.map(r => `${r.name}: ${r.problems[0]}`).join(' · '), step: d.step }); saveDocs(docs); toast(`재검사 실패 ${bad.length}건. 사전에 반영하지 않았습니다. [검사 결과] 탭과 이력을 확인하고 반려하세요`, 'danger'); drawRows(); panel(); return; } }
+      if (d.type === 'dict' && allRejected(d)) { toast('모든 항목이 반려돼 승인할 수 없습니다. 문서 반려로 처리하세요', 'danger'); panel(); return; }
+      if (d.type === 'dict' && ['da', 'final'].includes(d.step)) { const bad = checkDictDoc(withMarks(d)).filter(r => r.problems.length); if (bad.length) { addHist(d, { act: '재검사 실패. 승인 취소', why: bad.map(r => `${r.name}: ${r.problems[0]}`).join(' · '), step: d.step }); saveDocs(docs); toast(`재검사 실패 ${bad.length}건. 사전에 반영하지 않았습니다. [검사 결과] 탭과 이력을 확인하고 반려하세요`, 'danger'); drawRows(); panel(); return; } }
       if (box === 'queue') captureToast();
+      // DX-12: marked items are written to the document as rejected (with reason · who · step) before the approval itself
+      const back = d.type === 'dict' ? markRejected(d) : [];
       addHist(d, { act: `${stepRole(d.step)} 승인`, why, step: d.step, self });
       const was = d.step; d.step = was === 'da' && hasFinal(d) ? 'final' : 'done'; d.decisionPolicyVer = getPolicy().ver;
       saveDocs(docs);
+      const backN = back.length ? returnRejected(d, back) : 0;
+      const backTxt = back.length ? ` · 항목 ${back.length}건 반려(${d.req === ME.id ? '내' : '신청자'} 바구니로 ${backN}건 돌려보냄)` : '';
       if (d.step === 'final') {
         const fin = approversFor(d, 'final'); pushNotif({ to: fin.map(u => u.id), k: 'appr', t: `${d.id}. 최종 승인 차례`, m: d.title, href: `approvals.html?doc=${d.id}` });
         if (!fin.length) addHist(d, { act: '최종 승인 담당자 없음 — 담당 지정 필요', step: 'final' }), saveDocs(docs);
         notifyReq(`${d.id} DA 승인됨. 최종 승인 대기`, d.title);
-        toast(fin.length ? `DA 승인. 최종 승인 담당자 ${fin.length}명에게 알렸습니다` : 'DA 승인. 이 시스템을 맡은 최종 승인자가 없어 결재가 멈춰 있습니다 — Admin에게 담당 지정을 요청하세요', fin.length ? 'info' : 'danger');
+        toast(fin.length ? `DA 승인. 최종 승인 담당자 ${fin.length}명에게 알렸습니다${backTxt}` : 'DA 승인. 이 시스템을 맡은 최종 승인자가 없어 결재가 멈춰 있습니다 — Admin에게 담당 지정을 요청하세요', fin.length ? 'info' : 'danger');
       } else if (d.type === 'model') {
         notifyReq(`${d.id} 최종 승인. v${d.ver} 확정본`, d.title);
         toast(`${was === 'da' ? 'DA 승인으로 완료' : '최종 승인'}. v${d.ver}이 확정본이 됐습니다. 모델 화면에서 다음 작업 버전을 시작할 수 있습니다`, 'success', { label: '확정본 보기', fn: () => location.href = `model.html?area=${d.area}&snap=${d.id}` });
@@ -351,14 +531,15 @@ window.pageInit = function () {
         const res = applyDictDoc(d);
         d.applied = res; saveDocs(docs);
         // notify only when something in use changed (changed/unused items), and point at the area that uses them
-        const touched = (d.items || []).filter(it => it.id && it.act !== '추가');
+        const touched = (d.items || []).filter(it => it.id && it.act !== '추가' && !it.rej);
         if (touched.length) pushNotif({ to: Object.values(USERS).filter(u => u.roles.includes('modeler')).map(u => u.id), k: 'sys', t: `${d.id} 사전 반영. 사용 중인 항목 ${touched.length}건 변경`, m: `${touched.map(it => it.name).join(', ')} · 사용하는 모델은 [표준 맞추기]에서 다시 판정`, href: 'standardize.html' });   // one grouped notice per document
-        if (d.batch) { const bs = getBatches(); const b = bs.find(x => x.id === d.batch); if (b) { b.status = '반영됨'; b.applied = { doc: d.id, ids: (d.items || []).map(it => it.name), at: nowStr() }; saveBatches(bs); } }
+        if (d.batch) { const bs = getBatches(); const b = bs.find(x => x.id === d.batch); if (b) { b.status = '반영됨'; b.applied = { doc: d.id, ids: (d.items || []).filter(it => !it.rej).map(it => it.name), at: nowStr() }; saveBatches(bs); } }
         notifyReq(`${d.id} 반영됨. ${d.batch ? '반영본 내려받기' : '사전에 반영'}`, d.title + (d.batch ? ' · 엑셀 원본을 반영본으로 맞추세요' : ''));
-        toast(`최종 승인. 사전에 ${res.applied}건 반영${d.sample ? `(목업 시드: ${d.n}건 중 대표 행만)` : ''}${res.failed.length ? ` · 실패 ${res.failed.length}건` : ''} · 항목 버전이 올라갔습니다(제정차수는 DA 공표 때만)`, res.failed.length ? 'danger' : 'success', d.batch ? { label: '반영본 내려받기', fn: () => toast(`반영본_${d.batch}.xlsx. 새 버전·ID가 들어간 편집용 엑셀`, 'info') } : null);
+        toast(`최종 승인. 사전에 ${res.applied}건 반영${d.sample ? `(목업 시드: ${d.n}건 중 대표 행만)` : ''}${res.failed.length ? ` · 실패 ${res.failed.length}건` : ''}${backTxt} · 항목 버전이 올라갔습니다(제정차수는 DA 공표 때만)`, res.failed.length ? 'danger' : 'success', d.batch ? { label: '반영본 내려받기', fn: () => toast(`반영본_${d.batch}.xlsx. 새 버전·ID가 들어간 편집용 엑셀`, 'info') } : null);
       }
     } else if (kind === 'reject') {
       if (box === 'queue') captureToast();
+      delete MARKS[d.id]; editRej = null;   // a whole-document rejection replaces any per-item marks
       addHist(d, { act: '반려', why, step: d.step }); d.step = 'rejected'; saveDocs(docs);
       const rel = releaseDoc(d);   // pending markers of this document are released → the requester can re-request (CL9-07)
       notifyReq(`${d.id} 반려됨. 보완 필요`, why);
@@ -415,7 +596,7 @@ window.pageInit = function () {
     $('new-banner').innerHTML = `<div class="banner">${icon('check')}<div class="grow"><b>${id} ${q.get('dup') ? '이미 신청돼 있습니다' : '신청됨'}</b>. ${d ? d.title : ''}. ${q.get('dup') ? '같은 내용의 진행 중 신청이 있어 새로 만들지 않았습니다.' : d && canActOn(d) ? '1단계를 내가 처리할 수 있어 바로 대기함에 들어왔습니다. 직접 승인하면 ‘자기 승인’으로 남습니다.' : `1단계 담당 ${d ? approversFor(d, 'da').length : 0}명에게 알렸습니다.`}</div></div>`;
     box = d && canActOn(d) ? 'queue' : 'mine';
   }
-  if (q.get('doc')) { sel = q.get('doc'); const d = docs.find(x => x.id === sel); if (d && !BOX[box][1](d)) box = BOX.queue[1](d) ? 'queue' : BOX.mine[1](d) ? 'mine' : BOX.cc[1](d) ? 'cc' : 'all'; }
+  if (q.get('doc')) { sel = q.get('doc'); const d = docs.find(x => x.id === sel); if (d) box = boxFor(d); }
   if (!sel) sel = (list()[0] || {}).id || null;
   drawBoxes(); drawRows(); panel();
 };

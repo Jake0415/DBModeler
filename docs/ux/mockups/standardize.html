@@ -26,7 +26,7 @@
     <h1>표준 맞추기</h1>
     
     <span class="badge" id="scope"></span>
-    <div class="actions"><span class="caption muted" id="analyzed"></span><button class="btn sm" id="reanalyze" data-busy="800">다시 분석</button></div>
+    <div class="actions"><span class="caption muted" id="analyzed"></span><a class="btn sm" id="to-wiz" href="term-wizard.html" title="이름을 단어로 나눠 대안을 비교하고 용어 등록·모델 반영까지 단계별로 진행">용어 자동분석</a><button class="btn sm" id="reanalyze" data-busy="800">다시 분석</button></div>
   </div>
   <div class="pad u-pb-0" id="from-import" hidden>
     <div class="banner info"><i data-ic=info></i><div class="grow" id="from-import-t"></div></div>
@@ -83,6 +83,7 @@ window.pageInit = function () {
   const LK = modelLock(AREA), VER = LK.model.ver;
   $('crumb-area').textContent = `${LK.model.name} · v${VER}`;
   $('back').href = `model.html?area=${AREA}`;
+  $('to-wiz').href = `term-wizard.html?area=${AREA}&from=standardize`;
   $('analyzed').textContent = `분석 ${nowStr()} · 사전 기준 현재(제정 ${getPub().cha}차 + 승인 반영분)`;
   if (q.get('from') === 'import') { const imp = J2('dbm-import-last'); $('from-import').hidden = false; $('from-import-t').innerHTML = `<b>DDL 가져오기가 끝나 자동으로 열었습니다.</b> ${imp && imp.area === AREA ? `가져온 ${imp.tables}개 테이블·${imp.cols}개 컬럼을 ‘${LK.model.name}’ 영역 v${VER}로 만들고 분석했습니다.` : '가져온 구조를 분석했습니다.'}`; }
   function J2(k) { try { return JSON.parse(dbmStore.get(k, 'null')); } catch (e) { return null; } }
