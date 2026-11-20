@@ -424,6 +424,12 @@ window.pageInit = function () {
     const why = inp.value.trim(); if (!why) { toast('반려 사유를 입력해야 합니다', 'danger'); inp.focus(); return; }
     (MARKS[d.id] = MARKS[d.id] || {})[i] = why; editRej = null;
     repaint(`[data-unrej="${i}"]`);
+    // review: items in this document that depend on the rejected word / domain / class would be left orphaned — offer to reject them together
+    const base = d.items[i], mk = MARKS[d.id];
+    const deps = (d.items || []).map((it, j) => [it, j]).filter(([it, j]) => j !== i && mk[j] == null && !it.rej && opOf(it) === '추가' && ((it.dep || []).includes(base.name)
+      || (base.k === 'word' && (it.k === 'term' || it.k === 'entity') && decompose(it.name, d.items.filter(o => o.k === 'word' && o !== base)).parts.some(p => p.w === base.name && p.unknown !== false && !p.ok))
+      || (base.k === 'domain' && it.dom === base.name) || (base.k === 'class' && it.k === 'domain' && String(it.name).startsWith(base.name))));
+    if (deps.length) toast(`‘${base.name}’에 기대는 항목 ${deps.length}건(${deps.map(([it]) => it.name).join(', ')})이 남아 있습니다 — 함께 반려하지 않으면 승인 재검사에서 걸립니다`, 'info', { label: `함께 반려 ${deps.length}건`, fn: () => { deps.forEach(([, j]) => { mk[j] = `‘${base.name}’ 반려에 따름 — ${why}`; }); repaint(); } });
   }
   $('pn-doc').addEventListener('click', e => {
     const d = docs.find(x => x.id === sel); if (!d) return;
@@ -529,12 +535,13 @@ window.pageInit = function () {
       } else {
         // each submitted item is applied to the dictionary (new V1 / version +1, pending cleared, one change row per item)
         const res = applyDictDoc(d);
-        d.applied = res; saveDocs(docs);
+        d.applied = res; if (res.failed.length) addHist(d, { act: `반영 실패 ${res.failed.length}건`, why: res.failed.map(f => `${f[0]}: ${f[1]}`).join(' · '), step: 'final' }); saveDocs(docs);   // review: a partial apply is visible, never a silent "done"
         // notify only when something in use changed (changed/unused items), and point at the area that uses them
         const touched = (d.items || []).filter(it => it.id && it.act !== '추가' && !it.rej);
         if (touched.length) pushNotif({ to: Object.values(USERS).filter(u => u.roles.includes('modeler')).map(u => u.id), k: 'sys', t: `${d.id} 사전 반영. 사용 중인 항목 ${touched.length}건 변경`, m: `${touched.map(it => it.name).join(', ')} · 사용하는 모델은 [표준 맞추기]에서 다시 판정`, href: 'standardize.html' });   // one grouped notice per document
         if (d.batch) { const bs = getBatches(); const b = bs.find(x => x.id === d.batch); if (b) { b.status = '반영됨'; b.applied = { doc: d.id, ids: (d.items || []).filter(it => !it.rej).map(it => it.name), at: nowStr() }; saveBatches(bs); } }
-        notifyReq(`${d.id} 반영됨. ${d.batch ? '반영본 내려받기' : '사전에 반영'}`, d.title + (d.batch ? ' · 엑셀 원본을 반영본으로 맞추세요' : ''));
+        const rejN = (d.items || []).filter(it => it.rej).length;
+        notifyReq(`${d.id} 반영됨 — 반영 ${res.applied}${rejN ? ` · 반려 ${rejN}(바구니로 돌아감)` : ''}${res.failed.length ? ` · 실패 ${res.failed.length}` : ''}`, d.title + (d.batch ? ' · 엑셀 원본을 반영본으로 맞추세요' : ''));
         toast(`최종 승인. 사전에 ${res.applied}건 반영${d.sample ? `(목업 시드: ${d.n}건 중 대표 행만)` : ''}${res.failed.length ? ` · 실패 ${res.failed.length}건` : ''}${backTxt} · 항목 버전이 올라갔습니다(제정차수는 DA 공표 때만)`, res.failed.length ? 'danger' : 'success', d.batch ? { label: '반영본 내려받기', fn: () => toast(`반영본_${d.batch}.xlsx. 새 버전·ID가 들어간 편집용 엑셀`, 'info') } : null);
       }
     } else if (kind === 'reject') {
@@ -542,8 +549,10 @@ window.pageInit = function () {
       delete MARKS[d.id]; editRej = null;   // a whole-document rejection replaces any per-item marks
       addHist(d, { act: '반려', why, step: d.step }); d.step = 'rejected'; saveDocs(docs);
       const rel = releaseDoc(d);   // pending markers of this document are released → the requester can re-request (CL9-07)
-      notifyReq(`${d.id} 반려됨. 보완 필요`, why);
-      toast(`반려했습니다. 신청자에게 의견과 함께 알렸습니다${rel ? ` · 사전 항목 ${rel}건의 '진행 중'을 풀었습니다` : ''}`, 'info');
+      // review: a whole rejection returns the items to the requester's basket exactly like a partial one (excel batches keep their own resume path)
+      const backAll = d.type === 'dict' && !d.batch && (d.items || []).length ? returnRejected(d, d.items.map(it => Object.assign({}, it, { rejWhy: `문서 반려 — ${why}` }))) : 0;
+      if (d.req !== ME.id || !backAll) notifyReq(`${d.id} 반려됨. 보완 필요`, why);
+      toast(`반려했습니다. 신청자에게 의견과 함께 알렸습니다${backAll ? ` · 항목 ${backAll}건을 신청자 바구니로 돌려보냄` : ''}${rel ? ` · 사전 항목 ${rel}건의 '진행 중'을 풀었습니다` : ''}`, 'info');
     } else if (kind === 'withdraw') {
       addHist(d, { act: '회수', why }); d.step = 'withdrawn'; saveDocs(docs);
       const rel = releaseDoc(d);

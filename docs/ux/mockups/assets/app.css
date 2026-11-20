@@ -532,6 +532,7 @@ input[type=checkbox]:focus-visible, input[type=radio]:focus-visible { outline:2p
 .pane { display:none; } .pane.on { display:block; }
 /* the dictionary screens' shared tab row (links) */
 .tabs.dtabs { margin:0; padding:0 20px; background:var(--surface); flex:none; }
+.tabs.dtabs .dsep { width:1px; align-self:center; height:16px; background:var(--ds-gray-400); margin:0 8px; }
 .tabs a { display:inline-flex; align-items:center; font:400 14px/20px var(--font-sans); color:var(--fg-2); padding:14px 2px; border-bottom:2px solid transparent; text-decoration:none; }
 .tabs a:hover { color:var(--fg); text-decoration:none; }
 .tabs a.on { color:var(--fg); border-bottom-color:var(--ds-gray-1000); }

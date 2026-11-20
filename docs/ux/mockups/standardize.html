@@ -102,7 +102,7 @@ window.pageInit = function () {
   model.E.forEach(e => {
     if (e.ref) return;
     if (e.p === '—') { const key = `${e.n}.${e.n}`; const pr = PROPOSAL[key] || { term: e.n, phys: decompose(e.n).abbr, dom: '엔터티' }; const ot = openTerm(pr.term);
-      if (e.st && e.reqDoc && linkState(e.reqDoc).s === 'done') { rows.push({ key, e: e.id, ent: e.n, a: e.n, entRow: true, cur: '—', st: 'ok', dx: ['T-DONE', `${e.reqDoc} 승인 완료 — 테이블명은 모델에서 반영`] }); return; }
+      if (e.st && e.reqDoc && linkState(e.reqDoc, e.n).s === 'done') { rows.push({ key, e: e.id, ent: e.n, a: e.n, entRow: true, cur: '—', st: 'ok', dx: ['T-DONE', `${e.reqDoc} 승인 완료 — 테이블명은 모델에서 반영`] }); return; }
       rows.push({ key, e: e.id, ent: e.n, a: e.n, entRow: true, cur: '—', st: ot ? 'req' : 'comb', toWait: !!ot && !e.st, pr, wait: ot && ot.doc, dx: ot ? ['T-WAIT', `${ot.doc} ${STEP_NAME[docsNow.find(d => d.id === ot.doc).step]}`] : ['E-NAME', '테이블명 미정 — 엔터티 용어 신청'] }); }
     e.a.forEach(a => {
       if (a.edit) return;
@@ -110,7 +110,7 @@ window.pageInit = function () {
       if (a.s === 'ok') { rows.push(Object.assign(base, { st: 'ok', dx: ['OK', '표준'] })); return; }
       if (a.s === 'ex') { rows.push(Object.assign(base, { st: 'ex', why: a.exReason, dx: ['X-EX', '예외 — 사유 기록'] })); return; }
       if (a.s === 'na') { rows.push(Object.assign(base, { st: 'na', why: a.naReason, dx: ['X-NA', '비대상'] })); return; }
-      if (a.s === 'req') { const L = linkState(a.reqDoc), d = L.d;
+      if (a.s === 'req') { const L = linkState(a.reqDoc, a.n), d = L.d;
         if (L.s === 'done') { rows.push(Object.assign(base, { st: 'ok', dx: ['T-DONE', `${d.id} 승인 완료 — 표준`] })); return; }
         const ended = L.s === 'ended';
         rows.push(Object.assign(base, { st: ended ? 'comb' : 'req', wait: d && !ended ? d.id : null, pr: { term: a.n, phys: a.p, dom: '' }, dx: d ? (ended ? ['T-ENDED', `${d.id} ${STEP_NAME[d.step]} — 다시 맞추기`] : ['T-WAIT', `${d.id} ${STEP_NAME[d.step]}`]) : ['T-WAIT', '용어 신청 중(연결 문서 없음)'] })); return; }

@@ -51,7 +51,7 @@
         </div></span>
       <span class="u-rel"><button class="btn u-w-32 u-p-0 u-jc-c" data-menu-btn aria-haspopup="true" aria-expanded="false" aria-label="더 보기"><i data-ic=more></i></button>
         <div class="menu u-w-200" data-auto role="menu"><a class="mi" role="menuitem" href="excel-import.html"><i data-ic=upload></i>엑셀 가져오기</a><a class="mi" role="menuitem" href="dict-history.html"><i data-ic=history></i>변경 내역</a><a class="mi" role="menuitem" href="uploads.html"><i data-ic=upload></i>업로드 이력</a></div></span>
-      <button class="btn primary" data-open="pn-request" data-close-others="pn-detail" id="b-req"><i data-ic=plus></i>등록 신청<span class="fcount" id="bk-n" hidden></span></button>
+      <button class="btn primary" data-open="pn-request" data-close-others="pn-detail" id="b-req"><i data-ic=basket></i>바구니 · 품의<span class="fcount" id="bk-n" hidden></span></button>
     </div>
   </div>
 
@@ -98,7 +98,7 @@
     <!-- PN-12 request -->
     <aside class="rpanel wide" id="pn-request">
       <div class="rp-head">
-        <div class="t"><h2>등록 신청 · 바구니</h2><button class="iconbtn close u-w-28 u-h-28" data-close="pn-request" aria-label="닫기"><i data-ic=x></i></button></div>
+        <div class="t"><h2>바구니 · 품의 올리기</h2><button class="iconbtn close u-w-28 u-h-28" data-close="pn-request" aria-label="닫기"><i data-ic=x></i></button></div>
         <div class="u-mt-4 u-flex u-gap-8 u-ai-c"><span class="caption muted" id="bk-saved"></span><span class="grow"></span>
           <button class="btn ghost sm" id="dr-save">초안으로 보관</button>
           <span class="u-rel"><button class="btn ghost sm" id="dr-open" aria-haspopup="true" aria-expanded="false">초안 <span class="num" id="dr-n"></span></button><div class="menu" id="dr-menu" role="menu"></div></span></div>
@@ -112,7 +112,7 @@
           <div class="field"><label for="en-name">엔터티명 *</label><input class="input" id="en-name" value=""><span class="help">마지막 단어가 엔터티 분류어(기본 · 내역 · 이력 · 관계)이면 물리명 접미가 정해집니다 — 예: 산출물기본 → DLVRBL_M</span></div>
           <div class="card u-bg2 u-mb-12"><div class="caption muted">분석 결과</div><div id="en-res" class="u-mt-4">—</div></div>
           <div class="field"><label for="en-desc">설명</label><textarea class="input" id="en-desc" rows="2"></textarea></div>
-          <div class="flex"><span class="grow"></span><button class="btn" id="add-entity">목록에 추가</button></div>
+          <div class="flex"><span class="grow"></span><button class="btn" id="add-entity">바구니에 담기</button></div>
         </div>
         <div class="rq-form" data-rq="code" hidden>
           <div class="field-row"><div class="field"><label for="cd-name">코드명(한글) *</label><input class="input" id="cd-name" value=""></div><div class="field"><label for="cd-abbr">영문 코드명 *</label><input class="input mono" id="cd-abbr" value=""></div></div>
@@ -123,7 +123,7 @@
             <div class="field"><label for="cd-type">코드 타입</label><select class="input" id="cd-type"><option>자체</option><option>기관</option><option>법정</option></select></div>
           </div>
           <div class="field"><label for="cd-vals">코드값 * <span class="faint">한 줄에 하나 — ‘값 이름’, 미사용은 끝에 (미사용)</span></label><textarea class="input mono" id="cd-vals" rows="5" placeholder="01 문서&#10;02 코드&#10;99 기타"></textarea><span class="help" id="cd-chk">값을 입력하면 길이 · 중복을 바로 확인합니다 · 앞자리 0은 그대로 보존</span></div>
-          <div class="flex"><span class="grow"></span><button class="btn" id="add-code">목록에 추가</button></div>
+          <div class="flex"><span class="grow"></span><button class="btn" id="add-code">바구니에 담기</button></div>
         </div>
         <div class="rq-form" data-rq="domain" hidden>
           <div class="field-row">
@@ -145,7 +145,7 @@
           </div>
           <div class="field"><label for="dm-desc">설명</label><textarea class="input" id="dm-desc" rows="2">3자리 영숫자 코드</textarea></div>
           <div class="caption u-danger u-mb-8" id="dm-err"></div>
-          <div class="flex"><span class="grow"></span><button class="btn" id="add-domain">목록에 추가</button></div>
+          <div class="flex"><span class="grow"></span><button class="btn" id="add-domain">바구니에 담기</button></div>
         </div>
         <div class="rq-form" data-rq="word" hidden>
           <div class="field-row"><div class="field"><label for="wd-name">단어명 *</label><input class="input" id="wd-name" value=""></div><div class="field"><label for="wd-abbr">영문약어명 * <span class="faint" id="wd-lim">6자 이내</span></label><input class="input mono" id="wd-abbr" value=""></div></div>
@@ -155,7 +155,7 @@
           <div class="field"><label for="wd-desc">설명</label><input class="input" id="wd-desc" value=""></div>
           <div class="caption u-danger u-mb-8" id="wd-err"></div>
           <div class="banner warning" id="wd-sim" hidden><i data-ic=warn></i><div id="wd-sim-t"></div></div>
-          <div class="flex u-mt-8"><span class="grow"></span><button class="btn" id="add-word">목록에 추가</button></div>
+          <div class="flex u-mt-8"><span class="grow"></span><button class="btn" id="add-word">바구니에 담기</button></div>
         </div>
         <div class="rq-form" data-rq="term">
         <div class="field"><label for="tm-name">용어명 *</label><input class="input" id="tm-name" value="산출물제출일자"><span class="help">입력을 멈추면 자동으로 분석합니다</span></div>
@@ -166,14 +166,14 @@
           <div class="field"><label for="tm-dom">도메인 * <span class="faint">마지막 형식단어 ‘일자’ 기준 추천</span></label><select class="input mono" id="tm-dom"><option>연월일C8</option><option>명V100</option><option>ID V10</option><option>코드C2</option><option>내용V1000</option><option>금액N15</option><option>일련번호N10</option><option>여부C1</option></select></div>
         </div>
         <div class="field"><label for="tm-desc">설명</label><textarea class="input" id="tm-desc" rows="2">산출물을 발주처에 제출한 날짜</textarea></div>
-        <div class="flex"><span class="grow"></span><button class="btn" id="add-term">목록에 추가</button></div>
+        <div class="flex"><span class="grow"></span><button class="btn" id="add-term">바구니에 담기</button></div>
         </div>
         <div class="hr"></div>
         <div class="caption muted u-mt-8">여러 건을 한 번에 쓰려면 <a href="dict-grid.html">화면 일괄 작성</a> — 표에서 쓰고 정상 행만 이 바구니로 보냅니다.</div>
         <div class="section-t">바구니 <span class="badge" id="q-n">0</span> <span class="caption muted">자동 저장 · 신청하면 이 목록 그대로 결재 문서가 됩니다 · 단어 → 도메인 → 용어 순으로 정렬</span></div>
         <table class="tbl"><thead><tr><th>구분</th><th>이름</th><th>약어 · 내용</th><th>검사</th><th></th></tr></thead><tbody id="q-body"></tbody></table>
         <div class="banner warning u-mt-8" id="rq-warn" hidden><i data-ic=warn></i><div class="grow" id="rq-warn-t"></div></div>
-        <div class="field u-mt-12"><label for="rq-why">신청 사유 * <span class="faint">1~1,000자</span></label><textarea class="input" id="rq-why" rows="2" placeholder="예: 요구사항관리 산출물 제출 관리 기능 추가"></textarea></div>
+        <div class="field u-mt-12"><label for="rq-why">품의 사유 * <span class="faint">1~1,000자</span></label><textarea class="input" id="rq-why" rows="2" placeholder="예: 요구사항관리 산출물 제출 관리 기능 추가"></textarea></div>
         <div class="section-t">결재선</div>
         <div class="approval-line">
           <div class="al-step"><span class="pt"></span><div><b>DA 승인</b> <span class="caption faint">필수 · 템플릿</span><div class="caption muted" id="da-cnt"></div></div></div>
@@ -183,7 +183,7 @@
       <div class="rp-foot">
         <span class="grow"></span>
         <button class="btn" data-close="pn-request">취소</button>
-        <button class="btn primary" id="rq-go" data-needs="rq-why" data-needs-msg="신청 사유·중복 사유를 입력해야 제출할 수 있습니다">신청</button>
+        <button class="btn primary" id="rq-go" data-needs="rq-why" data-needs-msg="품의 사유·중복 사유를 입력해야 올릴 수 있습니다">품의 올리기</button>
       </div>
     </aside>
   </div>
@@ -294,8 +294,8 @@ window.pageInit = function () {
     [...picked].forEach(id => { if (!I.some(x => x.id === id && pickable(x))) picked.delete(id); });
     $('bulk').hidden = !picked.size; $('bulk-n').textContent = `${picked.size}건 선택`;
     const ca = $('ck-all'); ca.checked = vis.length > 0 && vis.every(x => picked.has(x.id)); ca.indeterminate = !ca.checked && vis.some(x => picked.has(x.id)); ca.disabled = !vis.length;
-    const inUse = [...picked].map(id => I.find(x => x.id === id)).filter(x => x && x.use > 0);
-    $('bk-del').disabled = inUse.length === picked.size && picked.size > 0; $('bk-del').title = inUse.length ? `모델에서 쓰는 ${inUse.length}건은 삭제할 수 없어 빠집니다(미사용을 쓰세요)` : '';
+    const inUse = [...picked].map(id => I.find(x => x.id === id)).filter(x => x && usageOf(x).n > 0);
+    $('bk-del').disabled = !can('dict.request') || (inUse.length === picked.size && picked.size > 0); $('bk-del').title = inUse.length ? `모델에서 쓰는 ${inUse.length}건은 삭제할 수 없어 빠집니다(미사용을 쓰세요)` : '';
   }
   // DX-20: the search conditions live in the URL — reload, back and a shared link reopen the same list
   function condState() { const o = {}; const qs = $('q').value.trim(); if (qs) o.q = qs; if (kind) o.kind = kind; if (srcs.size < 2) o.src = [...srcs][0]; if (stFilter) o.st = stFilter; ['dg', 'since', 'flen', 'fdom'].forEach(id => { if ($(id).value) o[id] = $(id).value; }); if ($('fdisc').checked) o.disc = '1'; if (showAll) o.all = '1'; return o; }
@@ -349,7 +349,7 @@ window.pageInit = function () {
       <div class="rp-foot">${common ? `<span class="caption muted">공통 표준은 신청할 수 없습니다</span><span class="grow"></span><button class="btn sm" id="copy-new" title="이 항목 값으로 새 기관 항목 신청을 시작합니다"><i data-ic=copy data-s=12></i>복사해서 신규</button>`
         : it.st === '삭제 보관' ? (can('dict.purge') ? `<span class="caption muted">V0 삭제 보관 — 복원 없음</span><span class="grow"></span><button class="btn sm danger" id="purge">영구 삭제</button>` : '<span class="caption muted">V0 삭제 보관 — 영구 삭제는 DA·Admin</span>')
         : it.pending ? `<span class="caption muted">${it.pending} 진행 중이라 새 신청 불가</span><span class="grow"></span><button class="btn sm" id="copy-new"><i data-ic=copy data-s=12></i>복사해서 신규</button>`
-        : `<button class="btn sm" id="del-req"${it.use > 0 ? ` disabled title="모델 ${it.use}곳에서 쓰는 중 — 삭제할 수 없습니다(미사용을 쓰세요)"` : ''}>삭제 담기</button><button class="btn sm" id="copy-new"><i data-ic=copy data-s=12></i>복사해서 신규</button><span class="grow"></span>${it.st === '사용' ? '<button class="btn sm" id="unuse-req">미사용 담기</button>' : ''}<button class="btn primary sm" id="chg-req">변경 담기</button>`}</div>`;
+        : `<button class="btn sm" id="del-req"${usageOf(it).n > 0 ? ` disabled title="모델 ${usageOf(it).n}곳에서 쓰는 중 — 삭제할 수 없습니다(미사용을 쓰세요)"` : ''}>삭제 담기</button><button class="btn sm" id="copy-new"><i data-ic=copy data-s=12></i>복사해서 신규</button><span class="grow"></span>${it.st === '사용' ? '<button class="btn sm" id="unuse-req">미사용 담기</button>' : ''}<button class="btn primary sm" id="chg-req">변경 담기</button>`}</div>`;
     const ur = $('unuse-req'); if (ur) ur.onclick = () => basketAct([it], '미사용');
     const dr = $('del-req'); if (dr) dr.onclick = () => basketAct([it], '삭제');
     const cr = $('chg-req'); if (cr) cr.onclick = () => openChg(it);
@@ -445,13 +445,13 @@ window.pageInit = function () {
     const rows = queue.map((it, i) => {
       const op = opOf(it), del = `<button class="btn ghost sm" data-del="${i}" aria-label="${it.name} 바구니에서 빼기">빼기</button>`;
       if (op === '미사용' || op === '삭제') { const d = I.find(x => x.id === it.id) || {}; return `<tr><td>${op}<div class="caption muted">${d.kn || ''}</div></td><td>${it.name}</td><td><input class="input" data-why="${i}" aria-label="${it.name} ${op} 사유" value="${it.why || ''}" placeholder="${op} 사유 *"></td><td>${op === '삭제' && d.use > 0 ? `<span class="badge b-danger">사용처 ${d.use}곳 · 삭제 불가</span>` : `<span class="badge">사용처 ${d.use || 0}곳</span>`}</td><td>${del}</td></tr>`; }
-      if (op === '변경') { const ks = Object.keys(it.chg || {}); return `<tr><td>변경<div class="caption muted">${(I.find(x => x.id === it.id) || {}).kn || ''}</div></td><td>${it.name}</td><td class="wrap">${ks.length ? ks.map(k => `<div class="caption"><b>${k}</b> <span class="old-v">${fmtV(it.chg[k][0])}</span> → ${fmtV(it.chg[k][1])}</div>`).join('') : '<span class="caption u-warning">바꾼 칸이 없습니다</span>'}</td><td>${ks.length ? `<span class="badge b-success">칸 ${ks.length}개</span>` : '<span class="badge b-warning">확인</span>'}</td><td class="u-nowrap"><button class="btn ghost sm" data-edit="${i}" aria-label="${it.name} 고치기">고치기</button>${del}</td></tr>`; }
+      if (op === '변경') { const ks = Object.keys(it.chg || {}); return `<tr><td>변경<div class="caption muted">${(I.find(x => x.id === it.id) || {}).kn || ''}</div></td><td>${it.name}${it.back ? `<div class="caption u-danger">반려되어 돌아옴 · ${hx(it.back)}</div>` : ''}</td><td class="wrap">${ks.length ? ks.map(k => `<div class="caption"><b>${k}</b> <span class="old-v">${fmtV(it.chg[k][0])}</span> → ${fmtV(it.chg[k][1])}</div>`).join('') : '<span class="caption u-warning">바꾼 칸이 없습니다</span>'}</td><td>${ks.length ? `<span class="badge b-success">칸 ${ks.length}개</span>` : '<span class="badge b-warning">확인</span>'}</td><td class="u-nowrap"><button class="btn ghost sm" data-edit="${i}" aria-label="${it.name} 고치기">고치기</button>${del}</td></tr>`; }
       const body = it.k === 'code' ? `<span class="mono">${it.abbr}</span> · 코드값 ${(it.vals || []).length}개` : `<span class="mono">${it.abbr || ''}</span>${it.dom && it.k !== 'word' ? ` · <span class="mono">${it.dom}</span>` : ''}`;
-      return `<tr><td>${KN(it)}<div class="caption muted">신규</div></td><td>${it.name}${it.dep ? `<div class="caption muted">함께 신청한 ${it.dep.join(' · ')} 다음에 판정</div>` : ''}${it.from ? `<div class="caption faint">${it.from}</div>` : ''}</td><td>${body}</td><td>${similar(it) ? '<span class="badge b-warning">약어 중복 사유 필요</span>' : '<span class="muted">통과</span>'}</td><td class="u-nowrap">${['term', 'word', 'entity', 'code'].includes(it.k) ? `<button class="btn ghost sm" data-edit="${i}" aria-label="${it.name} 폼으로 불러오기">고치기</button>` : ''}${del}</td></tr>`;
+      return `<tr><td>${KN(it)}<div class="caption muted">신규</div></td><td>${it.name}${it.back ? `<div class="caption u-danger">반려되어 돌아옴 · ${hx(it.back)}</div>` : ''}${it.dep ? `<div class="caption muted">함께 올린 ${it.dep.join(' · ')} 다음에 판정</div>` : ''}${it.from || it.src ? `<div class="caption faint">${hx(it.from || it.src)}</div>` : ''}</td><td>${body}</td><td>${similar(it) ? '<span class="badge b-warning">약어 중복 사유 필요</span>' : '<span class="muted">통과</span>'}</td><td class="u-nowrap">${['term', 'word', 'entity', 'code', 'domain', 'class'].includes(it.k) ? `<button class="btn ghost sm" data-edit="${i}" aria-label="${it.name} 폼으로 불러오기">고치기</button>` : ''}${del}</td></tr>`;
     }).join('');
     $('q-body').innerHTML = queue.length ? rows + (needDup ? `<tr><td colspan="5"><label for="dup-why" class="caption">약어 중복 허용 사유 * <span class="faint">비슷한 기존 약어가 있습니다</span></label><textarea class="input" id="dup-why" rows="2">${dupWhy}</textarea></td></tr>` : '')
-      : '<tr class="er"><td colspan="5" class="caption muted u-tc u-p-16">위에서 입력하고 [목록에 추가]를 누르거나, 목록에서 항목을 골라 담으세요</td></tr>';
-    const go = $('rq-go'); go.textContent = queue.length ? `${queue.length}건 신청` : '신청';
+      : '<tr class="er"><td colspan="5" class="caption muted u-tc u-p-16">위에서 입력하고 [바구니에 담기]를 누르거나, 목록에서 항목을 골라 담으세요</td></tr>';
+    const go = $('rq-go'); go.textContent = queue.length ? `${queue.length}건 품의 올리기` : '품의 올리기';
     go.dataset.needs = 'rq-why' + (needDup ? ' dup-why' : '');
     setBlock(go, queueBlock()); $('rq-warn').hidden = true; warnSeen = '';
     persist(); const b = getBasket(); $('bk-saved').textContent = queue.length ? `자동 저장됨 · ${(b.at || '').slice(5)} · 다른 화면에서 담은 항목도 여기 모입니다` : '바구니가 비어 있습니다';
@@ -461,7 +461,7 @@ window.pageInit = function () {
   const openPanel = () => { $('pn-detail').classList.remove('open'); $('pn-request').classList.add('open'); };
   // DX-02 · DX-04: unuse / delete for one or many items
   function basketAct(items, act) {
-    const ok = items.filter(d => pickable(d) && !(act === '삭제' && d.use > 0));
+    const ok = items.filter(d => pickable(d) && !(act === '삭제' && usageOf(d).n > 0));
     const [a, s] = addToBasket(ok.map(d => ({ k: kindKey(d), id: d.id, name: d.name, act, why: '' })));
     queue.splice(0, queue.length, ...getBasket().items); drawQueue(); openPanel();
     toast(`${act} ${a}건을 바구니에 담았습니다${s ? ` · 이미 담긴 ${s}건 제외` : ''}${items.length - ok.length ? ` · 담을 수 없는 ${items.length - ok.length}건 제외(사용 중 · 공통 · 진행 중)` : ''} — 사유를 적으세요`, 'info');
@@ -510,7 +510,7 @@ window.pageInit = function () {
     else if (kk === 'entity') { $('en-name').value = d.name; $('en-desc').value = d.desc || ''; anEntity(); }
     else if (kk === 'code') { $('cd-name').value = d.name; $('cd-abbr').value = d.abbr; $('cd-dom').value = d.dom; $('cd-scope').value = d.scope || '공통'; $('cd-vals').value = fmtLines(d.vals); chkCode(); }
     else if (kk === 'domain') { const m = String(d.name).match(/([CVNT])(\d*)$/); if (m) { $('dm-type').value = m[1]; $('dm-len').value = m[2] || ''; } upd(); }
-    toast(`‘${d.name}’ 값으로 새 신청을 시작합니다 — 이름을 바꾸고 [목록에 추가]를 누르세요`, 'info');
+    toast(`‘${d.name}’ 값으로 새 신청을 시작합니다 — 이름을 바꾸고 [바구니에 담기]를 누르세요`, 'info');
     const f = document.querySelector('#pn-request .rq-form:not([hidden]) input'); if (f) { f.focus(); f.select(); }
   }
   const add = it => {
@@ -584,29 +584,39 @@ window.pageInit = function () {
     const d = e.target.closest('[data-del]'); if (d) { queue.splice(+d.dataset.del, 1); drawQueue(); return; }
     const ed = e.target.closest('[data-edit]'); if (!ed) return; const it = queue[+ed.dataset.edit];
     if (opOf(it) === '변경') { openChg(I.find(x => x.id === it.id), it); return; }
-    // a new row goes back into its form for editing (it leaves the basket until [목록에 추가] again)
+    // a new row goes back into its form for editing (it leaves the basket until [바구니에 담기] again)
     queue.splice(+ed.dataset.edit, 1); drawQueue(); setChip(it.k); show(it.k);
+    // review fix: every field comes back (nothing silently lost on re-edit)
     if (it.k === 'term') { $('tm-name').value = it.name; $('tm-desc').value = it.desc || ''; analyse(); if (it.dom) $('tm-dom').value = it.dom; }
-    else if (it.k === 'word') { $('wd-name').value = it.name; $('wd-abbr').value = it.abbr || ''; $('wd-eng').value = it.eng || ''; $('wd-syn').value = (it.syn || []).join(', '); }
+    else if (it.k === 'word') { $('wd-name').value = it.name; $('wd-abbr').value = it.abbr || ''; $('wd-eng').value = it.eng || ''; $('wd-fmt').value = it.fmt || 'N'; $('wd-fmt').onchange(); $('wd-cls').value = it.cls || ''; $('wd-syn').value = (it.syn || []).join(', '); $('wd-forbid').value = (it.forbid || []).join(', '); $('wd-desc').value = it.desc || ''; }
     else if (it.k === 'entity') { $('en-name').value = it.name; $('en-desc').value = it.desc || ''; anEntity(); }
-    else if (it.k === 'code') { $('cd-name').value = it.name; $('cd-abbr').value = it.abbr; $('cd-dom').value = it.dom; $('cd-scope').value = it.scope || '공통'; $('cd-vals').value = fmtLines(it.vals); chkCode(); }
-    formDirty = true; toast(`‘${it.name}’을 폼으로 불러왔습니다 — 고친 뒤 [목록에 추가]`, 'info');
+    else if (it.k === 'code') { $('cd-name').value = it.name; $('cd-abbr').value = it.abbr; $('cd-dom').value = it.dom; $('cd-scope').value = it.scope || '공통'; if (it.sys) $('cd-sys').value = it.sys; $('cd-type').value = it.ctype || '자체'; $('cd-vals').value = fmtLines(it.vals); chkCode(); }
+    else if (it.k === 'domain') { const g = getGroups().groups.find(x => x.name === it.dg); if (g) { $('dm-grp').value = g.id; fillCls(); } const m = String(it.name).match(/^(.+?)([CVNDT])(\d*)(?:,(\d+))?$/); if (m) { $('dm-fw').value = m[1]; $('dm-type').value = m[2]; $('dm-len').value = m[3] || ''; $('dm-sc').value = m[4] || ''; } $('dm-allow').value = it.allow || ''; $('dm-sec').value = it.sec || '없음'; $('dm-desc').value = it.desc || ''; upd(); }
+    else if (it.k === 'class') { queue.push(it); drawQueue(); location.href = 'domain-groups.html'; return; }
+    formDirty = true; toast(`‘${it.name}’을 폼으로 불러왔습니다 — 고친 뒤 [바구니에 담기]`, 'info');
   });
   $('q-body').addEventListener('input', e => { if (e.target.id === 'dup-why') { dupWhy = e.target.value; updateNeeds(); persist(); }
     const w = e.target.dataset.why; if (w !== undefined) { queue[+w].why = e.target.value; setBlock($('rq-go'), queueBlock()); persist(); } });
   $('rq-why').addEventListener('input', persist);
+  const hx = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+  // a problem links to its basket row (scroll + highlight) — the way back to the fix
+  $('rq-warn').addEventListener('click', e => { const a = e.target.closest('[data-goq]'); if (!a) return; e.preventDefault(); const i = queue.findIndex(q => q.name === a.dataset.goq); const tr = $('q-body').querySelectorAll('tr')[i]; if (tr) { tr.scrollIntoView({ block: 'center' }); tr.classList.add('sel'); setTimeout(() => tr.classList.remove('sel'), 1800); const b = tr.querySelector('[data-edit], input'); if (b) b.focus(); } });
   const itemsOut = () => { const needDup = queue.some(similar);
     return orderItems(queue.map(it => { const o = Object.assign({}, it); delete o.key; if (opOf(o) === '추가') o.act = '추가'; if (o.why) o.why = o.why.trim(); if (needDup && similar(o)) o.why = `약어 중복 허용 — ${dupWhy}`; return o; })); };
   $('rq-go').onclick = () => {
     if ($('rq-go').disabled) return;
     if (liveRoleChanged()) { staleRoleToast(); return; }
+    if (!can('dict.request')) { toast('사전 품의 권한이 없습니다 — 모델러 · DA만 올릴 수 있습니다', 'danger'); return; }
     const items = itemsOut();
-    // DX-15: business-rule findings are shown first; the second press submits them as known warnings (the DA sees the same check)
+    // review fix: submit check = approval re-check. Blocking problems can NOT be submitted (they would fail at the DA); only warnings take a second press (DX-15)
     const probs = checkDictDoc({ id: '(작성 중)', items }).filter(r => r.problems.length);
-    const sig = JSON.stringify(probs);
-    if (probs.length && warnSeen !== sig) { warnSeen = sig; $('rq-warn').hidden = false; $('rq-warn-t').innerHTML = `<b>검사에서 ${probs.length}건을 확인했습니다</b> — 고치거나, 알고 신청하려면 한 번 더 누르세요(결재자에게 같은 결과가 보입니다)<ul class="ag-imp">${probs.map(r => `<li>${r.name}: ${r.problems.join(' · ')}</li>`).join('')}</ul>`; $('rq-go').textContent = '경고 확인 후 신청'; $('rq-warn').scrollIntoView({ block: 'nearest' }); return; }
+    const goRow = n => `<a href="#" data-goq="${hx(n)}">${hx(n)}</a>`;
+    if (probs.length) { $('rq-warn').hidden = false; $('rq-warn').className = 'banner danger u-mt-8'; $('rq-warn-t').innerHTML = `<b>고쳐야 올릴 수 있습니다 — ${probs.length}건</b> (결재 단계에서도 같은 검사로 막힙니다)<ul class="ag-imp">${probs.map(r => `<li>${goRow(r.name)}: ${hx(r.problems.join(' · '))}</li>`).join('')}</ul>`; $('rq-warn').scrollIntoView({ block: 'nearest' }); return; }
+    const warns = items.filter(it => opOf(it) === '추가').map(it => [it.name, checkItem(it, { batch: items }).filter(p => p.lvl === 'warn').map(p => p.msg)]).filter(x => x[1].length);
+    const sig = JSON.stringify(warns);
+    if (warns.length && warnSeen !== sig) { warnSeen = sig; $('rq-warn').hidden = false; $('rq-warn').className = 'banner warning u-mt-8'; $('rq-warn-t').innerHTML = `<b>경고 ${warns.length}건 — 확인했으면 한 번 더 누르세요</b> (결재 문서에 ‘올릴 때 경고’로 남습니다)<ul class="ag-imp">${warns.map(([n, m]) => `<li>${goRow(n)}: ${hx(m.join(' · '))}</li>`).join('')}</ul>`; $('rq-go').textContent = '경고 확인 후 품의 올리기'; $('rq-warn').scrollIntoView({ block: 'nearest' }); return; }
     const title = `${items[0].name}${items.length > 1 ? ` 외 ${items.length - 1}건` : ''} ${items.every(q => opOf(q) === '변경') ? '변경' : items.every(q => opOf(q) === '추가') ? '등록' : '등록 · 변경'}`;
-    const r = createDoc({ type: 'dict', title, n: items.length, reason: $('rq-why').value.trim(), cc: ['hyun'], items, warnAtSubmit: probs.length ? probs : undefined });
+    const r = createDoc({ type: 'dict', title, n: items.length, reason: $('rq-why').value.trim(), cc: [], items, warnAtSubmit: warns.length ? warns.map(([name, m]) => ({ name, problems: m })) : undefined });
     if (r.conflict) { toast(`다른 신청이 먼저 들어왔습니다 — ${r.conflict.join(', ')}. 그 항목을 바구니에서 빼고 다시 신청하세요`, 'danger'); return; }
     if (candId) { const all = getCands(); const c = all.find(x => x.id === candId); if (c) { c.doc = r.doc.id; delete c.closed; saveCands(all); } }   // the candidate follows the document it was converted into
     queue.length = 0; dupWhy = ''; $('rq-why').value = ''; formDirty = false; saveBasket({ items: [], reason: '' });
@@ -620,7 +630,7 @@ window.pageInit = function () {
   const drMenu = (open) => { $('dr-menu').classList.toggle('open', open); $('dr-open').setAttribute('aria-expanded', open); };
   function drawDrafts() { const L = getDrafts();
     $('dr-menu').innerHTML = (L.length ? L.map(d => `<div class="mi u-col u-ai-c" role="menuitem"><div class="u-w-full"><b>${d.name}</b><div class="caption muted">${d.items.length}건 · ${d.at}</div></div><div class="flex u-w-full u-gap-4 u-mb-8"><button class="btn sm" data-dr-load="${d.id}">불러오기</button><button class="btn sm" data-dr-merge="${d.id}">바구니에 합치기</button><span class="grow"></span><button class="btn ghost sm" data-dr-del="${d.id}" aria-label="${d.name} 초안 지우기">지우기</button></div></div>`).join('') : '<div class="caption muted u-p-16">보관한 초안이 없습니다</div>')
-      + '<div class="caption muted u-p-8">초안은 내 계정에 저장되어 다른 PC에서도 이어 쓸 수 있습니다(제품: 서버 저장)</div>';
+      + '<div class="caption muted u-p-8">목업: 이 브라우저에 저장 · 제품: 계정별 서버 저장(다른 PC에서 이어 쓰기)</div>';
     $('dr-n').textContent = L.length || ''; }
   $('dr-open').onclick = e => { e.stopPropagation(); drawDrafts(); drMenu(!$('dr-menu').classList.contains('open')); };
   document.addEventListener('click', e => { if (!e.target.closest('#dr-menu, #dr-open')) drMenu(false); });
@@ -646,14 +656,19 @@ window.pageInit = function () {
   $('bk-unuse').onclick = () => { basketAct(pickedItems().filter(x => x.st === '사용'), '미사용'); picked.clear(); draw(); };
   $('bk-del').onclick = () => { basketAct(pickedItems(), '삭제'); picked.clear(); draw(); };
   $('bk-chg').onclick = () => { const L = pickedItems(); if (L.length === 1) { openChg(L[0]); return; }
+    if (L.length > 1) { location.href = 'dict-grid.html?mode=edit&ids=' + L.map(d => d.id).join(','); return; }   // review: different values for many items → the screen grid, not n empty rows
     const [a, s] = addToBasket(L.map(d => ({ k: kindKey(d), id: d.id, name: d.name, act: '변경', chg: {} }))); queue.splice(0, queue.length, ...getBasket().items); drawQueue(); openPanel(); picked.clear(); draw();
     toast(`${a}건을 변경 행으로 담았습니다${s ? ` · 이미 담긴 ${s}건 제외` : ''} — 행마다 [고치기]로 값을 바꾸거나 [같은 값 일괄 변경]을 쓰세요`, 'info'); };
   const sameFields = L => { const sets = L.map(d => EDIT_FIELDS[kindKey(d)] || []); return (sets[0] || []).filter(f => f !== '코드값' && sets.every(s => s.includes(f))); };
   const sameCalc = (d, f, m, v, find) => { const o = d[FIELD_KEY[f] || f]; const cur = Array.isArray(o) ? o.join(', ') : o == null ? '' : String(o); return [cur, m === 'set' ? v : m === 'pre' ? v + cur : m === 'suf' ? cur + v : find ? cur.split(find).join(v) : cur]; };
   function samePrev() { const L = pickedItems(), f = $('same-f').value, m = $('same-m').value, v = $('same-v').value, find = $('same-find').value; $('same-find-f').hidden = m !== 'rep';
-    const rows = L.map(d => [d, ...sameCalc(d, f, m, v, find)]).filter(r => r[1] !== r[2]);
-    $('same-n').textContent = rows.length; $('same-prev').innerHTML = rows.map(([d, a, b]) => `<tr><td>${d.name}</td><td class="old-v">${a || '(빈 값)'}</td><td>${b || '(빈 값)'}</td></tr>`).join('') || '<tr class="er"><td colspan="3" class="caption muted">바뀌는 항목이 없습니다</td></tr>';
-    setBlock($('same-go'), rows.length ? '' : '바뀌는 항목이 없습니다'); return rows; }
+    // review fix: each new value passes the item rules (the item itself excluded); blocked rows are shown and left out
+    const fk = FIELD_KEY[f] || f;
+    const all = L.map(d => [d, ...sameCalc(d, f, m, v, find)]).filter(r => r[1] !== r[2]).map(r => { const bad = checkItem(Object.assign(mergedOf(r[0], { chg: { [f]: [r[1], r[2]] } }), { k: kindKey(r[0]) }), { self: r[0].id }).filter(p => p.lvl === 'block' && p.f === fk).map(p => p.msg); return r.concat([bad]); });
+    const rows = all.filter(r => !r[3].length);
+    $('same-n').textContent = `${rows.length}${all.length - rows.length ? ` · 제외 ${all.length - rows.length}` : ''}`;
+    $('same-prev').innerHTML = all.map(([d, a, b, bad]) => `<tr${bad.length ? ' class="u-op-50"' : ''}><td>${hx(d.name)}</td><td class="old-v">${hx(a) || '(빈 값)'}</td><td>${hx(b) || '(빈 값)'}${bad.length ? `<div class="caption u-danger">${hx(bad.join(' · '))} — 제외</div>` : ''}</td></tr>`).join('') || '<tr class="er"><td colspan="3" class="caption muted">바뀌는 항목이 없습니다</td></tr>';
+    setBlock($('same-go'), rows.length ? '' : all.length ? '모든 행이 규칙에 걸려 담을 수 없습니다' : '바뀌는 항목이 없습니다'); return rows; }
   $('bk-same').onclick = () => { const L = pickedItems(), F = sameFields(L); if (!F.length) { toast('고른 항목에 공통으로 바꿀 수 있는 칸이 없습니다 — 종류를 맞춰 고르세요', 'info'); return; }
     $('same-sub').textContent = `${L.length}건 · ${[...new Set(L.map(d => d.kn))].join(' · ')} — 공통 칸만 고를 수 있습니다`;
     $('same-f').innerHTML = F.map(f => `<option>${f}</option>`).join(''); $('same-v').value = ''; $('same-find').value = ''; samePrev(); $('mo-same').classList.add('open'); $('same-v').focus(); };
@@ -677,6 +692,10 @@ window.pageInit = function () {
     if (a) { applyCond(L[+a.dataset.ss].c); sel = null; ssMenu(false); draw(); } });
   document.addEventListener('basket', () => { if (getBasket().items.length !== queue.length) { queue.splice(0, queue.length, ...getBasket().items); } });
   drawQueue();
+  // review fix: without request rights the basket is read-only (the reason is on the panel and the header button)
+  if (!can('dict.request')) { panel.querySelector('.rp-body').insertAdjacentHTML('afterbegin', '<div class="banner u-mb-12"><i data-ic=info></i><div>조회 전용 — 사전 품의는 모델러 · DA만 올릴 수 있습니다.</div></div>');
+    panel.querySelectorAll('.rp-body button, .rp-foot button:not([data-close]), #dr-save, #dr-open').forEach(b => { b.disabled = true; b.title = '사전 품의 권한이 없습니다'; });
+    ['bk-grid', 'bk-chg', 'bk-same', 'bk-unuse', 'bk-del'].forEach(id => { $(id).disabled = true; $(id).title = '사전 품의 권한이 없습니다'; }); }
   const MAP = { C: ['CHAR', 'CHAR'], V: ['VARCHAR2', 'VARCHAR'], N: ['NUMBER', 'NUMERIC'], D: ['DATE', 'DATE'], T: ['TIMESTAMP', 'TIMESTAMP'] };
   // G1: group → class from the dictionary's domain classes (the class name is the front of the domain name)
   const GR = getGroups();
@@ -727,7 +746,7 @@ window.pageInit = function () {
   $('rq-final').style.display = lineFor('dict').includes('final') ? '' : 'none';
   let candId = null;
   if (q0.get('cand')) { const c = getCands().find(x => x.id === q0.get('cand')); if (c) { candId = c.id; $('pn-detail').classList.remove('open'); panel.classList.add('open'); if (c.t === '단어') { panel.querySelector('[data-rq="word"].chip').click(); $('wd-name').value = c.name; $('wd-abbr').value = c.abbr || ''; } else { $('tm-name').value = c.name; analyse(); }
-    panel.querySelector('.rp-body').insertAdjacentHTML('afterbegin', `<div class="banner info u-mb-12"><i data-ic=flag></i><div><b>후보 ‘${c.name}’을 ${c.t} 신청으로 전환</b> — 발생 위치 ${c.loc.length}곳. 값을 확인하고 [목록에 추가] 후 신청하면 후보가 이 신청에 연결됩니다.</div></div>`); $('rq-why').value = `후보 큐 ${c.loc.length}곳 발생 — ${c.name}`; } }
+    panel.querySelector('.rp-body').insertAdjacentHTML('afterbegin', `<div class="banner info u-mb-12"><i data-ic=flag></i><div><b>후보 ‘${c.name}’을 ${c.t} 신청으로 전환</b> — 발생 위치 ${c.loc.length}곳. 값을 확인하고 [바구니에 담기] 후 신청하면 후보가 이 신청에 연결됩니다.</div></div>`); $('rq-why').value = `후보 큐 ${c.loc.length}곳 발생 — ${c.name}`; } }
   // V0 permanent delete (30 v1.2 ⑦): DA·Admin, references block it, the exact name and a reason confirm it, a separate log records it
   function purge(it) {
     if (liveRoleChanged()) { staleRoleToast(); return; }

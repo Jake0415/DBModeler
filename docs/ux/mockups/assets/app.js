@@ -527,9 +527,12 @@
   window.getBasket = () => J(bKey(), { items: [], reason: '', at: '' });
   window.saveBasket = b => { b.at = today() + ' ' + now().split(' ')[1]; S(bKey(), b); if (window.refreshTop) window.refreshTop(); document.dispatchEvent(new CustomEvent('basket')); };
   // add items; an item already in the basket (same id, or same kind + name for new ones) is skipped — returns [added, skipped]
-  window.addToBasket = list => { const b = getBasket(); let a = 0, s = 0;
-    [].concat(list).forEach(it => { const same = b.items.find(x => (it.id && x.id === it.id) || (!it.id && !x.id && x.k === it.k && x.name === it.name)); if (same) { s++; return; } b.items.push(Object.assign({ key: 'b' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5) }, it)); a++; });
-    saveBasket(b); return [a, s]; };
+  // two changes of the same item merge field by field (the later value wins); a different action on the same item is skipped and reported
+  window.addToBasket = list => { const b = getBasket(); let a = 0, s = 0, m = 0;
+    [].concat(list).forEach(it => { const same = b.items.find(x => (it.id && x.id === it.id) || (!it.id && !x.id && x.k === it.k && x.name === it.name));
+      if (same && it.id && opOf(same) === '변경' && opOf(it) === '변경') { same.chg = Object.assign({}, same.chg, it.chg); m++; return; }
+      if (same) { s++; return; } b.items.push(Object.assign({ key: 'b' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5) }, it)); a++; });
+    saveBasket(b); const r = [a + m, s]; r.merged = m; return r; };
   /* ---- domain groups → classes (→ domains): groups are kept by the DA directly (recorded), classes go through the same request as domains (30 MD-02·03) ---- */
   const GROUPS0 = { groups: [
       { id: 'G1', name: '날짜', desc: '연월일 · 연월 · 일시 등 날짜와 시각', st: '사용', src: '공통' }, { id: 'G2', name: '번호', desc: '식별자 · 번호 · 일련번호', st: '사용', src: '공통' },
@@ -551,7 +554,7 @@
      ctx.batch = the other rows being written together (a new word in the same batch is a known word) */
   window.checkItem = (it, ctx = {}) => {
     const out = [], dict = getDict(), batch = (ctx.batch || []).filter(b => b !== it), pol = getPolicy(), B = (f, msg) => out.push({ f, msg, lvl: 'block' }), Wn = (f, msg) => out.push({ f, msg, lvl: 'warn' });
-    const name = (it.name || '').trim(), k = it.k, live = x => x.ver > 0 && x.st !== '삭제 보관';
+    const name = (it.name || '').trim(), k = it.k, live = x => x.ver > 0 && x.st !== '삭제 보관' && x.id !== ctx.self;   // ctx.self: a change is checked against everyone but itself
     const openNew = openItems().filter(x => opOf(x.it) === '추가');
     if (!name) { B('name', '이름이 비어 있음'); return out; }
     if (/\s/.test(name) && k !== 'class') B('name', '이름에 공백이 있음');
@@ -608,6 +611,13 @@
     }
     return out;
   };
+  // the item as it would be after a change (labels → fields; list fields from comma text)
+  window.mergedOf = (d, it) => { const m = JSON.parse(JSON.stringify(d)); Object.entries(it.chg || {}).forEach(([l, v]) => { const key = FIELD[l] || l; m[key] = Array.isArray(d[key]) && typeof v[1] === 'string' ? v[1].split(/\s*,\s*/).filter(Boolean) : v[1]; }); return m; };
+  /* one usage lookup for the detail panel, delete checks and rename warnings: columns of saved working models that carry the item (by name or abbreviation part) + the seeded count */
+  window.usageOf = d => { const hits = []; if (!d) return { n: 0, hits }; try { const ms = getModels(); Object.keys(ms).forEach(a => { const md = modelOf(a, ms[a].ver); (md.E || []).forEach(e => (e.a || []).forEach(x => {
+      const byName = x.n === d.name, byAbbr = d.k !== 'domain' && d.abbr && d.abbr !== '—' && x.p && (x.p === d.abbr || (d.k === 'word' && x.p.split('_').includes(d.abbr))), byDom = d.k === 'domain' && x.dom === d.name;
+      if (byName || byAbbr || byDom) hits.push([a, ms[a].name, e, x]); })); }); } catch (e) {}
+    return { n: Math.max(hits.length, d.use || 0), hits, seed: d.use || 0 }; };
   /* named drafts: park a basket, start another, come back later (DX-03) */
   const dKey = () => 'dbm-drafts-' + (window.ME ? ME.id : 'kim');
   window.getDrafts = () => J(dKey(), [{ id: 'dr1', name: '리스크 영역 용어 정리(작성 중)', at: '2026-11-18 17:40', reason: '리스크 관리 화면 개편', items: [{ key: 'bs1', k: 'term', name: '리스크대응완료일자', abbr: 'RISK_RSPNS_CMPTN_YMD', dom: '연월일C8', act: '추가' }, { key: 'bs2', k: 'word', name: '완화', abbr: 'MTGT', eng: 'mitigation', act: '추가' }] }]);
@@ -643,7 +653,7 @@
         if (it.scope === '시스템' && !it.sys) res.problems.push('시스템 코드인데 대상 시스템이 없음');
       }
       if (op === '추가' && (k === 'term' || k === 'entity')) {
-        if (it.dom && !knownDomains().has(it.dom)) res.problems.push(`도메인 '${it.dom}'이 사전에 없음`);
+        if (it.dom && !knownDomains().has(it.dom) && !(doc.items || []).some(o => o.k === 'domain' && o.name === it.dom && !o.rej && opOf(o) === '추가')) res.problems.push(`도메인 '${it.dom}'이 사전에 없음`);
         if ((it.abbr || '').length > 30) res.problems.push(`영문약어명 ${it.abbr.length}자 — 30자 초과(대상 DBMS 기준)`);
         { const dc = decompose(name, (doc.items || []).filter(o => o.k === 'word' && !o.rej && opOf(o) === '추가')); const inDoc = w => (doc.items || []).some(o => o.k === 'word' && o.name === w && !o.rej);
           const pend = dc.pending.filter(p => !inDoc(p.w)); if (pend.length) res.problems.push(`구성 단어 미승인: ${pend.map(p => p.w + (p.doc ? `(${p.doc} 진행 중)` : '')).join(', ')}`);
@@ -664,12 +674,15 @@
           if (d.pending && d.pending !== doc.id && getDocs().some(x => x.id === d.pending && ['da', 'final'].includes(x.step))) res.problems.push(`${d.pending}에서 같은 항목을 신청 중`);
           if (op === '변경' && !Object.keys(it.chg || {}).length && !Object.keys(it.set || {}).length) res.problems.push('바뀌는 칸이 없음');
           if (op === '미사용' && d.st === '미사용') res.problems.push('이미 미사용');
-          if (op === '삭제' && (d.use || 0) > 0) res.problems.push(`모델 ${d.use}곳에서 쓰는 중 — 삭제할 수 없음(미사용을 쓰세요)`);
+          if (op === '삭제') { const u = usageOf(d).n; if (u > 0) res.problems.push(`모델 ${u}곳에서 쓰는 중 — 삭제할 수 없음(미사용을 쓰세요)`); }
+          if (op === '삭제' && d.k === 'domain' && dict.some(x => x.k === 'term' && x.dom === d.name && x.ver > 0 && x.st !== '삭제 보관')) res.problems.push('이 도메인을 쓰는 용어가 있어 삭제할 수 없음');
           if (op === '삭제' && d.st === '삭제 보관') res.problems.push('이미 삭제 보관');
           // G5: a renamed item must not collide; a domain rename re-checks the naming rule
           const nn = it.chg && Object.entries(it.chg).find(([l]) => FIELD[l] === 'name');
-          if (op === '변경' && nn) { const nv = String(nn[1][1]).trim(); if (dict.some(x => x.id !== d.id && x.k === d.k && x.name === nv && x.ver > 0)) res.problems.push(`새 이름 '${nv}'이 이미 있음`);
-            if (d.k === 'domain') checkItem({ k: 'domain', name: nv, dg: d.dg }).filter(p => p.lvl === 'block' && !/사전에 있음/.test(p.msg)).forEach(p => res.problems.push(p.msg)); }
+          if (op === '변경' && nn) { const nv = String(nn[1][1]).trim(); if (dict.some(x => x.id !== d.id && x.k === d.k && x.name === nv && x.ver > 0)) res.problems.push(`새 이름 '${nv}'이 이미 있음`); }
+          // the FINAL values of a change pass the same item rules as a new item (only for the fields that change; the item itself is excluded from duplicate checks)
+          if (op === '변경' && it.chg) { const merged = mergedOf(d, it), kk = d.kn === '엔터티 용어' ? 'entity' : d.k, fields = Object.keys(it.chg).map(l => FIELD[l] || l);
+            checkItem(Object.assign({}, merged, { k: kk }), { self: d.id, batch: (doc.items || []).filter(o => o !== it && !o.rej) }).filter(p => p.lvl === 'block' && fields.includes(p.f === 'dom' ? 'dom' : p.f)).forEach(p => res.problems.push(p.msg)); }
         }
       }
       res.problems = [...new Set(res.problems)];
@@ -708,7 +721,11 @@
         Object.entries(it.chg || {}).forEach(([label, v]) => { const key = FIELD[label] || label; const nv = Array.isArray(d[key]) && typeof v[1] === 'string' ? v[1].split(/\s*,\s*/).filter(Boolean) : v[1];
           diff.push([label, show(d[key]), show(nv)]); d[key] = nv; });
         Object.entries(it.set || {}).forEach(([key, v]) => { if (diff.some(x => (FIELD[x[0]] || x[0]) === key)) return; diff.push([key, d[key] == null ? '' : d[key], v]); d[key] = v; });
-        { const nd = diff.find(x => FIELD[x[0]] === 'name'); if (nd && nd[1]) d.old = (d.old || []).concat([nd[1]]); }   // the previous name stays searchable as a past name
+        { const nd = diff.find(x => FIELD[x[0]] === 'name'); if (nd && nd[1]) d.old = (d.old || []).concat([nd[1]]);   // the previous name stays searchable as a past name
+          // a domain is referenced by name: its terms and codes follow the rename, each with its own history line (models are re-reviewed, never edited)
+          if (nd && nd[1] && d.k === 'domain') dict.filter(x => (x.k === 'term' || x.k === 'code') && x.dom === nd[1]).forEach(x => { x.dom = nd[2]; x.ver += 1; x.dt = today(); x.review = `도메인 ${nd[1]} → ${nd[2]}`;
+            x.hist = x.hist || []; x.hist.unshift({ v: 'V' + x.ver, at, act: '변경', doc: doc.id, by: ME.name, why: `도메인 이름 변경을 따라감`, diff: [['도메인', nd[1], nd[2]]] });
+            ch.unshift({ at, item: x.name, kind: x.kn, act: '변경', ver: 'V' + x.ver, doc: doc.id, by: ME.name, diff: `도메인: ${nd[1]} → ${nd[2]} (도메인 이름 변경 따라감)`, fields: [['도메인', nd[1], nd[2]]], itemId: x.id }); }); }
         d.ver += 1;
       } else {
         // a placeholder created by the document itself (e.g. 엔터티 용어 '신청 중', ver 0) becomes V1; anything else with the same name is a conflict
@@ -786,7 +803,7 @@
     const unk = parts.filter(p => p.unknown), pend = parts.filter(p => !p.unknown && !p.ok);
     return { parts, unknown: unk, pending: pend, abbr: parts.map(p => p.abbr || '?').join('_'), ok: !unk.length && !pend.length, sus: parts.some(p => !p.unknown && p.w.length === 1 && !['명', '자'].includes(p.w)) };
   };
-  window.knownDomains = () => new Set(getDict().filter(x => x.k === 'domain').map(x => x.name).concat(['연월일C8', '명V100', 'ID V10', '코드C1', '코드C2', '여부C1', '내용V1000', '금액N15', '일련번호N10', '일시T', '엔터티 용어', '엔터티']));
+  window.knownDomains = () => new Set(getDict().filter(x => x.k === 'domain' && x.ver > 0 && x.st === '사용').map(x => x.name).concat(['연월일C8', '명V100', 'ID V10', '코드C1', '코드C2', '여부C1', '내용V1000', '금액N15', '일련번호N10', '일시T', '엔터티 용어', '엔터티']));
 
   /* ---- candidate queue lives in the state layer: model / standardize register, candidate queue / home / nav read (CX13-03) ---- */
   const CANDS0 = [
@@ -795,7 +812,10 @@
     { id: 'c3', t: '용어', name: '요구사항변경사유내용', abbr: 'DEMND_MATER_CHG_RSN_CN', sim: null, loc: [{ area: 'rq', e: 'rqrm', ent: '요구사항내역', attr: '변경사유', by: 'kim' }] }
   ];
   /* linked term request state — model, standardize and approvals read the same rule (CX14-02/03) */
-  window.linkState = docId => { const d = docId && getDocs().find(x => x.id === docId); if (!d) return { s: 'none', d: null }; return { s: d.step === 'done' ? 'done' : ['rejected', 'withdrawn'].includes(d.step) ? 'ended' : 'live', d }; };
+  // name (optional) = the term this link waits for: an item rejected inside a finished document ends the link for that term only (DX-12)
+  window.linkState = (docId, name) => { const d = docId && getDocs().find(x => x.id === docId); if (!d) return { s: 'none', d: null };
+    const it = name && (d.items || []).find(x => x.name === name); if (it && it.rej) return { s: 'ended', d, rej: it.rejWhy || '항목 반려' };
+    return { s: d.step === 'done' ? 'done' : ['rejected', 'withdrawn'].includes(d.step) ? 'ended' : 'live', d }; };
   window.getCands = () => J('dbm-cand-list', clone(CANDS0));
   window.saveCands = c => S('dbm-cand-list', c);
   /* state follows the linked document: 대기 → 신청 전환(진행 중) → 등록 완료 / 반려(DA) / 기존 표준 안내; a rejected/withdrawn conversion re-opens */
@@ -1655,6 +1675,7 @@
       </nav>
       <div class="spacer"></div>
       <button class="gsearch" id="gsearch" type="button" aria-haspopup="dialog" aria-label="전체 검색 (Ctrl+K)">${ICON.search}<span>검색</span><kbd>Ctrl K</kbd></button>
+      ${can('dict.request') ? (() => { const bn = getBasket().items.length; return `<a class="iconbtn" id="btn-basket" href="dictionary.html?basket=1" aria-label="사전 바구니 ${bn}건 — 열어서 품의 올리기" title="사전 바구니 ${bn}건">${ICON.basket}${bn ? `<span class="dot">${bn}</span>` : ''}</a>`; })() : ''}
       <button class="iconbtn" id="btn-bell" aria-label="알림 ${nUnread}건" aria-haspopup="true" aria-expanded="false">${ICON.bell}${nUnread ? `<span class="dot">${nUnread}</span>` : ''}</button>
       <button class="avatar btnlike" id="btn-user" aria-label="사용자 메뉴 · ${ME.name}" aria-haspopup="true" aria-expanded="false">${ME.name[0]}${store.get('dbm-seen-ver', '') !== PRODUCT.version ? '<span class="newdot" title="새 기능"></span>' : ''}</button>
       <div class="pop-menu npanel" id="pn-notif" role="dialog" aria-label="알림"></div>
@@ -1671,9 +1692,11 @@
     app.insertBefore(top, nav);
     document.querySelectorAll('.crumbs a[href="system.html"]').forEach(a => { if (a.textContent.trim() === '요구사항관리') a.textContent = curSys().name; });
     // the dictionary screens share one tab row under the header (01 v2 §5, D4) — they have no breadcrumb
-    { const DT = [['dictionary.html', '통합 검색'], ['dict-grid.html', '화면 일괄 작성'], ['domain-groups.html', '도메인 그룹 · 분류'], ['excel-import.html', '엑셀 가져오기'], ['uploads.html', '업로드 이력'], ['candidates.html', '후보 큐'], ['dict-history.html', '변경 내역']];
-      const ph = DT.some(([f]) => f === curFile()) && document.querySelector('#content .page-header');
-      if (ph && !document.querySelector('.dtabs')) ph.insertAdjacentHTML('afterend', `<nav class="tabs dtabs" aria-label="사전 화면">${DT.map(([f, l]) => `<a href="${f}"${f === curFile() ? ' class="on" aria-current="page"' : ''}>${l}</a>`).join('')}</nav>`); }
+    // three groups (review: find · write / bring in / flow · history) + the reference data at the end; upload history lives inside the excel group
+    { const DT = [['dictionary.html', '통합 검색'], ['dict-grid.html', '화면 일괄 작성'], 0, ['excel-import.html', '엑셀 가져오기', ['uploads.html']], 0, ['candidates.html', '후보 큐'], ['dict-history.html', '변경 내역'], 0, ['domain-groups.html', '도메인 그룹 · 분류']];
+      const here = t => t && (t[0] === curFile() || (t[2] || []).includes(curFile()));
+      const ph = DT.some(here) && document.querySelector('#content .page-header');
+      if (ph && !document.querySelector('.dtabs')) ph.insertAdjacentHTML('afterend', `<nav class="tabs dtabs" aria-label="사전 화면">${DT.map(t => !t ? '<span class="dsep" aria-hidden="true"></span>' : `<a href="${t[0]}"${here(t) ? ' class="on" aria-current="page"' : ''}>${t[1]}</a>`).join('')}</nav>`); }
     drawTree(nav);
     const toasts = document.createElement('div');
     toasts.className = 'toasts'; toasts.id = 'toasts';

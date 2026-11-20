@@ -580,6 +580,10 @@ window.pageInit = function () {
   $('rq-go').onclick = () => {
     if ($('rq-go').disabled || !guard()) return;
     const C = gChecked().filter(it => !it.unk); const items = orderItems(C.map(toItem));
+    // review fix: a dictionary request needs dictionary rights and the same submit check as the dictionary screen (submit = approval re-check)
+    if (!can('dict.request')) { toast('사전 신청 권한이 없습니다 — [후보 큐로]를 쓰세요', 'danger'); return; }
+    const bad = checkDictDoc({ id: '(작성 중)', items }).filter(r => r.problems.length);
+    if (bad.length) { $('mo-req').classList.remove('open'); toast(`검사에서 ${bad.length}건이 막힙니다 — ${bad.map(r => `${r.name}: ${r.problems[0]}`).join(' · ')}. 바구니에 담아 고친 뒤 올리세요`, 'danger', { label: '바구니에 담기', fn: () => $('g-basket').click() }); return; }
     const res = createDoc({ type: 'dict', kind: 'std', area: AREA, ver: VER, title: `용어 자동분석 신청 ${items.length}건 (${MNAME})`, n: items.length, reason: $('rq-why').value.trim(), cc: [], items, key: `auto:${AREA}:v${VER}:${items.map(i => i.name).join(',')}` });
     $('mo-req').classList.remove('open');
     if (res.conflict) { toast(`이미 진행 중인 신청과 겹칩니다 — ${res.conflict.join(', ')}. 그 항목은 선택에서 빼고 다시 신청하세요`, 'danger'); return; }
@@ -603,7 +607,7 @@ window.pageInit = function () {
       if (newN === r.cur.n && newP === r.cur.p && newT === r.cur.t && (res.s === r.cur.s || (res.s === 'unreg' && r.cur.s === 'unreg'))) return;
       out.push({ r, kind: 'row', newN, newP, newT, res });
     });
-    out.forEach(x => { if (!(x.r.key in mSel)) mSel[x.r.key] = true; });
+    out.forEach(x => { if (!(x.r.key in mSel)) mSel[x.r.key] = x.res.proc !== '이름만 맞춤'; });   // review: name-only rows (not yet a standard) start unselected
     return out;
   }
   const RES_TAG = { ok: 'ok', req: 'run', unreg: 'warn', comb: 'mine', na: 'end' };

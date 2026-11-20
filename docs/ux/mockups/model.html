@@ -1550,9 +1550,9 @@ window.pageInit = function () {
   // term requests made from standardize: once the document ends, the attribute follows it (approved → standard, rejected → back to unresolved)
   if (!locked && !DEMO) {
     const docsNow = getDocs(); let fin = 0, back = 0;
-    E.forEach(e => e.a.forEach(a => { if (a.s !== 'req' || !a.reqDoc) return; const d = docsNow.find(x => x.id === a.reqDoc); if (!d) return;
-      if (d.step === 'done') { a.s = 'ok'; delete a.reqDoc; fin++; } else if (['rejected', 'withdrawn'].includes(d.step)) { a.s = 'comb'; a.reqNote = `${d.id} ${STEP_NAME[d.step]}`; delete a.reqDoc; back++; } }));
-    E.forEach(e => { if (!e.st || !e.reqDoc) return; const L = linkState(e.reqDoc); if (L.s === 'done') { delete e.st; delete e.reqDoc; fin++; } else if (L.s === 'ended') { e.reqNote = `${e.reqDoc} ${STEP_NAME[L.d.step]} — 미승인 물리명 ${e.p}`; e.p = '—'; delete e.st; delete e.reqDoc; back++; } });
+    E.forEach(e => e.a.forEach(a => { if (a.s !== 'req' || !a.reqDoc) return; const L = linkState(a.reqDoc, a.n), d = L.d; if (!d) return;   // per item: a rejected item inside a finished document goes back
+      if (L.s === 'done') { a.s = 'ok'; delete a.reqDoc; fin++; } else if (L.s === 'ended') { a.s = 'comb'; a.reqNote = `${d.id} ${L.rej ? '항목 반려 · ' + L.rej : STEP_NAME[d.step]}`; delete a.reqDoc; back++; } }));
+    E.forEach(e => { if (!e.st || !e.reqDoc) return; const L = linkState(e.reqDoc, e.n); if (L.s === 'done') { delete e.st; delete e.reqDoc; fin++; } else if (L.s === 'ended') { e.reqNote = `${e.reqDoc} ${STEP_NAME[L.d.step]} — 미승인 물리명 ${e.p}`; e.p = '—'; delete e.st; delete e.reqDoc; back++; } });
     // a candidate word that has since been approved makes its attributes combinable again (re-judged in standardize)
     const dictNow = getDict(); const rc = dictNow.find(x => x.name === '수령자' && x.k === 'word' && x.ver > 0 && x.st === '사용');
     let cnd = 0; if (rc) E.forEach(e => e.a.forEach(a => { if (a.cand && a.s === 'unreg') { a.s = 'comb'; delete a.cand; cnd++; } }));
