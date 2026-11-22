@@ -44,6 +44,36 @@
   .xfoot { height:56px; padding:0 20px; border-top:1px solid var(--ds-gray-400); }
   .stages { display:flex; gap:8px; flex-wrap:wrap; margin-top:12px; font-size:14px; color:var(--fg-3); }
   .stages span.on { color:var(--fg); font-weight:500; } .stages span.done { color:var(--fg-2); }
+  /* auto-fix preview · find & replace (07 E3) */
+  .modal.xmodal { width:720px; max-width:calc(100vw - 48px); }
+  .xprev { max-height:320px; overflow:auto; margin-top:8px; border:1px solid var(--border); border-radius:var(--r-md); }
+  .xprev .tbl { margin:0; } .xprev thead th { position:sticky; top:0; background:var(--surface); z-index:1; }
+  .xprev td.to { color:var(--fg); } .xprev td.from { color:var(--fg-2); text-decoration:line-through; }
+  .xprev tr.skip td { color:var(--fg-3); } .xprev tr.skip td.from { text-decoration:none; }
+  .xrules { display:flex; flex-wrap:wrap; gap:8px; }
+  .frg { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .fro { display:flex; flex-wrap:wrap; align-items:center; gap:16px; margin-top:8px; font-size:14px; }
+  .fro select.input { width:auto; min-width:160px; }
+  .xhit { background:var(--ds-amber-200, #fff3c4); border-radius:2px; }
+  /* E-01 · E-03 · E-06 · E-08 · E-12 · E-15 */
+  .xprev tr.derived td { color:var(--fg-2); font-size:12px; }
+  .xprev td.chk { white-space:normal; min-width:140px; }
+  .cell-bad { box-shadow:inset 0 0 0 2px var(--danger); background:color-mix(in srgb, var(--danger) 8%, transparent); }
+  .cellmsg { padding:6px 20px; font-size:12px; color:var(--danger); border-bottom:1px solid var(--border); background:var(--surface); }
+  .cellmsg[hidden] { display:none; }
+  .undo-last { max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .btn[aria-disabled="true"], .chip[aria-disabled="true"] { opacity:.5; cursor:not-allowed; }
+  .tbl td.why5 { max-width:360px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  #pn-row .three { table-layout:fixed; width:100%; }
+  #pn-row .three th, #pn-row .three td { white-space:normal; overflow-wrap:anywhere; padding:6px 8px; height:auto; line-height:18px; }
+  #pn-row .three th:first-child, #pn-row .three td:first-child { width:76px; }
+  .three td.fixv { background:color-mix(in srgb, var(--info) 12%, transparent); color:var(--fg); }
+  .three td.nov { color:var(--fg-3); }
+  .scope-note { flex-basis:100%; margin-top:4px; }
+  .x5 .toasts { right:calc(var(--panel) + 20px); }
+  .sum6-sub { color:var(--fg-2); font-size:12px; }
+  .chk-line { margin-top:6px; font-size:12px; }
+  .prob-list { margin:4px 0 0; padding-left:18px; font-size:12px; line-height:18px; }
 </style>
 </head>
 <body data-page="excel">
@@ -84,7 +114,7 @@
       </div>
       <div class="card">
         <div class="section-t u-mt-0">왕복 편집 규칙</div>
-        <div class="caption u-lh-22">· <b>빈 칸 = 그대로 둠.</b> 값을 지우려면 <span class="mono">#지움</span><br>· 모든 칸을 글자로 읽습니다(앞자리 0·날짜 자동 변환 경고)<br>· 약어·도메인명은 계산 값이라 고쳐도 반영되지 않습니다<br>· 파일에서 지운 행은 <b>자동 삭제하지 않습니다</b><br>· 결재 중인 항목에 고친 값은 <b>보류</b>로 보존됩니다</div>
+        <div class="caption u-lh-22">· <b>빈 칸 = 그대로 둠.</b> 값을 지우려면 <span class="mono">#지움</span><br>· 모든 칸을 글자로 읽습니다(앞자리 0·날짜 자동 변환 경고)<br>· 용어 영문약어명·도메인명은 계산 값이라 고쳐도 반영되지 않습니다<br>· 파일에서 지운 행은 <b>자동 삭제하지 않습니다</b><br>· 결재 중인 항목에 고친 값은 <b>보류</b>로 보존됩니다</div>
       </div>
     </div>
   </div></section>
@@ -120,6 +150,7 @@
   <section class="stepview" data-step="5">
     <div class="toolbar" id="chips"></div>
     <div class="errbar" id="errbar"></div>
+    <div class="cellmsg" id="cellmsg" role="alert" hidden></div>
     <div class="page-body" style="flex:1;min-height:0">
       <div class="main"><div class="scroll">
         <table class="tbl">
@@ -156,38 +187,71 @@
     <button class="btn primary" id="next">다음</button>
   </div>
   </div></div>
+
+  <!-- 07 E3: auto-fix preview — the target rows, before → after, chosen one by one before anything changes -->
+  <div class="overlay" id="mo-auto" role="dialog" aria-modal="true" aria-labelledby="auto-t" aria-describedby="auto-sub"><div class="modal xmodal">
+    <div class="m-head"><h3 class="sm" id="auto-t">자동 수정 미리보기</h3><div class="caption muted u-mt-4" id="auto-sub"></div></div>
+    <div class="m-body">
+      <div class="xrules" id="auto-rules" role="group" aria-label="규칙으로 고르기"></div>
+      <div class="xprev"><table class="tbl"><thead><tr><th class="ck"><input type="checkbox" id="auto-ck" aria-label="보이는 대상 모두 고르기"></th><th>행</th><th>규칙</th><th>칸</th><th>파일 값</th><th>바뀔 값</th><th>검사</th></tr></thead><tbody id="auto-body"></tbody></table></div>
+      <div class="caption muted u-mt-8">'검사'는 신청 때 결재 재검사와 같은 규칙으로 미리 본 결과입니다. 통과하지 못하는 행은 처음부터 고르지 않습니다. 적용한 작업은 결과 도구 줄의 [되돌리기]나 <kbd>Ctrl+Z</kbd>로 되돌릴 수 있습니다.</div>
+    </div>
+    <div class="m-foot"><button class="btn" data-close="mo-auto">취소</button><button class="btn primary" id="auto-go">적용</button></div>
+  </div></div>
+
+  <!-- 07 E3: find & replace inside the upload — visible rows only, a count and a preview before it runs -->
+  <div class="overlay" id="mo-fr" role="dialog" aria-modal="true" aria-labelledby="fr-t" aria-describedby="fr-scope"><div class="modal xmodal">
+    <div class="m-head"><h3 class="sm" id="fr-t">찾아 바꾸기</h3><div class="caption muted u-mt-4" id="fr-scope"></div></div>
+    <div class="m-body">
+      <div class="frg">
+        <div class="field"><label for="fr-find">찾을 값 *</label><input class="input" id="fr-find" autocomplete="off"></div>
+        <div class="field"><label for="fr-rep">바꿀 값</label><input class="input" id="fr-rep" autocomplete="off" placeholder="비우면 찾은 글자를 지웁니다"></div>
+      </div>
+      <div class="fro">
+        <label class="flex" for="fr-col">칸 <select class="input" id="fr-col"></select></label>
+        <label class="flex"><input type="checkbox" id="fr-whole"> 칸 전체가 같을 때만</label>
+        <label class="flex"><input type="checkbox" id="fr-case"> 대소문자 구분</label>
+      </div>
+      <div class="caption u-mt-12" id="fr-sum" aria-live="polite"></div>
+      <div class="xprev"><table class="tbl"><thead><tr><th>행</th><th>칸</th><th>지금 값</th><th>바뀔 값</th><th>검사</th></tr></thead><tbody id="fr-body"></tbody></table></div>
+    </div>
+    <div class="m-foot"><button class="btn" data-close="mo-fr">취소</button><button class="btn primary" id="fr-go" disabled>바꾸기</button></div>
+  </div></div>
 </div>
 </div>
 <script>
 window.pageInit = function () {
   const $ = id => document.getElementById(id);
   const q = new URLSearchParams(location.search);
-  const DOMS = [...knownDomains()].filter(x => !/엔터티/.test(x));   // same list the approval check uses (CL14-07)
   const ST = {
     new: ['신규', 'b-success', 'row-success', '등록 신청'], chg: ['변경', 'b-success', 'row-success', '변경 신청'], same: ['동일', '', 'row-mute', '제외'],
-    waitSame: ['동일 내용 대기', 'b-info', 'row-info', '제외'], waitDiff: ['다른 내용 대기', 'b-warning', 'row-warning', '보류'],
+    waitSame: ['같은 내용 결재 중', 'b-info', 'row-info', '제외'], waitDiff: ['다른 내용 결재 중', 'b-warning', 'row-warning', '보류'],
     conflict: ['버전 충돌', 'b-warning', 'row-warning', '선택'], pick: ['후보 선택', 'b-warning', 'row-warning', '선택'], pre: ['선행 승인 필요', 'b-warning', 'row-warning', '보류'],
     err: ['오류', 'b-danger', 'row-danger', '보정'], missing: ['파일에서 빠짐', '', 'row-mute', '무시']
   };
   const ROWS0 = [
     { r: 2, st: 'new', name: '산출물승인일자', abbr: 'DLVRBL_APRV_YMD', dom: '연월일C8', desc: '발주처가 산출물을 승인한 날짜', why: '신규' },
-    { r: 3, st: 'new', name: '산출물검수결과코드', abbr: 'DLVRBL_INSPCT_RSLT_CD', dom: '코드C2', desc: '검수 결과 구분', why: '신규' },
-    { r: 4, st: 'chg', id: 'T-0412', name: '요청부서명', abbr: 'REQ_DEPT_NM', dom: '명V100', desc: '요청한 부서의 공식 명칭', old: { desc: '요청 부서명' }, why: '설명 1칸 변경 · V2 → V3' },
+    { r: 3, st: 'new', name: '산출물검수결과코드', abbr: 'DLVRBL_IGI_RSLT_CD', dom: '코드C2', desc: '검수 결과 구분', why: '신규' },
+    // E-02: rows are judged against today's dictionary (full common standard); seed rows refer only to seed documents (a request made while testing may block them — that is the live state, judged by rejudge)
+    { r: 4, st: 'chg', id: 'T-0425', name: '산출물제출자명', abbr: 'DLVRBL_SBMTR_NM', dom: '명V100', desc: '산출물을 제출한 사람의 이름', old: { desc: '제출자 이름' }, why: '설명 1칸 변경 · V1 → V2' },
     { r: 5, st: 'chg', id: 'T-0388', name: '요구사항상태코드', abbr: 'DEMND_MATER_STTS_CD', dom: '코드C2', desc: '요구사항 진행 상태', old: { dom: '코드C1' }, why: '도메인 1칸 변경 · 모델 사용처 3', warn: '도메인 변경 — 사용 중 컬럼 3개 재검토 알림(MD-11)' },
     { r: 6, st: 'same', id: 'T-0101', name: '요구사항ID', abbr: 'DEMND_MATER_ID', dom: 'ID V10', desc: '요구사항 식별자', why: '바뀐 것 없음' },
     { r: 7, st: 'waitSame', id: 'T-0430', name: '산출물기본', abbr: 'DLVRBL_M', dom: '—', desc: '산출물 기본 정보 테이블', why: 'REQ-2026-0013 진행 중(같은 내용)', doc: 'REQ-2026-0013' },
     { r: 8, st: 'waitDiff', id: 'T-0411', name: '산출물명', abbr: 'DLVRBL_NM', dom: '명V100', desc: '산출물의 정식 이름', old: { desc: '산출물의 이름' }, why: 'REQ-2026-0016 진행 중(다른 내용: 산출물의 공식 명칭) — 고친 값 보류', doc: 'REQ-2026-0016' },
     { r: 9, st: 'conflict', id: 'T-0201', name: '수주금액', abbr: 'WINCON_AMT', dom: '금액N15', desc: '계약 수주 금액', three: { field: '설명', base: '수주한 금액', cur: '계약 수주 금액(부가세 포함)', file: '계약 수주 금액' }, why: '내려받은 뒤 이데이터가 설명 변경(V3 → V4)' },
-    { r: 10, st: 'pick', name: '검사결과내용', abbr: '—', dom: '내용V1000', desc: '검사 결과 서술', cands: ['검사+결과+내용 · INSP_RSLT_CN', '검+사결과+내용 · ? 의심(1음절)'], why: '분해 후보 2개(MD-09)' },
-    { r: 11, st: 'pre', name: '수령자명', abbr: 'RCPNT_NM', dom: '명V100', desc: '받은 사람 이름', why: '새 단어 ‘수령자’ 승인 후 자동 재검증(REQ-2026-0012)' },
+    { r: 10, st: 'pick', name: '검사결과의견내용', abbr: '—', dom: '내용V1000', desc: '검사 결과에 대한 의견', cands: ['검사+결과+의견+내용 · INSP_RSLT_OPNN_CN', '검+사결과+의견+내용 · ? 의심(1음절)'], why: '분해 후보 2개(MD-09)' },
+    // the word 품질검토 is still in REQ-2026-0014 → the re-judge puts this row on hold (선행 승인)
+    { r: 11, st: 'new', name: '품질검토일자', abbr: 'QLTRVW_YMD', dom: '연월일C8', desc: '품질 검토를 마친 날짜', why: '신규' },
     { r: 12, st: 'err', name: '프로젝트종료일자', abbr: 'PRJ_END_YMD', dom: '연월일C9', desc: '프로젝트 종료 날짜', rule: 'D-NOTFOUND', bad: 'dom', why: "도메인 '연월일C9' 없음", fix: { dom: '연월일C8' } },
-    { r: 13, st: 'err', name: '산출물 검수 일자', abbr: '—', dom: '연월일C8', desc: '검수한 날짜', rule: 'T-SPACE', bad: 'name', why: '용어명에 공백', fix: { name: '산출물검수일자', abbr: 'DLVRBL_INSPCT_YMD' }, auto: 1 },
-    { r: 14, st: 'err', name: '요구사항순번', abbr: 'DEMND_MATER_SN', dom: '일련번호N10', desc: '0012 형식 순번', rule: 'X-ZERO', bad: 'desc', shown: '12 형식 순번', why: "엑셀이 '0012'를 숫자 12로 바꾼 흔적", fix: { desc: '0012 형식 순번' } },
+    { r: 13, st: 'err', name: '산출물 검수 일자', abbr: '—', dom: '연월일C8', desc: '검수한 날짜', rule: 'T-SPACE', bad: 'name', why: '용어명에 공백', fix: { name: '산출물검수일자', abbr: 'DLVRBL_IGI_YMD' }, auto: 1 },
+    { r: 14, st: 'err', name: '요구사항순번', abbr: 'DEMND_MATER_SN', dom: '일련번호N10', desc: '0012 형식 순번', rule: 'X-ZERO', bad: 'desc', shown: '12 형식 순번', why: "엑셀이 '0012'를 숫자 12로 바꾼 흔적", fix: { desc: '0012 형식 순번' }, auto: 1 },
     { r: 15, st: 'err', id: 'T-0233', name: '요청고객명', abbr: 'REQ_CUST_NM', dom: '명V100', desc: '요청 고객 이름', rule: 'X-DUPID', bad: 'id', why: '같은 항목 ID(T-0233)가 16행에도 있음 — 행 복사?' },
     { r: '—', st: 'missing', id: 'T-0410', name: '산출물ID', abbr: 'DLVRBL_ID', dom: 'ID V10', desc: '산출물 식별자', why: '기준본에 있었는데 파일에 없음' }
   ];
-  const RULES = { 'D-NOTFOUND': '도메인 없음', 'T-SPACE': '용어명 공백', 'X-ZERO': '자동 형 변환', 'X-DUPID': '항목 ID 중복', 'X-NAMEDUP': '이름 중복',
-    'W-DUPABBR': '영문약어명 중복', 'W-SIMABBR': '비슷한 약어(경고)', 'W-ABBRLEN': '약어 길이 초과', 'D-BADTYPE': '데이터 타입 오류', 'D-NAMERULE': '도메인명 규칙', 'CV-DUP': '코드값 중복', 'CV-LEN': '코드값 길이' };
+  const RULES = { 'D-NOTFOUND': '도메인 없음', 'T-SPACE': '이름 공백', 'X-ZERO': '엑셀이 앞자리 0 제거', 'X-DUPID': '항목 ID 중복', 'X-NAMEDUP': '이름 중복',
+    'W-DUPABBR': '영문약어명 중복', 'W-SIMABBR': '비슷한 약어(경고)', 'W-ABBRLEN': '약어 길이 초과', 'D-BADTYPE': '데이터 타입 오류', 'D-NAMERULE': '도메인명 규칙', 'CV-DUP': '코드값 중복', 'CV-LEN': '코드값 길이',
+    // E-01: rules the shared approval check reports (checkItem · checkDictDoc)
+    'T-UNKWORD': '미등록 단어', 'T-ABBR': '약어 ≠ 단어 조합', 'T-ABBRLEN': '약어 30자 초과', 'W-ABBRFMT': '영문약어명 형식', 'X-EMPTY': '빈 이름', 'X-COMMON': '공통 표준 변경 불가', 'X-FORBID': '금칙어', 'X-OPEN': '다른 신청과 겹침', 'X-CHECK': '결재 재검사' };
   // how to fix, per rule — the same text goes into the downloaded error guide (DX-08)
   const GUIDE = { 'D-NOTFOUND': '사전에 있는 도메인명으로 바꾸세요(예: 연월일C8). 새 도메인이면 도메인 양식으로 먼저 신청합니다',
     'T-SPACE': '용어명의 공백을 지우세요(예: 산출물 검수 일자 → 산출물검수일자)', 'X-ZERO': '셀 서식을 텍스트로 바꾸고 앞자리 0을 살려 다시 입력하세요',
@@ -195,14 +259,93 @@ window.pageInit = function () {
     'W-DUPABBR': '다른 단어가 이미 쓰는 영문약어명입니다 — 겹치지 않는 약어로 바꾸세요', 'W-SIMABBR': '경고(신청 가능) — 같은 뜻이면 기존 단어를 쓰고, 다른 뜻이면 신청 사유에 근거를 적으세요',
     'W-ABBRLEN': '단어 영문약어명을 검수 기준 글자 수 이내로 줄이세요', 'D-BADTYPE': '데이터 타입은 N(숫자)·C(고정 문자)·V(가변 문자)·D(날짜)·T(일시) 중 하나로 쓰세요',
     'D-NAMERULE': '도메인명은 분류+타입+길이로 만듭니다(예: 금액N15) — 도메인명 칸을 고치거나 비워 두면 계산합니다', 'CV-DUP': '한 코드 안에서 코드값은 한 번만 — 다른 값으로 바꾸세요',
-    'CV-LEN': '코드값 길이를 코드 도메인 길이에 맞추세요(코드C1 → 1자리)' };
-  // the same composition rule as the approval check: a new term built on a word that is not approved yet waits (CL12-15)
-  const judgePre = r => { if (r.st !== 'new' || kind !== '용어') return r; const dc = decompose(r.name);
-    // the term abbreviation is a calculated value: recompute it from today's dictionary (the full common standard changed e.g. 시작 BEGIN → BGNG),
-    // otherwise step 5 showed '신규' rows that the approval re-check then blocked
-    if (!dc.pending.length && !dc.unknown.length && dc.abbr) r.abbr = dc.abbr;
-    else if (dc.unknown.length) { r.st = 'err'; r.rule = r.rule || null; r.why = `미등록 단어: ${dc.unknown.map(p => p.w).join(', ')} — 단어부터 등록하세요`; return r; }
-    if (dc.pending.length) { const p = dc.pending[0]; r.st = 'pre'; r.why = `단어 ‘${p.w}’ 승인 후 재검증${p.doc ? `(${p.doc})` : ''}`; r.doc = p.doc; r.word = p.w; } return r; };
+    'CV-LEN': '코드값 길이를 코드 도메인 길이에 맞추세요(코드C1 → 1자리)',
+    'T-UNKWORD': '사전에 없는 단어가 들어 있습니다 — 표준단어 양식으로 단어부터 신청하거나 있는 단어로 이름을 고치세요', 'T-ABBR': '용어 영문약어명은 구성 단어 약어를 이어 계산합니다 — 용어명을 고치면 다시 계산합니다',
+    'T-ABBRLEN': '용어 영문약어명이 30자를 넘습니다 — 더 짧은 단어로 이름을 구성하세요', 'W-ABBRFMT': '영문약어명은 대문자·숫자만, 숫자로 시작할 수 없습니다', 'X-EMPTY': '이름 칸을 채우세요',
+    'X-COMMON': '공통 표준 항목은 기관에서 바꿀 수 없습니다 — 공통표준 관리의 새 판 품의로 요청하세요', 'X-FORBID': '금칙어 대신 안내된 표준 단어를 쓰세요',
+    'X-OPEN': '같은 항목을 다른 신청이 처리 중입니다 — 그 신청이 끝난 뒤 다시 검증하세요', 'X-CHECK': '결재 재검사 문구를 확인하고 해당 칸을 고치세요' };
+  /* ---- E-01 · ONE re-judge for every edit path (seed · cell edit · 제안 적용 · 자동 수정 · 찾아 바꾸기 · 다시 검증):
+     the approval re-check itself (checkDictDoc on the row's request item) + the shared item check (checkItem: which field, warnings, rows of this file)
+     + the term decomposition (a renamed term is split again; unknown word → error, word still in another request → 선행 승인 보류).
+     A row only becomes 신규/변경 when it passes; otherwise it is 오류 with the real reason and rule. */
+  const RULE_OF = [[/미등록 단어/, 'T-UNKWORD'], [/공백/, 'T-SPACE'], [/30자 초과/, 'T-ABBRLEN'], [/단어 약어 조합/, 'T-ABBR'], [/이름이 비어/, 'X-EMPTY'], [/같은 이름|새 이름 '|이름과 겹침|이름이 겹침/, 'X-NAMEDUP'],
+    [/^약어 .+ 씀$/, 'W-DUPABBR'], [/자 초과/, 'W-ABBRLEN'], [/영문약어명이 비어|대문자/, 'W-ABBRFMT'], [/도메인 '.+'이 사전에 없음|도메인이 비어/, 'D-NOTFOUND'],
+    [/도메인명은|타입은|소수점|도메인분류|그룹은/, 'D-NAMERULE'], [/공통 표준은/, 'X-COMMON'], [/금칙어/, 'X-FORBID'], [/신청 중/, 'X-OPEN']];
+  const RULE_FIELD = { 'T-UNKWORD': 'name', 'T-SPACE': 'name', 'T-ABBRLEN': 'name', 'T-ABBR': 'name', 'X-EMPTY': 'name', 'X-NAMEDUP': 'name', 'W-DUPABBR': 'abbr', 'W-ABBRLEN': 'abbr', 'W-ABBRFMT': 'abbr', 'D-NOTFOUND': 'dom', 'D-NAMERULE': 'name', 'X-FORBID': 'name' };
+  const FILE_RULES = ['X-ZERO', 'X-DUPID'];   // file-level findings the shared check does not know: they stay until their own cell (or action) fixes them
+  const ruleOf = msg => (RULE_OF.find(([re]) => re.test(msg)) || [0, 'X-CHECK'])[1];
+  // the grid cell that carries a problem: a term's abbreviation is calculated, so its problems point at the name
+  const gridF = f => { if (!f) return null; const K = KC[kind]; if (kind === '용어' && f === 'abbr') return 'name'; return K.cols.some(c => c[0] === f) ? f : K.cols[0][0]; };
+  const setErr = (r, rule, bad, why, probs) => { r.st = 'err'; r.rule = rule; r.bad = bad; r.why = why; if (probs && probs.length > 1) r.probs = probs; if (rule === 'X-NAMEDUP') { const m = /\(([A-Z]-[A-Z0-9]+)/.exec(why); if (m) r.dupOf = m[1]; } return r; };
+  // a row → the request item the approval re-check reads (the same shape step 6 submits)
+  function rowItem(x, act) {
+    const K = KC[kind], LBL = K.lbl;
+    const pk = x.st === 'pick' && x.choice !== undefined ? x.cands[x.choice] : null;
+    const abbr0 = pk ? pk.split(' · ')[1] : x.abbr, abbr = abbr0 === '—' ? '' : abbr0;
+    const isChg = act ? act === '변경' : !!(x.id && x.st !== 'new');
+    const chg = x.old && Object.keys(x.old).length ? Object.fromEntries(Object.entries(x.old).map(([k, v]) => [LBL[k] || k, [v, x[k]]])) : x.three && x.choice === 'file' ? { 설명: [x.three.cur, x.three.file] } : undefined;
+    const from = x.fixed ? `화면에서 보정: ${Object.keys(x.fixed).map(k => LBL[k] || k).join('·')}` : undefined;
+    const base = { k: K.k, row: x.r, id: isChg ? x.id : undefined, name: x.name, abbr, desc: x.desc, act: isChg ? '변경' : '추가', chg, warn: x.warn, from };
+    if (kind === '용어') return Object.assign(base, { dom: x.dom, pick: pk ? pk.split(' · ')[0] + (x.choice === 1 ? ' (1음절 의심 — 확인 후 선택)' : '') : undefined });
+    if (kind === '단어') return Object.assign(base, { eng: x.eng });
+    return Object.assign(base, { dg: x.dg, dom: `${x.dg} · ${TYPES[x.type] || x.type}(${x.len})` });
+  }
+  // code rows: length of the code domain, unique value inside the code (rows of the file + the stored value list)
+  function judgeCode(r, okWhy, rows) {
+    ['rule', 'bad', 'probs'].forEach(k => delete r[k]);
+    const len = codeLen(r), v = String(r.v || '');
+    if (len && v.length !== len) return setErr(r, 'CV-LEN', 'v', `코드값 '${v}'는 ${v.length}자리 — 도메인 ${(CG[r.grp] || {}).dom}은 ${len}자리`);
+    const dup = rows.find(o => o.r !== r.r && o.grp === r.grp && o.v === v && !['err', 'missing'].includes(o.st));
+    if (dup) return setErr(r, 'CV-DUP', 'v', `코드값 '${v}'가 ${dup.r}행(${dup.nm})에도 있음 — 한 코드 안에서 한 번만`);
+    const stored = ((getDict().find(x => x.id === (CG[r.grp] || {}).id) || {}).vals || []).find(x => x.v === v);
+    if (stored && !r.old && String(stored.nm) !== String(r.nm)) r.old = { nm: stored.nm };
+    r.st = stored ? (r.old && Object.keys(r.old).length ? 'chg' : 'same') : 'new';
+    r.why = r.st === 'same' ? '바뀐 것 없음(현재 사전과 같음)' : okWhy || (r.st === 'chg' ? '코드값명 변경' : '새 코드값'); return r;
+  }
+  function rejudge(r, okWhy, touched, rows) {
+    rows = rows || ROWS;
+    // a file-level finding stays; the other cells are still judged, so a change that breaks them is told (r.also) and not let through
+    if (r.st === 'err' && FILE_RULES.includes(r.rule) && !(touched || []).includes(r.bad)) { delete r.also;
+      if (touched && touched.length) { const pr = rejudge(Object.assign(JSON.parse(JSON.stringify(r)), { st: r.id ? 'chg' : 'new', rule: null }), okWhy, touched, rows); if (pr.st === 'err') r.also = { rule: pr.rule, bad: pr.bad, why: pr.why }; }
+      return r; }
+    delete r.also;
+    if (kind === '코드') return judgeCode(r, okWhy, rows);
+    const ex = r.id ? getDict().find(x => x.id === r.id) : null, K = KC[kind];
+    ['rule', 'bad', 'probs', 'doc', 'word', 'dupOf'].forEach(k => delete r[k]);
+    if (!ex) { delete r.warn; delete r.warnF; }
+    let pend = null;
+    // a term's abbreviation is calculated: split again whenever the name is not the stored one (new rows, renamed rows)
+    if (kind === '용어' && (!ex || r.name !== ex.name)) { const dc = decompose(r.name);
+      if (dc.unknown.length) return setErr(r, 'T-UNKWORD', 'name', `미등록 단어: ${dc.unknown.map(p => p.w).join(', ')} — 단어부터 등록하세요`);
+      if (dc.abbr && dc.abbr !== r.abbr) { if (ex) { r.old = r.old || {}; if (!('abbr' in r.old)) r.old.abbr = ex.abbr; } r.abbr = dc.abbr; }
+      pend = dc.pending[0] || null; }
+    else if (kind === '용어' && ex) { r.abbr = ex.abbr; if (r.old) delete r.old.abbr; }   // the stored name keeps the stored abbreviation
+    if (ex && r.old) { Object.keys(r.old).forEach(k => { if (String(r.old[k]) === String(r[k] == null ? '' : r[k])) delete r.old[k]; }); if (!Object.keys(r.old).length) delete r.old; }
+    if (ex && !r.old) { r.st = 'same'; r.why = '바뀐 것 없음(파일 값 = 현재 사전)'; return r; }
+    // a new word / domain whose name is already in an open request waits for it (the approval check's "신청 중")
+    if (!ex && kind !== '용어') { const o = openItems().find(x => x.it.k === K.k && x.it.name === r.name && (x.it.act || '추가') === '추가');
+      if (o) { const same = !o.it.abbr || o.it.abbr === r.abbr; r.st = same ? 'waitSame' : 'waitDiff'; r.doc = o.doc; r.why = `${o.doc} 진행 중(${same ? '같은 내용' : `다른 내용: ${o.it.abbr}`})${same ? '' : ' — 고친 값 보류'}`; return r; } }
+    const it = rowItem(r, ex ? '변경' : '추가'), others = rows.filter(o => o.r !== r.r && ['new', 'chg', 'pre'].includes(o.st)).map(o => rowItem(o));
+    let probs = checkDictDoc({ type: 'dict', items: [it] })[0].problems.filter(m => !/구성 단어 미승인/.test(m));
+    const ci = ex ? checkItem(Object.assign(mergedOf(ex, it), { k: K.k }), { self: ex.id, batch: others }) : checkItem(it, { batch: others });
+    if (!ex) ci.filter(p => p.lvl === 'block' && /같이 작성 중/.test(p.msg)).forEach(p => { if (!probs.includes(p.msg)) probs.push(p.msg); });
+    // a change of an item another request is already changing waits (보류) instead of failing at the approver
+    if (ex && probs.length === 1 && /같은 항목을 신청 중/.test(probs[0])) { r.st = 'waitDiff'; r.doc = (/REQ-\d{4}-\d{4}/.exec(probs[0]) || [])[0]; r.why = `${r.doc} 진행 중(같은 항목의 다른 변경) — 고친 값 보류`; return r; }
+    if (probs.length) { const rule = ruleOf(probs[0]), f = (ci.find(p => p.msg === probs[0]) || {}).f || RULE_FIELD[rule]; return setErr(r, rule, gridF(f), probs[0] + (probs.length > 1 ? ` 외 ${probs.length - 1}건` : ''), probs); }
+    if (pend) { r.st = 'pre'; r.word = pend.w; r.doc = pend.doc; r.why = `단어 ‘${pend.w}’ 승인 후 재검증${pend.doc ? `(${pend.doc})` : ''}`; return r; }
+    r.st = ex ? 'chg' : 'new';
+    if (!ex) { const ws = ci.filter(p => p.lvl === 'warn' && !/승인 전 단어/.test(p.msg)); if (ws.length) { r.warn = ws.map(p => p.msg).join(' · '); r.warnF = gridF(ws[0].f); if (ws.some(p => /비슷한 약어/.test(p.msg))) r.rule = 'W-SIMABBR'; } }
+    r.why = okWhy || (ex ? '변경' : '신규'); if (r.warn) r.why += ' · 경고 있음(신청 시 확인)';
+    return r;
+  }
+  // a domain's name (and abbreviation suffix) follows group + type + length (E-12: the group too)
+  function derive(r) { if (kind !== '도메인') return r; const nm = `${r.dg}${r.type}${r.len}`; if (nm !== r.name) { r.fixed = r.fixed || {}; if (!('name' in r.fixed)) r.fixed.name = r.name; r.name = nm; r.abbr = String(r.abbr || '').replace(/_[A-Z][\d,_]*$/, `_${r.type}${String(r.len).replace(',', '_')}`); } return r; }
+  // what a row WOULD be after some changes — the same re-judge, on a copy (previews: 자동 수정 · 찾아 바꾸기 · 수정 제안 · cell edit)
+  function simRow(r, changes) { const c = JSON.parse(JSON.stringify(r)), keys = Object.keys(changes); c.fixed = c.fixed || {};
+    keys.forEach(k => { if (!(k in c.fixed)) c.fixed[k] = c.shown && k === 'desc' ? c.shown : c[k]; if ((c.st === 'same' || c.st === 'chg') && c.id) { c.old = c.old || {}; if (!(k in c.old)) c.old[k] = c[k]; } c[k] = changes[k]; }); delete c.shown;
+    if (keys.some(k => ['dg', 'type', 'len'].includes(k))) derive(c); syncRow(c);
+    return rejudge(c, '통과', keys, ROWS.map(o => o.r === r.r ? c : o)); }
+  const verdict = c => c.st === 'err' ? `오류 · ${c.why}` : c.st === 'pre' ? `보류 · ${c.why}` : `통과 · ${ST[c.st][0]}${c.warn ? '(경고)' : ''}`;
   // initial load (empty organisation dictionary): new rows only, no baseline, recorded as 초기 적재 (CL12-18)
   const INIT_ROWS = [
     { r: 2, st: 'new', name: '요구사항상태구분', abbr: 'DEMND_MATER_STTS_SE', dom: '코드C2', desc: '요구사항 진행 상태 구분', why: '신규(초기 적재)' },
@@ -215,19 +358,20 @@ window.pageInit = function () {
   const wordLim = () => getPolicy().wordAbbr || 6;   // the same limit the approval check uses
   const CG = { 요구사항상태: { id: 'C-0006', dom: '코드C1' }, 산출물상태: { abbr: 'DLVRBL_STTS', dom: '코드C1', eng: '산출물 진행 상태' } };   // code groups the sample rows belong to
   const W_ROWS = [
-    { r: 2, st: 'new', name: '완화', abbr: 'MTGT', eng: 'mitigation', desc: '위험의 영향이나 발생 가능성을 줄임', why: '신규' },
-    { r: 3, st: 'new', name: '검수', abbr: 'INSPCT', eng: 'inspection', desc: '납품된 산출물이 요구에 맞는지 확인함', rule: 'W-SIMABBR', warnF: 'abbr', why: '신규 · 경고: 약어가 공통 단어 ‘검사’(INSP)와 비슷', warn: '영문약어명 INSPCT가 공통 단어 ‘검사’(INSP · W-0211)와 비슷합니다 — 뜻이 다르다는 근거를 신청 사유에 적으세요(W-SIMABBR)' },
+    // E-02: every new word here is absent from the full common standard (검수 · 점검 · 정비 · 납품 · 수령자 are common words now); warnings come from the shared check
+    { r: 2, st: 'new', name: '완화', abbr: 'MITG', eng: 'mitigation', desc: '위험의 영향이나 발생 가능성을 줄임', why: '신규' },
+    { r: 3, st: 'new', name: '검측', abbr: 'INSPMS', eng: 'inspection and measurement', desc: '시공·설치 결과를 검사하고 치수를 재어 확인함', why: '신규' },
     { r: 4, st: 'same', id: 'W-0102', name: '산출물', abbr: 'DLVRBL', eng: 'deliverable', desc: '사업 수행 결과로 제출하는 문서·코드·모델 등', why: '바뀐 것 없음' },
     { r: 5, st: 'err', name: '산출물', abbr: 'DLVRBL', eng: 'deliverable', desc: '사업 결과로 제출하는 문서·코드·모델', rule: 'X-NAMEDUP', bad: 'name', dupOf: 'W-0102', why: '같은 이름의 단어가 이미 있음(W-0102) — 4행을 복사한 행?' },
-    { r: 6, st: 'err', name: '납품', abbr: 'DLVRBL', eng: 'delivery', desc: '물품·산출물을 발주처에 넘김', rule: 'W-DUPABBR', bad: 'abbr', why: "영문약어명 'DLVRBL'을 단어 ‘산출물’(W-0102)이 이미 씀", fix: { abbr: 'DLVR' } },
-    { r: 7, st: 'err', name: '정비', abbr: 'MAINTENANCE', eng: 'maintenance', desc: '시설·장비를 손보아 유지함', rule: 'W-ABBRLEN', bad: 'abbr', why: '영문약어명 11자 — 단어 약어는 6자 이내(검수 기준)', fix: { abbr: 'MNTN' }, auto: 1 },
-    { r: 8, st: 'waitSame', name: '수령자', abbr: 'RCPNT', eng: 'recipient', desc: '물품·문서를 받는 사람', doc: 'REQ-2026-0012', why: 'REQ-2026-0012 진행 중(같은 내용)' },
-    { r: 9, st: 'new', name: '점검', abbr: 'INSPC', eng: 'check', desc: '상태를 하나하나 살펴 확인함', rule: 'W-SIMABBR', warnF: 'abbr', why: '신규 · 경고: 약어가 공통 단어 ‘검사’(INSP)와 비슷', warn: '영문약어명 INSPC가 공통 단어 ‘검사’(INSP · W-0211)와 한 글자 차이입니다 — 뜻이 다르다는 근거를 신청 사유에 적으세요(W-SIMABBR)' }
+    { r: 6, st: 'err', name: '인도물', abbr: 'DLVRBL', eng: 'delivered item', desc: '계약에 따라 발주처에 넘기는 물품', rule: 'W-DUPABBR', bad: 'abbr', why: "영문약어명 'DLVRBL'을 단어 ‘산출물’(W-0102)이 이미 씀", fix: { abbr: 'DVITM' } },
+    { r: 7, st: 'err', name: '검교정', abbr: 'CALIBRATION', eng: 'calibration', desc: '계측 장비를 검사하고 기준에 맞게 바로잡음', rule: 'W-ABBRLEN', bad: 'abbr', why: '영문약어명 11자 — 단어 약어는 6자 이내(검수 기준)', fix: { abbr: 'CLVRF' }, auto: 1 },
+    { r: 8, st: 'waitSame', name: '품질검토', abbr: 'QLTRVW', eng: 'quality review', desc: '산출물이 품질 기준을 채우는지 검토함', doc: 'REQ-2026-0014', why: 'REQ-2026-0014 진행 중(같은 내용)' },
+    { r: 9, st: 'new', name: '수검', abbr: 'INSPE', eng: 'undergoing inspection', desc: '검사를 받음', why: '신규' }
   ];
   const D_ROWS = [
     { r: 2, st: 'new', name: '금액N18,2', abbr: 'AMT_N18_2', dg: '금액', type: 'N', len: '18,2', desc: '소수 둘째 자리까지의 금액(원)', why: '신규' },
-    { r: 3, st: 'new', name: '코드C3', abbr: 'CD_C3', dg: '코드', type: 'C', len: '3', desc: '3자리 고정 코드', why: '신규' },
-    { r: 4, st: 'err', name: '번호X5', abbr: 'NO_X5', dg: '번호', type: 'X', len: '5', desc: '5자리 번호', rule: 'D-BADTYPE', bad: 'type', why: "데이터 타입 'X'는 쓸 수 없음 — N·C·V·D·T 중 하나", fix: { type: 'V', name: '번호V5', abbr: 'NO_V5' } },
+    { r: 3, st: 'new', name: '코드C6', abbr: 'CD_C6', dg: '코드', type: 'C', len: '6', desc: '6자리 고정 코드', why: '신규' },
+    { r: 4, st: 'err', name: '번호X7', abbr: 'NO_X7', dg: '번호', type: 'X', len: '7', desc: '7자리 번호', rule: 'D-BADTYPE', bad: 'type', why: "데이터 타입 'X'는 쓸 수 없음 — N·C·V·D·T 중 하나", fix: { type: 'V', name: '번호V7', abbr: 'NO_V7' } },
     { r: 5, st: 'err', name: '건수N5', abbr: 'CNT_N5', dg: '수량', type: 'N', len: '5', desc: '5자리 건수', rule: 'D-NAMERULE', bad: 'name', why: "도메인명 '건수N5' ≠ 분류+타입+길이 '수량N5'", fix: { name: '수량N5', abbr: 'QTY_N5' }, auto: 1 },
     { r: 6, st: 'same', id: 'D-0002', name: '금액N15', abbr: 'AMT_N15', dg: '금액', type: 'N', len: '15', desc: '금액', why: '바뀐 것 없음' },
     { r: 7, st: 'waitSame', id: 'D-0031', name: '코드C2', abbr: 'CD_C2', dg: '코드', type: 'C', len: '2', desc: '2자리 코드', doc: 'REQ-2026-0010', why: 'REQ-2026-0010 진행 중(같은 내용)' }
@@ -252,7 +396,7 @@ window.pageInit = function () {
     용어: { k: 'term', sheet: '표준용어', file: m => m === 'init' ? '기관용어_초기적재.xlsx' : '요구사항관리_용어_2차.xlsx', rows: ROWS0, init: INIT_ROWS,
       cols: [['name', '용어명'], ['abbr', '약어', 'cm'], ['dom', '도메인', 'm'], ['desc', '설명']], cmp: ['name', 'dom', 'desc'], lbl: { name: '용어명', abbr: '영문약어명', dom: '도메인', desc: '설명' },
       req: '2/2', note: '<span class="badge b-warning">확인 필요 1</span> 담당자 열은 가져오지 않음으로 둡니다', ok: '필수 항목이 모두 연결됐습니다. 1행은 숨김 열이 없어 <b>이름+약어</b>로 짝을 찾습니다.',
-      map: () => MR('용어명', '산출물제출일자', '용어명 *', AUTO) + MR('표준도메인', '연월일C8', '도메인명 * <span class="caption faint">(구 양식 별칭)</span>', AUTO) + MR('용어설명', '산출물을 제출한 날짜', '설명', AUTO) + MR('영문약어', '<span class="mono">DLVRBL_SBMT_DATE</span>', '용어 영문약어명 <span class="caption faint">계산 값 — 참고만</span>', RO) + IDROW('T-0412 · V2 · BL-20261116-0905', '13/14행') + MR('담당자', '김모델', '<select class="input u-w-200" aria-label="담당자 열 매핑"><option>(가져오지 않음)</option><option>설명에 덧붙이기</option></select>', '<span class="badge">미사용 열</span>') },
+      map: () => MR('용어명', '산출물제출일자', '용어명 *', AUTO) + MR('표준도메인', '연월일C8', '도메인명 * <span class="caption faint">(구 양식 별칭)</span>', AUTO) + MR('용어설명', '산출물을 제출한 날짜', '설명', AUTO) + MR('영문약어', '<span class="mono">DLVRBL_SBMT_DATE</span>', '용어 영문약어명 <span class="caption faint">계산 값 — 참고만</span>', RO) + IDROW('T-0412 · V2 · BL-20261116-0905', '13/14행') + MR('담당자', '김모델', '<select class="input u-w-200" aria-label="담당자 열 매핑"><option>(가져오지 않음)</option><option>설명에 덧붙이기</option></select>', '<span class="badge b-warning">확인 필요</span>') },
     단어: { k: 'word', sheet: '표준단어', file: m => m === 'init' ? '기관단어_초기적재.xlsx' : '요구사항관리_단어_2차.xlsx', rows: W_ROWS,
       cols: [['name', '단어명'], ['abbr', '영문약어명', 'm'], ['eng', '영문명'], ['desc', '설명']], cmp: ['name', 'abbr', 'eng', 'desc'], lbl: { name: '단어명', abbr: '영문약어명', eng: '영문명', desc: '설명' },
       req: '3/3', note: '<span class="badge b-warning">확인 필요 1</span> ‘형식단어여부’ 열은 W1에서 받지 않아 가져오지 않음으로 둡니다', ok: '필수 항목(단어명·영문약어명·영문명)이 모두 연결됐습니다. 4행 말고는 숨김 열이 없어 <b>단어명</b>으로 사전과 짝을 찾습니다.',
@@ -269,10 +413,13 @@ window.pageInit = function () {
       note2: '코드값은 <b>코드 그룹별로 한 결재 항목</b>이 됩니다. 같은 코드 안 중복(CV-DUP)과 도메인 길이(CV-LEN)를 추가로 검사합니다.',
       map: () => MR('코드ID · 코드명', '<span class="mono">C-0006</span> · 요구사항상태', '코드 *', AUTO) + MR('코드값', '<span class="mono">R</span>', '코드값 *', AUTO) + MR('코드값명', '접수', '코드값명 *', AUTO) + MR('정렬순서', '1', '순서', AUTO) + MR('도메인', '<span class="mono">코드C1</span>', '코드값 길이 검사 기준 <span class="caption faint">사전 값 사용</span>', RO) }
   };
-  const seedRows = () => { const K = KC[kind]; const src = mode === 'init' ? (K.init || K.rows.filter(r => !r.id && ['new', 'err'].includes(r.st)).map(r => Object.assign({}, r, { why: r.st === 'new' ? '신규(초기 적재)' : r.why }))) : K.rows; return JSON.parse(JSON.stringify(src)).map(syncRow).map(openCheck).map(judgePre); };
-  // a new word / domain whose name is already in an open request waits for it (same rule as the approval check's "신청 중")
-  function openCheck(r) { if (r.st !== 'new' || kind === '용어' || kind === '코드') return r; const o = openItems().find(x => x.it.k === KC[kind].k && x.it.name === r.name && (x.it.act || '추가') === '추가'); if (!o) return r;
-    const same = !o.it.abbr || o.it.abbr === r.abbr; r.st = same ? 'waitSame' : 'waitDiff'; r.doc = o.doc; r.why = `${o.doc} 진행 중(${same ? '같은 내용' : `다른 내용: ${o.it.abbr}`})${same ? '' : ' — 고친 값 보류'}`; return r; }
+  // E-02 · CL-03: seeded 신규/변경 rows go through the same re-judge as every edit — step 5 never shows '신규' for a row the approval re-check would block
+  const seedRows = () => { const K = KC[kind]; const src = mode === 'init' ? (K.init || K.rows.filter(r => !r.id && ['new', 'err'].includes(r.st)).map(r => Object.assign({}, r, { why: r.st === 'new' ? '신규(초기 적재)' : r.why }))) : K.rows;
+    const rows = JSON.parse(JSON.stringify(src)).map(syncRow);
+    rows.forEach(r => { if (kind !== '코드' && ['new', 'chg'].includes(r.st)) rejudge(r, r.why, null, rows);
+      // a decomposition candidate carries today's word abbreviations (the common standard renamed some)
+      if (r.st === 'pick') { const dc = decompose(r.name); if (dc.ok) r.cands[0] = `${dc.parts.map(p => p.w).join('+')} · ${dc.abbr}`; } });
+    return rows; };
   // a code row is named by its value; a fixed domain row recomputes its name from group + type + length
   function syncRow(r) { if (kind === '코드') r.name = `${r.v} ${r.nm}`; return r; }
   const codeLen = r => +((((CG[r.grp] || {}).dom || '').match(/\d+$/) || [0])[0]);
@@ -310,16 +457,21 @@ window.pageInit = function () {
   }
   else if (verifyId) ROWS = [];
   // baseline scope (CX14-05): a filtered download only covers the items it listed — "파일에서 빠짐" is judged inside that set
-  const applyScope = () => { window.__scopeNote = ''; if (mode !== 'round' || B || verifyId || kind !== '용어') return; /* the sample baseline is a term download */ const bl = latestBaseline(); const m = /(?:필터: |검색 결과\()([^)]+)\)?$/.exec(bl.scope || ''); const ids = Array.isArray(bl.ids) && bl.ids.length ? new Set(bl.ids) : null; if (ids || (m && m[1].trim() && m[1].trim() !== '최근 변경')) { const kw = m ? m[1].trim() : ''; const inScope = r => !r.id || (ids ? ids.has(r.id) : r.name.includes(kw)); const out = ROWS.filter(r => r.id && !inScope(r) && ['missing', 'same', 'chg'].includes(r.st)); ROWS = ROWS.filter(r => !out.includes(r)); window.__scopeNote = `기준본 ${bl.id} 범위(${bl.scope}) 밖 ${out.length}행은 비교·신청에서 뺐습니다`; } }; applyScope();
+  let outRows = [];   // E-05: rows outside the baseline scope stay in the corrected file (with their status), they are only left out of comparison
+  const applyScope = () => { window.__scopeNote = ''; outRows = []; if (mode !== 'round' || B || verifyId || kind !== '용어') return; /* the sample baseline is a term download */ const bl = latestBaseline(); const m = /(?:필터: |검색 결과\()([^)]+)\)?$/.exec(bl.scope || ''); const ids = Array.isArray(bl.ids) && bl.ids.length ? new Set(bl.ids) : null; if (ids || (m && m[1].trim() && m[1].trim() !== '최근 변경')) { const kw = m ? m[1].trim() : ''; const inScope = r => !r.id || (ids ? ids.has(r.id) : r.name.includes(kw)); const out = ROWS.filter(r => r.id && !inScope(r) && ['missing', 'same', 'chg'].includes(r.st)); ROWS = ROWS.filter(r => !out.includes(r)); outRows = out; window.__scopeNote = `기준본 ${bl.id} 범위(${bl.scope}) 밖 ${out.length}행은 비교·신청에서 뺐습니다`; } }; applyScope();
   { const xf = $('x-final'); if (xf) xf.style.display = lineFor('dict').includes('final') ? '' : 'none'; }   // the line follows settings (CL14-10)
   let cur = missingB ? 1 : (resumeId || verifyId) ? 5 : parseInt(q.get('step') || '1', 10), file = !missingB && !!(resumeId || verifyId), timer = null, sel = null;
-  let undoStack = [];
+  // E-03: a lasting, labelled undo history (toolbar button · Ctrl+Z · the toast's [실행 취소] all pop this one stack)
+  let undoStack = [], undoSeq = 0, lastRows = null, recentF = false, pendingCell = null;
   // write rules (S1/S4): submitted batches are read-only; deep-link demos never write; only the uploader resumes
   const lastDoc = B ? (B.docs || []).map(id => getDocs().find(x => x.id === id)).filter(Boolean).slice(-1)[0] : null;
   const frozen = !!(lastDoc && ['da', 'final', 'done'].includes(lastDoc.step));
   const demo = !!verifyId || (q.has('step') && !resumeId);
   const notMine = B && B.by !== ME.id;
   const canWrite = !demo && !frozen && !notMine && !missingB && can('dict.request');   // RBAC (15): 사전 신청 권한
+  // E-09: why this screen is read-only — said from step 1, and on every disabled correction tool
+  const roReason = canWrite ? '' : missingB ? '찾을 수 없는 업로드' : demo ? '예시 화면이라 저장하지 않습니다' : frozen ? '신청된 묶음은 열람 전용입니다' : notMine ? '다른 사람이 올린 묶음이라 열람만 할 수 있습니다' : '사전 신청 권한이 없어 검증 결과 보기까지만 할 수 있습니다';
+  let err0 = B && B.err0 != null ? B.err0 : null;   // E-07: errors found by validation → progress "처음 n → 남은 m"
   const tokenNow = () => ({ policy: getPolicy().ver, dict: dictRev() });
   let stale = !!(B && B.token && canWrite && (B.token.policy !== getPolicy().ver || B.token.dict !== dictRev()));
   if (missingB) { $('resume-banner').hidden = false; $('resume-banner').innerHTML = `<div class="banner danger"><i data-ic=warn></i><div class="grow"><b>${lookupId}</b> 업로드를 찾을 수 없거나 열람 권한이 없습니다. 새 업로드는 1단계부터 시작하세요 — 이 화면은 아무것도 저장하지 않습니다.</div><a class="btn sm" href="uploads.html">업로드 이력</a><a class="btn sm" href="excel-import.html">새 업로드</a></div>`; }
@@ -333,8 +485,9 @@ window.pageInit = function () {
     $('resume-banner').innerHTML = `<div class="banner ${verifyId ? (verifyOk && verifySame ? 'success' : verifyOk ? 'warning' : 'danger') : frozen || notMine || demo ? 'info' : lastDoc ? 'warning' : 'info'}"><i data-ic=info></i><div class="grow">${msg}</div></div>`;
     if (verifyId && verifyOk && verifySame && B) { const bs = getBatches(); const bb = bs.find(x => x.id === B.id); if (bb && !bb.roundTrip) { bb.roundTrip = { at: nowStr(), by: ME.id, rows: ROWS.length }; saveBatches(bs); } }   // round-trip completion is recorded
   }
+  if (!canWrite && !B && !demo && !missingB) { $('resume-banner').hidden = false; $('resume-banner').innerHTML = `<div class="banner info"><i data-ic=info></i><div class="grow"><b>열람 전용</b> — ${ME.name}님 역할은 ${roReason}. 파일을 올려 오류를 확인하고 가이드를 내려받을 수는 있지만, 고치기와 신청은 할 수 없습니다. 신청은 DA·모델러에게 요청하세요.</div><a class="btn sm" href="uploads.html">업로드 이력</a></div>`; }
   if (stale) { $('resume-banner').hidden = false; $('resume-banner').insertAdjacentHTML('beforeend', `<div class="banner warning u-mt-8"><i data-ic=warn></i><div class="grow"><b>다시 검증해야 합니다</b> — 이 묶음을 검증한 뒤 ${B.token.policy !== getPolicy().ver ? `검수 기준이 v${B.token.policy} → v${getPolicy().ver}로` : '사전이'} 바뀌었습니다. 화면에서 고친 값은 그대로 두고 현재 기준으로 다시 검증합니다.</div><button class="btn sm primary" id="revalidate">다시 검증</button></div>`);
-    setTimeout(() => { const b = $('revalidate'); if (b) b.onclick = () => { ROWS.forEach(r => { if (r.st === 'pre') { r.st = 'new'; } judgePre(r); if (r.st === 'new' || r.st === 'chg') { const bad = r.dom && r.dom !== '—' && !DOMS.includes(r.dom); if (bad) { r.st = 'err'; r.rule = 'D-NOTFOUND'; r.bad = 'dom'; r.why = `도메인 '${r.dom}' 없음(현재 기준)`; } } }); stale = false; if (B) B.token = tokenNow(); persist(); toast('현재 기준으로 다시 검증했습니다 — 고친 값은 유지', 'success'); $('resume-banner').querySelectorAll('.banner.warning').forEach(x => { if (x.querySelector('#revalidate')) x.remove(); }); render(); }; }, 0); }
+    setTimeout(() => { const b = $('revalidate'); if (b) b.onclick = () => { ROWS.forEach(r => { if (['new', 'chg', 'pre'].includes(r.st)) rejudge(r, '다시 검증 통과(현재 기준)'); }); /* E-01: the same re-judge */ stale = false; if (B) B.token = tokenNow(); persist(); toast('현재 기준으로 다시 검증했습니다 — 고친 값은 유지', 'success'); $('resume-banner').querySelectorAll('.banner.warning').forEach(x => { if (x.querySelector('#revalidate')) x.remove(); }); render(); }; }, 0); }
   const counts = () => { const c = { new: 0, chg: 0, same: 0, waitSame: 0, waitDiff: 0, conflict: 0, dup: 0, pre: 0, err: 0, missing: 0, pick: 0 }; ROWS.forEach(r => { c[r.st === 'pick' ? 'pick' : r.st]++; }); return c; };
   function persist() {
     if (!canWrite) { $('saved').innerHTML = `<span class="sdot"></span>${demo ? '예시 · 저장 안 함' : '열람 전용'}`; return; }
@@ -345,7 +498,7 @@ window.pageInit = function () {
     if (B) { const st = batches.find(b => b.id === B.id); if (st && ((st.docs || []).length !== (B.docs || []).length || st.status !== B.status || (st.rev || 0) !== (B.rev || 0))) { toast(`${B.id}가 다른 탭에서 바뀌었습니다(${batchStateLabel(batchState(st))}) — 이 탭의 내용은 저장하지 않았습니다. 새로고침하세요`, 'danger', { label: '새로고침', fn: () => location.reload() }); $('saved').innerHTML = '<span class="sdot err"></span>저장 안 함 · 다른 탭 변경'; return false; } }
     // the batch keeps the baseline the user actually downloaded (or 초기 적재) — CX12-09 · CL12-19
     if (!B) { const id = 'UP-2026-' + String(Math.max(...batches.map(b => +b.id.slice(-4))) + 1).padStart(4, '0'); const bl = latestBaseline(); B = { id, file: KC[kind].file(mode), kind, by: ME.id, at: nowStr(), baseline: mode === 'init' ? '—(초기 적재)' : bl.id, baselineScope: mode === 'init' ? '' : bl.scope, rows: ROWS.length, docs: [], status: '임시 저장', mode }; batches.unshift(B); }
-    const i = batches.findIndex(b => b.id === B.id); B.counts = counts(); B.draft = ROWS; B.rev = (B.rev || 0) + 1; if (!B.token) B.token = tokenNow(); B.mode = mode; batches[i] = B; saveBatches(batches);
+    const i = batches.findIndex(b => b.id === B.id); B.counts = counts(); B.draft = ROWS; if (B.err0 == null && err0 != null) B.err0 = err0; B.rev = (B.rev || 0) + 1; if (!B.token) B.token = tokenNow(); B.mode = mode; batches[i] = B; saveBatches(batches);
     $('saved').innerHTML = `<span class="sdot ok"></span>${B.id} · 임시 저장 ${nowStr().split(' ')[1]}`;
     $('crumb').textContent = `기관 사전 · ${kind === '코드' ? '코드값' : '표준' + kind} · ${B.id}`;
     return true;
@@ -354,7 +507,7 @@ window.pageInit = function () {
   // same visibility and the same state function as the upload history (CX9-09 · CL10-02)
   const recent = getBatches().filter(canSeeBatch).slice(0, 4);
   $('recent').innerHTML = recent.map(b => { const s = batchState(b); const ld = (b.docs || []).slice(-1)[0]; return `<tr><td class="mono">${b.id}<div class="caption faint">${b.at}</div></td><td>${b.file}<div class="caption faint">${b.kind} · ${b.rows}행</div></td><td><span class="badge ${s === '반영됨' ? 'b-success' : s === '보완' ? 'b-danger' : s === '취소' ? '' : 'b-info'}">${batchStateLabel(s)}</span>${ld ? ` <a href="approvals.html?doc=${ld}" class="caption">${ld}</a>` : ''}</td><td>${['임시 저장', '보완'].includes(s) && b.by === ME.id ? `<a class="btn sm" href="excel-import.html?resume=${b.id}">이어서 작업</a>` : `<a class="caption" href="uploads.html?b=${b.id}">보기</a>`}</td></tr>`; }).join('') || '<tr class="er none"><td colspan="4" class="caption muted u-tc u-p-16">최근 업로드가 없습니다</td></tr>';
-  const setMode = m => { if (B && canWrite && m !== mode) { toast('이미 저장된 묶음은 방식을 바꿀 수 없습니다 — 새 업로드로 시작하세요', 'info'); return; } mode = m; document.querySelectorAll('.modecard').forEach(x => { const on = (x.dataset.mode === 'new' ? 'init' : 'round') === m; x.classList.toggle('on', on); x.querySelector('input').checked = on; }); if (!B) { ROWS = seedRows(); applyScope(); } drawBL(); drawKind(); };
+  const setMode = m => { if (B && canWrite && m !== mode) { toast('이미 저장된 묶음은 방식을 바꿀 수 없습니다 — 새 업로드로 시작하세요', 'info'); return; } mode = m; document.querySelectorAll('.modecard').forEach(x => { const on = (x.dataset.mode === 'new' ? 'init' : 'round') === m; x.classList.toggle('on', on); x.querySelector('input').checked = on; }); if (!B) { ROWS = seedRows(); applyScope(); undoStack = []; lastRows = null; recentF = false; pendingCell = null; err0 = null; } drawBL(); drawKind(); };
   document.querySelectorAll('.modecard').forEach(m => m.onclick = () => setMode(m.dataset.mode === 'new' ? 'init' : 'round'));
   if (mode === 'init') setTimeout(() => setMode('init'), 0);   // after the baseline banner function exists
   // everything that depends on the kind: buttons, blank form, header mapping, grid columns, file card (DX-07)
@@ -371,7 +524,7 @@ window.pageInit = function () {
   }
   $('kinds').addEventListener('click', e => { const k = e.target.closest('.kindcard'); if (!k || k.dataset.k === kind) return;
     if (B) { toast(`${B.id}는 ${B.kind} 묶음이라 종류를 바꿀 수 없습니다 — 새 업로드로 시작하세요`, 'info'); return; }
-    kind = k.dataset.k; ROWS = seedRows(); applyScope(); undoStack = []; sel = null; filt = ''; ruleF = '';
+    kind = k.dataset.k; ROWS = seedRows(); applyScope(); undoStack = []; lastRows = null; recentF = false; pendingCell = null; err0 = null; sel = null; filt = ''; ruleF = '';
     if (file) { file = false; $('filecard').hidden = true; toast(`종류를 ${josa(kind === '코드' ? '코드값' : '표준' + kind, '으로/로')} 바꿨습니다 — 그 양식 파일을 다시 선택하세요`, 'info'); }
     drawKind(); render(); });
   // ---- step 2
@@ -388,121 +541,189 @@ window.pageInit = function () {
   const colOf = f => KC[kind].cols.find(c => c[0] === f) || [f, f, ''];
   const cellV = (r, f) => {
     const v = r[f] == null ? '' : r[f]; const o = r.old && r.old[f]; const [, lb, fl] = colOf(f); const mono = (fl || '').includes('m') ? ' mono' : '';
-    if (r.st === 'err' && r.bad === f) return `<td class="cell-err${mono}" contenteditable="${canWrite}" data-f="${f}" data-r="${r.r}" title="${r.rule}: ${r.why}" aria-label="${r.r}행 ${lb} — 오류 ${r.rule}: ${r.why}${canWrite ? ' · 고치면 다시 검증' : ''}">${r.shown && f === 'desc' ? r.shown : v}</td>`;
-    if (r.fixed && r.fixed[f]) return `<td class="cell-fix${mono}" title="파일 값: ${r.fixed[f]}"><span class="old-v">${r.fixed[f]}</span>${v}</td>`;
-    if (o !== undefined) return `<td class="cell-chg${mono}"><span class="old-v">${o}</span>${v}</td>`;
+    // E-08: a value that failed its check stays in the cell (red, with the reason) until it is fixed or Esc brings the file value back — it is never saved
+    const pc = pendingCell && pendingCell.r === r.r && pendingCell.f === f ? pendingCell : null;
+    if (r.st === 'err' && r.bad === f) return `<td class="${pc ? 'cell-bad' : 'cell-err'}${mono}" contenteditable="${canWrite}" data-f="${f}" data-r="${r.r}" title="${esc5(pc ? pc.msg : `${r.rule}: ${r.why}`)}"${pc ? ' aria-invalid="true"' : ''} aria-label="${r.r}행 ${lb} — ${pc ? `입력 값 확인 안 됨: ${esc5(pc.msg)}` : `오류 ${r.rule}: ${esc5(r.why)}`}${canWrite ? ' · Enter 다시 검증 · Esc 파일 값' : ''}">${esc5(pc ? pc.val : r.shown && f === 'desc' ? r.shown : v)}</td>`;
+    // E-15: the crossed-out old value is not read aloud as part of the new one
+    if (r.fixed && r.fixed[f] !== undefined && String(r.fixed[f]) !== String(v)) return `<td class="cell-fix${mono}" title="파일 값: ${esc5(r.fixed[f])}"><span class="old-v" aria-hidden="true">${esc5(r.fixed[f])}</span><span class="sr-only">파일 값 ${esc5(r.fixed[f])}, 고친 값 </span>${esc5(v)}</td>`;
+    if (o !== undefined) return `<td class="cell-chg${mono}"><span class="old-v" aria-hidden="true">${esc5(o)}</span><span class="sr-only">현재 사전 ${esc5(o)}, 파일 값 </span>${esc5(v)}</td>`;
     if (r.warnF === f && r.warn) return `<td class="${mono.trim()}" title="${r.warn}"><span class="st">${v}<span aria-label="경고: ${r.warn}"><i data-ic=warn data-s=12></i></span></span></td>`;
     return `<td${mono ? ` class="${mono.trim()}"` : ''}>${v}</td>`;
   };
   let filt = '', ruleF = '';
+  const esc5 = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+  // one visibility rule for the grid, the panel, F8, auto-fix and find & replace: status chip × error rule × "방금 바꾼 행만" (E-03)
+  const rowVis = r => (!filt || r.st === filt) && (!ruleF || r.rule === ruleF) && (!recentF || !lastRows || lastRows.has(r.r));
+  const roAttr = () => canWrite ? '' : ` aria-disabled="true" title="열람 전용 — ${roReason}"`;
+  // what still needs a look once the errors are gone (E-07) — real counts, not a fixed sentence
+  const leftText = () => { const p = plan(), c = counts(), w = p.sub.filter(r => r.warn).length;
+    const parts = [[w, '경고 확인'], [p.pickLeft, '후보 미선택'], [c.conflict, '충돌'], [p.hold.length, '보류'], [c.missing, '빠짐']].filter(([n]) => n).map(([n, l]) => `${l} ${n}`);
+    return parts.length ? `남은 확인: ${parts.join(' · ')}` : `남은 확인 없음 — 신청 ${p.sub.length + p.unuse.length}건`; };
   function drawGrid() {
     const c = counts();
-    const chips = [['', '전체', ROWS.length], ['new', '신규', c.new], ['chg', '변경', c.chg], ['same', '동일', c.same], ['waitSame', '동일 내용 대기', c.waitSame], ['waitDiff', '다른 내용 대기', c.waitDiff], ['conflict', '충돌', c.conflict], ['pick', '후보 선택', c.pick], ['pre', '선행 승인', c.pre], ['err', '오류', c.err], ['missing', '빠짐', c.missing]];
-    $('chips').innerHTML = chips.map(([k, l, n]) => `<button class="chip ${filt === k ? 'on' : ''}" data-f="${k}">${l} <span class="n">${n}</span></button>`).join('') + `<span class="grow"></span><button class="btn sm" id="dl-err" title="오류 행 + 오류 칸·수정 방법 열이 붙은 CSV(엑셀에서 바로 열림)"><i data-ic=download></i>오류·수정 가이드</button><button class="btn sm" id="dl-fix" title="화면에서 고친 값을 반영한 전체 행 CSV"><i data-ic=download></i>보정본</button>` + (window.__scopeNote ? `<div class="caption muted" style="flex-basis:100%;margin-top:4px"><i data-ic=info data-s=12></i> ${window.__scopeNote}</div>` : '');
+    const chips = [['', '전체', ROWS.length], ['new', '신규', c.new], ['chg', '변경', c.chg], ['same', '동일', c.same], ['waitSame', '같은 내용 결재 중', c.waitSame], ['waitDiff', '다른 내용 결재 중', c.waitDiff], ['conflict', '충돌', c.conflict], ['pick', '후보 선택', c.pick], ['pre', '선행 승인', c.pre], ['err', '오류', c.err], ['missing', '빠짐', c.missing]];
+    const last = undoStack[undoStack.length - 1], nRecent = lastRows ? lastRows.size : 0, nErr = c.err;
+    $('chips').innerHTML = chips.map(([k, l, n]) => `<button class="chip ${filt === k && !recentF ? 'on' : ''}" data-f="${k}" aria-pressed="${filt === k && !recentF}">${l} <span class="n">${n}</span></button>`).join('')
+      + `<button class="chip ${recentF ? 'on' : ''}" id="recent-f" aria-pressed="${recentF}"${nRecent ? ` title="마지막 작업(${esc5(last ? last.label : '')})이 바꾼 행만 봅니다"` : ' aria-disabled="true" title="아직 바꾼 행이 없습니다"'}>방금 바꾼 행만 <span class="n">${nRecent}</span></button>`
+      + '<span class="grow"></span>'
+      + `<span class="caption muted undo-last" title="${esc5(undoStack.slice(-6).reverse().map(o => `${o.at} ${o.label}`).join(' / '))}">${last ? `마지막 작업: ${esc5(last.label)} · ${last.at}` : ''}</span>`
+      + `<button class="btn sm" id="undo-btn"${!canWrite ? roAttr() : undoStack.length ? ` title="${esc5(last.label)} 되돌리기 (Ctrl+Z)"` : ' aria-disabled="true" title="되돌릴 작업이 없습니다"'}>되돌리기 (${undoStack.length})</button>`
+      + `<button class="btn sm" id="fr-open"${canWrite ? ' title="보이는 행에서 찾아 바꾸기 (Ctrl+H)"' : roAttr()}><i data-ic=search></i>찾아 바꾸기</button>`
+      + `<button class="btn sm" id="dl-err" title="화면 필터와 관계없이 전체 오류 ${nErr}행 + 확인 필요 행 · CSV(목업 — 실제는 XLSX 가이드 시트 · 셀 메모)"><i data-ic=download></i>오류 가이드 (전체 ${nErr}행)</button>`
+      + '<button class="btn sm" id="dl-fix" title="파일의 모든 행 + 숨김 열(항목 ID·버전·기준본) + 변경점 열 · CSV(목업 — 실제는 XLSX: 본문 + 변경점 시트, 모든 칸 텍스트 서식)"><i data-ic=download></i>보정본 (CSV)</button>'
+      + (window.__scopeNote ? `<div class="caption muted scope-note"><i data-ic=info data-s=12></i> ${window.__scopeNote}</div>` : '');
     const errs = ROWS.filter(r => r.st === 'err'); const by = {}; errs.forEach(r => { by[r.rule] = (by[r.rule] || 0) + 1; });
-    const autos = errs.filter(r => r.auto && (!filt || r.st === filt) && (!ruleF || r.rule === ruleF));
-    $('errbar').innerHTML = errs.length ? `<b class="u-danger">오류 ${errs.length}</b>${Object.entries(by).map(([k, n]) => `<button data-rule="${k}" class="${ruleF === k ? 'on' : ''}"><span class="rule">${k}</span> ${RULES[k]} ${n}</button>`).join('')}<span class="grow"></span>${autos.length ? `<button id="auto-all">자동 수정 제안 ${autos.length}건 미리보기</button>` : ''}<button id="next-err">다음 오류 <kbd>F8</kbd></button>` : `<b class="u-success">오류 없음</b> <span class="caption muted">보류·선택 행만 남았습니다</span>`;
-    const L = ROWS.filter(r => (!filt || r.st === filt) && (!ruleF || r.rule === ruleF));
-    $('grid-body').innerHTML = L.map(r => { const s = ST[r.st]; return `<tr class="click ${s[2]} ${sel === r.r ? 'sel' : ''}" data-r="${r.r}" tabindex="0"><td class="num">${r.r}</td><td><span class="st"><span class="badge ${s[1]}">${s[0]}</span>${r.warn ? '<span title="경고 — 신청 시 확인 기록" aria-label="경고"><i data-ic=warn data-s=12></i></span>' : ''}</span></td>${KC[kind].cols.map(c => cellV(r, c[0])).join('')}<td class="wrap caption">${r.rule ? `<span class="rule">${r.rule}</span> ` : ''}${r.why}</td></tr>`; }).join('') || `<tr class="er none"><td colspan="${KC[kind].cols.length + 3}" class="caption muted u-tc u-p-32">이 조건의 행이 없습니다</td></tr>`;
-    $('legend').innerHTML = `<span class="lg"><i style="background:var(--success)"></i>녹색 신청</span><span class="lg"><i style="background:var(--border-strong)"></i>회색 제외</span><span class="lg"><i style="background:var(--info)"></i>파랑 같은 내용 대기</span><span class="lg"><i style="background:var(--warning)"></i>주황 확인·선택·보류</span><span class="lg"><i style="background:var(--danger)"></i>붉은색 오류</span><span class="lg"><i data-ic=warn data-s=12></i> 경고(신청 가능, 기록)</span><span class="lg"><span class="old-v">전</span>후 = 바뀐 칸</span>`;
+    const autos = errs.filter(r => r.auto && rowVis(r));
+    const prog = err0 != null && err0 !== errs.length ? `<span class="caption muted">처음 오류 ${err0} →</span> ` : '';
+    $('errbar').innerHTML = errs.length ? `${prog}<b class="u-danger">오류 ${errs.length}</b>${Object.entries(by).map(([k, n]) => `<button data-rule="${k}" class="${ruleF === k ? 'on' : ''}" aria-pressed="${ruleF === k}"><span class="rule">${k}</span> ${RULES[k] || k} ${n}</button>`).join('')}<span class="grow"></span>${autos.length ? `<button id="auto-all"${roAttr()}>자동 수정 제안 ${autos.length}건 미리보기</button>` : ''}<button id="next-err">다음 오류 <kbd>F8</kbd></button>`
+      : `<b class="u-success">오류 없음</b>${err0 ? ` <span class="caption muted">처음 오류 ${err0} → 0</span>` : ''} <span class="caption muted">${leftText()}</span>`;
+    const L = ROWS.filter(rowVis);
+    $('grid-body').innerHTML = L.map(r => { const s = ST[r.st]; return `<tr class="click ${s[2]} ${sel === r.r ? 'sel' : ''}" data-r="${r.r}" tabindex="0"><td class="num">${r.r}</td><td><span class="st"><span class="badge ${s[1]}">${s[0]}</span>${r.warn ? '<span title="경고 — 신청 시 확인 기록" aria-label="경고"><i data-ic=warn data-s=12></i></span>' : ''}</span></td>${KC[kind].cols.map(c => cellV(r, c[0])).join('')}<td class="why5 caption" title="${esc5((r.rule ? r.rule + ' ' : '') + r.why)}">${r.rule ? `<span class="rule">${r.rule}</span> ` : ''}${esc5(r.why)}</td></tr>`; }).join('') || `<tr class="er none"><td colspan="${KC[kind].cols.length + 3}" class="caption muted u-tc u-p-32">이 조건의 행이 없습니다</td></tr>`;
+    $('legend').innerHTML = '<span class="lg"><i style="background:var(--success)"></i>녹색 신청</span><span class="lg"><i style="background:var(--border-strong)"></i>회색 제외</span><span class="lg"><i style="background:var(--info)"></i>파랑 같은 내용 결재 중</span><span class="lg"><i style="background:var(--warning)"></i>주황 확인·선택·보류</span><span class="lg"><i style="background:var(--danger)"></i>붉은색 오류</span><span class="lg"><i data-ic=warn data-s=12></i> 경고(신청 가능, 기록)</span><span class="lg"><span class="old-v">전</span>후 = 바뀐 칸</span>';
     drawPanel();
   }
   function drawPanel() {
-    const vis = ROWS.filter(r => (!filt || r.st === filt) && (!ruleF || r.rule === ruleF));
+    const vis = ROWS.filter(rowVis);
     const r = vis.find(x => x.r === sel) || vis[0];
     if (!r) { $('pn-row').innerHTML = '<div class="rp-body"><div class="caption muted u-p-24 u-tc">이 조건에 맞는 행이 없습니다 — 필터를 바꾸세요</div></div>'; return; } sel = r.r;
     const s = ST[r.st];
     const K = KC[kind], inDict = r.id || (kind === '코드' && CG[r.grp] && CG[r.grp].id && ['same', 'chg'].includes(r.st));
     const idLine = kind === '코드' ? `${CG[r.grp] && CG[r.grp].id ? CG[r.grp].id + ' · ' : '새 코드 · '}${r.grp} · 값 ${r.v} <span class="caption faint">(코드+코드값으로 짝짓기 · 도메인 ${(CG[r.grp] || {}).dom || '—'})</span>` : (r.id || `(없음 — ${kind === '용어' ? '이름+약어로' : kind + '명으로'} 짝짓기)`);
-    let body = `<div class="section-t">값 비교</div><table class="tbl three"><thead><tr><th>항목</th><th>${inDict ? '현재 사전' : '—'}</th><th>파일</th></tr></thead><tbody>${K.cmp.map(f => `<tr><td>${K.lbl[f]}</td><td>${inDict ? ((r.old && r.old[f]) || r[f]) : '—'}</td><td>${r[f] == null ? '' : r[f]}</td></tr>`).join('')}<tr><td>${kind === '코드' ? '짝' : '항목 ID'}</td><td class="mono" colspan="2">${idLine}</td></tr></tbody></table>`;
+    // E-06: three columns — current dictionary · the file as uploaded · the value corrected on this screen
+    const fileV = f => r.fixed && f in r.fixed ? r.fixed[f] : r.shown && f === 'desc' ? r.shown : r[f];
+    const fixV = f => r.fixed && f in r.fixed && String(r.fixed[f]) !== String(r[f]) ? r[f] : null;
+    let body = `<div class="section-t">값 비교</div><table class="tbl three"><thead><tr><th>항목</th><th>현재 사전</th><th>파일 원본</th><th>보정 값</th></tr></thead><tbody>${K.cmp.map(f => { const fx = fixV(f); return `<tr><td>${K.lbl[f]}</td><td${inDict ? '' : ' class="nov"'}>${inDict ? esc5((r.old && r.old[f] !== undefined) ? r.old[f] : r[f]) : '—'}</td><td>${esc5(fileV(f) == null ? '' : fileV(f))}</td><td${fx != null ? ' class="fixv"' : ' class="nov"'}>${fx != null ? esc5(fx) : '—'}</td></tr>`; }).join('')}<tr><td>${kind === '코드' ? '짝' : '항목 ID'}</td><td class="mono" colspan="3">${idLine}</td></tr></tbody></table>`;
     if (r.st === 'conflict') body = `<div class="section-t">칸 단위 3방향 비교 · ${r.three.field}</div><table class="tbl three"><tbody><tr><td>내려받은 값 (V3)</td><td>${r.three.base}</td></tr><tr><td>현재 사전 (V4)</td><td>${r.three.cur}</td></tr><tr><td>파일 값</td><td>${r.three.file}</td></tr></tbody></table>
-      <div class="caption muted" style="margin:8px 0">같은 칸을 서로 고쳤습니다. 다른 칸끼리였다면 자동으로 합칩니다.</div>
+      <div class="caption muted u-mt-8 u-mb-8">같은 칸을 서로 고쳤습니다. 다른 칸끼리였다면 자동으로 합칩니다.</div>
       <label class="flex"><input type="radio" name="cf" value="keep" ${r.choice !== 'file' ? 'checked' : ''}> 현재 값 유지 <span class="caption faint">(기본 · 이 행 제외)</span></label><label class="flex"><input type="radio" name="cf" value="file" ${r.choice === 'file' ? 'checked' : ''}> 파일 값으로 변경 신청</label>`;
     if (r.st === 'waitSame' || r.st === 'waitDiff') body += `<div class="banner ${r.st === 'waitSame' ? 'info' : 'warning'} u-mt-12"><i data-ic=info></i><div class="grow"><b>${r.doc}</b> 진행 중 — ${r.st === 'waitSame' ? '같은 내용이라 제외합니다.' : '<b>고친 값은 보류로 보존</b>됩니다. 그 신청이 끝나면 [보류 행 다시 검증]으로 이어갑니다.'}</div><a class="btn sm" href="approvals.html?doc=${r.doc}">결재 보기</a></div>`;
     if (r.st === 'pick') body += `<div class="section-t">분해 후보 선택 (MD-09)</div>${r.cands.map((c, i) => `<label class="cand ${r.choice === i ? 'on' : ''}"><input type="radio" name="pk" value="${i}" ${r.choice === i ? 'checked' : ''}><span class="grow">${c}</span></label>`).join('')}`;
-    if (r.st === 'pre') { const w = r.word || '수령자', d0 = r.doc || 'REQ-2026-0012'; body += `<div class="banner warning u-mt-12"><i data-ic=warn></i><div class="grow">다른 신청(${d0})의 새 단어 ‘${w}’가 아직 승인 전입니다. 이 행은 <b>보류</b>되고, 단어가 승인되면 업로드 이력에서 다시 검증해 이어서 신청합니다.</div><a class="btn sm" href="approvals.html?doc=${d0}">결재 보기</a></div>`; }
-    if (r.st === 'err') body += `<div class="section-t">무엇이 틀렸나 · <span class="rule">${r.rule}</span></div><div class="caption u-lh-20">${r.why}.<br>${r.rule === 'X-DUPID' ? '한 항목 ID는 한 행에만 있어야 합니다. 복사한 행이면 ID를 지우고 새 항목으로 처리하세요.' : `<b>고치는 법</b> · ${GUIDE[r.rule] || '규칙을 확인하세요'}.<br>표에서 붉은 칸(${K.lbl[r.bad] || r.bad})을 바로 고치면 즉시 다시 검증합니다.`}</div>
-      ${r.fix ? `<div class="card u-mt-8"><div class="caption muted">수정 제안</div><div>${Object.entries(r.fix).map(([k, v]) => `<span class="old-v">${r.shown && k === 'desc' ? r.shown : r[k]}</span>${v}`).join(' · ')}</div><div class="flex u-mt-8"><span class="grow"></span><button class="btn sm primary" id="apply-fix">제안 적용</button></div></div>` : ''}
-      ${r.rule === 'X-DUPID' ? `<div class="flex u-mt-8"><span class="grow"></span><button class="btn sm" id="as-new">ID 지우고 새 항목으로</button></div>` : ''}
-      ${r.rule === 'X-NAMEDUP' ? `<div class="flex u-mt-8"><span class="grow"></span><button class="btn sm" id="as-chg">기존 항목(${r.dupOf}) 변경으로</button></div>` : ''}`;
-    if (r.st === 'missing') body += `<div class="section-t">처리</div><label class="flex"><input type="radio" name="ms" value="ignore" ${r.choice !== 'unuse' ? 'checked' : ''}> 무시 <span class="caption faint">(기본 · 사전 그대로)</span></label><label class="flex"><input type="radio" name="ms" value="unuse" ${r.choice === 'unuse' ? 'checked' : ''}> 미사용 신청 — 사용처 모델 컬럼 2개 영향</label>${r.choice === 'unuse' ? `<div class="field u-mt-8"><label for="ms-why">미사용 사유 *</label><input class="input" id="ms-why" value="${r.why2 || ''}"></div>` : ''}<div class="caption muted">삭제(V0)는 W2 — 여기서는 하지 않습니다.</div>`;
-    if (r.warn) body += `<div class="banner warning u-mt-12"><span><i data-ic=warn data-s=12></i></span><div>${r.warn}${r.rule && GUIDE[r.rule] && r.st !== 'err' ? `<br>${GUIDE[r.rule]}` : ''}</div></div>`;
-    $('pn-row').innerHTML = `<div class="rp-head"><div class="t"><h2>${r.r}행 · ${r.name}</h2></div><div class="rp-sub"><span class="badge ${s[1]}">${s[0]}</span> · 처리: ${s[3]}</div></div><div class="rp-body">${body}</div>`;
+    if (r.st === 'pre') { const w = r.word || '—', d0 = r.doc || ''; body += `<div class="banner warning u-mt-12"><i data-ic=warn></i><div class="grow">${d0 ? `다른 신청(${d0})의 ` : ''}새 단어 ‘${w}’가 아직 승인 전입니다. 이 행은 <b>보류</b>되고, 단어가 승인되면 업로드 이력에서 다시 검증해 이어서 신청합니다.</div>${d0 ? `<a class="btn sm" href="approvals.html?doc=${d0}">결재 보기</a>` : ''}</div>`; }
+    if (r.st === 'err') {
+      const where = r.rule === 'X-DUPID' ? '한 항목 ID는 한 행에만 있어야 합니다. 복사한 행이면 ID를 지우고 새 항목으로 처리하세요.'
+        : `<b>고치는 법</b> · ${GUIDE[r.rule] || '규칙을 확인하세요'}.<br>${r.bad ? `표에서 붉은 칸(${K.lbl[r.bad] || r.bad})을 바로 고치면 즉시 다시 검증합니다(Enter 확인 · Esc 파일 값).` : '칸 하나를 고쳐서 풀리는 문제가 아닙니다 — 아래 조치나 다른 신청의 결과를 기다리세요.'}`;
+      const sim = r.fix ? simRow(r, effFix(r)) : null;   // E-01: the suggestion is judged the same way before it is offered
+      body += `<div class="section-t">무엇이 틀렸나 · <span class="rule">${r.rule}</span></div><div class="caption u-lh-20">${esc5(r.why)}.${r.probs ? `<ul class="prob-list">${r.probs.map(m => `<li>${esc5(m)}</li>`).join('')}</ul>` : ''}<br>${where}</div>
+      ${r.fix ? `<div class="card u-mt-8"><div class="caption muted">수정 제안</div><div>${Object.entries(effFix(r)).map(([k, v]) => `<span class="old-v" aria-hidden="true">${esc5(r.shown && k === 'desc' ? r.shown : r[k])}</span><span class="sr-only">${esc5(K.lbl[k] || k)} ${esc5(r.shown && k === 'desc' ? r.shown : r[k])}에서 </span>${esc5(v)}`).join(' · ')}</div><div class="chk-line ${sim.st === 'err' ? 'u-danger' : 'u-success'}">검사: ${esc5(verdict(sim))}</div><div class="flex u-mt-8"><span class="grow"></span><button class="btn sm primary" id="apply-fix">제안 적용</button></div></div>` : ''}
+      ${r.rule === 'X-DUPID' ? '<div class="flex u-mt-8"><span class="grow"></span><button class="btn sm" id="as-new">ID 지우고 새 항목으로</button></div>' : ''}
+      ${r.rule === 'X-NAMEDUP' && r.dupOf && !r.id ? `<div class="flex u-mt-8"><span class="grow"></span><button class="btn sm" id="as-chg">기존 항목(${r.dupOf}) 변경으로</button></div>` : ''}`;
+    }
+    if (r.st === 'missing') body += `<div class="section-t">처리</div><label class="flex"><input type="radio" name="ms" value="ignore" ${r.choice !== 'unuse' ? 'checked' : ''}> 무시 <span class="caption faint">(기본 · 사전 그대로)</span></label><label class="flex"><input type="radio" name="ms" value="unuse" ${r.choice === 'unuse' ? 'checked' : ''}> 미사용 신청 — 사용처 모델 컬럼 2개 영향</label>${r.choice === 'unuse' ? `<div class="field u-mt-8"><label for="ms-why">미사용 사유 *</label><input class="input" id="ms-why" value="${esc5(r.why2 || '')}"></div>` : ''}<div class="caption muted">삭제(V0)는 W2 — 여기서는 하지 않습니다.</div>`;
+    if (r.warn) body += `<div class="banner warning u-mt-12"><span><i data-ic=warn data-s=12></i></span><div>${esc5(r.warn)}${r.rule && GUIDE[r.rule] && r.st !== 'err' ? `<br>${GUIDE[r.rule]}` : ''}</div></div>`;
+    if (!canWrite) body += `<div class="banner info u-mt-12"><i data-ic=info></i><div>열람 전용 — ${roReason}. 고치기·선택은 할 수 없습니다.</div></div>`;
+    $('pn-row').innerHTML = `<div class="rp-head"><div class="t"><h2>${r.r}행 · ${esc5(r.name)}</h2></div><div class="rp-sub"><span class="badge ${s[1]}">${s[0]}</span> · 처리: ${s[3]}</div></div><div class="rp-body">${body}</div>`;
     if (!canWrite) { $('pn-row').querySelectorAll('input, button').forEach(x => x.disabled = true); return; }
     const af = $('apply-fix'); if (af) af.onclick = () => fixRow(r);
-    const an = $('as-new'); if (an) an.onclick = () => { pushUndo(); delete r.id; const ex = getDict().find(x => x.k === KC[kind].k && x.name === r.name && x.ver > 0);
-      if (ex) { r.st = 'err'; r.rule = 'X-NAMEDUP'; r.bad = 'name'; r.dupOf = ex.id; r.why = `같은 이름의 용어가 이미 있음(${ex.id}) — 새 항목으로 등록할 수 없습니다`; afterEdit(`${r.r}행: 이름이 이미 사전에 있어 새 항목으로 만들 수 없습니다`); }
-      else { r.st = 'new'; r.why = '복사한 행 → 새 항목'; r.rule = null; judgePre(r); afterEdit(`${r.r}행을 새 항목으로 바꿨습니다`); } };
-    const asChg = $('as-chg'); if (asChg) asChg.onclick = () => { pushUndo(); r.id = r.dupOf; r.rule = null; const ex = getDict().find(x => x.id === r.dupOf) || {};
-      const old = {}; KC[kind].cmp.filter(k => k !== 'name').concat(kind === '용어' ? ['abbr'] : []).forEach(k => { const cur = k === 'desc' ? (ex.desc || (kind === '용어' ? ex.eng : '') || '') : (ex[k] || ''); if (r[k] && r[k] !== '—' && String(r[k]) !== String(cur)) old[k] = cur; });
-      if (Object.keys(old).length) { r.st = 'chg'; r.old = old; r.why = `기존 항목 ${r.dupOf} 변경 — ${Object.keys(old).map(k => KC[kind].lbl[k]).join('·')} ${Object.keys(old).length}칸`; afterEdit(`${r.r}행을 기존 항목 변경으로 바꿨습니다`); }
-      else { r.st = 'same'; delete r.old; r.why = `기존 항목 ${r.dupOf}과 같음 — 바뀐 칸이 없어 신청에서 제외`; afterEdit(`${r.r}행: 사전과 같아 신청에서 제외합니다`); } };
+    const an = $('as-new'); if (an) an.onclick = () => { pushUndo(`${r.r}행 새 항목으로`, [r]); delete r.id; delete r.old; const rule = r.rule; r.st = 'new'; r.rule = null;
+      rejudge(r, `복사한 행 → 새 항목(${rule} 해소)`, ['id']);
+      afterEdit(r.st === 'err' ? `${r.r}행: 새 항목으로도 신청할 수 없습니다 — ${r.why}` : `${r.r}행을 새 항목으로 바꿨습니다 — ${verdict(r)}`); };
+    const asChg = $('as-chg'); if (asChg) asChg.onclick = () => { pushUndo(`${r.r}행 기존 항목 변경으로`, [r]); const id = r.dupOf, ex = getDict().find(x => x.id === id) || {};
+      const old = {}; KC[kind].cmp.filter(k => k !== 'name').forEach(k => { const cur = k === 'desc' ? (ex.desc || '') : (ex[k] || ''); if (r[k] && r[k] !== '—' && String(r[k]) !== String(cur)) old[k] = cur; });
+      r.id = id; r.st = 'chg'; if (Object.keys(old).length) r.old = old; else delete r.old;
+      rejudge(r, `기존 항목 ${id} 변경 — ${Object.keys(old).map(k => KC[kind].lbl[k]).join('·')} ${Object.keys(old).length}칸`, ['name']);
+      afterEdit(r.st === 'same' ? `${r.r}행: 사전과 같아 신청에서 제외합니다` : r.st === 'err' ? `${r.r}행: 변경으로도 신청할 수 없습니다 — ${r.why}` : `${r.r}행을 기존 항목 변경으로 바꿨습니다 — ${verdict(r)}`); };
     // choices are edits too — recorded so an older undo can't silently wipe them (S6)
-    $('pn-row').querySelectorAll('input[name=cf]').forEach(i => i.onchange = () => { pushUndo(); r.choice = i.value; persist(); });
-    $('pn-row').querySelectorAll('input[name=pk]').forEach(i => i.onchange = () => { pushUndo(); r.choice = +i.value; if (r.choice === 1) toast('1음절 분해는 의심 — 확인 후 선택했습니다', 'info'); persist(); drawPanel(); });
-    $('pn-row').querySelectorAll('input[name=ms]').forEach(i => i.onchange = () => { pushUndo(); r.choice = i.value; persist(); drawPanel(); });
+    $('pn-row').querySelectorAll('input[name=cf]').forEach(i => i.onchange = () => { pushUndo(`${r.r}행 충돌 처리 선택`, [r]); r.choice = i.value; persist(); drawGrid(); drawHint(); });
+    $('pn-row').querySelectorAll('input[name=pk]').forEach(i => i.onchange = () => { pushUndo(`${r.r}행 분해 후보 선택`, [r]); r.choice = +i.value; if (r.choice === 1) toast('1음절 분해는 의심 — 확인 후 선택했습니다', 'info'); persist(); drawGrid(); drawHint(); });
+    $('pn-row').querySelectorAll('input[name=ms]').forEach(i => i.onchange = () => { pushUndo(`${r.r}행 빠짐 처리 선택`, [r]); r.choice = i.value; persist(); drawGrid(); drawHint(); });
     const mw = $('ms-why'); if (mw) mw.oninput = () => { r.why2 = mw.value; persist(); };
   }
-  function pushUndo() { undoStack.push(JSON.stringify(ROWS)); }
-  // after a fix the keyboard user stays on the row they were working on (CL10 #10)
-  const focusSel = () => { const tr = document.querySelector(`#grid-body tr[data-r="${sel}"]`) || document.querySelector('#grid-body tr[data-r]'); if (tr) tr.focus(); };
-  function afterEdit(msg) { persist(); drawGrid(); focusSel(); const t = undoStack.length; toast(msg, 'success', { label: '실행 취소', fn: () => { if (undoStack.length !== t) { toast('이후 다른 보정이 있어 이 작업만 되돌릴 수 없습니다', 'info'); return; }
+  // ---- E-03: labelled undo history
+  function pushUndo(label, rows) { undoStack.push({ id: ++undoSeq, label, at: nowStr().split(' ')[1], snap: JSON.stringify(ROWS), rows: (rows || []).map(x => x.r) }); lastRows = new Set((rows || []).map(x => x.r)); if (undoStack.length > 50) undoStack.shift(); return undoSeq; }
+  function undo() {
+    if (!canWrite) { toast(`열람 전용 — ${roReason}`, 'info'); return; }
+    const op = undoStack.pop(); if (!op) { toast('되돌릴 작업이 없습니다', 'info'); return; }
     // undo restores the fix only — reasons typed afterwards (unuse reason) are kept (CX9-19)
     const keep = Object.fromEntries(ROWS.filter(r => r.why2).map(r => [r.r, r.why2]));
-    ROWS = JSON.parse(undoStack.pop()); ROWS.forEach(r => { if (keep[r.r] !== undefined) r.why2 = keep[r.r]; }); persist(); drawGrid(); focusSel(); toast('되돌렸습니다', 'info'); } }); }
+    ROWS = JSON.parse(op.snap); ROWS.forEach(r => { if (keep[r.r] !== undefined) r.why2 = keep[r.r]; });
+    pendingCell = null; showCellMsg(''); lastRows = new Set(op.rows);
+    persist(); drawGrid(); drawHint(); focusSel(); toast(`되돌렸습니다 — ${op.label}${undoStack.length ? ` · 남은 작업 ${undoStack.length}개` : ''}`, 'info');
+  }
+  // after a fix the keyboard user stays on the row they were working on (CL10 #10)
+  const focusSel = () => { const tr = document.querySelector(`#grid-body tr[data-r="${sel}"]`) || document.querySelector('#grid-body tr[data-r]'); if (tr) tr.focus(); };
+  function afterEdit(msg) { const my = undoSeq; persist(); drawGrid(); drawHint(); focusSel();
+    toast(msg, 'success', { label: '실행 취소', fn: () => { const i = undoStack.findIndex(o => o.id === my);
+      if (i < 0) { toast('이미 되돌린 작업입니다', 'info'); return; }
+      if (i !== undoStack.length - 1) { toast(`이 작업 뒤에 ${undoStack.length - 1 - i}개 작업이 더 있습니다 — 도구 줄 [되돌리기]로 최근 작업부터 차례로 되돌리세요`, 'info'); return; }
+      undo(); } }); }
   function fixRow(r) {
-    pushUndo(); r.fixed = {}; Object.entries(r.fix).forEach(([k, v]) => { r.fixed[k] = r.shown && k === 'desc' ? r.shown : r[k]; r[k] = v; });
-    r.st = r.id ? 'chg' : 'new'; r.why = `보정됨(${r.rule}) — 파일 값과 다름`; r.rule = null; delete r.shown; syncRow(r); judgePre(r);
-    afterEdit(`${r.r}행을 보정했습니다 — 다시 검증 통과`);
+    const fx = effFix(r), rule = r.rule; pushUndo(`${r.r}행 수정 제안 적용`, [r]);
+    r.fixed = r.fixed || {}; Object.entries(fx).forEach(([k, v]) => { if (!(k in r.fixed)) r.fixed[k] = r.shown && k === 'desc' ? r.shown : r[k]; r[k] = v; }); delete r.shown;
+    syncRow(r); rejudge(r, `보정됨(${rule}) — 다시 검증 통과`, Object.keys(fx));
+    afterEdit(`${r.r}행을 보정했습니다 — ${r.st === 'err' ? '아직 오류: ' + r.why : r.st === 'pre' ? '형식은 통과 · 구성 단어 승인 대기로 보류' : verdict(r)}`);   // CX-03: the message says what the re-check really found
   }
-  // per-kind cell check — the same rules as the seeded errors (DX-07)
-  function cellOk(r, f, val) {
-    if (kind === '단어') {
-      const words = getDict().filter(x => x.k === 'word' && x.ver > 0);
-      if (f === 'name') return !/\s/.test(val) && !words.some(x => x.name === val);
-      if (f === 'abbr') return /^[A-Z][A-Z0-9]*$/.test(val) && val.length <= wordLim() && !words.some(x => x.abbr === val) && !ROWS.some(o => o !== r && o.abbr === val && o.st !== 'err');
-      return true;
-    }
-    if (kind === '도메인') { if (f === 'type') return !!TYPES[val]; if (f === 'len') return /^\d+(,\d+)?$/.test(val); if (f === 'name') return val === `${r.dg}${r.type}${r.len}`; return true; }
-    if (kind === '코드') { if (f === 'v') return val.length === codeLen(r) && !codeTaken(r, val); return true; }
-    return f === 'dom' ? DOMS.includes(val) : f === 'name' ? !/\s/.test(val) : f === 'desc' ? (r.fix && val === r.fix.desc) || /^0\d+\b/.test(val) : true;
+  // format-only checks a typed value must pass before the shared re-judge (rules the approval check does not know: file traces, domain parts)
+  function preOk(r, f, val) {
+    if (!String(val).trim()) return '빈 값은 쓸 수 없습니다';
+    if (f === 'name' && /\s/.test(val)) return '이름에 공백이 있습니다';
+    if (r.st === 'err' && r.rule === 'X-ZERO' && f === 'desc' && !/^0\d+/.test(val)) return '앞자리 0이 없습니다 — 0012처럼 0을 살려 입력하세요';
+    if (kind === '도메인') { if (f === 'type' && !TYPES[val]) return '데이터 타입은 N·C·V·D·T 중 하나'; if (f === 'len' && !/^\d+(,\d+)?$/.test(val)) return '길이는 숫자 또는 숫자,숫자(예: 18,2)'; if (f === 'name' && val !== `${r.dg}${r.type}${r.len}`) return `도메인명은 분류+타입+길이(${r.dg}${r.type}${r.len})로 계산합니다`; }
+    if (kind === '단어' && f === 'abbr' && !/^[A-Z][A-Z0-9]*$/.test(val)) return '영문약어명은 대문자·숫자, 숫자로 시작할 수 없습니다';
+    return '';
   }
-  function revalidate(r, f, val) {
-    const ok = cellOk(r, f, val);
-    // a failed value is NOT kept in memory (it would ride along with the next good save — CX9-18); the cell shows the file value again
-    if (!ok) { toast(`${r.r}행: ‘${val}’은 아직 ${RULES[r.rule]} — ${f === 'dom' ? '사전에 있는 도메인을 쓰세요(예: 연월일C8)' : GUIDE[r.rule] || '규칙을 확인하세요'}. 파일 값으로 되돌렸습니다`, 'danger'); drawGrid(); focusSel(); return; }
-    pushUndo(); r.fixed = r.fixed || {}; r.fixed[f] = r.shown && f === 'desc' ? r.shown : r[f]; r[f] = val; delete r.shown;
-    // a domain's name is computed: fixing type / length recomputes it (and its abbreviation suffix)
-    if (kind === '도메인' && f !== 'name' && f !== 'desc') { const nm = `${r.dg}${r.type}${r.len}`; if (nm !== r.name) { r.fixed.name = r.name; r.name = nm; r.abbr = String(r.abbr || '').replace(/_[A-Z][\d,_]*$/, `_${r.type}${String(r.len).replace(',', '_')}`); } }
-    syncRow(r);
-    r.st = r.id ? 'chg' : 'new'; r.why = `보정됨(${r.rule}) — 다시 검증 통과`; r.rule = null; if (f === 'name' && r.fix && r.fix.abbr) r.abbr = r.fix.abbr; judgePre(r); afterEdit(`${r.r}행 다시 검증 — ${r.st === 'pre' ? '형식은 통과 · 구성 단어 승인 대기로 보류' : '통과'}`);
+  const showCellMsg = t => { const m = $('cellmsg'); m.textContent = t; m.hidden = !t; };
+  // E-08: Enter / leaving the cell runs the re-judge; a failing value stays in the cell (not saved), Esc brings the file value back
+  function commitCell(td, how) {
+    const r = ROWS.find(x => String(x.r) === td.dataset.r); if (!r || !td.isConnected) return;
+    const f = td.dataset.f, v = td.textContent.trim(), before = r.shown && f === 'desc' ? r.shown : r[f], lb = colOf(f)[1];
+    if (v === String(before)) { if (pendingCell && pendingCell.r === r.r && pendingCell.f === f) { pendingCell = null; showCellMsg(''); td.classList.remove('cell-bad'); td.classList.add('cell-err'); td.removeAttribute('aria-invalid'); } return; }
+    let fail = preOk(r, f, v), sim = null;
+    if (!fail) { sim = simRow(r, { [f]: v }); if (sim.st === 'err' && sim.bad === f) fail = sim.why; else if (sim.also && sim.also.bad === f) fail = sim.also.why; }
+    if (fail) { pendingCell = { r: r.r, f, val: v, msg: fail }; td.classList.remove('cell-err'); td.classList.add('cell-bad'); td.setAttribute('aria-invalid', 'true'); td.title = fail;
+      showCellMsg(`${r.r}행 ${lb} ‘${v}’ — ${fail}. 저장하지 않았습니다 · 고친 뒤 Enter, 파일 값으로 되돌리려면 Esc`); if (how === 'enter') td.focus(); return; }
+    pendingCell = null; showCellMsg(''); const rule = r.rule;
+    pushUndo(`${r.r}행 ${lb} 고침`, [r]); r.fixed = r.fixed || {}; if (!(f in r.fixed)) r.fixed[f] = before; r[f] = v; delete r.shown;
+    if (['dg', 'type', 'len'].includes(f)) derive(r); syncRow(r);
+    rejudge(r, `보정됨(${rule}) — 다시 검증 통과`, [f]);
+    afterEdit(`${r.r}행 다시 검증 — ${r.st === 'err' ? `칸은 통과했지만 아직 오류: ${r.why}` : r.st === 'pre' ? '형식은 통과 · 구성 단어 승인 대기로 보류' : verdict(r)}`);
   }
   $('grid-body').addEventListener('click', e => { const tr = e.target.closest('tr[data-r]'); if (!tr || e.target.isContentEditable) return; sel = isNaN(+tr.dataset.r) ? tr.dataset.r : +tr.dataset.r; drawGrid(); });
-  $('grid-body').addEventListener('focusout', e => { const td = e.target.closest('td[contenteditable]'); if (!td) return; const r = ROWS.find(x => String(x.r) === td.dataset.r); const v = td.textContent.trim(); const before = r.shown && td.dataset.f === 'desc' ? r.shown : r[td.dataset.f]; if (v && v !== before) revalidate(r, td.dataset.f, v); });
-  $('grid-body').addEventListener('keydown', e => { if (e.target.isContentEditable && e.key === 'Enter') { e.preventDefault(); e.target.blur(); } });
+  $('grid-body').addEventListener('focusout', e => { const td = e.target.closest('td[contenteditable="true"]'); if (td) commitCell(td, 'blur'); });
+  $('grid-body').addEventListener('keydown', e => { if (!e.target.isContentEditable) return; const td = e.target.closest('td');
+    if (e.key === 'Enter') { e.preventDefault(); commitCell(td, 'enter'); }
+    else if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); const r = ROWS.find(x => String(x.r) === td.dataset.r); td.textContent = r.shown && td.dataset.f === 'desc' ? r.shown : r[td.dataset.f]; pendingCell = null; showCellMsg(''); td.classList.remove('cell-bad'); td.classList.add('cell-err'); td.removeAttribute('aria-invalid'); td.title = `${r.rule}: ${r.why}`; } });
   function nextErr() {
     const all = ROWS.filter(r => r.st === 'err'); if (!all.length) { toast('남은 오류가 없습니다', 'info'); return; }
     // stay inside the current view when it has errors; otherwise clear filters so the row is visible
-    const inView = all.filter(r => (!filt || r.st === filt) && (!ruleF || r.rule === ruleF));
-    const errs = inView.length ? inView : all; if (!inView.length) { filt = ''; ruleF = ''; }
-    const i = errs.findIndex(r => r.r === sel); const n = errs[(i + 1) % errs.length]; sel = n.r; drawGrid(); const td = document.querySelector(`#grid-body tr[data-r="${n.r}"] td[contenteditable]`); if (td) td.focus(); }
-  document.addEventListener('keydown', e => { if (e.key === 'F8' && cur === 5) { e.preventDefault(); nextErr(); } });
+    const inView = all.filter(rowVis);
+    const errs = inView.length ? inView : all; if (!inView.length) { filt = ''; ruleF = ''; recentF = false; }
+    const i = errs.findIndex(r => r.r === sel); const n = errs[(i + 1) % errs.length]; sel = n.r; drawGrid();
+    // E-13: an error without an editable cell (duplicate ID, an open request) lands on the row's action in the panel
+    const td = document.querySelector(`#grid-body tr[data-r="${n.r}"] td[contenteditable="true"]`);
+    const act = td || $('pn-row').querySelector('#apply-fix:not([disabled]), #as-new:not([disabled]), #as-chg:not([disabled])') || document.querySelector(`#grid-body tr[data-r="${n.r}"]`);
+    if (act) act.focus(); }
+  document.addEventListener('keydown', e => { if (e.key === 'F8' && cur === 5 && !document.querySelector('.overlay.open')) { e.preventDefault(); nextErr(); } });
+  // Ctrl+Z = the same undo stack, only when no text field has the focus and no dialog is open
+  document.addEventListener('keydown', e => { if (cur !== 5 || document.querySelector('.overlay.open') || !(e.ctrlKey || e.metaKey) || e.shiftKey || e.altKey || e.key.toLowerCase() !== 'z') return;
+    const t = e.target; if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return; e.preventDefault(); undo(); });
   document.querySelector('[data-step="5"]').addEventListener('click', e => {
-    const ch = e.target.closest('#chips [data-f]'); if (ch) { filt = ch.dataset.f; ruleF = ''; drawGrid(); return; }
-    const rb = e.target.closest('#errbar [data-rule]'); if (rb) { ruleF = ruleF === rb.dataset.rule ? '' : rb.dataset.rule; filt = ''; drawGrid(); return; }
+    // E-13: the pressed chip keeps the focus after the toolbar is drawn again
+    const refocus = sel0 => { const b = document.querySelector(sel0); if (b) b.focus(); };
+    const ch = e.target.closest('#chips [data-f]'); if (ch) { filt = ch.dataset.f; ruleF = ''; recentF = false; drawGrid(); refocus(`#chips [data-f="${filt}"]`); return; }
+    if (e.target.closest('#recent-f')) { if (!lastRows || !lastRows.size) { toast('아직 바꾼 행이 없습니다', 'info'); return; } recentF = !recentF; if (recentF) { filt = ''; ruleF = ''; } drawGrid(); refocus('#recent-f'); return; }
+    if (e.target.closest('#undo-btn')) { if (canWrite && !undoStack.length) { toast('되돌릴 작업이 없습니다', 'info'); return; } undo(); refocus('#undo-btn'); return; }
+    const rb = e.target.closest('#errbar [data-rule]'); if (rb) { ruleF = ruleF === rb.dataset.rule ? '' : rb.dataset.rule; filt = ''; recentF = false; drawGrid(); refocus(`#errbar [data-rule="${rb.dataset.rule}"]`); return; }
     if (e.target.closest('#next-err')) { nextErr(); return; }
-    if (e.target.closest('#auto-all') && !canWrite) { toast('열람 전용이라 고칠 수 없습니다', 'info'); return; }
+    if (e.target.closest('#auto-all') && !canWrite) { toast(`열람 전용 — ${roReason}`, 'info'); return; }
     // "visible targets only" means exactly that: the same filter as the grid (CL9-15)
-    if (e.target.closest('#auto-all')) { const autos = ROWS.filter(r => r.st === 'err' && r.auto && (!filt || r.st === filt) && (!ruleF || r.rule === ruleF)); if (!autos.length) { toast('지금 보이는 행에는 자동 수정 대상이 없습니다 — 필터를 바꿔 보세요', 'info'); return; } if (!confirmAuto(autos)) return; pushUndo(); autos.forEach(r => { r.fixed = {}; Object.entries(r.fix).forEach(([k, v]) => { r.fixed[k] = r[k]; r[k] = v; }); r.st = r.id ? 'chg' : 'new'; r.why = `자동 수정(${r.rule})`; r.rule = null; syncRow(r); judgePre(r); }); afterEdit(`자동 수정 ${autos.length}건 적용`); return; }
-    if (e.target.closest('#dl-err')) { const errs = ROWS.filter(r => r.st === 'err'); if (!errs.length) { toast('남은 오류 행이 없습니다 — 내려받을 가이드가 없습니다', 'info'); return; }
-      const K = KC[kind];
-      const rows = errs.map(r => [r.r, ST[r.st][0], ...K.cols.map(c => r.shown && c[0] === 'desc' ? r.shown : r[c[0]]), r.rule, K.lbl[r.bad] || r.bad || '', r.why, GUIDE[r.rule] || '', r.fix ? Object.entries(r.fix).map(([k, v]) => `${K.lbl[k] || k}: ${v}`).join(' / ') : '']);
-      const fn = downloadCsv('오류가이드', ['원본 행', '상태', ...K.cols.map(c => c[1]), '규칙', '오류 칸', '사유', '수정 방법', '수정 제안'], rows);
-      toast(`${fn} 내려받음 — 오류 ${errs.length}행 · 원본 행 번호·모든 열·오류 칸·수정 방법 포함`, 'success'); return; }
-    if (e.target.closest('#dl-fix')) { const K = KC[kind]; const all = ROWS.filter(r => r.st !== 'missing');
-      const rows = all.map(r => [r.r, ST[r.st][0], ...K.cols.map(c => r.shown && c[0] === 'desc' ? r.shown : r[c[0]]), r.fixed ? Object.entries(r.fixed).map(([k, v]) => `${K.lbl[k] || k}: ${v} → ${r[k]}`).join(' / ') : '']);
-      const fn = downloadCsv('보정본', ['원본 행', '상태', ...K.cols.map(c => c[1]), '변경점(파일 값 → 보정 값)'], rows);
-      toast(`${fn} 내려받음 — ${all.length}행 중 화면에서 고친 ${all.filter(r => r.fixed).length}행 반영. 엑셀 원본을 이것으로 맞추세요`, 'success'); return; }
+    if (e.target.closest('#auto-all')) { const autos = ROWS.filter(r => r.st === 'err' && r.auto && rowVis(r)); if (!autos.length) { toast('지금 보이는 행에는 자동 수정 대상이 없습니다 — 필터를 바꿔 보세요', 'info'); return; } openAuto(autos, e.target.closest('#auto-all')); return; }
+    if (e.target.closest('#fr-open')) { openFr(e.target.closest('#fr-open')); return; }
+    if (e.target.closest('#dl-err')) { const errs = ROWS.filter(r => r.st === 'err');
+      // CL-16: the rows that still need a look (warning · candidate · hold · conflict) travel with the errors
+      const look = ROWS.filter(r => r.st !== 'err' && (r.warn && ['new', 'chg'].includes(r.st) || (r.st === 'pick' && r.choice === undefined) || ['pre', 'waitDiff', 'conflict'].includes(r.st)));
+      if (!errs.length && !look.length) { toast('남은 오류도 확인할 행도 없습니다 — 내려받을 가이드가 없습니다', 'info'); return; }
+      const K = KC[kind], lbl = f => K.lbl[f] || (f === 'id' ? '항목 ID(숨김 열)' : f || '');
+      const rows = errs.map(r => ['오류', r.r, ST[r.st][0], ...K.cols.map(c => r.shown && c[0] === 'desc' ? r.shown : r[c[0]]), r.rule, lbl(r.bad), r.why, GUIDE[r.rule] || '', r.fix ? Object.entries(effFix(r)).map(([k, v]) => `${lbl(k)}: ${v}`).join(' / ') : ''])
+        .concat(look.map(r => ['확인 필요', r.r, ST[r.st][0], ...K.cols.map(c => r[c[0]]), r.rule || '', r.warnF ? lbl(r.warnF) : '', ['new', 'chg'].includes(r.st) && r.warn ? r.warn : r.why, r.rule && GUIDE[r.rule] ? GUIDE[r.rule] : r.st === 'pick' ? '결과 검토에서 분해 후보를 고르세요' : r.st === 'conflict' ? '현재 값 유지 또는 파일 값으로 변경을 고르세요' : '진행 중인 신청이 끝난 뒤 다시 검증합니다', '']));
+      const fn = downloadCsv('오류가이드', ['구분', '원본 행', '상태', ...K.cols.map(c => c[1]), '규칙', '오류 칸', '사유', '수정 방법', '수정 제안'], rows);
+      toast(`${fn} 내려받음 — 화면 필터와 관계없이 전체 오류 ${errs.length}행 + 확인 필요 ${look.length}행 · CSV(목업 — 실제는 XLSX: 가이드 시트 · 셀 메모)`, 'success'); return; }
+    if (e.target.closest('#dl-fix')) { const K = KC[kind], dict = getDict(), bl = mode === 'init' ? '—(초기 적재)' : B ? B.baseline : BL.id;
+      // E-05: a file that can REPLACE the original — every row of the file (out of scope · missing included, told apart by the status column), the hidden columns, the change column
+      const all = ROWS.map(r => [r, ST[r.st][0]]).concat(outRows.map(r => [r, '기준본 범위 밖 — 비교·신청 안 함'])).sort((a, b) => (+a[0].r || 1e9) - (+b[0].r || 1e9));
+      const rows = all.map(([r, st]) => { const d = r.id ? dict.find(x => x.id === r.id) : null;
+        return [r.r, ...K.cols.map(c => r.shown && c[0] === 'desc' ? r.shown : r[c[0]]), r.id || '', d ? 'V' + d.ver : '', r.id ? bl : '', r.st === 'missing' ? '파일에서 빠짐 — 원본에 없던 행(참고)' : st, r.fixed ? Object.entries(r.fixed).filter(([k, v]) => String(v) !== String(r[k])).map(([k, v]) => `${K.lbl[k] || k}: ${v} → ${r[k]}`).join(' / ') : '']; });
+      const fn = downloadCsv('보정본', ['원본 행', ...K.cols.map(c => c[1]), '(숨김) 항목 ID', '(숨김) 버전', '(숨김) 기준본', '상태(참고)', '변경점(파일 값 → 보정 값)'], rows);
+      toast(`${fn} 내려받음 — 파일의 모든 ${all.length}행(범위 밖 ${outRows.length} · 빠짐 ${ROWS.filter(r => r.st === 'missing').length} 포함, 상태 열로 구분) · 숨김 열 · 고친 ${ROWS.filter(r => r.fixed).length}행. CSV · 목업 — 실제는 XLSX(본문 + 변경점 시트, 모든 칸 텍스트 서식)`, 'success'); return; }
   });
   // DX-08: a real file built in the browser — CSV, UTF-8 with BOM so Excel opens Korean correctly
   function downloadCsv(suffix, head, rows) {
@@ -515,13 +736,113 @@ window.pageInit = function () {
     setTimeout(() => URL.revokeObjectURL(url), 1000);
     return fn;
   }
-  function confirmAuto(list) { return window.confirm(`자동 수정 제안 ${list.length}건을 적용합니다(보이는 대상만):\n\n` + list.map(r => `${r.r}행: ${Object.entries(r.fix).map(([k, v]) => `${r[k]} → ${v}`).join(', ')}`).join('\n') + '\n\n적용 후 [실행 취소]로 되돌릴 수 있습니다.'); }
+  // ---- 07 E3 · auto-fix preview: every target row with its before → after, chosen before anything changes (was a browser confirm)
+  // what a fix really writes: a term's abbreviation is recomputed from today's dictionary, so the preview shows that value
+  function effFix(r) { const fx = Object.assign({}, r.fix || {}); if (kind === '용어' && fx.name) { const dc = decompose(fx.name); if (!dc.unknown.length && dc.abbr) fx.abbr = dc.abbr; } return fx; }
+  // E-14: focus moves synchronously, so keys typed right after opening land in the dialog
+  const openOv = (id, opener) => { const ov = $(id); ov.classList.add('open'); ov._opener = opener || null; };
+  const closeOv = id => { const ov = $(id); ov.classList.remove('open'); if (ov._opener && ov._opener.isConnected) ov._opener.focus(); };
+  let autoList = [], autoPick = new Set(), autoRule = '', autoSim = new Map();
+  function openAuto(list, opener) {
+    // E-01: every target is judged after its fix; a row that would still fail is not chosen by default
+    autoList = list; autoSim = new Map(list.map(r => [r.r, simRow(r, effFix(r))])); autoPick = new Set(list.filter(r => autoSim.get(r.r).st !== 'err').map(r => r.r)); autoRule = '';
+    drawAuto(); openOv('mo-auto', opener); const c = $('auto-body').querySelector('[data-ap]'); (c || $('auto-go')).focus();   // CX-01: start on the first row's choice, not on [적용]
+  }
+  function drawAuto() {
+    const K = KC[kind], by = {}; autoList.forEach(r => { by[r.rule] = (by[r.rule] || 0) + 1; });
+    const shown = autoList.filter(r => !autoRule || r.rule === autoRule), fails = autoList.filter(r => autoSim.get(r.r).st === 'err').length;
+    $('auto-sub').textContent = `지금 표에 보이는 오류 행 중 자동으로 고칠 수 있는 ${autoList.length}건입니다.${fails ? ` 그중 ${fails}건은 고쳐도 검사를 통과하지 못해 고르지 않았습니다.` : ''} 적용할 행만 고르세요.`;
+    $('auto-rules').innerHTML = Object.keys(by).length > 1 ? `<button class="chip ${autoRule ? '' : 'on'}" data-ar="" aria-pressed="${!autoRule}">전체 ${autoList.length}</button>` + Object.entries(by).map(([k, n]) => `<button class="chip ${autoRule === k ? 'on' : ''}" data-ar="${k}" aria-pressed="${autoRule === k}"><span class="rule">${k}</span> ${RULES[k] || ''} ${n}</button>`).join('') : '';
+    $('auto-body').innerHTML = shown.map(r => { const fx = Object.entries(effFix(r)), n = fx.length, sm = autoSim.get(r.r), bad = sm.st === 'err';
+      return fx.map(([k, v], i) => `<tr${autoPick.has(r.r) ? '' : ' class="skip"'}>${i === 0 ? `<td class="ck" rowspan="${n}"><input type="checkbox" data-ap="${r.r}" aria-label="${r.r}행 ${esc5(r.name)} 적용 — ${esc5(verdict(sm))}"${autoPick.has(r.r) ? ' checked' : ''}></td><td class="num" rowspan="${n}">${r.r}</td><td rowspan="${n}"><span class="rule">${r.rule}</span></td>` : ''}<td>${esc5(K.lbl[k] || k)}</td><td class="from">${esc5(r.shown && k === 'desc' ? r.shown : r[k])}</td><td class="to">${esc5(v)}</td>${i === 0 ? `<td class="chk" rowspan="${n}"><span class="caption ${bad ? 'u-danger' : sm.st === 'pre' || sm.warn ? 'u-warning' : 'u-success'}">${esc5(verdict(sm))}</span></td>` : ''}</tr>`).join(''); }).join('');
+    const n = autoList.filter(r => autoPick.has(r.r)).length, out = autoList.filter(r => autoPick.has(r.r) && autoRule && r.rule !== autoRule).length, ck = $('auto-ck'), vis = shown.map(r => r.r);
+    ck.checked = vis.length > 0 && vis.every(x => autoPick.has(x)); ck.indeterminate = !ck.checked && vis.some(x => autoPick.has(x));
+    $('auto-go').textContent = n ? `${n}건 적용${out ? `(다른 규칙 ${out}건 포함)` : ''}` : '적용할 행을 고르세요'; $('auto-go').disabled = !n;   // CX-01: selections hidden by the rule filter are counted on the button
+  }
+  $('mo-auto').addEventListener('click', e => {
+    const ar = e.target.closest('[data-ar]'); if (ar) { autoRule = ar.dataset.ar; drawAuto(); const b = $('auto-rules').querySelector(`[data-ar="${autoRule}"]`); if (b) b.focus(); return; }   // E-13 · CL-17: the chip keeps the focus
+    if (e.target.closest('#auto-go')) { const L = autoList.filter(r => autoPick.has(r.r)); if (!L.length) return; closeOv('mo-auto'); pushUndo(`자동 수정 ${L.length}건`, L);
+      L.forEach(r => { const rule = r.rule, fx = effFix(r); r.fixed = r.fixed || {}; Object.entries(fx).forEach(([k, v]) => { if (!(k in r.fixed)) r.fixed[k] = r.shown && k === 'desc' ? r.shown : r[k]; r[k] = v; }); delete r.shown; syncRow(r); rejudge(r, `자동 수정(${rule}) — 다시 검증 통과`, Object.keys(fx)); });
+      const still = L.filter(r => r.st === 'err').length;
+      if (L.length > 1) { recentF = true; filt = ''; ruleF = ''; }   // CL-04: after a bulk change, show the rows it touched
+      afterEdit(`자동 수정 ${L.length}건 적용${still ? ` · ${still}건은 아직 오류` : ''}${autoList.length > L.length ? ` · ${autoList.length - L.length}건은 고르지 않아 그대로` : ''}`); }
+  });
+  $('mo-auto').addEventListener('change', e => {
+    if (e.target.id === 'auto-ck') { autoList.filter(r => !autoRule || r.rule === autoRule).forEach(r => e.target.checked ? autoPick.add(r.r) : autoPick.delete(r.r)); drawAuto(); $('auto-ck').focus(); return; }
+    const c = e.target.closest('[data-ap]'); if (c) { const k = isNaN(+c.dataset.ap) ? c.dataset.ap : +c.dataset.ap; c.checked ? autoPick.add(k) : autoPick.delete(k); drawAuto(); const back = $('mo-auto').querySelector(`[data-ap="${k}"]`); if (back) back.focus(); }
+  });
+  // ---- 07 E3 · find & replace inside the upload: only the rows the table shows now, never computed cells or rows that are not being requested
+  const FR_SKIP = ['waitSame', 'waitDiff', 'conflict', 'missing'];
+  const frCols = () => KC[kind].cols.filter(c => !(c[2] || '').includes('c'));
+  const frRows = () => ROWS.filter(r => rowVis(r) && !FR_SKIP.includes(r.st));
+  // E-04: the keys that pair a row with the dictionary are never replaced — a stored code value, the name of a row that carries an item ID
+  const isKey = (r, f) => (kind === '코드' && f === 'v' && CG[r.grp] && CG[r.grp].id && ['same', 'chg'].includes(r.st)) || (f === 'name' && !!r.id && kind !== '코드');
+  function frMatches() {
+    const find = $('fr-find').value, rep = $('fr-rep').value, col = $('fr-col').value, whole = $('fr-whole').checked, cs = $('fr-case').checked;
+    if (!find) return [];
+    const cols = col ? [col] : frCols().map(c => c[0]), out = [];
+    const re = new RegExp(find.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), cs ? 'g' : 'gi');
+    frRows().forEach(r => cols.forEach(f => { const cur = r.shown && f === 'desc' ? r.shown : r[f]; if (cur == null || cur === '—') return; const s = String(cur);
+      const hit = whole ? (cs ? s === find : s.toLowerCase() === find.toLowerCase()) : re.test(s); re.lastIndex = 0; if (!hit) return;
+      const to = whole ? rep : s.replace(re, rep); if (to === s) return;
+      out.push({ r, f, from: s, to, why: isKey(r, f) ? '짝짓기 키라 바꾸지 않음' : preOk(r, f, to) }); }));
+    // CX-03: two replacements must not land on the same value where it has to be unique (name · word abbreviation · code value in one code)
+    const key = m => (m.f === 'name' || (kind === '단어' && m.f === 'abbr') || (kind === '코드' && m.f === 'v')) ? m.f + '|' + (kind === '코드' ? m.r.grp : '') + '|' + m.to : null;
+    const cnt = {}; out.forEach(m => { const k = key(m); if (k && !m.why) cnt[k] = (cnt[k] || 0) + 1; }); out.forEach(m => { const k = key(m); if (k && !m.why && cnt[k] > 1) m.why = '바꾼 값끼리 겹침'; });
+    // E-01: the row as it would be after ALL its replacements, through the same re-judge as the approval check
+    const byRow = new Map(); out.filter(m => !m.why).forEach(m => { if (!byRow.has(m.r)) byRow.set(m.r, []); byRow.get(m.r).push(m); });
+    byRow.forEach((ms, r) => { const c = simRow(r, Object.fromEntries(ms.map(m => [m.f, m.to]))), was = r.st === 'err';
+      const block = !was && c.st === 'err' ? `바꾸면 오류 · ${c.why}` : c.also && ms.some(m => m.f === c.also.bad) ? `바꾸면 오류 · ${c.also.why}` : was && c.st === 'err' && ms.some(m => m.f === c.bad) ? `아직 오류 · ${c.why}` : '';
+      ms.forEach(m => { if (block) m.why = block; else m.res = c; });
+      // E-12: a domain's name follows group · type · length — the preview shows that derived change too
+      if (!block && kind === '도메인' && c.name !== r.name) ms[0].derived = { from: r.name, to: c.name }; });
+    return out;
+  }
+  let frColLast = '';   // E-14: the chosen column survives reopening (falls back to all when the kind has no such column)
+  function frScopeLine() { const col = $('fr-col'); return `범위: ${col.value ? col.options[col.selectedIndex].text + ' 칸' : '바꿀 수 있는 칸 전체'} · ${$('fr-whole').checked ? '칸 전체 일치' : '일부 일치'} · ${$('fr-case').checked ? '대소문자 구분' : '대소문자 무시'}`; }
+  function drawFr() {
+    const K = KC[kind], M = frMatches(), ok = M.filter(m => !m.why), rowsN = new Set(ok.map(m => m.r.r)).size, der = ok.filter(m => m.derived).length;
+    const find = $('fr-find').value;
+    $('fr-sum').innerHTML = `<span class="caption muted">${esc5(frScopeLine())}</span><br>` + (!find ? '찾을 값을 입력하면 바뀔 칸과 검사 결과를 미리 보여 줍니다' : !M.length ? `‘${esc5(find)}’ — 보이는 행에서 찾지 못했습니다` : `<b>${ok.length}칸</b>(${rowsN}행)을 바꿉니다${der ? ` · 도메인명 ${der}칸이 따라 바뀝니다` : ''}${M.length > ok.length ? ` · <span class="u-warning">${M.length - ok.length}칸은 건너뜁니다(짝짓기 키 · 규칙)</span>` : ''}`);
+    const hl = s => { if (!find) return esc5(s); const re = new RegExp(find.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), $('fr-case').checked ? 'g' : 'gi'); return esc5(s).replace(re, m => `<mark class="xhit">${m}</mark>`); };
+    const CAPN = 200;   // CX-02: the preview says when it is cut, and the count on the button is the whole set
+    $('fr-body').innerHTML = M.slice(0, CAPN).map(m => `<tr${m.why ? ' class="skip"' : ''}><td class="num">${m.r.r}</td><td>${esc5(K.lbl[m.f] || m.f)}</td><td class="from">${hl(m.from)}</td><td class="to">${esc5(m.to) || '<span class="caption faint">(빈 값)</span>'}</td><td class="chk">${m.why ? `<span class="caption u-warning">건너뜀 · ${esc5(m.why)}</span>` : `<span class="caption ${m.res.st === 'err' ? 'u-danger' : m.res.st === 'pre' || m.res.warn ? 'u-warning' : 'u-success'}">${m.res.st === 'err' ? `적용 · 행은 아직 오류: ${esc5(m.res.why)}` : esc5(verdict(m.res))}</span>`}</td></tr>${m.derived ? `<tr class="derived"><td class="num">${m.r.r}</td><td>도메인명 <span class="caption faint">계산</span></td><td class="from">${esc5(m.derived.from)}</td><td class="to">${esc5(m.derived.to)}</td><td class="chk"><span class="caption">분류·타입·길이에 따라 바뀜</span></td></tr>` : ''}`).join('') || `<tr class="er none"><td colspan="5" class="caption muted u-tc u-p-24">${find ? '바뀔 칸이 없습니다' : '찾을 값을 입력하세요'}</td></tr>`;
+    if (M.length > CAPN) $('fr-body').insertAdjacentHTML('beforeend', `<tr class="er none"><td colspan="5" class="caption u-warning u-tc">앞 ${CAPN}칸만 보여 줍니다 — 나머지 ${M.length - CAPN}칸도 같은 규칙으로 바뀝니다. 칸이나 필터로 범위를 좁혀 확인하세요</td></tr>`);
+    $('fr-go').disabled = !ok.length; $('fr-go').textContent = ok.length ? `${ok.length}칸 바꾸기` : '바꾸기';
+  }
+  function openFr(opener) {
+    if (!canWrite) { toast(`열람 전용 — ${roReason}`, 'info'); return; }
+    const K = KC[kind], n = frRows().length, skipped = ROWS.filter(r => rowVis(r) && FR_SKIP.includes(r.st)).length;
+    $('fr-col').innerHTML = '<option value="">바꿀 수 있는 칸 전체</option>' + frCols().map(c => `<option value="${c[0]}">${c[1]}</option>`).join('');
+    $('fr-col').value = frCols().some(c => c[0] === frColLast) ? frColLast : '';
+    const calc = K.cols.filter(c => (c[2] || '').includes('c')).map(c => c[1]);
+    const keyNote = kind === '코드' ? ' 사전에 있는 코드값(동일·변경 행)은 짝짓기 키라 바꾸지 않습니다.' : ' 항목 ID가 있는 행의 이름은 짝짓기 키라 바꾸지 않습니다.';
+    $('fr-scope').textContent = `지금 표에 보이는 ${n}행이 대상입니다${filt || ruleF || recentF ? '(필터 적용 중)' : ''}.${skipped ? ` 결재 중·충돌·파일에서 빠짐 ${skipped}행은 바꾸지 않습니다.` : ''}${calc.length ? ` ${josa(calc.join('·'), '은/는')} 계산 값이라 바꾸지 않습니다.` : ''}${keyNote}`;
+    drawFr(); openOv('mo-fr', opener); $('fr-find').focus(); $('fr-find').select();   // the last search stays, selected — typing replaces it (focus is synchronous: CL-14)
+  }
+  ['fr-find', 'fr-rep'].forEach(id => $(id).addEventListener('input', drawFr));
+  ['fr-col', 'fr-whole', 'fr-case'].forEach(id => $(id).addEventListener('change', () => { if (id === 'fr-col') frColLast = $('fr-col').value; drawFr(); }));
+  $('fr-find').addEventListener('keydown', e => { if (e.key === 'Enter') e.preventDefault(); });   // CX-02: Enter never runs a bulk change — [바꾸기] does
+  $('fr-go').addEventListener('click', () => {
+    const M = frMatches().filter(m => !m.why); if (!M.length) return; closeOv('mo-fr');
+    const byRow = new Map(); M.forEach(m => { if (!byRow.has(m.r)) byRow.set(m.r, []); byRow.get(m.r).push(m); });
+    pushUndo(`찾아 바꾸기 ${M.length}칸`, [...byRow.keys()]);
+    byRow.forEach((ms, r) => { const rule = r.rule;
+      ms.forEach(({ f, from, to }) => { r.fixed = r.fixed || {}; if (!(f in r.fixed)) r.fixed[f] = from;
+        if ((r.st === 'same' || r.st === 'chg') && r.id) { r.old = r.old || {}; if (!(f in r.old)) r.old[f] = from; }
+        r[f] = to; if (f === 'desc') delete r.shown; });
+      if (ms.some(m => ['dg', 'type', 'len'].includes(m.f))) derive(r); syncRow(r);
+      rejudge(r, r.st === 'err' ? `보정됨(${rule}) — 찾아 바꾸기` : '찾아 바꾸기로 바뀐 칸', ms.map(m => m.f)); });
+    const still = [...byRow.keys()].filter(r => r.st === 'err').length;
+    if (byRow.size > 1) { recentF = true; filt = ''; ruleF = ''; }   // CL-04: after a bulk change, show the rows it touched
+    afterEdit(`찾아 바꾸기 — ${M.length}칸(${byRow.size}행) 바꿨습니다${still ? ` · ${still}행은 아직 오류` : ''}`);
+  });
+  document.addEventListener('keydown', e => { if (cur === 5 && !document.querySelector('.overlay.open') && (e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey && e.key.toLowerCase() === 'h') { e.preventDefault(); openFr($('fr-open')); } });
   // ---- step 6
   // rows → document / basket items (one shape for both): every row keeps its own decision — changed fields, chosen decomposition, unuse reason, acknowledged warning (S1)
   function buildItems(p) {
     const K = KC[kind], LBL = K.lbl;
     const fromOf = x => x.fixed ? `화면에서 보정: ${Object.keys(x.fixed).map(k => LBL[k] || k).join('·')}` : undefined;
-    const chgOf = x => x.old ? Object.fromEntries(Object.entries(x.old).map(([k, v]) => [LBL[k] || k, [v, x[k]]])) : x.three && x.choice === 'file' ? { 설명: [x.three.cur, x.three.file] } : undefined;
     if (kind === '코드') {
       // one item per code group: the group's value list after the file rows are applied
       const show = vs => vs.map(v => `${v.v} ${v.nm}${v.st === '미사용' ? '(미사용)' : ''}`).join(', ');
@@ -534,15 +855,7 @@ window.pageInit = function () {
         return { k: 'code', row, id: ex.id, name: ex.name, dom: meta.dom, act: '변경', chg: { 코드값: [ex.vals || [], vals] }, vals, from };   // the shared apply takes the value list as objects (shown as '값 이름' in history)
       });
     }
-    return p.sub.map(x => {
-      const pk = x.st === 'pick' ? x.cands[x.choice] : null;
-      const abbr = pk ? pk.split(' · ')[1] : x.abbr;
-      const isChg = x.id && x.st !== 'new';
-      const base = { k: K.k, row: x.r, id: isChg ? x.id : undefined, name: x.name, abbr, desc: x.desc, act: isChg ? '변경' : '추가', chg: chgOf(x), warn: x.warn, from: fromOf(x) };
-      if (kind === '용어') return Object.assign(base, { dom: x.dom, pick: pk ? pk.split(' · ')[0] + (x.choice === 1 ? ' (1음절 의심 — 확인 후 선택)' : '') : undefined });
-      if (kind === '단어') return Object.assign(base, { eng: x.eng });
-      return Object.assign(base, { dg: x.dg, dom: `${x.dg} · ${TYPES[x.type] || x.type}(${x.len})` });
-    }).concat(p.unuse.map(x => ({ k: K.k, row: x.r, id: x.id, name: x.name, act: '미사용', why: x.why2 })));
+    return p.sub.map(x => rowItem(x)).concat(p.unuse.map(x => ({ k: K.k, row: x.r, id: x.id, name: x.name, act: '미사용', why: x.why2 })));
   }
   // DX-16: the same items go to the request basket, so file rows and hand-picked items can travel in ONE request
   $('to-basket').onclick = () => {
@@ -560,22 +873,31 @@ window.pageInit = function () {
     const unuse = ROWS.filter(r => r.st === 'missing' && r.choice === 'unuse');
     const hold = ROWS.filter(r => ['waitDiff', 'pre'].includes(r.st));
     const ex = ROWS.filter(r => !sub.includes(r) && !unuse.includes(r) && !hold.includes(r));
-    return { sub, unuse, hold, ex, err: ROWS.filter(r => r.st === 'err').length, pickLeft: ROWS.filter(r => r.st === 'pick' && r.choice === undefined).length, unuseNoWhy: unuse.filter(r => !(r.why2 || '').trim()).length };
+    // E-11: excluded rows are counted apart — errors, undecided candidates, and rows with nothing to request
+    const errR = ex.filter(r => r.st === 'err'), pickR = ex.filter(r => r.st === 'pick'), sameR = ex.filter(r => r.st !== 'err' && r.st !== 'pick');
+    return { sub, unuse, hold, ex, errR, pickR, sameR, err: errR.length, pickLeft: pickR.length, unuseNoWhy: unuse.filter(r => !(r.why2 || '').trim()).length };
   }
+  const groupsOf = rows => new Set(rows.map(r => r.grp)).size;
   function drawSubmit() {
-    const p = plan();
-    $('sum6').innerHTML = `<tbody><tr><td><b>신청</b> (등록·변경)</td><td class="num mono"><b>${p.sub.length}</b></td><td class="caption">${p.sub.map(r => r.name).join(', ')}</td></tr>
-      <tr><td>미사용 신청</td><td class="num mono">${p.unuse.length}</td><td class="caption">${p.unuse.map(r => r.name).join(', ') || '—'}</td></tr>
-      <tr><td>보류 (다른 신청 끝난 뒤 다시 검증)</td><td class="num mono">${p.hold.length}</td><td class="caption">${p.hold.map(r => r.name).join(', ') || '—'}</td></tr>
-      <tr><td>제외 (동일·같은 내용 대기·현재 값 유지·빠짐 무시·남은 오류)</td><td class="num mono">${p.ex.length}</td><td class="caption">남은 오류 ${p.err} · 후보 미선택 ${p.pickLeft}</td></tr></tbody>`;
+    const p = plan(), nm = rs => rs.map(r => `${r.r}행 ${esc5(r.name)}`).join(', ') || '—';
+    const subN = kind === '코드' ? `<b>${p.sub.length}</b>행` : `<b>${p.sub.length}</b>`;
+    $('sum6').innerHTML = `<tbody><tr><td><b>신청 대상</b> (등록·변경)${kind === '코드' ? `<div class="sum6-sub">결재 항목 ${groupsOf(p.sub)}건 — 코드 그룹 하나가 결재 항목 하나</div>` : ''}</td><td class="num mono">${subN}</td><td class="caption">${nm(p.sub)}</td></tr>
+      <tr><td>미사용 신청</td><td class="num mono">${p.unuse.length}</td><td class="caption">${nm(p.unuse)}</td></tr>
+      <tr><td>보류 <div class="sum6-sub">다른 신청이 끝난 뒤 업로드 이력에서 다시 검증</div></td><td class="num mono">${p.hold.length}</td><td class="caption">${nm(p.hold)}</td></tr>
+      <tr><td>오류로 제외 <div class="sum6-sub">결과 검토에서 고치면 신청에 들어감</div></td><td class="num mono">${p.errR.length}</td><td class="caption">${nm(p.errR)}</td></tr>
+      ${p.pickR.length ? `<tr><td>후보 미선택으로 제외</td><td class="num mono">${p.pickR.length}</td><td class="caption">${nm(p.pickR)}</td></tr>` : ''}
+      <tr><td>변경 없음 <div class="sum6-sub">동일 · 같은 내용 결재 중 · 현재 값 유지 · 빠짐 무시</div></td><td class="num mono">${p.sameR.length}</td><td class="caption">${nm(p.sameR)}</td></tr></tbody>`;
     $('selfnote').hidden = !ME.has('da');
     // warnings are submittable but must be acknowledged; the acknowledgement travels with the row (CL9-16)
     const w = p.sub.filter(r => r.warn);
     $('ack6-w').hidden = !w.length;
     $('ack6-t').innerHTML = w.length ? `경고 ${w.length}건을 확인했습니다 — ${w.map(r => `${r.r}행 ${r.name}: ${r.warn}`).join(' · ')}` : '';
   }
+  // E-07: the foot line follows every edit, not only a step change
+  function drawHint() { const p = plan();
+    $('hint').textContent = cur === 2 && !file ? '파일을 선택하세요' : cur === 4 ? '검증이 끝나면 결과 검토로 넘어갑니다' : cur === 5 ? (!canWrite ? `열람 전용 — ${roReason}` : p.err ? `오류 ${p.err}행은 신청에서 빠집니다 · F8 다음 오류` : `오류 없음 · ${leftText()}`) : ''; }
   // ---- wizard
-  const names = ['방식·종류', '업로드', '열 매핑', '검증·비교', '결과 검토·보정', '신청'];
+  const names =['방식·종류', '업로드', '열 매핑', '검증·비교', '결과 검토·보정', '신청'];
   const steps = $('steps');
   function render() {
     steps.innerHTML = names.map((n, i) => { const k = i + 1; const c = k < cur ? 'done' : k === cur ? 'cur' : ''; const back = k < cur && k !== 4 && cur !== 4; const inner = `<span class="n">${k < cur ? '<i data-ic=check data-s=12></i>' : k}</span>${n}`; return (i ? '<span class="step-sep" aria-hidden="true"></span>' : '') + (back ? `<button class="step ${c}" data-goto="${k}" title="${n} 단계로 돌아가기">${inner}</button>` : `<span class="step ${c}" ${k === cur ? 'aria-current="step"' : ''}>${inner}</span>`); }).join('');
@@ -586,8 +908,12 @@ window.pageInit = function () {
     nx.hidden = cur >= 5 && !canWrite;
     $('to-basket').hidden = !(cur === 6 && canWrite);
     const p = plan();
-    nx.textContent = cur === 6 ? `${p.sub.length + p.unuse.length}건 신청` : cur === 5 ? '신청 준비' : cur === 3 ? '검증 시작' : cur === 2 ? '열 매핑 확인' : cur === 1 ? '파일 올리기' : '다음';
-    $('hint').textContent = cur === 2 && !file ? '파일을 선택하세요' : cur === 4 ? '검증이 끝나면 결과 검토로 넘어갑니다' : cur === 5 ? (!canWrite ? '' : p.err ? `오류 ${p.err}행은 신청에서 빠집니다 · F8 다음 오류` : '오류 없음') : '';
+    nx.textContent = cur === 6 ? (kind === '코드' ? `${p.sub.length}행(결재 항목 ${groupsOf(p.sub) + p.unuse.length}) 신청` : `${p.sub.length + p.unuse.length}건 신청`) : cur === 5 ? '신청 준비' : cur === 3 ? '검증 시작' : cur === 2 ? '열 매핑 확인' : cur === 1 ? '파일 올리기' : '다음';
+    drawHint();
+    document.body.classList.toggle('x5', cur === 5);   // E-15: toasts stay clear of the row panel
+    if (cur !== 5) { pendingCell = null; showCellMsg(''); }
+    // E-10: the step-6 block reason must not stay at the foot of another step
+    if (cur !== 6) document.querySelectorAll('.needs-msg[data-btn="next"]').forEach(m => m.remove());
     if (cur === 3) $('map-file').textContent = $('fc-name').textContent;
     if (cur === 5) drawGrid();
     if (cur === 6) {
@@ -615,7 +941,13 @@ window.pageInit = function () {
       const sub = { new: p.sub.filter(x => x.st === 'new').length, chg: p.sub.filter(x => x.st === 'chg').length, pick: p.sub.filter(x => x.st === 'pick').length, conflict: p.sub.filter(x => x.st === 'conflict').length, unuse: p.unuse.length, hold: p.hold.length, ex: p.ex.length };
       const items = buildItems(p);
       // the same check the approver runs, before the document exists (CL14-07): nothing that would fail at DA is submitted
-      { const pre = checkDictDoc({ type: 'dict', items }).filter(x => x.problems.length); if (pre.length) { toast(`결재 재검사에서 막힐 행이 ${pre.length}건 있습니다 — ${pre.slice(0, 3).map(x => `${x.name}: ${x.problems[0]}`).join(' · ')}. 결과 검토에서 고친 뒤 신청하세요`, 'danger'); return; } }
+      { const res = checkDictDoc({ type: 'dict', items }), pre = res.filter(x => x.problems.length);
+        if (pre.length) {
+          // CX-03: what the last re-check found goes back to its row (status · rule · cell) and step 5 opens on it
+          let back = 0; res.forEach((x, i) => { if (!x.problems.length) return; const rows = String(items[i].row || '').split(',');
+            rows.forEach(rn => { const r = ROWS.find(o => String(o.r) === rn.trim()); if (!r) return; const rule = ruleOf(x.problems[0]); setErr(r, rule, gridF(RULE_FIELD[rule] || (kind === '코드' ? 'v' : 'name')), x.problems[0] + (x.problems.length > 1 ? ` 외 ${x.problems.length - 1}건` : ''), x.problems); back++; }); });
+          if (back) { persist(); cur = 5; filt = 'err'; ruleF = ''; recentF = false; render(); }
+          toast(`결재 재검사에서 막힐 항목이 ${pre.length}건 있습니다 — ${pre.slice(0, 3).map(x => `${x.name}: ${x.problems[0]}`).join(' · ')}.${back ? ` 그 ${back}행을 오류로 돌려 결과 검토를 열었습니다.` : ''} 고친 뒤 신청하세요`, 'danger'); return; } }
       const r = createDoc({ type: 'dict', kind: 'excel', batch: B.id, baseline: B.baseline, key: 'batch:' + B.id + ':' + (B.docs || []).length, n, title: `엑셀 일괄 — ${kind === '코드' ? '코드값' : kind} ${n}건${items.length !== n ? `(항목 ${items.length})` : ''} (${B.file})`, reason: $('why6').value.trim(), sub, items });
       if (r.conflict) { toast(`진행 중인 다른 신청과 겹치는 행이 있습니다 — ${r.conflict.join(', ')}. 결과 검토에서 그 행을 다시 확인하세요`, 'danger'); return; }
       batches = getBatches(); const b = batches.find(x => x.id === B.id); b.status = '신청됨'; b.docs = (b.docs || []).concat(r.dup ? [] : [r.doc.id]); b.counts = counts();
@@ -635,7 +967,7 @@ window.pageInit = function () {
       $('prog-t').textContent = `${Math.round(N * pct / 100)} / ${N}행 확인 · ${pct}% · ${pct >= 100 ? '완료' : document.querySelectorAll('#stages span')[n].textContent}`; };
     show();
     const tick = () => { pct = Math.min(100, pct + 10); show();
-      if (pct >= 100) { timer = setTimeout(() => { timer = null; if (cur !== 4) return; cur = 5; persist(); render(); toast(`검증·비교 완료${B ? ` — ${B.id}로 임시 저장했습니다` : ''}`, 'info'); const ch = $('chips'); if (ch) { ch.tabIndex = -1; ch.focus(); } }, 400); }
+      if (pct >= 100) { timer = setTimeout(() => { timer = null; if (cur !== 4) return; cur = 5; err0 = counts().err; persist(); render(); toast(`검증·비교 완료${B ? ` — ${B.id}로 임시 저장했습니다` : ''}`, 'info'); const ch = $('chips'); if (ch) { ch.tabIndex = -1; ch.focus(); } }, 400); }
       else timer = setTimeout(tick, 250); };
     timer = setTimeout(tick, 250);
   }
