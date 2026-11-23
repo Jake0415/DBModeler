@@ -116,9 +116,10 @@
       <div id="sysview"></div>
       <div id="grid"></div>
       <!-- bottom controls: always inside the window (pinCtl), legend · minimap can be folded and the choice is remembered -->
-      <div class="legend" id="cv-legend"><span class="lg-body" id="lg-body">상태 <span class="dot-i s-ok"></span>표준 <span class="dot-i s-comb"></span>조합 가능 <span class="dot-i s-unreg"></span>미등록 단어 <span class="dot-i s-ex"></span>예외 <span class="dot-i s-na"></span>비대상</span><button class="iconbtn u-w-28 u-h-28" id="lg-fold" aria-expanded="true" aria-controls="lg-body" aria-label="범례 접기" title="범례 접기"><i data-ic=x></i></button><button class="btn sm lg-open" id="lg-open" aria-expanded="false" aria-controls="lg-body">범례</button></div>
+      <!-- ERD P3-20: one row at the bottom — the legend is a popover from [ⓘ] in the zoom bar (open on first use, then only on request) -->
+      <div class="legend" id="cv-legend" role="region" aria-label="범례"><span class="lg-body" id="lg-body">상태 <span class="dot-i s-ok"></span>표준 <span class="dot-i s-comb"></span>조합 가능 <span class="dot-i s-unreg"></span>미등록 단어 <span class="dot-i s-ex"></span>예외 <span class="dot-i s-na"></span>비대상 <span class="lg-sep" aria-hidden="true"></span>미니맵 <span class="lg-sw lg-w"></span>미준수 있음 <span class="lg-sw lg-p"></span>함께 편집 중</span><button class="iconbtn u-w-28 u-h-28" id="lg-fold" aria-expanded="true" aria-controls="cv-legend" aria-label="범례 닫기" title="범례 닫기"><i data-ic=x></i></button></div>
       <div class="cv-zoom" role="group" aria-label="확대 · 축소"><button id="zo" aria-label="축소 (Ctrl+-)" title="축소 (Ctrl+-)">−</button><button type="button" id="zl" class="mono" title="100%로 (Ctrl+0)" aria-label="지금 배율 — 눌러서 100%로 (Ctrl+0)">100%</button><button id="zi" aria-label="확대 (Ctrl++)" title="확대 (Ctrl++)">+</button><button id="zfit" title="전체 맞춤 (Shift+1)">맞춤</button>
-        <select class="input" id="lodsel" aria-label="캔버스 표시 단계"><option value="auto" title="글자가 11px 이상이면 전체 속성, 9~11px이면 키만, 9px 미만이면 이름만">표시: 자동</option><option value="full">전체 속성</option><option value="mid">키만</option><option value="low">요약(이름만)</option></select></div>
+        <select class="input" id="lodsel" aria-label="캔버스 표시 단계"><option value="auto" title="글자가 11px 이상이면 전체 속성, 9~11px이면 키만, 9px 미만이면 이름만">표시: 자동</option><option value="full">전체 속성</option><option value="mid">키만</option><option value="low">요약(이름만)</option></select><button type="button" id="lg-open" class="lg-i" aria-expanded="false" aria-controls="cv-legend" aria-label="범례" title="범례 — 상태 점 · 미니맵 색"><i data-ic=info data-s=14></i></button></div>
       <div class="cv-mini" id="cv-mini"><svg id="mini" width="180" height="120" role="img" aria-label="미니맵 — 전체 중 지금 보이는 범위"></svg><button class="iconbtn u-w-28 u-h-28 mini-x" id="mini-x" aria-expanded="true" aria-controls="cv-mini" aria-label="미니맵 접기" title="미니맵 접기"><i data-ic=x></i></button></div>
       <button class="btn sm mini-open" id="mini-open" aria-expanded="false" aria-controls="cv-mini">미니맵</button>
     </div>
@@ -548,6 +549,9 @@ window.pageInit = function () {
     let s = VE().map(e => { const b = box(e.id); const col = remoteSel === e.id && !offline ? 'var(--p-1)' : bad(e) ? 'var(--warning)' : 'var(--border-strong)'; return `<rect x="${(b.x - ox) * k}" y="${(b.y - oy) * k}" width="${b.w * k}" height="${b.h * k}" fill="${col}" opacity=".6" rx="1"/>`; }).join('');
     s += `<rect id="mini-vp" x="${(-panX / zoom - ox) * k}" y="${(-panY / zoom - oy) * k}" width="${cv.clientWidth / zoom * k}" height="${cv.clientHeight / zoom * k}" fill="none" stroke="var(--ink)" stroke-width="1"/>`;
     m.innerHTML = s; miniK = { k, ox, oy };
+    // ERD P3-21: what the colours say, in words too (screen readers · tooltip)
+    const nb = VE().filter(e => bad(e)).length, lbl = `미니맵 — 엔터티 ${VE().length}개 중 미준수 있음 ${nb}개(호박색)${remoteSel && !offline && ent(remoteSel) ? ` · ${ent(remoteSel).n} 함께 편집 중` : ''} · 테두리 = 지금 보이는 범위`;
+    m.setAttribute('aria-label', lbl); m.parentElement.title = lbl;
   }
   const PANELS = ['rp', 'pn-gate', 'pn-confirm', 'pn-review', 'pn-check'];
   function syncTab() { $('rp-tab').style.display = PANELS.some(p => $(p).classList.contains('open')) ? 'none' : 'flex'; }
@@ -1430,13 +1434,14 @@ window.pageInit = function () {
   function applyFold() {
     const narrow = cv.clientWidth < 760, lgOff = !!fold.lg, miniOff = !!fold.mini || (narrow && !miniPeek);
     cv.classList.toggle('lg-off', lgOff); cv.classList.toggle('mini-off', miniOff);
-    $('lg-fold').setAttribute('aria-expanded', String(!lgOff)); $('lg-open').setAttribute('aria-expanded', String(!lgOff));
+    $('lg-fold').setAttribute('aria-expanded', String(!lgOff)); $('lg-open').setAttribute('aria-expanded', String(!lgOff)); $('lg-open').title = lgOff ? '범례 열기 — 상태 점 · 미니맵 색' : '범례 닫기';
     $('mini-x').setAttribute('aria-expanded', String(!miniOff)); $('mini-open').setAttribute('aria-expanded', String(!miniOff));
     $('mini-open').title = narrow && !fold.mini ? '캔버스가 좁아 미니맵을 접었습니다 — 눌러서 펼치기' : '미니맵 펼치기';
   }
   const saveFold = () => dbmStore.set(FOLD_KEY, JSON.stringify(fold));
   $('lg-fold').onclick = () => { fold.lg = 1; saveFold(); applyFold(); $('lg-open').focus(); };
-  $('lg-open').onclick = () => { fold.lg = 0; saveFold(); applyFold(); $('lg-fold').focus(); };
+  $('lg-open').onclick = () => { fold.lg = fold.lg ? 0 : 1; saveFold(); applyFold(); if (!fold.lg) $('lg-fold').focus(); };   // [ⓘ] toggles the popover
+  $('cv-legend').addEventListener('keydown', ev => { if (ev.key === 'Escape') { ev.stopPropagation(); fold.lg = 1; saveFold(); applyFold(); $('lg-open').focus(); } });
   $('mini-x').onclick = () => { fold.mini = 1; miniPeek = false; saveFold(); applyFold(); $('mini-open').focus(); };
   $('mini-open').onclick = () => { fold.mini = 0; miniPeek = true; saveFold(); applyFold(); isSys() ? miniSys() : mini(); $('mini-x').focus(); };
   function pinCtl() {
@@ -1893,15 +1898,23 @@ window.pageInit = function () {
   function childPicker(fId) {
     const parent = ent(fId); if (!parent || guard()) return; document.querySelectorAll('.pop').forEach(x => x.remove());
     const p = document.createElement('div'); p.className = 'pop'; p.setAttribute('role', 'dialog'); p.setAttribute('aria-label', '관계 만들기'); p.style.left = '16px'; p.style.top = '52px'; p.style.width = '320px';
-    p.innerHTML = `<b>${hx(parent.n)} → 자식 고르기</b><div class="caption muted u-mt-4">유형: ${({ nonid: '1:N 비식별', id: '1:N 식별', one: '1:1', mn: 'M:N' })[relType]} · 자기 자신을 고르면 재귀</div><input class="input u-mt-8" type="text" role="combobox" aria-expanded="true" aria-controls="cp-list" aria-autocomplete="list" aria-label="자식 엔터티 찾기" placeholder="이름으로 거르기"><div class="vlist" id="cp-list" role="listbox" aria-label="자식 엔터티"></div><div class="flex"><button class="btn sm" data-no>취소 (Esc)</button></div>`;
+    // ERD P3-19: the relation type is chosen here, on top of the picker (1 · 2 · 3) — no trip back to the toolbar menu
+    const RT = [['nonid', '비식별', '1:N 비식별 — 자식 FK는 일반 속성'], ['id', '식별', '1:N 식별 — 자식 FK가 식별자에 들어감'], ['one', '1:1', '1:1 — 자식 FK에 UK']];
+    if (!RT.some(x => x[0] === relType)) relType = 'nonid';
+    p.innerHTML = `<b>${hx(parent.n)} → 자식 고르기</b><div class="cp-rt u-mt-8" role="radiogroup" aria-label="관계 종류 (1 · 2 · 3)">${RT.map(([k, l, t], i) => `<button type="button" class="chip${k === relType ? ' on' : ''}" role="radio" aria-checked="${k === relType}" data-cprt="${k}" title="${t}" tabindex="${k === relType ? 0 : -1}"><kbd>${i + 1}</kbd>${l}</button>`).join('')}</div><div class="caption muted u-mt-4">자기 자신을 고르면 재귀 · M:N · 배타는 도구 막대의 관계 ▾</div><input class="input u-mt-8" type="text" role="combobox" aria-expanded="true" aria-controls="cp-list" aria-autocomplete="list" aria-label="자식 엔터티 찾기" placeholder="이름으로 거르기"><div class="vlist" id="cp-list" role="listbox" aria-label="자식 엔터티"></div><div class="flex"><button class="btn sm" data-no>취소 (Esc)</button></div>`;
     cv.appendChild(p); const inp = p.querySelector('input'), list = p.querySelector('.vlist'); let idx = 0;
     const items = () => VE().filter(e => !e.ref && e.n.includes(inp.value.trim()));
     const draw = () => { const L = items(); idx = Math.min(idx, Math.max(0, L.length - 1)); list.innerHTML = L.map((e, i) => `<div role="option" id="cp-o${i}" class="ac-opt${i === idx ? ' on' : ''}" aria-selected="${i === idx}" data-e="${e.id}">${hx(e.n)}${e.id === fId ? ' <span class="faint">(재귀)</span>' : ''}</div>`).join('') || '<div class="caption muted">맞는 엔터티가 없습니다</div>';
       if (L.length) inp.setAttribute('aria-activedescendant', 'cp-o' + idx); else inp.removeAttribute('aria-activedescendant'); };
     const close = () => { p.remove(); const n = $('n-' + fId); if (n) { n.tabIndex = -1; n.focus(); } };   // focus goes back to the parent entity
     const pick = id => { p.remove(); if (id === fId) { makeRel(fId, fId, 'nonid'); return; } makeRel(fId, id, relType); };
+    const setRT = k => { relType = k; $('reltype').textContent = ({ nonid: '1:N 비식별', id: '1:N 식별', one: '1:1', mn: 'M:N' })[k]; document.querySelectorAll('#relmenu .mi[data-rt]').forEach(x => x.classList.toggle('on', x.dataset.rt === k));
+      p.querySelectorAll('[data-cprt]').forEach(b => { const on = b.dataset.cprt === k; b.classList.toggle('on', on); b.setAttribute('aria-checked', on); b.tabIndex = on ? 0 : -1; }); agLive('관계 종류 ' + RT.find(x => x[0] === k)[2].split(' — ')[0]); };
+    p.querySelector('.cp-rt').addEventListener('click', ev => { const b = ev.target.closest('[data-cprt]'); if (b) { setRT(b.dataset.cprt); inp.focus(); } });
     inp.addEventListener('input', () => { idx = 0; draw(); });
     p.addEventListener('keydown', ev => { ev.stopPropagation(); if (ev.isComposing || ev.keyCode === 229) return; const L = items();
+      if (['1', '2', '3'].includes(ev.key) && !ev.ctrlKey && !ev.altKey) { ev.preventDefault(); setRT(RT[+ev.key - 1][0]); return; }
+      if ((ev.key === 'ArrowLeft' || ev.key === 'ArrowRight') && ev.target.closest('.cp-rt')) { ev.preventDefault(); const i = RT.findIndex(x => x[0] === relType), j = (i + (ev.key === 'ArrowRight' ? 1 : RT.length - 1)) % RT.length; setRT(RT[j][0]); p.querySelector(`[data-cprt="${RT[j][0]}"]`).focus(); return; }
       if (ev.key === 'ArrowDown') { idx = Math.min(idx + 1, L.length - 1); draw(); ev.preventDefault(); } else if (ev.key === 'ArrowUp') { idx = Math.max(idx - 1, 0); draw(); ev.preventDefault(); }
       else if (ev.key === 'Enter' && L[idx]) { ev.preventDefault(); pick(L[idx].id); } else if (ev.key === 'Escape') close(); });
     list.addEventListener('click', ev => { const o = ev.target.closest('[data-e]'); if (o) pick(o.dataset.e); });

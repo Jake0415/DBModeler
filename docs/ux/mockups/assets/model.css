@@ -137,6 +137,10 @@
 #cv[data-sys="1"] .cv-toolbar #lp, #cv[data-sys="1"] .cv-toolbar #vw { display:none; }
 /* ERD P2-10: [확정 신청 n] — the count of items still to fix rides on the one goal button */
 #confirm-btn .cb-n { display:inline-grid; place-items:center; min-width:20px; height:20px; padding:0 6px; margin-left:6px; border-radius:9999px; background:var(--ds-amber-200); color:var(--ds-amber-900); font:600 12px var(--font-mono); }
+/* ERD P3-19: relation type chips on the child picker */
+.pop .cp-rt { display:flex; gap:6px; }
+.pop .cp-rt .chip { height:28px; gap:4px; }
+.pop .cp-rt kbd { font-size:12px; padding:0 3px; }
 #grid .g-title { margin:0; font-weight:600; outline:none; }
 .ck-tbl td:last-child, .ck-tbl th:last-child { text-align:right; white-space:nowrap; }
 .ck-tbl .ck-act { display:flex; gap:4px; justify-content:flex-end; }
@@ -240,9 +244,15 @@ body.gridmode .cv-banner, body.gridmode .legend, body.gridmode .cv-zoom, body.gr
 .legend .lg-body { display:flex; gap:8px; align-items:center; }
 .legend #lg-fold { color:var(--fg-3); }
 .cv-mini .mini-x { position:absolute; top:4px; right:4px; background:var(--surface); color:var(--fg-3); }
-.lg-open, .mini-open { display:none; }
-#cv.lg-off .legend .lg-body, #cv.lg-off .legend #lg-fold { display:none; }
-#cv.lg-off .legend .lg-open { display:inline-flex; box-shadow:var(--menu-shadow); }
+.mini-open { display:none; }
+/* ERD P3-20: the legend is a popover above the zoom bar; folded = gone (the bottom keeps one row) */
+.legend { background:var(--surface); border-radius:var(--r-lg); box-shadow:var(--menu-shadow); padding:4px 4px 4px 10px; color:var(--fg-2); }
+.legend .lg-sep { width:1px; height:14px; background:var(--border); margin:0 2px; }
+.legend .lg-sw { width:10px; height:10px; border-radius:2px; opacity:.6; display:inline-block; }
+.legend .lg-w { background:var(--warning); } .legend .lg-p { background:var(--p-1); }
+#cv.lg-off .legend { display:none; }
+.cv-zoom .lg-i { display:inline-grid; place-items:center; color:var(--fg-2); }
+.cv-zoom .lg-i[aria-expanded="true"] { background:var(--ds-gray-100); color:var(--fg); }
 #cv.mini-off .cv-mini { display:none; }
 #cv.mini-off .mini-open { display:inline-flex; position:absolute; right:calc(12px + var(--cv-cutr, 0px)); bottom:calc(12px + var(--cv-cut, 0px)); z-index:10; box-shadow:var(--menu-shadow); }
 /* system view: zoomable area cards */
