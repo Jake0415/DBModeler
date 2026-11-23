@@ -71,8 +71,16 @@
 * { box-sizing:border-box; }
 html,body { margin:0; }
 body { background:var(--outside); color:var(--fg); font:400 14px/22px var(--font-sans); letter-spacing:-.1px; -webkit-font-smoothing:antialiased; }
-html, body, * { scrollbar-width:thin; scrollbar-color:var(--ds-gray-500) transparent; }
-*:hover { scrollbar-color:var(--ds-gray-600) transparent; }
+/* scrollbars: 5px (half of the 10px 'thin'). Chromium/Edge/Safari use the ::-webkit-scrollbar rules (the standard properties
+   would override them there), Firefox keeps the standard thin scrollbar */
+@supports not selector(::-webkit-scrollbar) {
+  html, body, * { scrollbar-width:thin; scrollbar-color:var(--ds-gray-500) transparent; }
+  *:hover { scrollbar-color:var(--ds-gray-600) transparent; }
+}
+::-webkit-scrollbar { width:5px; height:5px; }
+::-webkit-scrollbar-track, ::-webkit-scrollbar-corner { background:transparent; }
+::-webkit-scrollbar-thumb { background:var(--ds-gray-500); border-radius:9999px; }
+::-webkit-scrollbar-thumb:hover { background:var(--ds-gray-700); }
 h1,h2,h3,h4 { margin:0; font-weight:600; }
 b, strong { font-weight:600; }   /* weights are 400 · 500 · 600 only (01 v2 §3) */
 a { color:var(--accent); text-decoration:none; }
@@ -183,6 +191,12 @@ kbd, .gsearch kbd { margin-left:auto; height:22px; display:inline-flex; align-it
 .mtree .tpanel { flex:1; min-height:0; display:flex; flex-direction:column; }
 .mtree .tpanel[hidden] { display:none; }
 .ltabs { display:flex; gap:2px; padding:8px 8px 0; flex:none; }
+/* [모델 | 사전] + fold button on one row (the button sits outside the tablist) */
+.ltop { display:flex; align-items:center; gap:2px; padding:8px 8px 0; flex:none; }
+.ltop .ltabs { flex:1; padding:0; }
+.tcol { width:28px; height:28px; flex:0 0 28px; border:0; border-radius:var(--r-md); background:transparent; color:var(--fg-2); display:grid; place-items:center; cursor:pointer; }
+.tcol:hover { background:var(--ds-gray-100); color:var(--fg); }
+.tcol:focus-visible { outline:2px solid var(--focus); outline-offset:-2px; }
 .ltabs button { flex:1; height:28px; border:0; border-radius:var(--r-md); background:transparent; color:var(--fg-2); font:500 14px var(--font-sans); cursor:pointer; }
 .ltabs button:hover { color:var(--fg); }
 .ltabs button[aria-selected="true"] { background:var(--surface); color:var(--fg); box-shadow:var(--ring); }
@@ -264,6 +278,9 @@ body.dict-in-tree .side-tab, body.dict-in-tree #side [data-toggle="side"] { disp
 .mtree .tl .tn { margin-left:auto; font-size:12px; color:var(--fg-2); font-weight:400; overflow:hidden; text-overflow:ellipsis; }
 .mtree .tsep { height:1px; background:var(--nav-line); margin:10px 4px; }
 .mtree .tempty { padding:4px 8px; font-size:12px; line-height:16px; color:var(--fg-3); }
+.mtree .tcollapse { display:none !important; }   /* replaced by the top [«] · rail [»] buttons (it could fall below the window); kept as the toggle's logic owner */
+.tm-i.tm-x { width:32px; height:32px; border:0; background:var(--ds-gray-100); color:var(--fg); cursor:pointer; margin-bottom:6px; }
+.tm-i.tm-x:hover { background:var(--ds-gray-200); }
 .tcollapse { flex:none; display:flex; align-items:center; justify-content:flex-end; gap:6px; height:40px; padding:0 16px; border:0; border-top:1px solid var(--nav-line); background:transparent; color:var(--fg-2); font:400 13px var(--font-sans); cursor:pointer; }
 .tcollapse:hover { color:var(--fg); background:var(--ds-gray-100); }
 .mtree .tmini { display:none; }

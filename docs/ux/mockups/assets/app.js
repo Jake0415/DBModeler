@@ -1437,8 +1437,10 @@
     }
     // ---- markup
     const tabs = page === 'model' && document.getElementById('side');
+    // fold the whole left column to the icon rail — at the TOP (the old bottom [접기] could fall below the window), Ctrl+B
+    const COLBTN = '<button class="tcol" id="tr-col" type="button" aria-expanded="true" aria-controls="tr-full" aria-label="왼쪽 칸 접기 (Ctrl+B)" title="왼쪽 칸 접기 — 아이콘만 (Ctrl+B)"><i data-ic=left data-s=14></i></button>';
     nav.innerHTML = `
-      ${tabs ? `<div class="ltabs" role="tablist" aria-label="왼쪽 칸"><button role="tab" id="lt-m" aria-controls="tp-model" data-lt="m">모델</button><button role="tab" id="lt-d" aria-controls="tp-dict" data-lt="d">사전</button></div>` : ''}
+      ${tabs ? `<div class="ltop"><div class="ltabs" role="tablist" aria-label="왼쪽 칸"><button role="tab" id="lt-m" aria-controls="tp-model" data-lt="m">모델</button><button role="tab" id="lt-d" aria-controls="tp-dict" data-lt="d">사전</button></div>${COLBTN}</div>` : ''}
       <div class="tpanel" id="tp-model"${tabs ? ' role="tabpanel" aria-labelledby="lt-m"' : ''}>
         <div class="tfull" id="tr-full">
           <!-- tree head: fixed while only the tree scrolls; folds to one line (system name + find button), remembered per user -->
@@ -1448,6 +1450,7 @@
             <button class="tsrch-open" id="tr-sopen" type="button" aria-label="찾기 — 상단 펼치기" title="찾기 (상단 펼치기)"><i data-ic=search data-s=14></i></button>
             <span class="tmw"><button class="tsw" type="button" data-menu-btn aria-expanded="false" aria-controls="mn-sys" aria-label="시스템 바꾸기" title="시스템 바꾸기"><i data-ic=down data-s=14></i></button><div class="menu" data-auto id="mn-sys">${SYSTEMS.map(s => `<a class="mi${s.cur ? ' on' : ''}" href="${s.href}"${s.cur ? ' aria-current="true"' : ''}><span>${s.name}</span><span class="caption muted" style="margin-left:auto">${s.db}</span></a>`).join('')}</div></span>
             <button class="thfold" id="tr-hfold" type="button" aria-expanded="true" aria-controls="tr-hbody" aria-label="트리 상단 접기" title="상단 접기 — 시스템 · 찾기를 한 줄로"><i data-ic=up data-s=14></i></button>
+            ${tabs ? '' : COLBTN}
           </div>
           <div class="thbody" id="tr-hbody">
           <div class="tfrow">
@@ -1478,6 +1481,7 @@
       </div>
       ${tabs ? '<div class="tpanel" id="tp-dict" role="tabpanel" aria-labelledby="lt-d" hidden></div>' : ''}
       <div class="tmini" aria-label="접힌 모델 트리">
+        <button class="tm-i tm-x" id="tr-exp" type="button" aria-expanded="false" aria-controls="tr-full" aria-label="왼쪽 칸 펼치기 (Ctrl+B)" title="왼쪽 칸 펼치기 (Ctrl+B)"><i data-ic=right></i></button>
         <a class="tm-i${page === 'system' ? ' on" aria-current="page' : ''}" href="system.html" title="시스템 홈 · ${sys.name}" aria-label="시스템 홈"><i data-ic=table></i></a>
         ${Object.entries(models0).map(([id, m]) => `<a class="tm-i tm-a${id === famArea ? ' on" aria-current="true' : ''}" href="model.html?area=${id}" title="${esc(m.name)}" aria-label="${esc(m.name)}">${esc(String(m.name).trim()[0])}</a>`).join('')}
         <a class="tm-i${file === 'model.html' && qp.get('sys') ? ' on" aria-current="page' : ''}" href="model.html?sys=1" title="시스템 전체 ERD" aria-label="시스템 전체 ERD"><i data-ic=compare></i></a>
@@ -1781,6 +1785,13 @@
     const btn = nav.querySelector('#tr-min');
     const syncMin = () => { const m = minned(); btn.innerHTML = `<i data-ic=${m ? 'right' : 'left'}></i><span>접기</span>`; btn.setAttribute('aria-label', m ? '모델 트리 펼치기' : '모델 트리 접기'); btn.setAttribute('aria-expanded', String(!m)); btn.setAttribute('aria-controls', 'tr-full'); btn.title = m ? '펼치기' : '접기'; if (m) app.style.removeProperty('--nav'); else { curW = 0; fit(); } };
     btn.addEventListener('click', () => { app.classList.toggle('treemin'); store.set('dbm-tree-min-' + ME.id, minned() ? '1' : '0'); syncMin(); window.dispatchEvent(new Event('resize')); });
+    // the visible controls: [«] at the top of the column, [»] at the top of the icon rail, Ctrl+B anywhere (not while typing)
+    const colTop = nav.querySelector('#tr-col'), expTop = nav.querySelector('#tr-exp');
+    const syncTop = () => { const m = minned(); if (colTop) colTop.setAttribute('aria-expanded', String(!m)); if (expTop) expTop.setAttribute('aria-expanded', String(!m)); };
+    if (colTop) colTop.addEventListener('click', () => { btn.click(); syncTop(); if (expTop) expTop.focus(); });
+    if (expTop) expTop.addEventListener('click', () => { btn.click(); syncTop(); if (colTop && colTop.offsetParent) colTop.focus(); });
+    document.addEventListener('keydown', e => { if (!(e.ctrlKey || e.metaKey) || e.shiftKey || e.altKey || e.key.toLowerCase() !== 'b') return; if (e.target.closest && e.target.closest('input, textarea, select, [contenteditable="true"]')) return; e.preventDefault(); btn.click(); syncTop(); });
+    new MutationObserver(syncTop).observe(app, { attributes: true, attributeFilter: ['class'] }); syncTop();
     // ---- [모델 | 사전] — the model screen's dictionary panel moves into this one column (12 §4.6)
     if (tabs) {
       const side = document.getElementById('side'); const dp = nav.querySelector('#tp-dict');
@@ -1890,7 +1901,7 @@
             <tr><td><kbd>V</kbd> <kbd>E</kbd> <kbd>R</kbd> <kbd>M</kbd></td><td>선택 · 엔터티 · 관계 · 메모 도구</td></tr>
             <tr><td><kbd>Enter</kbd></td><td>선택한 엔터티에 속성 추가</td></tr><tr><td><kbd>Delete</kbd></td><td>선택 삭제 (영향 확인)</td></tr>
             <tr><td><kbd>Ctrl</kbd><kbd>Z</kbd> / <kbd>Ctrl</kbd><kbd>Y</kbd></td><td>내 편집 되돌리기 / 다시 실행</td></tr>
-            <tr><td><kbd>Ctrl</kbd><kbd>F</kbd></td><td>표 보기 · 찾기/바꾸기</td></tr><tr><td><kbd>Shift</kbd><kbd>1</kbd></td><td>전체 맞춤</td></tr><tr><td><kbd>Ctrl</kbd>+휠 · <kbd>Ctrl</kbd><kbd>+</kbd> <kbd>Ctrl</kbd><kbd>-</kbd></td><td>확대·축소</td></tr><tr><td><kbd>Ctrl</kbd><kbd>0</kbd></td><td>100%로</td></tr>
+            <tr><td><kbd>Ctrl</kbd><kbd>F</kbd></td><td>표 보기 · 찾기/바꾸기</td></tr><tr><td><kbd>Shift</kbd><kbd>1</kbd></td><td>전체 맞춤</td></tr><tr><td><kbd>Ctrl</kbd>+휠 · <kbd>Ctrl</kbd><kbd>+</kbd> <kbd>Ctrl</kbd><kbd>-</kbd></td><td>확대·축소</td></tr><tr><td><kbd>Ctrl</kbd><kbd>0</kbd></td><td>100%로</td></tr><tr><td><kbd>Ctrl</kbd><kbd>B</kbd></td><td>왼쪽 칸(모델 트리) 접기 · 펼치기</td></tr>
           </tbody></table>
           <label class="flex caption" style="margin-top:12px"><input type="checkbox" id="kb-single" ${store.get('dbm-single-keys', '1') === '1' ? 'checked' : ''}> 한 글자 단축키(V·E·R·M) 사용 — 끄면 화면 낭독기·음성 입력과 충돌하지 않습니다</label>
         </div>
