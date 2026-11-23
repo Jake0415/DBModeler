@@ -189,7 +189,7 @@ window.pageInit = function () {
       ${top.length ? `<ol class="reasons">${top.map(reasonLi).join('')}</ol>` : '<div class="ok-line">막힌 신청이 없습니다.</div>'}</section>`;
     const stale = live.slice().sort((a, b) => docAge(b) - docAge(a)).slice(0, 5);
     staleS = `<section class="sec" id="stale"><div class="sec-h"><h2>오래 머무는 결재</h2><a class="end" href="approvals.html">결재함</a></div>
-      <table class="tbl box"><tbody>${stale.map(d => `<tr><td><a class="mono" href="approvals.html?doc=${d.id}" title="${d.title}">${d.id}</a></td><td class="muted">${STEP_NAME[d.step]}</td><td class="r">${docLate(d) ? tag('err', docAge(d) + '일') : `<span class="num muted">${docAge(d)}일</span>`}</td></tr>`).join('') || '<tr><td class="muted">진행 중인 결재가 없습니다.</td></tr>'}</tbody></table></section>`;
+      <table class="tbl box"><tbody>${stale.map(d => `<tr><td><a class="mono" href="approvals.html?doc=${d.id}" title="${d.title}">${d.id}</a></td><td class="muted">${STEP_NAME[d.step]}</td><td class="r">${docLate(d) ? tag('err', docAge(d) + '일') : `<span class="num muted">${docAge(d)}일</span>`}</td></tr>`).join('') || '<tr class="er done"><td colspan="3" class="caption muted u-tc">진행 중인 결재가 없습니다</td></tr>'}</tbody></table></section>`;   // list standard L-6: the shared empty row
     const weeks = []; for (let i = 5; i >= 0; i--) { const end = new Date(T0 - i * 7 * 864e5), start = new Date(end - 6 * 864e5); weeks.push({ start, end, n: 0 }); }
     getDict().forEach(x => { const d = toDay(x.dt); if (!d) return; const w = weeks.find(w => d >= w.start && d <= w.end); if (w) w.n++; });
     const pubD = toDay(getPub().at); const wmax = Math.max(...weeks.map(w => w.n), 1);

@@ -1111,8 +1111,9 @@ window.pageInit = function () {
     gvis = new Set(rows.map(r => r.k)); const selVis = [...gsel].filter(k => gvis.has(k)).length, selHid = gsel.size - selVis;
     const hl = s => fv ? esc(s).split(esc(fv)).join(`<mark>${esc(fv)}</mark>`) : esc(s);
     const hits = fv ? rows.filter(r => r.a.n.includes(fv)).length : 0;
+    // list standard: filter chips are the shared 32px <button class="chip"> (were 26px inline-styled spans)
     g.innerHTML = `<div class="gbar"><b class="u-fs-14">속성 표 보기</b><span class="caption muted">${rows.length}개</span>
-        ${['all:전체', 'bad:미준수', 'sec:보안', 'na:비대상'].map(x => { const [k, l] = x.split(':'); return `<span class="chip ${gfilter === k ? 'on' : ''}" data-gf="${k}" style="height:26px;font-size:12px">${l}</span>`; }).join('')}
+        <span class="flex u-gap-8" role="group" aria-label="속성 거르기">${['all:전체', 'bad:미준수', 'sec:보안', 'na:비대상'].map(x => { const [k, l] = x.split(':'); return `<button type="button" class="chip ${gfilter === k ? 'on' : ''}" data-gf="${k}">${l}</button>`; }).join('')}</span>
         <span class="grow"></span>
         <input class="input u-w-150" id="g-find" placeholder="찾기 (논리명)" aria-label="찾기 (논리명)" value="${esc(fv)}">${gRepOpen ? `<input class="input edit-only u-w-130" id="g-rep" placeholder="바꿀 말" aria-label="바꿀 말" value="${esc(rv)}">` : '<button class="btn sm ghost edit-only" id="g-rep-open">바꾸기…</button>'}
         <span class="caption muted" style="width:90px">${fv ? `보이는 행 ${hits}건` : ''}</span>${gRepOpen ? `<button class="btn sm edit-only" id="g-replace" ${hits && rv ? '' : 'disabled'}>보이는 행 바꾸기</button>` : ''}

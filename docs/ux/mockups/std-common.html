@@ -91,9 +91,9 @@
               <input class="input" id="q" type="search" placeholder="코드명 · 영문 · 연결 용어 검색" aria-label="코드명 · 영문 · 연결 용어 검색">
             </div>
             <select class="input u-w-200" id="f-org" aria-label="소관기관"></select>
-            <span class="seg" id="f-part" role="group" aria-label="원문 코드값"><button data-v="" class="on" aria-pressed="true">전체</button><button data-v="p" aria-pressed="false">원문 일부 <span class="n" id="n-part"></span></button><button data-v="f" aria-pressed="false">원문 전체 <span class="n" id="n-full"></span></button></span>
+            <span class="flex u-gap-8" id="f-part" role="group" aria-label="원문 코드값"><button class="chip on" data-v="">전체</button><button class="chip" data-v="p">원문 일부 <span class="n" id="n-part"></span></button><button class="chip" data-v="f">원문 전체 <span class="n" id="n-full"></span></button></span>
           </div>
-          <div class="listhead" id="lh" aria-live="polite"></div>
+          <div class="listhead" id="lh"></div>
           <div class="scroll">
             <table class="tbl">
               <thead><tr><th>코드명</th><th>영문</th><th>도메인</th><th class="num">코드값 수</th><th>소관기관</th><th>제정차수</th><th class="num">연결 용어</th></tr></thead>
@@ -214,7 +214,8 @@ window.pageInit = function () {
   }
 
   /* ---- 1. 행정표준코드 ---- */
-  function codeHit(c) { if (!q) return true; const s = [c.name, c.abbr, c.org, ...(c.terms || []).map(t => t.name + ' ' + t.abbr)].join(' ').toLowerCase(); return s.includes(q); }
+  // L-2 'name' profile, field by field (a joined string used to match across field boundaries)
+  function codeHit(c) { return listMatch(q, [c.name, c.abbr, c.org, ...(c.terms || []).flatMap(t => [t.name, t.abbr])], 'name'); }
   function drawCodes() {
     const all = codes();
     if (!$('f-org').options.length) {
@@ -227,8 +228,12 @@ window.pageInit = function () {
         <td><b>${esc(c.name)}</b>${c.pending ? ` ${tag('run', '신청 중')}` : ''}</td><td class="mono">${esc(c.abbr)}</td><td class="mono">${esc(c.dom)}</td>
         <td class="num cnt-n">${(c.vals || []).length}${c.partial ? ' <span class="badge b-warning">원문 일부</span>' : ''}${supp[c.id] ? ' <span class="badge b-info">보완 담음</span>' : ''}</td>
         <td>${c.org && c.org !== '-' ? esc(c.org) : '<span class="faint">—</span>'}</td><td class="muted">${esc(c.cha || '—')}</td><td class="num cnt-n">${(c.terms || []).length}</td></tr>`).join('')
-      || `<tr><td colspan="7"><div class="empty"><b>조건에 맞는 행정표준코드가 없습니다</b><span class="caption">검색어나 소관기관 · 원문 필터를 바꿔 보세요</span></div></td></tr>`;
-    $('lh').textContent = (q || fOrg || fPart) ? `${list.length}종 표시 (전체 ${all.length}종)` : `행정표준코드 ${all.length}종 · 원문 일부 ${all.filter(c => c.partial).length}종 · 연결 용어 ${all.reduce((s, c) => s + (c.terms || []).length, 0)}건`;
+      || `<tr class="er none"><td colspan="7" class="caption muted u-tc u-p-32"><span class="et">필터에 맞는 행정표준코드가 없습니다</span><button class="btn sm ghost" data-sclr="all">모두 지우기</button></td></tr>`;
+    const act = [q && ['q', '검색: ' + esc(q)], fOrg && ['org', '소관기관: ' + (fOrg === '-' ? '표기 없음' : esc(fOrg))], fPart && ['part', fPart === 'p' ? '원문 일부' : '원문 전체']].filter(Boolean);
+    $('lh').innerHTML = act.length ? `<b class="u-fg">${all.length}종 중 ${list.length}종</b> <span class="fchips">${act.map(([k, l]) => `<button class="fchip" data-sclr="${k}" aria-label="${l} 필터 지우기">${l}<i data-ic=x data-s=12></i></button>`).join('')}<button class="btn ghost sm" data-sclr="all">모두 지우기</button></span>`
+      : `<b class="u-fg">행정표준코드 ${all.length}종</b> · 원문 일부 ${all.filter(c => c.partial).length}종 · 연결 용어 ${all.reduce((s, c) => s + (c.terms || []).length, 0)}건`;
+    liveCount(`${list.length}종`);
+    urlSync(['q', 'org', 'part', 'sel', 'code'], { q, org: fOrg, part: fPart, sel: sel || '' });
     $('tn-codes').textContent = all.length;
     if (sel) codePanel();
   }
@@ -368,7 +373,8 @@ window.pageInit = function () {
     const vis = rows.filter(r => (!fG || r.g === fG) && (!fK || r.k === fK));
     const ro = !!blk, selVis = vis.filter(r => !r.conflict), allOn = selVis.length && selVis.every(r => picked.has(r.key)), someOn = selVis.some(r => picked.has(r.key));
     const cf = rows.filter(r => r.conflict);
-    const seg = (id, list, cur) => `<span class="seg" id="${id}" role="group">${list.map(([v, t, n]) => `<button data-v="${v}" class="${cur === v ? 'on' : ''}" aria-pressed="${cur === v}">${t}${n != null ? ` <span class="n">${n}</span>` : ''}</button>`).join('')}</span>`;
+    // list standard L-1: 구분 · 종류 only shrink the rows → chips (were segments)
+    const seg = (id, list, cur) => `<span class="flex u-gap-8" id="${id}" data-fgk role="group" aria-label="${id === 'f-g' ? '구분' : '종류'}">${list.map(([v, t, n]) => `<button class="chip ${cur === v ? 'on' : ''}" data-v="${v}">${t}${n != null ? ` <span class="n">${n}</span>` : ''}</button>`).join('')}</span>`;
     $('st2-body').innerHTML = `
       <div class="caption muted">신규 단어 ${by('신규', 'word')} · 신규 용어 ${by('신규', 'term')} · 신규 도메인 ${by('신규', 'domain')} · 변경 ${by('변경') - by('변경', 'code')} · 폐기 ${by('폐기')} · 행정표준코드 변경 ${by('변경', 'code')}${Object.keys(supp).length ? ` (소관기관 원본 보완 ${Object.keys(supp).length} 포함)` : ''}</div>
       ${cf.length ? `<div class="banner warning u-mt-12"><i data-ic=warn></i><div class="grow"><b>기관 항목과 충돌 ${cf.length}건 — DA 처리 목록</b>
@@ -387,7 +393,7 @@ window.pageInit = function () {
           <td>${GTAG[r.g]}</td><td>${KN[r.k]}</td>
           <td><b>${esc(r.name)}</b>${r.d ? ` <span class="caption muted mono">${esc(r.d.id)}</span>` : ''}${r.supp ? ' <span class="badge b-info">원본 보완</span>' : ''}</td>
           <td class="chgc muted">${r.cur}</td><td class="chgc">${r.next}</td>
-          <td>${r.conflict ? '<span class="badge b-warning">기관 충돌</span>' : ''}${r.use ? ` <span class="caption">모델 ${r.use}곳</span>` : ''}${!r.conflict && !r.use ? '<span class="faint">—</span>' : ''}</td></tr>`).join('') || '<tr><td colspan="7" class="muted">조건에 맞는 차이가 없습니다.</td></tr>'}</tbody>
+          <td>${r.conflict ? '<span class="badge b-warning">기관 충돌</span>' : ''}${r.use ? ` <span class="caption">모델 ${r.use}곳</span>` : ''}${!r.conflict && !r.use ? '<span class="faint">—</span>' : ''}</td></tr>`).join('') || '<tr class="er none"><td colspan="7" class="caption muted u-tc u-p-16"><span class="et">필터에 맞는 차이가 없습니다</span><button class="btn sm ghost" data-nclr="1">모두 지우기</button></td></tr>'}</tbody>
       </table></div>
       ${rows.some(r => r.g === '폐기' && r.use) ? '<div class="caption muted u-mt-8">폐기 항목은 지우지 않고 미사용으로 바꿉니다. 모델에서 쓰는 곳은 그대로 두고 다음 표준 맞추기에서 다시 검토합니다.</div>' : ''}`;
     const ca = $('ck-all'); if (ca) ca.indeterminate = !allOn && someOn;
@@ -444,15 +450,21 @@ window.pageInit = function () {
 
   /* ---- wiring ---- */
   function showTab(t) { const b = document.querySelector(`.ptabs button[data-tab="${t}"]`); if (b) b.click(); }
-  $('rows').addEventListener('click', e => { const tr = e.target.closest('tr[data-id]'); if (!tr) return; sel = tr.dataset.id; codePanel(); });
-  $('pn-code').addEventListener('click', e => { if (e.target.closest('[data-close="pn-code"]')) { sel = null; document.querySelectorAll('#rows tr.sel').forEach(r => r.classList.remove('sel')); } });
-  $('q').addEventListener('input', e => { q = e.target.value.trim().toLowerCase(); drawCodes(); });
+  const syncSel = () => urlSync(['sel', 'code'], { sel: sel || '' });
+  $('rows').addEventListener('click', e => { const tr = e.target.closest('tr[data-id]'); if (!tr) return; sel = tr.dataset.id; codePanel(); syncSel(); });
+  $('pn-code').addEventListener('click', e => { if (e.target.closest('[data-close="pn-code"]')) { sel = null; document.querySelectorAll('#rows tr.sel').forEach(r => r.classList.remove('sel')); syncSel(); } });
+  $('q').addEventListener('input', e => { q = e.target.value.trim(); drawCodes(); });
   $('f-org').addEventListener('change', e => { fOrg = e.target.value; drawCodes(); });
-  $('f-part').addEventListener('click', e => { const b = e.target.closest('button[data-v]'); if (!b) return; $('f-part').querySelectorAll('button').forEach(x => { x.classList.toggle('on', x === b); x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); }); fPart = b.dataset.v; drawCodes(); });
+  const setPart = v => { fPart = v; $('f-part').querySelectorAll('button[data-v]').forEach(x => x.classList.toggle('on', x.dataset.v === v)); };
+  $('f-part').addEventListener('click', e => { const b = e.target.closest('button[data-v]'); if (!b) return; setPart(b.dataset.v); drawCodes(); });
+  document.addEventListener('click', e => { const c = e.target.closest('[data-sclr]'); if (!c) return; const k = c.dataset.sclr;
+    if (k === 'all' || k === 'q') { q = ''; $('q').value = ''; } if (k === 'all' || k === 'org') { fOrg = ''; $('f-org').value = ''; } if (k === 'all' || k === 'part') setPart('');
+    drawCodes(); const nc = document.querySelector('#lh [data-sclr]'); (nc || $('q')).focus(); });
   $('b-pick').onclick = () => { const bw = blockedWhy(); if (bw && bw.kind !== 'ro') return; const again = loaded; loaded = true; picked = null; drawNew(); toast(again ? '원본을 다시 읽었습니다 — 고른 항목을 처음 상태로 되돌렸습니다' : `${NEW_FILE} — 머리글 검사 통과 · 판 비교를 만들었습니다`, 'success'); };
   $('st2-body').addEventListener('click', e => {
-    const b = e.target.closest('.seg button[data-v]');
-    if (b) { if (b.closest('#f-g')) fG = b.dataset.v; else fK = b.dataset.v; drawNew(); return; }
+    const b = e.target.closest('[data-fgk] button[data-v]');
+    if (b) { if (b.closest('#f-g')) fG = b.dataset.v; else fK = b.dataset.v; drawNew(); const n = document.querySelector(`#${b.closest('[data-fgk]').id} button[data-v="${b.dataset.v}"]`); if (n) n.focus(); return; }
+    if (e.target.closest('[data-nclr]')) { fG = ''; fK = ''; drawNew(); return; }
   });
   $('st2-body').addEventListener('change', e => {
     if (!picked || blockedWhy()) return;
@@ -460,7 +472,10 @@ window.pageInit = function () {
     const k = e.target.dataset.ck; if (k) { e.target.checked ? picked.add(k) : picked.delete(k); drawNew(); }
   });
   const qs0 = new URLSearchParams(location.search);
-  drawHead(); drawCodes(); drawNew(); drawHist();
+  q = qs0.get('q') || ''; $('q').value = q; if (['p', 'f'].includes(qs0.get('part'))) setPart(qs0.get('part'));
+  drawHead(); drawCodes();
+  if (qs0.get('org') && [...$('f-org').options].some(o => o.value === qs0.get('org'))) { fOrg = qs0.get('org'); $('f-org').value = fOrg; drawCodes(); }
+  drawNew(); drawHist();
   // ?sel= (this page) and ?code= (the dictionary detail's [원문 보기]) both open the code — ?code= used to open nothing
   const pre = qs0.get('sel') || qs0.get('code');
   if (pre && codes().some(c => c.id === pre)) { sel = pre; drawCodes(); const r = document.querySelector(`#content tbody tr[data-id="${pre}"], #content tbody tr[data-c="${pre}"]`); if (r) r.scrollIntoView({ block: 'center' }); }

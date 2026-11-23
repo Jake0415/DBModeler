@@ -71,13 +71,14 @@
           <i data-ic=search data-s=14></i>
           <input class="input" id="q" type="search" placeholder="그룹 · 분류 · 형식단어 검색" aria-label="그룹 · 분류 · 형식단어 검색">
         </div>
-        <span class="seg" id="f-src" role="group" aria-label="출처"><button data-v="" class="on">전체</button><button data-v="공통">공통</button><button data-v="기관">기관</button></span>
-        <span class="seg" id="f-st" role="group" aria-label="상태"><button data-v="" class="on">전체 상태</button><button data-v="사용">사용</button><button data-v="미사용">미사용</button><button data-v="신청">신청 중 · 바구니</button></span>
+        <!-- list standard L-1: these only shrink the rows → chips, not segments -->
+        <span class="flex u-gap-8" id="f-src" role="group" aria-label="출처"><button class="chip on" data-v="">전체</button><button class="chip" data-v="공통">공통</button><button class="chip" data-v="기관">기관</button></span>
+        <span class="flex u-gap-8" id="f-st" role="group" aria-label="상태"><button class="chip on" data-v="">전체 상태</button><button class="chip" data-v="사용">사용</button><button class="chip" data-v="미사용">미사용</button><button class="chip" data-v="신청">신청 중 · 바구니</button></span>
         <span class="grow"></span>
         <button class="btn ghost sm" id="x-open">모두 펼치기</button>
         <button class="btn ghost sm" id="x-close">모두 접기</button>
       </div>
-      <div class="listhead" id="lh" aria-live="polite"></div>
+      <div class="listhead" id="lh"></div>
       <div class="scroll">
         <table class="tbl" id="tbl">
           <thead><tr><th>그룹 / 분류</th><th>연결 형식단어</th><th>설명</th><th>출처</th><th>상태</th><th class="num">분류 수</th><th class="num">도메인 수</th><th class="num">용어 수</th></tr></thead>
@@ -176,9 +177,10 @@ window.pageInit = function () {
     const rows = []; let nG = 0, nC = 0;
     M.g.groups.forEach(gr => {
       const B = M.byGroup[gr.id];
-      const gHit = hit(gr.name) || hit(gr.desc);
-      const cOk = c => (!fSrc || c.src === fSrc) && (!fSt || (fSt === '신청' ? !!M.chgOf[c.id] : c.st === fSt)) && (gHit || hit(c.name) || hit(c.fw) || hit(c.desc));
-      const pOk = p => (!fSrc || fSrc === '기관') && (!fSt || fSt === '신청') && (gHit || hit(p.it.name) || hit(p.it.fw));
+      // L-2 'name' profile (initials · several words · spacing absorbed); a group hit keeps all its classes
+      const gHit = listMatch(q, [gr.name, gr.desc], 'name');
+      const cOk = c => (!fSrc || c.src === fSrc) && (!fSt || (fSt === '신청' ? !!M.chgOf[c.id] : c.st === fSt)) && (gHit || listMatch(q, [c.name, c.fw, c.desc], 'name'));
+      const pOk = p => (!fSrc || fSrc === '기관') && (!fSt || fSt === '신청') && (gHit || listMatch(q, [p.it.name, p.it.fw], 'name'));
       const cs = B.classes.filter(cOk), ps = B.pend.filter(pOk);
       const selfOk = (!fSrc || gr.src === fSrc) && (!fSt || gr.st === fSt) && gHit;
       if (!selfOk && !cs.length && !ps.length) return;
@@ -199,12 +201,18 @@ window.pageInit = function () {
           <td class="num faint">—</td><td class="num faint">0</td><td class="num faint">0</td></tr>`));
     });
     // a pending class whose group no longer exists (e.g. a basket row from before the group list changed) was counted in the summary but drawn nowhere
-    const orphan = M.pend.filter(p => !M.g.groups.some(gr => gr.id === p.it.group) && (!fSrc || fSrc === '기관') && (!fSt || fSt === '신청') && (hit(p.it.name) || hit(p.it.fw)));
+    const orphan = M.pend.filter(p => !M.g.groups.some(gr => gr.id === p.it.group) && (!fSrc || fSrc === '기관') && (!fSt || fSt === '신청') && listMatch(q, [p.it.name, p.it.fw], 'name'));
     if (orphan.length) rows.push(`<tr class="grp off"><td class="nm"><span class="gname">그룹을 찾을 수 없음</span></td><td class="faint">—</td><td class="muted" colspan="6">이 분류가 가리키는 그룹(${[...new Set(orphan.map(p => esc(p.it.group || '없음')))].join(', ')})이 없습니다 — 바구니에서 빼거나 다른 그룹으로 다시 신청하세요</td></tr>`,
       ...orphan.map(p => `<tr class="click pend${sel && sel.t === 'p' && sel.id === p.key ? ' sel' : ''}" data-panel="pn-detail" data-t="p" data-id="${esc(p.key)}"><td class="nm cn">${esc(p.it.name)}</td><td class="mono">${esc(p.it.fw || '—')}</td><td class="muted">${esc(p.it.desc || '')}</td><td>${srcTag('기관')}</td><td>${pendTag(p)}${p.doc ? ` <span class="caption muted mono">${esc(p.doc)}</span>` : ''}</td><td class="num faint">—</td><td class="num faint">0</td><td class="num faint">0</td></tr>`));
-    $('rows').innerHTML = rows.join('') || `<tr><td colspan="8"><div class="empty"><b>조건에 맞는 그룹 · 분류가 없습니다</b><span class="caption">검색어나 출처 · 상태 필터를 바꿔 보세요</span></div></td></tr>`;
+    // L-6: the shared empty row (header hides) with a way back
+    $('rows').innerHTML = rows.join('') || `<tr class="er none"><td colspan="8" class="caption muted u-tc u-p-32"><span class="et">필터에 맞는 그룹 · 분류가 없습니다</span><button class="btn sm ghost" data-gclr="all">모두 지우기</button></td></tr>`;
     const tg = M.g.groups.length, tc = M.g.classes.length;
-    $('lh').textContent = (q || fSrc || fSt) ? `그룹 ${nG}개 · 분류 ${nC}개 표시 (전체 그룹 ${tg} · 분류 ${tc})` : `그룹 ${tg}개 · 분류 ${tc}개${M.pend.length ? ` · 신청 중 · 바구니 분류 ${M.pend.length}개` : ''}${Object.keys(M.chgOf).length ? ` · 변경 · 미사용 신청 중 · 바구니 ${Object.keys(M.chgOf).length}개` : ''}`;
+    const SRCN = { 공통: '공통', 기관: '기관' }, STN = { 사용: '사용', 미사용: '미사용', 신청: '신청 중 · 바구니' };
+    const act = [q && ['q', '검색: ' + esc(q)], fSrc && ['src', '출처: ' + SRCN[fSrc]], fSt && ['st', '상태: ' + STN[fSt]]].filter(Boolean);
+    $('lh').innerHTML = (act.length ? `<b class="u-fg">그룹 ${nG}개 · 분류 ${nC}개</b> (전체 그룹 ${tg} · 분류 ${tc}) <span class="fchips">${act.map(([k, l]) => `<button class="fchip" data-gclr="${k}" aria-label="${l} 필터 지우기">${l}<i data-ic=x data-s=12></i></button>`).join('')}<button class="btn ghost sm" data-gclr="all">모두 지우기</button></span>`
+      : `<b class="u-fg">그룹 ${tg}개 · 분류 ${tc}개</b>${M.pend.length ? ` · 신청 중 · 바구니 분류 ${M.pend.length}개` : ''}${Object.keys(M.chgOf).length ? ` · 변경 · 미사용 신청 중 · 바구니 ${Object.keys(M.chgOf).length}개` : ''}`) + ' · 그룹 순';
+    liveCount(`그룹 ${nG}개, 분류 ${nC}개`);
+    syncUrl();
     $('sum').textContent = `공통 그룹 ${M.g.groups.filter(x => x.src === '공통').length} · 기관 그룹 ${M.g.groups.filter(x => x.src === '기관').length}`;
     const n = getBasket().items.length; $('bk-n').hidden = !n; $('bk-n').textContent = n;
     if (sel) panel(M);
@@ -529,15 +537,22 @@ window.pageInit = function () {
     if (tw) { e.stopPropagation(); const id = tw.dataset.tw; open.has(id) ? open.delete(id) : open.add(id); draw(); const b = document.querySelector(`[data-tw="${id}"]`); if (b) b.focus(); return; }
     const tr = e.target.closest('tr[data-t]'); if (!tr) return;
     if (!sel || sel.id !== tr.dataset.id) cMode = null;
-    sel = { t: tr.dataset.t, id: tr.dataset.id }; panel();
+    sel = { t: tr.dataset.t, id: tr.dataset.id }; panel(); syncUrl();
   });
   $('rows').addEventListener('keydown', e => {   // ← → fold / unfold a group row
     const tr = e.target.closest('tr.grp'); if (!tr || !['ArrowLeft', 'ArrowRight'].includes(e.key)) return;
     e.preventDefault(); const id = tr.dataset.id; if (e.key === 'ArrowRight') open.add(id); else open.delete(id); draw(); const r = document.querySelector(`tr.grp[data-id="${id}"]`); if (r) r.focus();
   });
-  $('pn-detail').addEventListener('click', e => { if (e.target.closest('[data-close="pn-detail"]')) { sel = null; cMode = null; $('b-cadd').classList.add('primary'); document.querySelectorAll('#rows tr.sel').forEach(r => r.classList.remove('sel')); } });
-  $('q').addEventListener('input', e => { q = e.target.value.trim().toLowerCase(); draw(); });
-  [['f-src', v => { fSrc = v; }], ['f-st', v => { fSt = v; }]].forEach(([id, set]) => $(id).addEventListener('click', e => { const b = e.target.closest('button[data-v]'); if (!b) return; $(id).querySelectorAll('button').forEach(x => { x.classList.toggle('on', x === b); x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); }); set(b.dataset.v); draw(); }));
+  $('pn-detail').addEventListener('click', e => { if (e.target.closest('[data-close="pn-detail"]')) { sel = null; cMode = null; $('b-cadd').classList.add('primary'); document.querySelectorAll('#rows tr.sel').forEach(r => r.classList.remove('sel')); syncUrl(); } });
+  $('q').addEventListener('input', e => { q = e.target.value.trim(); draw(); });
+  const setChip = (id, v) => $(id).querySelectorAll('button[data-v]').forEach(x => x.classList.toggle('on', x.dataset.v === v));
+  [['f-src', v => { fSrc = v; }], ['f-st', v => { fSt = v; }]].forEach(([id, set]) => $(id).addEventListener('click', e => { const b = e.target.closest('button[data-v]'); if (!b) return; setChip(id, b.dataset.v); set(b.dataset.v); draw(); }));
+  // applied-chip × and 모두 지우기
+  document.addEventListener('click', e => { const c = e.target.closest('[data-gclr]'); if (!c) return; const k = c.dataset.gclr;
+    if (k === 'all' || k === 'q') { q = ''; $('q').value = ''; } if (k === 'all' || k === 'src') { fSrc = ''; setChip('f-src', ''); } if (k === 'all' || k === 'st') { fSt = ''; setChip('f-st', ''); }
+    draw(); const nc = document.querySelector('#lh [data-gclr]'); (nc || $('q')).focus(); });
+  // L-3: q · src · st · sel live in the address (other keys stay)
+  function syncUrl() { urlSync(['q', 'src', 'st', 'sel'], { q, src: fSrc, st: fSt, sel: sel && sel.t !== 'p' ? sel.id : '' }); }
   $('x-open').onclick = () => { open = new Set(getGroups().groups.map(x => x.id)); draw(); };
   $('x-close').onclick = () => { open = new Set(); draw(); };
   document.addEventListener('basket', () => draw());
@@ -545,6 +560,7 @@ window.pageInit = function () {
   if (dbmStore.get(GUIDE_KEY, '') !== '1' || new URLSearchParams(location.search).get('guide') === '1') $('guide').hidden = false;
   $('guide-x').onclick = () => { $('guide').hidden = true; dbmStore.set(GUIDE_KEY, '1'); };
   const qs0 = new URLSearchParams(location.search);
+  q = qs0.get('q') || ''; $('q').value = q; if (['공통', '기관'].includes(qs0.get('src'))) { fSrc = qs0.get('src'); setChip('f-src', fSrc); } if (['사용', '미사용', '신청'].includes(qs0.get('st'))) { fSt = qs0.get('st'); setChip('f-st', fSt); }
   if (qs0.get('sel')) { const id = qs0.get('sel'), g = getGroups(); if (g.groups.some(x => x.id === id)) sel = { t: 'g', id }; else if (g.classes.some(x => x.id === id)) sel = { t: 'c', id }; }
   draw();
 };

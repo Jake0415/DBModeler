@@ -132,7 +132,7 @@ window.pageInit = function () {
     $('o-fmt').innerHTML = FMT[k].map(f => `<option>${f}</option>`).join('');
     const [t, cap, h, rows] = P[k];
     document.getElementById('o-title').textContent = t;
-    document.getElementById('o-prev').innerHTML = `<div class="ph">${cap}</div><table><thead><tr>${h.map(x => `<th>${x}</th>`).join('')}</tr></thead><tbody>${rows.map(r => `<tr>${r.map(c => `<td>${c}</td>`).join('')}</tr>`).join('') || `<tr><td colspan="${h.length}" class="caption muted">해당 항목이 없습니다</td></tr>`}</tbody></table>`;
+    document.getElementById('o-prev').innerHTML = `<div class="ph">${cap}</div><table><thead><tr>${h.map(x => `<th>${x}</th>`).join('')}</tr></thead><tbody>${rows.map(r => `<tr>${r.map(c => `<td>${c}</td>`).join('')}</tr>`).join('') || `<tr class="er none"><td colspan="${h.length}" class="caption muted u-tc">이 산출물에 실을 항목이 없습니다</td></tr>`}</tbody></table>`;
     document.querySelectorAll('.ocard').forEach(c => c.classList.toggle('on', c.dataset.k === k));
   };
   document.getElementById('cards').addEventListener('click', e => { const c = e.target.closest('.ocard'); if (c && !e.target.closest('a')) show(c.dataset.k); });

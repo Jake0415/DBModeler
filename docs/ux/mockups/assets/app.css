@@ -484,7 +484,8 @@ input[type=checkbox]:focus-visible, input[type=radio]:focus-visible { outline:2p
 .scroll[style*="padding"] > table.tbl { margin:0; width:100%; }
 /* empty result: tr.er (none · first · done) — header hidden, centred message under a 54px icon tile */
 .tbl:has(> tbody > tr.er:only-child) > thead { display:none; }
-.tbl.is-empty > thead { display:none; }   /* list standard L-6: empty judged by result, not by DOM (rows hidden by a filter) */
+.tbl.is-empty > thead { display:none; }
+.chip.zero:not(.on) { color:var(--fg-3); }   /* list standard Q4: a 0-count chip stays in place, dimmed, still selectable */   /* list standard L-6: empty judged by result, not by DOM (rows hidden by a filter) */
 .tbl > tbody > tr.er > td { height:auto; padding:40px 24px !important; text-align:center !important; white-space:normal; font-size:14px; line-height:20px; color:var(--fg-2); background:var(--surface); }
 .tbl > tbody > tr.er > td::before { content:""; display:block; width:54px; height:54px; margin:0 auto 12px; border-radius:var(--r-lg); box-shadow:var(--ring); background:var(--surface) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M22 12h-6l-2 3h-4l-2-3H2'/%3E%3Cpath d='M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z'/%3E%3C/svg%3E") center/20px no-repeat; }
 .tbl > tbody > tr.er > td:is([colspan="2"],[colspan="3"],[colspan="4"]) { padding:12px 16px !important; text-align:left !important; color:var(--fg-3); }

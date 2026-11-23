@@ -128,9 +128,9 @@
     <div class="page-body" style="border:1px solid var(--ds-gray-400);border-radius:var(--r-lg);overflow:hidden;height:calc(100vh - 310px);min-height:480px">
       <div class="main"><div class="flex" style="padding:8px 12px;border-bottom:1px solid var(--ds-gray-400);gap:8px">
           <input class="input" id="u-q" type="search" placeholder="이름 · ID · 회사 · 부서 찾기" aria-label="사용자 찾기" style="width:260px" data-nodirty>
-          <span class="seg" id="u-st" role="group" aria-label="상태"><button data-v="" class="on">전체</button><button data-v="active">사용</button><button data-v="stopped">중지</button><button data-v="locked">잠김</button></span>
-          <span class="caption muted" id="u-count"></span><span class="grow"></span>
-          <button class="btn sm primary" id="u-new"><i data-ic=plus></i>사용자 등록</button></div><div class="scroll">
+          <span class="flex u-gap-8" id="u-st" role="group" aria-label="상태"><button class="chip on" data-v="">전체</button><button class="chip" data-v="active">사용</button><button class="chip" data-v="stopped">중지</button><button class="chip" data-v="locked">잠김</button></span>
+          <span class="grow"></span>
+          <button class="btn sm primary" id="u-new"><i data-ic=plus></i>사용자 등록</button></div><div class="listhead" id="u-count"></div><div class="scroll">
         <table class="tbl flat"><thead><tr><th>이름</th><th>ID</th><th>회사 · 부서</th><th>역할</th><th>담당 시스템</th><th>인증</th><th>상태</th><th>마지막 접속</th></tr></thead><tbody id="u-rows">
         </tbody></table></div></div>
       <aside class="rpanel open" id="pn-acct"></aside>
@@ -335,10 +335,13 @@ window.pageInit = function () {
   const renderDraft = () => { const keep = draftAuth; const a0 = getAuth(); const tmp = Object.assign({}, a0, keep); const saved = window.getAuth; window.getAuth = () => tmp; drawAuth(); window.getAuth = saved; draftAuth = keep; };
   // ---- list
   function drawList() {
-    const q = uq.trim().toLowerCase();
-    const rows = list().filter(u => (!ust || (u.status || 'active') === ust) && (!q || [u.name, u.id, u.company, u.org, u.mail].some(x => String(x || '').toLowerCase().includes(q))));
-    $('u-count').textContent = `${rows.length}명${rows.length !== list().length ? ` / 전체 ${list().length}` : ''}`;
-    $('u-rows').innerHTML = rows.map(u => `<tr class="click ${u.id === selU && mode !== 'new' ? 'sel' : ''} u-fg3" data-u="${u.id}" tabindex="0"${u.status === 'stopped' ? '' : ''}><td>${esc(u.name)}${u.id === ME.id ? ' <span class="caption muted">(나)</span>' : ''}</td><td class="mono">${esc(u.id)}</td><td>${esc(u.company || '—')} · ${esc(u.org || '—')}</td><td>${(u.roles || []).map(r => ROLE_NAME[r]).join(' · ') || '<span class="faint">조회만</span>'}</td><td>${(u.systems || []).join(', ')}</td><td>${u.auth === 'sso' ? 'SSO' : 'ID · 비밀번호'}</td><td>${stBadge(u)}</td><td class="mono caption">${lastOf(u)}</td></tr>`).join('') || '<tr class="er none"><td colspan="8" class="caption muted u-tc u-p-24">맞는 사용자가 없습니다</td></tr>';
+    const q = uq.trim();
+    const rows = list().filter(u => (!ust || (u.status || 'active') === ust) && listMatch(q, [u.name, u.id, u.company, u.org, u.mail], 'doc'));
+    // list standard L-5: count line under the toolbar + applied chips + 모두 지우기
+    const STN = { active: '사용', stopped: '중지', locked: '잠김' }, fl = q || ust;
+    $('u-count').innerHTML = `<b class="u-fg">${fl ? `${list().length}명 중 ${rows.length}명` : `${rows.length}명`}</b>${fl ? ` <span class="fchips">${q ? `<button class="fchip" data-uclr="q" aria-label="검색어 지우기">검색: ${esc(q)}<i data-ic=x data-s=12></i></button>` : ''}${ust ? `<button class="fchip" data-uclr="st" aria-label="상태 필터 지우기">상태: ${STN[ust]}<i data-ic=x data-s=12></i></button>` : ''}<button class="btn ghost sm" data-uclr="all">모두 지우기</button></span>` : ''}`;
+    liveCount(`${rows.length}명`);
+    $('u-rows').innerHTML = rows.map(u => `<tr class="click ${u.id === selU && mode !== 'new' ? 'sel' : ''} u-fg3" data-u="${u.id}" tabindex="0"${u.status === 'stopped' ? '' : ''}><td>${esc(u.name)}${u.id === ME.id ? ' <span class="caption muted">(나)</span>' : ''}</td><td class="mono">${esc(u.id)}</td><td>${esc(u.company || '—')} · ${esc(u.org || '—')}</td><td>${(u.roles || []).map(r => ROLE_NAME[r]).join(' · ') || '<span class="faint">조회만</span>'}</td><td>${(u.systems || []).join(', ')}</td><td>${u.auth === 'sso' ? 'SSO' : 'ID · 비밀번호'}</td><td>${stBadge(u)}</td><td class="mono caption">${lastOf(u)}</td></tr>`).join('') || '<tr class="er none"><td colspan="8" class="caption muted u-tc u-p-24"><span class="et">필터에 맞는 사용자가 없습니다</span><button class="btn sm ghost" data-uclr="all">모두 지우기</button></td></tr>';
   }
   // ---- one form for register and edit
   const F = [['company', '회사명', true, '예: 한국데이터진흥원'], ['org', '부서명', true, '예: 데이터정책팀'], ['name', '이름', true, ''], ['phone', '전화번호', true, '010-1234-5678'], ['mail', '이메일', true, 'name@company.co.kr']];
@@ -468,7 +471,9 @@ window.pageInit = function () {
   $('u-rows').addEventListener('keydown', e => { if (e.key === 'Enter') { const r = e.target.closest('[data-u]'); if (r) r.click(); } });
   $('u-new').onclick = () => { if (!can('users')) { toast('사용자 등록은 Admin만 할 수 있습니다', 'danger'); return; } if (formDraft() && !confirm('저장하지 않은 입력이 있습니다. 버리고 새로 등록할까요?')) return; mode = 'new'; draw(); };
   $('u-q').addEventListener('input', () => { uq = $('u-q').value; drawList(); });
-  $('u-st').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; ust = b.dataset.v; $('u-st').querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); drawList(); });
+  const setUst = v => { ust = v; $('u-st').querySelectorAll('button').forEach(x => x.classList.toggle('on', x.dataset.v === v)); };
+  $('u-st').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; setUst(b.dataset.v); drawList(); });
+  document.addEventListener('click', e => { const c = e.target.closest('[data-uclr]'); if (!c) return; const k = c.dataset.uclr; if (k !== 'st') { uq = ''; $('u-q').value = ''; } if (k !== 'q') setUst(''); drawList(); const nc = document.querySelector('#u-count [data-uclr]'); (nc || $('u-q')).focus(); });
   window.addEventListener('beforeunload', e => { if (formDraft()) { e.preventDefault(); e.returnValue = ''; } });
   const roleDraft = formDraft;   // older guards in this page call roleDraft()
   drawAuth();

@@ -24,6 +24,13 @@
   .kindcard.on { background:var(--ds-gray-100); color:var(--fg); }
   .kindrow { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
   #grid-body tr.sel td { background:var(--ds-blue-100); }
+  /* list standard L-14: wide edit grid keeps the identifying columns (행 · 상태 · 이름) on screen while scrolling sideways */
+  [data-step="5"] .tbl th:nth-child(-n+3), #grid-body td:nth-child(-n+3) { position:sticky; z-index:1; background:var(--surface); }
+  [data-step="5"] .tbl thead th:nth-child(-n+3) { z-index:3; background:var(--ds-gray-100); }
+  [data-step="5"] .tbl th:nth-child(1), #grid-body td:nth-child(1) { left:0; min-width:48px; }
+  [data-step="5"] .tbl th:nth-child(2), #grid-body td:nth-child(2) { left:48px; min-width:150px; }
+  [data-step="5"] .tbl th:nth-child(3), #grid-body td:nth-child(3) { left:198px; box-shadow:inset -1px 0 0 var(--border); }
+  #grid-body tr.sel td:nth-child(-n+3) { background:var(--ds-blue-100); }
   .st { display:inline-flex; align-items:center; gap:4px; }
   .lg { display:inline-flex; align-items:center; gap:4px; font-size:12px; color:var(--fg-2); }
   .lg i { width:10px; height:10px; border-radius:2px; display:inline-block; }
@@ -563,7 +570,10 @@ window.pageInit = function () {
     const c = counts();
     const chips = [['', '전체', ROWS.length], ['new', '신규', c.new], ['chg', '변경', c.chg], ['same', '동일', c.same], ['waitSame', '같은 내용 결재 중', c.waitSame], ['waitDiff', '다른 내용 결재 중', c.waitDiff], ['conflict', '충돌', c.conflict], ['pick', '후보 선택', c.pick], ['pre', '선행 승인', c.pre], ['err', '오류', c.err], ['missing', '빠짐', c.missing]];
     const last = undoStack[undoStack.length - 1], nRecent = lastRows ? lastRows.size : 0, nErr = c.err;
-    $('chips').innerHTML = chips.map(([k, l, n]) => `<button class="chip ${filt === k && !recentF ? 'on' : ''}" data-f="${k}" aria-pressed="${filt === k && !recentF}">${l} <span class="n">${n}</span></button>`).join('')
+    // list standard Q4: 11 states were too many to scan — the states that need action come first (6 chips), the rest go into [더보기]; a 0-count chip stays (dimmed) so nothing moves
+    const MAIN = ['', 'err', 'conflict', 'pick', 'new', 'chg'], main = MAIN.map(k => chips.find(c => c[0] === k)), more = chips.filter(c => !MAIN.includes(c[0])), inMore = more.some(c => c[0] === filt) && !recentF;
+    $('chips').innerHTML = `<span class="flex u-gap-8" role="group" aria-label="행 상태">${main.map(([k, l, n]) => `<button class="chip ${filt === k && !recentF ? 'on' : ''}${k && !n ? ' zero' : ''}" data-f="${k}" aria-pressed="${filt === k && !recentF}">${l} <span class="n">${n}</span></button>`).join('')}</span>`
+      + `<select class="input" id="more-f" style="width:190px" aria-label="다른 상태로 거르기"><option value="">${inMore ? '다른 상태 해제' : '더보기…'}</option>${more.map(([k, l, n]) => `<option value="${k}"${filt === k && !recentF ? ' selected' : ''}>${l} ${n}</option>`).join('')}</select>`
       + `<button class="chip ${recentF ? 'on' : ''}" id="recent-f" aria-pressed="${recentF}"${nRecent ? ` title="마지막 작업(${esc5(last ? last.label : '')})이 바꾼 행만 봅니다"` : ' aria-disabled="true" title="아직 바꾼 행이 없습니다"'}>방금 바꾼 행만 <span class="n">${nRecent}</span></button>`
       + '<span class="grow"></span>'
       + `<span class="caption muted undo-last" title="${esc5(undoStack.slice(-6).reverse().map(o => `${o.at} ${o.label}`).join(' / '))}">${last ? `마지막 작업: ${esc5(last.label)} · ${last.at}` : ''}</span>`
@@ -696,6 +706,7 @@ window.pageInit = function () {
   // Ctrl+Z = the same undo stack, only when no text field has the focus and no dialog is open
   document.addEventListener('keydown', e => { if (cur !== 5 || document.querySelector('.overlay.open') || !(e.ctrlKey || e.metaKey) || e.shiftKey || e.altKey || e.key.toLowerCase() !== 'z') return;
     const t = e.target; if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return; e.preventDefault(); undo(); });
+  document.querySelector('[data-step="5"]').addEventListener('change', e => { if (e.target.id !== 'more-f') return; filt = e.target.value; ruleF = ''; recentF = false; drawGrid(); const s = $('more-f'); if (s) s.focus(); });
   document.querySelector('[data-step="5"]').addEventListener('click', e => {
     // E-13: the pressed chip keeps the focus after the toolbar is drawn again
     const refocus = sel0 => { const b = document.querySelector(sel0); if (b) b.focus(); };
