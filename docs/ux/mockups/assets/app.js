@@ -1105,6 +1105,7 @@
     plus: '<path d="M5 12h14"/><path d="M12 5v14"/>',
     more: '<circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/>',
     left: '<path d="m15 18-6-6 6-6"/>',
+    pclose: '<rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 3v18"/><path d="m16 15-3-3 3-3"/>', popen: '<rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 3v18"/><path d="m14 9 3 3-3 3"/>',
     undo: '<path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/>',
     redo: '<path d="M21 7v6h-6"/><path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3l3 2.7"/>',
     db: '<ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5V19A9 3 0 0 0 21 19V5"/><path d="M3 12A9 3 0 0 0 21 12"/>',
@@ -1438,7 +1439,7 @@
     // ---- markup
     const tabs = page === 'model' && document.getElementById('side');
     // fold the whole left column to the icon rail — at the TOP (the old bottom [접기] could fall below the window), Ctrl+B
-    const COLBTN = '<button class="tcol" id="tr-col" type="button" aria-expanded="true" aria-controls="tr-full" aria-label="왼쪽 칸 접기 (Ctrl+B)" title="왼쪽 칸 접기 — 아이콘만 (Ctrl+B)"><i data-ic=left data-s=14></i></button>';
+    const COLBTN = '<button class="tcol" id="tr-col" type="button" aria-expanded="true" aria-controls="tr-full" aria-label="왼쪽 칸 접기 (Ctrl+B)" title="왼쪽 칸 접기 — 아이콘만 (Ctrl+B)"><i data-ic=pclose data-s=16></i></button>';
     nav.innerHTML = `
       ${tabs ? `<div class="ltop"><div class="ltabs" role="tablist" aria-label="왼쪽 칸"><button role="tab" id="lt-m" aria-controls="tp-model" data-lt="m">모델</button><button role="tab" id="lt-d" aria-controls="tp-dict" data-lt="d">사전</button></div>${COLBTN}</div>` : ''}
       <div class="tpanel" id="tp-model"${tabs ? ' role="tabpanel" aria-labelledby="lt-m"' : ''}>
@@ -1446,10 +1447,8 @@
           <!-- tree head: fixed while only the tree scrolls; folds to one line (system name + find button), remembered per user -->
           <div class="thead" id="tr-head">
           <div class="tsys">
-            <a class="tsys-a${page === 'system' ? ' on' : ''}" href="system.html"${page === 'system' ? ' aria-current="page"' : ''} title="시스템 홈 · ${esc(sys.name)} · ${esc(sys.db)} · ${esc(sys.code)}"><b>${sys.name}</b><span>${sys.db} · ${sys.code}</span></a>
-            <button class="tsrch-open" id="tr-sopen" type="button" aria-label="찾기 — 상단 펼치기" title="찾기 (상단 펼치기)"><i data-ic=search data-s=14></i></button>
+            <a class="tsys-a${page === 'system' ? ' on' : ''}" href="system.html"${page === 'system' ? ' aria-current="page"' : ''} title="시스템 홈 · ${esc(sys.name)} · ${esc(sys.db)} · ${esc(sys.code)}"><i data-ic=db data-s=14></i><b>${sys.name}</b><span>${sys.db} · ${sys.code}</span></a>
             <span class="tmw"><button class="tsw" type="button" data-menu-btn aria-expanded="false" aria-controls="mn-sys" aria-label="시스템 바꾸기" title="시스템 바꾸기"><i data-ic=down data-s=14></i></button><div class="menu" data-auto id="mn-sys">${SYSTEMS.map(s => `<a class="mi${s.cur ? ' on' : ''}" href="${s.href}"${s.cur ? ' aria-current="true"' : ''}><span>${s.name}</span><span class="caption muted" style="margin-left:auto">${s.db}</span></a>`).join('')}</div></span>
-            <button class="thfold" id="tr-hfold" type="button" aria-expanded="true" aria-controls="tr-hbody" aria-label="트리 상단 접기" title="상단 접기 — 시스템 · 찾기를 한 줄로"><i data-ic=up data-s=14></i></button>
             ${tabs ? '' : COLBTN}
           </div>
           <div class="thbody" id="tr-hbody">
@@ -1481,7 +1480,7 @@
       </div>
       ${tabs ? '<div class="tpanel" id="tp-dict" role="tabpanel" aria-labelledby="lt-d" hidden></div>' : ''}
       <div class="tmini" aria-label="접힌 모델 트리">
-        <button class="tm-i tm-x" id="tr-exp" type="button" aria-expanded="false" aria-controls="tr-full" aria-label="왼쪽 칸 펼치기 (Ctrl+B)" title="왼쪽 칸 펼치기 (Ctrl+B)"><i data-ic=right></i></button>
+        <button class="tm-i tm-x" id="tr-exp" type="button" aria-expanded="false" aria-controls="tr-full" aria-label="왼쪽 칸 펼치기 (Ctrl+B)" title="왼쪽 칸 펼치기 (Ctrl+B)"><i data-ic=popen data-s=16></i></button>
         <a class="tm-i${page === 'system' ? ' on" aria-current="page' : ''}" href="system.html" title="시스템 홈 · ${sys.name}" aria-label="시스템 홈"><i data-ic=table></i></a>
         ${Object.entries(models0).map(([id, m]) => `<a class="tm-i tm-a${id === famArea ? ' on" aria-current="true' : ''}" href="model.html?area=${id}" title="${esc(m.name)}" aria-label="${esc(m.name)}">${esc(String(m.name).trim()[0])}</a>`).join('')}
         <a class="tm-i${file === 'model.html' && qp.get('sys') ? ' on" aria-current="page' : ''}" href="model.html?sys=1" title="시스템 전체 ERD" aria-label="시스템 전체 ERD"><i data-ic=compare></i></a>
@@ -1521,7 +1520,6 @@
       const l = live(); const curName = (getModels()[cur] || {}).name || '';
       tree.setAttribute('aria-label', `모델 트리 · ${curName}${l && l.label ? ' ' + l.label : ''} · ${pageMode() === 'P' ? '물리' : '논리'}`);
       nav.querySelector('#tr-ro').hidden = true;   // merged into the area badge (stateBadge) — no separate line that comes and goes
-      nav.querySelector('#tr-sopen').classList.toggle('on', fltOn() || !!q.trim());   // folded head: the find button says a search / filter is on
       nav.querySelector('#tr-live').textContent = q.trim() ? (found ? `${found}건 찾음` : '맞는 객체가 없습니다') : '';
       const fb = nav.querySelector('#tr-fbar'); fb.hidden = !fltOn();
       if (fltOn()) fb.innerHTML = `<span>${[flt.bad && '미준수만', flt.ex && '예외 있는 것만', flt.noref && '참조 숨김', flt.cls && ({ M: '기준 정보', A: '거래', H: '이력', K: '코드 · 분류' })[flt.cls] + '만'].filter(Boolean).join(' · ')}</span><button type="button" class="btn ghost sm" id="tr-fclr">지우기</button>`;
@@ -1747,19 +1745,15 @@
     qIn.addEventListener('input', () => { q = qIn.value; render(); });
     qIn.addEventListener('keydown', e => { if (e.key === 'Escape' && qIn.value) { e.stopPropagation(); qIn.value = ''; q = ''; render(); } else if (e.key === 'ArrowDown') { const f = tree.querySelector('[role=treeitem]'); if (f) { e.preventDefault(); focusRow(f); } } });
     nav.querySelector('#mn-tf').addEventListener('change', e => { const c = e.target.closest('[data-tf]'); if (c) { flt[c.dataset.tf] = c.checked; render(); } });
-    // head fold · description · row density
-    const applyHead = () => { const m = !!UI.head, b = nav.querySelector('#tr-hfold'); nav.querySelector('#tr-head').classList.toggle('min', m);
-      b.setAttribute('aria-expanded', String(!m)); b.setAttribute('aria-label', m ? '트리 상단 펼치기' : '트리 상단 접기'); b.title = m ? '상단 펼치기 — 찾기 · 거르기 보기' : '상단 접기 — 시스템 · 찾기를 한 줄로'; b.innerHTML = `<i data-ic=${m ? 'down' : 'up'} data-s=14></i>`; };
+    // description · row density (the head fold was removed — user feedback: the whole-column collapse [‹] is the fold)
     const curDen = () => UI.den || document.documentElement.dataset.density || 'default';
     const applyDen = () => { ['compact', 'default', 'comfy'].forEach(d => nav.classList.toggle('tden-' + d, curDen() === d)); nav.querySelectorAll('[data-tden]').forEach(x => x.classList.toggle('on', x.dataset.tden === curDen())); };
     const markDesc = () => nav.querySelectorAll('[data-tdesc]').forEach(x => x.classList.toggle('on', x.dataset.tdesc === UI.desc));
-    nav.querySelector('#tr-hfold').addEventListener('click', () => { UI.head = UI.head ? 0 : 1; saveUI(); applyHead(); nav.querySelector('#tr-hfold').focus(); });
-    nav.querySelector('#tr-sopen').addEventListener('click', () => { UI.head = 0; saveUI(); applyHead(); qIn.focus(); });
     nav.querySelector('#mn-tf').addEventListener('click', e => {
       const d = e.target.closest('[data-tdesc]'); if (d) { e.stopPropagation(); UI.desc = d.dataset.tdesc; saveUI(); markDesc(); render(); return; }
       const n = e.target.closest('[data-tden]'); if (n) { e.stopPropagation(); UI.den = n.dataset.tden; saveUI(); applyDen(); render(); }
     });
-    applyHead(); applyDen(); markDesc();
+    applyDen(); markDesc();
     nav.querySelector('#mn-tf').addEventListener('click', e => { const b = e.target.closest('[data-tc]'); if (!b) return; e.stopPropagation(); flt.cls = b.dataset.tc; nav.querySelectorAll('[data-tc]').forEach(x => x.classList.toggle('on', x === b)); render(); });
     nav.addEventListener('click', e => { if (e.target.id === 'tr-fclr') { flt = { bad: false, ex: false, noref: false, cls: '' }; nav.querySelectorAll('[data-tf]').forEach(c => c.checked = false); nav.querySelectorAll('[data-tc]').forEach(x => x.classList.toggle('on', x.dataset.tc === '')); render(); qIn.focus(); } });
     // ---- width: follows the content, never squeezes the canvas below 760px (12 §4.6)
