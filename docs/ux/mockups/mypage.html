@@ -118,9 +118,7 @@ window.pageInit = function () {
   const docs = getDocs().filter(d => d.req === ME.id);
   const f = d => ({ live: 'ing', fix: 'fix', done: 'end' })[docGroup(d)];   // same rule as the user menu (CL14-03)
   $('mine-body').innerHTML = docs.length ? docs.map(d => `<tr data-f="${f(d)}"><td class="mono">${d.id}</td><td><span class="muted">${d.type === 'model' ? '모델 확정' : '사전 신청'}</span></td><td>${d.title}</td><td><span class="badge ${f(d) === 'fix' ? 'b-danger' : 'b-info'}">${STEP_NAME[d.step]}</span></td><td class="mono">${d.date}</td><td><a href="approvals.html?box=mine&doc=${d.id}">열기</a></td></tr>`).join('') : '<tr class="er first"><td colspan="6" class="caption muted u-tc u-p-24">신청한 문서가 없습니다</td></tr>';
-  // a chip that leaves no rows says so (app.js filterRows only hides rows)
-  if (docs.length) { $('mine-body').insertAdjacentHTML('beforeend', '<tr class="er" id="mine-none"><td colspan="6" class="caption muted u-tc u-p-24">이 조건에 맞는 신청이 없습니다</td></tr>'); const none = $('mine-none'); none.hidden = true;
-    document.querySelector('[data-pane="mine"]').addEventListener('click', e => { if (!e.target.closest('.chip[data-group="mf"]')) return; setTimeout(() => { const n = [...$('mine-body').rows].filter(r => r !== none && r.style.display !== 'none').length; none.style.display = ''; none.hidden = n > 0; }, 0); }); }
+  // a chip that leaves no rows: app.js filterRows adds the shared 'er none' row with [모두 지우기] (list standard L-6)
   // 내 작업 (CX13-15): computed from documents, batches, candidates and audit entries made by me
   const w = [];
   getDocs().filter(d => d.req === ME.id).forEach(d => w.push({ at: d.date, g: d.type === 'model' ? '모델 확정' : '사전 신청', t: `${d.title} <span class="mono caption">${d.id}</span>`, st: STEP_NAME[d.step] || d.step, href: `approvals.html?box=mine&doc=${d.id}` }));

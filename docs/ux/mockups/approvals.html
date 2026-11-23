@@ -73,11 +73,19 @@
     <div class="main">
       <div class="pad u-pb-0" id="new-banner" hidden></div>
       <div class="toolbar" id="tb">
-        <select class="input" id="f-type" style="width:160px;" aria-label="문서 유형"><option value="">문서 유형: 전체</option><option value="dict">사전 신청</option><option value="model">모델 확정</option></select>
-        <select class="input u-w-150" id="f-step" aria-label="단계"><option value="">단계: 전체</option><option value="da">DA 승인</option><option value="final">최종 승인</option><option value="done">완료</option><option value="rejected">반려됨</option><option value="withdrawn">회수됨</option></select>
-        <div class="search" style="flex-basis:280px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input class="input" id="f-q" placeholder="신청번호·제목·요청자" aria-label="신청번호·제목·요청자 검색"></div>
+        <div class="search" style="flex-basis:280px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input class="input" id="f-q" placeholder="신청번호 · 제목 · 요청자 찾기" aria-label="신청번호, 제목, 요청자 찾기"></div>
+        <!-- list standard L-1: secondary filters live in the [필터] popover (was two loose selects) -->
+        <span class="u-rel">
+          <button class="btn" id="af-btn" aria-haspopup="dialog" aria-expanded="false" aria-controls="af-pop"><i data-ic=filter></i>필터<span class="fcount" id="af-n" hidden></span></button>
+          <div class="menu fpop" id="af-pop" role="dialog" aria-label="결재함 필터">
+            <div class="frow"><label class="fl" for="f-type">문서 유형</label><select class="input" id="f-type"><option value="">전체</option><option value="dict">사전 신청</option><option value="model">모델 확정</option></select></div>
+            <div class="frow"><label class="fl" for="f-step">단계</label><select class="input" id="f-step"><option value="">전체</option><option value="da">DA 승인</option><option value="final">최종 승인</option><option value="done">완료</option><option value="rejected">반려됨</option><option value="withdrawn">회수됨</option></select></div>
+            <div class="ffoot"><button class="btn ghost sm" id="af-reset">필터 초기화</button><span class="grow"></span><button class="btn sm" id="af-done">닫기</button></div>
+          </div>
+        </span>
         <span class="grow"></span><span class="caption muted" id="boxhint" hidden></span>
       </div>
+      <div class="listhead" id="alh"></div>
       <div class="scroll" style="padding:16px 20px" id="listwrap">
         <table class="tbl">
           <thead><tr><th>신청번호</th><th>유형</th><th>제목</th><th>요청자</th><th>현재 단계</th><th class="r">머문 일</th><th class="r">건수</th><th>신청일</th></tr></thead>
@@ -175,16 +183,23 @@ window.pageInit = function () {
   function list() {
     if (!BOX[box]) return [];   // the stats view has no document list
     const ft = $('f-type').value, fs = $('f-step').value, fq = $('f-q').value.trim();
-    return docs.filter(BOX[box][1]).filter(d => (!ft || d.type === ft) && (!fs || d.step === fs) && (!fq || (d.id + d.title + nameOf(d.req)).includes(fq))).map((d, i) => [d, i]).sort((a, b) => ((inQueue(b[0]) ? 1 : 0) - (inQueue(a[0]) ? 1 : 0)) || ((['da', 'final'].includes(b[0].step) ? docAge(b[0]) : -1) - (['da', 'final'].includes(a[0].step) ? docAge(a[0]) : -1)) || a[1] - b[1]).map(x => x[0]);
+    // L-2 '문서 · 코드' profile: field by field, case-insensitive ('12' finds REQ-2026-0012; no match across field boundaries)
+    return docs.filter(BOX[box][1]).filter(d => (!ft || d.type === ft) && (!fs || d.step === fs) && listMatch(fq, [d.id, d.title, nameOf(d.req)], 'doc')).map((d, i) => [d, i]).sort((a, b) => ((inQueue(b[0]) ? 1 : 0) - (inQueue(a[0]) ? 1 : 0)) || ((['da', 'final'].includes(b[0].step) ? docAge(b[0]) : -1) - (['da', 'final'].includes(a[0].step) ? docAge(a[0]) : -1)) || a[1] - b[1]).map(x => x[0]);
   }
   function drawRows() {
     const st = box === 'stats';
     $('tb').hidden = st; $('listwrap').hidden = st; $('stats').hidden = !st;
     if (st) { drawStats(); return; }
     const L = list();
+    // L-5 count line: total in the box → after filters, the default order, applied filter chips + 모두 지우기
+    const tot = docs.filter(BOX[box][1]).length, ft = $('f-type'), fs = $('f-step'), fq = $('f-q').value.trim();
+    const act = [fq && ['q', '검색: ' + esc(fq)], ft.value && ['f-type', '유형: ' + ft.options[ft.selectedIndex].text], fs.value && ['f-step', '단계: ' + fs.options[fs.selectedIndex].text]].filter(Boolean);
+    $('af-n').hidden = !(ft.value || fs.value); $('af-n').textContent = (ft.value ? 1 : 0) + (fs.value ? 1 : 0);
+    $('alh').innerHTML = `<b class="u-fg">${act.length ? `${tot}건 중 ${L.length}건` : `${L.length}건`}</b> · 내 차례 우선 · 오래 머문 순${act.length ? ` <span class="fchips">${act.map(([k, l]) => `<button class="fchip" data-aclr="${k}" aria-label="${l} 필터 지우기">${l}<i data-ic=x data-s=12></i></button>`).join('')}<button class="btn ghost sm" data-aclr="all">모두 지우기</button></span>` : ''}`;
+    liveCount(`${L.length}건`);
+    syncUrl();
     $('rows').innerHTML = L.length ? L.map(d => `<tr aria-selected="${sel === d.id}" class="click ${sel === d.id ? 'sel' : ''} ${['done', 'withdrawn', 'rejected'].includes(d.step) ? 'dim' : ''}" data-id="${d.id}" tabindex="0"><td class="mono">${d.id}</td><td class="muted">${d.type === 'model' ? '모델 확정' : '사전 신청'}</td><td>${d.title}</td><td>${nameOf(d.req)}${d.req === ME.id ? ' <span class="muted">(나)</span>' : ''}</td><td>${box === 'queue' ? docTag(d) : stBadge(d)}</td><td class="r">${ageCell(d)}</td><td class="num">${d.n}</td><td class="num muted">${d.date}</td></tr>`).join('')
-      : `<tr class="er ${box === 'queue' && !docs.filter(BOX.queue[1]).length ? 'done' : 'none'}"><td colspan="8" style="padding:16px 12px" class="caption muted">${box === 'queue' && docs.filter(BOX.queue[1]).length ? `<span class="et">필터에 맞는 대기 문서가 없습니다</span>대기 ${docs.filter(BOX.queue[1]).length}건이 필터에 가려져 있습니다.` : box === 'queue' ? (docs.some(d => d.hist && d.hist.some(h => h.who === ME.name)) ? '<span class="et">처리할 결재를 모두 마쳤습니다</span><a href="approvals.html?box=mine">내 신청 보기</a>' : '<span class="et">지금 처리할 결재가 없습니다</span>새 신청이 들어오면 알림으로 알려 드립니다.') : '<span class="et">조건에 맞는 문서가 없습니다</span>'} ${($('f-type').value || $('f-step').value || $('f-q').value) ? '<button class="btn sm ghost" id="f-clear">필터 지우기</button>' : ''}</td></tr>`;
-    const c = $('f-clear'); if (c) c.onclick = () => { $('f-type').value = ''; $('f-step').value = ''; $('f-q').value = ''; drawRows(); };
+      : `<tr class="er ${box === 'queue' && !docs.filter(BOX.queue[1]).length ? 'done' : 'none'}"><td colspan="8" style="padding:16px 12px" class="caption muted">${box === 'queue' && docs.filter(BOX.queue[1]).length ? `<span class="et">필터에 맞는 대기 문서가 없습니다</span>대기 ${docs.filter(BOX.queue[1]).length}건이 필터에 가려져 있습니다.` : box === 'queue' ? (docs.some(d => d.hist && d.hist.some(h => h.who === ME.name)) ? '<span class="et">처리할 결재를 모두 마쳤습니다</span><a href="approvals.html?box=mine">내 신청 보기</a>' : '<span class="et">지금 처리할 결재가 없습니다</span>새 신청이 들어오면 알림으로 알려 드립니다.') : '<span class="et">필터에 맞는 문서가 없습니다</span>'} ${($('f-type').value || $('f-step').value || $('f-q').value) ? '<button class="btn sm ghost" data-aclr="all">모두 지우기</button>' : ''}</td></tr>`;
   }
   /* DX-21 신청·결재 집계 — dictionary requests only; period by request date */
   let period = 'month';
@@ -447,7 +462,7 @@ window.pageInit = function () {
   function panel() {
     const p = $('pn-doc'); const d = docs.find(x => x.id === sel);
     // a link to a document that does not exist says so instead of silently showing nothing
-    if (!d && sel && sel === q.get('doc')) { p.classList.add('open'); deadEnd(p, sel, '문서를 찾을 수 없습니다', `${sel} 결재 문서가 없거나 삭제됐습니다. 신청번호로 다시 찾거나 목록으로 돌아가세요.`); return; }
+    if (!d && sel && sel === (q.get('doc') || q.get('sel'))) { p.classList.add('open'); deadEnd(p, sel, '문서를 찾을 수 없습니다', `${sel} 결재 문서가 없거나 삭제됐습니다. 신청번호로 다시 찾거나 목록으로 돌아가세요.`); return; }
     p.classList.toggle('dictw', !!d && d.type === 'dict' && (d.items || []).length > 0 && canView(d));   // A1: wide panel for item-by-item review
     if (!d) { p.classList.remove('open'); return; }
     p.classList.add('open');
@@ -708,7 +723,25 @@ window.pageInit = function () {
   $('do-apr').onclick = () => { $('mo-apr').classList.remove('open'); act('approve', $('apr-note').value.trim(), false); };
   $('do-rej').onclick = () => { $('mo-reject').classList.remove('open'); act('reject', $('rej-why').value.trim()); $('rej-why').value = ''; };
   $('do-wd').onclick = () => { $('mo-wd').classList.remove('open'); act('withdraw', $('wd-why').value.trim()); $('wd-why').value = ''; };
-  $('boxes').addEventListener('click', e => { const b = e.target.closest('[data-box]'); if (!b) return; box = b.dataset.box; sel = (list()[0] || {}).id || null; drawBoxes(); drawRows(); panel(); const nb = $('boxes').querySelector(`[data-box="${box}"]`); if (nb) nb.focus(); });
+  // L-3: box switches are history steps (push), everything else rewrites the current entry (replace); old doc= links keep working
+  const DEF_BOX = ME.has('da') || ME.has('owner') ? 'queue' : 'mine';
+  function syncUrl(push) { urlSync(['box', 'q', 'type', 'step', 'sel', 'doc', 'new', 'dup'], { box: box === DEF_BOX ? '' : box, q: $('f-q').value.trim(), type: $('f-type').value, step: $('f-step').value, sel: box === 'stats' ? '' : (sel || '') }, push); }
+  window.addEventListener('popstate', () => { const p = new URLSearchParams(location.search); box = p.get('box') || DEF_BOX; if (!BOX[box] && box !== 'stats') box = DEF_BOX; $('f-q').value = p.get('q') || ''; $('f-type').value = p.get('type') || ''; $('f-step').value = p.get('step') || ''; sel = p.get('sel') || (box === 'queue' ? (list()[0] || {}).id : null) || null; drawBoxes(); drawRows(); panel(); });
+  $('boxes').addEventListener('click', e => { const b = e.target.closest('[data-box]'); if (!b) return; box = b.dataset.box;
+    // L-9: only the work queue auto-selects its first document; 내 신청 · 참조함 are lookup lists (panel opens on pick)
+    sel = box === 'queue' ? (list()[0] || {}).id || null : null; syncUrl(true); drawBoxes(); drawRows(); panel(); const nb = $('boxes').querySelector(`[data-box="${box}"]`); if (nb) nb.focus(); });
+  // [필터] popover + applied chips
+  const afPop = $('af-pop'), afBtn = $('af-btn');
+  const setAf = on => { afPop.classList.toggle('open', on); afBtn.setAttribute('aria-expanded', on); if (on) { const f = afPop.querySelector('select'); f && f.focus(); } };
+  afBtn.onclick = () => setAf(!afPop.classList.contains('open'));
+  $('af-done').onclick = () => { setAf(false); afBtn.focus(); };
+  $('af-reset').onclick = () => { $('f-type').value = ''; $('f-step').value = ''; drawRows(); };
+  document.addEventListener('click', e => { if (!e.target.closest('#af-pop, #af-btn')) setAf(false); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && afPop.classList.contains('open')) { setAf(false); afBtn.focus(); } }, true);
+  document.addEventListener('click', e => { const c = e.target.closest('[data-aclr]'); if (!c) return; const k = c.dataset.aclr;
+    if (k === 'all' || k === 'q') $('f-q').value = ''; if (k === 'all' || k === 'f-type') $('f-type').value = ''; if (k === 'all' || k === 'f-step') $('f-step').value = '';
+    if (box === 'queue' && !list().some(d => d.id === sel)) sel = (list()[0] || {}).id || null; drawRows(); panel(); const nc = document.querySelector('#alh [data-aclr]'); (nc || $('f-q')).focus(); });
+  $('f-q').addEventListener('keydown', e => { if (e.key === 'Escape' && $('f-q').value) { e.stopPropagation(); $('f-q').value = ''; drawRows(); } });
   $('rows').addEventListener('click', e => { const r = e.target.closest('tr[data-id]'); if (!r) return; sel = r.dataset.id; drawRows(); panel(); });
   document.addEventListener('keydown', e => {
     if (e.ctrlKey || e.metaKey || e.altKey || e.isComposing || dbmStore.get('dbm-single-keys', '1') !== '1' || e.target.closest('input, textarea, select, [contenteditable]') || document.querySelector('.overlay.open, .gs-overlay.open')) return;
@@ -738,8 +771,10 @@ window.pageInit = function () {
     $('new-banner').innerHTML = `<div class="banner">${icon('check')}<div class="grow"><b>${id} ${q.get('dup') ? '이미 신청돼 있습니다' : '신청됨'}</b>. ${d ? d.title : ''}. ${q.get('dup') ? '같은 내용의 진행 중 신청이 있어 새로 만들지 않았습니다.' : d && canActOn(d) ? '1단계를 내가 처리할 수 있어 바로 대기함에 들어왔습니다. 직접 승인하면 ‘자기 승인’으로 남습니다.' : `1단계 담당 ${d ? approversFor(d, 'da').length : 0}명에게 알렸습니다.`}</div></div>`;
     box = d && canActOn(d) ? 'queue' : 'mine';
   }
-  if (q.get('doc')) { sel = q.get('doc'); const d = docs.find(x => x.id === sel); if (d) box = boxFor(d); }
-  if (!sel) sel = (list()[0] || {}).id || null;
+  $('f-q').value = q.get('q') || ''; $('f-type').value = q.get('type') || ''; $('f-step').value = q.get('step') || '';
+  const dl = q.get('doc') || q.get('sel');   // doc= is the old deep-link key — kept as an alias of sel=
+  if (dl) { sel = dl; const d = docs.find(x => x.id === sel); if (d) box = boxFor(d); }
+  if (!sel && box === 'queue') sel = (list()[0] || {}).id || null;   // L-9: auto-select only in the work queue
   drawBoxes(); drawRows(); panel();
 };
 </script>

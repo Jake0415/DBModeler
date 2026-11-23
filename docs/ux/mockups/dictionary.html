@@ -85,14 +85,14 @@
             <div class="frow"><label class="fl" for="flen">길이</label><select class="input" id="flen"><option value="">전체</option><option value="0-10">10 이하</option><option value="11-100">11~100</option><option value="101-99999">101 이상</option></select></div>
             <div class="frow"><label class="fl" for="fdom">도메인 연결</label><select class="input" id="fdom"><option value="">전체</option><option value="y">연결됨</option><option value="n">연결 없음·사전에 없음</option></select></div>
             <div class="frow"><span class="fl"></span><label class="flex u-gap-8"><input type="checkbox" id="fdisc"> 원본 폐기 포함</label></div>
-            <div class="ffoot"><button class="btn ghost sm" id="f-reset">초기화</button><span class="grow"></span><button class="btn primary sm" id="f-done">닫기</button></div>
+            <div class="ffoot"><button class="btn ghost sm" id="f-reset">필터 초기화</button><span class="grow"></span><button class="btn primary sm" id="f-done">닫기</button></div>
           </div>
         </span>
         <span class="u-rel"><button class="btn" id="ss-btn" aria-haspopup="true" aria-expanded="false"><i data-ic=star></i>저장한 검색</button><div class="menu" id="ss-menu" role="menu"></div></span>
       </div>
-      <div class="listhead" id="lh" aria-live="polite"></div>
+      <div class="listhead" id="lh"></div>
       <div class="bulkbar" id="bulk" hidden role="region" aria-label="선택한 항목 일괄 처리">
-        <b id="bulk-n"></b><span class="caption muted">기관 항목만 고를 수 있습니다 · 진행 중 신청이 있는 항목은 제외</span><span class="grow"></span>
+        <b id="bulk-n"></b><button class="btn ghost sm" id="bk-allf" hidden></button><span class="caption muted">기관 항목만 고를 수 있습니다 · 진행 중 신청이 있는 항목은 제외</span><span class="grow"></span>
         <button class="btn sm" id="bk-grid">표에서 고치기</button><button class="btn sm" id="bk-chg">변경 담기</button><button class="btn sm" id="bk-same">같은 값 일괄 변경…</button><button class="btn sm" id="bk-unuse">미사용 담기</button><button class="btn sm" id="bk-del">삭제 담기</button><button class="btn ghost sm" id="bk-clear">선택 해제</button>
       </div>
       <div class="scroll">
@@ -247,21 +247,29 @@ window.pageInit = function () {
   const cho = s => [...s].map(c => { const n = c.charCodeAt(0) - 0xac00; return n >= 0 && n < 11172 ? CHO[Math.floor(n / 588)] : c; }).join('');
   const isCho = s => /^[ㄱ-ㅎ]+$/.test(s);
   let kind = '', srcs = new Set(['공통', '기관']), stFilter = '', sel = null, showAll = false;
-  function match(it, qs) {
-    if (!qs) return { t: '' };
+  // list standard L-2: case-insensitive in every field, spacing absorbed; several words must ALL match (each inside one field)
+  const lc = s => String(s || '').toLowerCase(), has = (s, w) => lc(s).includes(w) || lc(s).replace(/\s+/g, '').includes(w);
+  function match1(it, qs) {
     const low = qs.toLowerCase();
     if (isCho(qs)) return cho(it.name).includes(qs) ? { t: '초성' } : null;
-    if (it.name.includes(qs)) return { t: '현재명' };
-    if (it.abbr.toLowerCase().includes(low)) return { t: '약어' };
-    if ((it.eng || '').toLowerCase().includes(low) || (it.desc || '').includes(qs)) return { t: '영문·설명' };
-    if (it.syn.some(s => s.includes(qs))) return { t: '동의어', v: it.syn.find(s => s.includes(qs)) };
-    if (it.forbid.some(s => s.includes(qs))) return { t: '금칙어', v: it.forbid.find(s => s.includes(qs)) };
-    if (it.src === '기관' && it.old.some(s => s.includes(qs))) return { t: '과거명', v: it.old.find(s => s.includes(qs)) };
+    if (has(it.name, low)) return { t: '현재명' };
+    if (has(it.abbr, low)) return { t: '약어' };
+    if (has(it.eng, low) || has(it.desc, low)) return { t: '영문·설명' };
+    const f = arr => arr.find(s => has(s, low));
+    if (f(it.syn)) return { t: '동의어', v: f(it.syn) };
+    if (f(it.forbid)) return { t: '금칙어', v: f(it.forbid) };
+    if (it.src === '기관' && f(it.old)) return { t: '과거명', v: f(it.old) };
     return null;
   }
-  const hl = (s, qs) => qs && !isCho(qs) && s.includes(qs) ? s.split(qs).join(`<mark>${qs}</mark>`) : s;
+  function match(it, qs) {
+    if (!qs) return { t: '' };
+    const ws = qs.split(/\s+/).filter(Boolean); if (ws.length < 2) return match1(it, qs);
+    const whole = match1(it, ws.join('')); if (whole) return whole;   // "고객 번호" → 고객번호
+    let first = null; for (const w of ws) { const m = match1(it, w); if (!m) return null; first = first || m; } return first;
+  }
+  const hl = (s, qs) => { if (!qs || isCho(qs)) return s; const ws = qs.split(/\s+/).filter(Boolean).map(w => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')); return ws.length ? String(s).replace(new RegExp(ws.join('|'), 'gi'), m => `<mark>${m}</mark>`) : s; };
   // short queries (2 characters or fewer, not initial consonants) use prefix match; long substring results count up to 1,000 (23 §6-1)
-  const isShort = qs => qs && qs.length <= 2 && !isCho(qs);
+  const isShort = qs => qs && qs.length <= 2 && !isCho(qs) && !/\s/.test(qs);
   // DX-22: items in an open request I made (a pending marker on the item, or a new name in my open document)
   const MYDOCS = getDocs().filter(d => d.type === 'dict' && d.req === ME.id && ['da', 'final'].includes(d.step));
   const myPend = it => MYDOCS.some(d => d.id === it.pending || (d.items || []).some(x => !x.id && x.name === it.name));
@@ -295,36 +303,45 @@ window.pageInit = function () {
     // applied conditions: count on the filter button + removable chips in the result line
     const LBL = { dg: '도메인그룹', since: '변경일', flen: '길이', fdom: '도메인 연결', fscope: '적용 범위' };
     const act = [];
+    if (qs) act.push(['q', '검색: ' + qs.replace(/[<>&"]/g, '')]);   // L-1 · L-4: the search term is an applied filter chip too
     if (srcs.size < 2) act.push(['src', '출처: ' + [...srcs][0]]);
     if (stFilter) act.push(['st', '상태: ' + stFilter]);
     ['dg', 'since', 'flen', 'fdom', 'fscope'].forEach(id => { const el = $(id); if (el.value) act.push([id, LBL[id] + ': ' + el.options[el.selectedIndex].text]); });
     if ($('fdisc').checked) act.push(['fdisc', '원본 폐기 포함']);
-    $('f-n').hidden = !act.length; $('f-n').textContent = act.length;
-    const chipsHtml = act.length ? `<span class="fchips">${act.map(([k, l]) => `<button class="fchip" data-clear="${k}" aria-label="${l} 조건 지우기">${l}<i data-ic=x data-s=12></i></button>`).join('')}<button class="btn ghost sm" data-clear="all">모두 지우기</button></span>` : '';
+    const fnN = act.filter(a => a[0] !== 'q').length; $('f-n').hidden = !fnN; $('f-n').textContent = fnN;
+    const chipsHtml = act.length ? `<span class="fchips">${act.map(([k, l]) => `<button class="fchip" data-clear="${k}" aria-label="${l} 필터 지우기">${l}<i data-ic=x data-s=12></i></button>`).join('')}<button class="btn ghost sm" data-clear="all">모두 지우기</button></span>` : '';
     const recent = isRecent();
     $('lh').innerHTML = `<b class="u-fg">${L.length}건</b> · ${recent ? (EMPTY ? '기관 사전이 비어 있어 공통표준만 보입니다' : '검색어가 없어 <b>기관 사전 최근 변경</b>을 보여 줍니다 <button class="btn ghost sm" id="show-all">전체 보기</button>') : qs ? `‘${qs}’ 검색${isCho(qs) ? ' (초성)' : isShort(qs) ? ' — <b>2글자 이하는 앞부분 일치</b>로 찾습니다' : ''}${L.length >= 1000 ? ' · <b>1,000건 이상 — 검색어를 더 입력하세요</b>' : ''}` : showAll && !kind && !act.length ? '전체 사전(원본 폐기 · V0 삭제 보관 제외)' : '필터 결과'}${L.length > CAP ? ` · <b>앞 ${CAP}건만 표시 — 검색어나 종류 · 필터로 좁히세요</b>` : ''} ${chipsHtml} <span class="grow"></span> <kbd>↑</kbd><kbd>↓</kbd> 이동 <kbd>Enter</kbd> 열기`;
+    liveCount(`${L.length}건${L.length > CAP ? `, 앞 ${CAP}건 표시` : ''}`);   // L-5: announce only the count, in the shared hidden status region
     const orgN = L.filter(x => x.it.src === '기관').length;   // only organisation items go into the editable file (CX12-05)
     $('dl-n').textContent = orgN ? `기관 ${orgN}건(공통 ${L.length - orgN}건은 참고 시트) · 숨김 열(항목 ID·버전·기준본)` : '이 검색 결과에는 편집할 기관 항목이 없습니다 — 공통표준은 기관에서 편집할 수 없습니다';
     $('dl-menu').querySelector('[data-dl="filter"]').disabled = !orgN;
     $('rows').innerHTML = L.length ? L.slice(0, CAP).map(({ it, m }) => `<tr class="click ${sel === it.id ? 'sel' : ''}" data-id="${it.id}" tabindex="0"><td class="ck"><input type="checkbox" data-ck="${it.id}" aria-label="${it.name} 선택"${picked.has(it.id) ? ' checked' : ''}${pickable(it) ? '' : ` disabled title="${it.src === '공통' ? '공통 표준은 신청할 수 없습니다' : it.pending ? it.pending + ' 진행 중' : '고를 수 없는 상태'}"`}></td><td>${myPend(it) ? '<span class="badge b-info">내 신청</span> ' : ''}<span class="badge ${{ 사용: 'b-success', '신청 중': 'b-info', '보완 필요': 'b-warning', '삭제 보관': 'b-danger' }[it.st] || ''}">${{ 사용: '사용', '신청 중': '신청 중', '보완 필요': '보완 필요', '삭제 보관': 'V0 삭제 보관' }[it.st] || '미사용'}</span>${it.pending && it.st !== '신청 중' ? ' <span class="caption muted">신청 중</span>' : ''}</td><td>${it.kn}${it.ctype === '행정표준' ? ' <span class="badge b-common">행정표준</span>' : ''}${(it.k === 'code' ? (it.scope === '시스템' && it.sys) : (it.scope && it.scope !== '공통')) ? ` <span class="badge">${scopeName(it.k === 'code' ? it.sys : it.scope)} 전용</span>` : ''}</td><td><span class="muted">${it.src}</span></td><td><b>${hl(it.name, qs)}</b>${m.t && m.t !== '현재명' ? `<span class="mt">${m.t}${m.v ? ': ' + m.v : ''}</span>` : ''}${m.t === '금칙어' ? ` <span class="caption u-danger">‘${m.v}’ 대신 이 표준을 쓰세요</span>` : ''}</td><td class="mono">${hl(it.abbr, qs)}</td><td class="mono">${it.dom}</td><td>${it.eng || ''}</td><td class="mono">${it.ver ? 'V' + it.ver : '—'}</td><td class="mono">${it.dt}</td><td class="num">${it.use}</td></tr>`).join('')
-      : `<tr class="er none"><td colspan="11" style="text-align:center;padding:40px"><span class="et">‘${qs}’에 맞는 표준이 없습니다</span><div class="caption muted u-mb-8">필터를 지우고 다시 찾거나, 없으면 등록 신청하세요.</div><button class="btn sm primary" id="req-q">‘${qs}’ 등록 신청</button> <button class="btn sm ghost" id="clr">필터 지우기</button></td></tr>`;
+      : `<tr class="er none"><td colspan="11" style="text-align:center;padding:40px"><span class="et">‘${qs}’에 맞는 표준이 없습니다</span><div class="caption muted u-mb-8">필터를 지우고 다시 찾거나, 없으면 등록 신청하세요.</div><button class="btn sm primary" id="req-q">‘${qs}’ 등록 신청</button> <button class="btn sm ghost" id="clr">모두 지우기</button></td></tr>`;
     const sa = $('show-all'); if (sa) sa.onclick = () => { showAll = true; draw(); };
     const rq = $('req-q'); if (rq) rq.onclick = () => { $('pn-detail').classList.remove('open'); $('pn-request').classList.add('open'); document.querySelector('#pn-request [data-rq="term"] input').value = qs; };
     const cl = $('clr'); if (cl) cl.onclick = () => { clearAll(); $('q').value = ''; kind = ''; showAll = true; draw(); };
     detail(); drawBulk(); syncUrl();
   }
   // DX-02: bulk bar follows the checked rows
+  // L-10 (R-01): the header checkbox works on the DRAWN rows only (the first CAP) — it never picks items the user has not seen
+  const drawnPickable = () => list().slice(0, CAP).map(x => x.it).filter(pickable);
   function drawBulk() {
-    const vis = list().map(x => x.it).filter(pickable);
+    const Lall = list(), vis = Lall.slice(0, CAP).map(x => x.it).filter(pickable), allP = Lall.map(x => x.it).filter(pickable);
     [...picked].forEach(id => { if (!I.some(x => x.id === id && pickable(x))) picked.delete(id); });
-    $('bulk').hidden = !picked.size; $('bulk-n').textContent = `${picked.size}건 선택`;
+    const shownIds = new Set(Lall.map(x => x.it.id)), hidden = [...picked].filter(id => !shownIds.has(id)).length;
+    $('bulk').hidden = !picked.size; $('bulk-n').textContent = `${picked.size}건 선택${hidden ? `(필터로 숨은 ${hidden}건 포함)` : ''}`;
     const ca = $('ck-all'); ca.checked = vis.length > 0 && vis.every(x => picked.has(x.id)); ca.indeterminate = !ca.checked && vis.some(x => picked.has(x.id)); ca.disabled = !vis.length;
+    // all drawn rows picked but the filter matches more → offer the whole filtered set as a separate action
+    const more = $('bk-allf'); if (more) { const rest = allP.filter(x => !picked.has(x.id)).length; more.hidden = !(ca.checked && rest > 0); more.textContent = `필터에 맞는 전체 ${allP.length.toLocaleString()}건 고르기`; }
     const inUse = [...picked].map(id => I.find(x => x.id === id)).filter(x => x && usageOf(x).n > 0);
     $('bk-del').disabled = !can('dict.request') || (inUse.length === picked.size && picked.size > 0); $('bk-del').title = inUse.length ? `모델에서 쓰는 ${inUse.length}건은 삭제할 수 없어 빠집니다(미사용을 쓰세요)` : '';
   }
   // DX-20: the search conditions live in the URL — reload, back and a shared link reopen the same list
   function condState() { const o = {}; const qs = $('q').value.trim(); if (qs) o.q = qs; if (kind) o.kind = kind; if (srcs.size < 2) o.src = [...srcs][0]; if (stFilter) o.st = stFilter; ['dg', 'since', 'flen', 'fdom', 'fscope'].forEach(id => { if ($(id).value) o[id] = $(id).value; }); if ($('fdisc').checked) o.disc = '1'; if (showAll) o.all = '1'; return o; }
-  function syncUrl() { const p = new URLSearchParams(condState()); ['sel', 'empty'].forEach(k => { if (q0.get(k) && k === 'empty') p.set(k, q0.get(k)); }); if (sel) p.set('sel', sel); const s = p.toString(); history.replaceState(null, '', location.pathname + (s ? '?' + s : '') + location.hash); }
+  // L-3: only the keys this list owns are rewritten — review-mode (as · audit), way-back (ret) and other keys stay in the address
+  const OWN = ['q', 'kind', 'src', 'st', 'dg', 'since', 'flen', 'fdom', 'fscope', 'disc', 'all', 'sel'];
+  function syncUrl() { urlSync(OWN, Object.assign(condState(), { sel: sel || '' })); }
   function applyCond(o) { $('q').value = o.q || ''; kind = o.kind || ''; srcs = new Set(o.src ? [o.src] : ['공통', '기관']); document.querySelectorAll('[data-src]').forEach(x => x.classList.toggle('on', srcs.has(x.dataset.src)));
     stFilter = o.st || ''; document.querySelectorAll('[data-st]').forEach(x => x.classList.toggle('on', x.dataset.st === stFilter)); ['dg', 'since', 'flen', 'fdom', 'fscope'].forEach(id => { $(id).value = o[id] || ''; }); $('fdisc').checked = o.disc === '1'; showAll = o.all === '1'; }
   // usage = attributes of saved working models that carry this item's name/abbr (mock index); otherwise the count is shown as a sample
@@ -396,7 +413,7 @@ window.pageInit = function () {
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && fpop.classList.contains('open')) { setPop(false); fbtn.focus(); } });
   fpop.addEventListener('focusout', e => { if (e.relatedTarget && !fpop.contains(e.relatedTarget) && e.relatedTarget !== fbtn) setPop(false); });
   $('lh').addEventListener('click', e => { const c = e.target.closest('[data-clear]'); if (!c) return; const k = c.dataset.clear;
-    if (k === 'all') clearAll(); else if (k === 'src') { srcs = new Set(['공통', '기관']); document.querySelectorAll('[data-src]').forEach(x => x.classList.add('on')); } else if (k === 'st') { stFilter = ''; document.querySelectorAll('[data-st]').forEach(x => x.classList.remove('on')); } else if (k === 'fdisc') $('fdisc').checked = false; else $(k).value = '';
+    if (k === 'all') { clearAll(); $('q').value = ''; } else if (k === 'q') $('q').value = ''; else if (k === 'src') { srcs = new Set(['공통', '기관']); document.querySelectorAll('[data-src]').forEach(x => x.classList.add('on')); } else if (k === 'st') { stFilter = ''; document.querySelectorAll('[data-st]').forEach(x => x.classList.remove('on')); } else if (k === 'fdisc') $('fdisc').checked = false; else $(k).value = '';
     sel = null; draw(); const nc = document.querySelector('#lh [data-clear]'); (nc || $('f-btn')).focus(); });
   $('q').addEventListener('input', () => { showAll = false; sel = null; draw(); });
   $('q-help-b').onclick = () => toast($('q-help-b').title, 'info');   // the help button used to do nothing on click (title only)
@@ -409,7 +426,8 @@ window.pageInit = function () {
     const p = e.target.closest('[data-st]'); if (p) { const on = !p.classList.contains('on'); document.querySelectorAll('[data-st]').forEach(x => x.classList.remove('on')); p.classList.toggle('on', on); stFilter = on ? p.dataset.st : ''; sel = null; draw(); }
   });
   $('rows').addEventListener('change', e => { const c = e.target.dataset.ck; if (!c) return; e.target.checked ? picked.add(c) : picked.delete(c); drawBulk(); });
-  $('ck-all').onchange = e => { list().map(x => x.it).filter(pickable).forEach(x => e.target.checked ? picked.add(x.id) : picked.delete(x.id)); draw(); };
+  $('ck-all').onchange = e => { drawnPickable().forEach(x => e.target.checked ? picked.add(x.id) : picked.delete(x.id)); draw(); };
+  $('bk-allf').onclick = () => { const all = list().map(x => x.it).filter(pickable); all.forEach(x => picked.add(x.id)); draw(); toast(`필터에 맞는 기관 항목 ${all.length.toLocaleString()}건을 골랐습니다 — 화면에 그리지 않은 항목도 포함됩니다`, 'info'); };
   $('rows').addEventListener('click', e => { if (e.target.closest('td.ck')) return; const r = e.target.closest('tr[data-id]'); if (!r) return; sel = r.dataset.id; $('pn-request').classList.remove('open'); draw(); const n = $('rows').querySelector(`tr[data-id="${sel}"]`); if (n) n.focus(); });
   $('rows').addEventListener('keydown', e => { const r = e.target.closest('tr[data-id]'); if (!r) return; if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); r.click(); } if (e.key === 'ArrowDown' && r.nextElementSibling) { e.preventDefault(); r.nextElementSibling.focus(); } if (e.key === 'ArrowUp' && r.previousElementSibling) { e.preventDefault(); r.previousElementSibling.focus(); } });
   // download menu (records a baseline on the server)

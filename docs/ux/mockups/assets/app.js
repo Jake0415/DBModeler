@@ -2072,7 +2072,17 @@
       if (e.key === '?' && !(e.target.closest && e.target.closest('input,textarea,select,[contenteditable="true"]'))) { e.preventDefault(); openKeys(); }
     });
     // make those widgets focusable and announce pressed state
-    const a11y = () => document.querySelectorAll('.chip:not(button):not([tabindex]), .kindcard:not([tabindex]), .ocard:not([tabindex]), tr.click:not([tabindex])').forEach(el => { el.tabIndex = 0; if (!el.matches('tr')) el.setAttribute('role', 'button'); });
+    // list standard L-11: rows use a roving tabindex — only the selected (else the first visible) row of a body is a Tab stop, so Tab leaves the table in one press
+    const rove = () => { const bodies = new Set(); document.querySelectorAll('tr.click').forEach(r => r.parentElement && bodies.add(r.parentElement));
+      bodies.forEach(b => { const rows = [...b.children].filter(r => r.matches('tr.click')); if (!rows.length) return;
+        const vis = rows.filter(r => r.style.display !== 'none'); const cur = vis.find(r => r === document.activeElement) || vis.find(r => r.classList.contains('sel')) || vis[0];
+        rows.forEach(r => { const t = r === cur ? 0 : -1; if (r.tabIndex !== t) r.tabIndex = t; const s = r.classList.contains('sel') ? 'true' : 'false'; if (r.getAttribute('aria-selected') !== s) r.setAttribute('aria-selected', s); }); }); };
+    const a11y = () => { document.querySelectorAll('.chip:not(button):not([tabindex]), .kindcard:not([tabindex]), .ocard:not([tabindex])').forEach(el => { el.tabIndex = 0; el.setAttribute('role', 'button'); }); rove(); };
+    // the focused row becomes the body's Tab stop; ↑↓ move between visible rows when the page did not handle the key itself
+    document.addEventListener('focusin', e => { const r = e.target.closest && e.target.closest('tr.click'); if (r && r === e.target && r.parentElement) { [...r.parentElement.children].forEach(x => { if (x.matches('tr.click')) x.tabIndex = x === r ? 0 : -1; }); } });
+    document.addEventListener('keydown', e => { if (e.defaultPrevented || !['ArrowDown', 'ArrowUp'].includes(e.key) || !e.target.matches || !e.target.matches('tr.click')) return;
+      let n = e.target; do { n = e.key === 'ArrowDown' ? n.nextElementSibling : n.previousElementSibling; } while (n && !(n.matches('tr.click') && n.style.display !== 'none'));
+      if (n) { e.preventDefault(); n.focus(); } });
     const pressed = () => document.querySelectorAll('.chip').forEach(c => c.setAttribute('aria-pressed', c.classList.contains('on') ? 'true' : 'false'));
     new MutationObserver(() => { a11y(); pressed(); }).observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] });
     a11y(); pressed();
@@ -2080,10 +2090,47 @@
   }
 
   function filterRows(group, value) {
-    document.querySelectorAll(`[data-filter-target="${group}"] tbody tr`).forEach(tr => {
-      tr.style.display = !value || (tr.dataset.f || '').split(' ').includes(value) ? '' : 'none';
+    let shown = 0;
+    document.querySelectorAll(`[data-filter-target="${group}"]`).forEach(box => {
+      const tb = box.matches('table') ? box : box.querySelector('table'); const body = tb && tb.tBodies[0]; if (!body) return;
+      let n = 0; const data = [...body.rows].filter(tr => !tr.classList.contains('er')).length;
+      [...body.rows].forEach(tr => { if (tr.classList.contains('er-auto')) return; if (tr.classList.contains('er')) return; const ok = !value || (tr.dataset.f || '').split(' ').includes(value); tr.style.display = ok ? '' : 'none'; if (ok) n++; });
+      // list standard L-6: a filter that hides every row says so (er none + clear) instead of leaving a blank table
+      let er = body.querySelector('tr.er-auto');
+      if (!n && value && data) { if (!er) { /* no data at all → the page's own 'er first' row already says so */ er = document.createElement('tr'); er.className = 'er none er-auto'; const cols = (tb.tHead && tb.tHead.rows[0] ? tb.tHead.rows[0].cells.length : 1); er.innerHTML = `<td colspan="${cols}" class="caption muted u-tc u-p-16"><span class="et">필터에 맞는 항목이 없습니다</span><button class="btn sm ghost" type="button" data-er-clear="${group}">모두 지우기</button></td>`; body.appendChild(er); } }
+      else if (er) er.remove();
+      tb.classList.toggle('is-empty', !n && !!value && !!data); shown += n;
     });
+    if (window.liveCount && document.querySelector(`[data-filter-target="${group}"]`)) liveCount(`${shown}건`);
   }
+  // the auto empty row's clear goes back to the group's first chip ('전체')
+  document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-er-clear]'); if (!b) return; const c = document.querySelector(`.chip[data-group="${b.dataset.erClear}"]`); if (c) c.click(); });
+
+  /* ── list standard (22-list-standard.md) shared parts ── */
+  // L-2 search: one function, three profiles. words are ANDed; one word must match inside ONE field; spacing differences are absorbed
+  const CHO_ = 'ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ';
+  const choOf = s => [...s].map(c => { const n = c.charCodeAt(0) - 0xac00; return n >= 0 && n < 11172 ? CHO_[Math.floor(n / 588)] : c; }).join('');
+  const normQ = s => String(s == null ? '' : s).normalize('NFKC').toLowerCase().trim();
+  window.listMatch = (q, fields, profile) => {
+    const words = normQ(q).split(/\s+/).filter(Boolean); if (!words.length) return true;
+    const fs = fields.map(normQ), fsNs = fs.map(f => f.replace(/\s+/g, ''));
+    const one = w => { if (profile === 'name' && /^[ㄱ-ㅎ]+$/.test(w)) return fs.some(f => choOf(f).includes(w));
+      if (profile === 'name' && words.length === 1 && w.length <= 2) return fs.slice(0, 2).some(f => f.startsWith(w));
+      return fs.some((f, i) => f.includes(w) || fsNs[i].includes(w)); };
+    if (words.length > 1 && one(words.join(''))) return true;   // "고객 번호" also finds "고객번호"
+    return words.every(one);
+  };
+  // L-5: a result count for screen readers in ONE hidden status region, after typing pauses, only when it changes
+  let lcT = 0, lcLast = '';
+  window.liveCount = text => { clearTimeout(lcT); lcT = setTimeout(() => { let el = document.getElementById('list-live'); if (!el) { el = document.createElement('div'); el.id = 'list-live'; el.className = 'sr-only'; el.setAttribute('role', 'status'); document.body.appendChild(el); } if (text !== lcLast) { lcLast = text; el.textContent = text; } }, 500); };
+  // L-3: write only the keys a list owns; other keys (as · audit · ret · tree · deep links) and the hash stay. push only for box/view switches
+  window.urlSync = (owned, vals, push) => {
+    const p = new URLSearchParams(location.search); owned.forEach(k => p.delete(k));
+    Object.entries(vals).forEach(([k, v]) => { if (v !== '' && v != null && v !== false) p.set(k, v === true ? '1' : v); });
+    const s = p.toString(), url = location.pathname + (s ? '?' + s : '') + location.hash;
+    if (url === location.pathname + location.search + location.hash) return;
+    history[push ? 'pushState' : 'replaceState'](null, '', url);
+  };
 
   document.addEventListener('DOMContentLoaded', () => {
     buildShell(); wire();

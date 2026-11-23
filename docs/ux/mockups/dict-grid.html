@@ -928,10 +928,13 @@ window.pageInit = function () {
     const q = t($('q').value).toLowerCase(), kk = $('qk').value;
     const hit = d => (!kk || kindKey(d) === kk) && (!q || d.name.toLowerCase().includes(q) || (d.abbr || '').toLowerCase().includes(q));
     // common (행정표준) codes are listed read-only when codes are asked for — the reason says where they are changed
-    const L = getDict().filter(d => hit(d) && (editable(d) || (commonCode(d) && (kk === 'code' || q)))).slice(0, 50);
-    $('eres').innerHTML = L.length ? L.map(d => { const ro = !editable(d), added = E().some(r => r.id === d.id); if (added) picked.delete(d.id);
+    // list standard L-7: the picker draws 50 rows but says so — it no longer cuts the rest off silently
+    const ALL = getDict().filter(d => hit(d) && (editable(d) || (commonCode(d) && (kk === 'code' || q)))), CAPP = 50, L = ALL.slice(0, CAPP);
+    liveCount(`${ALL.length}건${ALL.length > CAPP ? `, 앞 ${CAPP}건 표시` : ''}`);
+    $('eres').innerHTML = (L.length ? L.map(d => { const ro = !editable(d), added = E().some(r => r.id === d.id); if (added) picked.delete(d.id);
       return `<tr><td class="ck"><input type="checkbox" data-pick="${d.id}" aria-label="${esc(d.name)} 선택"${added || picked.has(d.id) ? ' checked' : ''}${added || RO || ro ? ' disabled' : ''}></td><td class="mono">${d.id}</td><td>${KN[kindKey(d)]}</td><td>${esc(d.name)}</td><td class="mono">${esc(d.abbr || '')}</td><td class="num">${d.use || 0}</td><td>${ro ? `${tag('end', '읽기 전용')} <span class="caption muted">${COMMON_RO}</span>` : added ? tag('mine', '추가됨') : d.st !== '사용' ? tag('end', d.st) : ''}</td></tr>`; }).join('')
-      : '<tr class="er"><td colspan="7">조건에 맞는 고칠 수 있는 항목이 없습니다 (신청 중 · 공통 · 삭제 보관 제외)</td></tr>';
+      : `<tr class="er none"><td colspan="7">${q || kk ? '필터에 맞는' : ''} 고칠 수 있는 항목이 없습니다 (신청 중 · 공통 · 삭제 보관 제외)</td></tr>`)
+      + (ALL.length > CAPP ? `<tr class="er-more"><td colspan="7" class="caption u-warning u-tc">${ALL.length.toLocaleString()}건 중 앞 ${CAPP}건만 보여 줍니다 — 이름 · 약어를 더 입력하거나 종류로 좁히세요</td></tr>` : '');
     pickBtn();
   }
   const picked = new Set();
