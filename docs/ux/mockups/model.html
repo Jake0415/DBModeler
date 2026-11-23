@@ -90,12 +90,12 @@
         <button class="tb" id="b-undo" data-edit title="내 편집 되돌리기 (Ctrl+Z)"><i data-ic=undo></i></button>
         <button class="tb" id="b-redo" data-edit title="다시 실행 (Ctrl+Y)"><i data-ic=redo></i></button>
       </div>
-      <div class="cv-hint" id="hint"></div>
+      <div class="cv-hint" id="hint" role="status" aria-live="polite"></div>
       <button class="side-tab" data-toggle="side" title="사전 패널 열기">사전<i data-ic=right data-s=12></i></button>
       <button class="rp-tab" id="rp-tab" title="우측 패널 열기"><i data-ic=left data-s=12></i>패널</button>
       <div class="cv-banner">
         <div class="banner info" id="ban-lock"><i data-ic=info></i><div class="grow" id="ban-lock-t"></div><a class="btn sm" id="ban-lock-a" href="approvals.html">결재 보기</a></div>
-        <div class="banner warning" id="ban-left"><i data-ic=warn></i><div class="grow" id="ban-left-t"></div><button class="btn sm" id="ban-left-b">예외로 유지</button></div>
+        <div class="banner warning" id="ban-left"><i data-ic=warn></i><div class="grow" id="ban-left-t"></div><a class="btn sm" id="ban-left-b" href="candidates.html">후보 보기</a></div>
         <div class="banner" id="ban-view"><i data-ic=info></i><div class="grow"><b>조회 전용</b> — 모델 편집은 <b>모델러</b> 역할만 할 수 있습니다. 지금 역할: <span id="ban-view-r"></span></div></div>
         <div class="banner danger" id="ban-off"><i data-ic=warn></i><div class="grow"><b>연결 끊김</b> — 편집 내용은 이 브라우저에 보관하고, 다시 연결되면 병합합니다.</div><button class="btn sm" id="b-reconnect">다시 연결</button></div>
         <div class="banner warning" id="ban-gate"><i data-ic=warn></i><div class="grow" id="ban-gate-t"></div><button class="btn sm" id="b-gate">점검 보기</button></div>
@@ -179,9 +179,6 @@
   <div class="overlay" id="mo-ex" role="dialog" aria-modal="true" aria-labelledby="ex-t"><div class="modal"><div class="m-head"><h3 id="ex-t">표준 예외로 유지</h3></div>
     <div class="m-body"><div class="caption muted u-mb-8" id="ex-target">—</div><div class="field"><label for="ex-why">사유 *</label><textarea class="input" id="ex-why" rows="3"></textarea></div></div>
     <div class="m-foot"><button class="btn" data-close="mo-ex">취소</button><button class="btn primary" id="exr-go" data-needs="ex-why">예외 기록</button></div></div></div>
-  <div class="overlay" id="mo-ex2" role="dialog" aria-modal="true" aria-labelledby="ex2-t"><div class="modal"><div class="m-head"><h3 id="ex2-t">예외로 유지</h3></div>
-    <div class="m-body"><div class="caption muted u-mb-8" id="ex2-target">—</div><div class="field"><label for="ex2-why">사유 * <span class="faint">확정 결재에서 DA가 검토합니다</span></label><textarea class="input" id="ex2-why" rows="3"></textarea></div></div>
-    <div class="m-foot"><button class="btn" data-close="mo-ex2">취소</button><button class="btn primary" id="ex2-go" data-needs="ex2-why">예외 기록</button></div></div></div>
   <div class="overlay" id="mo-wd" role="dialog" aria-modal="true" aria-labelledby="wd-t"><div class="modal"><div class="m-head"><h3 id="wd-t">확정 신청 회수</h3></div>
     <div class="m-body"><div class="caption muted u-mb-8" id="wd-desc">결재가 취소되고, 이 업무 영역의 잠금이 풀려 모든 접속자가 다시 편집할 수 있습니다.</div><div class="field"><label for="wd-why">회수 사유 *</label><textarea class="input" id="wd-why" rows="2"></textarea></div></div>
     <div class="m-foot"><button class="btn" data-close="mo-wd">취소</button><button class="btn primary" id="wd-go" data-needs="wd-why">회수</button></div></div></div>
@@ -287,9 +284,10 @@ window.pageInit = function () {
   };
   const canEdit = () => !(confirmed || review || viewOnly || DEMO || revConflict || cv.dataset.sys === '1') && modelLock(AREA).state === LOCK.state && getModel(AREA).ver === VER && !liveRoleChanged() && liveCanEdit(AREA);   // silent check for drag/memo (R5)
   // optimistic revision per area+version: a tab that loaded an older revision may not overwrite a newer save (CL9-03)
-  let myRev = 0, revConflict = false;
+  let myRev = 0, revConflict = false, holdSave = false;
   function saveData() {
     if (locked || viewOnly || DEMO || !dataReady || revConflict) return;
+    if (holdSave) { setSave('run', '저장 대기 · 역할명 확정 전'); return; }   // the role box saves everything at once when it closes
     if (!liveCanEdit(AREA)) { revConflict = true; setSave('err', '저장 안 됨 · 권한 변경'); toast('편집 권한이 회수되어 이 탭의 편집은 저장하지 않았습니다 — 새로고침하세요', 'danger', { label: '새로고침', fn: () => location.reload() }); return; }
     // this version may have been submitted / confirmed in another tab meanwhile — never write into it then (CL11-01)
     const lk = modelLock(AREA); if (lk.state !== 'edit' || lk.model.ver !== VER) { revConflict = true; toast(`v${VER}은 다른 탭에서 ${lk.state === 'edit' ? `확정되고 v${lk.model.ver} 작업이 시작됐습니다` : lk.state === 'review' ? '확정 신청됐습니다' : '확정됐습니다'} — 이 탭의 편집은 저장하지 않았습니다`, 'danger', { label: '새로고침', fn: () => location.reload() }); return; }
@@ -297,10 +295,16 @@ window.pageInit = function () {
     if (cur && (cur.rev || 0) !== myRev) { revConflict = true; setSave('err', '저장 안 됨 · 최신본 확인'); toast('다른 탭에서 이 버전을 먼저 저장했습니다 — 이 탭의 편집은 저장하지 않았습니다. 새로고침해서 최신 내용으로 이어가세요', 'danger', { label: '새로고침', fn: () => location.reload() }); return; }
     // the saved copy never carries an open inline edit: no edit/orig marks, no unnamed new attribute, no unnamed new entity (other screens read it)
     const E2 = E.filter(e => !e.fresh).map(e => Object.assign({}, e, { a: e.a.filter(a => !(a.edit && !a.n)).map(a => { const c = Object.assign({}, a); delete c.edit; delete c.orig; return c; }) }));
-    myRev++; setModelData(AREA, VER, { E: E2, R, M, V, rev: myRev });
+    // ERD P1-7: the revision and '저장됨' move only after the write landed — a failed write keeps the edit on screen and offers a retry
+    const wrote = !window.__failSave && setModelData(AREA, VER, { E: E2, R, M, V, rev: myRev + 1 });
+    if (!wrote) { saveFailed = true; setSave('err', '저장 안 됨', true); agLive('저장하지 못했습니다'); if (!saveFailToast) { saveFailToast = true; toast('저장하지 못했습니다(브라우저 저장 공간 부족 등) — 편집 내용은 화면에 남아 있습니다. [다시 시도]를 누르세요', 'danger', { label: '다시 시도', fn: retrySave }); } return; }
+    myRev++; saveFailed = false; saveFailToast = false;
     const n = new Date(); setSave('ok', `저장됨 · ${String(n.getHours()).padStart(2, '0')}:${String(n.getMinutes()).padStart(2, '0')}`);
   }
-  function setSave(kind, text) { const s = $('savest'); if (!s) return; s.className = 'savest' + (kind === 'err' ? ' err' : ''); s.innerHTML = `<span class="sdot ${kind === 'err' ? 'err' : kind === 'run' ? 'run' : 'ok'}"></span>${text}`; }
+  let saveFailed = false, saveFailToast = false;
+  window.__failSave = q.has('failsave');   // ?failsave=1 — mockup switch: every model write fails (shows the retry state; set it false in the console to let a retry succeed)
+  function retrySave() { saveFailToast = false; saveData(); if (!saveFailed) toast('저장했습니다', 'success'); }
+  function setSave(kind, text, retry) { const s = $('savest'); if (!s) return; s.className = 'savest' + (kind === 'err' ? ' err' : ''); s.title = text; s.innerHTML = `<span class="sdot ${kind === 'err' ? 'err' : kind === 'run' ? 'run' : 'ok'}"></span>${text}${retry ? ' <button type="button" class="btn sm" id="save-retry">다시 시도</button>' : ''}`; const rb = $('save-retry'); if (rb) rb.onclick = retrySave; }
   // undo bound to one action: if something else happened after it, say so instead of undoing the wrong thing (R6)
   // each history entry has its own id — the toast undoes ITS edit only, never whatever happens to be last (the 50-entry cap keeps the length unchanged)
   const undoAction = () => { const id = histIds[histIds.length - 1]; return { label: '실행 취소', fn: () => { if (!id || histIds[histIds.length - 1] !== id) { toast('이후에 다른 편집이 있어 이 작업만 따로 되돌릴 수 없습니다 — Ctrl+Z로 차례대로 되돌리세요', 'info'); return; } undo(); } }; };
@@ -323,7 +327,9 @@ window.pageInit = function () {
   function applyRows(keys) { if (AREA !== 'rq') return []; const done = []; keys.forEach(k => { const t = STD_MAP[k] && stdTarget(k); if (t) { STD_MAP[k](t); if (/제출일|이력순번/.test(k)) t.s = 'req'; done.push(k); } }); return done; }
   function applyStd() { applyRows(Object.keys(STD_MAP)); }
   // attributes still unregistered because their word is only a candidate (by flag, not by array position)
-  const candAttrs = () => { const L = []; E.forEach(e => e.a.forEach(a => { if (a.s === 'unreg' && !a.edit) L.push([e, a]); })); return L; };   // every still-unregistered attribute (word not approved yet)
+  // attributes whose missing word is already a candidate (a.cand, set when 표준 맞추기 registered it) — not every unregistered attribute (ERD P1-4)
+  const candAttrs = () => { const L = []; E.forEach(e => e.a.forEach(a => { if (a.s === 'unreg' && a.cand && !a.edit) L.push([e, a]); })); return L; };
+  const candWordOf = a => a.candWord || (/수령자/.test(a.n) ? '수령자' : a.n);   // the candidate word the attribute waits on
   function keepRecipientAsEx(why, list) {
     const L = list || candAttrs();
     L.forEach(([e, a]) => { a.s = 'ex'; a.exReason = why; delete a.cand; });
@@ -346,6 +352,7 @@ window.pageInit = function () {
     $('ban-big').style.display = E.length > 300 ? 'flex' : 'none';
     if (E.length > 300) $('ban-big-t').innerHTML = `<b>엔터티 ${E.length}개</b> — 업무 영역 권장 상한 300개를 넘었습니다. 계속 편집할 수 있지만 화면이 느려질 수 있습니다. 영역을 나누는 것을 검토하세요.`;
     if (!locked && !DEMO && !viewOnly) setComp(AREA, lastComp);          // home / system badges read this; approvals re-check the submitted copy
+    if (!SNAP && window.areaNavBad) areaNavBad(bad);                     // ERD P1-4: the '영역 화면' badge shows the same live count as the main button
     const b = $('confirm-btn');
     if (locked) return;
     if (DEMO) { b.classList.add('disabled', 'has-tip'); b.classList.remove('primary'); b.dataset.tip = '예시 화면에서는 확정 신청할 수 없습니다'; b.setAttribute('aria-disabled', 'true'); b.onclick = () => toast(b.dataset.tip, 'info'); return; }
@@ -359,9 +366,15 @@ window.pageInit = function () {
     if (fix) { b.removeAttribute('aria-disabled'); b.setAttribute('aria-label', `미준수 ${bad}건 해결 — 표준 맞추기로 이동`); }
     b.onclick = () => { if (fix) { go(`standardize.html?area=${AREA}&f=todo`); return; } if (!can) { toast(b.dataset.tip, 'info'); return; } fillConfirm(); openPanel('pn-confirm'); };
     // remaining-unregistered banner from the current attributes and the candidate's real state (CX12-22)
-    const left = candAttrs();
+    // ERD P1-4: the strip names only attributes that wait on a word candidate, grouped by that word — each one gets its own reason (no blanket exception);
+    // any other unregistered attribute is counted in the main button and handled in 표준 맞추기
+    const left = candAttrs(), byWord = new Map(); left.forEach(([e, a]) => { const w = candWordOf(a); if (!byWord.has(w)) byWord.set(w, []); byWord.get(w).push([e, a]); });
     $('ban-left').style.display = left.length && !viewOnly ? 'flex' : 'none';
-    if (left.length) { const c = getCands().find(x => x.name === '수령자'); const st = c ? candState(c) : '대기'; const docTxt = c && c.doc && st !== '대기' ? ` — ${c.doc}` : ''; $('ban-left-t').innerHTML = `<b>남은 미준수 ${left.length}</b> — ${left.map(([e, a]) => e.n + '.' + a.n).join(', ')}: 단어 ‘수령자’가 아직 승인 전입니다(후보 ${st}${docTxt}). 사유를 남기고 예외로 유지하면 확정 신청할 수 있습니다.`; $('ban-left-b').textContent = `${left.length}건 예외로 유지`; }
+    if (left.length) {
+      $('ban-left-t').innerHTML = `<b>단어 승인 대기 ${left.length}</b> — ` + [...byWord].map(([w, L]) => { const c = getCands().find(x => x.name === w); const st = c ? candState(c) : '대기'; const docTxt = c && c.doc && st !== '대기' ? ` · ${hx(c.doc)}` : '';
+        return `단어 ‘${hx(w)}’ 후보 ${st}${docTxt}: ` + L.map(([e, a]) => `<button type="button" class="linkbtn" data-exone="${e.id}" data-exa="${hx(a.n)}" title="사유를 남기고 예외로 유지">${hx(e.n)}.${hx(a.n)}</button>`).join(', '); }).join(' · ')
+        + `<div class="caption muted">승인되면 표준이 됩니다. 기다리지 않고 확정 신청하려면 속성을 눌러 건마다 사유를 남기고 예외로 유지하세요.</div>`;
+    }
 
   }
   let lastComp = null;
@@ -746,6 +759,7 @@ window.pageInit = function () {
     else if (f === 'desc' || f === 'def') { const [, a, ai] = curAttr(); if (a && String(t.value).trim() !== (a[f] || '')) agEdit(e, ai, f, t.value); }
   });
   rpb.addEventListener('keydown', ev => {
+    if (ev.isComposing || ev.keyCode === 229) return;   // ERD P1-5
     if (ev.key === 'Escape' && gPend) { ev.stopPropagation(); const [, pai] = pendAttr(); gPend = null; gFocus = { e: sel, ai: pai, f: 'row' }; render(); return; }
     if (ev.target.matches('.ag-det textarea, .ag-det input:not([type=checkbox])')) {
       if (ev.key === 'Escape') { ev.stopPropagation(); const [, a] = curAttr(); const f = ev.target.dataset.f; if (a && f) ev.target.value = a[f] || ''; ev.target.blur(); }   // Esc = cancel: back to the saved value
@@ -857,12 +871,8 @@ window.pageInit = function () {
     $('mo-ex').classList.remove('open'); $('ex-why').value = ''; render();
     toast(`‘${e.n}.${a.n}’을 예외로 기록했습니다 — 남은 미준수 ${lastComp ? lastComp.bad : '?'}건 · 확정 결재에서 DA가 검토합니다`, 'violet', undoAction());
   };
-  $('ban-left-b').onclick = () => { const L = candAttrs(); $('ex2-t').textContent = `예외로 유지 (${L.length}건)`; $('ex2-target').textContent = L.map(([e, a]) => e.n + '.' + a.n).join(' · ') + ' — 미등록 단어 ‘수령자’'; $('mo-ex2').classList.add('open'); $('ex2-why').focus(); };
-  $('ex2-go').onclick = () => {
-    if (guard()) return; if (!candAttrs().length) { $('mo-ex2').classList.remove('open'); toast('예외로 둘 미등록 속성이 없습니다', 'info'); return; } snap(); keepRecipientAsEx($('ex2-why').value.trim());
-    $('mo-ex2').classList.remove('open'); $('ex2-why').value = ''; render();
-    toast(`예외로 기록했습니다 — 남은 미준수 ${lastComp.bad}건${lastComp.bad ? '' : ' · 확정 신청할 수 있습니다'}`, 'violet', undoAction());
-  };
+  // ERD P1-4: one attribute, one reason — the strip's attribute names open the single-exception dialog (the blanket 'n건 예외로 유지' is gone)
+  $('ban-left-t').addEventListener('click', ev => { const b = ev.target.closest('[data-exone]'); if (!b) return; if (guard()) return; window.__openEx(b.dataset.exone, b.dataset.exa); });
   // 참조자 (CC): was a button with no action and a fixed ['hyun'] on the document — now picked here, the 기관 담당자 first by default
   const ccList = Object.values(USERS).filter(u => u.id !== ME.id && (u.roles || []).includes('owner')).slice(0, 1).map(u => u.id);
   const drawCc = () => { $('cf-ccl').innerHTML = ccList.map(id => `<span class="chip on u-h-28 u-fs-12" data-cc="${id}" title="빼기">${hx((USERS[id] || {}).name || id)} ✕</span>`).join('') || '<span class="caption faint">없음</span>';
@@ -904,11 +914,18 @@ window.pageInit = function () {
   const gsel = new Set(); let gfilter = 'all'; let gvis = new Set(); let gAllArm = null;   // arm = the exact scope + values the user confirmed
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
   const gpass = a => !a.edit && !(gfilter === 'bad' && !(a.s === 'comb' || a.s === 'unreg')) && !(gfilter === 'sec' && !a.sec) && !(gfilter === 'na' && a.s !== 'na');
+  // ERD P1-6: a selection follows the attribute itself, never its position — moving or deleting a row can no longer shift the selection onto another attribute.
+  // the key is per object (in memory only); an undo rebuilds the objects, so their old keys simply drop out of the selection
+  const gAid = new WeakMap(); let gAidSeq = 0;
+  const gKey = (e, a) => { if (!gAid.has(a)) gAid.set(a, ++gAidSeq); return e.id + ':' + gAid.get(a); };
+  const gFind = k => { const [eid, n] = k.split(':'); const e = ent(eid); const a = e && e.a.find(x => gAid.get(x) === +n); return a ? [e, a] : null; };
   function renderGrid() {
     const g = $('grid'); const fv = (g.querySelector('#g-find') || {}).value || '', rv = (g.querySelector('#g-rep') || {}).value || '';
     const gstd = (g.querySelector('#g-std') || {}).value || '', gwhy = (g.querySelector('#g-why') || {}).value || '';
-    const rows = []; E.forEach(e => e.a.forEach((a, i) => { if (gpass(a)) rows.push({ e, a, k: e.id + ':' + i }); }));
+    [...gsel].forEach(k => { const t = gFind(k); if (!t || t[1].edit) gsel.delete(k); });   // a deleted (or re-created by undo) attribute leaves the selection
+    const rows = []; E.forEach(e => e.a.forEach(a => { if (gpass(a)) rows.push({ e, a, k: gKey(e, a) }); }));
     gvis = new Set(rows.map(r => r.k)); const selVis = [...gsel].filter(k => gvis.has(k)).length, selHid = gsel.size - selVis;
+    const selNames = [...gsel].map(gFind).filter(Boolean).map(([e, a]) => e.n + '.' + a.n);
     const hl = s => fv ? esc(s).split(esc(fv)).join(`<mark>${esc(fv)}</mark>`) : esc(s);
     const hits = fv ? rows.filter(r => r.a.n.includes(fv)).length : 0;
     // list standard: filter chips are the shared 32px <button class="chip"> (were 26px inline-styled spans)
@@ -918,7 +935,7 @@ window.pageInit = function () {
         <input class="input u-w-150" id="g-find" placeholder="찾기 (논리명)" aria-label="찾기 (논리명)" value="${esc(fv)}">${gRepOpen ? `<input class="input edit-only u-w-130" id="g-rep" placeholder="바꿀 말" aria-label="바꿀 말" value="${esc(rv)}">` : '<button class="btn sm ghost edit-only" id="g-rep-open">바꾸기…</button>'}
         <span class="caption muted g-hits">${fv ? `보이는 행 ${hits}건` : ''}</span>${gRepOpen ? `<button class="btn sm edit-only" id="g-replace" ${hits && rv ? '' : 'disabled'}>보이는 행 바꾸기</button>` : ''}
         <button class="btn sm ghost" id="g-close">다이어그램으로 (Esc)</button></div>
-      <div class="gbulk edit-only ${gsel.size ? 'on' : ''}"><span class="gscope">표시된 선택 <b>${selVis}</b>${selHid ? ` · 숨겨진 선택 <b>${selHid}</b>` : ''}</span>
+      <div class="gbulk edit-only ${gsel.size ? 'on' : ''}"><span class="gscope has-tip" tabindex="0" data-tip="${esc(selNames.slice(0, 8).join(', ') + (selNames.length > 8 ? ` 외 ${selNames.length - 8}개` : ''))}" aria-label="선택한 속성: ${esc(selNames.join(', '))}">표시된 선택 <b>${selVis}</b>${selHid ? ` · 숨겨진 선택 <b>${selHid}</b>` : ''}</span>
         <span class="caption muted">도메인</span><select class="input u-w-130" id="g-dom"><option value="">유지</option>${Object.keys(DOMS).map(d => `<option>${d}</option>`).join('')}</select>
         <span class="caption muted">필수</span><select class="input" id="g-nn"><option value="">유지</option><option value="1">예</option><option value="0">아니오</option></select>
         <span class="caption muted">표준</span><select class="input" id="g-std"><option value="">유지</option><option value="in" ${gstd === 'in' ? 'selected' : ''}>대상</option><option value="na" ${gstd === 'na' ? 'selected' : ''}>비대상</option></select>
@@ -956,13 +973,13 @@ window.pageInit = function () {
       if (guard()) return; const scope = ev.target.id === 'g-apply-all' ? [...gsel] : [...gsel].filter(k => gvis.has(k)); gAllArm = null; const dom = $('g-dom').value, nn = $('g-nn').value, std = $('g-std').value, why = ($('g-why') || {}).value || '';
       if (!dom && !nn && !std) { toast('바꿀 항목을 고르세요', 'info'); return; }
       if (std === 'na' && !why.trim()) { toast('비대상 사유를 입력해야 합니다 — 확정 결재에서 DA가 검토합니다', 'danger'); $('g-why').focus(); return; }
-      snap(); let n = 0, skip = 0;
-      scope.forEach(k => { gsel.delete(k); const [eid, i] = k.split(':'); const e = ent(eid); if (!e) return; if (e.ref) { skip++; return; } const a = e.a[+i]; if (!a) return; n++;
+      snap(); let n = 0, skip = 0; const names = [];
+      scope.forEach(k => { gsel.delete(k); const t = gFind(k); if (!t) return; const [e, a] = t; if (e.ref) { skip++; return; } n++; names.push(e.n + '.' + a.n);
         if (dom) { a.t = DOMS[dom]; a.dom = dom; delete a.d; }
         if (nn) a.nn = nn === '1' ? 1 : 0;
         if (std === 'na') { a.s = 'na'; a.naReason = why.trim(); } else if (std === 'in' && a.s === 'na') a.s = 'unreg'; });
       render();
-      toast(`${n}개 속성에 일괄 적용했습니다${skip ? ` · 참조 엔터티 ${skip}개는 건너뜀` : ''}${std === 'na' ? ' — 비대상은 준수율 계산에서 빠지고 사유가 남습니다' : ''}`, 'success', undoAction()); return;
+      toast(`${n}개 속성에 일괄 적용했습니다(${names.slice(0, 3).join(', ')}${names.length > 3 ? ` 외 ${names.length - 3}개` : ''})${skip ? ` · 참조 엔터티 속성 ${skip}개는 제외` : ''}${std === 'na' ? ' — 비대상은 준수율 계산에서 빠지고 사유가 남습니다' : ''}`, 'success', undoAction()); return;
     }
   });
   $('grid').addEventListener('change', ev => {
@@ -973,19 +990,22 @@ window.pageInit = function () {
     if (ev.target.id === 'g-all') { $('grid').querySelectorAll('[data-k]').forEach(c => ev.target.checked ? gsel.add(c.dataset.k) : gsel.delete(c.dataset.k)); renderGrid(); }
   });
   $('grid').addEventListener('input', ev => {
-    if (ev.target.id === 'g-find' || ev.target.id === 'g-rep') { const id = ev.target.id, pos0 = ev.target.selectionStart; renderGrid(); const el = $(id); el.focus(); el.setSelectionRange(pos0, pos0); }
+    if (ev.isComposing) return;   // ERD P1-5: never replace the box mid-syllable — the redraw waits for compositionend
+    if (ev.target.id === 'g-find' || ev.target.id === 'g-rep') gRefind(ev.target);
   });
-  $('grid').addEventListener('keydown', ev => { ev.stopPropagation(); if (ev.key === 'Escape') closeGrid(); });
+  function gRefind(t) { const id = t.id, pos0 = t.selectionStart; renderGrid(); const el = $(id); if (el) { el.focus(); el.setSelectionRange(pos0, pos0); } }
+  $('grid').addEventListener('compositionend', ev => { if (ev.target.id === 'g-find' || ev.target.id === 'g-rep') gRefind(ev.target); });
+  $('grid').addEventListener('keydown', ev => { ev.stopPropagation(); if (ev.isComposing || ev.keyCode === 229) return; if (ev.key === 'Escape') closeGrid(); });
 
   function hint(msg) { const h = $('hint'); h.style.display = msg ? 'block' : 'none'; h.textContent = msg || ''; }
   function setTool(t) {
     if (t !== 'select' && guard()) t = 'select';
     tool = t; relSrc = null; xorPick = []; preview.setAttribute('d', ''); hint(''); $('relmenu').classList.remove('open');   // Esc · another tool never leaves the relation-type menu hanging open
-    document.querySelectorAll('.cv-toolbar .tb[data-tool]').forEach(b => b.classList.toggle('on', b.dataset.tool === t || (t === 'xor' && b.dataset.tool === 'rel')));
+    document.querySelectorAll('.cv-toolbar .tb[data-tool]').forEach(b => { const on = b.dataset.tool === t || (t === 'xor' && b.dataset.tool === 'rel'); b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); });
     cv.classList.toggle('tool-entity', t === 'entity'); cv.classList.toggle('tool-rel', t === 'rel' || t === 'xor'); cv.classList.toggle('tool-memo', t === 'memo');
     if (t === 'rel') hint('부모 엔터티를 클릭하세요 · Esc 취소');
     if (t === 'xor') hint('같은 부모에서 나간 관계선 2개를 차례로 클릭하세요 · Esc 취소');
-    if (t === 'entity') hint('엔터티를 놓을 곳을 클릭하세요');
+    if (t === 'entity') hint('엔터티를 놓을 곳을 클릭하세요 · Enter = 보이는 곳 가운데 · Esc 취소');
     if (t === 'memo') hint('메모를 놓을 곳을 클릭하세요');
     render();
   }
@@ -1030,7 +1050,13 @@ window.pageInit = function () {
   }
   function commitRename(inp, ok) {
     const e = ent(inp.dataset.e); renaming = null;
-    if (e && e.fresh) {   // D3: a just-made entity — a name is required; Esc / empty cancels the entity, Enter goes on to its identifier
+    if (!e) { render(); return; }
+    // ERD P1-8: the input was opened while editable — check version · role again before the name lands (another tab may have submitted the version)
+    if (ok && inp.value.trim() && (e.fresh || inp.value.trim() !== e.n) && guard()) {
+      if (e.fresh) { E.splice(E.indexOf(e), 1); V.forEach(x => { if (x.ents) x.ents = x.ents.filter(i => i !== e.id); }); if (sel === e.id) sel = null; }
+      render(); return;   // the title shows the saved name again; the guard's toast says why
+    }
+    if (e.fresh) {   // D3: a just-made entity — a name is required; Esc / empty cancels the entity, Enter goes on to its identifier
       const v = inp.value.trim();
       if (!ok || !v || v === '새엔터티') { E.splice(E.indexOf(e), 1); V.forEach(x => { if (x.ents) x.ents = x.ents.filter(i => i !== e.id); }); if (sel === e.id) sel = null; dirty = true; render(); toast('엔터티 추가를 취소했습니다', 'info'); return; }
       delete e.fresh; e.n = v;
@@ -1049,12 +1075,12 @@ window.pageInit = function () {
     const editing = !locked && !viewOnly && !DEMO;
     const others = [['홍설계', 'var(--p-1)', '편집 중']].concat(Object.values(USERS).filter(u => u.id !== ME.id && u.roles.includes('modeler')).slice(0, 1).map(u => [u.name, 'var(--p-2)', '조회']));
     $('av-list').innerHTML = `<span class="av" style="background:var(--ink);color:var(--on-ink)" title="${ME.name} (나) · ${editing ? '편집' : '조회'}">${ME.name[0]}</span>` + others.map(([n, c, s]) => `<span class="av ${s === '조회' ? 'view' : ''}" style="${s === '조회' ? '' : 'background:' + c}" title="${n} · ${s}">${n[0]}</span>`).join('');
-    $('avcap').textContent = `${others.length + 1}명 접속 · ${(editing ? 1 : 0) + 1}명 편집`;
+    $('avcap').textContent = `${others.length + 1}명 접속 · ${(editing ? 1 : 0) + 1}명 편집`; $('avs').title = `이 업무 영역에 접속한 사람 — ${$('avcap').textContent}`;
     $('cur-park').querySelector('span').textContent = `${others[1] ? others[1][0] : '박설계'} · 조회`;
   }
   function setOffline(v) {
     offline = v; document.body.classList.toggle('offline', v); $('ban-off').style.display = v ? 'flex' : 'none';
-    if (v) $('avcap').textContent = '연결 끊김 · 로컬 보관 중'; else drawParticipants();
+    if (v) { $('avcap').textContent = '연결 끊김 · 로컬 보관 중'; $('avs').title = '연결 끊김 · 로컬 보관 중'; } else drawParticipants();
     $('cur-hong').style.display = $('cur-park').style.display = v ? 'none' : 'block';
     render(); if (!v) toast('다시 연결했습니다 — 끊긴 동안의 내 편집 0건, 다른 사람 편집 1건을 병합했습니다', 'info');
   }
@@ -1148,23 +1174,34 @@ window.pageInit = function () {
   });
   // a finished move is an edit boundary: positions are saved like any other change (CX9-05)
   window.addEventListener('mouseup', () => { const moved = drag && drag.moved; drag = null; pan = null; cv.classList.remove('panning'); if (moved) render(); });
+  function placeEntity(w) {
+    if (guard()) { setTool('select'); return; }
+    const id = 'e' + Date.now(); snap();
+    // D3: the name comes first (like F2, with entity-term suggestions); Enter goes on to the identifier — no '새엔터티' left behind
+    E.push({ id, n: '새엔터티', p: '—', c: 'M', x: Math.round(w.x), y: Math.round(w.y), px: Math.round(w.x), py: Math.round(w.y), a: [], fresh: 1 });
+    if (curView !== 'all') { const v = vCur(); (v.ents = v.ents || []).push(id); }   // made in a view → placed in it (and always in 전체)
+    sel = id; renaming = id; setTool('select'); render(); hint('엔터티 이름을 입력하세요 · Enter 다음(식별자) · Esc 취소'); setTimeout(() => hint(''), 2500);
+  }
+  // ERD P1-9: keyboard placement — after E (or the tree's 새 엔터티), Enter puts the entity in the middle of what is visible, on a free spot
+  function placeEntityKeyboard() {
+    const v = viewRect(); let x = ((v.left + v.right) / 2 - panX) / zoom - 90, y = ((v.top + v.bottom) / 2 - world.offsetTop - panY) / zoom - 40;
+    const hit = (px, py) => VE().some(e => { const b = box(e.id); return !b.none && px < b.x + b.w + 16 && px + 180 > b.x - 16 && py < b.y + b.h + 16 && py + 80 > b.y - 16; });
+    for (let i = 0; i < 12 && hit(x, y); i++) { x += 40; y += 40; }   // step diagonally off anything already there
+    placeEntity({ x, y });
+  }
+  // ERD P1-3: every control that sits on top of the canvas (toolbar · banners · legend · zoom · minimap · side tabs · popovers) — a click or double-click there never places anything
+  const CV_UI = '.cv-toolbar,.cv-zoom,.cv-mini,.mini-open,.legend,.cv-banner,.side-tab,.rp-tab,.acl,#sysview,.pop,#grid,.memo,button,select,a';
   cv.addEventListener('click', ev => {
     const del = ev.target.closest('[data-mdel]');
     if (del) { if (guard()) return; snap(); M.splice(M.findIndex(m => m.id === del.dataset.mdel), 1); render(); toast('메모를 삭제했습니다 · Ctrl+Z', 'info'); return; }
-    if (ev.target.closest('.cv-toolbar,.cv-zoom,.cv-mini,.cv-banner,.acl,#sysview,.pop,#grid,.memo')) return;
+    if (ev.target.closest(CV_UI)) return;
     const node = ev.target.closest('.node');
     if (tool === 'memo' && !node) {
       const w = toWorld(ev), id = 'm' + Date.now(); snap();
       M.push({ id, mode, x: Math.round(w.x), y: Math.round(w.y), text: '', by: ME.name });
       setTool('select'); const mb = document.querySelector(`[data-mid="${id}"]`); if (mb) mb.focus(); return;
     }
-    if (tool === 'entity' && !node) {
-      const w = toWorld(ev), id = 'e' + Date.now(); snap();
-      // D3: the name comes first (like F2, with entity-term suggestions); Enter goes on to the identifier — no '새엔터티' left behind
-      E.push({ id, n: '새엔터티', p: '—', c: 'M', x: w.x, y: w.y, px: w.x, py: w.y, a: [], fresh: 1 });
-      if (curView !== 'all') { const v = vCur(); (v.ents = v.ents || []).push(id); }   // made in a view → placed in it (and always in 전체)
-      sel = id; renaming = id; setTool('select'); render(); hint('엔터티 이름을 입력하세요 · Enter 다음(식별자) · Esc 취소'); setTimeout(() => hint(''), 2500); return;
-    }
+    if (tool === 'entity' && !node) { placeEntity(toWorld(ev)); return; }
     if (tool === 'rel' && node) {
       const id = node.id.slice(2);
       if (!relSrc) { relSrc = id; hint('자식 엔터티를 클릭하세요 · 같은 엔터티를 누르면 재귀 관계 · Esc 취소'); render(); return; }
@@ -1178,14 +1215,19 @@ window.pageInit = function () {
     if (title) { if (guard() || refGuard(ent(title.dataset.e))) return; renaming = title.dataset.e; render(); return; }
     const row = ev.target.closest('.ar[data-i]');
     if (row) { const e = ent(row.dataset.e); if (guard() || refGuard(e)) return; editHid = snap(); const a = e.a[+row.dataset.i]; a.orig = JSON.stringify(a); a.edit = 1; sel = e.id; render(); return; }
-    if (!ev.target.closest('.node,.cv-toolbar,.cv-zoom,.cv-mini,.cv-banner,#sysview') && tool === 'select' && !locked) { setTool('entity'); cv.dispatchEvent(new MouseEvent('click', { clientX: ev.clientX, clientY: ev.clientY, bubbles: true })); }
+    if (!ev.target.closest('.node,' + CV_UI) && tool === 'select' && !locked) { setTool('entity'); cv.dispatchEvent(new MouseEvent('click', { clientX: ev.clientX, clientY: ev.clientY, bubbles: true })); }
   });
   cv.addEventListener('input', ev => {
     if (ev.target.classList.contains('attr-in')) { acIdx = 0; showAC(ev.target); }
     const mb = ev.target.closest && ev.target.closest('.mb'); if (mb) { const m = M.find(x => x.id === mb.dataset.mid); if (m) m.text = mb.textContent; }
   });
-  cv.addEventListener('focusin', ev => { if (ev.target.classList && ev.target.classList.contains('mb')) snap(); });
+  // memo: the undo entry is taken on the first real change, and leaving the memo is a save boundary (ERD P1-7)
+  let memoHid = null, memoBefore = null;
+  cv.addEventListener('focusin', ev => { if (ev.target.classList && ev.target.classList.contains('mb')) { memoHid = null; memoBefore = ev.target.textContent; } });
+  cv.addEventListener('beforeinput', ev => { if (ev.target.classList && ev.target.classList.contains('mb') && memoHid == null) memoHid = snap(); });
+  cv.addEventListener('focusout', ev => { if (!(ev.target.classList && ev.target.classList.contains('mb'))) return; if (memoHid != null && ev.target.textContent !== memoBefore) { dirty = false; saveData(); } else if (memoHid != null) dropHist(memoHid); memoHid = null; });
   cv.addEventListener('keydown', ev => {
+    if (ev.isComposing || ev.keyCode === 229) return;   // ERD P1-5: Enter / Esc while a Hangul syllable is being composed belongs to the IME, not to the name input
     if (ev.target.closest && ev.target.closest('.mb')) { if (ev.key === 'Escape') ev.target.blur(); return; }
     const ren = ev.target.closest('.ren-in');
     if (ren) { if (ev.key === 'Enter') commitRename(ren, true); else if (ev.key === 'Escape') commitRename(ren, false); return; }
@@ -1210,6 +1252,7 @@ window.pageInit = function () {
     const k = ev.key.toLowerCase();
     if (ev.ctrlKey && k === 'f') { openGrid(true); ev.preventDefault(); return; }
     if (ev.target.closest && ev.target.closest('input,textarea,select,[contenteditable="true"]')) return;
+    if ((ev.key === 'Enter' || ev.key === ' ') && ev.target.closest && ev.target.closest('button,a,[role="menuitem"],[role="option"]')) return;   // ERD P1-9: Enter on a button presses that button — it never leaks into '속성 추가'
     if (ev.target.closest && ev.target.closest('.page-header, .menu, #grid, .mtree, .rpanel') && !(ev.ctrlKey || ev.metaKey)) return;   // the right panel's attribute grid keeps Delete · Enter for its rows   // the tree keeps its own keys (Delete · Enter never reach the canvas)   // header buttons, menus and the table keep their own keys
     if (ev.ctrlKey && k === 'z' && ev.shiftKey) { redoFn(); ev.preventDefault(); return; }
     if (ev.ctrlKey && k === 'z') { undo(); ev.preventDefault(); return; }
@@ -1226,7 +1269,8 @@ window.pageInit = function () {
     else if (inCanvas && k === 'm') setTool('memo');
     else if (ev.key === 'Escape' && rolePending && document.querySelector('.pop[aria-label="역할명"]')) { rolePending(); }
     else if (ev.key === 'Escape') { document.querySelectorAll('.pop').forEach(p => p.remove()); $('expmenu').classList.remove('open'); closeGrid(); setTool('select'); }
-    else if (ev.key === 'Enter' && sel) { addAttr(); ev.preventDefault(); }
+    else if (ev.key === 'Enter' && tool === 'entity' && (document.activeElement === document.body || cv.contains(document.activeElement))) { ev.preventDefault(); placeEntityKeyboard(); }
+    else if (ev.key === 'Enter' && sel && (document.activeElement === document.body || cv.contains(document.activeElement))) { addAttr(); ev.preventDefault(); }
     else if (ev.key === 'Delete' && sel) { if (!guard()) askDelete(sel); }
     else if (ev.key === 'Delete' && selRel) relDelete(selRel);
     else if (ev.key === '!' || (ev.shiftKey && ev.code === 'Digit1')) fitAny();
@@ -1307,7 +1351,26 @@ window.pageInit = function () {
   $('zi').onclick = zoomIn;
   $('zo').onclick = zoomOut;
   $('zl').addEventListener('dblclick', zoom100);
-  function fit() { let maxx = 0, maxy = 0; if (!VE().length) { zoom = 1; panX = 40; panY = 80; applyView(); return; } VE().forEach(e => { const b = box(e.id); maxx = Math.max(maxx, b.x + b.w); maxy = Math.max(maxy, b.y + b.h); }); zoom = Math.min(1.2, (cv.clientWidth - 80) / maxx, (cv.clientHeight - 140) / maxy); panX = 40; panY = 80; applyView(); }
+  // ERD P1-2: the part of the canvas nothing covers — below the toolbar and guidance strips, above the bottom controls (legend · zoom · minimap, as they are pinned now)
+  function viewRect() {
+    const cr = cv.getBoundingClientRect(); let top = world.offsetTop;
+    cv.querySelectorAll('.cv-toolbar, .cv-banner').forEach(el => { if (el.offsetHeight) top = Math.max(top, el.getBoundingClientRect().bottom - cr.top); });
+    let bottom = Math.min(cv.clientHeight, window.innerHeight - cr.top);
+    ['cv-legend', 'cv-mini', 'mini-open'].forEach(id => { const el = $(id); if (el && el.offsetHeight && getComputedStyle(el).display !== 'none') bottom = Math.min(bottom, el.getBoundingClientRect().top - cr.top); });
+    const zb = cv.querySelector('.cv-zoom'); if (zb && zb.offsetHeight) bottom = Math.min(bottom, zb.getBoundingClientRect().top - cr.top);
+    const right = Math.min(cv.clientWidth, document.documentElement.clientWidth - cr.left);
+    return { left: 16, top: top + 16, right: right - 16, bottom: bottom - 12 };
+  }
+  function fit() {
+    if (!VE().length) { zoom = 1; panX = 40; panY = 80; applyView(); return; }
+    let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;   // the whole bounding box (negative positions included), not just the far corner
+    VE().forEach(e => { const b = box(e.id); if (b.none) return; x0 = Math.min(x0, b.x); y0 = Math.min(y0, b.y); x1 = Math.max(x1, b.x + b.w); y1 = Math.max(y1, b.y + b.h); });
+    const v = viewRect(), vw = Math.max(80, v.right - v.left), vh = Math.max(80, v.bottom - v.top);
+    zoom = Math.max(0.15, Math.min(1.2, vw / (x1 - x0), vh / (y1 - y0)));
+    panX = v.left + (vw - (x1 - x0) * zoom) / 2 - x0 * zoom;
+    panY = v.top - world.offsetTop - y0 * zoom;
+    applyView();
+  }
   $('zfit').onclick = fitAny;
   pinCtl();
   $('lodsel').onchange = ev => { lodForce = ev.target.value; applyView(); };
@@ -1315,6 +1378,7 @@ window.pageInit = function () {
   document.querySelectorAll('.cv-toolbar .tb[data-tool]').forEach(b => b.addEventListener('click', () => {
     if (b.dataset.tool === 'rel' && (tool === 'rel' || tool === 'xor')) { $('relmenu').classList.toggle('open'); return; }
     setTool(b.dataset.tool); if (b.dataset.tool === 'rel' && tool === 'rel') $('relmenu').classList.add('open');
+    if (tool === 'entity') cv.focus({ preventScroll: true });   // ERD P1-9: the next Enter places the entity (focus left on the button would press it again)
   }));
   $('relmenu').addEventListener('click', ev => {
     ev.stopPropagation(); const d = ev.target.closest('[data-rt]'); if (!d) return; $('relmenu').classList.remove('open');
@@ -1673,6 +1737,7 @@ window.pageInit = function () {
       const x = { n: un, p: up, t: k.t, dom: domOf(k), fk: 1, fkg: g, fkp: k.p, pk: idr ? 1 : 0, nn: self ? 0 : 1, s: clash ? 'comb' : (k.s === 'ex' ? 'ok' : k.s || 'ok') };
       placeAttr(child, x, true); added.push(x); if (clash) { clashes.push(x); keyName.set(x, k.n); } if (idr) pkSpread(child, x); });
     if (one && !idr) syncUk(r);
+    if (clashes.length) holdSave = true;   // ERD P1-8: a relation that still needs its role names is not saved yet — a reload while the box is open leaves nothing behind
     render(); showRP();
     const msg = `${parent.n} → ${child.n} 관계 · FK ${added.length}개 추가${idr ? ' (자식 식별자)' : ''}${r.uk ? ' · 1:1 보장 UK' : ''}`;
     if (clashes.length) { agLive('관계 미리 만듦 · 역할명을 정하세요'); rolePop(r, clashes, msg, keyName); return; }   // post-review C5: the success toast waits for the role confirmation
@@ -1692,14 +1757,15 @@ window.pageInit = function () {
     cv.appendChild(p); const first = p.querySelector('input'); first.focus(); first.select();
     const fresh = () => histIds[histIds.length - 1] === hid && R.includes(r);   // nothing else was edited since the relation was made
     rolePending = () => cancel();
-    const done = () => { p.remove(); rolePending = null; const vals = cols.map((x, i) => p.querySelector('#role-' + i).value.trim()); let named = 0;
+    const done = () => { p.remove(); rolePending = null; holdSave = false; const vals = cols.map((x, i) => p.querySelector('#role-' + i).value.trim()); let named = 0;
       vals.forEach((v, i) => { if (v && v !== cols[i].n && !cols.some((y, j) => j !== i && y.n === v) && !ent(r.t).a.some(y => y !== cols[i] && y.n === v)) { cols[i].n = v; cols[i].s = 'comb'; named++; } });
       dirty = true; render(); showRP(); toast(msg + (named ? ' · 역할명 ' + named + '개 — 표준 맞추기에서 용어를 확인하세요' : ''), 'success', undoAction()); agLive('관계 생성 · 역할명 확정'); };   // one snapshot: Ctrl+Z takes back the relation and its names together
-    const cancel = () => { p.remove(); rolePending = null;
-      if (fresh()) { const s = hist.pop(); histIds.pop(); restore(JSON.parse(s)); dirty = true; }   // drop only this relation's own snapshot — never redo-able, never someone else's edit
+    const cancel = () => { p.remove(); rolePending = null; holdSave = false; dirty = true;
+      if (fresh()) { const s = hist.pop(); histIds.pop(); restore(JSON.parse(s)); }   // drop only this relation's own snapshot — never redo-able, never someone else's edit
+      else if (R.includes(r) && r.k !== 'id') { snap(); const ch = ent(r.t); if (ch) for (let i = ch.a.length - 1; i >= 0; i--) if (ch.a[i].fkg === r.g) ch.a.splice(i, 1); if (r.uk && ch) ch.uk = (ch.uk || []).filter(x => x !== r.uk); R.splice(R.indexOf(r), 1); }   // other edits came after it: take out just this relation and its FK columns, keep the rest
       selRel = null; render(); showRP(); toast(R.includes(r) ? '역할명 창을 닫았습니다 — 관계는 남아 있습니다(Ctrl+Z로 되돌리기)' : '연결을 취소했습니다 — 모델은 그대로입니다', 'info'); agLive('관계 연결 취소');
       const back = $('n-' + r.f); if (back) { back.tabIndex = -1; back.focus(); } };
-    p.addEventListener('keydown', ev => { ev.stopPropagation(); if (ev.key === 'Enter' && ev.target.tagName === 'INPUT') { ev.preventDefault(); done(); } else if (ev.key === 'Escape') { ev.preventDefault(); cancel(); } });
+    p.addEventListener('keydown', ev => { ev.stopPropagation(); if (ev.isComposing || ev.keyCode === 229) return; if (ev.key === 'Enter' && ev.target.tagName === 'INPUT') { ev.preventDefault(); done(); } else if (ev.key === 'Escape') { ev.preventDefault(); cancel(); } });
     p.querySelector('[data-ok]').onclick = done; p.querySelector('[data-no]').onclick = cancel;
     const tw = p.querySelector('[data-twin]'); if (tw) tw.onclick = ev => { ev.preventDefault(); const keep = twin; cancel(); const again = R.find(x => x.f === keep.f && x.t === keep.t && x.name === keep.name); if (again) { selRel = again; sel = null; render(); showRP(); } };
   }
@@ -1715,7 +1781,7 @@ window.pageInit = function () {
     const close = () => { p.remove(); const n = $('n-' + fId); if (n) { n.tabIndex = -1; n.focus(); } };   // focus goes back to the parent entity
     const pick = id => { p.remove(); if (id === fId) { makeRel(fId, fId, 'nonid'); return; } makeRel(fId, id, relType); };
     inp.addEventListener('input', () => { idx = 0; draw(); });
-    p.addEventListener('keydown', ev => { ev.stopPropagation(); const L = items();
+    p.addEventListener('keydown', ev => { ev.stopPropagation(); if (ev.isComposing || ev.keyCode === 229) return; const L = items();
       if (ev.key === 'ArrowDown') { idx = Math.min(idx + 1, L.length - 1); draw(); ev.preventDefault(); } else if (ev.key === 'ArrowUp') { idx = Math.max(idx - 1, 0); draw(); ev.preventDefault(); }
       else if (ev.key === 'Enter' && L[idx]) { ev.preventDefault(); pick(L[idx].id); } else if (ev.key === 'Escape') close(); });
     list.addEventListener('click', ev => { const o = ev.target.closest('[data-e]'); if (o) pick(o.dataset.e); });
@@ -1873,7 +1939,7 @@ window.pageInit = function () {
     p.innerHTML = html; cv.appendChild(p);
     const back = document.activeElement;
     const close = () => { p.remove(); if (back && document.contains(back)) back.focus(); };
-    p.addEventListener('keydown', ev => { ev.stopPropagation(); if (ev.key === 'Escape') close(); else if (ev.key === 'Enter' && ev.target.matches('input[type=text]')) { ev.preventDefault(); p.querySelector('[data-ok]').click(); } });
+    p.addEventListener('keydown', ev => { ev.stopPropagation(); if (ev.isComposing || ev.keyCode === 229) return; if (ev.key === 'Escape') close(); else if (ev.key === 'Enter' && ev.target.matches('input[type=text]')) { ev.preventDefault(); p.querySelector('[data-ok]').click(); } });
     p.querySelector('[data-no]').onclick = close;
     p.querySelector('[data-ok]').onclick = () => { if (onOk(p) !== false) p.remove(); };
     const f = p.querySelector('input[type=text], input[type=checkbox], [data-no]'); if (f) { f.focus(); if (f.select) f.select(); }
@@ -1982,7 +2048,7 @@ window.pageInit = function () {
     const attr = d.ai != null && e && e.a[d.ai];
     if (d.ai != null && (!attr || attr.edit)) { toast('이 속성을 찾지 못했습니다', 'danger'); return; }
     switch (d.cmd) {
-      case 'newent': if (guard()) return; closeGrid(); setTool('entity'); cv.focus(); toast('캔버스에서 엔터티를 놓을 곳을 클릭하세요 · Esc 취소', 'info'); return;
+      case 'newent': if (guard()) return; closeGrid(); setTool('entity'); cv.focus(); toast('캔버스에서 엔터티를 놓을 곳을 클릭하세요 · Enter = 보이는 곳 가운데 · Esc 취소', 'info'); return;
       case 'newrel': if (guard()) return; closeGrid(); setTool('rel'); cv.focus(); return;
       case 'grid': openGrid(false); return;
       case 'rename': if (attr) { pickEnt(); agRename(e, d.ai); return; } if (guard() || refGuard(e)) return; closeGrid(); focusEnt(e.id); renaming = e.id; render(); return;

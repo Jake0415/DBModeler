@@ -7,7 +7,7 @@
   if (!window.STD_COMMON && document.readyState === 'loading') { const me = document.currentScript; document.write(`<script src="${me ? me.src.replace(/app\.js(\?.*)?$/, 'std-common.js') : 'assets/std-common.js'}"><\/script>`); }
   const store = {
     get(k, d) { try { return localStorage.getItem(k) ?? d; } catch (e) { return d; } },
-    set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} },
+    set(k, v) { try { localStorage.setItem(k, v); return true; } catch (e) { return false; } },   /* true = written (false: store full / blocked) */
     del(k) { try { localStorage.removeItem(k); } catch (e) {} }
   };
   window.dbmStore = store;
@@ -1048,6 +1048,21 @@
     const h1 = head.querySelector('h1:not(.crumb)'); if (h1) h1.classList.add('sr-only');
     // the path's area link goes UP (system home, that area's card) — moving between screens is this menu's job
     head.querySelectorAll('.crumbs a[href^="model.html"]').forEach(a => { a.href = 'system.html#area-' + area; a.title = '시스템 홈 · 이 업무 영역'; });
+    nav.dataset.area = area; if (o.snap) nav.dataset.snap = '1';
+    // the area name and status badges may end in … at narrow widths (P1-1) — the tooltip is read at hover time, so it always matches the current text
+    head.addEventListener('mouseover', ev => {
+      const t = ev.target.closest('h1.crumb, .badge'); if (!t || t.parentElement !== head) return;
+      const box = t.matches('h1.crumb') ? (t.querySelector('b') || t) : t, cut = box.scrollWidth > box.clientWidth + 1;
+      if (cut) { t.title = t.textContent.trim(); t.dataset.cutTip = '1'; } else if (t.dataset.cutTip) { t.removeAttribute('title'); delete t.dataset.cutTip; }   // only a tooltip this code added is taken away
+    });
+  };
+  /* ERD P1-4: one count everywhere — a screen that recounts the live work copy (the model canvas) pushes the same number into the menu badge */
+  window.areaNavBad = bad => {
+    const nav = document.querySelector('.page-header .anav'); if (!nav) return; const a = nav.querySelector('a[href^="standardize.html"]'); if (!a) return;
+    const tip = `표준 맞추기${bad ? ` — 미준수 ${bad}건` : ''}${nav.dataset.snap ? ' · 작업본 기준' : ''}`;
+    a.title = tip; a.setAttribute('aria-label', tip); a.href = 'standardize.html?area=' + nav.dataset.area + (bad ? '&f=todo' : '');
+    let n = a.querySelector('.anav-n'); if (!bad) { if (n) n.remove(); return; }
+    if (!n) { n = document.createElement('span'); n.className = 'anav-n'; n.setAttribute('aria-hidden', 'true'); a.appendChild(n); } n.textContent = bad;
   };
   window.modelBad = m => m ? m.E.reduce((n, e) => n + (e.ref ? 0 : (e.p === '—' ? 1 : 0) + e.a.filter(a => !a.edit && (a.s === 'comb' || a.s === 'unreg')).length), 0) : null;
   /* baselines: every editable download is recorded (range, item ids, versions) — round-trip judgement uses this, not the file alone */
@@ -1062,7 +1077,7 @@
     const [p, hash] = h.split('#'); return p + (p.includes('?') ? '&' : '?') + 'audit=1&as=' + q0.get('as') + (hash ? '#' + hash : ''); }
   window.keepUrl = keepUrl; window.navKeep = h => { location.href = keepUrl(h); };
   window.getModelData = (area, ver) => tidyModel(J(`dbm-mdata-${area}-v${ver}`, null));
-  window.setModelData = (area, ver, data) => S(`dbm-mdata-${area}-v${ver}`, data);
+  window.setModelData = (area, ver, data) => S(`dbm-mdata-${area}-v${ver}`, data);   /* returns false when the write did not land */
 
   /* ---- notifications: addressed to people, created by events ---- */
   window.NOTIFY_KINDS = [['appr', '결재 요청 (내 차례)', 'must'], ['res', '내 신청 결과 (승인·반려·회수)', 'opt'], ['cc', '참조', ''], ['cand', '후보 등록·처리 결과', ''], ['job', '긴 작업 완료 (엑셀 검증·산출물)', ''], ['rev', '표준 재검토 가능 · 공동 편집 충돌', '']];
