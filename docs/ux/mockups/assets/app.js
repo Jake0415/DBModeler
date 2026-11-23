@@ -871,6 +871,9 @@
     return b.status;
   };
   window.batchStateLabel = s => s === '보완' ? '반려·회수 — 보완 필요' : s;
+  /* held rows still waiting on another request — not yet carried into a follow-up batch (shown next to the state everywhere) */
+  window.batchHoldLeft = b => { const c = b.counts || {}; const n = (c.waitDiff || 0) + (c.pre || 0); return n && !b.holdNext && !['임시 저장', '취소'].includes(batchState(b)) ? n : 0; };
+  window.batchHoldBadge = b => { const n = batchHoldLeft(b); return n ? ` <span class="badge b-warning" title="앞선 신청이 끝나면 업로드 이력에서 [보류 행 다시 검증]으로 이어서 신청">보류 ${n} 남음</span>` : ''; };
   /* one classification for "my requests" everywhere (user menu, mypage, approvals): live · fix (rejected/withdrawn) · done */
   window.docGroup = d => ['da', 'final'].includes(d.step) ? 'live' : ['rejected', 'withdrawn'].includes(d.step) ? 'fix' : 'done';
   window.DOC_GROUP_NAME = { live: '진행 중', fix: '보완 필요', done: '완료' };

@@ -124,7 +124,7 @@ window.pageInit = function () {
   // 내 작업 (CX13-15): computed from documents, batches, candidates and audit entries made by me
   const w = [];
   getDocs().filter(d => d.req === ME.id).forEach(d => w.push({ at: d.date, g: d.type === 'model' ? '모델 확정' : '사전 신청', t: `${d.title} <span class="mono caption">${d.id}</span>`, st: STEP_NAME[d.step] || d.step, href: `approvals.html?box=mine&doc=${d.id}` }));
-  getBatches().filter(b => b.by === ME.id).forEach(b => w.push({ at: b.at, g: '엑셀 묶음', t: `${b.file} · ${b.kind} ${b.rows}행 <span class="mono caption">${b.id}</span>`, st: batchStateLabel(batchState(b)), href: `uploads.html?b=${b.id}` }));
+  getBatches().filter(b => b.by === ME.id).forEach(b => w.push({ at: b.at, g: '엑셀 묶음', t: `${b.file} · ${b.kind} ${b.rows}행 <span class="mono caption">${b.id}</span>`, st: batchStateLabel(batchState(b)) + (batchHoldLeft(b) ? ` · 보류 ${batchHoldLeft(b)} 남음` : ''), href: `uploads.html?b=${b.id}` }));
   getCands().forEach(c => (c.loc || []).filter(l => l.by === ME.id).forEach(l => w.push({ at: '', g: '후보 등록', t: `${c.t} '${c.name}' · ${l.ent}.${l.attr}`, st: candState(c), href: `candidates.html?c=${c.id}` })));
   getAudit().filter(a => a.whoId === ME.id).forEach(a => w.push({ at: a.at, g: '설정·관리', t: `${a.act} · ${a.target || ''}`, st: '기록됨', href: 'audit.html' }));
   const wk = at => /^\d\d\//.test(at) ? '2026-' + at.replace('/', '-') : at || '0';
