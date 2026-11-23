@@ -216,7 +216,7 @@ window.pageInit = function () {
   /* ---- E10: dictionary build order for DA (dismissable per user) ---- */
   const BG_KEY = 'dbm-home-buildguide-' + ME.id;
   const guide = ME.has('da') && dbmStore.get(BG_KEY, '') !== '1' ? `<section class="sec" id="build-guide"><div class="card bguide"><div class="flex"><b>사전 구축 순서</b><span class="grow"></span><button class="btn ghost sm" id="bg-x" type="button">다시 보지 않기</button></div>
-    <ol class="bsteps"><li><a href="domain-groups.html">도메인그룹</a> ${tag('ok', '즉시 저장')}</li><li aria-hidden="true" class="ar">→</li><li><a href="domain-groups.html">분류</a> ${tag('run', '품의 후 반영')}</li><li aria-hidden="true" class="ar">→</li><li>단어 · 도메인 · 용어 <a href="dict-grid.html">화면 일괄 작성</a> → <a href="dictionary.html?basket=1">품의</a> ${tag('run', '품의 후 반영')}</li></ol>
+    <ol class="bsteps"><li><a href="domain-groups.html">도메인그룹</a> ${tag('ok', '즉시 저장')}</li><li aria-hidden="true" class="ar">→</li><li><a href="domain-groups.html">분류</a> ${tag('run', '품의 후 반영')}</li><li aria-hidden="true" class="ar">→</li><li>단어 · 도메인 · 용어 <a href="dict-grid.html">직접 등록</a> → <a href="dictionary.html?basket=1">품의</a> ${tag('run', '품의 후 반영')}</li></ol>
     <div class="caption muted">그룹은 DA가 바로 저장하고 감사 로그에 남습니다. 분류와 단어 · 도메인 · 용어는 결재가 끝나야 사전에 반영됩니다.</div></div></section>` : '';
 
   /* ---- layout by role: same frame, order differs ---- */
