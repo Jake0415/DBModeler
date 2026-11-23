@@ -18,13 +18,10 @@
     <span class="badge mono" id="ver">v5 작업 중</span><span class="savest" id="savest" aria-live="polite"><span class="sdot ok"></span>저장됨</span>
     <div class="avs" id="avs" title="이 업무 영역에 접속한 사람"><span id="av-list"></span><span class="cap" id="avcap">3명 접속 · 2명 편집</span></div>
     <div class="actions">
-      <span class="seg" id="vw" role="group" aria-label="보기"><button class="on" data-v="erd" aria-pressed="true">다이어그램</button><button data-v="grid" aria-pressed="false">표</button></span>
-      <span class="seg" id="lp" role="group" aria-label="논리·물리"><button class="on" data-v="L">논리</button><button data-v="P">물리</button></span>
+      <!-- ERD P2-11: the head = path · area screens · state · ⋯ · the one goal action; everything that changes the canvas lives in the canvas toolbar -->
       <span class="u-rel"><button class="btn u-w-32 u-p-0 u-jc-c" id="b-more" aria-haspopup="true" aria-expanded="false" aria-label="더 보기"><i data-ic=more></i></button>
         <div class="menu" id="moremenu" role="menu">
-          <a class="mi" role="menuitem" href="import.html"><i data-ic=upload></i>가져오기 (DDL)</a>
-          <a class="mi" role="menuitem" href="ddl.html"><i data-ic=file></i>DDL 만들기</a>
-          <a class="mi" role="menuitem" href="outputs.html"><i data-ic=table></i>산출물</a>
+          <a class="mi" role="menuitem" href="import.html"><i data-ic=upload></i>DDL 가져오기</a>
           <button class="mi" role="menuitem" id="mi-export"><i data-ic=download></i>이미지로 내보내기</button>
           <div class="msep"></div>
           <button class="mi" role="menuitem" data-toast="v4 확정본 대비: 엔터티 +2, 속성 +6, 변경 5" data-toast-type="info"><i data-ic=compare></i>v4 확정본과 비교</button>
@@ -38,7 +35,7 @@
           <div class="caption muted u-mb-12">테이블 정의서·준수검사 엑셀은 <a href="outputs.html">[산출물]</a>에서 만듭니다.</div>
           <div class="flex"><span class="grow"></span><button class="btn sm" id="ex-cancel">취소</button><button class="btn sm primary" id="ex-go">내보내기</button></div>
         </div></span>
-      <button class="btn has-tip disabled" id="confirm-btn" data-tip="미준수 6건이 남아 있습니다 — [표준 맞추기]에서 해결하거나 사유를 남겨 예외로 처리하세요">확정 신청</button>
+      <button class="btn primary" id="confirm-btn">확정 신청</button>
     </div>
   </div>
   <div class="compbar">
@@ -49,7 +46,6 @@
     <a class="stat" href="candidates.html"><span class="dot-i" style="background:var(--violet);opacity:.5"></span>후보 대기 <b id="c-cand">0</b></a>
     <a class="stat" href="#" id="b-review"><span class="dot-i" style="background:var(--fg-3)"></span>검토 <b id="c-rev">5</b></a>
     <span class="grow"></span><span class="caption faint" id="sel-info">선택 없음</span>
-    <a class="btn sm" href="standardize.html?f=todo" id="cb-std">표준 맞추기</a>
   </div>
   <div class="page-body">
     <div class="side" id="side">
@@ -81,7 +77,9 @@
           </div></span>
         <button class="tb" data-tool="memo" data-edit title="메모 (M)"><i data-ic=pen></i>메모 <kbd>M</kbd></button>
         <span class="sep"></span>
-        <button class="tb" id="b-grid" title="표 보기 · 일괄편집 · 찾기/바꾸기 (Ctrl+F)"><i data-ic=table></i>표 보기</button>
+        <span class="seg tseg" id="vw" role="group" aria-label="보기"><button class="on" data-v="erd" aria-pressed="true">다이어그램</button><button data-v="grid" aria-pressed="false" id="b-grid" title="표 보기 · 일괄편집 · 찾기/바꾸기 (Ctrl+F)">표</button></span>
+        <span class="seg tseg" id="lp" role="group" aria-label="논리·물리"><button class="on" data-v="L" aria-pressed="true">논리</button><button data-v="P" aria-pressed="false">물리</button></span>
+        <span class="sep"></span>
         <button class="tb" id="b-layout" data-edit>자동 배치</button>
         <button class="tb" id="b-sys">시스템 전체</button>
         <span class="sep"></span>
@@ -119,8 +117,8 @@
       <div id="grid"></div>
       <!-- bottom controls: always inside the window (pinCtl), legend · minimap can be folded and the choice is remembered -->
       <div class="legend" id="cv-legend"><span class="lg-body" id="lg-body">상태 <span class="dot-i s-ok"></span>표준 <span class="dot-i s-comb"></span>조합 가능 <span class="dot-i s-unreg"></span>미등록 단어 <span class="dot-i s-ex"></span>예외 <span class="dot-i s-na"></span>비대상</span><button class="iconbtn u-w-28 u-h-28" id="lg-fold" aria-expanded="true" aria-controls="lg-body" aria-label="범례 접기" title="범례 접기"><i data-ic=x></i></button><button class="btn sm lg-open" id="lg-open" aria-expanded="false" aria-controls="lg-body">범례</button></div>
-      <div class="cv-zoom" role="group" aria-label="확대 · 축소"><button id="zo" aria-label="축소 (Ctrl+-)" title="축소 (Ctrl+-)">−</button><span id="zl" class="mono" title="100%로 (Ctrl+0)">100%</span><button id="zi" aria-label="확대 (Ctrl++)" title="확대 (Ctrl++)">+</button><button id="zfit" title="전체 맞춤 (Shift+1)">맞춤</button>
-        <select class="input" id="lodsel" aria-label="캔버스 표시 단계"><option value="auto">표시: 자동(0.35배 미만 요약)</option><option value="full">전체 속성</option><option value="mid">키만</option><option value="low">요약(이름만)</option></select></div>
+      <div class="cv-zoom" role="group" aria-label="확대 · 축소"><button id="zo" aria-label="축소 (Ctrl+-)" title="축소 (Ctrl+-)">−</button><button type="button" id="zl" class="mono" title="100%로 (Ctrl+0)" aria-label="지금 배율 — 눌러서 100%로 (Ctrl+0)">100%</button><button id="zi" aria-label="확대 (Ctrl++)" title="확대 (Ctrl++)">+</button><button id="zfit" title="전체 맞춤 (Shift+1)">맞춤</button>
+        <select class="input" id="lodsel" aria-label="캔버스 표시 단계"><option value="auto" title="글자가 11px 이상이면 전체 속성, 9~11px이면 키만, 9px 미만이면 이름만">표시: 자동</option><option value="full">전체 속성</option><option value="mid">키만</option><option value="low">요약(이름만)</option></select></div>
       <div class="cv-mini" id="cv-mini"><svg id="mini" width="180" height="120" role="img" aria-label="미니맵 — 전체 중 지금 보이는 범위"></svg><button class="iconbtn u-w-28 u-h-28 mini-x" id="mini-x" aria-expanded="true" aria-controls="cv-mini" aria-label="미니맵 접기" title="미니맵 접기"><i data-ic=x></i></button></div>
       <button class="btn sm mini-open" id="mini-open" aria-expanded="false" aria-controls="cv-mini">미니맵</button>
     </div>
@@ -148,6 +146,14 @@
         <div class="caption muted u-mt-8">물리 반영 때 시스템 컬럼 4개(<span class="mono">REG_DT · REGR_ID · MDFCN_DT · MDFR_ID</span>)가 모든 테이블에 붙습니다 — <a href="settings.html#sys">시스템 설정</a></div>
       </div>
       <div class="rp-foot"><a class="btn" href="standardize.html?f=todo">표준 맞추기로 이동</a><span class="grow"></span><button class="btn primary" id="gate-go">경고 확인 후 계속</button></div>
+    </aside>
+
+    <!-- ERD P2-10: 확정 전 점검 — what still stands between the model and [확정 신청], fixed in place (no round trip to 표준 맞추기) -->
+    <aside class="rpanel" id="pn-check" aria-labelledby="ck-t">
+      <div class="rp-head"><div class="t"><h2 id="ck-t">확정 전 점검</h2><span class="badge b-warning" id="ck-n">0</span><button class="iconbtn close u-w-28 u-h-28" id="ck-x" aria-label="닫기"><i data-ic=x></i></button></div>
+        <div class="caption muted u-mt-4">아래 항목을 표준에 맞추거나 사유를 남겨 예외로 두면 확정 신청할 수 있습니다.</div></div>
+      <div class="rp-body" id="ck-body"></div>
+      <div class="rp-foot"><a class="btn" id="ck-std" href="standardize.html?f=todo">표준 맞추기에서 한꺼번에</a><span class="grow"></span><button class="btn primary" id="ck-go">확정 신청 계속</button></div>
     </aside>
 
     <!-- PN-38 confirm -->
@@ -241,7 +247,7 @@ window.pageInit = function () {
   const VE = () => E.filter(inView);
   const cv = $('cv'), world = $('world'), nodes = $('nodes'), eg = $('eg'), preview = $('preview');
   let lodTimer = null, lodHinted = false;
-  let mode = 'L', tool = 'select', relType = 'nonid', zoom = 1, panX = 40, panY = 50, sel = null, relSrc = null, lodForce = 'auto';
+  let mode = 'L', tool = 'select', relType = 'nonid', zoom = 1, panX = 40, panY = 50, sel = null, relSrc = null, lodForce = 'auto', kbNode = false;
   let gateSeen = false, offline = false, remoteSel = 'rqrm', renaming = null, xorPick = [];
   const STATE = q.get('state') || '';          // only a data preset now (applied / resolved) — never the lock
   const LOCK = modelLock(AREA);                  // lock & version come from the approval documents (R1)
@@ -356,15 +362,16 @@ window.pageInit = function () {
     const b = $('confirm-btn');
     if (locked) return;
     if (DEMO) { b.classList.add('disabled', 'has-tip'); b.classList.remove('primary'); b.dataset.tip = '예시 화면에서는 확정 신청할 수 없습니다'; b.setAttribute('aria-disabled', 'true'); b.onclick = () => toast(b.dataset.tip, 'info'); return; }
-    const can = bad === 0 && !viewOnly;
-    const fix = bad > 0 && !viewOnly;
-    b.textContent = fix ? `미준수 ${bad}건 해결` : '확정 신청';
-    b.classList.toggle('disabled', !can && !fix); b.classList.toggle('has-tip', !can && !fix); b.classList.toggle('primary', can || fix);
-    b.setAttribute('aria-disabled', can ? 'false' : 'true');
-    b.dataset.tip = viewOnly ? (outOfScope ? '담당 시스템이 아니라 확정 신청할 수 없습니다' : '확정 신청은 모델러 역할만 할 수 있습니다') : `미준수 ${bad}건이 남아 있습니다 — [표준 맞추기]에서 해결하거나 사유를 남겨 예외로 처리하세요`;
-    b.setAttribute('aria-label', can ? '확정 신청' : '확정 신청 (불가: ' + b.dataset.tip + ')');
-    if (fix) { b.removeAttribute('aria-disabled'); b.setAttribute('aria-label', `미준수 ${bad}건 해결 — 표준 맞추기로 이동`); }
-    b.onclick = () => { if (fix) { go(`standardize.html?area=${AREA}&f=todo`); return; } if (!can) { toast(b.dataset.tip, 'info'); return; } fillConfirm(); openPanel('pn-confirm'); };
+    // ERD P2-10: the goal action is always [확정 신청] in the same place — with open items it carries their count and opens '확정 전 점검' in the right panel
+    const can = bad === 0 && !viewOnly, fix = bad > 0 && !viewOnly;
+    b.innerHTML = `확정 신청${fix ? ` <span class="cb-n">${bad}</span>` : ''}`;
+    b.classList.toggle('disabled', viewOnly); b.classList.toggle('has-tip', viewOnly); b.classList.toggle('primary', !viewOnly);
+    b.dataset.tip = viewOnly ? (outOfScope ? '담당 시스템이 아니라 확정 신청할 수 없습니다' : '확정 신청은 모델러 역할만 할 수 있습니다') : '';
+    if (viewOnly) { b.setAttribute('aria-disabled', 'true'); b.setAttribute('aria-label', '확정 신청 (불가: ' + b.dataset.tip + ')'); }
+    else { b.removeAttribute('aria-disabled'); b.setAttribute('aria-label', fix ? `확정 신청 — 먼저 고칠 항목 ${bad}건, 확정 전 점검 열기` : '확정 신청'); }
+    b.title = fix ? `확정 전에 고칠 항목 ${bad}건 — 눌러서 점검 목록을 엽니다` : '';
+    b.onclick = () => { if (viewOnly) { toast(b.dataset.tip, 'info'); return; } if (bad > 0) { openCheck(); return; } fillConfirm(); openPanel('pn-confirm'); };
+    if ($('pn-check').classList.contains('open')) drawCheck();
     // remaining-unregistered banner from the current attributes and the candidate's real state (CX12-22)
     // ERD P1-4: the strip names only attributes that wait on a word candidate, grouped by that word — each one gets its own reason (no blanket exception);
     // any other unregistered attribute is counted in the main button and handled in 표준 맞추기
@@ -459,12 +466,16 @@ window.pageInit = function () {
       const d = document.createElement('div');
       d.className = 'node' + (sel === e.id ? ' sel' : '') + (relSrc === e.id ? ' relsrc' : '') + (remoteSel === e.id && !offline ? ' remote' : '') + (e.ref ? ' ref' : '');
       d.id = 'n-' + e.id; const p = pos(e);
+      // ERD P2-16: nodes are reachable from the keyboard — one Tab stop (the selected node, else the first), arrows walk between nodes
+      const nb = bad(e); d.tabIndex = (sel === e.id || (!ent(sel) && e === VE()[0])) ? 0 : -1;
+      d.setAttribute('role', 'group'); d.setAttribute('aria-roledescription', '엔터티'); d.setAttribute('aria-label', `${e.n}${e.ref ? ' (참조)' : ''}, 속성 ${e.a.length}개${nb ? `, 미준수 ${nb}` : ''}${sel === e.id ? ', 선택됨' : ''}`);
       d.style.left = p.x + 'px'; d.style.top = p.y + 'px';
       d.innerHTML = nodeHTML(e);
       nodes.appendChild(d);
     });
-    renderMemos(); drawEdges(); mini(); panel(); updateComp();
+    renderMemos(); drawEdges(); mini(); panel(); autoPanel(); updateComp();
     if (dirty) { dirty = false; saveData(); }   // edits persist per area+version (S5) — only when something changed
+    if (kbNode) { kbNode = false; const n = $('n-' + sel); if (n) n.focus({ preventScroll: true }); }   // a keyboard move keeps focus on the (redrawn) node
     const inp = nodes.querySelector('.attr-in'); if (inp) { inp.focus(); inp.select(); showAC(inp); const dk = inp.dataset.e + ':' + inp.dataset.i; if (window.openDictTab && dictAutoFor !== dk) { dictAutoFor = dk; openDictTab(null, false); } } else dictAutoFor = '';
     const ren = nodes.querySelector('.ren-in'); if (ren) { ren.focus(); ren.select(); }
     if ($('grid').classList.contains('open')) renderGrid();
@@ -514,27 +525,47 @@ window.pageInit = function () {
   function applyView() {
     world.style.transform = `translate(${panX}px,${panY}px) scale(${zoom})`;
     $('zl').textContent = Math.round(zoom * 100) + '%';
-    const want = lodForce !== 'auto' ? lodForce : zoom >= 0.35 ? 'full' : 'low';
+    // ERD P2-13: automatic detail follows the size the attribute text really has on screen (12px × zoom):
+    // 11px or more → every attribute · 9–11px → keys only (title 15px) · under 9px → names only
+    const fx = 12 * zoom, want = lodForce !== 'auto' ? lodForce : fx >= 11 ? 'full' : fx >= 9 ? 'mid' : 'low';
     clearTimeout(lodTimer);
-    const applyLod = () => { world.className = 'lod-' + want; if (lodForce === 'auto' && zoom < 0.2 && !lodHinted) { lodHinted = true; toast('더 넓게 보려면 [시스템 전체] — 영역 묶음 보기로 전체를 봅니다', 'info'); } };
+    const applyLod = () => { const was = world.className; world.className = 'lod-' + want; if (was && was !== world.className) { drawEdges(); mini(); }   // node heights change with the level — lines and the map follow
+      if (lodForce === 'auto' && zoom < 0.2 && !lodHinted) { lodHinted = true; toast('더 넓게 보려면 [시스템 전체] — 영역 묶음 보기로 전체를 봅니다', 'info'); } };
     if (lodForce !== 'auto' || !world.className) applyLod(); else lodTimer = setTimeout(applyLod, 150);
-    mini();
+    miniView();
   }
+  // ERD P2-18: panning moves only the minimap's view frame (the boxes are drawn once); dragging redraws lines and the map at most once per frame.
+  // (300 entities · 500 relations timing is an implementation-stage measurement)
+  let miniK = null, dragRaf = 0;
+  const dragDraw = () => { if (dragRaf) return; dragRaf = requestAnimationFrame(() => { dragRaf = 0; drawEdges(); mini(); }); };
+  function miniView() { const r = $('mini-vp'); if (!r || !miniK) { mini(); return; } const { k, ox, oy } = miniK;
+    r.setAttribute('x', (-panX / zoom - ox) * k); r.setAttribute('y', (-panY / zoom - oy) * k); r.setAttribute('width', cv.clientWidth / zoom * k); r.setAttribute('height', cv.clientHeight / zoom * k); }
   function mini() {
-    const m = $('mini'); if (!nodes.children.length) { m.innerHTML = ''; return; }   // an empty view clears the map (it kept the previous view's boxes)
+    const m = $('mini'); if (!nodes.children.length) { m.innerHTML = ''; miniK = null; return; }   // an empty view clears the map (it kept the previous view's boxes)
     let minx = 1e9, miny = 1e9, maxx = -1e9, maxy = -1e9;
     VE().forEach(e => { const b = box(e.id); minx = Math.min(minx, b.x); miny = Math.min(miny, b.y); maxx = Math.max(maxx, b.x + b.w); maxy = Math.max(maxy, b.y + b.h); });
     const W = maxx - minx + 200, H = maxy - miny + 200, k = Math.min(180 / W, 120 / H), ox = minx - 100, oy = miny - 100;
     let s = VE().map(e => { const b = box(e.id); const col = remoteSel === e.id && !offline ? 'var(--p-1)' : bad(e) ? 'var(--warning)' : 'var(--border-strong)'; return `<rect x="${(b.x - ox) * k}" y="${(b.y - oy) * k}" width="${b.w * k}" height="${b.h * k}" fill="${col}" opacity=".6" rx="1"/>`; }).join('');
-    s += `<rect x="${(-panX / zoom - ox) * k}" y="${(-panY / zoom - oy) * k}" width="${cv.clientWidth / zoom * k}" height="${cv.clientHeight / zoom * k}" fill="none" stroke="var(--ink)" stroke-width="1"/>`;
-    m.innerHTML = s;
+    s += `<rect id="mini-vp" x="${(-panX / zoom - ox) * k}" y="${(-panY / zoom - oy) * k}" width="${cv.clientWidth / zoom * k}" height="${cv.clientHeight / zoom * k}" fill="none" stroke="var(--ink)" stroke-width="1"/>`;
+    m.innerHTML = s; miniK = { k, ox, oy };
   }
-  const PANELS = ['rp', 'pn-gate', 'pn-confirm', 'pn-review'];
+  const PANELS = ['rp', 'pn-gate', 'pn-confirm', 'pn-review', 'pn-check'];
   function syncTab() { $('rp-tab').style.display = PANELS.some(p => $(p).classList.contains('open')) ? 'none' : 'flex'; }
   function openPanel(id) { PANELS.forEach(p => $(p).classList.toggle('open', p === id)); syncTab(); }
-  $('rp-close').onclick = () => { $('rp').classList.remove('open'); syncTab(); };
-  $('rp-tab').onclick = () => openPanel('rp');
-  $('rp-wide').onclick = () => { $('rp').classList.toggle('wide2'); applyView(); };
+  // ERD P2-12: below 1920 the right panel follows the selection — nothing selected = folded (canvas ≈1,200 at 1600), a selection opens it.
+  // opening it by hand with nothing selected pins it until it is closed again
+  const narrowW = () => document.documentElement.classList.contains('frame-1600') || document.documentElement.clientWidth < 1900;
+  let rpPinned = false;
+  function autoPanel() {
+    if (!narrowW()) return; const rp = $('rp'); if (PANELS.some(p => p !== 'rp' && $(p).classList.contains('open'))) return;
+    const has = (typeof sel === 'string' && ent(sel)) || selRel;
+    if (has && !rp.classList.contains('open')) { openPanel('rp'); relayout(); }
+    else if (!has && rp.classList.contains('open') && !rpPinned) { rp.classList.remove('open'); syncTab(); relayout(); }
+  }
+  const relayout = () => requestAnimationFrame(() => window.dispatchEvent(new Event('resize')));   // the tree re-checks its width budget (canvas ≥ 760)
+  $('rp-close').onclick = () => { rpPinned = false; $('rp').classList.remove('open'); syncTab(); relayout(); };
+  $('rp-tab').onclick = () => { rpPinned = !sel && !selRel; openPanel('rp'); relayout(); };
+  $('rp-wide').onclick = () => { $('rp').classList.toggle('wide2'); applyView(); relayout(); };   // a wider panel takes width from the tree first (≥ 760 canvas)
   new MutationObserver(syncTab).observe($('pn-confirm'), { attributes: true, attributeFilter: ['class'] });
   const showRP = () => { openPanel('rp'); const e = sel && typeof sel === 'string' && ent(sel); if (e && !e.ref && window.noteRecent && !SNAP) noteRecent(AREA, e.id, e.n); };
   const stBadge = s => ({ ok: '<i data-ic=check></i><span class="sr-only">표준</span>', comb: '<span class="badge b-info">조합 가능</span>', unreg: '<span class="badge b-warning">미등록</span>', ex: '<span class="badge b-ex"><i data-ic=flag data-s=12></i>예외</span>', na: '<span class="faint">—</span>', req: '<span class="badge b-info" title="용어 신청 중 · 결재에서 함께 확인">신청</span>' })[s];
@@ -871,6 +902,26 @@ window.pageInit = function () {
     $('mo-ex').classList.remove('open'); $('ex-why').value = ''; render();
     toast(`‘${e.n}.${a.n}’을 예외로 기록했습니다 — 남은 미준수 ${lastComp ? lastComp.bad : '?'}건 · 확정 결재에서 DA가 검토합니다`, 'violet', undoAction());
   };
+  // ---- ERD P2-10: 확정 전 점검 — the same count as the main button (entity without a table name + attributes not yet standard)
+  function checkRows() {
+    const L = [];
+    E.forEach(e => { if (e.ref) return; if (e.p === '—') L.push({ e, a: null, why: e.st ? '엔터티 용어 신청 중' : '엔터티 용어 미정', cls: 'b-warning' });
+      e.a.forEach(a => { if (a.edit || !(a.s === 'comb' || a.s === 'unreg')) return; L.push({ e, a, why: a.s === 'comb' ? '조합 가능 — 용어 신청' : a.cand ? `단어 ‘${candWordOf(a)}’ 승인 대기` : '미등록 단어', cls: a.s === 'comb' ? 'b-info' : 'b-warning' }); }); });
+    return L;
+  }
+  function drawCheck() {
+    const L = checkRows(); $('ck-n').textContent = L.length; $('ck-std').href = `standardize.html?area=${AREA}&f=todo`;
+    $('ck-body').innerHTML = L.length ? `<table class="tbl ck-tbl"><thead><tr><th>항목</th><th>남은 이유</th><th><span class="sr-only">처리</span></th></tr></thead><tbody>${L.map((r, i) => `<tr><td><button type="button" class="linkbtn" data-ckgo="${r.e.id}" title="캔버스에서 보기">${hx(r.e.n)}${r.a ? '.' + hx(r.a.n) : ''}</button>${r.a ? '' : ' <span class="caption muted">(테이블명)</span>'}</td><td><span class="badge ${r.cls}">${hx(r.why)}</span></td>
+        <td class="ck-act"><a class="btn sm" href="${stdUrl(r.e, r.a)}">고치기</a>${r.a ? `<button type="button" class="btn sm ghost" data-ckex="${i}">예외…</button>` : ''}</td></tr>`).join('')}</tbody></table>
+        <div class="caption muted u-mt-8">[고치기]는 표준 맞추기의 그 항목으로 갑니다. 예외는 건마다 사유를 남기고, 확정 결재에서 DA가 검토합니다.</div>`
+      : '<div class="banner success"><i data-ic=check></i><div><b>남은 항목이 없습니다</b> — 확정 신청을 이어서 할 수 있습니다.</div></div>';
+    $('ck-go').disabled = L.length > 0; $('ck-go').textContent = L.length ? `확정 신청 계속 (${L.length}건 남음)` : '확정 신청 계속';
+    $('ck-body').querySelectorAll('[data-ckex]').forEach(x => x.onclick = () => { const r = L[+x.dataset.ckex]; if (guard()) return; window.__openEx(r.e.id, r.a.n); });
+    $('ck-body').querySelectorAll('[data-ckgo]').forEach(x => x.onclick = () => { const id = x.dataset.ckgo; if (ent(id) && !inView(ent(id))) { curView = 'all'; } sel = id; render(); const bx = box(id); panX = cv.clientWidth / 2 - (bx.x + bx.w / 2) * zoom; panY = cv.clientHeight / 2 - (bx.y + bx.h / 2) * zoom; applyView(); });   // the check list stays open
+  }
+  function openCheck() { drawCheck(); openPanel('pn-check'); const f = $('ck-body').querySelector('button, a'); if (f) f.focus(); }
+  $('ck-x').onclick = () => { if (narrowW() && !sel && !selRel) { openPanel(null); relayout(); } else showRP(); };   // below 1920 with nothing selected, closing leaves the canvas wide (P2-12)
+  $('ck-go').onclick = () => { if (checkRows().length) return; fillConfirm(); openPanel('pn-confirm'); };
   // ERD P1-4: one attribute, one reason — the strip's attribute names open the single-exception dialog (the blanket 'n건 예외로 유지' is gone)
   $('ban-left-t').addEventListener('click', ev => { const b = ev.target.closest('[data-exone]'); if (!b) return; if (guard()) return; window.__openEx(b.dataset.exone, b.dataset.exa); });
   // 참조자 (CC): was a button with no action and a fixed ['hyun'] on the document — now picked here, the 기관 담당자 first by default
@@ -922,6 +973,10 @@ window.pageInit = function () {
   function renderGrid() {
     const g = $('grid'); const fv = (g.querySelector('#g-find') || {}).value || '', rv = (g.querySelector('#g-rep') || {}).value || '';
     const gstd = (g.querySelector('#g-std') || {}).value || '', gwhy = (g.querySelector('#g-why') || {}).value || '';
+    // ERD P2-17: a redraw keeps what the user had — pending bulk values, the body's scroll and the focused control
+    const gdom = (g.querySelector('#g-dom') || {}).value || '', gnn = (g.querySelector('#g-nn') || {}).value || '', gscroll = (g.querySelector('.gbody') || {}).scrollTop || 0;
+    const ae = document.activeElement, gact = ae && g.contains(ae) ? (ae.id ? '#' + ae.id : ae.dataset.k ? `[data-k="${ae.dataset.k}"]` : ae.dataset.gf ? `[data-gf="${ae.dataset.gf}"]` : null) : null;
+    let total = 0; E.forEach(e => e.a.forEach(a => { if (!a.edit) total++; }));
     [...gsel].forEach(k => { const t = gFind(k); if (!t || t[1].edit) gsel.delete(k); });   // a deleted (or re-created by undo) attribute leaves the selection
     const rows = []; E.forEach(e => e.a.forEach(a => { if (gpass(a)) rows.push({ e, a, k: gKey(e, a) }); }));
     gvis = new Set(rows.map(r => r.k)); const selVis = [...gsel].filter(k => gvis.has(k)).length, selHid = gsel.size - selVis;
@@ -929,8 +984,8 @@ window.pageInit = function () {
     const hl = s => fv ? esc(s).split(esc(fv)).join(`<mark>${esc(fv)}</mark>`) : esc(s);
     const hits = fv ? rows.filter(r => r.a.n.includes(fv)).length : 0;
     // list standard: filter chips are the shared 32px <button class="chip"> (were 26px inline-styled spans)
-    g.innerHTML = `<div class="gbar"><b class="u-fs-14">속성 표 보기</b><span class="caption muted">${rows.length}개</span>
-        <span class="flex u-gap-8" role="group" aria-label="속성 거르기">${['all:전체', 'bad:미준수', 'sec:보안', 'na:비대상'].map(x => { const [k, l] = x.split(':'); return `<button type="button" class="chip ${gfilter === k ? 'on' : ''}" data-gf="${k}">${l}</button>`; }).join('')}</span>
+    g.innerHTML = `<div class="gbar"><h2 class="u-fs-14 g-title" tabindex="-1">속성 표 보기</h2><span class="caption muted" aria-live="polite">${gfilter === 'all' ? `${rows.length}개` : `${rows.length}개 / 전체 ${total}개`}</span>
+        <span class="flex u-gap-8" role="group" aria-label="속성 거르기">${['all:전체', 'bad:미준수 속성', 'sec:보안', 'na:비대상'].map(x => { const [k, l] = x.split(':'); return `<button type="button" class="chip ${gfilter === k ? 'on' : ''}" data-gf="${k}" aria-pressed="${gfilter === k}">${l}</button>`; }).join('')}</span>
         <span class="grow"></span>
         <input class="input u-w-150" id="g-find" placeholder="찾기 (논리명)" aria-label="찾기 (논리명)" value="${esc(fv)}">${gRepOpen ? `<input class="input edit-only u-w-130" id="g-rep" placeholder="바꿀 말" aria-label="바꿀 말" value="${esc(rv)}">` : '<button class="btn sm ghost edit-only" id="g-rep-open">바꾸기…</button>'}
         <span class="caption muted g-hits">${fv ? `보이는 행 ${hits}건` : ''}</span>${gRepOpen ? `<button class="btn sm edit-only" id="g-replace" ${hits && rv ? '' : 'disabled'}>보이는 행 바꾸기</button>` : ''}
@@ -942,19 +997,24 @@ window.pageInit = function () {
         <input class="input" id="g-why" placeholder="비대상 사유 *" aria-label="비대상 사유" value="${esc(gwhy)}"${gstd === 'na' ? '' : ' hidden'}>
         <span class="grow"></span><button class="btn sm" id="g-clear">선택 해제</button>${selHid ? `<button class="btn sm" id="g-apply-all">${gAllArm ? `한 번 더 눌러 숨겨진 ${selHid}개 포함 적용` : `숨겨진 ${selHid}개 포함…`}</button>` : ''}<button class="btn sm primary" id="g-apply" ${selVis ? '' : 'disabled'}>표시된 ${selVis}개 적용</button></div>
       <div class="gbody"><table class="tbl"><thead><tr><th class="u-w-32"><input type="checkbox" id="g-all" class="edit-only" aria-label="보이는 행 모두 선택" ${rows.length && rows.every(r => gsel.has(r.k)) ? 'checked' : ''}></th><th></th><th>엔터티</th><th>속성명</th><th>물리명</th><th>타입</th><th>필수</th><th>보안</th></tr></thead><tbody>
-      ${rows.map(r => `<tr><td><input type="checkbox" class="edit-only" data-k="${r.k}" aria-label="${esc(r.e.n + '.' + r.a.n)} 선택" ${gsel.has(r.k) ? 'checked' : ''}></td><td>${stBadge(r.a.s)}</td><td>${r.e.n}${r.e.ref ? ' <span class="muted">· 참조</span>' : ''}</td><td>${r.a.pk ? '# ' : ''}${hl(r.a.n)}${r.a.fk ? ' <span class="faint">(FK)</span>' : ''}</td><td class="mono">${r.a.p}</td><td class="mono">${r.a.t}</td><td>${r.a.nn || r.a.pk ? '예' : '<span class="faint">아니오</span>'}</td><td>${r.a.sec ? `<span class="badge b-danger">${r.a.sec}</span>` : ''}</td></tr>`).join('')}</tbody></table></div>`;
-    const f = g.querySelector('#g-find'); if (document.activeElement && document.activeElement.id === 'g-find-focus') f.focus();
+      ${rows.map(r => `<tr><td><input type="checkbox" class="edit-only" data-k="${r.k}" aria-label="${esc(r.e.n + '.' + r.a.n)} 선택" ${gsel.has(r.k) ? 'checked' : ''}></td><td>${stBadge(r.a.s)}</td><td>${r.e.n}${r.e.ref ? ' <span class="muted">· 참조</span>' : ''}</td><td>${r.a.pk ? '# ' : ''}${hl(r.a.n)}${r.a.fk ? ' <span class="faint">(FK)</span>' : ''}</td><td class="mono">${r.a.p}</td><td class="mono">${r.a.t}</td><td>${r.a.nn || r.a.pk ? '예' : '<span class="faint">아니오</span>'}</td><td>${r.a.sec ? `<span class="badge b-danger">${r.a.sec}</span>` : ''}</td></tr>`).join('') || `<tr class="none"><td colspan="8" class="caption muted">조건에 맞는 속성이 없습니다. <button type="button" class="linkbtn" data-gf="all">거르기 해제</button></td></tr>`}</tbody></table></div>`;
+    const all = g.querySelector('#g-all'); if (all) { const n = rows.filter(r => gsel.has(r.k)).length; all.indeterminate = n > 0 && n < rows.length; }   // part of the visible rows selected
+    if (gdom && g.querySelector('#g-dom')) g.querySelector('#g-dom').value = gdom; if (gnn && g.querySelector('#g-nn')) g.querySelector('#g-nn').value = gnn;
+    const gb = g.querySelector('.gbody'); if (gb) gb.scrollTop = gscroll;
+    if (gact) { const t = g.querySelector(gact); if (t) t.focus({ preventScroll: true }); }
   }
+  // ERD P2-17: every way in puts focus on the table's find box; closing goes back to where the user came from
+  let gridFrom = null;
   function openGrid(focusFind) {
-    if (!$('grid').classList.contains('open')) { sideWas = $('side').classList.contains('closed'); $('side').classList.add('closed'); }
-    $('grid').classList.add('open'); $('b-grid').classList.add('on'); document.body.classList.add('gridmode'); $('world').inert = true; cv.tabIndex = -1; syncView(); renderGrid();
-    if (focusFind) { const f = $('g-find'); f.focus(); }
+    if (!$('grid').classList.contains('open')) { sideWas = $('side').classList.contains('closed'); $('side').classList.add('closed'); const a = document.activeElement; gridFrom = a && a !== document.body && !$('grid').contains(a) ? a : null; }
+    $('grid').classList.add('open'); document.body.classList.add('gridmode'); $('world').inert = true; cv.tabIndex = -1; syncView(); renderGrid();
+    const f = $('g-find'); if (f) f.focus();
   }
   let sideWas = false;
-  function closeGrid() { if (!$('grid').classList.contains('open')) return; $('grid').classList.remove('open'); $('b-grid').classList.remove('on'); document.body.classList.remove('gridmode'); $('world').inert = false; cv.tabIndex = 0; syncView(); $('side').classList.toggle('closed', sideWas); const vb = document.querySelector('#vw [data-v="erd"]'); if (vb) vb.focus(); }
+  function closeGrid() { if (!$('grid').classList.contains('open')) return; $('grid').classList.remove('open'); document.body.classList.remove('gridmode'); $('world').inert = false; cv.tabIndex = 0; syncView(); $('side').classList.toggle('closed', sideWas);
+    const back = gridFrom && gridFrom.isConnected && gridFrom.offsetParent && !gridFrom.closest('#vw') ? gridFrom : document.querySelector('#vw [data-v="erd"]'); gridFrom = null; if (back) back.focus(); }
   function syncView() { const g = $('grid').classList.contains('open'); document.querySelectorAll('#vw button').forEach(b => { const on = (b.dataset.v === 'grid') === g; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); }); }
   document.getElementById('vw').addEventListener('click', ev => { const b = ev.target.closest('button[data-v]'); if (!b) return; b.dataset.v === 'grid' ? openGrid(false) : closeGrid(); });
-  $('b-grid').onclick = () => $('grid').classList.contains('open') ? closeGrid() : openGrid(false);
   $('grid').addEventListener('mousedown', ev => ev.stopPropagation());
   $('grid').addEventListener('click', ev => {
     ev.stopPropagation();
@@ -1015,21 +1075,33 @@ window.pageInit = function () {
     if (!sel || guard()) return; const e = ent(sel); if (refGuard(e)) return;
     e.a.forEach(a => delete a.edit); editHid = snap(); e.a.push({ n: '', p: '—', t: '—', s: 'na', edit: 1 }); render();
   }
-  let acEl = null, acIdx = 0;
+  let acEl = null, acIdx = 0, acSim = false;
   function showAC(inp) {
     if (acEl) acEl.remove();
-    const v = inp.value.trim(); const hit = []; for (let i = 0; i < TERMS.length && hit.length < 30; i++) if (!v || TERMS[i].n.includes(v)) hit.push(i); const list = hit.map(i => TERMS[i]);   // first 30 matches (13,000+ terms)
+    const v = inp.value.trim(); const hit = []; for (let i = 0; i < TERMS.length && hit.length < 30; i++) if (!v || TERMS[i].n.includes(v)) hit.push(i);   // first 30 matches (13,000+ terms)
+    // ERD P2-15: similar terms = share a two-letter piece of what was typed (e.g. '수령인명' → '수령자명'); shown on request, never mixed into the exact matches
+    const grams = v.length >= 2 ? [...new Set([...Array(v.length - 1)].map((_, i) => v.slice(i, i + 2)))] : [];
+    const simIdx = []; if (grams.length) for (let i = 0; i < TERMS.length && simIdx.length < 20; i++) if (!hit.includes(i) && grams.some(g => TERMS[i].n.includes(g))) simIdx.push(i);
+    if (acSim) { hit.length = 0; hit.push(...simIdx); }
+    const list = hit.map(i => TERMS[i]);
+    const exact = TERMS.some(t => t.n === v); let unk = []; try { unk = v && !exact ? decompose(v).unknown.map(p => p.w).filter(Boolean) : []; } catch (x) { unk = []; }
     acEl = document.createElement('div'); acEl.className = 'acl';
     const r = inp.getBoundingClientRect(), c = cv.getBoundingClientRect();
     acEl.style.left = (r.left - c.left) + 'px'; acEl.style.top = (r.bottom - c.top + 4) + 'px';
     acEl.innerHTML = list.map((t, i) => `<div class="o ${i === acIdx ? 'on' : ''}" data-ti="${hit[i]}"><span>${t.n} <span class="badge ${tagCls(t.tag)}" style="height:16px">${t.tag}</span></span><span class="m">${t.d}</span><span class="m" style="grid-column:1/3">${t.p}${t.sec ? ' · 개인정보' : ''}</span></div>`).join('') +
-      (v ? `<div class="o" data-new="1" style="border-top:1px solid var(--border)"><span>＋ ‘${v}’ 그대로 입력 (미매핑)</span></div>` : '');
+      (acSim ? `<div class="o" data-sim="0" style="border-top:1px solid var(--border)"><span>← ‘${hx(v)}’ 포함 용어로 돌아가기</span></div>` : '') +
+      (v && !exact ? `<div class="acl-x">` +
+        (!acSim && simIdx.length ? `<div class="o" data-sim="1"><span>비슷한 용어 ${simIdx.length}${simIdx.length >= 20 ? '+' : ''}개 보기</span><span class="m">${hx(TERMS[simIdx[0]].n)} …</span></div>` : '') +
+        (unk.length ? `<div class="o" data-cand="${hx(unk[0])}"><span>단어 후보 등록 — ‘${hx(unk[0])}’</span><span class="m">승인되면 표준</span></div>` : '') +
+        `<div class="o" data-new="1"><span>＋ ‘${hx(v)}’ 그대로 입력</span><span class="m">미준수로 집계</span></div></div>` : '');
     cv.appendChild(acEl);
+    const allO = acEl.querySelectorAll('.o'); acIdx = Math.min(acIdx, Math.max(0, allO.length - 1)); allO.forEach((o, i) => o.classList.toggle('on', i === acIdx));   // ↑↓ walk every row, the extra ones included
   }
   const fromTerm = t => Object.assign({ n: t.n, p: t.p, t: t.t, dom: t.d, s: t.s, sec: t.sec, enc: t.enc }, t.doc ? { reqDoc: t.doc } : {});   // a 신청 중 term keeps its document link
   let editHid = null;   // the history entry the open name input started — Esc or "nothing changed" drops exactly that one
   const back = (a, o) => { Object.keys(a).forEach(k => delete a[k]); Object.assign(a, o); };
   function commitAttr(inp, term) {
+    acSim = false;
     const e = ent(inp.dataset.e), i = +inp.dataset.i, a = e.a[i];
     const old = a.orig ? JSON.parse(a.orig) : null;
     // the input was opened while editable — check again before it lands (another tab may have locked the area or taken the role)
@@ -1167,13 +1239,34 @@ window.pageInit = function () {
     if (drag) {
       if (!drag.moved) { snap(); drag.moved = true; } const w = toWorld(ev);
       if (drag.memo) { drag.memo.x = Math.round(w.x - drag.dx); drag.memo.y = Math.round(w.y - drag.dy); const el = $('m-' + drag.memo.id); el.style.left = drag.memo.x + 'px'; el.style.top = drag.memo.y + 'px'; return; }
-      setPos(drag.e, Math.round((w.x - drag.dx) / 8) * 8, Math.round((w.y - drag.dy) / 8) * 8); const d = $('n-' + drag.e.id); const p = pos(drag.e); d.style.left = p.x + 'px'; d.style.top = p.y + 'px'; drawEdges(); mini();
+      setPos(drag.e, Math.round((w.x - drag.dx) / 8) * 8, Math.round((w.y - drag.dy) / 8) * 8); const d = $('n-' + drag.e.id); const p = pos(drag.e); d.style.left = p.x + 'px'; d.style.top = p.y + 'px'; dragDraw();
     }
     if (pan) { panX = ev.clientX - pan.x; panY = ev.clientY - pan.y; applyView(); }
     if (tool === 'rel' && relSrc) { const a = box(relSrc), w = toWorld(ev); preview.setAttribute('d', `M${a.x + a.w / 2},${a.y + a.h / 2} L${w.x},${w.y}`); }
   });
   // a finished move is an edit boundary: positions are saved like any other change (CX9-05)
   window.addEventListener('mouseup', () => { const moved = drag && drag.moved; drag = null; pan = null; cv.classList.remove('panning'); if (moved) render(); });
+  // ---- ERD P2-16 keyboard helpers
+  function walk(id, dir) {
+    const a = box(id), ax = a.x + a.w / 2, ay = a.y + a.h / 2; let best = null, bd = 1e12;
+    VE().forEach(e => { if (e.id === id) return; const b = box(e.id); if (b.none) return; const dx = b.x + b.w / 2 - ax, dy = b.y + b.h / 2 - ay;
+      const ok = dir === 'right' ? dx > 4 : dir === 'left' ? dx < -4 : dir === 'down' ? dy > 4 : dy < -4; if (!ok) return;
+      const main = dir === 'left' || dir === 'right' ? Math.abs(dx) : Math.abs(dy), side = dir === 'left' || dir === 'right' ? Math.abs(dy) : Math.abs(dx);
+      const d = main + side * 2; if (d < bd) { bd = d; best = e.id; } });
+    if (!best) { agLive(`${({ right: '오른쪽', left: '왼쪽', down: '아래', up: '위' })[dir]}에 엔터티가 없습니다`); return; }
+    sel = best; kbNode = true; showRP(); render(); showNode(best);
+  }
+  function nudge(id, dir) {
+    const e = ent(id); if (!e || guard() || refGuard(e)) return; snap(); const p = pos(e), s = 16;
+    setPos(e, p.x + (dir === 'right' ? s : dir === 'left' ? -s : 0), p.y + (dir === 'down' ? s : dir === 'up' ? -s : 0)); sel = id; kbNode = true; render(); showNode(id);
+  }
+  function showNode(id) { const b = box(id), v = viewRect(), sx = panX + b.x * zoom, sy = world.offsetTop + panY + b.y * zoom;
+    if (sx < v.left || sx + b.w * zoom > v.right || sy < v.top || sy + b.h * zoom > v.bottom) { panX = (v.left + v.right) / 2 - (b.x + b.w / 2) * zoom; panY = (v.top + v.bottom) / 2 - world.offsetTop - (b.y + b.h / 2) * zoom; applyView(); } }
+  function fitSel() {
+    const id = typeof sel === 'string' && ent(sel) ? sel : null; if (!id) { toast('맞출 엔터티를 먼저 고르세요 · 전체 맞춤은 Shift+1', 'info'); return; }
+    const b = box(id), v = viewRect(); zoom = Math.max(0.5, Math.min(1.2, (v.right - v.left) / (b.w + 120), (v.bottom - v.top) / (b.h + 120)));
+    panX = (v.left + v.right) / 2 - (b.x + b.w / 2) * zoom; panY = (v.top + v.bottom) / 2 - world.offsetTop - (b.y + b.h / 2) * zoom; applyView();
+  }
   function placeEntity(w) {
     if (guard()) { setTool('select'); return; }
     const id = 'e' + Date.now(); snap();
@@ -1218,9 +1311,11 @@ window.pageInit = function () {
     if (!ev.target.closest('.node,' + CV_UI) && tool === 'select' && !locked) { setTool('entity'); cv.dispatchEvent(new MouseEvent('click', { clientX: ev.clientX, clientY: ev.clientY, bubbles: true })); }
   });
   cv.addEventListener('input', ev => {
-    if (ev.target.classList.contains('attr-in')) { acIdx = 0; showAC(ev.target); }
+    if (ev.target.classList.contains('attr-in')) { acIdx = 0; acSim = false; showAC(ev.target); }
     const mb = ev.target.closest && ev.target.closest('.mb'); if (mb) { const m = M.find(x => x.id === mb.dataset.mid); if (m) m.text = mb.textContent; }
   });
+  // ERD P2-16: a node reached with Tab is selected (the panel follows), so Enter · F2 · Delete act on what has focus
+  cv.addEventListener('focusin', ev => { const n = ev.target.classList && ev.target.classList.contains('node') ? ev.target : null; if (!n || drag) return; const id = n.id.slice(2); if (sel === id) return; sel = id; kbNode = true; showRP(); render(); });
   // memo: the undo entry is taken on the first real change, and leaving the memo is a save boundary (ERD P1-7)
   let memoHid = null, memoBefore = null;
   cv.addEventListener('focusin', ev => { if (ev.target.classList && ev.target.classList.contains('mb')) { memoHid = null; memoBefore = ev.target.textContent; } });
@@ -1232,10 +1327,14 @@ window.pageInit = function () {
     const ren = ev.target.closest('.ren-in');
     if (ren) { if (ev.key === 'Enter') commitRename(ren, true); else if (ev.key === 'Escape') commitRename(ren, false); return; }
     const inp = ev.target.closest('.attr-in'); if (!inp) return;
-    const opts = acEl ? acEl.querySelectorAll('.o[data-ti]') : [];
+    const opts = acEl ? acEl.querySelectorAll('.o') : [];
     if (ev.key === 'ArrowDown') { acIdx = Math.min(acIdx + 1, opts.length - 1); showAC(inp); ev.preventDefault(); }
     else if (ev.key === 'ArrowUp') { acIdx = Math.max(acIdx - 1, 0); showAC(inp); ev.preventDefault(); }
-    else if (ev.key === 'Enter') { const isNew = !(ent(inp.dataset.e).a[+inp.dataset.i] || {}).orig; const o = opts[acIdx]; commitAttr(inp, o ? TERMS[+o.dataset.ti] : null); if (!ev.shiftKey && sel && isNew) setTimeout(addAttr, 0); ev.preventDefault(); }   // a rename ends with Enter; only a new attribute chains the next one
+    else if (ev.key === 'Enter') { ev.preventDefault(); const o = opts[acIdx];
+      if (o && o.dataset.sim) { acSim = o.dataset.sim === '1'; acIdx = 0; showAC(inp); return; }
+      const isNew = !(ent(inp.dataset.e).a[+inp.dataset.i] || {}).orig;
+      if (o && o.dataset.cand) { commitCand(inp, o.dataset.cand); if (!ev.shiftKey && sel && isNew) setTimeout(addAttr, 0); return; }
+      commitAttr(inp, o && o.dataset.ti ? TERMS[+o.dataset.ti] : null); if (!ev.shiftKey && sel && isNew) setTimeout(addAttr, 0); }   // a rename ends with Enter; only a new attribute chains the next one
     else if (ev.key === 'Escape') {
       const e = ent(inp.dataset.e), a = e.a[+inp.dataset.i];
       if (a.orig) { const o = JSON.parse(a.orig); Object.keys(a).forEach(k => delete a[k]); Object.assign(a, o); }  // existing attribute: restore
@@ -1246,7 +1345,20 @@ window.pageInit = function () {
   // a re-render replaces the name input (its removal also fires focusout) — only a real blur commits (D3: a new entity would be cancelled)
   cv.addEventListener('focusout', ev => { const t = ev.target; if (!(t.classList && t.classList.contains('ren-in')) || !renaming) return;
     setTimeout(() => { if (!renaming) return; const now = nodes.querySelector('.ren-in'); if (now && now !== t) return; if (document.activeElement === t) return; commitRename(t, true); }, 0); });
-  document.addEventListener('mousedown', ev => { const o = ev.target.closest('.acl .o'); if (!o) return; ev.preventDefault(); const inp = nodes.querySelector('.attr-in'); if (inp) commitAttr(inp, o.dataset.ti ? TERMS[+o.dataset.ti] : null); });
+  document.addEventListener('mousedown', ev => { const o = ev.target.closest('.acl .o'); if (!o) return; ev.preventDefault(); const inp = nodes.querySelector('.attr-in'); if (!inp) return;
+    if (o.dataset.sim) { acSim = o.dataset.sim === '1'; acIdx = 0; showAC(inp); return; }
+    if (o.dataset.cand) { commitCand(inp, o.dataset.cand); return; }
+    commitAttr(inp, o.dataset.ti ? TERMS[+o.dataset.ti] : null); });
+  // ERD P2-15: the exit from free typing — the attribute is kept as typed and its missing word goes to the candidate queue (the attribute waits on it, as in 표준 맞추기)
+  function commitCand(inp, word) {
+    const e = ent(inp.dataset.e), a = e && e.a[+inp.dataset.i]; if (!a) return;
+    if (viewOnly || DEMO) { guard(); return; }
+    commitAttr(inp, null); if (!e.a.includes(a) || a.s !== 'unreg') return;
+    a.cand = 1; a.candWord = word; dirty = true;
+    const c = addCandidate({ t: '단어', name: word, abbr: '' }, { area: AREA, e: e.id, ent: e.n, attr: a.n });
+    $('c-cand').textContent = candOpenCount(); render();
+    toast(`‘${word}’을 단어 후보로 등록했습니다 — ‘${e.n}.${a.n}’은 승인될 때까지 대기(미준수로 집계)`, 'violet', { label: '후보 큐 열기', fn: () => go(`candidates.html?c=${c.id}`) });
+  }
   document.addEventListener('keydown', ev => {
     if (ev.target.closest && ev.target.closest('.mtree')) return;   // the left column (tree · dictionary) keeps every key, Ctrl+F/Z included
     const k = ev.key.toLowerCase();
@@ -1264,6 +1376,11 @@ window.pageInit = function () {
       if (ev.key === '0' || ev.code === 'Numpad0') { zoom100(); ev.preventDefault(); return; }
     }
     if (ev.ctrlKey || ev.metaKey) return;
+    // ERD P2-16: on a focused node — arrows walk to the nearest node that way, Shift+arrows nudge it, F2 renames; Shift+2 fits the selection anywhere on the canvas
+    const nd = ev.target.closest && ev.target.closest('#nodes .node');
+    if (nd && ev.key.startsWith('Arrow') && !$('grid').classList.contains('open')) { ev.preventDefault(); const id = nd.id.slice(2), dir = ev.key.slice(5).toLowerCase(); if (ev.shiftKey) nudge(id, dir); else walk(id, dir); return; }
+    if (ev.key === 'F2' && typeof sel === 'string' && ent(sel) && (document.activeElement === document.body || cv.contains(document.activeElement))) { ev.preventDefault(); if (guard() || refGuard(ent(sel))) return; renaming = sel; render(); return; }
+    if ((ev.key === '@' || (ev.shiftKey && ev.code === 'Digit2')) && (document.activeElement === document.body || cv.contains(document.activeElement))) { ev.preventDefault(); fitSel(); return; }
     const inCanvas = singleKeys() && (document.activeElement === document.body || cv.contains(document.activeElement));
     if (inCanvas && k === 'v') setTool('select'); else if (inCanvas && k === 'e') setTool('entity'); else if (inCanvas && k === 'r') { ev.preventDefault(); if (!canEdit()) guard(); else if (typeof sel === 'string' && ent(sel)) childPicker(sel); else setTool('rel'); }   // preventDefault: the 'r' must not land in the picker's filter box   // read-only: the reason, never the tool mode (post-review CL10)   // keyboard path: a selected entity is the parent
     else if (inCanvas && k === 'm') setTool('memo');
@@ -1350,7 +1467,7 @@ window.pageInit = function () {
   const fitAny = () => isSys() ? sysFit() : fit();
   $('zi').onclick = zoomIn;
   $('zo').onclick = zoomOut;
-  $('zl').addEventListener('dblclick', zoom100);
+  $('zl').addEventListener('click', zoom100);   // ERD P2-16: a real button (was a span with a double-click)
   // ERD P1-2: the part of the canvas nothing covers — below the toolbar and guidance strips, above the bottom controls (legend · zoom · minimap, as they are pinned now)
   function viewRect() {
     const cr = cv.getBoundingClientRect(); let top = world.offsetTop;
@@ -1435,7 +1552,7 @@ window.pageInit = function () {
   if (remoteSel && !ent(remoteSel)) { const o = E.find(e => !e.ref && e.c === 'A') || E.find(e => !e.ref); remoteSel = o ? o.id : null; }   // other areas (ERP): the co-editor works on one of this area's entities
   $('jump-bad').onclick = ev => { ev.preventDefault(); const t = E.find(bad); if (!t) { toast('미준수 항목이 없습니다', 'info'); return; } focusEnt(t.id); toast(`미준수 속성이 있는 ‘${t.n}’으로 이동했습니다`, 'info'); };
   function setMode(v) {
-    mode = v; document.querySelectorAll('#lp button').forEach(b => b.classList.toggle('on', b.dataset.v === v));
+    mode = v; document.querySelectorAll('#lp button').forEach(b => { b.classList.toggle('on', b.dataset.v === v); b.setAttribute('aria-pressed', b.dataset.v === v); });   // ERD P3-21 groundwork: pressed state is announced
     $('ban-gate').style.display = $('ban-sync').style.display = v === 'P' ? 'flex' : 'none'; if (v === 'P') drawGate();
     sel = null; showRP(); render(); toast(v === 'P' ? '물리 캔버스 — 배치는 논리와 따로 저장됩니다 · 시스템 컬럼 4개 포함' : '논리 캔버스', 'info');
   }
@@ -1484,7 +1601,7 @@ window.pageInit = function () {
       box.hidden = !vis.length; box.classList.toggle('min', !all);
       const longOne = vis.length === 1 && vis[0].querySelector('.grow') && vis[0].querySelector('.grow').scrollWidth > vis[0].querySelector('.grow').clientWidth + 1;
       tg.hidden = !vis.length || (!all && vis.length < 2 && !longOne);
-      tg.textContent = all ? '접기' : `펼치기${vis.length > 1 ? ` (안내 ${vis.length}건)` : ''}`; tg.setAttribute('aria-expanded', all);
+      tg.textContent = all ? '접기' : vis.length > 1 ? `외 ${vis.length - 1}건 ▸` : '자세히 ▸'; tg.setAttribute('aria-expanded', all); tg.setAttribute('aria-label', all ? '안내 접기' : `안내 ${vis.length}건 모두 펼치기`);   // ERD P2-14
       fit(); busy = false; };
     tg.onclick = () => { all = !all; const m = hintMap(); m[ME.id] = all ? 'open' : 'min'; dbmStore.set(HK, JSON.stringify(m)); arrange(); };
     new MutationObserver(recs => { if (recs.some(r => r.target !== box)) arrange(); }).observe(box, { attributes: true, subtree: true, attributeFilter: ['style'] }); arrange();
@@ -1655,7 +1772,10 @@ window.pageInit = function () {
   if (sidePref === 'closed' || (!sidePref && (document.documentElement.classList.contains('frame-1600') || innerWidth < 1920))) $('side').classList.add('closed');
   new MutationObserver(() => dbmStore.set('dbm-side', $('side').classList.contains('closed') ? 'closed' : 'open')).observe($('side'), { attributes: true, attributeFilter: ['class'] });
   if (viewOnly && !locked) {
-    document.body.classList.add('viewonly'); $('ban-view').style.display = 'flex'; if (!document.body.classList.contains('locked')) setSave('run', '조회 전용');
+    // ERD P2-14: a plain read-only role is said once in the head (state + its reason in the tooltip) and by the dimmed tools — no strip over the canvas.
+    // the strip stays only when it carries something to do (담당 시스템 추가 요청)
+    document.body.classList.add('viewonly'); if (outOfScope) $('ban-view').style.display = 'flex';
+    if (!document.body.classList.contains('locked')) { setSave('run', '조회 전용'); $('savest').title = `조회 전용 — 모델 편집은 모델러 역할만 할 수 있습니다 · 지금 역할: ${ME.roles.map(r => ROLE_NAME[r]).join(', ') || '조회만'}`; }
     if ($('ban-view-r')) $('ban-view-r').textContent = ME.roles.map(r => ROLE_NAME[r]).join(', ') || '조회만';
     if (outOfScope) $('ban-view').querySelector('.grow').innerHTML = `<b>조회 전용</b> — 내 담당 시스템(${(ME.systems || []).join(', ') || '없음'})에 <b>${sysOfArea(AREA)}</b>${josa(sysOfArea(AREA), '이/가').slice(-1)} 없습니다. <a href="mypage.html?req=sys&sys=${encodeURIComponent(sysOfArea(AREA))}">담당 시스템 추가 요청</a>`;
   }

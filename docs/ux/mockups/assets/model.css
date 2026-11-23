@@ -41,7 +41,10 @@
 .node .nh { display:flex; align-items:center; gap:6px; padding:6px 10px; border-bottom:1px solid var(--border); font-weight:600; font-size:14px; cursor:move; }
 .node .nh .nbad { height:18px; padding:0 6px; font-size:12px; border-radius:9999px; background:var(--ds-amber-200); color:var(--ds-amber-900); font-weight:500; display:inline-flex; align-items:center; white-space:nowrap; }
 .node .nh .cls { font:500 12px var(--font-mono); background:var(--ds-gray-100); border-radius:9999px; padding:0 6px; color:var(--fg-2); }
-.node .nh .sub { font:400 12px var(--font-mono); color:var(--fg-3); margin-left:auto; }
+.node .nh .sub { font:400 12px var(--font-mono); color:var(--fg-3); margin-left:auto; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+/* the entity name never wraps (keys-only / names-only levels hide the rows that used to give the node its width) */
+.node .nh .title { white-space:nowrap; flex:0 0 auto; }
+.node .nh .cls, .node .nh .nbad { flex:0 0 auto; }
 .node .nh input { font:600 13px var(--font-sans); border:1px solid var(--ink); border-radius:4px; padding:0 4px; width:150px; background:var(--surface); color:var(--fg); }
 .node .pk { border-bottom:1px solid var(--border); }
 .node .ar { display:flex; align-items:center; gap:6px; padding:2px 10px; min-height:20px; white-space:nowrap; }
@@ -63,7 +66,7 @@
 /* summary keeps every row's space so node size and relation endpoints don't jump (22 §6-5 · 23 §6-6) */
 #world.lod-low .node .ar, #world.lod-low .node .nh .sub, #world.lod-low .node .sysc, #world.lod-low .node .subt { visibility:hidden; }
 #world.lod-low .node .more, #world.lod-low .memo { display:none; }
-#world.lod-low .node .nh .title { font-size:15px; }
+#world.lod-low .node .nh .title, #world.lod-mid .node .nh .title { font-size:15px; }
 .relname { font:400 12px var(--font-sans); fill:var(--fg-2); paint-order:stroke; stroke:var(--bg); stroke-width:4px; }
 .memo { position:absolute; width:200px; background:color-mix(in srgb, var(--warning) 16%, var(--surface)); border:1px solid color-mix(in srgb, var(--warning) 45%, var(--border)); border-radius:6px; font-size:12px; box-shadow:var(--menu-shadow); }
 .memo .mh { display:flex; align-items:center; padding:3px 8px; color:var(--fg-2); font-size:12px; cursor:move; }
@@ -110,6 +113,8 @@
 .acl .o { display:grid; grid-template-columns:1fr auto; align-items:center; min-height:32px; padding:0 8px; border-radius:6px; cursor:pointer; gap:6px; }
 .acl .o.on, .acl .o:hover { background:var(--ds-gray-100); }
 .acl .o .m { font-family:var(--font-mono); color:var(--fg-3); }
+.acl .acl-x { border-top:1px solid var(--border); margin-top:4px; padding-top:4px; }
+.acl .acl-x .o .m { font-family:var(--font-sans); font-size:12px; }
 .grp { position:absolute; border:1px dashed var(--border-strong); border-radius:var(--r-xl); background:var(--surface); padding:14px; }
 .grp h4 { margin:0 0 4px; font-size:16px; }
 .grp .refrow { display:flex; align-items:center; gap:6px; font-size:12px; padding:4px 0; border-top:1px solid var(--border); }
@@ -126,12 +131,30 @@
 #moremenu .mi:hover, #moremenu .mi:focus-visible { background:var(--ds-gray-100); outline:none; }
 #moremenu .msep { height:1px; background:var(--ds-gray-400); margin:4px 0; }
 #b-export { display:none; }
+/* ERD P2-11: canvas switches as toolbar segments (28px, same height as the tools) */
+.cv-toolbar .tseg { height:28px; flex:0 0 auto; }
+.cv-toolbar .tseg button { height:24px; font-size:13px; }
+#cv[data-sys="1"] .cv-toolbar #lp, #cv[data-sys="1"] .cv-toolbar #vw { display:none; }
+/* ERD P2-10: [확정 신청 n] — the count of items still to fix rides on the one goal button */
+#confirm-btn .cb-n { display:inline-grid; place-items:center; min-width:20px; height:20px; padding:0 6px; margin-left:6px; border-radius:9999px; background:var(--ds-amber-200); color:var(--ds-amber-900); font:600 12px var(--font-mono); }
+#grid .g-title { margin:0; font-weight:600; outline:none; }
+.ck-tbl td:last-child, .ck-tbl th:last-child { text-align:right; white-space:nowrap; }
+.ck-tbl .ck-act { display:flex; gap:4px; justify-content:flex-end; }
+/* ERD P2-14: the folded strip is one 28px line */
+.cv-banner.min { padding-top:2px; padding-bottom:2px; }
+.cv-banner.min > .banner { padding:1px 8px; border:0; background:transparent; line-height:24px; }
+.cv-banner.min > .banner > .ic, .cv-banner.min > .banner > i > .ic { margin-top:5px; }
+.cv-banner.min > .banner .caption { display:none; }
+.cv-banner.min .btn.sm, .cv-banner.min .ban-ctl .btn { height:24px; }
 /* one banner slot: highest priority first, the rest folded behind "+N" */
 .cv-banner > .banner.fold { display:none !important; }
 .cv-banner .ban-more { align-self:flex-start; } .cv-banner .ban-more[hidden] { display:none !important; }
 /* table view = a body switch, not a floating window */
 body.gridmode #grid { left:0; right:0; top:0; bottom:0; border-radius:0; box-shadow:none; }
-body.gridmode .cv-toolbar, body.gridmode .cv-banner, body.gridmode .legend, body.gridmode .cv-zoom, body.gridmode .cv-mini, body.gridmode .mini-open, body.gridmode .cv-hint { display:none !important; }
+/* ERD P2-11: in the table view the toolbar stays (only [다이어그램 | 표] is shown), so the way back is in the same place */
+body.gridmode .cv-toolbar > :not(#vw) { display:none !important; }
+body.gridmode #grid { top:37px; }
+body.gridmode .cv-banner, body.gridmode .legend, body.gridmode .cv-zoom, body.gridmode .cv-mini, body.gridmode .mini-open, body.gridmode .cv-hint { display:none !important; }
 #grid .gscope { font-size:13px; color:var(--fg-2); } #grid .gscope b { color:var(--fg); font-variant-numeric:tabular-nums; }
 /* grid mode */
 #grid { position:absolute; left:12px; right:12px; top:56px; bottom:12px; background:var(--surface); border-radius:var(--r-lg); box-shadow:var(--menu-shadow); z-index:15; display:none; flex-direction:column; overflow:hidden; }

@@ -1795,7 +1795,9 @@
       if (!modelish) { setW(Math.max(curW, needW(), 240)); return; }   // home · system home: content fit up to 400px (ERP names need it)
       if (modelish && app.clientWidth - [...document.querySelectorAll('.rpanel.open')].reduce((w, p) => w + p.getBoundingClientRect().width, 0) - 760 < 240) { app.classList.add('treemin'); syncMin(); return; }   // not even 240px fits → the tree folds first (not remembered)
       if (ST.manual) { setW(curW || ST.w || 264); return; }
-      setW(Math.max(curW, needW(), 240));
+      // ERD P2-12: below 1920 the content-fit width stops at 280 (long ERP names end in … with a tooltip) — the canvas keeps its room
+      const cap = document.documentElement.classList.contains('frame-1600') || window.innerWidth < 1900 ? 280 : 1e4;
+      setW(Math.min(Math.max(curW, needW(), 240), cap));
     }
     window.addEventListener('resize', () => { if (!minned()) { const c = curW; curW = 0; setW(c || ST.w || 264); fit(); } });
     const rs = nav.querySelector('#tr-rs');
@@ -1922,7 +1924,7 @@
             <tr><td><kbd>V</kbd> <kbd>E</kbd> <kbd>R</kbd> <kbd>M</kbd></td><td>선택 · 엔터티 · 관계 · 메모 도구</td></tr>
             <tr><td><kbd>Enter</kbd></td><td>선택한 엔터티에 속성 추가</td></tr><tr><td><kbd>Delete</kbd></td><td>선택 삭제 (영향 확인)</td></tr>
             <tr><td><kbd>Ctrl</kbd><kbd>Z</kbd> / <kbd>Ctrl</kbd><kbd>Y</kbd></td><td>내 편집 되돌리기 / 다시 실행</td></tr>
-            <tr><td><kbd>Ctrl</kbd><kbd>F</kbd></td><td>표 보기 · 찾기/바꾸기</td></tr><tr><td><kbd>Shift</kbd><kbd>1</kbd></td><td>전체 맞춤</td></tr><tr><td><kbd>Ctrl</kbd>+휠 · <kbd>Ctrl</kbd><kbd>+</kbd> <kbd>Ctrl</kbd><kbd>-</kbd></td><td>확대·축소</td></tr><tr><td><kbd>Ctrl</kbd><kbd>0</kbd></td><td>100%로</td></tr><tr><td><kbd>Ctrl</kbd><kbd>B</kbd></td><td>왼쪽 칸(모델 트리) 접기 · 펼치기</td></tr>
+            <tr><td><kbd>Ctrl</kbd><kbd>F</kbd></td><td>표 보기 · 찾기/바꾸기</td></tr><tr><td><kbd>Shift</kbd><kbd>1</kbd> · <kbd>Shift</kbd><kbd>2</kbd></td><td>전체 맞춤 · 선택 맞춤</td></tr><tr><td><kbd>E</kbd> → <kbd>Enter</kbd></td><td>보이는 곳 가운데에 엔터티 놓기</td></tr><tr><td><kbd>←</kbd><kbd>→</kbd><kbd>↑</kbd><kbd>↓</kbd> · <kbd>Shift</kbd>+방향키</td><td>엔터티 사이 이동 · 엔터티 옮기기(포커스가 엔터티에 있을 때)</td></tr><tr><td><kbd>F2</kbd></td><td>선택한 엔터티 이름 바꾸기</td></tr><tr><td><kbd>Ctrl</kbd>+휠 · <kbd>Ctrl</kbd><kbd>+</kbd> <kbd>Ctrl</kbd><kbd>-</kbd></td><td>확대·축소</td></tr><tr><td><kbd>Ctrl</kbd><kbd>0</kbd></td><td>100%로</td></tr><tr><td><kbd>Ctrl</kbd><kbd>B</kbd></td><td>왼쪽 칸(모델 트리) 접기 · 펼치기</td></tr>
           </tbody></table>
           <label class="flex caption" style="margin-top:12px"><input type="checkbox" id="kb-single" ${store.get('dbm-single-keys', '1') === '1' ? 'checked' : ''}> 한 글자 단축키(V·E·R·M) 사용 — 끄면 화면 낭독기·음성 입력과 충돌하지 않습니다</label>
         </div>
