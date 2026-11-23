@@ -261,6 +261,7 @@ window.pageInit = function () {
   // review visibility (requester + approval line only): a submitted copy under review is closed to others; the area shows its last confirmed copy
   const SNAP_HIDDEN = !!SNAPDOC && inReview(SNAPDOC) && !canSeeDoc(SNAPDOC);
   // ?state= presets are read-only samples: never saved, never submitted, never written to the shared judgement (CX9-01)
+  const PERF = q.has('perf') && !SNAP;   // ?perf=300&rels=500 — speed measurement model (in memory only, see the PERF loader below and window.__perf)
   const DEMO = (!!STATE || q.has('big')) && !SNAP; if (DEMO) setTimeout(() => setSave('run', '예시 화면 · 저장 안 함'), 0);   // ?big=1 → 300+ entity sample to show the size warning (read-only)
   const confirmed = LOCK.state === 'confirmed' && !SNAP, review = LOCK.state === 'review' || !!SNAP;
   const locked = review || confirmed;
@@ -294,7 +295,8 @@ window.pageInit = function () {
   let myRev = 0, revConflict = false, holdSave = false;
   function saveData() {
     if (locked || viewOnly || DEMO || !dataReady || revConflict) return;
-    if (holdSave) { setSave('run', '저장 대기 · 역할명 확정 전'); return; }   // the role box saves everything at once when it closes
+    if (holdSave) { setSave('run', '저장 대기 · 역할명 확정 전'); return; }
+    if (PERF) { setSave('run', '속도 측정 · 저장 안 함'); return; }   // the role box saves everything at once when it closes
     if (!liveCanEdit(AREA)) { revConflict = true; setSave('err', '저장 안 됨 · 권한 변경'); toast('편집 권한이 회수되어 이 탭의 편집은 저장하지 않았습니다 — 새로고침하세요', 'danger', { label: '새로고침', fn: () => location.reload() }); return; }
     // this version may have been submitted / confirmed in another tab meanwhile — never write into it then (CL11-01)
     const lk = modelLock(AREA); if (lk.state !== 'edit' || lk.model.ver !== VER) { revConflict = true; toast(`v${VER}은 다른 탭에서 ${lk.state === 'edit' ? `확정되고 v${lk.model.ver} 작업이 시작됐습니다` : lk.state === 'review' ? '확정 신청됐습니다' : '확정됐습니다'} — 이 탭의 편집은 저장하지 않았습니다`, 'danger', { label: '새로고침', fn: () => location.reload() }); return; }
@@ -358,7 +360,7 @@ window.pageInit = function () {
     // area size guidance (23 §6-2): recommended up to 300 entities, warn only
     $('ban-big').style.display = E.length > 300 ? 'flex' : 'none';
     if (E.length > 300) $('ban-big-t').innerHTML = `<b>엔터티 ${E.length}개</b> — 업무 영역 권장 상한 300개를 넘었습니다. 계속 편집할 수 있지만 화면이 느려질 수 있습니다. 영역을 나누는 것을 검토하세요.`;
-    if (!locked && !DEMO && !viewOnly) setComp(AREA, lastComp);          // home / system badges read this; approvals re-check the submitted copy
+    if (!locked && !DEMO && !viewOnly && !PERF) setComp(AREA, lastComp);          // home / system badges read this; approvals re-check the submitted copy
     if (!SNAP && window.areaNavBad) areaNavBad(bad);                     // ERD P1-4: the '영역 화면' badge shows the same live count as the main button
     const b = $('confirm-btn');
     if (locked) return;
@@ -460,26 +462,53 @@ window.pageInit = function () {
   };
   function render() {
     queueMicrotask(treeSync);
-    nodes.innerHTML = '';
     if (!V.some(v => v.id === curView)) curView = 'all';
     syncViewSel();
-    VE().forEach(e => {
-      const d = document.createElement('div');
-      d.className = 'node' + (sel === e.id ? ' sel' : '') + (relSrc === e.id ? ' relsrc' : '') + (remoteSel === e.id && !offline ? ' remote' : '') + (e.ref ? ' ref' : '');
-      d.id = 'n-' + e.id; const p = pos(e);
+    // speed: the visible list and the selection are looked up once (they were recomputed for every node — 300 × 300), and the nodes go in as one string
+    const list = VE(), selOk = !!(typeof sel === 'string' && ent(sel)), first = list[0];
+    // speed (300 entities): nodes are kept and only the ones whose markup changed are swapped — laying out all 300 again cost ≈150ms per edit
+    const have = new Map([...nodes.children].map(n => [n.id, n])), tpl = document.createElement('template');
+    list.forEach(e => {
+      const p = pos(e), nb = bad(e), cls = 'node' + (sel === e.id ? ' sel' : '') + (relSrc === e.id ? ' relsrc' : '') + (remoteSel === e.id && !offline ? ' remote' : '') + (e.ref ? ' ref' : '');
       // ERD P2-16: nodes are reachable from the keyboard — one Tab stop (the selected node, else the first), arrows walk between nodes
-      const nb = bad(e); d.tabIndex = (sel === e.id || (!ent(sel) && e === VE()[0])) ? 0 : -1;
-      d.setAttribute('role', 'group'); d.setAttribute('aria-roledescription', '엔터티'); d.setAttribute('aria-label', `${e.n}${e.ref ? ' (참조)' : ''}, 속성 ${e.a.length}개${nb ? `, 미준수 ${nb}` : ''}${sel === e.id ? ', 선택됨' : ''}`);
-      d.style.left = p.x + 'px'; d.style.top = p.y + 'px';
-      d.innerHTML = nodeHTML(e);
-      nodes.appendChild(d);
+      const ti = (sel === e.id || (!selOk && e === first)) ? 0 : -1;
+      const h = `<div class="${cls}" id="n-${e.id}" tabindex="${ti}" role="group" aria-roledescription="엔터티" aria-label="${hx(e.n)}${e.ref ? ' (참조)' : ''}, 속성 ${e.a.length}개${nb ? `, 미준수 ${nb}` : ''}${sel === e.id ? ', 선택됨' : ''}" style="left:${p.x}px;top:${p.y}px">${nodeHTML(e)}</div>`;
+      const old = have.get('n-' + e.id); have.delete('n-' + e.id);
+      if (old && old.__h === h) return;
+      tpl.innerHTML = h; const el = tpl.content.firstElementChild; el.__h = h;
+      if (old) old.replaceWith(el); else nodes.appendChild(el);
     });
+    have.forEach(el => el.remove());   // entities gone (or not in this view)
     renderMemos(); drawEdges(); mini(); panel(); autoPanel(); updateComp();
     if (dirty) { dirty = false; saveData(); }   // edits persist per area+version (S5) — only when something changed
     if (kbNode) { kbNode = false; const n = $('n-' + sel); if (n) n.focus({ preventScroll: true }); }   // a keyboard move keeps focus on the (redrawn) node
     const inp = nodes.querySelector('.attr-in'); if (inp) { inp.focus(); inp.select(); showAC(inp); const dk = inp.dataset.e + ':' + inp.dataset.i; if (window.openDictTab && dictAutoFor !== dk) { dictAutoFor = dk; openDictTab(null, false); } } else dictAutoFor = '';
     const ren = nodes.querySelector('.ren-in'); if (ren) { ren.focus(); ren.select(); }
     if ($('grid').classList.contains('open')) renderGrid();
+  }
+  // ---- speed (300 entities · 500 relations, 2026-11-24): a selection change only moves the selection marks and refreshes the panel —
+  // the nodes, lines and map stay as they are (a full redraw measured 220ms per click). Falls back to render() while something is being edited.
+  function selectOnly(id) {
+    if (renaming || relSrc || dirty || nodes.querySelector('.attr-in') || (id && !$('n-' + id)) || cv.dataset.sys === '1') return false;
+    if (id === sel && !selRel) return true;
+    // nodes touched here no longer match their kept markup (render's swap check) — forget it so the next render redraws them
+    nodes.querySelectorAll('.node.sel').forEach(n => { n.__h = ''; n.classList.remove('sel'); n.setAttribute('aria-label', (n.getAttribute('aria-label') || '').replace(/, 선택됨$/, '')); });
+    nodes.querySelectorAll('.node[tabindex="0"]').forEach(n => { n.__h = ''; n.tabIndex = -1; });
+    sel = id; selRel = null;
+    const n = id ? $('n-' + id) : nodes.querySelector('.node');
+    if (n) { n.__h = ''; n.tabIndex = 0; if (id) { n.classList.add('sel'); n.setAttribute('aria-label', n.getAttribute('aria-label') + ', 선택됨'); } }
+    if (id) showRP(); panel(); autoPanel(); queueMicrotask(treeSync);
+    return true;
+  }
+  // a drag frame redraws only the lines of the entity being moved (all 500 measured 22ms per frame)
+  function edgesFor(id) {
+    const hid = (vCur() || {}).hide || []; let ok = true;
+    R.forEach((r, i) => { if (!ok || (r.f !== id && r.t !== id)) return; if (r.xg) { ok = false; return; }
+      const hit = eg.querySelector(`path.hit[data-r="${i}"]`); if (!hit) { if (!hid.includes(relKey(r))) ok = false; return; }
+      const p = r.f === r.t ? (() => { const a = box(r.f); return { d: `M${a.x + a.w},${a.y + 30} H${a.x + a.w + 30} V${a.y - 20} H${a.x + a.w - 30} V${a.y}`, lx: a.x + a.w + 34, ly: a.y - 8 }; })() : edgePath(box(r.f), box(r.t));
+      const vis = hit.nextElementSibling, tx = vis && vis.nextElementSibling; hit.setAttribute('d', p.d); if (vis) vis.setAttribute('d', p.d);
+      if (tx && tx.tagName === 'text') { tx.setAttribute('x', p.lx); tx.setAttribute('y', p.ly); const t2 = tx.nextElementSibling; if (r.k === 'mn' && t2 && t2.tagName === 'text') { t2.setAttribute('x', p.lx); t2.setAttribute('y', p.ly + 14); } } });
+    return ok;
   }
   function box(id) { const d = $('n-' + id); if (!d) return { x: 0, y: 0, w: 0, h: 0, none: true }; return { x: d.offsetLeft, y: d.offsetTop, w: d.offsetWidth, h: d.offsetHeight }; }
   function edgePath(a, b) {
@@ -538,7 +567,7 @@ window.pageInit = function () {
   // ERD P2-18: panning moves only the minimap's view frame (the boxes are drawn once); dragging redraws lines and the map at most once per frame.
   // (300 entities · 500 relations timing is an implementation-stage measurement)
   let miniK = null, dragRaf = 0;
-  const dragDraw = () => { if (dragRaf) return; dragRaf = requestAnimationFrame(() => { dragRaf = 0; drawEdges(); mini(); }); };
+  const dragDraw = () => { if (dragRaf) return; dragRaf = requestAnimationFrame(() => { dragRaf = 0; if (!(drag && drag.e && edgesFor(drag.e.id))) drawEdges(); }); };   // the map is redrawn once, when the drag ends (render on mouseup)
   function miniView() { const r = $('mini-vp'); if (!r || !miniK) { mini(); return; } const { k, ox, oy } = miniK;
     r.setAttribute('x', (-panX / zoom - ox) * k); r.setAttribute('y', (-panY / zoom - oy) * k); r.setAttribute('width', cv.clientWidth / zoom * k); r.setAttribute('height', cv.clientHeight / zoom * k); }
   function mini() {
@@ -966,6 +995,7 @@ window.pageInit = function () {
 
   // ---- grid mode (bulk edit · find/replace)
   let gRepOpen = false;
+  let gLimit = 300;   // rows drawn in the table view (grows by 300 with [다음 300개 보기]; back to 300 when the filter or the find text changes)
   const gsel = new Set(); let gfilter = 'all'; let gvis = new Set(); let gAllArm = null;   // arm = the exact scope + values the user confirmed
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
   const gpass = a => !a.edit && !(gfilter === 'bad' && !(a.s === 'comb' || a.s === 'unreg')) && !(gfilter === 'sec' && !a.sec) && !(gfilter === 'na' && a.s !== 'na');
@@ -982,13 +1012,15 @@ window.pageInit = function () {
     const ae = document.activeElement, gact = ae && g.contains(ae) ? (ae.id ? '#' + ae.id : ae.dataset.k ? `[data-k="${ae.dataset.k}"]` : ae.dataset.gf ? `[data-gf="${ae.dataset.gf}"]` : null) : null;
     let total = 0; E.forEach(e => e.a.forEach(a => { if (!a.edit) total++; }));
     [...gsel].forEach(k => { const t = gFind(k); if (!t || t[1].edit) gsel.delete(k); });   // a deleted (or re-created by undo) attribute leaves the selection
-    const rows = []; E.forEach(e => e.a.forEach(a => { if (gpass(a)) rows.push({ e, a, k: gKey(e, a) }); }));
+    const rowsAll = []; E.forEach(e => e.a.forEach(a => { if (gpass(a) && (!fv || a.n.includes(fv))) rowsAll.push({ e, a, k: gKey(e, a) }); }));   // find narrows the rows (list standard 22) — and the matches are never past the first 300
+    // speed (2,900 attributes): the table shows 300 rows at a time — [다음 300개] adds more; find and the chips narrow it (all 2,900 took 1–2s to lay out)
+    const rows = rowsAll.slice(0, gLimit), more = rowsAll.length - rows.length;
     gvis = new Set(rows.map(r => r.k)); const selVis = [...gsel].filter(k => gvis.has(k)).length, selHid = gsel.size - selVis;
     const selNames = [...gsel].map(gFind).filter(Boolean).map(([e, a]) => e.n + '.' + a.n);
     const hl = s => fv ? esc(s).split(esc(fv)).join(`<mark>${esc(fv)}</mark>`) : esc(s);
-    const hits = fv ? rows.filter(r => r.a.n.includes(fv)).length : 0;
+    const hits = fv ? rowsAll.filter(r => r.a.n.includes(fv)).length : 0;
     // list standard: filter chips are the shared 32px <button class="chip"> (were 26px inline-styled spans)
-    g.innerHTML = `<div class="gbar"><h2 class="u-fs-14 g-title" tabindex="-1">속성 표 보기</h2><span class="caption muted" aria-live="polite">${gfilter === 'all' ? `${rows.length}개` : `${rows.length}개 / 전체 ${total}개`}</span>
+    g.innerHTML = `<div class="gbar"><h2 class="u-fs-14 g-title" tabindex="-1">속성 표 보기</h2><span class="caption muted" aria-live="polite">${gfilter === 'all' ? `${rowsAll.length}개` : `${rowsAll.length}개 / 전체 ${total}개`}${more ? ` · ${rows.length}개 표시` : ''}</span>
         <span class="flex u-gap-8" role="group" aria-label="속성 거르기">${['all:전체', 'bad:미준수 속성', 'sec:보안', 'na:비대상'].map(x => { const [k, l] = x.split(':'); return `<button type="button" class="chip ${gfilter === k ? 'on' : ''}" data-gf="${k}" aria-pressed="${gfilter === k}">${l}</button>`; }).join('')}</span>
         <span class="grow"></span>
         <input class="input u-w-150" id="g-find" placeholder="찾기 (논리명)" aria-label="찾기 (논리명)" value="${esc(fv)}">${gRepOpen ? `<input class="input edit-only u-w-130" id="g-rep" placeholder="바꿀 말" aria-label="바꿀 말" value="${esc(rv)}">` : '<button class="btn sm ghost edit-only" id="g-rep-open">바꾸기…</button>'}
@@ -1001,7 +1033,7 @@ window.pageInit = function () {
         <input class="input" id="g-why" placeholder="비대상 사유 *" aria-label="비대상 사유" value="${esc(gwhy)}"${gstd === 'na' ? '' : ' hidden'}>
         <span class="grow"></span><button class="btn sm" id="g-clear">선택 해제</button>${selHid ? `<button class="btn sm" id="g-apply-all">${gAllArm ? `한 번 더 눌러 숨겨진 ${selHid}개 포함 적용` : `숨겨진 ${selHid}개 포함…`}</button>` : ''}<button class="btn sm primary" id="g-apply" ${selVis ? '' : 'disabled'}>표시된 ${selVis}개 적용</button></div>
       <div class="gbody"><table class="tbl"><thead><tr><th class="u-w-32"><input type="checkbox" id="g-all" class="edit-only" aria-label="보이는 행 모두 선택" ${rows.length && rows.every(r => gsel.has(r.k)) ? 'checked' : ''}></th><th></th><th>엔터티</th><th>속성명</th><th>물리명</th><th>타입</th><th>필수</th><th>보안</th></tr></thead><tbody>
-      ${rows.map(r => `<tr><td><input type="checkbox" class="edit-only" data-k="${r.k}" aria-label="${esc(r.e.n + '.' + r.a.n)} 선택" ${gsel.has(r.k) ? 'checked' : ''}></td><td>${stBadge(r.a.s)}</td><td>${r.e.n}${r.e.ref ? ' <span class="muted">· 참조</span>' : ''}</td><td>${r.a.pk ? '# ' : ''}${hl(r.a.n)}${r.a.fk ? ' <span class="faint">(FK)</span>' : ''}</td><td class="mono">${r.a.p}</td><td class="mono">${r.a.t}</td><td>${r.a.nn || r.a.pk ? '예' : '<span class="faint">아니오</span>'}</td><td>${r.a.sec ? `<span class="badge b-danger">${r.a.sec}</span>` : ''}</td></tr>`).join('') || `<tr class="none"><td colspan="8" class="caption muted">조건에 맞는 속성이 없습니다. <button type="button" class="linkbtn" data-gf="all">거르기 해제</button></td></tr>`}</tbody></table></div>`;
+      ${rows.map(r => `<tr><td><input type="checkbox" class="edit-only" data-k="${r.k}" aria-label="${esc(r.e.n + '.' + r.a.n)} 선택" ${gsel.has(r.k) ? 'checked' : ''}></td><td>${stBadge(r.a.s)}</td><td>${r.e.n}${r.e.ref ? ' <span class="muted">· 참조</span>' : ''}</td><td>${r.a.pk ? '# ' : ''}${hl(r.a.n)}${r.a.fk ? ' <span class="faint">(FK)</span>' : ''}</td><td class="mono">${r.a.p}</td><td class="mono">${r.a.t}</td><td>${r.a.nn || r.a.pk ? '예' : '<span class="faint">아니오</span>'}</td><td>${r.a.sec ? `<span class="badge b-danger">${r.a.sec}</span>` : ''}</td></tr>`).join('') || `<tr class="none"><td colspan="8" class="caption muted">조건에 맞는 속성이 없습니다. <button type="button" class="linkbtn" data-gf="all">거르기 해제</button></td></tr>`}</tbody></table>${more ? `<div class="g-more"><button type="button" class="btn sm" id="g-more">다음 ${Math.min(300, more)}개 보기</button><span class="caption muted">남은 ${more}개 · 찾기나 거르기로 좁히면 빠릅니다</span></div>` : ''}</div>`;
     const all = g.querySelector('#g-all'); if (all) { const n = rows.filter(r => gsel.has(r.k)).length; all.indeterminate = n > 0 && n < rows.length; }   // part of the visible rows selected
     if (gdom && g.querySelector('#g-dom')) g.querySelector('#g-dom').value = gdom; if (gnn && g.querySelector('#g-nn')) g.querySelector('#g-nn').value = gnn;
     const gb = g.querySelector('.gbody'); if (gb) gb.scrollTop = gscroll;
@@ -1022,7 +1054,8 @@ window.pageInit = function () {
   $('grid').addEventListener('mousedown', ev => ev.stopPropagation());
   $('grid').addEventListener('click', ev => {
     ev.stopPropagation();
-    const chip = ev.target.closest('[data-gf]'); if (chip) { gfilter = chip.dataset.gf; gAllArm = null; renderGrid(); return; }
+    const chip = ev.target.closest('[data-gf]'); if (chip) { gfilter = chip.dataset.gf; gAllArm = null; gLimit = 300; renderGrid(); return; }
+    if (ev.target.id === 'g-more') { gLimit += 300; renderGrid(); const b = $('g-more'); if (b) b.focus(); return; }
     if (ev.target.id === 'g-close') { closeGrid(); return; }
     if (ev.target.id === 'g-rep-open') { gRepOpen = true; renderGrid(); const r = $('g-rep'); if (r) r.focus(); return; }
     if (ev.target.id === 'g-clear') { gsel.clear(); gAllArm = null; renderGrid(); return; }
@@ -1057,7 +1090,7 @@ window.pageInit = function () {
     if (ev.isComposing) return;   // ERD P1-5: never replace the box mid-syllable — the redraw waits for compositionend
     if (ev.target.id === 'g-find' || ev.target.id === 'g-rep') gRefind(ev.target);
   });
-  function gRefind(t) { const id = t.id, pos0 = t.selectionStart; renderGrid(); const el = $(id); if (el) { el.focus(); el.setSelectionRange(pos0, pos0); } }
+  function gRefind(t) { const id = t.id, pos0 = t.selectionStart; if (id === 'g-find') gLimit = 300; renderGrid(); const el = $(id); if (el) { el.focus(); el.setSelectionRange(pos0, pos0); } }
   $('grid').addEventListener('compositionend', ev => { if (ev.target.id === 'g-find' || ev.target.id === 'g-rep') gRefind(ev.target); });
   $('grid').addEventListener('keydown', ev => { ev.stopPropagation(); if (ev.isComposing || ev.keyCode === 229) return; if (ev.key === 'Escape') closeGrid(); });
 
@@ -1233,11 +1266,11 @@ window.pageInit = function () {
     if (md && canEdit()) { const m = M.find(x => x.id === md.dataset.mdrag), w = toWorld(ev); drag = { memo: m, dx: w.x - m.x, dy: w.y - m.y, moved: false }; return; }
     const nh = ev.target.closest('[data-drag]'), node = ev.target.closest('.node');
     if (tool === 'select' && node) {
-      const e = ent(node.id.slice(2)); sel = e.id; showRP();
+      const e = ent(node.id.slice(2));
       if (nh && canEdit()) { const p = pos(e), w = toWorld(ev); drag = { e, dx: w.x - p.x, dy: w.y - p.y, moved: false }; }
-      render(); return;
+      if (!selectOnly(e.id)) { sel = e.id; showRP(); render(); } return;
     }
-    if (!node && tool === 'select') { if (sel || selRel) { sel = null; selRel = null; render(); } pan = { x: ev.clientX - panX, y: ev.clientY - panY }; cv.classList.add('panning'); }
+    if (!node && tool === 'select') { if (sel || selRel) { if (!selectOnly(null)) { sel = null; selRel = null; render(); } } pan = { x: ev.clientX - panX, y: ev.clientY - panY }; cv.classList.add('panning'); }
   });
   window.addEventListener('mousemove', ev => {
     if (drag) {
@@ -1258,7 +1291,7 @@ window.pageInit = function () {
       const main = dir === 'left' || dir === 'right' ? Math.abs(dx) : Math.abs(dy), side = dir === 'left' || dir === 'right' ? Math.abs(dy) : Math.abs(dx);
       const d = main + side * 2; if (d < bd) { bd = d; best = e.id; } });
     if (!best) { agLive(`${({ right: '오른쪽', left: '왼쪽', down: '아래', up: '위' })[dir]}에 엔터티가 없습니다`); return; }
-    sel = best; kbNode = true; showRP(); render(); showNode(best);
+    if (selectOnly(best)) { const n = $('n-' + best); if (n) n.focus({ preventScroll: true }); } else { sel = best; kbNode = true; showRP(); render(); } showNode(best);
   }
   function nudge(id, dir) {
     const e = ent(id); if (!e || guard() || refGuard(e)) return; snap(); const p = pos(e), s = 16;
@@ -1319,7 +1352,7 @@ window.pageInit = function () {
     const mb = ev.target.closest && ev.target.closest('.mb'); if (mb) { const m = M.find(x => x.id === mb.dataset.mid); if (m) m.text = mb.textContent; }
   });
   // ERD P2-16: a node reached with Tab is selected (the panel follows), so Enter · F2 · Delete act on what has focus
-  cv.addEventListener('focusin', ev => { const n = ev.target.classList && ev.target.classList.contains('node') ? ev.target : null; if (!n || drag) return; const id = n.id.slice(2); if (sel === id) return; sel = id; kbNode = true; showRP(); render(); });
+  cv.addEventListener('focusin', ev => { const n = ev.target.classList && ev.target.classList.contains('node') ? ev.target : null; if (!n || drag) return; const id = n.id.slice(2); if (sel === id) return; if (!selectOnly(id)) { sel = id; kbNode = true; showRP(); render(); } });
   // memo: the undo entry is taken on the first real change, and leaving the memo is a save boundary (ERD P1-7)
   let memoHid = null, memoBefore = null;
   cv.addEventListener('focusin', ev => { if (ev.target.classList && ev.target.classList.contains('mb')) { memoHid = null; memoBefore = ev.target.textContent; } });
@@ -1656,6 +1689,16 @@ window.pageInit = function () {
   if (SNAP_HIDDEN) { E.splice(0, E.length); R.splice(0, R.length); M.splice(0, M.length); }
   else if (REVIEW_HIDDEN) { const c = confirmedCopy(AREA); if (!loadData(c)) { E.splice(0, E.length); R.splice(0, R.length); M.splice(0, M.length); } }
   else if (SNAP_BAD) { E.splice(0, E.length); R.splice(0, R.length); M.splice(0, M.length); }   // nothing to show rather than the wrong model
+  else if (PERF) {   // measurement model: N entities (8 attributes each) · M relations with real FK columns — editable in memory, never saved
+    const N = Math.max(10, +q.get('perf') || 300), NR = +q.get('rels') || 500; E.splice(0, E.length); R.splice(0, R.length); M.splice(0, M.length);
+    const ATT = [['명', 'NM', 'VARCHAR2(100)'], ['코드', 'CD', 'CHAR(2)'], ['일자', 'YMD', 'CHAR(8)'], ['금액', 'AMT', 'NUMBER(15)'], ['여부', 'YN', 'CHAR(1)'], ['내용', 'CN', 'VARCHAR2(1000)'], ['순번', 'SN', 'NUMBER(10)']];
+    for (let i = 0; i < N; i++) { const x = 60 + (i % 20) * 300, y = 60 + Math.floor(i / 20) * 300;
+      E.push({ id: 'p' + i, n: `측정엔터티${i}`, p: `PERF${i}_M`, c: 'M', x, y, px: x, py: y, a: [{ n: `측정${i}ID`, p: `PERF${i}_ID`, t: 'VARCHAR2(10)', pk: 1, nn: 1, s: 'ok' }].concat(ATT.map(([n, p, t], j) => ({ n: `측정${i}${n}`, p: `PERF${i}_${p}`, t, s: j === 3 && i % 9 === 0 ? 'unreg' : 'ok' }))) }); }
+    const seen = new Set(); let r = 0;
+    for (let k = 0; R.length < NR && k < NR * 4; k++) { const f = (k * 7) % N, t = (f + 1 + (k % 23)) % N; if (f === t || seen.has(f + ':' + t)) continue; seen.add(f + ':' + t);
+      const pe = E[f], ce = E[t], pk = pe.a[0], g = 'gp' + (r++); ce.a.push({ n: pk.n, p: pk.p, t: pk.t, fk: 1, fkg: g, fkp: pk.p, nn: 1, s: 'ok' }); R.push({ f: pe.id, t: ce.id, k: 'nonid', name: '', g, card: '0n', opt: 'must', del: 'none' }); }
+    V.splice(0, V.length, { id: 'all', n: '전체' }); sel = null; remoteSel = null;
+  }
   else if (q.has('big')) { for (let i = 0; i < 305; i++) E.push({ id: 'b' + i, n: `대용량엔터티${i}`, p: `BIG${i}_M`, c: 'M', x: 1300 + (i % 20) * 280, y: 60 + Math.floor(i / 20) * 200, px: 1300 + (i % 20) * 280, py: 60 + Math.floor(i / 20) * 200, a: [{ n: `대용량${i}ID`, p: `BIG${i}_ID`, t: 'VARCHAR2(10)', pk: 1, nn: 1, s: 'ok' }, { n: '이름', p: 'NM', t: 'VARCHAR2(100)', s: 'ok' }] }); }
   else if (STATE === 'applied') { applyStd(); }
   else if (STATE === 'resolved') { applyStd(); keepRecipientAsEx(RECIP_WHY); }
@@ -1787,6 +1830,13 @@ window.pageInit = function () {
   drawParticipants();
   if (q.get('focus') && ent(q.get('focus'))) setTimeout(() => { focusEnt(q.get('focus')); if (q.get('attr')) { treeOrigin = true; treeAttr = +q.get('attr'); render(); hlAttr(treeAttr); } }, 120);
   // ---- model tree (12 · T1)
+  // speed measurement hooks (?perf only): the same functions a pan · zoom · drag frame · selection runs
+  if (PERF) window.__perf = { n: () => ({ E: E.length, R: R.length, A: E.reduce((s, e) => s + e.a.length, 0) }), render, drawEdges, mini, miniView, fit, snap, undo,
+    select: id => { if (!selectOnly(id)) { sel = id; showRP(); render(); } }, selectFull: id => { sel = id; showRP(); render(); }, panel, edgesFor, pan: (dx, dy) => { panX += dx; panY += dy; applyView(); }, zoomTo: z => { zoom = z; applyView(); }, lod: () => world.className,
+    dragFrame: id => { const e = ent(id), p = pos(e); setPos(e, p.x + 8, p.y); const d = $('n-' + id); d.style.left = (p.x + 8) + 'px'; if (!edgesFor(id)) drawEdges(); }, dragFrameFull: id => { const e = ent(id), p = pos(e); setPos(e, p.x - 8, p.y); $('n-' + id).style.left = (p.x - 8) + 'px'; drawEdges(); mini(); },
+    openGrid: () => openGrid(false), closeGrid, nodeHTML, syncViewSel, VE,
+    edit: id => { const e = ent(id); snap(); e.a[1].n = e.a[1].n.endsWith('가') ? e.a[1].n.slice(0, -1) : e.a[1].n + '가'; render(); },   // one attribute renamed = what an ordinary edit redraws
+    mode: v => { mode = v; render(); }, tree: () => window.dispatchEvent(new Event('dbm-tree-refresh')) };
   window.treeData = () => ({ area: AREA, E, R, V, view: curView, mode, ver: SNAP ? 'snap:' + SNAP : REVIEW_HIDDEN ? 'v' + LOCK.model.base : 'v' + VER, label: $('ver').textContent.trim(), ro: document.body.classList.contains('locked') || document.body.classList.contains('viewonly') });
   function hlAttr(ai) { setTimeout(() => { const tr = document.querySelector(`#rp-body tr[data-ai="${ai}"]`); document.querySelectorAll('#rp-body tr.hl').forEach(x => x.classList.remove('hl')); if (tr) { tr.classList.add('hl'); tr.scrollIntoView({ block: 'nearest' }); } }, 0); }
   window.addEventListener('dbm-tree-select', ev => {
@@ -1906,7 +1956,7 @@ window.pageInit = function () {
     const items = () => VE().filter(e => !e.ref && e.n.includes(inp.value.trim()));
     const draw = () => { const L = items(); idx = Math.min(idx, Math.max(0, L.length - 1)); list.innerHTML = L.map((e, i) => `<div role="option" id="cp-o${i}" class="ac-opt${i === idx ? ' on' : ''}" aria-selected="${i === idx}" data-e="${e.id}">${hx(e.n)}${e.id === fId ? ' <span class="faint">(재귀)</span>' : ''}</div>`).join('') || '<div class="caption muted">맞는 엔터티가 없습니다</div>';
       if (L.length) inp.setAttribute('aria-activedescendant', 'cp-o' + idx); else inp.removeAttribute('aria-activedescendant'); };
-    const close = () => { p.remove(); const n = $('n-' + fId); if (n) { n.tabIndex = -1; n.focus(); } };   // focus goes back to the parent entity
+    const close = () => { p.remove(); const n = $('n-' + fId); if (n) { n.__h = ''; n.tabIndex = -1; n.focus(); } };   // focus goes back to the parent entity
     const pick = id => { p.remove(); if (id === fId) { makeRel(fId, fId, 'nonid'); return; } makeRel(fId, id, relType); };
     const setRT = k => { relType = k; $('reltype').textContent = ({ nonid: '1:N 비식별', id: '1:N 식별', one: '1:1', mn: 'M:N' })[k]; document.querySelectorAll('#relmenu .mi[data-rt]').forEach(x => x.classList.toggle('on', x.dataset.rt === k));
       p.querySelectorAll('[data-cprt]').forEach(b => { const on = b.dataset.cprt === k; b.classList.toggle('on', on); b.setAttribute('aria-checked', on); b.tabIndex = on ? 0 : -1; }); agLive('관계 종류 ' + RT.find(x => x[0] === k)[2].split(' — ')[0]); };

@@ -27,7 +27,8 @@
 #edges { position:absolute; left:0; top:0; overflow:visible; pointer-events:none; }
 #edges path.hit { stroke:transparent; stroke-width:16; fill:none; pointer-events:stroke; cursor:pointer; }
 #edges path.hit.pick { stroke:color-mix(in srgb, var(--info) 35%, transparent); }
-.node { position:absolute; min-width:180px; max-width:320px; background:var(--surface); border:1px solid var(--border-strong); border-radius:var(--r-lg); font-size:12px; box-shadow:0 1px 2px rgba(0,0,0,.04); user-select:none; }
+.node { contain:layout style;   /* speed: a changed node is laid out on its own, the other 299 are left alone */
+  position:absolute; min-width:180px; max-width:320px; background:var(--surface); border:1px solid var(--border-strong); border-radius:var(--r-lg); font-size:12px; box-shadow:0 1px 2px rgba(0,0,0,.04); user-select:none; }
 .node.sel { border-color:var(--ds-gray-1000); box-shadow:0 0 0 1px var(--ds-gray-1000); }
 .node.relsrc { border-color:var(--info); box-shadow:0 0 0 2px var(--info); }
 .node.drop { box-shadow:0 0 0 2px var(--info), var(--menu-shadow); }
@@ -141,6 +142,7 @@
 .pop .cp-rt { display:flex; gap:6px; }
 .pop .cp-rt .chip { height:28px; gap:4px; }
 .pop .cp-rt kbd { font-size:12px; padding:0 3px; }
+#grid .g-more { display:flex; gap:12px; align-items:center; padding:12px 16px; }
 #grid .g-title { margin:0; font-weight:600; outline:none; }
 .ck-tbl td:last-child, .ck-tbl th:last-child { text-align:right; white-space:nowrap; }
 .ck-tbl .ck-act { display:flex; gap:4px; justify-content:flex-end; }

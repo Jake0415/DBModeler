@@ -1369,6 +1369,9 @@
     // the read-only note joins the area badge instead of taking its own line ("v5 작업 중 · 조회")
     const stateBadge = area => { const l = live(); if (l && l.area === area && l.label) return `<span class="tbadge" title="${esc(l.label)}${l.ro ? ' · 조회 전용' : ''}">${esc(l.label)}${l.ro ? ' · 조회' : ''}</span>`; const L = modelLock(area); const m = getModels()[area]; return L.state === 'review' ? '<span class="tbadge">검토</span>' : L.state === 'confirmed' ? '<span class="tbadge">확정</span>' : `<span class="tver" title="작업 중 v${m.ver}">v${m.ver}</span>`; };
 
+    // dictionary terms by name — built once per task (a redraw reads it for every area), first entry wins like the old find()
+    let termIdxMemo = null;
+    const termIndex = () => { if (termIdxMemo) return termIdxMemo; const m = new Map(); getDict().forEach(d => { if (d.k === 'term' && !m.has(d.name)) m.set(d.name, d); }); termIdxMemo = m; setTimeout(() => { termIdxMemo = null; }, 0); return m; };
     // ---- build the node tree (hierarchical), then flatten what is open
     function build() {
       const models = getModels(), P = pageMode() === 'P', qq = q.trim(); let found = 0;
@@ -1377,7 +1380,7 @@
         const s = src(area), k = SYS + ':' + area + '@' + s.ver, tog = ST.tog[k] || {};
         const isOp = (nid, def) => nid in tog ? !!tog[nid] : autoOpen.has(k + '|' + nid) ? true : def;
         const N = (nid, kind, o) => Object.assign({ id: area + '|' + nid, nid, area, key: k, kind, kids: null }, o);
-        const ents = s.E.filter(passF);
+        const ents = s.E.filter(passF), byId = new Map(s.E.map(e => [e.id, e])), entSet = new Set(ents.map(e => e.id));   // lookups by id (were find() per relation / node)
         const areaHit = hitFn(m.name);
         // the model screen's open view: entities not placed in it are grey, its hidden relation lines say so
         const lv0 = live(), onM = file === 'model.html' && lv0 && lv0.area === area && lv0.V;
@@ -1387,7 +1390,9 @@
           const eh = hitFn(e.n) || hitFn(e.p), ah = e.a.map((a, i) => (hitFn(a.n) || hitFn(a.p)) ? i : -1).filter(i => i >= 0);
           if (qq && !areaHit && !eh && !ah.length) return null;
           found += (eh ? 1 : 0) + ah.length;
-          const attrs = e.a.map((a, i) => ({ a, i })).filter(x => !qq || areaHit || eh || ah.includes(x.i));
+          // attribute rows are built only for an entity that is open (or matched by the search) — 2,900 rows were built on every redraw
+          const eOpen = !e.ref && (qq && ah.length ? true : isOp('e:' + e.id, false));
+          const attrs = eOpen ? e.a.map((a, i) => ({ a, i })).filter(x => !qq || areaHit || eh || ah.includes(x.i)) : [];
           const kids = attrs.map(({ a, i }) => N('a:' + e.id + ':' + i, P ? 'col' : 'attr', {
             ent: e.id, ai: i, selectable: true, pk: !!a.pk, fk: !!a.fk,
             html: P ? (a.p === '—' ? `<span class="tn1">${mark(a.n)}</span><span class="tmeta ts-miss">물리명 없음</span>` : `<span class="tn1 mono">${mark(a.p)}</span><span class="tmeta">${esc(a.t)}${a.pk ? ' · PK' : ''}${a.fk ? ' · FK' : ''}</span>`) : `<span class="tn1">${mark(a.n)}</span><span class="tmeta">${a.pk ? 'PK' : ''}${a.fk ? (a.pk ? ' · ' : '') + 'FK' : ''}${STC[a.s] ? `${a.pk || a.fk ? ' · ' : ''}<span class="ts-${a.s}">${STC[a.s]}</span>` : ''}</span>`,
@@ -1398,7 +1403,7 @@
             html: (() => { const stl = refStale(e), refMeta = e.ref ? `<span class="tmeta">${esc(e.refName || '공통')}${e.refVer ? ' v' + e.refVer + ' 확정' : ''}</span>${stl ? `<span class="tbadge" title="원본 v${stl} 확정본이 나왔습니다 — 메뉴의 [갱신]으로 맞춥니다">갱신</span>` : ''}` : '';
               return P ? `<span class="tn1 mono">${mark(e.p === '—' ? e.n + ' (물리명 없음)' : e.p)}</span>${e.ref ? refMeta : ahNote || `<span class="tmeta">${esc(e.n)}</span>`}` : `${entDot(e)}<span class="tn1">${mark(e.n)}</span>${e.ref ? refMeta : (ahNote || (entBad(e) ? `<span class="tct tbad" title="미준수 ${entBad(e)}">${entBad(e)}</span>` : '')) + `<span class="tmeta mono">${mark(e.p === '—' ? '물리명 없음' : e.p)}</span>`}`; })(),
             aria: `${P ? e.p : e.n}${!P && e.p !== '—' ? ' ' + e.p : ''}, ${entState(e)}${e.ref ? ', ' + (e.refName || '공통') + ' 영역에서 참조' + (refStale(e) ? ', 원본 새 확정본 있음' : '') : ''}${cvV && !(cvV.ents || []).includes(e.id) ? ', 이 보기에 없음' : ''}`, title: P ? e.n : (e.p !== '—' ? e.p : '물리명 없음'),
-            open: kids.length && !e.ref ? (qq && ah.length ? true : isOp('e:' + e.id, false)) : null, kids: e.ref ? null : kids });
+            open: e.a.length && !e.ref ? eOpen : null, kids: e.ref ? null : kids });
         }).filter(Boolean);
         const kidsOf = [];
         const FHELP = { 'f:views': '같은 영역의 테이블을 목적별로 나눠 그린 ERD 그림', 'f:ents': '데이터를 담는 표(테이블). 펼치면 컬럼(칸)이 보입니다', 'f:tbls': '실제 DB에 만들어질 테이블. 펼치면 컬럼과 타입이 보입니다', 'f:rels': '두 테이블이 어떻게 이어지는지(예: 부서 → 사원 소속된다)', 'f:prels': '관계마다 FK(다른 테이블을 가리키는 키)가 만들어졌는지', 'f:subs': '하나의 테이블을 종류별로 나눈 구조(예: 정규직 · 계약직)', 'f:std': '이 영역이 쓰는 표준 사전의 용어와 데이터 형식(도메인)', 'f:terms': '표준 사전에 등록된 이름과 영문 약어', 'f:doms': '데이터 형식 묶음(예: 금액N18 = 숫자 18자리)', 'f:cons': 'PK(기본키) · FK(참조키) · UK(중복 금지) 규칙', 'f:ix': '검색을 빠르게 하는 색인', 'f:refs': '다른 업무 영역의 테이블을 읽기 전용으로 가져와 관계만 맺은 것' };
@@ -1411,15 +1416,15 @@
             return N('v:' + v.id, 'view', { view: v.id, selectable: true, html: `<span class="tn1">${esc(v.n)}</span><span class="tct">${n}</span>${v.id === seeing ? '<span class="tmeta">보는 중</span>' : ''}`, aria: `${v.n}, 엔터티 ${n}${v.id === 'all' ? ', 기본 보기' : ''}${v.id === seeing ? ', 보는 중' : ''}` }); }), { def: !!onM && seeing !== 'all' }));
         }
         if (!P) {
-          if (entNodes.length || !qq) kidsOf.push(folder('f:ents', '엔터티', groupEnts(entNodes, area, isOp), { def: area === cur, count: qq ? entNodes.filter(n => !s.E.find(e => e.id === n.ent).ref).length : ents.filter(e => !e.ref).length }));
-          const refNodes = entNodes.filter(n => s.E.find(e => e.id === n.ent).ref);
+          if (entNodes.length || !qq) kidsOf.push(folder('f:ents', '엔터티', groupEnts(entNodes, area, isOp, byId), { def: area === cur, count: qq ? entNodes.filter(n => !byId.get(n.ent).ref).length : ents.filter(e => !e.ref).length }));
+          const refNodes = entNodes.filter(n => byId.get(n.ent).ref);
           if (refNodes.length) kidsOf.push(folder('f:refs', '다른 영역에서 참조', refNodes, { def: false, title: '다른 업무 영역의 엔터티를 읽기 전용으로 가져와 관계만 맺습니다' }));
-          const rels = s.R.filter(r => ents.some(e => e.id === r.f) && ents.some(e => e.id === r.t)).map((r, i) => ({ r, i })).filter(({ r }) => { const a = s.E.find(e => e.id === r.f), b = s.E.find(e => e.id === r.t); return !qq || areaHit || hitFn(a.n) || hitFn(b.n) || hitFn(r.name); });
-          if (rels.length || !qq) kidsOf.push(folder('f:rels', '관계', rels.map(({ r, i }) => { const a = s.E.find(e => e.id === r.f), b = s.E.find(e => e.id === r.t); return N('r:' + i, 'rel', { rel: i, ent: r.t, selectable: true, html: `<span class="tn1">${esc(a.n)} → ${esc(b.n)}</span><span class="tmeta">${esc(r.name || '')}${curV && (curV.hide || []).includes(relKey(r)) ? ' · 선 숨김' : ''}</span>`, aria: `${a.n}에서 ${b.n}, ${({ nonid: '비식별', id: '식별', one: '1:1', mn: 'M:N' })[r.k] || ''}`, title: ({ nonid: '1:N 비식별', id: '1:N 식별', one: '1:1', mn: 'M:N' })[r.k] }); })));
+          const rels = s.R.map((r, i) => ({ r, i })).filter(({ r }) => entSet.has(r.f) && entSet.has(r.t)).filter(({ r }) => { const a = byId.get(r.f), b = byId.get(r.t); return !qq || areaHit || hitFn(a.n) || hitFn(b.n) || hitFn(r.name); });
+          if (rels.length || !qq) kidsOf.push(folder('f:rels', '관계', rels.map(({ r, i }) => { const a = byId.get(r.f), b = byId.get(r.t); return N('r:' + i, 'rel', { rel: i, ent: r.t, selectable: true, html: `<span class="tn1">${esc(a.n)} → ${esc(b.n)}</span><span class="tmeta">${esc(r.name || '')}${curV && (curV.hide || []).includes(relKey(r)) ? ' · 선 숨김' : ''}</span>`, aria: `${a.n}에서 ${b.n}, ${({ nonid: '비식별', id: '식별', one: '1:1', mn: 'M:N' })[r.k] || ''}`, title: ({ nonid: '1:N 비식별', id: '1:N 식별', one: '1:1', mn: 'M:N' })[r.k] }); })));
           const subs = ents.filter(e => e.sub && (!qq || areaHit || hitFn(e.n)));
           if (subs.length) kidsOf.push(folder('f:subs', '서브타입', subs.map(e => N('s:' + e.id, 'ent', { ent: e.id, selectable: true, html: `<span class="tn1">${esc(e.n)}</span><span class="tmeta">${esc(e.sub.kind)} · ${e.sub.kids.length}</span>`, aria: `${e.n} 서브타입 ${e.sub.kind}`, title: e.sub.kids.join(', ') }))));
         } else {
-          if (entNodes.length || !qq) kidsOf.push(folder('f:tbls', '테이블', groupEnts(entNodes, area, isOp), { def: area === cur, count: qq ? entNodes.filter(n => !s.E.find(e => e.id === n.ent).ref).length : ents.filter(e => !e.ref).length }));
+          if (entNodes.length || !qq) kidsOf.push(folder('f:tbls', '테이블', groupEnts(entNodes, area, isOp, byId), { def: area === cur, count: qq ? entNodes.filter(n => !byId.get(n.ent).ref).length : ents.filter(e => !e.ref).length }));
           const refT = entNodes.filter(n => s.E.find(e => e.id === n.ent).ref);
           if (refT.length) kidsOf.push(folder('f:refs', '다른 영역에서 참조', refT, { def: false, title: '다른 업무 영역의 테이블 · FK가 가리키는 원본' }));
           const pr = s.R.map((r, i) => ({ r, i, f: fkOf(r, s.E) })).filter(x => x.f.st !== 'none' && ents.some(e => e.id === x.r.t)).filter(({ r }) => { const a = s.E.find(e => e.id === r.f), b = s.E.find(e => e.id === r.t); return !qq || areaHit || hitFn(a.p) || hitFn(b.p); });
@@ -1435,15 +1440,18 @@
           }
         }
         // standards this area uses (the dictionary stays the source)
-        const dict = getDict(); const own = ents.filter(e => !e.ref);
-        const tmap = {}; own.forEach(e => e.a.forEach(a => { if (a.s !== 'ok' || a.p === '—' || tmap[a.n]) return; const d0 = dict.find(d => d.k === 'term' && d.name === a.n); tmap[a.n] = { id: d0 ? d0.id : 'a-' + a.n, name: a.n, abbr: a.p, dom: (d0 && d0.dom) || a.dom || '' }; }));
+        // speed (300 entities · 2,900 attributes): one pass over the dictionary into a name index, one pass over the attributes for "used by" —
+        // was a dictionary scan per attribute name and an entity scan per term / domain (≈0.5s per tree redraw)
+        const own = ents.filter(e => !e.ref), dIdx = termIndex();
+        const tmap = {}, usedBy = new Map(); own.forEach(e => e.a.forEach(a => { if (!usedBy.has(a.n)) usedBy.set(a.n, new Set()); usedBy.get(a.n).add(e.id); if (a.s !== 'ok' || a.p === '—' || tmap[a.n]) return; const d0 = dIdx.get(a.n); tmap[a.n] = { id: d0 ? d0.id : 'a-' + a.n, name: a.n, abbr: a.p, dom: (d0 && d0.dom) || a.dom || '' }; }));
         const terms = Object.values(tmap).filter(d => !qq || hitFn(d.name) || hitFn(d.abbr)).sort((x, y) => x.name.localeCompare(y.name, 'ko'));
         const doms = [...new Set(terms.map(d => d.dom).filter(x => x && x !== '—'))];
         const unreg = own.reduce((n, e) => n + e.a.filter(a => a.s === 'unreg').length, 0);
         if (qq) found += terms.length;
         if (terms.length || !qq) {
-          const tk = terms.map(d => N('t:' + d.id, 'term', { term: d.name, ents: own.filter(e => e.a.some(a => a.n === d.name)).map(e => e.id), selectable: true, html: `<span class="tn1">${mark(d.name)}</span><span class="tmeta mono">${esc(d.abbr)}</span>`, aria: `용어 ${d.name}, ${d.abbr}`, title: d.dom }));
-          const dk = doms.map(dm => { const used = own.filter(e => e.a.some(a => terms.some(d => d.dom === dm && d.name === a.n))); return N('d:' + dm, 'dom', { dom: dm, ents: used.map(e => e.id), selectable: true, html: `<span class="tn1">${esc(dm)}</span><span class="tmeta">엔터티 ${used.length}</span>`, aria: `도메인 ${dm}, 엔터티 ${used.length}` }); });
+          const tk = terms.map(d => N('t:' + d.id, 'term', { term: d.name, ents: [...(usedBy.get(d.name) || [])], selectable: true, html: `<span class="tn1">${mark(d.name)}</span><span class="tmeta mono">${esc(d.abbr)}</span>`, aria: `용어 ${d.name}, ${d.abbr}`, title: d.dom }));
+          const domEnts = new Map(); terms.forEach(d => { if (!d.dom || d.dom === '—') return; if (!domEnts.has(d.dom)) domEnts.set(d.dom, new Set()); (usedBy.get(d.name) || []).forEach(id => domEnts.get(d.dom).add(id)); });
+          const dk = doms.map(dm => { const used = [...(domEnts.get(dm) || [])]; return N('d:' + dm, 'dom', { dom: dm, ents: used, selectable: true, html: `<span class="tn1">${esc(dm)}</span><span class="tmeta">엔터티 ${used.length}</span>`, aria: `도메인 ${dm}, 엔터티 ${used.length}` }); });
           kidsOf.push(N('f:std', 'folder', { html: `<span class="tn1">표준 용어 · 도메인</span><span class="tct">용어 ${terms.length} · 도메인 ${doms.length}${unreg ? ` · 미등록 ${unreg}` : ''}</span>`, aria: `표준 용어와 도메인, 용어 ${terms.length}, 도메인 ${doms.length}${unreg ? ', 미등록 ' + unreg : ''}`, open: qq && terms.length ? true : isOp('f:std', false),
             kids: [folder('f:terms', '용어', tk), folder('f:doms', '도메인', dk)].filter(f => f.kids.length || !qq) }));
         }
@@ -1455,12 +1463,13 @@
     }
     // entities by kind (기준 정보 · 거래 · 이력 · 코드) once an area has more than 6 — ERP areas read like their business
     const KIND = { M: ['기준 정보', '고객 · 품목 · 사원처럼 오래 두고 쓰는 정보와 그 하위 정보'], A: ['거래', '주문 · 발주 · 전표처럼 업무가 일어날 때마다 쌓이는 정보'], H: ['이력', '변경 · 상태 기록'], K: ['코드 · 분류', '분류 체계 · 직급 같은 기준 코드'] };
-    function groupEnts(nodes, area) {
-      const s = src(area), own = nodes.filter(n => !s.E.find(e => e.id === n.ent).ref);
-      const kinds = ['M', 'K', 'A', 'H'].filter(c => own.some(n => s.E.find(e => e.id === n.ent).c === c));
+    function groupEnts(nodes, area, _isOp, byId) {
+      if (!byId) { const s = src(area); byId = new Map(s.E.map(e => [e.id, e])); }
+      const own = nodes.filter(n => !byId.get(n.ent).ref);
+      const kinds = ['M', 'K', 'A', 'H'].filter(c => own.some(n => byId.get(n.ent).c === c));
       if (kinds.length < 2) return own;
       const out = [];
-      kinds.forEach(c => { const k = own.filter(n => s.E.find(e => e.id === n.ent).c === c); k[0].grp = { label: KIND[c][0], n: k.length, title: KIND[c][1] }; k.forEach(n => { n.aria += ', ' + KIND[c][0]; }); out.push(...k); });
+      kinds.forEach(c => { const k = own.filter(n => byId.get(n.ent).c === c); k[0].grp = { label: KIND[c][0], n: k.length, title: KIND[c][1] }; k.forEach(n => { n.aria += ', ' + KIND[c][0]; }); out.push(...k); });
       return out;
     }
     function flatten(nodes, lvl, parent, acc) {
