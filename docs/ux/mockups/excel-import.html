@@ -81,6 +81,13 @@
   .sum6-sub { color:var(--fg-2); font-size:12px; }
   .chk-line { margin-top:6px; font-size:12px; }
   .prob-list { margin:4px 0 0; padding-left:18px; font-size:12px; line-height:18px; }
+  /* fixed widths live in the page style, not inline (17 §6.2) */
+  .stepview[data-step="1"] > .pad { max-width:980px; }
+  .stepview[data-step="2"] > .pad, .stepview[data-step="3"] > .pad { max-width:960px; }
+  .stepview[data-step="4"] > .pad { max-width:640px; }
+  .stepview[data-step="6"] > .pad { max-width:760px; }
+  .mapsum .sep { width:1px; height:12px; background:var(--ds-gray-400); }
+  #more-f { width:190px; }
 </style>
 </head>
 <body data-page="excel">
@@ -96,7 +103,7 @@
   <div class="pad u-pb-0" id="resume-banner" hidden></div>
 
   <!-- 1 kind & mode -->
-  <section class="stepview" data-step="1"><div class="pad" style="max-width:980px">
+  <section class="stepview" data-step="1"><div class="pad">
     <h2 class="u-fs-16 u-mb-12">어떻게 가져올까요?</h2>
     <div class="modes" role="radiogroup" aria-label="가져오는 방식">
       <div class="modecard on" data-mode="round" tabindex="0" role="button"><input type="radio" name="mode" checked aria-label="편집용 파일 다시 올리기"><div><b>편집용 파일 다시 올리기</b><div class="caption muted">사전에서 [내려받기 › 편집용 엑셀]로 받아 고친 파일. 숨김 열(항목 ID·버전·기준본)로 <b>바뀐 것만</b> 찾아 신규·변경으로 나눕니다.</div></div></div>
@@ -127,7 +134,7 @@
   </div></section>
 
   <!-- 2 upload -->
-  <section class="stepview" data-step="2"><div class="pad" style="max-width:960px">
+  <section class="stepview" data-step="2"><div class="pad">
     <div class="drop"><b class="u-fg">파일을 끌어 놓거나 선택하세요</b><div class="caption">XLSX · CSV(UTF-8/CP949 자동 판별) · <b>최대 20MB · 10만 행</b> 중 먼저 걸리는 쪽</div><div class="u-mt-12"><button class="btn" id="pick"><i data-ic=upload></i>파일 선택</button></div><div class="caption muted u-mt-8">목업: 고른 파일 대신 종류별 예시 행으로 단계를 보여 줍니다(실제 파싱은 구현 단계)</div><div class="caption muted u-mt-12">목업 오류 재현: <button class="btn ghost sm" id="pick-big" style="height:24px;padding:0 6px">상한 초과 파일(12만 행)</button></div><div class="banner danger" id="big-err" hidden style="margin-top:12px;text-align:left"><i data-ic=warn></i><div><b>올릴 수 없습니다 — 120,000행</b> · 상한 10만 행을 넘었습니다(파일 6.1MB). 시트를 나누거나 필터로 범위를 줄여 다시 내려받은 편집용 파일을 쓰세요.</div></div></div>
     <div id="filecard" hidden>
       <div class="card u-mt-16 u-flex u-gap-12 u-ai-c"><span class="badge">XLSX</span><div class="grow"><b id="fc-name">요구사항관리_용어_2차.xlsx</b><div class="caption muted" id="fc-meta">시트 ‘표준용어’ · 14행 · 38KB · 양식 v2</div></div><button class="btn ghost sm" id="repick">바꾸기</button></div>
@@ -136,16 +143,16 @@
   </div></section>
 
   <!-- 3 mapping -->
-  <section class="stepview" data-step="3"><div class="pad" style="max-width:960px">
+  <section class="stepview" data-step="3"><div class="pad">
     <h2 class="u-fs-16 u-mb-4">열 매핑 확인</h2>
-    <div class="mapsum"><b id="map-file">요구사항관리_용어_2차.xlsx</b><span class="sep" style="width:1px;height:12px;background:var(--ds-gray-400)"></span>필수 항목 <b id="map-req">2/2</b> 연결<span class="sep" style="width:1px;height:12px;background:var(--ds-gray-400)"></span><span id="map-note"></span> <button class="btn ghost sm" id="map-repick">파일 바꾸기</button></div>
+    <div class="mapsum"><b id="map-file">요구사항관리_용어_2차.xlsx</b><span class="sep" aria-hidden="true"></span>필수 항목 <b id="map-req">2/2</b> 연결<span class="sep" aria-hidden="true"></span><span id="map-note"></span> <button class="btn ghost sm" id="map-repick">파일 바꾸기</button></div>
     <div class="caption muted u-mb-12">머리글 이름으로 자동 연결했습니다(위치로 연결하지 않음).</div>
     <table class="tbl"><thead><tr><th>파일 머리글</th><th>예시 값</th><th>NeoDB 항목</th><th>상태</th></tr></thead><tbody id="map-body"></tbody></table>
     <div class="banner success u-mt-12"><i data-ic=check></i><div id="map-ok"></div></div>
   </div></section>
 
   <!-- 4 validating -->
-  <section class="stepview" data-step="4"><div class="pad" style="max-width:640px">
+  <section class="stepview" data-step="4"><div class="pad">
     <h2 class="u-fs-16 u-mb-12">검증·비교 중…</h2>
     <div class="u-flex u-ai-c u-gap-12"><div class="progress grow" id="prog-bar" role="progressbar" aria-label="검증 진행률" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i id="prog" style="width:0%"></i></div><button class="btn sm" id="cancel-val" title="검증을 멈추고 열 매핑 단계로 돌아갑니다">취소</button></div>
     <div class="caption muted u-mt-8" id="prog-t" aria-live="polite"></div>
@@ -171,7 +178,7 @@
   </section>
 
   <!-- 6 submit -->
-  <section class="stepview" data-step="6"><div class="pad" style="max-width:760px">
+  <section class="stepview" data-step="6"><div class="pad">
     <h2 class="u-fs-16 u-mb-12">신청</h2>
     <table class="tbl" id="sum6" style="border:1px solid var(--border)"></table>
     <div class="banner u-mt-12" id="basket-cap"><i data-ic=basket></i><div class="grow"><b>[바구니로 보내기]</b>는 신청할 행을 내 바구니에 담습니다. 사전 화면에서 손으로 고른 항목(새 단어·용어 변경 등)과 <b>한 신청</b>으로 묶어 올릴 때 쓰세요. 바로 [신청]하면 이 파일의 행만 따로 신청됩니다. 바구니에 같은 항목이 이미 있으면 건너뜁니다.</div></div>
@@ -573,7 +580,7 @@ window.pageInit = function () {
     // list standard Q4: 11 states were too many to scan — the states that need action come first (6 chips), the rest go into [더보기]; a 0-count chip stays (dimmed) so nothing moves
     const MAIN = ['', 'err', 'conflict', 'pick', 'new', 'chg'], main = MAIN.map(k => chips.find(c => c[0] === k)), more = chips.filter(c => !MAIN.includes(c[0])), inMore = more.some(c => c[0] === filt) && !recentF;
     $('chips').innerHTML = `<span class="flex u-gap-8" role="group" aria-label="행 상태">${main.map(([k, l, n]) => `<button class="chip ${filt === k && !recentF ? 'on' : ''}${k && !n ? ' zero' : ''}" data-f="${k}" aria-pressed="${filt === k && !recentF}">${l} <span class="n">${n}</span></button>`).join('')}</span>`
-      + `<select class="input" id="more-f" style="width:190px" aria-label="다른 상태로 거르기"><option value="">${inMore ? '다른 상태 해제' : '더보기…'}</option>${more.map(([k, l, n]) => `<option value="${k}"${filt === k && !recentF ? ' selected' : ''}>${l} ${n}</option>`).join('')}</select>`
+      + `<select class="input" id="more-f" aria-label="다른 상태로 거르기"><option value="">${inMore ? '다른 상태 해제' : '더보기…'}</option>${more.map(([k, l, n]) => `<option value="${k}"${filt === k && !recentF ? ' selected' : ''}>${l} ${n}</option>`).join('')}</select>`
       + `<button class="chip ${recentF ? 'on' : ''}" id="recent-f" aria-pressed="${recentF}"${nRecent ? ` title="마지막 작업(${esc5(last ? last.label : '')})이 바꾼 행만 봅니다"` : ' aria-disabled="true" title="아직 바꾼 행이 없습니다"'}>방금 바꾼 행만 <span class="n">${nRecent}</span></button>`
       + '<span class="grow"></span>'
       + `<span class="caption muted undo-last" title="${esc5(undoStack.slice(-6).reverse().map(o => `${o.at} ${o.label}`).join(' / '))}">${last ? `마지막 작업: ${esc5(last.label)} · ${last.at}` : ''}</span>`

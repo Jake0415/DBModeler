@@ -45,6 +45,7 @@
   .dep-ban { margin:8px 0 0 40px; }
   .dep-ban .btn { flex:0 0 auto; }
   /* A5: item filter row */
+  #mo-diff .modal { width:720px; }   /* fixed widths live in the page style, not inline (17 §6.2) */
   .itf { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:8px; }
   .itf .search { flex:1 1 180px; min-width:160px; }
   /* A2: impact */
@@ -128,7 +129,7 @@
     <div class="m-foot"><button class="btn" data-close="mo-wd">취소</button><button class="btn" id="do-wd" data-needs="wd-why">회수</button></div>
   </div></div>
   <!-- MO-26 diff -->
-  <div class="overlay" id="mo-diff" role="dialog" aria-modal="true" aria-labelledby="diff-t"><div class="modal" style="width:720px">
+  <div class="overlay" id="mo-diff" role="dialog" aria-modal="true" aria-labelledby="diff-t"><div class="modal">
     <div class="m-head"><div class="flex"><h3 id="diff-t">직전 확정본 대비 변경</h3><span class="grow"></span><button class="iconbtn u-w-28 u-h-28 u-r-md" data-close="mo-diff" aria-label="닫기"><span class="sg-ic" data-ic="x"></span></button></div></div>
     <div class="m-body" style="max-height:60vh;overflow:auto" id="diff-body"></div>
     <div class="m-foot"><a class="btn" id="diff-erd" href="model.html">ERD로 보기</a><button class="btn primary" data-close="mo-diff">닫기</button></div>

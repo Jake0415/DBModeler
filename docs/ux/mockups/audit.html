@@ -12,6 +12,7 @@
   /* long 내용 · 사유 wrap instead of pushing the table past the window (1600 frame) */
   #ab td:nth-child(5), #ab td:nth-child(6) { white-space:normal; min-width:200px; }
   #ab td:nth-child(4) { white-space:normal; }
+  #amore { width:120px; } #aper { width:140px; }
 </style>
 </head>
 <body data-page="audit">
@@ -27,9 +28,9 @@
     <span class="flex u-gap-8" role="group" aria-label="종류" id="ak">
       <button class="chip on" data-k="">전체</button><button class="chip" data-k="self">자기 승인</button><button class="chip" data-k="purge">영구 삭제</button><button class="chip" data-k="appr">결재</button><button class="chip" data-k="role">역할·권한</button><button class="chip" data-k="set">설정</button>
     </span>
-    <select class="input" id="amore" style="width:120px;" aria-label="종류 더보기"><option value="">더보기…</option><option value="dict">사전 반영</option><option value="model">모델 확정</option></select>
+    <select class="input" id="amore" aria-label="종류 더보기"><option value="">더보기…</option><option value="dict">사전 반영</option><option value="model">모델 확정</option></select>
     <span class="grow"></span>
-    <select class="input" id="aper" style="width:140px;" aria-label="기간"><option value="30" selected>최근 30일</option><option value="365">최근 1년</option><option value="0">전체 기간</option></select>
+    <select class="input" id="aper" aria-label="기간"><option value="30" selected>최근 30일</option><option value="365">최근 1년</option><option value="0">전체 기간</option></select>
   </div>
   <div class="listhead" id="alh"></div>
   <div class="scroll">

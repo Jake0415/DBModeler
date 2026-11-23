@@ -13,13 +13,15 @@
   .set-row { display:grid; grid-template-columns:220px 1fr; gap:24px; padding:16px 0; border-bottom:1px solid var(--border); }
   .set-row .l b { display:block; font-size:14px; } .set-row .l span { font-size:12px; color:var(--fg-2); }
   .ntbl td, .ntbl th { text-align:center; } .ntbl td:first-child, .ntbl th:first-child { text-align:left; }
+  /* fixed widths live in the page style, not inline (17 §6.2) */
+  #av { width:36px; height:36px; font-size:15px; } #sec-pw { max-width:360px; }
 </style>
 </head>
 <body data-page="mypage">
 <div id="app">
 <div id="content" class="page" data-tabscope>
   <div class="page-header" style="border-bottom:0">
-    <span class="avatar" style="width:36px;height:36px;font-size:15px" id="av"></span>
+    <span class="avatar" id="av"></span>
     <h1 id="nm">마이페이지</h1><span class="role-tag" id="rb"></span>
   </div>
   <div class="tabs" style="margin:0;padding:0 20px;background:var(--surface)">
@@ -64,7 +66,7 @@
     <div class="pane set-wrap" data-pane="security">
       <div class="set-row"><div class="l"><b>인증 방식</b></div><div id="sec-auth"></div></div>
       <div class="set-row" id="sec-pwrow"><div class="l"><b>비밀번호 변경</b><span id="sec-pwat"></span></div>
-        <form id="sec-pw" novalidate style="max-width:360px"><div class="field"><label for="s-cur">지금 비밀번호</label><input class="input mono" id="s-cur" type="password" autocomplete="current-password"></div>
+        <form id="sec-pw" novalidate><div class="field"><label for="s-cur">지금 비밀번호</label><input class="input mono" id="s-cur" type="password" autocomplete="current-password"></div>
           <div class="field"><label for="s-n1">새 비밀번호</label><input class="input mono" id="s-n1" type="password" autocomplete="new-password"></div>
           <div class="field"><label for="s-n2">새 비밀번호 확인</label><input class="input mono" id="s-n2" type="password" autocomplete="new-password"></div>
           <div class="caption muted" id="s-rule"></div><div class="caption" id="s-err" role="alert" style="color:var(--danger-deep);min-height:16px;margin-top:4px"></div>

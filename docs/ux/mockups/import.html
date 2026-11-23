@@ -8,6 +8,10 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&display=swap">
 <link rel="stylesheet" href="assets/app.css">
 <script src="assets/app.js"></script>
+<style>
+  /* fixed widths live in the page style, not inline (17 §6.2) */
+  #dst-area { width:220px; } #newname-f { max-width:360px; }
+</style>
 </head>
 <body data-page="model">
 <div id="app">
@@ -32,8 +36,8 @@
         <table class="tbl"><thead><tr><th>테이블</th><th>논리명</th><th class="num">컬럼</th><th>PK</th><th class="num">FK</th><th>점검</th></tr></thead><tbody id="prev"><tr class="er first"><td colspan="6" class="caption muted u-tc u-p-32">왼쪽에 DDL을 넣고 [파싱]을 누르세요</td></tr></tbody></table>
         <div class="pad">
           <div class="field"><label>가져올 위치</label>
-            <div class="flex"><label class="flex caption"><input type="radio" name="dst" value="new" checked> 새 업무 영역</label><label class="flex caption"><input type="radio" name="dst" value="cur"> 기존 업무 영역에 추가</label><select class="input" id="dst-area" style="width:220px;" aria-label="기존 업무 영역"></select></div></div>
-          <div class="field" style="max-width:360px" id="newname-f"><label for="newname">새 업무 영역 이름 *</label><input class="input" id="newname" value="현행 요구사항 DB"></div>
+            <div class="flex"><label class="flex caption"><input type="radio" name="dst" value="new" checked> 새 업무 영역</label><label class="flex caption"><input type="radio" name="dst" value="cur"> 기존 업무 영역에 추가</label><select class="input" id="dst-area" aria-label="기존 업무 영역"></select></div></div>
+          <div class="field" id="newname-f"><label for="newname">새 업무 영역 이름 *</label><input class="input" id="newname" value="현행 요구사항 DB"></div>
           <div class="banner"><i data-ic=info></i><div>가져온 구조로 업무 영역(v1 작업 버전)을 만들고 <b>표준 맞추기</b>를 그 영역으로 엽니다. 이름·타입은 표준 맞추기에서 확인한 뒤에만 바뀝니다.</div></div>
         </div>
       </div>

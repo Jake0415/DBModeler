@@ -26,6 +26,8 @@
   --warning:var(--ds-amber-700); --warning-soft:var(--ds-amber-200); --warning-deep:var(--ds-amber-900);
   --danger:var(--ds-red-700); --danger-soft:var(--ds-red-200); --danger-deep:var(--ds-red-900);
   --violet:var(--ds-gray-900); --violet-soft:var(--ds-gray-100); --violet-deep:var(--ds-gray-900);
+  /* presence colours for co-editors (cursor · remote selection · avatar) — p-1 first other editor, p-2 second (17 §6.2) */
+  --p-1:#de1d8d; --p-2:#0a72ef;
   --r-sm:4px; --r-md:6px; --r-lg:8px; --r-xl:12px; --r-full:9999px;
   --row:36px; --control:32px; --th-bg:var(--ds-gray-100); --topbar:48px; --nav:264px; --panel:420px; --dictpanel:280px;
   --frame-w:1920px; --frame-h:1080px;
@@ -485,7 +487,17 @@ input[type=checkbox]:focus-visible, input[type=radio]:focus-visible { outline:2p
 /* empty result: tr.er (none · first · done) — header hidden, centred message under a 54px icon tile */
 .tbl:has(> tbody > tr.er:only-child) > thead { display:none; }
 .tbl.is-empty > thead { display:none; }
-.chip.zero:not(.on) { color:var(--fg-3); }   /* list standard Q4: a 0-count chip stays in place, dimmed, still selectable */   /* list standard L-6: empty judged by result, not by DOM (rows hidden by a filter) */
+.chip.zero:not(.on) { color:var(--fg-3); }
+/* list standard: [필터 ▾] popover · filter count · applied-filter chips — one shared part (was in dictionary.html only, so other lists rendered them unstyled) */
+.menu.fpop { position:absolute; top:40px; left:0; right:auto; width:340px; padding:12px 12px 8px; background:var(--surface); border-radius:var(--r-xl); box-shadow:var(--menu-shadow); display:none; z-index:40; }
+.menu.fpop.open { display:block; }
+.fpop .frow { display:grid; grid-template-columns:88px 1fr; align-items:center; gap:8px; min-height:40px; font-size:14px; }
+.fpop .fl { color:var(--fg-2); } .fpop .fv { display:flex; gap:6px; flex-wrap:wrap; }
+.fpop .ffoot { display:flex; align-items:center; gap:8px; border-top:1px solid var(--ds-gray-400); margin:8px -12px 0; padding:8px 12px 0; }
+.fcount { margin-left:2px; min-width:18px; height:18px; padding:0 5px; border-radius:9999px; background:var(--ds-gray-1000); color:var(--on-ink); font:500 12px/18px var(--font-sans); }
+.fchips { display:inline-flex; flex-wrap:wrap; gap:6px; align-items:center; vertical-align:middle; }
+.fchips .fchip { height:24px; padding:0 8px 0 10px; font-size:12px; border-style:solid; gap:4px; }
+.fchips .fchip .ic { width:12px; height:12px; }   /* list standard Q4: a 0-count chip stays in place, dimmed, still selectable */   /* list standard L-6: empty judged by result, not by DOM (rows hidden by a filter) */
 .tbl > tbody > tr.er > td { height:auto; padding:40px 24px !important; text-align:center !important; white-space:normal; font-size:14px; line-height:20px; color:var(--fg-2); background:var(--surface); }
 .tbl > tbody > tr.er > td::before { content:""; display:block; width:54px; height:54px; margin:0 auto 12px; border-radius:var(--r-lg); box-shadow:var(--ring); background:var(--surface) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M22 12h-6l-2 3h-4l-2-3H2'/%3E%3Cpath d='M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z'/%3E%3C/svg%3E") center/20px no-repeat; }
 .tbl > tbody > tr.er > td:is([colspan="2"],[colspan="3"],[colspan="4"]) { padding:12px 16px !important; text-align:left !important; color:var(--fg-3); }

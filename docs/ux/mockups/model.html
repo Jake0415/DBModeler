@@ -7,211 +7,8 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&display=swap">
 <link rel="stylesheet" href="assets/app.css">
+<link rel="stylesheet" href="assets/model.css">
 <script src="assets/app.js"></script>
-<style>
-  :root { --p-hong:#de1d8d; --p-park:#0a72ef; }
-  .side .dict-more { padding:8px 12px; }
-  .side .dict-item { padding:8px 12px; border-bottom:1px solid var(--border); font-size:13px; cursor:grab; }
-  .side .dict-item:hover { background:var(--surface-2); }
-  .side .dict-item .l1 { display:flex; gap:6px; align-items:center; }
-  .side .dict-item .l2 { font-family:var(--font-mono); font-size:12px; color:var(--fg-2); }
-  .s-ok { background:var(--success); } .s-comb { background:var(--info); } .s-unreg { background:var(--warning); } .s-ex { background:var(--violet); } .s-na { background:var(--border-strong); } .s-req { background:var(--surface); box-shadow:inset 0 0 0 2px var(--info); }
-  .node .ar .stw { font:500 12px var(--font-sans); padding:0 6px; border-radius:9999px; line-height:16px; }
-  .stw.comb, .stw.req { background:var(--ds-blue-200); color:var(--ds-blue-900); } .stw.unreg { background:var(--ds-amber-200); color:var(--ds-amber-900); } .stw.ex { box-shadow:inset 0 0 0 1px var(--ds-gray-500); color:var(--fg); }
-  #world.lod-mid .node .ar .stw { display:none; }
-  #confirm-btn.disabled { pointer-events:auto; }
-  .avs { display:flex; align-items:center; padding-left:6px; flex-shrink:0; }
-  .avs #av-list { display:flex; align-items:center; padding-left:6px; }
-  .avs .av { width:24px; height:24px; border-radius:50%; color:#fff; font:600 12px var(--font-sans); display:grid; place-items:center; border:2px solid var(--surface); margin-left:-6px; }
-  .avs .av.view { background:var(--surface-2) !important; color:var(--fg-2); box-shadow:inset 0 0 0 1px var(--border-strong); }
-  .avs .cap { margin-left:6px; font-size:12px; color:var(--fg-2); white-space:nowrap; }
-  .offline .avs .av { filter:grayscale(1); opacity:.5; }
-  #cv { flex:1; position:relative; overflow:hidden; background-color:var(--bg); background-image:radial-gradient(var(--border) 1px, transparent 1px); background-size:16px 16px; }
-  #cv.tool-entity, #cv.tool-rel, #cv.tool-memo { cursor:crosshair; }
-  #cv.panning { cursor:grabbing; }
-  #cv.dropping { box-shadow:inset 0 0 0 2px var(--info); }
-  #world { position:absolute; left:0; top:0; transform-origin:0 0; }
-  #edges { position:absolute; left:0; top:0; overflow:visible; pointer-events:none; }
-  #edges path.hit { stroke:transparent; stroke-width:16; fill:none; pointer-events:stroke; cursor:pointer; }
-  #edges path.hit.pick { stroke:color-mix(in srgb, var(--info) 35%, transparent); }
-  .node { position:absolute; min-width:180px; max-width:320px; background:var(--surface); border:1px solid var(--border-strong); border-radius:var(--r-lg); font-size:12px; box-shadow:0 1px 2px rgba(0,0,0,.04); user-select:none; }
-  .node.sel { border-color:var(--ds-gray-1000); box-shadow:0 0 0 1px var(--ds-gray-1000); }
-  .node.relsrc { border-color:var(--info); box-shadow:0 0 0 2px var(--info); }
-  .node.drop { box-shadow:0 0 0 2px var(--info), var(--menu-shadow); }
-  .node.remote { box-shadow:0 0 0 2px var(--p-hong), var(--menu-shadow); }
-  .node.ref { border-style:dashed; background:var(--surface-2); }
-  .node.thl { box-shadow:0 0 0 3px var(--ds-amber-700), var(--menu-shadow); }
-  #rp-body tr.hl > td { background:var(--ds-gray-100); }
-  #rp-body tr.hl > td:first-child { box-shadow:inset 2px 0 0 var(--ink); }
-  .node .rtag { position:absolute; top:-20px; left:-2px; background:var(--p-hong); color:#fff; font-size:12px; padding:1px 6px; border-radius:4px 4px 4px 0; white-space:nowrap; }
-  .node .rtag.reft { background:var(--fg-3); }
-  .node .nh { display:flex; align-items:center; gap:6px; padding:6px 10px; border-bottom:1px solid var(--border); font-weight:600; font-size:14px; cursor:move; }
-  .node .nh .nbad { height:18px; padding:0 6px; font-size:12px; border-radius:9999px; background:var(--ds-amber-200); color:var(--ds-amber-900); font-weight:500; display:inline-flex; align-items:center; white-space:nowrap; }
-  .node .nh .cls { font:500 12px var(--font-mono); background:var(--ds-gray-100); border-radius:9999px; padding:0 6px; color:var(--fg-2); }
-  .node .nh .sub { font:400 12px var(--font-mono); color:var(--fg-3); margin-left:auto; }
-  .node .nh input { font:600 13px var(--font-sans); border:1px solid var(--ink); border-radius:4px; padding:0 4px; width:150px; background:var(--surface); color:var(--fg); }
-  .node .pk { border-bottom:1px solid var(--border); }
-  .node .ar { display:flex; align-items:center; gap:6px; padding:2px 10px; min-height:20px; white-space:nowrap; }
-  .node .ar .p { margin-left:auto; padding-left:12px; font:400 12px var(--font-mono); color:var(--fg-3); }
-  .node .ar.fk .n { font-style:italic; color:var(--info-deep); }
-  .node .ar.new { background:color-mix(in srgb, var(--p-hong) 10%, transparent); }
-  .node .ar.excl .n { color:var(--fg-3); }
-  .node .ar input { border:1px solid var(--ink); border-radius:4px; font:inherit; padding:1px 4px; width:150px; background:var(--surface); color:var(--fg); }
-  .node .lk { color:var(--danger); display:inline-flex; }
-  .node .more { padding:2px 10px 4px; color:var(--fg-3); display:none; }
-  .node .sysc { padding:3px 10px; border-top:1px dashed var(--border); color:var(--fg-3); font-size:12px; }
-  .node .subt { border-top:1px solid var(--border); padding:6px 8px 8px; }
-  .node .subt .cap { font-size:12px; color:var(--fg-2); margin-bottom:4px; display:flex; align-items:center; gap:4px; }
-  .node .subt .cap b { font:600 12px var(--font-mono); border:1px solid var(--border-strong); border-radius:50%; width:16px; height:16px; display:inline-grid; place-items:center; }
-  .node .subt .kids { display:flex; gap:6px; }
-  .node .subt .kids span { flex:1; border:1px solid var(--border-strong); border-radius:6px; padding:3px 6px; font-weight:500; text-align:center; background:var(--surface); }
-  #world.lod-mid .node .ar:not(.pkr), #world.lod-mid .node .sysc { display:none; } #world.lod-mid .node .more { display:block; }
-  #world.lod-mid .relname, #world.lod-low .relname { display:none; }
-  /* summary keeps every row's space so node size and relation endpoints don't jump (22 §6-5 · 23 §6-6) */
-  #world.lod-low .node .ar, #world.lod-low .node .nh .sub, #world.lod-low .node .sysc, #world.lod-low .node .subt { visibility:hidden; }
-  #world.lod-low .node .more, #world.lod-low .memo { display:none; }
-  #world.lod-low .node .nh .title { font-size:15px; }
-  .relname { font:400 12px var(--font-sans); fill:var(--fg-2); paint-order:stroke; stroke:var(--bg); stroke-width:4px; }
-  .memo { position:absolute; width:200px; background:color-mix(in srgb, var(--warning) 16%, var(--surface)); border:1px solid color-mix(in srgb, var(--warning) 45%, var(--border)); border-radius:6px; font-size:12px; box-shadow:var(--menu-shadow); }
-  .memo .mh { display:flex; align-items:center; padding:3px 8px; color:var(--fg-2); font-size:12px; cursor:move; }
-  .memo .mh button { margin-left:auto; border:0; background:none; cursor:pointer; color:var(--fg-3); font-size:14px; line-height:1; }
-  .memo .mb { padding:2px 8px 8px; min-height:36px; outline:none; white-space:pre-wrap; }
-  .memo .mb:empty::before { content:'메모 입력'; color:var(--fg-3); }
-  .rcur { position:absolute; pointer-events:none; transition:left .9s ease, top .9s ease; z-index:5; }
-  .rcur span { position:absolute; left:12px; top:14px; color:#fff; font-size:12px; padding:1px 6px; border-radius:4px; white-space:nowrap; }
-  .locked #cur-hong span::after { content:' · 조회'; }
-  #world { margin-top:41px; }
-  .cv-toolbar { position:absolute; top:0; left:0; right:0; transform:none; justify-content:flex-start; border-bottom:1px solid var(--ds-gray-400); display:flex; gap:2px; align-items:center; background:var(--surface); border-radius:0; box-shadow:none; padding:4px 12px; z-index:20; }
-  .cv-toolbar .tb { height:28px; min-width:28px; padding:0 8px; border:0; border-radius:6px; background:none; color:var(--fg); font:500 13px var(--font-sans); cursor:pointer; display:flex; align-items:center; gap:4px; white-space:nowrap; flex:0 0 auto; }
-  .cv-toolbar .tb:hover { background:var(--ds-gray-100); }
-  .cv-toolbar .tb.on { background:var(--ds-gray-100); color:var(--fg); box-shadow:inset 0 0 0 1px var(--ds-gray-400); }
-  .cv-toolbar .sep { width:1px; height:20px; background:var(--border); margin:0 4px; }
-  .cv-toolbar kbd { font-size:12px; padding:0 3px; }
-  .locked .cv-toolbar .tb[data-edit], .viewonly .cv-toolbar .tb[data-edit] { opacity:.35; pointer-events:none; }
-  .viewonly #grid .edit-only { display:none !important; }
-  .menu { position:absolute; background:var(--surface); border-radius:var(--r-xl); box-shadow:var(--menu-shadow); padding:6px; display:none; z-index:30; min-width:200px; }
-  .menu.open { display:block; }
-  .menu .mi { min-height:36px; padding:0 8px; border-radius:6px; cursor:pointer; font-size:14px; display:flex; align-items:center; justify-content:space-between; gap:12px; }
-  .menu .mi:hover, .menu .mi.on { background:var(--ds-gray-100); }
-  .menu .msep { height:1px; background:var(--border); margin:4px 0; }
-  #relmenu { top:44px; left:0; width:220px; }
-  #expmenu { top:40px; right:0; width:330px; padding:12px; font-size:13px; }
-  #expmenu .row { display:flex; align-items:center; gap:8px; margin-bottom:10px; }
-  #expmenu .row > b { width:44px; font-weight:500; color:var(--fg-2); }
-  .cv-zoom { position:absolute; left:12px; bottom:12px; display:flex; gap:4px; align-items:center; background:var(--surface); border-radius:var(--r-lg); box-shadow:var(--menu-shadow); padding:4px; z-index:10; font-size:12px; }
-  .cv-zoom button { height:28px; min-width:28px; border:0; background:none; border-radius:6px; cursor:pointer; color:var(--fg); font:500 13px var(--font-sans); }
-  .cv-zoom button:hover { background:var(--surface-2); }
-  .cv-mini { position:absolute; right:12px; bottom:12px; width:180px; height:120px; background:var(--surface); border-radius:var(--r-lg); box-shadow:var(--menu-shadow); z-index:10; overflow:hidden; }
-  .cv-hint { position:absolute; left:50%; top:56px; transform:translateX(-50%); background:var(--ds-gray-1000); color:var(--on-ink); font-size:13px; padding:6px 12px; border-radius:6px; z-index:20; display:none; }
-  /* D2: guidance is a strip under the toolbar (never over the canvas) — one line folded, full text unfolded; the canvas moves down by its height */
-  .cv-banner { position:absolute; left:0; right:0; top:37px; z-index:19; display:grid; grid-template-columns:minmax(0,1fr) auto; column-gap:8px; row-gap:4px; align-items:center; padding:4px 12px; background:var(--surface); border-bottom:1px solid var(--ds-gray-400); }
-  .cv-banner[hidden] { display:none !important; }
-  .cv-banner > .banner { display:none; grid-column:1; padding-top:4px; padding-bottom:4px; }
-  .cv-banner > .banner > .grow { min-width:0; }
-  .cv-banner.min > .banner > .grow { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  .cv-banner > .ban-ctl { grid-column:2; grid-row:1; display:flex; gap:4px; align-items:center; }
-  #world { margin-top:calc(41px + var(--ban-h, 0px)); }
-  .cv-hint { top:calc(56px + var(--ban-h, 0px)); }
-  .pop { position:absolute; z-index:12; background:var(--surface); border-radius:var(--r-xl); box-shadow:var(--menu-shadow); padding:12px; font-size:14px; width:280px; }
-  .acl { position:absolute; z-index:13; background:var(--surface); border-radius:var(--r-xl); box-shadow:var(--menu-shadow); padding:6px; width:300px; font-size:13px; }
-  .acl .o { display:grid; grid-template-columns:1fr auto; align-items:center; min-height:32px; padding:0 8px; border-radius:6px; cursor:pointer; gap:6px; }
-  .acl .o.on, .acl .o:hover { background:var(--ds-gray-100); }
-  .acl .o .m { font-family:var(--font-mono); color:var(--fg-3); }
-  .grp { position:absolute; border:1px dashed var(--border-strong); border-radius:var(--r-xl); background:var(--surface); padding:14px; }
-  .grp h4 { margin:0 0 4px; font-size:16px; }
-  .grp .refrow { display:flex; align-items:center; gap:6px; font-size:12px; padding:4px 0; border-top:1px solid var(--border); }
-  #sysview { display:none; position:absolute; inset:0; }
-  #cv[data-sys="1"] .cv-banner, #cv[data-sys="1"] > .cv-zoom, #cv[data-sys="1"] .cv-mini, #cv[data-sys="1"] .legend { display:none !important; }
-  .legend { position:absolute; left:12px; bottom:52px; z-index:9; font-size:12px; color:var(--fg-3); display:flex; gap:8px; align-items:center; }
-  /* header: save state · more menu */
-  .savest { display:inline-flex; align-items:center; gap:6px; font-size:13px; color:var(--fg-2); white-space:nowrap; }
-  .savest .sdot { margin:0; width:8px; height:8px; }
-  .savest.err { color:var(--danger-deep); }
-  #moremenu { top:40px; right:0; width:240px; }
-  #moremenu .mi { min-height:36px; display:flex; align-items:center; gap:8px; padding:0 8px; border-radius:6px; color:var(--fg); text-decoration:none; font-size:14px; cursor:pointer; background:none; border:0; width:100%; text-align:left; }
-  #moremenu .mi:hover, #moremenu .mi:focus-visible { background:var(--ds-gray-100); outline:none; }
-  #moremenu .msep { height:1px; background:var(--ds-gray-400); margin:4px 0; }
-  #b-export { display:none; }
-  /* one banner slot: highest priority first, the rest folded behind "+N" */
-  .cv-banner > .banner.fold { display:none !important; }
-  .cv-banner .ban-more { align-self:flex-start; } .cv-banner .ban-more[hidden] { display:none !important; }
-  /* table view = a body switch, not a floating window */
-  body.gridmode #grid { left:0; right:0; top:0; bottom:0; border-radius:0; box-shadow:none; }
-  body.gridmode .cv-toolbar, body.gridmode .cv-banner, body.gridmode .legend, body.gridmode .cv-zoom, body.gridmode .cv-mini, body.gridmode .cv-hint { display:none !important; }
-  #grid .gscope { font-size:13px; color:var(--fg-2); } #grid .gscope b { color:var(--fg); font-variant-numeric:tabular-nums; }
-  /* grid mode */
-  #grid { position:absolute; left:12px; right:12px; top:56px; bottom:12px; background:var(--surface); border-radius:var(--r-lg); box-shadow:var(--menu-shadow); z-index:15; display:none; flex-direction:column; overflow:hidden; }
-  #grid.open { display:flex; }
-  #grid .gbar { display:flex; align-items:center; gap:8px; padding:10px 12px; border-bottom:1px solid var(--border); flex-wrap:wrap; }
-  #grid .gbulk { display:none; align-items:center; gap:8px; padding:8px 12px; background:var(--surface-2); border-bottom:1px solid var(--border); font-size:13px; }
-  #grid .gbulk.on { display:flex; }
-  #grid .gbody { flex:1; overflow:auto; }
-  #grid mark { background:color-mix(in srgb, var(--warning) 40%, transparent); color:inherit; border-radius:2px; }
-  #grid select.input, #grid input.input { height:32px; font-size:14px; }
-  #grid .tbl td { height:var(--row); }
-  .locked #grid .edit-only { display:none !important; }
-  /* attribute edit grid in the right panel (16) */
-  #rp-body .ag th, #rp-body .ag td { padding:0 6px; }
-  #rp-body .ag td { height:var(--row); }
-  #rp-body .ag .ag-st, #rp-body .ag .ag-c { width:30px; text-align:center; }
-  #rp-body .ag .ag-d { width:122px; }
-  #rp-body .ag .ag-n { white-space:normal; line-height:16px; padding-top:4px; padding-bottom:4px; }
-  #rp-body .ag .ag-n .s2 { display:block; font:400 12px/16px var(--font-mono); color:var(--fg-3); }
-  #rp-body .ag .ag-n .fkm { color:var(--info-deep); font-style:italic; }
-  #rp-body .ag .ag-sel { width:116px; height:26px; font:400 12px var(--font-mono); border:1px solid var(--border-strong); border-radius:6px; background:var(--surface); color:var(--fg); padding:0 2px; }
-  #rp-body .ag .ag-fix { font:400 12px var(--font-mono); color:var(--fg-2); display:inline-flex; align-items:center; gap:4px; }
-  #rp-body .ag input[type=checkbox] { width:15px; height:15px; margin:0; accent-color:var(--ink); cursor:pointer; }
-  #rp-body .ag input[type=checkbox]:disabled { cursor:not-allowed; opacity:.55; }
-  #rp-body .ag tbody tr[data-ai] { cursor:default; }
-  #rp-body .ag tbody tr[data-ai]:hover > td { background:var(--surface-2); }
-  #rp-body .ag tbody tr[data-ai].hl > td { background:var(--ds-gray-100); }
-  #rp-body .ag tbody tr:focus-visible { outline:2px solid var(--ink); outline-offset:-2px; }
-  #rp-body .ag tr.ag-new > td { background:color-mix(in srgb, var(--p-hong) 8%, var(--surface)); }
-  #rp-body .ag tr.ag-sys > td { color:var(--fg-3); }
-  .ag-bar { display:flex; gap:4px; align-items:center; margin:8px 0 0; }
-  .ag-bar .btn.sm { gap:4px; }
-  .ag-det { border:1px solid var(--border); border-radius:var(--r-lg); padding:10px 12px; margin-top:8px; }
-  .ag-det .ag-h { display:flex; align-items:center; gap:6px; font-weight:600; font-size:13px; margin-bottom:6px; }
-  .ag-det .kv { margin:0 0 4px; }
-  .ag-det .field { margin-top:8px; }
-  .ag-det .field label { font-size:12px; color:var(--fg-2); }
-  .ag-det textarea.input { min-height:52px; resize:vertical; font-size:14px; }
-  .ag-det input.input { height:var(--control); font-size:14px; }
-  .ag-pend { margin-top:8px; }
-  .ag-pend .ag-imp { margin:4px 0 0; padding-left:16px; font-size:12px; line-height:18px; }
-  .ag-keys { margin-top:8px; font-size:12px; color:var(--fg-3); line-height:18px; }
-  .ag-keys kbd { font-size:12px; padding:0 3px; }
-  .ag-two { display:flex; align-items:flex-end; gap:12px; flex-wrap:wrap; }
-  .ag-two .field { flex:1; min-width:150px; }
-  .ag-two select.input { height:var(--control); font-size:14px; }
-  .ag-nn { display:flex; align-items:center; gap:6px; font-size:13px; height:30px; flex-wrap:wrap; }
-  .ag-nn input { width:15px; height:15px; accent-color:var(--ink); }
-  /* relation panel (18) */
-  .relhd { display:flex; align-items:center; gap:8px; margin-bottom:12px; font-size:14px; }
-  .relhd svg { flex:none; overflow:visible; }
-  .relsent { display:flex; align-items:center; gap:6px; flex-wrap:wrap; font-size:14px; margin-bottom:6px; }
-  .relsent select.input { width:auto; min-width:120px; height:28px; padding:0 30px 0 8px; }
-  #rp-body .field select[data-rmap] { height:28px; font-size:13px; }
-  .reldb { border-top:1px solid var(--border); padding-top:10px; margin-top:4px; }
-  .reldb summary { cursor:pointer; display:flex; align-items:center; gap:8px; font-size:14px; list-style:none; }
-  .reldb summary::-webkit-details-marker { display:none; }
-  .reldb summary::before { content:'›'; display:inline-block; transition:transform .15s; color:var(--fg-2); }
-  .reldb[open] summary::before { transform:rotate(90deg); }
-  .reldanger { display:flex; align-items:center; gap:8px; border-top:1px solid var(--border); padding-top:12px; margin-top:12px; }
-  .pop .ac-opt { padding:6px 8px; border-radius:var(--r-md); cursor:pointer; font-size:14px; }
-  .pop .ac-opt.on, .pop .ac-opt:hover { background:var(--ds-gray-100); }
-  /* T3 views · placement */
-  .cv-toolbar .vsel { display:flex; align-items:center; gap:4px; color:var(--fg-2); }
-  .cv-toolbar .vsel select { height:28px; border:1px solid var(--border-strong); border-radius:6px; background:var(--surface); color:var(--fg); font:500 13px var(--font-sans); padding:0 6px; max-width:200px; }
-  #cv[data-sys="1"] .vsel { display:none; }
-  #cv.placing { box-shadow:inset 0 0 0 2px var(--info); }
-  .vempty { position:absolute; left:50%; top:45%; transform:translate(-50%,-50%); text-align:center; color:var(--fg-2); font-size:14px; line-height:22px; z-index:4; pointer-events:none; }
-  .pop .vlist { display:flex; flex-direction:column; gap:4px; margin:8px 0; max-height:220px; overflow:auto; }
-  .pop .vlist label { display:flex; align-items:center; gap:6px; font-size:13px; }
-  .pop input.input { width:100%; height:30px; font-size:13px; margin:8px 0; }
-  .cf-ccsel { width:160px; height:28px; font-size:12px; }
-  .cf-ccrow .chip { cursor:pointer; }
-</style>
 </head>
 <body data-page="model">
 <div id="app">
@@ -315,14 +112,14 @@
         </defs>
         <g id="eg"></g><path id="preview" d="" fill="none" stroke="var(--info)" stroke-width="1.5" stroke-dasharray="4 3"/>
       </svg><div id="memos"></div><div id="nodes"></div>
-        <div class="rcur" id="cur-hong"><svg width="14" height="18"><path d="M1 1 L1 15 L5 11 L8 17 L10 16 L7 10 L13 10 Z" fill="var(--p-hong)" stroke="#fff"/></svg><span style="background:var(--p-hong)">홍설계</span></div>
-        <div class="rcur" id="cur-park"><svg width="14" height="18"><path d="M1 1 L1 15 L5 11 L8 17 L10 16 L7 10 L13 10 Z" fill="var(--p-park)" stroke="#fff"/></svg><span style="background:var(--p-park)">박설계 · 조회</span></div>
+        <div class="rcur" id="cur-hong"><svg width="14" height="18"><path d="M1 1 L1 15 L5 11 L8 17 L10 16 L7 10 L13 10 Z" fill="var(--p-1)" stroke="#fff"/></svg><span style="background:var(--p-1)">홍설계</span></div>
+        <div class="rcur" id="cur-park"><svg width="14" height="18"><path d="M1 1 L1 15 L5 11 L8 17 L10 16 L7 10 L13 10 Z" fill="var(--p-2)" stroke="#fff"/></svg><span style="background:var(--p-2)">박설계 · 조회</span></div>
       </div>
       <div id="sysview"></div>
       <div id="grid"></div>
       <div class="legend">상태 <span class="dot-i s-ok"></span>표준 <span class="dot-i s-comb"></span>조합 가능 <span class="dot-i s-unreg"></span>미등록 단어 <span class="dot-i s-ex"></span>예외 <span class="dot-i s-na"></span>비대상</div>
-      <div class="cv-zoom"><button id="zo">−</button><span id="zl" class="mono" style="width:40px;text-align:center">100%</span><button id="zi">+</button><button id="zfit" title="전체 맞춤 (Shift+1)">맞춤</button>
-        <select class="input" id="lodsel" aria-label="캔버스 표시 단계" style="width:140px;font-size:12px"><option value="auto">표시: 자동(0.35배 미만 요약)</option><option value="full">전체 속성</option><option value="mid">키만</option><option value="low">요약(이름만)</option></select></div>
+      <div class="cv-zoom"><button id="zo">−</button><span id="zl" class="mono">100%</span><button id="zi">+</button><button id="zfit" title="전체 맞춤 (Shift+1)">맞춤</button>
+        <select class="input" id="lodsel" aria-label="캔버스 표시 단계"><option value="auto">표시: 자동(0.35배 미만 요약)</option><option value="full">전체 속성</option><option value="mid">키만</option><option value="low">요약(이름만)</option></select></div>
       <div class="cv-mini"><svg id="mini" width="180" height="120"></svg></div>
     </div>
 
@@ -712,7 +509,7 @@ window.pageInit = function () {
     let minx = 1e9, miny = 1e9, maxx = -1e9, maxy = -1e9;
     VE().forEach(e => { const b = box(e.id); minx = Math.min(minx, b.x); miny = Math.min(miny, b.y); maxx = Math.max(maxx, b.x + b.w); maxy = Math.max(maxy, b.y + b.h); });
     const W = maxx - minx + 200, H = maxy - miny + 200, k = Math.min(180 / W, 120 / H), ox = minx - 100, oy = miny - 100;
-    let s = VE().map(e => { const b = box(e.id); const col = remoteSel === e.id && !offline ? 'var(--p-hong)' : bad(e) ? 'var(--warning)' : 'var(--border-strong)'; return `<rect x="${(b.x - ox) * k}" y="${(b.y - oy) * k}" width="${b.w * k}" height="${b.h * k}" fill="${col}" opacity=".6" rx="1"/>`; }).join('');
+    let s = VE().map(e => { const b = box(e.id); const col = remoteSel === e.id && !offline ? 'var(--p-1)' : bad(e) ? 'var(--warning)' : 'var(--border-strong)'; return `<rect x="${(b.x - ox) * k}" y="${(b.y - oy) * k}" width="${b.w * k}" height="${b.h * k}" fill="${col}" opacity=".6" rx="1"/>`; }).join('');
     s += `<rect x="${(-panX / zoom - ox) * k}" y="${(-panY / zoom - oy) * k}" width="${cv.clientWidth / zoom * k}" height="${cv.clientHeight / zoom * k}" fill="none" stroke="var(--ink)" stroke-width="1"/>`;
     m.innerHTML = s;
   }
@@ -997,7 +794,7 @@ window.pageInit = function () {
         <div class="section-t">미준수 엔터티</div>
         ${E.filter(bad).map(e => `<div class="cand" data-goto="${e.id}"><span class="grow">${e.n}</span><span class="badge b-warning">${bad(e)}</span></div>`).join('')}
         <div class="section-t">접속자</div>
-        <div class="caption u-lh-22"><span class="dot-i" style="background:var(--ink)"></span> 김모델 (나) · ${locked ? '조회' : '편집'}<br><span class="dot-i" style="background:var(--p-hong)"></span> 홍설계 · ${locked ? '조회' : '편집 — ' + (remoteSel ? ent(remoteSel).n : '—')}<br><span class="dot-i" style="background:var(--p-park)"></span> 박설계 · 조회</div>
+        <div class="caption u-lh-22"><span class="dot-i" style="background:var(--ink)"></span> 김모델 (나) · ${locked ? '조회' : '편집'}<br><span class="dot-i" style="background:var(--p-1)"></span> 홍설계 · ${locked ? '조회' : '편집 — ' + (remoteSel ? ent(remoteSel).n : '—')}<br><span class="dot-i" style="background:var(--p-2)"></span> 박설계 · 조회</div>
         <div class="flex" style="margin-top:8px;gap:6px;${locked ? 'display:none' : ''}"><button class="btn sm" id="demo-conflict">동시 수정 충돌 보기</button><button class="btn sm" id="demo-off">연결 끊김 보기</button></div>
         <div class="section-t">이 화면에서 해 보기</div>
         <div class="caption u-lh-20">· 엔터티 제목을 끌어 이동 · <b>R</b> → 부모 → 자식 (같은 엔터티면 재귀)<br>· <b>R → 관계 종류 메뉴에서 배타 관계 묶기</b> → 같은 부모의 관계선 2개 클릭<br>· 엔터티 선택 후 <b>Enter</b> → 속성 추가 + 자동완성 · 사전 용어 <b>끌어 놓기</b><br>· <b>M</b> → 메모 · 제목 <b>더블클릭</b> → 이름 수정<br>· <b>Ctrl+Z / Ctrl+Y</b> → 내 편집 되돌리기·다시 실행<br>· <b>표 보기 (Ctrl+F)</b> → 일괄편집·찾기/바꾸기·비대상 지정<br>· 상단 <b>검토</b> → 명칭 중복·미입력·관계 점검<br>· <b>[물리]</b> → 게이트 A → 제약·인덱스·시스템 컬럼<br>· <b>[시스템 전체]</b> → 공통 엔터티를 참조로 가져오기</div>`;
@@ -1116,13 +913,13 @@ window.pageInit = function () {
         <span class="flex u-gap-8" role="group" aria-label="속성 거르기">${['all:전체', 'bad:미준수', 'sec:보안', 'na:비대상'].map(x => { const [k, l] = x.split(':'); return `<button type="button" class="chip ${gfilter === k ? 'on' : ''}" data-gf="${k}">${l}</button>`; }).join('')}</span>
         <span class="grow"></span>
         <input class="input u-w-150" id="g-find" placeholder="찾기 (논리명)" aria-label="찾기 (논리명)" value="${esc(fv)}">${gRepOpen ? `<input class="input edit-only u-w-130" id="g-rep" placeholder="바꿀 말" aria-label="바꿀 말" value="${esc(rv)}">` : '<button class="btn sm ghost edit-only" id="g-rep-open">바꾸기…</button>'}
-        <span class="caption muted" style="width:90px">${fv ? `보이는 행 ${hits}건` : ''}</span>${gRepOpen ? `<button class="btn sm edit-only" id="g-replace" ${hits && rv ? '' : 'disabled'}>보이는 행 바꾸기</button>` : ''}
+        <span class="caption muted g-hits">${fv ? `보이는 행 ${hits}건` : ''}</span>${gRepOpen ? `<button class="btn sm edit-only" id="g-replace" ${hits && rv ? '' : 'disabled'}>보이는 행 바꾸기</button>` : ''}
         <button class="btn sm ghost" id="g-close">다이어그램으로 (Esc)</button></div>
       <div class="gbulk edit-only ${gsel.size ? 'on' : ''}"><span class="gscope">표시된 선택 <b>${selVis}</b>${selHid ? ` · 숨겨진 선택 <b>${selHid}</b>` : ''}</span>
         <span class="caption muted">도메인</span><select class="input u-w-130" id="g-dom"><option value="">유지</option>${Object.keys(DOMS).map(d => `<option>${d}</option>`).join('')}</select>
-        <span class="caption muted">필수</span><select class="input" id="g-nn" style="width:90px"><option value="">유지</option><option value="1">예</option><option value="0">아니오</option></select>
-        <span class="caption muted">표준</span><select class="input" id="g-std" style="width:110px"><option value="">유지</option><option value="in" ${gstd === 'in' ? 'selected' : ''}>대상</option><option value="na" ${gstd === 'na' ? 'selected' : ''}>비대상</option></select>
-        <input class="input" id="g-why" placeholder="비대상 사유 *" aria-label="비대상 사유" value="${esc(gwhy)}" style="width:200px;${gstd === 'na' ? '' : 'display:none'}">
+        <span class="caption muted">필수</span><select class="input" id="g-nn"><option value="">유지</option><option value="1">예</option><option value="0">아니오</option></select>
+        <span class="caption muted">표준</span><select class="input" id="g-std"><option value="">유지</option><option value="in" ${gstd === 'in' ? 'selected' : ''}>대상</option><option value="na" ${gstd === 'na' ? 'selected' : ''}>비대상</option></select>
+        <input class="input" id="g-why" placeholder="비대상 사유 *" aria-label="비대상 사유" value="${esc(gwhy)}"${gstd === 'na' ? '' : ' hidden'}>
         <span class="grow"></span><button class="btn sm" id="g-clear">선택 해제</button>${selHid ? `<button class="btn sm" id="g-apply-all">${gAllArm ? `한 번 더 눌러 숨겨진 ${selHid}개 포함 적용` : `숨겨진 ${selHid}개 포함…`}</button>` : ''}<button class="btn sm primary" id="g-apply" ${selVis ? '' : 'disabled'}>표시된 ${selVis}개 적용</button></div>
       <div class="gbody"><table class="tbl"><thead><tr><th class="u-w-32"><input type="checkbox" id="g-all" class="edit-only" aria-label="보이는 행 모두 선택" ${rows.length && rows.every(r => gsel.has(r.k)) ? 'checked' : ''}></th><th></th><th>엔터티</th><th>속성명</th><th>물리명</th><th>타입</th><th>필수</th><th>보안</th></tr></thead><tbody>
       ${rows.map(r => `<tr><td><input type="checkbox" class="edit-only" data-k="${r.k}" aria-label="${esc(r.e.n + '.' + r.a.n)} 선택" ${gsel.has(r.k) ? 'checked' : ''}></td><td>${stBadge(r.a.s)}</td><td>${r.e.n}${r.e.ref ? ' <span class="muted">· 참조</span>' : ''}</td><td>${r.a.pk ? '# ' : ''}${hl(r.a.n)}${r.a.fk ? ' <span class="faint">(FK)</span>' : ''}</td><td class="mono">${r.a.p}</td><td class="mono">${r.a.t}</td><td>${r.a.nn || r.a.pk ? '예' : '<span class="faint">아니오</span>'}</td><td>${r.a.sec ? `<span class="badge b-danger">${r.a.sec}</span>` : ''}</td></tr>`).join('')}</tbody></table></div>`;
@@ -1247,7 +1044,7 @@ window.pageInit = function () {
   // ---- collaboration demo
   function drawParticipants() {
     const editing = !locked && !viewOnly && !DEMO;
-    const others = [['홍설계', 'var(--p-hong)', '편집 중']].concat(Object.values(USERS).filter(u => u.id !== ME.id && u.roles.includes('modeler')).slice(0, 1).map(u => [u.name, 'var(--p-park)', '조회']));
+    const others = [['홍설계', 'var(--p-1)', '편집 중']].concat(Object.values(USERS).filter(u => u.id !== ME.id && u.roles.includes('modeler')).slice(0, 1).map(u => [u.name, 'var(--p-2)', '조회']));
     $('av-list').innerHTML = `<span class="av" style="background:var(--ink);color:var(--on-ink)" title="${ME.name} (나) · ${editing ? '편집' : '조회'}">${ME.name[0]}</span>` + others.map(([n, c, s]) => `<span class="av ${s === '조회' ? 'view' : ''}" style="${s === '조회' ? '' : 'background:' + c}" title="${n} · ${s}">${n[0]}</span>`).join('');
     $('avcap').textContent = `${others.length + 1}명 접속 · ${(editing ? 1 : 0) + 1}명 편집`;
     $('cur-park').querySelector('span').textContent = `${others[1] ? others[1][0] : '박설계'} · 조회`;
@@ -1307,7 +1104,7 @@ window.pageInit = function () {
     const p = document.createElement('div'); p.className = 'pop'; p.style.width = '300px';
     p.style.left = Math.min(node.right - c.left + 8, cv.clientWidth - 316) + 'px'; p.style.top = Math.max(node.top - c.top, 60) + 'px';
     p.innerHTML = `<b>‘${e.n}’을(를) ${e.ref ? '참조 해제' : '삭제'}할까요?</b>
-      <div class="caption u-my-8 u-lh-20">관계 <b>${rels.length}</b>개가 함께 삭제됩니다${fks.length ? ` · 자식의 FK 속성 <b>${fks.length}</b>개: ${fks.map(([k, a]) => k.n + '.' + a.n).join(', ')}` : ''}.${remoteSel === id && !offline ? '<br><span style="color:var(--p-hong)">홍설계가 이 엔터티를 편집 중입니다.</span>' : ''}</div>
+      <div class="caption u-my-8 u-lh-20">관계 <b>${rels.length}</b>개가 함께 삭제됩니다${fks.length ? ` · 자식의 FK 속성 <b>${fks.length}</b>개: ${fks.map(([k, a]) => k.n + '.' + a.n).join(', ')}` : ''}.${remoteSel === id && !offline ? '<br><span style="color:var(--p-1)">홍설계가 이 엔터티를 편집 중입니다.</span>' : ''}</div>
       ${fks.length ? `<label class="flex caption"><input type="radio" name="fkopt" value="del" checked> FK 속성도 삭제</label><label class="flex caption u-mb-8"><input type="radio" name="fkopt" value="keep"> 일반 속성으로 남기기</label>` : ''}
       <div class="flex"><button class="btn sm" id="del-no">취소</button><span class="grow"></span><button class="btn sm danger" id="del-yes">${e.ref ? '참조 해제' : '삭제'}</button></div>`;
     cv.appendChild(p); $('del-yes').focus();
@@ -1589,9 +1386,9 @@ window.pageInit = function () {
     $('b-sys').classList.toggle('on', on); cv.dataset.sys = on ? '1' : '';
     if (on) { sel = null; relSrc = null; setTool('select'); closeGrid(); }
     const has = id => !!ent(id);
-    if (on) sv.innerHTML = `<div class="banner info" style="position:absolute;left:12px;top:60px;z-index:5;max-width:560px"><i data-ic=info></i><div class="grow"><b>시스템 전체 ERD · 조회 전용</b> — ${curSys().name}의 모든 업무 영역. 공통 영역의 엔터티는 <b>참조로 가져와</b> 관계를 맺을 수 있습니다.</div></div>
-      ${Object.entries(getModels()).map(([id, m], i) => { const mo = id === AREA && VER === m.ver && !snapDoc ? { E } : modelOf(id, m.ver); const es = mo.E.filter(x => !x.ref); const bad = compOf(mo).bad; const lk = modelLock(id); const st = lk.state === 'review' ? '검토 중' : lk.state === 'confirmed' ? '확정' : `v${m.ver} 작업 중`; const col = i % 3, row = Math.floor(i / 3); return `<div class="grp" style="left:${60 + col * 300}px;top:${130 + row * 200}px;width:270px;min-height:120px;cursor:pointer" ondblclick="__go('model.html?area=${id}')" title="더블클릭하면 이 업무 영역을 엽니다"><h4>${m.name}${id === AREA ? ' <span class="badge">지금 영역</span>' : ''}</h4><div class="caption muted">엔터티 ${es.length} · 미준수 ${bad} · ${st}</div><div class="u-flex u-wrap u-gap-4 u-mt-12">${'<span style="width:34px;height:18px;border-radius:4px;background:var(--surface-2);border:1px solid var(--border)"></span>'.repeat(Math.min(es.length, 18))}</div><div class="caption faint u-mt-8"><a href="model.html?area=${id}">열기</a> · 더블클릭해도 열립니다</div></div>`; }).join('')}
-      <div class="grp" style="left:${60 + 300 * Math.min(2, Object.keys(getModels()).length % 3)}px;top:${130 + 200 * Math.ceil(Object.keys(getModels()).length / 3)}px;width:340px"><h4>공통</h4><div class="caption muted u-mb-8">여러 업무 영역이 함께 쓰는 엔터티</div>
+    if (on) sv.innerHTML = `<div class="banner info sys-ban"><i data-ic=info></i><div class="grow"><b>시스템 전체 ERD · 조회 전용</b> — ${curSys().name}의 모든 업무 영역. 공통 영역의 엔터티는 <b>참조로 가져와</b> 관계를 맺을 수 있습니다.</div></div>
+      ${Object.entries(getModels()).map(([id, m], i) => { const mo = id === AREA && VER === m.ver && !snapDoc ? { E } : modelOf(id, m.ver); const es = mo.E.filter(x => !x.ref); const bad = compOf(mo).bad; const lk = modelLock(id); const st = lk.state === 'review' ? '검토 중' : lk.state === 'confirmed' ? '확정' : `v${m.ver} 작업 중`; const col = i % 3, row = Math.floor(i / 3); return `<div class="grp sys-area" style="left:${60 + col * 300}px;top:${130 + row * 200}px" ondblclick="__go('model.html?area=${id}')" title="더블클릭하면 이 업무 영역을 엽니다"><h4>${m.name}${id === AREA ? ' <span class="badge">지금 영역</span>' : ''}</h4><div class="caption muted">엔터티 ${es.length} · 미준수 ${bad} · ${st}</div><div class="u-flex u-wrap u-gap-4 u-mt-12">${'<span class="sys-chip"></span>'.repeat(Math.min(es.length, 18))}</div><div class="caption faint u-mt-8"><a href="model.html?area=${id}">열기</a> · 더블클릭해도 열립니다</div></div>`; }).join('')}
+      <div class="grp sys-common" style="left:${60 + 300 * Math.min(2, Object.keys(getModels()).length % 3)}px;top:${130 + 200 * Math.ceil(Object.keys(getModels()).length / 3)}px"><h4>공통</h4><div class="caption muted u-mb-8">여러 업무 영역이 함께 쓰는 엔터티</div>
         <div class="refrow"><b class="grow">사원기본</b><span class="mono faint">EMP_M</span><span class="badge">사용 중</span></div>
         <div class="refrow"><b class="grow">부서기본</b><span class="mono faint">DEPT_M</span>${has('dept') ? '<span class="badge">참조 중</span>' : '<button class="btn sm" onclick="window.__importRef(\'dept\')">참조로 가져오기</button>'}</div>
         <div class="refrow"><b class="grow">공통코드기본</b><span class="mono faint">CMMN_CD_M</span>${has('code') ? '<span class="badge">참조 중</span>' : '<button class="btn sm" onclick="window.__importRef(\'code\')">참조로 가져오기</button>'}</div></div>

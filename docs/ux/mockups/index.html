@@ -14,6 +14,10 @@
   .path a { border:1px solid var(--border); background:var(--surface); border-radius:var(--r-md); padding:3px 8px; color:var(--fg); }
   .path a:hover { border-color:var(--ink); text-decoration:none; }
   .path .ar { color:var(--fg-3); }
+  /* the screen map used to run past the 1120px column (1,676px wide): long cells wrap instead (17 §6.2) */
+  #screen-map td:nth-child(3), #screen-map td:nth-child(4), #screen-map td:nth-child(5) { white-space:normal; line-height:20px; padding-top:6px; padding-bottom:6px; }
+  #screen-map td:nth-child(4) { min-width:180px; }
+  #all-screens td:nth-child(2), #all-screens td:nth-child(3) { white-space:normal; line-height:20px; padding-top:6px; padding-bottom:6px; }
 </style>
 </head>
 <body>
@@ -74,7 +78,7 @@
   </script>
 
   <h2 class="u-fs-16 u-mb-8">전체 화면</h2>
-  <table class="tbl" >
+  <table class="tbl" id="all-screens">
     <thead><tr><th>ID</th><th>화면</th><th>링크</th><th>1600 프레임</th></tr></thead>
     <tbody>
       <tr><td class="mono">SC-55</td><td>홈 — 내 차례 결재 · 내 신청 · 최근 업무 영역 · 새 기능</td><td><a href="home.html">열기</a></td><td><a href="home.html?w=1600">1600</a></td></tr>

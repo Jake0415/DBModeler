@@ -8,6 +8,10 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&display=swap">
 <link rel="stylesheet" href="assets/app.css">
 <script src="assets/app.js"></script>
+<style>
+  /* fixed widths live in the page style, not inline (17 §6.2) */
+  .sys-kv { max-width:720px; margin-bottom:24px; }
+</style>
 </head>
 <body data-page="system">
 <div id="app">
@@ -21,7 +25,7 @@
     </div>
   </div>
   <div class="scroll"><div class="pad">
-    <dl class="kv" style="max-width:720px;margin-bottom:24px">
+    <dl class="kv sys-kv">
       <dt>업무 영역</dt><dd class="num" id="k-areas">—</dd>
       <dt title="작업본 기준">테이블 · 컬럼</dt><dd class="num" id="k-tc" title="작업본 기준(잠긴 영역은 제출 사본)">—</dd>
       <dt>명명 템플릿</dt><dd class="mono">%(EntityStdName)%(ClassSuffix)</dd>

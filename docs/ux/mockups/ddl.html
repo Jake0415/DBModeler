@@ -8,6 +8,11 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&display=swap">
 <link rel="stylesheet" href="assets/app.css">
 <script src="assets/app.js"></script>
+<style>
+  /* fixed widths live in the page style, not inline (17 §6.2) */
+  .tb-sep { width:1px; height:20px; background:var(--border); }
+  #preset { width:180px; }
+</style>
 </head>
 <body data-page="model">
 <div id="app">
@@ -21,9 +26,9 @@
   <div class="toolbar">
     <span class="caption muted">범위 *</span>
     <span id="scope-chips"></span>
-    <span style="width:1px;height:20px;background:var(--border)"></span>
+    <span class="tb-sep" aria-hidden="true"></span>
     <span class="caption muted">프리셋</span>
-    <select class="input" id="preset" style="width:180px;" aria-label="프리셋"><option value="create">신규 생성 (CREATE)</option><option value="alter">변경분 (ALTER)</option></select>
+    <select class="input" id="preset" aria-label="프리셋"><option value="create">신규 생성 (CREATE)</option><option value="alter">변경분 (ALTER)</option></select>
     <label class="caption flex"><input type="checkbox" id="o-cm" checked> 주석 포함</label>
     <label class="caption flex"><input type="checkbox" id="o-fk" checked> FK 포함</label>
     <span class="grow"></span>

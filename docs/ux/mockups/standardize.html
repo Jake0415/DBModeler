@@ -16,6 +16,8 @@
 .sbulk{display:flex;align-items:center;gap:8px;padding:8px 16px;background:var(--surface-2);border-top:1px solid var(--border);font-size:14px}.sbulk[hidden]{display:none}.sbulk .mline{margin:0 0 0 8px}
 .sbulk .mi{border:0;background:none;width:100%;font:inherit;cursor:pointer;text-align:left}.sbulk .mi:disabled{color:var(--fg-3);cursor:default}
 #ap-sum tr.grp td{background:var(--surface-2)}
+  /* fixed widths live in the page style, not inline (17 §6.2) */
+.sd-more{width:200px;top:auto;bottom:36px}#mo-apply .modal{width:620px}.sd-proc{width:170px}
 </style>
 </head>
 <body data-page="model">
@@ -51,7 +53,7 @@
         <button class="btn sm primary" id="sd-apply" data-open="mo-apply">선택 적용</button>
         <button class="btn sm" id="sd-ex" data-open="mo-ex">예외로 표시</button>
         <span class="u-rel"><button class="btn sm u-w-32 u-p-0 u-jc-c" data-menu-btn aria-haspopup="true" aria-expanded="false" aria-label="더 보기"><i data-ic=more></i></button>
-          <div class="menu" data-auto role="menu" style="width:200px;top:auto;bottom:36px"><button class="mi" role="menuitem" id="sd-na" data-open="mo-na">비대상으로 지정</button></div></span>
+          <div class="menu sd-more" data-auto role="menu"><button class="mi" role="menuitem" id="sd-na" data-open="mo-na">비대상으로 지정</button></div></span>
         <button class="btn sm ghost" id="sd-clear">선택 해제</button>
       </div>
     </div>
@@ -68,7 +70,7 @@
   <div class="overlay" id="mo-ex" role="dialog" aria-modal="true" aria-labelledby="sx-t"><div class="modal"><div class="m-head"><h3 id="sx-t">예외로 유지</h3></div>
     <div class="m-body"><div class="caption u-mb-8" id="sx-list"></div><div class="field"><label for="sx-why">사유 * <span class="faint">모델 확정 결재에서 DA가 검토합니다</span></label><textarea class="input" id="sx-why" rows="3"></textarea></div></div>
     <div class="m-foot"><button class="btn" data-close="mo-ex">취소</button><button class="btn primary" id="sx-go" data-needs="sx-why">예외 기록</button></div></div></div>
-  <div class="overlay" id="mo-apply" role="dialog" aria-modal="true" aria-labelledby="ap-t"><div class="modal" style="width:620px"><div class="m-head"><h3 id="ap-t">표준 맞추기 적용</h3></div>
+  <div class="overlay" id="mo-apply" role="dialog" aria-modal="true" aria-labelledby="ap-t"><div class="modal"><div class="m-head"><h3 id="ap-t">표준 맞추기 적용</h3></div>
     <div class="m-body">
       <table class="tbl" id="ap-sum"></table>
       <div class="banner warning u-mt-12" id="ap-phys"><i data-ic=warn></i><div><b>물리명 변경은 운영 DB에 영향</b>이 있습니다. 모델에는 바로 반영되고, 운영 DB는 다음 DDL 출력에서 <b>변경분(ALTER)</b>으로 바뀝니다.</div></div>
@@ -161,7 +163,7 @@ window.pageInit = function () {
   function draw() {
     const prev = {}; document.querySelectorAll('#rows tr[data-i]').forEach(tr => { const c = tr.querySelector('input[type=checkbox]'), s = tr.querySelector('select'); prev[tr.dataset.i] = { c: c ? c.checked : null, s: s ? s.value : null }; });
     $('rows').innerHTML = rows.map((r0, i) => { const r = effective(r0); const s = ST[r.st]; const can = selectable(r) && !readOnly; const opts = can ? procOpts(r) : [];
-      return `<tr class="${s[3]}" data-f="${s[2]}${TODO.includes(s[2]) ? ' todo' : ''}" data-i="${i}"><td><input type="checkbox" ${can ? (['comb', 'okapply', 'req'].includes(r.st) ? 'checked' : '') : 'disabled'} aria-label="${r.ent}.${r.a} 선택"></td><td><span class="badge ${s[0]}">${s[1]}</span></td><td>${r.ent}${r.entRow ? ' <span class="muted">· 테이블명</span>' : ''}</td><td${r.now && r.now !== r.a ? ` title="원래 이름 ${r.a}"` : ''}>${two(r.now || r.a, r.pr && r.pr.term, r.st === 'unreg' ? `<span class="faint">‘${r.word}’ 미등록</span>` : '')}</td><td class="mono">${two(r.cur, r.pr && r.pr.phys)}</td><td class="mono">${r.pr && r.pr.dom ? r.pr.dom : ''}</td><td>${opts.length > 1 ? `<select class="input" style="width:170px">${opts.map(o => `<option>${o}</option>`).join('')}</select>` : opts.length ? `<span class="caption">${opts[0]}${r.wait ? ` · <a href="approvals.html?doc=${r.wait}">${r.wait}</a>` : ''}</span>` : r.why ? `<span class="caption">사유: ${r.why}</span>` : '<span class="caption muted">변경 없음</span>'}</td><td class="dx"><b>${r.dx[0]}</b> ${r.dx[1]}</td></tr>`; }).join('') || '<tr class="er first"><td colspan="8" class="caption muted" style="text-align:center;padding:40px">이 업무 영역에 분석할 속성이 없습니다.</td></tr>';
+      return `<tr class="${s[3]}" data-f="${s[2]}${TODO.includes(s[2]) ? ' todo' : ''}" data-i="${i}"><td><input type="checkbox" ${can ? (['comb', 'okapply', 'req'].includes(r.st) ? 'checked' : '') : 'disabled'} aria-label="${r.ent}.${r.a} 선택"></td><td><span class="badge ${s[0]}">${s[1]}</span></td><td>${r.ent}${r.entRow ? ' <span class="muted">· 테이블명</span>' : ''}</td><td${r.now && r.now !== r.a ? ` title="원래 이름 ${r.a}"` : ''}>${two(r.now || r.a, r.pr && r.pr.term, r.st === 'unreg' ? `<span class="faint">‘${r.word}’ 미등록</span>` : '')}</td><td class="mono">${two(r.cur, r.pr && r.pr.phys)}</td><td class="mono">${r.pr && r.pr.dom ? r.pr.dom : ''}</td><td>${opts.length > 1 ? `<select class="input sd-proc" aria-label="처리 방법">${opts.map(o => `<option>${o}</option>`).join('')}</select>` : opts.length ? `<span class="caption">${opts[0]}${r.wait ? ` · <a href="approvals.html?doc=${r.wait}">${r.wait}</a>` : ''}</span>` : r.why ? `<span class="caption">사유: ${r.why}</span>` : '<span class="caption muted">변경 없음</span>'}</td><td class="dx"><b>${r.dx[0]}</b> ${r.dx[1]}</td></tr>`; }).join('') || '<tr class="er first"><td colspan="8" class="caption muted" style="text-align:center;padding:40px">이 업무 영역에 분석할 속성이 없습니다.</td></tr>';
     // chip counts from the same rows (CL12-40)
     const cnt = k => rows.filter(r => ST[effective(r).st][2] === k).length;
     const cur = (document.querySelector('#chips .chip.on') || {}).dataset;

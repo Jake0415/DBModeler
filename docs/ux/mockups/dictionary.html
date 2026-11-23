@@ -13,14 +13,7 @@
   .mt { font-size:12px; padding:0 6px; border-radius:9999px; background:var(--ds-gray-100); color:var(--fg-2); margin-left:4px; }
   .menu { position:absolute; right:0; top:40px; background:var(--surface); border-radius:var(--r-xl); box-shadow:var(--menu-shadow); padding:6px; width:340px; display:none; z-index:40; }
   .menu.open { display:block; }
-  .fpop { left:0; right:auto; width:340px; padding:12px 12px 8px; }
-  .fpop .frow { display:grid; grid-template-columns:88px 1fr; align-items:center; gap:8px; min-height:40px; font-size:14px; }
-  .fpop .fl { color:var(--fg-2); } .fpop .fv { display:flex; gap:6px; flex-wrap:wrap; }
-  .fpop .ffoot { display:flex; align-items:center; gap:8px; border-top:1px solid var(--ds-gray-400); margin:8px -12px 0; padding:8px 12px 0; }
-  .fcount { margin-left:2px; min-width:18px; height:18px; padding:0 5px; border-radius:9999px; background:var(--ds-gray-1000); color:var(--on-ink); font:500 12px/18px var(--font-sans); }
-  .fchips { display:flex; flex-wrap:wrap; gap:6px; align-items:center; }
-  .fchips .fchip { height:24px; padding:0 8px 0 10px; font-size:12px; border-style:solid; gap:4px; }
-  .fchips .fchip .ic { width:12px; height:12px; }
+  .fchips { display:flex; }   /* popover · count · applied chips are the shared part in app.css; here the chips keep their own line behaviour */
   .menu .mi { display:flex; align-items:center; min-height:36px; width:100%; text-align:left; border:0; background:none; padding:0 8px; border-radius:6px; cursor:pointer; font:14px var(--font-sans); color:var(--fg); }
   .menu .mi:hover { background:var(--ds-gray-100); } .menu .mi:focus-visible { background:var(--ds-gray-100); outline:none; box-shadow:0 0 0 2px var(--focus); }
   .bulkbar { display:flex; align-items:center; gap:8px; padding:8px 12px; margin:0 0 8px; border:1px solid var(--ds-blue-400); border-radius:var(--r-md); background:var(--surface-2); }
@@ -41,6 +34,7 @@
   .tl { border-left:2px solid var(--border); margin-left:6px; padding-left:14px; }
   .tl .ev { position:relative; padding-bottom:14px; }
   .tl .ev::before { content:''; position:absolute; left:-21px; top:4px; width:10px; height:10px; border-radius:50%; background:var(--surface); border:2px solid var(--ds-gray-1000); }
+  #mo-pub .modal { width:560px; }   /* fixed widths live in the page style (17 §6.2) */
 </style>
 </head>
 <body data-page="dictionary">
@@ -200,7 +194,7 @@
     </aside>
   </div>
 
-  <div class="overlay" id="mo-pub" role="dialog" aria-modal="true" aria-labelledby="pub-t"><div class="modal" style="width:560px">
+  <div class="overlay" id="mo-pub" role="dialog" aria-modal="true" aria-labelledby="pub-t"><div class="modal">
     <div class="m-head"><h3 id="pub-t">제정차수 공표</h3></div>
     <div class="m-body">
       <div id="pub-sum"></div>
