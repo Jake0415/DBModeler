@@ -1326,7 +1326,14 @@
     const mark = s => { const v = q.trim(); s = esc(s); if (!v) return s; const i = s.toUpperCase().indexOf(esc(v).toUpperCase()); return i < 0 ? s : s.slice(0, i) + '<mark>' + s.slice(i, i + v.length) + '</mark>' + s.slice(i + v.length); };
     const passF = e => (!flt.bad || entBad(e) > 0) && (!flt.ex || e.a.some(a => a.s === 'ex')) && (!flt.noref || !e.ref) && (!flt.cls || e.c === flt.cls);
     const fltOn = () => flt.bad || flt.ex || flt.noref || !!flt.cls;
-    const stateBadge = area => { const l = live(); if (l && l.area === area && l.label) return `<span class="tbadge">${esc(l.label)}</span>`; const L = modelLock(area); const m = getModels()[area]; return L.state === 'review' ? '<span class="tbadge">검토</span>' : L.state === 'confirmed' ? '<span class="tbadge">확정</span>' : `<span class="tver" title="작업 중 v${m.ver}">v${m.ver}</span>`; };
+    // tree head / description / row density — per user (dbm-tree-ui-<id>)
+    const UIK = 'dbm-tree-ui-' + ME.id;
+    let UI = (() => { try { return Object.assign({ head: 0, desc: 'cur', den: '' }, JSON.parse(store.get(UIK, '{}')) || {}); } catch (e) { return { head: 0, desc: 'cur', den: '' }; } })();
+    const saveUI = () => store.set(UIK, JSON.stringify(UI));
+    // area description + shortcuts (모델 · 표준 맞추기 · DDL · 산출물): the area I am in by default, every open area, or none
+    const showDesc = a => UI.desc === 'all' || (UI.desc === 'cur' && a === cur);
+    // the read-only note joins the area badge instead of taking its own line ("v5 작업 중 · 조회")
+    const stateBadge = area => { const l = live(); if (l && l.area === area && l.label) return `<span class="tbadge" title="${esc(l.label)}${l.ro ? ' · 조회 전용' : ''}">${esc(l.label)}${l.ro ? ' · 조회' : ''}</span>`; const L = modelLock(area); const m = getModels()[area]; return L.state === 'review' ? '<span class="tbadge">검토</span>' : L.state === 'confirmed' ? '<span class="tbadge">확정</span>' : `<span class="tver" title="작업 중 v${m.ver}">v${m.ver}</span>`; };
 
     // ---- build the node tree (hierarchical), then flatten what is open
     function build() {
@@ -1362,8 +1369,8 @@
         const kidsOf = [];
         const FHELP = { 'f:views': '같은 영역의 테이블을 목적별로 나눠 그린 ERD 그림', 'f:ents': '데이터를 담는 표(테이블). 펼치면 컬럼(칸)이 보입니다', 'f:tbls': '실제 DB에 만들어질 테이블. 펼치면 컬럼과 타입이 보입니다', 'f:rels': '두 테이블이 어떻게 이어지는지(예: 부서 → 사원 소속된다)', 'f:prels': '관계마다 FK(다른 테이블을 가리키는 키)가 만들어졌는지', 'f:subs': '하나의 테이블을 종류별로 나눈 구조(예: 정규직 · 계약직)', 'f:std': '이 영역이 쓰는 표준 사전의 용어와 데이터 형식(도메인)', 'f:terms': '표준 사전에 등록된 이름과 영문 약어', 'f:doms': '데이터 형식 묶음(예: 금액N18 = 숫자 18자리)', 'f:cons': 'PK(기본키) · FK(참조키) · UK(중복 금지) 규칙', 'f:ix': '검색을 빠르게 하는 색인', 'f:refs': '다른 업무 영역의 테이블을 읽기 전용으로 가져와 관계만 맺은 것' };
         const folder = (nid, label, kids, o = {}) => N(nid, 'folder', Object.assign({ title: o.title || FHELP[nid] || '', html: `<span class="tn1">${label}</span><span class="tct">${o.count != null ? o.count : kids.length}</span>${o.warn ? '<span class="twarn" aria-hidden="true"></span>' : ''}`, aria: `${label} ${o.count != null ? o.count : kids.length}${o.warn ? ', 경고 있음' : ''}`, open: kids.length ? (qq ? true : isOp(nid, o.def || false)) : null, kids }, o));
-        // shortcuts (always visible when the area is open — not hidden in a folder)
-        if (!qq) {
+        // shortcuts (visible when the area is open — not hidden in a folder); the 영역 설명 setting decides which areas show them
+        if (!qq && showDesc(area)) {
           const bad = compOf(s).bad;
           const sn = s.snap ? '&snap=' + s.snap : '';
           [['model.html?area=' + area + sn, '모델'], ['standardize.html?area=' + area + '&f=todo', '표준 맞추기', bad, '작업본'], ['ddl.html?area=' + area + sn, 'DDL'], ['outputs.html?area=' + area + sn, '산출물']].forEach((l, j) => kidsOf.push(N('l:' + j, 'link', { href: l[0], html: `${l[1]}${l[2] ? ` <b>${l[2]}</b>` : ''}`, aria: l[1] + (l[2] ? ` 미준수 ${l[2]}` : '') + (l[3] && s.snap ? ', 작업본 기준' : '') })));
@@ -1434,17 +1441,25 @@
       ${tabs ? `<div class="ltabs" role="tablist" aria-label="왼쪽 칸"><button role="tab" id="lt-m" aria-controls="tp-model" data-lt="m">모델</button><button role="tab" id="lt-d" aria-controls="tp-dict" data-lt="d">사전</button></div>` : ''}
       <div class="tpanel" id="tp-model"${tabs ? ' role="tabpanel" aria-labelledby="lt-m"' : ''}>
         <div class="tfull" id="tr-full">
+          <!-- tree head: fixed while only the tree scrolls; folds to one line (system name + find button), remembered per user -->
+          <div class="thead" id="tr-head">
           <div class="tsys">
-            <a class="tsys-a${page === 'system' ? ' on' : ''}" href="system.html"${page === 'system' ? ' aria-current="page"' : ''} title="시스템 홈"><b>${sys.name}</b><span>${sys.db} · ${sys.code}</span></a>
-            <span class="tmw"><button class="tsw" type="button" data-menu-btn aria-expanded="false" aria-controls="mn-sys" aria-label="시스템 바꾸기"><i data-ic=down data-s=14></i></button><div class="menu" data-auto id="mn-sys">${SYSTEMS.map(s => `<a class="mi${s.cur ? ' on' : ''}" href="${s.href}"${s.cur ? ' aria-current="true"' : ''}><span>${s.name}</span><span class="caption muted" style="margin-left:auto">${s.db}</span></a>`).join('')}</div></span>
+            <a class="tsys-a${page === 'system' ? ' on' : ''}" href="system.html"${page === 'system' ? ' aria-current="page"' : ''} title="시스템 홈 · ${esc(sys.name)} · ${esc(sys.db)} · ${esc(sys.code)}"><b>${sys.name}</b><span>${sys.db} · ${sys.code}</span></a>
+            <button class="tsrch-open" id="tr-sopen" type="button" aria-label="찾기 — 상단 펼치기" title="찾기 (상단 펼치기)"><i data-ic=search data-s=14></i></button>
+            <span class="tmw"><button class="tsw" type="button" data-menu-btn aria-expanded="false" aria-controls="mn-sys" aria-label="시스템 바꾸기" title="시스템 바꾸기"><i data-ic=down data-s=14></i></button><div class="menu" data-auto id="mn-sys">${SYSTEMS.map(s => `<a class="mi${s.cur ? ' on' : ''}" href="${s.href}"${s.cur ? ' aria-current="true"' : ''}><span>${s.name}</span><span class="caption muted" style="margin-left:auto">${s.db}</span></a>`).join('')}</div></span>
+            <button class="thfold" id="tr-hfold" type="button" aria-expanded="true" aria-controls="tr-hbody" aria-label="트리 상단 접기" title="상단 접기 — 시스템 · 찾기를 한 줄로"><i data-ic=up data-s=14></i></button>
           </div>
+          <div class="thbody" id="tr-hbody">
           <div class="tfrow">
             <label class="tfind"><i data-ic=search data-s=14></i><input id="tr-q" type="search" placeholder="엔터티·속성·테이블·용어 찾기" aria-label="모델 객체 찾기" autocomplete="off"></label>
             <span class="tmw"><button class="tfb" type="button" data-menu-btn aria-expanded="false" aria-controls="mn-tf" aria-label="거르기" title="거르기"><i data-ic=filter data-s=14></i></button><div class="menu" data-auto id="mn-tf">
               <label class="mi"><input type="checkbox" data-tf="bad"> 미준수만</label><label class="mi"><input type="checkbox" data-tf="ex"> 예외 있는 것만</label><label class="mi"><input type="checkbox" data-tf="noref"> 참조 숨기기</label>
-              <div class="sep"></div><div class="mi" style="cursor:default">분류<span class="seg" style="margin-left:auto">${['', 'M', 'A', 'H', 'K'].map(c => `<button type="button" data-tc="${c}" class="${c === '' ? 'on' : ''}">${({ '': '전체', M: '기준', A: '거래', H: '이력', K: '코드' })[c]}</button>`).join('')}</span></div></div></span>
+              <div class="sep"></div><div class="mi" style="cursor:default">분류<span class="seg" style="margin-left:auto">${['', 'M', 'A', 'H', 'K'].map(c => `<button type="button" data-tc="${c}" class="${c === '' ? 'on' : ''}">${({ '': '전체', M: '기준', A: '거래', H: '이력', K: '코드' })[c]}</button>`).join('')}</span></div>
+              <div class="sep"></div><div class="mi" style="cursor:default">영역 설명<span class="seg" style="margin-left:auto" role="group" aria-label="영역 설명 · 바로가기">${[['cur', '지금 영역'], ['all', '모두'], ['none', '숨김']].map(([v, l]) => `<button type="button" data-tdesc="${v}">${l}</button>`).join('')}</span></div>
+              <div class="mi" style="cursor:default">행 간격<span class="seg" style="margin-left:auto" role="group" aria-label="트리 행 간격">${[['compact', '촘촘'], ['default', '기본'], ['comfy', '넓게']].map(([v, l]) => `<button type="button" data-tden="${v}">${l}</button>`).join('')}</span></div></div></span>
           </div>
           <div class="tfbar" id="tr-fbar" hidden></div>
+          </div>
           <div class="sr-only" id="tr-live" aria-live="polite"></div>
           <div class="tro" id="tr-ro" hidden></div>
           <div class="tsec"><span>업무 영역</span><span class="tsec-r"><span class="tmw"><button class="tadd" type="button" data-menu-btn aria-expanded="false" aria-controls="mn-thelp" aria-label="트리 보는 법" title="트리 보는 법"><i data-ic=help data-s=14></i></button><div class="menu thelp" data-auto id="mn-thelp">
@@ -1452,6 +1467,7 @@
             ${[['db', '업무 영역', '시스템 안의 업무 묶음. 버전과 결재(확정)의 단위입니다', '인사관리 · 재무관리 · 회계관리'], ['flow', '다이어그램', '같은 영역의 테이블을 목적별로 나눠 그린 ERD', '급여 · 근태 · 휴가'], ['table', '테이블(엔터티)', '데이터를 담는 표. 오른쪽 회색 글자가 DB 이름입니다', '사원기본 = EMP_M'], ['col', '컬럼(속성)', '테이블의 칸', '사원명 · 입사일자'], ['key', '기본키(PK)', '행 하나를 구별하는 값', '사원번호'], ['link', 'FK · 관계', '다른 테이블을 가리키는 칸, 테이블 사이의 연결', '부서 → 사원 (소속된다)'], ['layers', '서브타입', '한 테이블을 종류별로 나눈 구조', '정규직 · 계약직'], ['term', '표준 용어', '표준 사전에 등록된 이름과 영문 약어', '사원번호 = EMP_NO'], ['tag', '도메인', '데이터 형식 묶음', '금액N18 · 연월일C8'], ['shield', '제약조건', '물리 모드: PK · FK · UK 규칙', 'EMP_M_PK'], ['list', '인덱스', '물리 모드: 검색을 빠르게 하는 색인', 'EMP_M_IX01'], ['ext', '참조', '다른 영역의 테이블을 읽기 전용으로 가져온 것', '회계관리의 은행계좌']].map(([ic, n, d, ex]) => `<div class="thelp-r"><span class="tico"><i data-ic=${ic} data-s=14></i></span><div><b>${n}</b><div class="caption">${d}</div><div class="caption faint">예: ${ex}</div></div></div>`).join('')}
             <div class="thelp-st"><span class="tico ti-ok"><i data-ic=table data-s=14></i></span>표준 준수 <span class="tico ti-bad"><i data-ic=table data-s=14></i></span>미준수 있음(숫자 = 개수) <span class="tico ti-ex"><i data-ic=table data-s=14></i></span>예외 있음</div>
           </div></span>${canNew ? '<a class="tadd" href="system.html#new" aria-label="새 업무 영역" title="새 업무 영역"><i data-ic=plus data-s=14></i></a>' : ''}</span></div>
+          </div>
           <div role="tree" id="tr-tree" class="otree"></div>
           <div class="tsep"></div>
           <a class="tl${file === 'model.html' && qp.get('sys') ? ' on" aria-current="page' : ''}" href="model.html?sys=1"><i data-ic=compare></i>시스템 전체 ERD</a>
@@ -1495,12 +1511,13 @@
         }
         if (r.grp) html += `<div class="tgrp" role="none" style="--lv:${r.lvl}" title="${esc(r.grp.title)}">${r.grp.label}<span>${r.grp.n}</span></div>`;
         html += `<div role="treeitem" aria-haspopup="menu"${r.drag ? ' draggable="true"' : ''} class="trow2 k-${r.kind}${r.id === selId ? ' sel' : ''}${r.gray ? ' gray' : ''}" data-id="${esc(r.id)}" aria-level="${r.lvl}" aria-posinset="${r.pos}" aria-setsize="${r.size}"${r.open != null ? ` aria-expanded="${r.open}"` : ''}${r.selectable ? ` aria-selected="${r.id === selId}"` : ''} tabindex="${r.id === focusId ? 0 : -1}" aria-label="${esc(r.aria || '')}"${r.title ? ` title="${esc(r.title)}"` : ''} style="--lv:${r.lvl}"><span class="ttw" data-tw aria-hidden="true">${r.open == null ? '' : `<i data-ic=${r.open ? 'down' : 'right'} data-s=12></i>`}</span>${iconOf(r) ? `<span class="tico${icoCls(r)}" aria-hidden="true"><i data-ic=${iconOf(r)} data-s=14></i></span>` : ''}${r.html.replace(/^<span class="tdot[^"]*" aria-hidden="true">(<i[^>]*><\/i>)?<\/span>/, '')}<span class="tmore" data-tmore aria-hidden="true" title="메뉴 (Shift+F10)"><i data-ic=more data-s=14></i></span></div>`;
-        if (r.kind === 'area' && r.open && r.desc && !q.trim()) html += `<div class="tdesc" role="none" style="--lv:${r.lvl + 1}">${esc(r.desc)}</div>`;
+        if (r.kind === 'area' && r.open && r.desc && !q.trim() && showDesc(r.area)) html += `<div class="tdesc" role="none" style="--lv:${r.lvl + 1}">${esc(r.desc)}</div>`;
       });
       tree.innerHTML = html || '<div class="tempty">맞는 객체가 없습니다</div>';
       const l = live(); const curName = (getModels()[cur] || {}).name || '';
       tree.setAttribute('aria-label', `모델 트리 · ${curName}${l && l.label ? ' ' + l.label : ''} · ${pageMode() === 'P' ? '물리' : '논리'}`);
-      const ro = nav.querySelector('#tr-ro'); ro.hidden = !(l && l.ro); if (l && l.ro) ro.textContent = `${l.label} · 조회 전용`;
+      nav.querySelector('#tr-ro').hidden = true;   // merged into the area badge (stateBadge) — no separate line that comes and goes
+      nav.querySelector('#tr-sopen').classList.toggle('on', fltOn() || !!q.trim());   // folded head: the find button says a search / filter is on
       nav.querySelector('#tr-live').textContent = q.trim() ? (found ? `${found}건 찾음` : '맞는 객체가 없습니다') : '';
       const fb = nav.querySelector('#tr-fbar'); fb.hidden = !fltOn();
       if (fltOn()) fb.innerHTML = `<span>${[flt.bad && '미준수만', flt.ex && '예외 있는 것만', flt.noref && '참조 숨김', flt.cls && ({ M: '기준 정보', A: '거래', H: '이력', K: '코드 · 분류' })[flt.cls] + '만'].filter(Boolean).join(' · ')}</span><button type="button" class="btn ghost sm" id="tr-fclr">지우기</button>`;
@@ -1726,6 +1743,19 @@
     qIn.addEventListener('input', () => { q = qIn.value; render(); });
     qIn.addEventListener('keydown', e => { if (e.key === 'Escape' && qIn.value) { e.stopPropagation(); qIn.value = ''; q = ''; render(); } else if (e.key === 'ArrowDown') { const f = tree.querySelector('[role=treeitem]'); if (f) { e.preventDefault(); focusRow(f); } } });
     nav.querySelector('#mn-tf').addEventListener('change', e => { const c = e.target.closest('[data-tf]'); if (c) { flt[c.dataset.tf] = c.checked; render(); } });
+    // head fold · description · row density
+    const applyHead = () => { const m = !!UI.head, b = nav.querySelector('#tr-hfold'); nav.querySelector('#tr-head').classList.toggle('min', m);
+      b.setAttribute('aria-expanded', String(!m)); b.setAttribute('aria-label', m ? '트리 상단 펼치기' : '트리 상단 접기'); b.title = m ? '상단 펼치기 — 찾기 · 거르기 보기' : '상단 접기 — 시스템 · 찾기를 한 줄로'; b.innerHTML = `<i data-ic=${m ? 'down' : 'up'} data-s=14></i>`; };
+    const curDen = () => UI.den || document.documentElement.dataset.density || 'default';
+    const applyDen = () => { ['compact', 'default', 'comfy'].forEach(d => nav.classList.toggle('tden-' + d, curDen() === d)); nav.querySelectorAll('[data-tden]').forEach(x => x.classList.toggle('on', x.dataset.tden === curDen())); };
+    const markDesc = () => nav.querySelectorAll('[data-tdesc]').forEach(x => x.classList.toggle('on', x.dataset.tdesc === UI.desc));
+    nav.querySelector('#tr-hfold').addEventListener('click', () => { UI.head = UI.head ? 0 : 1; saveUI(); applyHead(); nav.querySelector('#tr-hfold').focus(); });
+    nav.querySelector('#tr-sopen').addEventListener('click', () => { UI.head = 0; saveUI(); applyHead(); qIn.focus(); });
+    nav.querySelector('#mn-tf').addEventListener('click', e => {
+      const d = e.target.closest('[data-tdesc]'); if (d) { e.stopPropagation(); UI.desc = d.dataset.tdesc; saveUI(); markDesc(); render(); return; }
+      const n = e.target.closest('[data-tden]'); if (n) { e.stopPropagation(); UI.den = n.dataset.tden; saveUI(); applyDen(); render(); }
+    });
+    applyHead(); applyDen(); markDesc();
     nav.querySelector('#mn-tf').addEventListener('click', e => { const b = e.target.closest('[data-tc]'); if (!b) return; e.stopPropagation(); flt.cls = b.dataset.tc; nav.querySelectorAll('[data-tc]').forEach(x => x.classList.toggle('on', x === b)); render(); });
     nav.addEventListener('click', e => { if (e.target.id === 'tr-fclr') { flt = { bad: false, ex: false, noref: false, cls: '' }; nav.querySelectorAll('[data-tf]').forEach(c => c.checked = false); nav.querySelectorAll('[data-tc]').forEach(x => x.classList.toggle('on', x.dataset.tc === '')); render(); qIn.focus(); } });
     // ---- width: follows the content, never squeezes the canvas below 760px (12 §4.6)

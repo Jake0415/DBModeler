@@ -191,15 +191,33 @@ kbd, .gsearch kbd { margin-left:auto; height:22px; display:inline-flex; align-it
 .mtree .side { width:auto; flex:1 1 auto; border-right:0; background:transparent; }
 .mtree .side.closed { display:flex; }
 body.dict-in-tree .side-tab, body.dict-in-tree #side [data-toggle="side"] { display:none !important; }
-.tsys { position:relative; display:flex; align-items:stretch; gap:4px; margin:0 0 8px; }
+/* tree head: system · find · filter · '업무 영역' stay on top while only the tree scrolls (sticky inside .tfull) */
+.mtree .tfull { padding-top:0; }
+.thead { position:sticky; top:0; z-index:5; margin:0 -8px; padding:12px 8px 0; background:var(--nav-bg); }
+.thead .tsec { margin-top:2px; }
+/* system: ONE line, fixed 32px — the name never shrinks first; the DB info gives way (ellipsis), the full text is in the tooltip */
+.tsys { position:relative; display:flex; align-items:center; gap:2px; height:32px; margin:0 0 8px; }
 .tsys .tmw { position:static; }
-.tsys-a { flex:1; min-width:0; display:flex; flex-direction:column; justify-content:center; height:44px; padding:0 10px; border-radius:var(--r-lg); background:var(--surface); box-shadow:var(--ring); color:var(--fg); text-decoration:none; }
+.tsys-a { flex:1; min-width:0; display:flex; flex-direction:row; align-items:center; gap:6px; height:32px; padding:0 10px; border-radius:var(--r-lg); background:var(--surface); box-shadow:var(--ring); color:var(--fg); text-decoration:none; white-space:nowrap; }
 .tsys-a:hover { text-decoration:none; box-shadow:0 0 0 1px var(--ds-gray-500); }
 .tsys-a.on { box-shadow:0 0 0 1px var(--ink); }
-.tsys-a b { font-weight:500; font-size:14px; line-height:18px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.tsys-a span { font-size:12px; line-height:16px; color:var(--fg-2); }
-.tsys .tmw > .menu[data-auto] { left:0; right:0; top:48px; min-width:0; }
-.tsw { width:32px; height:44px; border:0; border-radius:var(--r-lg); background:transparent; color:var(--fg-2); display:grid; place-items:center; cursor:pointer; }
+.tsys-a b { flex:0 0 auto; max-width:100%; font-weight:500; font-size:14px; line-height:18px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.tsys-a span { flex:1 1 0; min-width:0; font-size:12px; line-height:16px; color:var(--fg-2); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.tsys-a span::before { content:'· '; }
+.tsys .tmw > .menu[data-auto] { left:0; right:0; top:36px; min-width:0; }
+.tsw, .thfold, .tsrch-open { width:28px; height:28px; flex:0 0 28px; border:0; border-radius:var(--r-md); background:transparent; color:var(--fg-2); display:grid; place-items:center; cursor:pointer; position:relative; }
+.thfold:hover, .tsrch-open:hover { background:var(--ds-gray-100); color:var(--fg); }
+.tsrch-open { display:none; }
+.tsrch-open.on::after { content:''; position:absolute; top:4px; right:4px; width:6px; height:6px; border-radius:50%; background:var(--info); }   /* a search / filter is on while folded */
+/* folded head: one 28px line (system name + find button); find · filter rows hidden */
+.thead.min .tsys { height:28px; margin-bottom:4px; }
+.thead.min .tsys-a { height:28px; box-shadow:none; background:transparent; padding:0 6px; }
+.thead.min .thbody { display:none; }
+.thead.min .tsrch-open { display:grid; }
+/* tree row density: follows 마이페이지 › 표 밀도 unless set in the tree's filter menu */
+.mtree.tden-compact .trow2 { height:24px; } .mtree.tden-compact .trow2.k-area { height:28px; } .mtree.tden-compact .tlinks { padding-top:0; padding-bottom:2px; }
+.mtree.tden-comfy .trow2 { height:32px; }
+.tsw { width:28px; height:28px; border:0; border-radius:var(--r-md); background:transparent; color:var(--fg-2); display:grid; place-items:center; cursor:pointer; }
 .tsw:hover, .tsw[aria-expanded="true"] { background:var(--ds-gray-100); color:var(--fg); }
 .tfrow { display:flex; gap:4px; margin-bottom:8px; }
 .tfind { display:flex; align-items:center; gap:6px; height:32px; padding:0 8px; margin-bottom:8px; border-radius:var(--r-md); background:var(--surface); box-shadow:0 0 0 1px var(--ds-gray-500); color:var(--fg-3); }
