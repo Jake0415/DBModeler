@@ -3,6 +3,11 @@
    Order: 1 tokens · 2 base · 3 utilities · 4 shell · 5 model tree · 6 page · 7 controls · 8 badges · 9 table · 10 panel · 11 feedback · 12 components · 13 screen pieces · 14 mock tools
    Colour: Vercel Geist scale (vercel.com/geist/colors). 100–300 backgrounds · 400–600 borders · 700–800 fills · 900 secondary text · 1000 primary text.
    Rule: change a component where it is defined — never append an override further down. */
+/* flicker-free screen switch: the top bar, tree and lists are built by app.js after the HTML is parsed, so a frame painted
+   earlier showed the bare content and then the shell popping in. The app stays hidden until app.js marks it ready —
+   meanwhile the browser keeps the previous screen on display (paint holding). Safety net: shown after 1.5 s regardless. */
+#app:not(.ready) { visibility:hidden; animation:app-reveal 0s linear 1.5s forwards; }
+@keyframes app-reveal { to { visibility:visible; } }
 [hidden] { display:none !important; }   /* the hidden attribute always wins over component display rules (banner · flex · toolbar) */
 
 /* ============ 1. tokens ============ */

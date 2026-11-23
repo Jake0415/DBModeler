@@ -2134,6 +2134,9 @@
   };
 
   document.addEventListener('DOMContentLoaded', () => {
+    // reveal the app once the shell and the page's first draw are done (app.css #app:not(.ready)); the timeout runs right after
+    // this handler even if a page script throws, so the screen is never left hidden
+    setTimeout(() => { const a = document.getElementById('app'); if (a) a.classList.add('ready'); }, 0);
     buildShell(); wire();
     // usability D5: a screen opened with &ret=<screen> (e.g. from the term wizard) keeps a way back, even after the page rewrites its own address
     try {
