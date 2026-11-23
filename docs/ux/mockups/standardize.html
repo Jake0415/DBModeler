@@ -95,6 +95,7 @@ window.pageInit = function () {
   const CE = q.get('e') || '', CA = q.get('a') || '';
   const backUrl = `model.html?area=${AREA}${CE ? '&focus=' + encodeURIComponent(CE) : ''}`;
   $('back').href = backUrl;
+  areaNav(AREA, 'std');   // the head's '영역 화면' menu — 표준 맞추기 always works on the work copy (resolution-tree-menu)
   $('to-wiz').href = `term-wizard.html?area=${AREA}&from=standardize${CE ? '&e=' + encodeURIComponent(CE) + (CA ? '&a=' + encodeURIComponent(CA) : '') : ''}`;
   const ANALYZED = `분석 ${nowStr()} · 사전 기준 현재(제정 ${getPub().cha}차 + 승인 반영분)`;   // shown at the right of the filter row (the header keeps room for the title and the wizard entry)
   if (q.get('from') === 'import') { const imp = J2('dbm-import-last'); $('from-import').hidden = false; $('from-import-t').innerHTML = `<b>DDL 가져오기가 끝나 자동으로 열었습니다.</b> ${imp && imp.area === AREA ? `가져온 ${imp.tables}개 테이블·${imp.cols}개 컬럼을 ‘${LK.model.name}’ 영역 v${VER}${imp.dst === 'cur' ? '에 추가하고' : '로 만들고'} 분석했습니다.` : '가져온 구조를 분석했습니다.'}`; }

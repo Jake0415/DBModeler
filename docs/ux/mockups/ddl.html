@@ -83,6 +83,7 @@ window.pageInit = function () {
   const label = snapHidden ? `${snapDoc.id} 결재 중 · 열람 제한` : !snapDoc && view.hidden ? view.label : snapDoc ? `v${snapDoc.ver} ${snapDoc.step === 'done' ? '확정본' : '제출 사본'} · ${snapDoc.id}` : L.state === 'confirmed' ? `v${L.model.ver} 확정본` : L.state === 'review' ? `v${L.model.ver} 검토 중 사본` : `v${L.model.ver} 작업본(미확정)`;
   $('crumb-area').textContent = L.model.name; $('vbadge').textContent = label; $('vbadge').className = 'badge ' + (L.state === 'edit' && !snapDoc ? 'b-warning' : 'b-success');
   $('back').href = `model.html?area=${AREA}${snapDoc ? '&snap=' + snapDoc.id : ''}`;
+  areaNav(AREA, 'ddl', { snap: snapDoc ? snapDoc.id : '' });   // the head's '영역 화면' menu (resolution-tree-menu)
   { const c = document.querySelector('.crumbs a'); if (c) c.textContent = sysOfArea(AREA) || curSys().name; }   // the area's own system (markup had a fixed ‘요구사항관리’)
   { const sy = SYSLIST.find(s => s.name === sysOfArea(AREA)) || curSys(); document.querySelector('.page-header h1').title = `${sy.db} · 스키마 ${sy.schema}`;
     // DBMS 비교 (sample, later phase): the selects name this system/version; the sample rows are 요구사항관리's — other areas say there is no comparison yet

@@ -1030,6 +1030,25 @@
     m.E.forEach(e => { if (!e.st || !e.reqDoc) return; const d = docs.find(x => x.id === e.reqDoc); if (d && ['rejected', 'withdrawn'].includes(d.step)) out.push(`${e.n} 엔터티 용어(${d.id} ${STEP_NAME[d.step]})`); }); return out; };
   /* compliance of a model copy — the model screen, system ERD and outputs use this one formula (CX15-04/05) */
   window.compOf = m => { let tot = 0, ok = 0, bad = 0, ex = 0, na = 0, req = 0; (m ? m.E : []).forEach(e => { if (e.ref) return; tot++; if (e.p === '—') bad++; else ok++; e.a.forEach(a => { if (a.edit) return; if (a.s === 'na') { na++; return; } tot++; if (a.s === 'ok') ok++; else if (a.s === 'ex') { ok++; ex++; } else if (a.s === 'req') { ok++; req++; } else bad++; }); }); return { rate: tot ? Math.floor(ok / tot * 100) : 0, bad, ex, na, req, tot }; };
+  /* '영역 화면' menu (resolution-tree-menu): the one place to move between the area's four screens — next to the path in the page head.
+     links (navigation, not toggles) with icon + label; the current screen is shown pressed + aria-current="page"; the 미준수 badge counts the
+     WORK COPY (the 표준 맞추기 target) and hides at 0; snapshots keep &snap= on 모델 · DDL · 산출물 */
+  window.areaNav = (area, here, o = {}) => {
+    const head = document.querySelector('.page-header'); const m = getModels()[area]; if (!head || !m || head.querySelector('.anav')) return;
+    let bad = 0; try { bad = compOf(modelOf(area, m.ver)).bad; } catch (e) {}
+    const sn = o.snap ? '&snap=' + encodeURIComponent(o.snap) : '';
+    const L = [['model', 'model.html?area=' + area + sn, 'flow', '모델'], ['std', 'standardize.html?area=' + area + (bad ? '&f=todo' : ''), 'check', '표준 맞추기'], ['ddl', 'ddl.html?area=' + area + sn, 'code', 'DDL'], ['out', 'outputs.html?area=' + area + sn, 'ftext', '산출물']];
+    const nav = document.createElement('nav'); nav.className = 'anav'; nav.setAttribute('aria-label', `${m.name} 화면`);
+    nav.innerHTML = L.map(([k, href, ic, l]) => { const cur = k === here, std = k === 'std';
+      const tip = std ? `표준 맞추기${bad ? ` — 미준수 ${bad}건` : ''}${o.snap ? ' · 작업본 기준' : ''}` : l;
+      return `<a class="anav-i${cur ? ' on' : ''}" href="${href}"${cur ? ' aria-current="page"' : ''} title="${tip}" aria-label="${tip}"><i data-ic=${ic} data-s=16></i><span>${l}</span>${std && bad ? `<span class="anav-n" aria-hidden="true">${bad}</span>` : ''}</a>`; }).join('');
+    // after the path (and after the area-name h1 on the model screen); the screen-title h1 of the other three stays for screen readers only
+    const anchor = head.querySelector('h1.crumb') || head.querySelector('.crumbs');
+    if (anchor) { anchor.insertAdjacentElement('afterend', nav); if (anchor.matches('h1.crumb')) { const sl = document.createElement('span'); sl.className = 'sl anav-sl'; sl.setAttribute('aria-hidden', 'true'); sl.textContent = '/'; anchor.insertAdjacentElement('afterend', sl); } }
+    const h1 = head.querySelector('h1:not(.crumb)'); if (h1) h1.classList.add('sr-only');
+    // the path's area link goes UP (system home, that area's card) — moving between screens is this menu's job
+    head.querySelectorAll('.crumbs a[href^="model.html"]').forEach(a => { a.href = 'system.html#area-' + area; a.title = '시스템 홈 · 이 업무 영역'; });
+  };
   window.modelBad = m => m ? m.E.reduce((n, e) => n + (e.ref ? 0 : (e.p === '—' ? 1 : 0) + e.a.filter(a => !a.edit && (a.s === 'comb' || a.s === 'unreg')).length), 0) : null;
   /* baselines: every editable download is recorded (range, item ids, versions) — round-trip judgement uses this, not the file alone */
   window.recordBaseline = (scope, ids) => { const all = J('dbm-baselines', []); const t = new Date(); const id = `BL-${today().replace(/-/g, '')}-${String(t.getHours()).padStart(2, '0')}${String(t.getMinutes()).padStart(2, '0')}`; all.unshift({ id, at: now(), by: ME.id, scope, n: ids.length, ids }); S('dbm-baselines', all.slice(0, 20)); return id; };
@@ -1105,6 +1124,7 @@
     plus: '<path d="M5 12h14"/><path d="M12 5v14"/>',
     more: '<circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/>',
     left: '<path d="m15 18-6-6 6-6"/>',
+    code: '<path d="m16 18 6-6-6-6"/><path d="m8 6-6 6 6 6"/>', ftext: '<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/>',
     pclose: '<rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 3v18"/><path d="m16 15-3-3 3-3"/>', popen: '<rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 3v18"/><path d="m14 9 3 3-3 3"/>',
     undo: '<path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/>',
     redo: '<path d="M21 7v6h-6"/><path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3l3 2.7"/>',
@@ -1331,8 +1351,6 @@
     const UIK = 'dbm-tree-ui-' + ME.id;
     let UI = (() => { try { return Object.assign({ head: 0, desc: 'cur', den: '' }, JSON.parse(store.get(UIK, '{}')) || {}); } catch (e) { return { head: 0, desc: 'cur', den: '' }; } })();
     const saveUI = () => store.set(UIK, JSON.stringify(UI));
-    // area description + shortcuts (모델 · 표준 맞추기 · DDL · 산출물): the area I am in by default, every open area, or none
-    const showDesc = a => UI.desc === 'all' || (UI.desc === 'cur' && a === cur);
     // the read-only note joins the area badge instead of taking its own line ("v5 작업 중 · 조회")
     const stateBadge = area => { const l = live(); if (l && l.area === area && l.label) return `<span class="tbadge" title="${esc(l.label)}${l.ro ? ' · 조회 전용' : ''}">${esc(l.label)}${l.ro ? ' · 조회' : ''}</span>`; const L = modelLock(area); const m = getModels()[area]; return L.state === 'review' ? '<span class="tbadge">검토</span>' : L.state === 'confirmed' ? '<span class="tbadge">확정</span>' : `<span class="tver" title="작업 중 v${m.ver}">v${m.ver}</span>`; };
 
@@ -1370,11 +1388,9 @@
         const kidsOf = [];
         const FHELP = { 'f:views': '같은 영역의 테이블을 목적별로 나눠 그린 ERD 그림', 'f:ents': '데이터를 담는 표(테이블). 펼치면 컬럼(칸)이 보입니다', 'f:tbls': '실제 DB에 만들어질 테이블. 펼치면 컬럼과 타입이 보입니다', 'f:rels': '두 테이블이 어떻게 이어지는지(예: 부서 → 사원 소속된다)', 'f:prels': '관계마다 FK(다른 테이블을 가리키는 키)가 만들어졌는지', 'f:subs': '하나의 테이블을 종류별로 나눈 구조(예: 정규직 · 계약직)', 'f:std': '이 영역이 쓰는 표준 사전의 용어와 데이터 형식(도메인)', 'f:terms': '표준 사전에 등록된 이름과 영문 약어', 'f:doms': '데이터 형식 묶음(예: 금액N18 = 숫자 18자리)', 'f:cons': 'PK(기본키) · FK(참조키) · UK(중복 금지) 규칙', 'f:ix': '검색을 빠르게 하는 색인', 'f:refs': '다른 업무 영역의 테이블을 읽기 전용으로 가져와 관계만 맺은 것' };
         const folder = (nid, label, kids, o = {}) => N(nid, 'folder', Object.assign({ title: o.title || FHELP[nid] || '', html: `<span class="tn1">${label}</span><span class="tct">${o.count != null ? o.count : kids.length}</span>${o.warn ? '<span class="twarn" aria-hidden="true"></span>' : ''}`, aria: `${label} ${o.count != null ? o.count : kids.length}${o.warn ? ', 경고 있음' : ''}`, open: kids.length ? (qq ? true : isOp(nid, o.def || false)) : null, kids }, o));
-        // shortcuts (visible when the area is open — not hidden in a folder); the 영역 설명 setting decides which areas show them
-        if (!qq && showDesc(area)) {
-          const bad = compOf(s).bad;
-          const sn = s.snap ? '&snap=' + s.snap : '';
-          [['model.html?area=' + area + sn, '모델'], ['standardize.html?area=' + area + '&f=todo', '표준 맞추기', bad, '작업본'], ['ddl.html?area=' + area + sn, 'DDL'], ['outputs.html?area=' + area + sn, '산출물']].forEach((l, j) => kidsOf.push(N('l:' + j, 'link', { href: l[0], html: `${l[1]}${l[2] ? ` <b>${l[2]}</b>` : ''}`, aria: l[1] + (l[2] ? ` 미준수 ${l[2]}` : '') + (l[3] && s.snap ? ', 작업본 기준' : '') })));
+        // the tree holds OBJECTS only (resolution-tree-menu): screen moves (모델 · 표준 맞추기 · DDL · 산출물) live in the page head's
+        // '영역 화면' menu and in the area ⋯ menu; every open area has the same children (the diagram folder was hidden for other areas)
+        if (!qq) {
           const vs = onM ? lv0.V : viewsOf(area), seeing = onM ? (lv0.view || 'all') : null;
           kidsOf.push(folder('f:views', '다이어그램', vs.map(v => { const n = v.id === 'all' ? s.E.length : (v.ents || []).length;
             return N('v:' + v.id, 'view', { view: v.id, selectable: true, html: `<span class="tn1">${esc(v.n)}</span><span class="tct">${n}</span>${v.id === seeing ? '<span class="tmeta">보는 중</span>' : ''}`, aria: `${v.n}, 엔터티 ${n}${v.id === 'all' ? ', 기본 보기' : ''}${v.id === seeing ? ', 보는 중' : ''}` }); }), { def: !!onM && seeing !== 'all' }));
@@ -1418,7 +1434,7 @@
         }
         if (qq && !areaHit && !kidsOf.length) return;
         if (qq && areaHit) found++;
-        out.push(N('area', 'area', { desc: m.desc || '', title: m.desc ? `${m.name} — ${m.desc} · 엔터티 ${s.E.filter(e => !e.ref).length}` : '', html: `<span class="tn1"><b>${mark(m.name)}</b></span>${stateBadge(area)}`, aria: `${m.name}, ${area === cur && live() && live().label ? live().label : '업무 영역'}${m.desc ? ', ' + m.desc : ''}`, open: qq ? true : isOp('area', area === cur), kids: kidsOf }));
+        out.push(N('area', 'area', { desc: m.desc || '', title: m.desc ? `${m.name} — ${m.desc} · 엔터티 ${s.E.filter(e => !e.ref).length}` : '', html: `<span class="tn1"><b>${mark(m.name)}</b></span>${stateBadge(area)}`, aria: `${m.name}${area === cur ? ', 지금 영역' : ''}, ${area === cur && live() && live().label ? live().label : '업무 영역'}${m.desc ? ', ' + m.desc : ''}`, open: qq ? true : isOp('area', area === cur), kids: kidsOf }));
       });
       return { nodes: out, found };
     }
@@ -1457,8 +1473,7 @@
             <span class="tmw"><button class="tfb" type="button" data-menu-btn aria-expanded="false" aria-controls="mn-tf" aria-label="거르기" title="거르기"><i data-ic=filter data-s=14></i></button><div class="menu" data-auto id="mn-tf">
               <label class="mi"><input type="checkbox" data-tf="bad"> 미준수만</label><label class="mi"><input type="checkbox" data-tf="ex"> 예외 있는 것만</label><label class="mi"><input type="checkbox" data-tf="noref"> 참조 숨기기</label>
               <div class="sep"></div><div class="mi" style="cursor:default">분류<span class="seg" style="margin-left:auto">${['', 'M', 'A', 'H', 'K'].map(c => `<button type="button" data-tc="${c}" class="${c === '' ? 'on' : ''}">${({ '': '전체', M: '기준', A: '거래', H: '이력', K: '코드' })[c]}</button>`).join('')}</span></div>
-              <div class="sep"></div><div class="mi" style="cursor:default">영역 설명<span class="seg" style="margin-left:auto" role="group" aria-label="영역 설명 · 바로가기">${[['cur', '지금 영역'], ['all', '모두'], ['none', '숨김']].map(([v, l]) => `<button type="button" data-tdesc="${v}">${l}</button>`).join('')}</span></div>
-              <div class="mi" style="cursor:default">행 간격<span class="seg" style="margin-left:auto" role="group" aria-label="트리 행 간격">${[['compact', '촘촘'], ['default', '기본'], ['comfy', '넓게']].map(([v, l]) => `<button type="button" data-tden="${v}">${l}</button>`).join('')}</span></div></div></span>
+              <div class="sep"></div><div class="mi" style="cursor:default">행 간격<span class="seg" style="margin-left:auto" role="group" aria-label="트리 행 간격">${[['compact', '촘촘'], ['default', '기본'], ['comfy', '넓게']].map(([v, l]) => `<button type="button" data-tden="${v}">${l}</button>`).join('')}</span></div></div></span>
           </div>
           <div class="tfbar" id="tr-fbar" hidden></div>
           </div>
@@ -1513,8 +1528,7 @@
           return;
         }
         if (r.grp) html += `<div class="tgrp" role="none" style="--lv:${r.lvl}" title="${esc(r.grp.title)}">${r.grp.label}<span>${r.grp.n}</span></div>`;
-        html += `<div role="treeitem" aria-haspopup="menu"${r.drag ? ' draggable="true"' : ''} class="trow2 k-${r.kind}${r.id === selId ? ' sel' : ''}${r.gray ? ' gray' : ''}" data-id="${esc(r.id)}" aria-level="${r.lvl}" aria-posinset="${r.pos}" aria-setsize="${r.size}"${r.open != null ? ` aria-expanded="${r.open}"` : ''}${r.selectable ? ` aria-selected="${r.id === selId}"` : ''} tabindex="${r.id === focusId ? 0 : -1}" aria-label="${esc(r.aria || '')}"${r.title ? ` title="${esc(r.title)}"` : ''} style="--lv:${r.lvl}"><span class="ttw" data-tw aria-hidden="true">${r.open == null ? '' : `<i data-ic=${r.open ? 'down' : 'right'} data-s=12></i>`}</span>${iconOf(r) ? `<span class="tico${icoCls(r)}" aria-hidden="true"><i data-ic=${iconOf(r)} data-s=14></i></span>` : ''}${r.html.replace(/^<span class="tdot[^"]*" aria-hidden="true">(<i[^>]*><\/i>)?<\/span>/, '')}<span class="tmore" data-tmore aria-hidden="true" title="메뉴 (Shift+F10)"><i data-ic=more data-s=14></i></span></div>`;
-        if (r.kind === 'area' && r.open && r.desc && !q.trim() && showDesc(r.area)) html += `<div class="tdesc" role="none" style="--lv:${r.lvl + 1}">${esc(r.desc)}</div>`;
+        html += `<div role="treeitem" aria-haspopup="menu"${r.drag ? ' draggable="true"' : ''} class="trow2 k-${r.kind}${r.id === selId ? ' sel' : ''}${r.gray ? ' gray' : ''}${r.kind === 'area' && r.area === cur ? ' tcur' : ''}" data-id="${esc(r.id)}"${r.kind === 'area' && r.area === cur ? ' aria-current="true"' : ''} aria-level="${r.lvl}" aria-posinset="${r.pos}" aria-setsize="${r.size}"${r.open != null ? ` aria-expanded="${r.open}"` : ''}${r.selectable ? ` aria-selected="${r.id === selId}"` : ''} tabindex="${r.id === focusId ? 0 : -1}" aria-label="${esc(r.aria || '')}"${r.title ? ` title="${esc(r.title)}"` : ''} style="--lv:${r.lvl}"><span class="ttw" data-tw aria-hidden="true">${r.open == null ? '' : `<i data-ic=${r.open ? 'down' : 'right'} data-s=12></i>`}</span>${iconOf(r) ? `<span class="tico${icoCls(r)}" aria-hidden="true"><i data-ic=${iconOf(r)} data-s=14></i></span>` : ''}${r.html.replace(/^<span class="tdot[^"]*" aria-hidden="true">(<i[^>]*><\/i>)?<\/span>/, '')}<span class="tmore" data-tmore aria-hidden="true" title="메뉴 (Shift+F10)"><i data-ic=more data-s=14></i></span></div>`;
       });
       tree.innerHTML = html || '<div class="tempty">맞는 객체가 없습니다</div>';
       const l = live(); const curName = (getModels()[cur] || {}).name || '';
@@ -1748,12 +1762,10 @@
     // description · row density (the head fold was removed — user feedback: the whole-column collapse [‹] is the fold)
     const curDen = () => UI.den || document.documentElement.dataset.density || 'default';
     const applyDen = () => { ['compact', 'default', 'comfy'].forEach(d => nav.classList.toggle('tden-' + d, curDen() === d)); nav.querySelectorAll('[data-tden]').forEach(x => x.classList.toggle('on', x.dataset.tden === curDen())); };
-    const markDesc = () => nav.querySelectorAll('[data-tdesc]').forEach(x => x.classList.toggle('on', x.dataset.tdesc === UI.desc));
     nav.querySelector('#mn-tf').addEventListener('click', e => {
-      const d = e.target.closest('[data-tdesc]'); if (d) { e.stopPropagation(); UI.desc = d.dataset.tdesc; saveUI(); markDesc(); render(); return; }
       const n = e.target.closest('[data-tden]'); if (n) { e.stopPropagation(); UI.den = n.dataset.tden; saveUI(); applyDen(); render(); }
     });
-    applyDen(); markDesc();
+    applyDen();
     nav.querySelector('#mn-tf').addEventListener('click', e => { const b = e.target.closest('[data-tc]'); if (!b) return; e.stopPropagation(); flt.cls = b.dataset.tc; nav.querySelectorAll('[data-tc]').forEach(x => x.classList.toggle('on', x === b)); render(); });
     nav.addEventListener('click', e => { if (e.target.id === 'tr-fclr') { flt = { bad: false, ex: false, noref: false, cls: '' }; nav.querySelectorAll('[data-tf]').forEach(c => c.checked = false); nav.querySelectorAll('[data-tc]').forEach(x => x.classList.toggle('on', x.dataset.tc === '')); render(); qIn.focus(); } });
     // ---- width: follows the content, never squeezes the canvas below 760px (12 §4.6)

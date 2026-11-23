@@ -11,6 +11,7 @@
 <style>
   /* fixed widths live in the page style, not inline (17 §6.2) */
   .sys-kv { max-width:720px; margin-bottom:24px; }
+  tr:target > td { background:var(--ds-blue-100); } tr:target > td:first-child { box-shadow:inset 3px 0 0 var(--info); }   /* arrived from a path's area link */
 </style>
 </head>
 <body data-page="system">
@@ -70,7 +71,9 @@ window.pageInit = function () {
     const L = modelLock(a), c = getComp(a);
     const st = L.state === 'review' ? `<span class="badge b-info">검토 중 · ${L.doc.id}</span>` : L.state === 'confirmed' ? '<span class="badge b-success">확정본</span>' : '<span class="badge">작업 중</span>';
     // E9: the area name is a real link (keyboard · screen reader); the rest of the row still opens it for mouse users
-    return `<tr data-href="model.html?area=${a}"><td><a href="model.html?area=${a}"><b>${L.model.name}</b></a></td><td>${st}</td><td class="mono">v${L.model.ver} <span class="faint">${L.model.base ? `(v${L.model.base} 확정 기준)` : '(확정본 없음)'}</span></td><td class="num">${sizeOf(a)[0]}</td><td class="mono">${c ? c.rate + '%' : '—'}</td><td class="num">${c ? c.bad : '—'}</td><td class="num">${c ? c.exList.length : '—'}</td><td>${a === 'rq' ? '김모델' : a === 'risk' ? '박설계' : OWN[a] || '—'}</td><td class="mono">${L.doc ? L.doc.date : '—'}</td></tr>`;
+    // the area's description lives here (moved out of the tree — resolution-tree-menu); #area-<id> is where the path's area link lands
+    const ds = (getModels()[a] || {}).desc || '';
+    return `<tr data-href="model.html?area=${a}" id="area-${a}"><td class="wrap"><a href="model.html?area=${a}"><b>${L.model.name}</b></a>${ds ? `<div class="caption muted">${ds}</div>` : ''}</td><td>${st}</td><td class="mono">v${L.model.ver} <span class="faint">${L.model.base ? `(v${L.model.base} 확정 기준)` : '(확정본 없음)'}</span></td><td class="num">${sizeOf(a)[0]}</td><td class="mono">${c ? c.rate + '%' : '—'}</td><td class="num">${c ? c.bad : '—'}</td><td class="num">${c ? c.exList.length : '—'}</td><td>${a === 'rq' ? '김모델' : a === 'risk' ? '박설계' : OWN[a] || '—'}</td><td class="mono">${L.doc ? L.doc.date : '—'}</td></tr>`;
   }).join('');
   $('areas').addEventListener('click', e => { if (e.target.closest('a, button, input')) return; const tr = e.target.closest('tr[data-href]'); if (tr && !String(window.getSelection())) go(tr.dataset.href); });
 };

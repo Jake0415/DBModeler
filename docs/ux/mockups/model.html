@@ -249,6 +249,7 @@ window.pageInit = function () {
   const STATE = q.get('state') || '';          // only a data preset now (applied / resolved) — never the lock
   const LOCK = modelLock(AREA);                  // lock & version come from the approval documents (R1)
   const SNAP = q.has('snap') ? (q.get('snap') || '(빈 값)') : null;   // an empty ?snap= is an invalid address, not "no snapshot" (CX11-03)
+  areaNav(AREA, 'model', { snap: q.get('snap') || '' });   // the head's '영역 화면' menu (resolution-tree-menu)
   // ?snap= must name a model document of THIS area; otherwise say it can't be opened (never fall back to the working copy — CX9-03)
   const SNAPDOC = SNAP ? getDocs().find(x => x.id === SNAP && x.type === 'model') : null;
   if (SNAPDOC && SNAPDOC.area !== AREA) { location.replace(`model.html?area=${SNAPDOC.area}&snap=${SNAPDOC.id}`); return; }

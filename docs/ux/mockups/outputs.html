@@ -86,6 +86,7 @@ window.pageInit = function () {
   // area + versions from the documents (CX12-32): confirmed copies are official, the working version is a draft
   const AREA = getModels()[qp.get('area')] ? qp.get('area') : defArea(); const L = modelLock(AREA);
   $('crumb-area').textContent = L.model.name; { const cl = document.getElementById('crumb-link'); if (cl) cl.href = `model.html?area=${AREA}`; }
+  areaNav(AREA, 'out', { snap: qp.get('snap') || '' });   // the head's '영역 화면' menu (resolution-tree-menu)
   { const c = document.querySelector('.crumbs a'); if (c) c.textContent = sysOfArea(AREA) || curSys().name; }   // the area's own system (markup had a fixed ‘요구사항관리’)
   { const dl = document.querySelector('.ocard[data-k="ddl"] a'); if (dl) dl.setAttribute('href', `ddl.html?area=${AREA}`); }   // the DDL card keeps the area (it opened the default area before)
   // ‘최근 만든 산출물’ sample rows belong to 요구사항 · 프로젝트 — other areas start empty
