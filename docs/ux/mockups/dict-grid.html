@@ -112,7 +112,7 @@
 
     <div class="esearch" id="esearch" hidden>
       <div class="srow">
-        <input class="input" id="q" type="search" placeholder="이름 · 영문약어명 검색" aria-label="고칠 항목 검색">
+        <input class="input" id="q" type="search" placeholder="이름 · 영문약어명 · 초성 찾기" aria-label="고칠 항목 찾기 — 이름, 영문약어명, 초성">
         <select class="input" id="qk" aria-label="종류 거르기">
           <option value="">전체 종류</option><option value="word">단어</option><option value="term">용어</option><option value="entity">엔터티 용어</option><option value="domain">도메인</option><option value="code">코드 · 코드값</option>
         </select>
@@ -925,8 +925,9 @@ window.pageInit = function () {
   $('b-add1').onclick = () => { addRows(1); focusCell(R()[S.tab].length - 1, firstEd()); };
   $('b-add5').onclick = () => { const n = R()[S.tab].length; addRows(5); focusCell(n, firstEd()); };
   function drawSearch() {
-    const q = t($('q').value).toLowerCase(), kk = $('qk').value;
-    const hit = d => (!kk || kindKey(d) === kk) && (!q || d.name.toLowerCase().includes(q) || (d.abbr || '').toLowerCase().includes(q));
+    const q = t($('q').value), kk = $('qk').value;
+    // list standard L-2 'name' profile: initials (ㅂㅅ), several words, spacing absorbed, short words match the start of name · abbr
+    const hit = d => (!kk || kindKey(d) === kk) && listMatch(q, [d.name, d.abbr || ''], 'name');
     // common (행정표준) codes are listed read-only when codes are asked for — the reason says where they are changed
     // list standard L-7: the picker draws 50 rows but says so — it no longer cuts the rest off silently
     const ALL = getDict().filter(d => hit(d) && (editable(d) || (commonCode(d) && (kk === 'code' || q)))), CAPP = 50, L = ALL.slice(0, CAPP);

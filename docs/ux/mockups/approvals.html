@@ -287,11 +287,16 @@ window.pageInit = function () {
     try { const R = checkDictDoc(withMarks(d)); if (R.length === (d.items || []).length) R.forEach((r, i) => { if (r.problems.length) s.add(i); }); } catch (e) {} return s; };
   function applyIF() {
     const p = $('pn-doc'); const L = p.querySelectorAll('.it-row[data-name]'); let shown = 0;   // item rows only — the impact tab's rows are not filtered
-    L.forEach(r => { const q = IF.q.trim(); const ok = (IF.f === 'all' || r.dataset[IF.f] === '1') && (!q || r.dataset.name.includes(q)); r.hidden = !ok; if (ok) shown++; });
+    const q = IF.q.trim();
+    L.forEach(r => { const ok = (IF.f === 'all' || r.dataset[IF.f] === '1') && listMatch(q, [r.dataset.name, r.dataset.abbr || ''], 'name'); r.hidden = !ok; if (ok) shown++; });
     p.querySelectorAll('[data-itf]').forEach(b => { const on = b.dataset.itf === IF.f; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); });
-    const m = $('itf-m'); if (m) m.textContent = shown === L.length ? '' : `${L.length}건 중 ${shown}건 표시`;
+    const fl = IF.f !== 'all' || q, lbl = (IFS.find(x => x[0] === IF.f) || [])[1];
+    const m = $('itf-m'); if (m) m.innerHTML = `<b class="u-fg">${fl ? `${L.length}건 중 ${shown}건` : `항목 ${L.length}건`}</b> · 신청 순${fl ? ` <span class="fchips">${q ? `<button class="fchip" data-ifclr="q" aria-label="검색어 지우기">검색: ${esc(q)}<i data-ic=x data-s=12></i></button>` : ''}${IF.f !== 'all' ? `<button class="fchip" data-ifclr="f" aria-label="${lbl} 필터 지우기">${lbl}<i data-ic=x data-s=12></i></button>` : ''}</span>` : ''}`;
+    if (L.length) liveCount(`${shown}건`);
     const e = $('itf-empty'); if (e) e.hidden = !!shown;
   }
+  // applied-chip × and 모두 지우기 of the item list (registered once — the panel is re-rendered)
+  $('pn-doc').addEventListener('click', e => { const c = e.target.closest('[data-ifclr], #itf-clr'); if (!c) return; const k = c.dataset.ifclr || 'all'; const iq = $('itf-q'); if (k !== 'f') { IF.q = ''; if (iq) iq.value = ''; } if (k !== 'q') IF.f = 'all'; applyIF(); if (iq) iq.focus(); });
   const newMarks = d => Object.keys(marksOf(d)).length;
   // the document as the checks should see it: marked items count as rejected
   const withMarks = d => { const m = marksOf(d); if (!Object.keys(m).length) return d; return Object.assign({}, d, { items: d.items.map((it, i) => m[i] != null ? Object.assign({}, it, { rej: true, rejWhy: m[i] }) : it) }); };
@@ -313,8 +318,10 @@ window.pageInit = function () {
     const head = canMk ?`<div class="caption muted u-mb-8">일부 항목만 문제가 있으면 항목마다 <b>[이 항목 반려]</b>로 빼고 나머지를 승인할 수 있습니다. 반려한 항목은 반영하지 않고 신청자 바구니로 돌려보냅니다.</div>` : prior ? `<div class="caption muted u-mb-8">항목 ${prior}건은 결재 중 반려돼 반영하지 않습니다(신청자 바구니로 돌아감).</div>` : '';
     const cnt = { all: L.length, add: 0, chg: 0, off: 0, fail: fails.size, rjm: 0 };
     L.forEach((it, i) => { cnt[opKey(it)]++; if (it.rej || mk[i] != null) cnt.rjm++; });
-    const filt = `<div class="itf"><div class="seg" role="group" aria-label="항목 거르기">${IFS.map(([k, l]) => `<button type="button" data-itf="${k}" aria-pressed="${IF.f === k}" class="${IF.f === k ? 'on' : ''}">${l}<span class="n">${cnt[k]}</span></button>`).join('')}</div>
-      <div class="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input class="input" id="itf-q" placeholder="항목 이름" aria-label="항목 이름으로 찾기" value="${esc(IF.q)}"></div><span class="caption muted" id="itf-m" role="status"></span></div>`;
+    // list standard: search → state chips (rows only shrink, so chips — not a segment) → count
+    const filt = `<div class="itf"><div class="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input class="input" id="itf-q" placeholder="항목 이름 · 약어 찾기" aria-label="항목 이름, 약어로 찾기" value="${esc(IF.q)}"></div>
+      <span class="flex u-gap-8" role="group" aria-label="항목 거르기" style="flex-wrap:wrap">${IFS.map(([k, l]) => `<button type="button" class="chip ${IF.f === k ? 'on' : ''}" data-itf="${k}" aria-pressed="${IF.f === k}">${l} <span class="n">${cnt[k]}</span></button>`).join('')}</span></div>
+      <div class="listhead u-p-0 u-mb-8" id="itf-m"></div>`;
     return resume + head + filt + `<div class="itl" role="list" aria-label="신청 항목">${L.map((it, i) => {
       const op = opOf(it), k = kOf(it);
       const fv = x => Array.isArray(x) ? x.map(y => typeof y === 'object' ? `${y.v} ${y.nm}${y.st === '미사용' ? '(미사용)' : ''}` : y).join(', ') : x;   // code values arrive as objects
@@ -331,9 +338,9 @@ window.pageInit = function () {
       const depBan = dl ? `<div class="banner warning dep-ban" role="status">${icon('warn')}<div class="grow">이 ${KN[k] || '항목'}에 기대는 <b>${dl.length}건</b>(${dl.map(([x]) => esc(x.name)).join(', ')}) — 함께 반려하지 않으면 승인 재검사에서 걸립니다</div><button type="button" class="btn sm danger" data-dep-rej="${i}">함께 반려 ${dl.length}건</button><button type="button" class="btn sm ghost" data-dep-keep="${i}">그대로 둠</button></div>` : '';
       const dep = it.dep && it.dep.length ? ` <span class="caption muted">함께 신청한 단어 ${it.dep.map(esc).join(' · ')}에 의존</span>` : '';
       const l2 = fields + (spec && !fields ? `<div>${spec}</div>` : '') + extra;
-      return `<div class="it-row ${it.rej || marked ? 'rej' : ''}" role="listitem" data-i="${i}" data-name="${esc(it.name)}" data-${opKey(it)}="1"${fails.has(i) ? ' data-fail="1"' : ''}${it.rej || marked ? ' data-rjm="1"' : ''}>
+      return `<div class="it-row ${it.rej || marked ? 'rej' : ''}" role="listitem" data-i="${i}" data-name="${esc(it.name)}" data-abbr="${esc(it.abbr || '')}" data-${opKey(it)}="1"${fails.has(i) ? ' data-fail="1"' : ''}${it.rej || marked ? ' data-rjm="1"' : ''}>
         <div class="it-l1"><span class="no mono">${it.row || i + 1}</span><span class="badge ${OPC[op] || ''}">${KN[k] || '항목'} ${op}</span><span class="it-nm">${esc(it.name)}</span>${it.id ? `<span class="mono faint caption">${it.id}</span>` : ''}${fails.has(i) ? tag('err', '검사 실패') : ''}${dep}<span class="grow"></span>${act}</div>
-        ${l2 ? `<div class="it-l2">${l2}</div>` : ''}${rejLine}${depBan}</div>`; }).join('')}<div class="caption muted u-mt-8" id="itf-empty" hidden>조건에 맞는 항목이 없습니다.</div></div>
+        ${l2 ? `<div class="it-l2">${l2}</div>` : ''}${rejLine}${depBan}</div>`; }).join('')}<div class="caption muted u-mt-8 u-tc" id="itf-empty" hidden><span class="et">필터에 맞는 항목이 없습니다</span><button type="button" class="btn sm ghost" id="itf-clr">모두 지우기</button></div></div>
       ${d.sample ? `<div class="banner warning u-mt-8">${icon('warn')}<div>목업 시드: 이 문서는 ${d.n}건 중 <b>대표 ${L.length}행만</b> 담고 있습니다. 승인하면 이 ${L.length}행만 반영됩니다.</div></div>` : ''}`;
   }
   // check tab: same judgement as the final-approval re-check (checkDictDoc)
@@ -512,8 +519,7 @@ window.pageInit = function () {
     const itb = p.querySelector('.tabs [data-tab="impact"]'); if (itb) itb.addEventListener('click', () => { const pn = p.querySelector('[data-pane="impact"]'); if (pn && !pn.innerHTML) pn.innerHTML = impact(d); });
     // A5: item filter (chips + name search) works on the rendered rows, so typing keeps focus
     p.querySelectorAll('[data-itf]').forEach(b => b.onclick = () => { IF.f = b.dataset.itf; applyIF(); });
-    const iq = $('itf-q'); if (iq) iq.oninput = () => { IF.q = iq.value; applyIF(); };
-    if (p.querySelector('.it-row')) applyIF();
+    const iq = $('itf-q'); if (iq) { iq.oninput = () => { IF.q = iq.value; applyIF(); }; iq.addEventListener('keydown', e => { if (e.key === 'Escape' && iq.value) { e.stopPropagation(); iq.value = ''; IF.q = ''; applyIF(); } }); }    if (p.querySelector('.it-row')) applyIF();
     // A5: a failing name in the check tab opens its row in the items tab
     p.querySelectorAll('[data-goitem]').forEach(b => b.onclick = () => goItem(+b.dataset.goitem));
     // A3: resume / clear the marks left before a reload

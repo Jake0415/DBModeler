@@ -28,7 +28,7 @@
         </table>
       </div>
     </div>
-    <aside class="rpanel open" id="pn-cand">
+    <aside class="rpanel" id="pn-cand">
       <div class="rp-head">
         <div class="t"><span class="badge b-violet" id="cd-type">단어 후보</span><span class="badge" id="cd-st">대기</span><button class="iconbtn close u-w-28 u-h-28" data-close="pn-cand" aria-label="닫기"><i data-ic=x></i></button></div>
         <h2 class="u-mt-8" id="cd-name"></h2><div class="rp-sub" id="cd-abbr"></div>
@@ -53,18 +53,28 @@ window.pageInit = function () {
   const $ = id => document.getElementById(id);
   const q = new URLSearchParams(location.search);
   // candidates come from the shared store: model/standardize register them, this queue processes them (CX13-03)
-  let C = getCands(); let f = q.get('f') || '대기', sel = q.get('c') || null;
+  const FS = ['전체', '대기', '신청 전환', '등록 완료', '반려', '기존 표준어 안내'];
+  let C = getCands(); let f = FS.includes(q.get('f')) ? q.get('f') : '대기', sel = q.get('sel') || q.get('c') || null;   // c= is the old deep-link key (alias)
   const reqs = c => [...new Set(c.loc.map(l => l.by))];
   const ST_BADGE = { 대기: '', '신청 전환': 'b-info', '등록 완료': 'b-success', 반려: 'b-danger', '기존 표준어 안내': '' };
   const locHref = l => l.area && getModels()[l.area] ? `model.html?area=${l.area}${l.e ? '&focus=' + l.e : ''}` : null;
   function draw() {
     C = getCands();
     const counts = {}; C.forEach(c => { const s = candState(c); counts[s] = (counts[s] || 0) + 1; });
-    $('cfilt').innerHTML = ['대기', '신청 전환', '등록 완료', '반려', '기존 표준어 안내', '전체'].map(k => `<button class="chip ${f === k ? 'on' : ''}" data-cf="${k}">${k} <span class="n">${k === '전체' ? C.length : counts[k] || 0}</span></button>`).join('') + '<span class="grow"></span><span class="caption muted">상태는 연결된 결재 문서를 따릅니다</span>';
+    // list standard: '전체' first; '대기' (the default) is the work queue
+    $('cfilt').innerHTML = `<span class="flex u-gap-8" role="group" aria-label="후보 상태">${FS.map(k => `<button class="chip ${f === k ? 'on' : ''}" data-cf="${k}">${k} <span class="n">${k === '전체' ? C.length : counts[k] || 0}</span></button>`).join('')}</span><span class="grow"></span><span class="caption muted">상태는 연결된 결재 문서를 따릅니다</span>`;
     const L = C.filter(c => f === '전체' || candState(c) === f);
-    $('clh').innerHTML = `<b class="u-fg">${L.length}건</b> · 같은 이름은 한 행으로 묶어 발생 위치를 표시합니다`;
-    if (!sel || !L.some(c => c.id === sel)) sel = (L[0] || {}).id || null;
-    $('crows').innerHTML = L.map(c => `<tr class="click ${sel === c.id ? 'sel' : ''}" data-c="${c.id}" tabindex="0"><td><span class="muted">${c.t}</span></td><td><b>${c.name}</b></td><td class="mono">${c.abbr || '—'}</td><td class="num">${c.loc.length}</td><td>${USERS[(c.loc[0] || {}).by] ? USERS[c.loc[0].by].name : '—'}</td><td><span class="badge ${ST_BADGE[candState(c)]}">${candState(c)}</span>${c.doc ? ` <a class="mono caption" href="approvals.html?doc=${c.doc}">${c.doc}</a>` : ''}</td><td>${c.sim ? `<span class="muted">${c.sim[2]}</span> ${c.sim[0]} <span class="mono faint">${c.sim[1]}</span>` : '<span class="faint">없음</span>'}</td></tr>`).join('') || `<tr class="er done"><td colspan="7" class="caption muted u-tc u-p-32">‘${f}’ 후보가 없습니다</td></tr>`;
+    $('clh').innerHTML = `<b class="u-fg">${f === '대기' ? `${L.length}건` : `${C.length}건 중 ${L.length}건`}</b> · 같은 이름은 한 행으로 묶어 발생 위치를 표시합니다${f !== '대기' ? ` <span class="fchips"><button class="fchip" data-cclr="1" aria-label="상태 필터 지우기">상태: ${f}<i data-ic=x data-s=12></i></button></span>` : ''}`;
+    // L-9: only the work queue ('대기') auto-selects its first candidate; other states open the panel on pick
+    if (sel && !L.some(c => c.id === sel)) sel = null;
+    if (!sel && f === '대기') sel = (L[0] || {}).id || null;
+    liveCount(`${L.length}건`);
+    urlSync(['f', 'sel', 'c'], { f: f === '대기' ? '' : f, sel: sel || '' });
+    $('pn-cand').classList.toggle('open', !!sel);
+    $('crows').innerHTML = L.map(c => `<tr class="click ${sel === c.id ? 'sel' : ''}" data-c="${c.id}" tabindex="0"><td><span class="muted">${c.t}</span></td><td><b>${c.name}</b></td><td class="mono">${c.abbr || '—'}</td><td class="num">${c.loc.length}</td><td>${USERS[(c.loc[0] || {}).by] ? USERS[c.loc[0].by].name : '—'}</td><td><span class="badge ${ST_BADGE[candState(c)]}">${candState(c)}</span>${c.doc ? ` <a class="mono caption" href="approvals.html?doc=${c.doc}">${c.doc}</a>` : ''}</td><td>${c.sim ? `<span class="muted">${c.sim[2]}</span> ${c.sim[0]} <span class="mono faint">${c.sim[1]}</span>` : '<span class="faint">없음</span>'}</td></tr>`).join('') || (f === '대기' && C.length   // L-6: 'done' only when the default queue is empty
+      ? '<tr class="er done"><td colspan="7" class="caption muted u-tc u-p-32"><span class="et">대기 중인 후보를 모두 처리했습니다</span>새 후보가 등록되면 알림으로 알려 드립니다.</td></tr>'
+      : !C.length ? '<tr class="er first"><td colspan="7" class="caption muted u-tc u-p-32"><span class="et">아직 등록된 후보가 없습니다</span>모델 · 표준 맞추기에서 사전에 없는 단어 · 용어를 후보로 올리면 여기에 모입니다.</td></tr>'
+      : `<tr class="er none"><td colspan="7" class="caption muted u-tc u-p-32"><span class="et">‘${f}’ 후보가 없습니다</span><button class="btn sm ghost" data-cclr="1">모두 지우기</button></td></tr>`);
     panel();
   }
   function panel() {
@@ -96,7 +106,11 @@ window.pageInit = function () {
   $('crej-go').onclick = () => { $('mo-crej').classList.remove('open'); close('반려', $('crej-why').value.trim()); $('crej-why').value = ''; };
   $('cstd-go').onclick = () => { $('mo-cstd').classList.remove('open'); close('기존 표준어 안내', $('cstd-msg').value.trim()); };
   $('cfilt').addEventListener('click', e => { const b = e.target.closest('[data-cf]'); if (!b) return; f = b.dataset.cf; sel = null; draw(); });
-  $('crows').addEventListener('click', e => { const r = e.target.closest('tr[data-c]'); if (!r || e.target.closest('a')) return; sel = r.dataset.c; draw(); });
+  $('crows').addEventListener('click', e => { const r = e.target.closest('tr[data-c]'); if (!r || e.target.closest('a')) return; sel = r.dataset.c; draw(); const n = document.querySelector(`#crows tr[data-c="${sel}"]`); if (n) n.focus(); });
+  // 모두 지우기 = back to the default queue (대기)
+  document.addEventListener('click', e => { if (!e.target.closest('[data-cclr]')) return; f = '대기'; sel = null; draw(); const b = document.querySelector('#cfilt .chip.on'); if (b) b.focus(); });
+  // the panel's close button also drops the selection (so the address and the next draw agree); focus returns to the row
+  document.querySelector('#pn-cand [data-close="pn-cand"]').addEventListener('click', () => { const back = sel; sel = null; setTimeout(() => { draw(); const r = document.querySelector(`#crows tr[data-c="${back}"]`); if (r) r.focus(); }, 0); });
   if (q.get('c')) { const c = C.find(x => x.id === q.get('c')); if (c) f = candState(c); }
   draw();
 };

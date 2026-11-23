@@ -2110,7 +2110,8 @@
   // L-2 search: one function, three profiles. words are ANDed; one word must match inside ONE field; spacing differences are absorbed
   const CHO_ = 'ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ';
   const choOf = s => [...s].map(c => { const n = c.charCodeAt(0) - 0xac00; return n >= 0 && n < 11172 ? CHO_[Math.floor(n / 588)] : c; }).join('');
-  const normQ = s => String(s == null ? '' : s).normalize('NFKC').toLowerCase().trim();
+  // NFC + full-width ASCII → half-width (NFKC would turn compatibility jamo ㄱ-ㅎ into conjoining jamo and break initial-consonant search)
+  const normQ = s => String(s == null ? '' : s).normalize('NFC').replace(/[！-～]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0)).replace(/　/g, ' ').toLowerCase().trim();
   window.listMatch = (q, fields, profile) => {
     const words = normQ(q).split(/\s+/).filter(Boolean); if (!words.length) return true;
     const fs = fields.map(normQ), fsNs = fs.map(f => f.replace(/\s+/g, ''));

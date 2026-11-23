@@ -21,18 +21,15 @@
     <h1>감사 로그</h1><span class="badge" title="수정·삭제 불가 · 5년 보관">보존 5년</span>
     <div class="actions"><button class="btn" id="axl">엑셀</button></div>
   </div>
+  <!-- list standard: search → quick chips (6 + more) → the screen's main filter (period, default 30 days) -->
   <div class="toolbar">
-    <span class="chip on" role="button" tabindex="0" data-group="ak" data-filter="">전체</span>
-    <span class="chip" role="button" tabindex="0" data-group="ak" data-filter="appr">결재</span>
-    <span class="chip" role="button" tabindex="0" data-group="ak" data-filter="self">자기 승인</span>
-    <span class="chip" role="button" tabindex="0" data-group="ak" data-filter="role">역할·권한</span>
-    <span class="chip" role="button" tabindex="0" data-group="ak" data-filter="set">설정</span>
-    <span class="chip" role="button" tabindex="0" data-group="ak" data-filter="dict">사전 반영</span>
-    <span class="chip" role="button" tabindex="0" data-group="ak" data-filter="model">모델 확정</span>
-    <span class="chip" role="button" tabindex="0" data-group="ak" data-filter="purge">영구 삭제</span>
+    <div class="search" style="flex-basis:260px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input class="input" id="aq" placeholder="사용자 · 대상 · 내용 · 사유 찾기" aria-label="사용자, 대상, 내용, 사유 찾기"></div>
+    <span class="flex u-gap-8" role="group" aria-label="종류" id="ak">
+      <button class="chip on" data-k="">전체</button><button class="chip" data-k="self">자기 승인</button><button class="chip" data-k="purge">영구 삭제</button><button class="chip" data-k="appr">결재</button><button class="chip" data-k="role">역할·권한</button><button class="chip" data-k="set">설정</button>
+    </span>
+    <select class="input" id="amore" style="width:120px;" aria-label="종류 더보기"><option value="">더보기…</option><option value="dict">사전 반영</option><option value="model">모델 확정</option></select>
     <span class="grow"></span>
-    <select class="input" id="aper" style="width:140px;" aria-label="기간"><option value="30">최근 30일</option><option value="365">최근 1년</option><option value="0" selected>전체</option></select>
-    <input class="input u-w-200" id="aq" placeholder="사용자·문서 번호" aria-label="사용자·문서 번호 검색">
+    <select class="input" id="aper" style="width:140px;" aria-label="기간"><option value="30" selected>최근 30일</option><option value="365">최근 1년</option><option value="0">전체 기간</option></select>
   </div>
   <div class="listhead" id="alh"></div>
   <div class="scroll">
@@ -63,25 +60,45 @@ window.pageInit = function () {
   JSON.parse(dbmStore.get('dbm-purge', '[]')).forEach(p => rows.push({ at: key(p.at), who: p.who, f: 'purge', kind: '<span class="badge b-danger">영구 삭제</span>', tgt: `<span class="mono">${p.id}</span> ${p.name}`, what: `${p.kind || ''} 항목 영구 삭제 · 근거 ${p.doc !== '—' ? docLink(p.doc) : '—'}`, why: p.why || '' }));
   rows.push(...FIXED); rows.sort((a, b) => b.at.localeCompare(a.at));
   const ab = document.getElementById('ab');
-  ab.innerHTML = rows.map(r => `<tr data-f="${r.f}" data-at="${r.at}"><td class="mono">${r.at}</td><td>${r.who}</td><td>${r.kind}</td><td>${r.tgt}</td><td>${r.what}</td><td class="caption">${r.why}</td><td class="mono">${r.ip || '—'}</td></tr>`).join('') || '<tr class="er none"><td colspan="7" class="caption muted u-tc u-p-24">기록이 없습니다</td></tr>';
-  // chip + period + text search in one pass
-  const aq = document.getElementById('aq'), per = document.getElementById('aper'); let kind = '';
-  const since = () => { const n = +per.value; if (!n) return ''; const d = new Date(Date.now() - n * 864e5); return d.toISOString().slice(0, 10); };
-  let shown = 0;
-  // filters that leave nothing show an empty row with a way back (E9)
-  const empty = document.createElement('tr'); empty.className = 'er none'; empty.hidden = true;
-  empty.innerHTML = '<td colspan="7" class="caption muted u-tc u-p-24">조건에 맞는 기록이 없습니다 <button class="btn sm u-ml-24" type="button" id="aclr">필터 지우기</button></td>';
-  if (rows.length) ab.appendChild(empty);
-  const clear = () => { kind = ''; aq.value = ''; per.value = '0'; document.querySelectorAll('.chip[data-group="ak"]').forEach(c => c.classList.toggle('on', c.dataset.filter === '')); apply(); aq.focus(); };
-  empty.querySelector('#aclr').onclick = clear;
-  const apply = () => { const v = aq.value.trim(), lo = since(); shown = 0; [...ab.rows].forEach(r => { if (!r.dataset.at) return; const ok = (!kind || (r.dataset.f || '').split(' ').includes(kind)) && (!v || r.innerText.includes(v)) && (!lo || r.dataset.at >= lo); r.style.display = ok ? '' : 'none'; if (ok) shown++; });
-    empty.hidden = !rows.length || shown > 0;
-    document.getElementById('alh').innerHTML = `<b class="u-fg">${shown}건</b>${kind || v || lo ? ' · 필터 적용' : ''} · 결재 이력·공표·설정·역할·영구 삭제를 한 곳에서 시간순으로`; };
+  // list standard: the list is re-drawn from data (not hidden rows) — count, empty state and export all read one result
+  const strip = h => { const d = document.createElement('div'); d.innerHTML = h || ''; return d.textContent; };
+  rows.forEach(r => { r.txt = [r.who, strip(r.kind), strip(r.tgt), strip(r.what), strip(r.why)]; });
+  const KN = { self: '자기 승인', purge: '영구 삭제', appr: '결재', role: '역할·권한', set: '설정', dict: '사전 반영', model: '모델 확정' };
+  const PN = { 30: '최근 30일', 365: '최근 1년', 0: '전체 기간' };
+  const aq = document.getElementById('aq'), per = document.getElementById('aper'), more = document.getElementById('amore');
+  const q0 = new URLSearchParams(location.search);
+  let kind = KN[q0.get('f')] ? q0.get('f') : ''; aq.value = q0.get('q') || ''; if (['30', '365', '0'].includes(q0.get('per'))) per.value = q0.get('per');
+  const TODAY = new Date(window.MOCK_TODAY || Date.now());
+  const since = () => { const n = +per.value; if (!n) return ''; const d = new Date(TODAY.getTime() - n * 864e5); return d.toISOString().slice(0, 10); };
+  const syncChips = () => { document.querySelectorAll('#ak .chip').forEach(c => c.classList.toggle('on', c.dataset.k === kind)); more.value = ['dict', 'model'].includes(kind) ? kind : ''; };
+  let L = [];
+  const apply = () => {
+    const v = aq.value.trim(), lo = since();
+    const inPer = rows.filter(r => !lo || r.at >= lo);
+    L = inPer.filter(r => (!kind || r.f.split(' ').includes(kind)) && listMatch(v, r.txt, 'log'));
+    const filtered = kind || v;
+    ab.innerHTML = L.map(r => `<tr data-f="${r.f}" data-at="${r.at}"><td class="mono">${r.at}</td><td>${r.who}</td><td>${r.kind}</td><td>${r.tgt}</td><td>${r.what}</td><td class="caption">${r.why}</td><td class="mono">${r.ip || '—'}</td></tr>`).join('')
+      || (!rows.length ? '<tr class="er first"><td colspan="7" class="caption muted u-tc u-p-24"><span class="et">아직 감사 기록이 없습니다</span>결재 · 공표 · 설정 · 역할 변경 · 영구 삭제가 일어나면 시간순으로 쌓입니다.</td></tr>'
+        : filtered ? '<tr class="er none"><td colspan="7" class="caption muted u-tc u-p-24"><span class="et">필터에 맞는 기록이 없습니다</span><button class="btn sm ghost" type="button" data-aclr="all">모두 지우기</button></td></tr>'
+        : `<tr class="er none"><td colspan="7" class="caption muted u-tc u-p-24"><span class="et">${PN[per.value]} 기록이 없습니다</span>더 오래된 기록 ${rows.length}건이 있습니다. <button class="btn sm ghost" type="button" id="aper-all">전체 기간 보기</button></td></tr>`);
+    const act = [v && ['q', '검색: ' + v.replace(/[<>&"]/g, '')], kind && ['f', '종류: ' + KN[kind]]].filter(Boolean);
+    document.getElementById('alh').innerHTML = `<b class="u-fg">${filtered ? `${inPer.length}건 중 ${L.length}건` : `${L.length}건`}</b> · ${PN[per.value]} · 최근 순${act.length ? ` <span class="fchips">${act.map(([k, l]) => `<button class="fchip" data-aclr="${k}" aria-label="${l} 필터 지우기">${l}<i data-ic=x data-s=12></i></button>`).join('')}<button class="btn ghost sm" data-aclr="all">모두 지우기</button></span>` : ''} <span class="grow"></span><span class="caption muted">결재 이력 · 공표 · 설정 · 역할 · 영구 삭제를 한 곳에서</span>`;
+    document.getElementById('axl').textContent = `엑셀 (${L.length}건)`;
+    liveCount(`${L.length}건`);
+    urlSync(['q', 'f', 'per'], { q: v, f: kind, per: per.value === '30' ? '' : per.value });
+  };
   aq.oninput = apply; per.onchange = apply;
-  document.querySelector('.toolbar').addEventListener('click', e => { const c = e.target.closest('.chip[data-filter]'); if (!c) return; kind = c.dataset.filter; setTimeout(apply, 0); });
-  document.querySelector('.toolbar').addEventListener('keydown', e => { const c = e.target.closest('.chip[data-filter]'); if (c && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); c.click(); } });   // chips work from the keyboard too
-  document.getElementById('axl').onclick = () => toast(`감사 로그 ${shown}건을 엑셀로 내려받았습니다(현재 필터 기준)`, 'info');
-  apply();
+  aq.addEventListener('keydown', e => { if (e.key === 'Escape' && aq.value) { e.stopPropagation(); aq.value = ''; apply(); } });
+  document.getElementById('ak').addEventListener('click', e => { const c = e.target.closest('.chip[data-k]'); if (!c) return; kind = c.dataset.k; syncChips(); apply(); });
+  more.onchange = () => { kind = more.value; syncChips(); apply(); };
+  // 모두 지우기 = back to the default view (search · kind cleared; the period goes back to 30 days)
+  document.addEventListener('click', e => { if (e.target.closest('#aper-all')) { per.value = '0'; apply(); return; }
+    const c = e.target.closest('[data-aclr]'); if (!c) return; const k = c.dataset.aclr;
+    if (k === 'all' || k === 'q') aq.value = ''; if (k === 'all' || k === 'f') kind = ''; if (k === 'all') per.value = '30';
+    syncChips(); apply(); const nc = document.querySelector('#alh [data-aclr]'); (nc || aq).focus(); });
+  // L-12 export: names the scope and count; the file's first line records the filters
+  document.getElementById('axl').onclick = () => toast(`감사 로그 ${L.length}건을 엑셀로 내려받았습니다 — 필터: ${[PN[per.value], kind && '종류 ' + KN[kind], aq.value.trim() && `검색 ‘${aq.value.trim()}’`].filter(Boolean).join(' · ')} (파일 첫 줄에 기록)`, 'info');
+  syncChips(); apply();
 };
 </script>
 </body>

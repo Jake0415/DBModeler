@@ -37,6 +37,7 @@
   <div class="toolbar" id="chips"></div>
   <div class="page-body">
     <div class="main">
+      <div class="listhead" id="slh"></div>
       <div class="scroll" data-filter-target="s">
         <table class="tbl">
           <thead><tr><th><input type="checkbox" id="sd-all" aria-label="보이는 행 중 처리 가능한 행 모두 선택"></th><th>상태</th><th>테이블</th><th title="윗줄 현재 · 아랫줄 제안">이름</th><th title="윗줄 현재 · 아랫줄 제안">물리명</th><th>도메인</th><th>처리</th><th>진단</th></tr></thead>
@@ -44,7 +45,7 @@
         </table>
       </div>
       <div class="sbulk" id="sd-bar" role="region" aria-label="선택한 행 일괄 처리">
-        <b id="sd-n" aria-live="polite"></b>
+        <b id="sd-n"></b>
         <div class="mline" id="sd-prev"></div>
         <span class="grow"></span>
         <button class="btn sm primary" id="sd-apply" data-open="mo-apply">선택 적용</button>
@@ -164,10 +165,10 @@ window.pageInit = function () {
     // chip counts from the same rows (CL12-40)
     const cnt = k => rows.filter(r => ST[effective(r).st][2] === k).length;
     const cur = (document.querySelector('#chips .chip.on') || {}).dataset;
-    $('chips').innerHTML = [['', '전체', rows.length], ['todo', '할 일(미준수)', TODO.reduce((n, k) => n + cnt(k), 0)], ['ok', '표준', cnt('ok')], ['comb', '조합 가능', cnt('comb')], ['req', '신청 중', cnt('req')], ['unreg', '미등록 단어', cnt('unreg')], ['ex', '예외', cnt('ex')], ['na', '비대상', cnt('na')]].map(([k, l, n]) => `<span class="chip ${(cur ? cur.filter : '') === k ? 'on' : ''}" data-group="s" data-filter="${k}">${l} <span class="n">${n}</span></span>`).join('') + `<span class="grow"></span><span class="caption muted" id="analyzed" title="작업본·사전·진행 중 신청으로 계산 · 상태별로 골라 한 번에 처리">${ANALYZED}</span>`;
+    $('chips').innerHTML = '<span class="flex u-gap-8" role="group" aria-label="판정 상태">' + [['', '전체', rows.length], ['todo', '할 일(미준수)', TODO.reduce((n, k) => n + cnt(k), 0)], ['ok', '표준', cnt('ok')], ['comb', '조합 가능', cnt('comb')], ['req', '신청 중', cnt('req')], ['unreg', '미등록 단어', cnt('unreg')], ['ex', '예외', cnt('ex')], ['na', '비대상', cnt('na')]].map(([k, l, n]) => `<button class="chip ${(cur ? cur.filter : '') === k ? 'on' : ''}" data-group="s" data-filter="${k}">${l} <span class="n">${n}</span></button>`).join('') + `</span><span class="grow"></span><span class="caption muted" id="analyzed" title="작업본·사전·진행 중 신청으로 계산 · 상태별로 골라 한 번에 처리">${ANALYZED}</span>`;
     // what the user had chosen stays chosen (only rows whose state changed are re-decided)
     document.querySelectorAll('#rows tr[data-i]').forEach(tr => { const p = prev[tr.dataset.i]; if (!p) return; const c = tr.querySelector('input[type=checkbox]'), s = tr.querySelector('select'); if (c && !c.disabled && p.c != null) c.checked = p.c; if (s && p.s != null && [...s.options].some(o => o.value === p.s)) s.value = p.s; });
-    if (cur && cur.filter) document.querySelectorAll('.scroll tbody tr').forEach(tr => { tr.style.display = (tr.dataset.f || '').split(' ').includes(cur.filter) ? '' : 'none'; });
+    if (cur && cur.filter) filterRows('s', cur.filter);   // shared: also shows 'er none' + 모두 지우기 when the state has no rows
     $('scope').textContent = `범위: 영역 전체 · 테이블 ${model.E.filter(e => !e.ref).length}개 · 속성 ${model.E.reduce((n, e) => n + (e.ref ? 0 : e.a.length), 0)}개`;
     sum();
   }
@@ -206,6 +207,12 @@ window.pageInit = function () {
     $('sd-all').disabled = !vis.length || readOnly;
     $('sd-all').checked = !!vis.length && on === vis.length; $('sd-all').indeterminate = on > 0 && on < vis.length;
     const hc = hiddenChecked();
+    // list standard L-5: count line — rows after the state chip, the order, the applied chip
+    const curF = (document.querySelector('#chips .chip.on') || {}).dataset || {}, nVis = trs().filter(visible).length;
+    const fl = curF.filter ? (document.querySelector('#chips .chip.on').childNodes[0].textContent || '').trim() : '';
+    $('slh').innerHTML = `<b class="u-fg">${fl ? `${rows.length}건 중 ${nVis}건` : `${rows.length}건`}</b> · 테이블 순${fl ? ` <span class="fchips"><button class="fchip" data-er-clear="s" aria-label="상태 필터 지우기">상태: ${fl}<i data-ic=x data-s=12></i></button></span>` : ''}`;
+    liveCount(`${fl ? nVis : rows.length}건`);
+    urlSync(['f'], { f: curF.filter || '' });
     const bar = (s.C.length || s.ho) && !readOnly;
     $('sd-bar').hidden = readOnly;   // always visible while editable — the one completing action never disappears
     $('sd-n').innerHTML = s.C.length ? `${s.C.length}건 선택` : s.ho ? `기록 ${s.ho}건 대기` : '<span class="muted">처리할 행을 고르세요</span>';
