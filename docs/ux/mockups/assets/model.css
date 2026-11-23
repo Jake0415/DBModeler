@@ -89,10 +89,10 @@
 #expmenu { top:40px; right:0; width:330px; padding:12px; font-size:13px; }
 #expmenu .row { display:flex; align-items:center; gap:8px; margin-bottom:10px; }
 #expmenu .row > b { width:44px; font-weight:500; color:var(--fg-2); }
-.cv-zoom { position:absolute; left:12px; bottom:12px; display:flex; gap:4px; align-items:center; background:var(--surface); border-radius:var(--r-lg); box-shadow:var(--menu-shadow); padding:4px; z-index:10; font-size:12px; }
+.cv-zoom { position:absolute; left:12px; bottom:calc(12px + var(--cv-cut, 0px)); display:flex; gap:4px; align-items:center; background:var(--surface); border-radius:var(--r-lg); box-shadow:var(--menu-shadow); padding:4px; z-index:10; font-size:12px; }
 .cv-zoom button { height:28px; min-width:28px; border:0; background:none; border-radius:6px; cursor:pointer; color:var(--fg); font:500 13px var(--font-sans); }
 .cv-zoom button:hover { background:var(--surface-2); }
-.cv-mini { position:absolute; right:12px; bottom:12px; width:180px; height:120px; background:var(--surface); border-radius:var(--r-lg); box-shadow:var(--menu-shadow); z-index:10; overflow:hidden; }
+.cv-mini { position:absolute; right:calc(12px + var(--cv-cutr, 0px)); bottom:calc(12px + var(--cv-cut, 0px)); width:180px; height:120px; background:var(--surface); border-radius:var(--r-lg); box-shadow:var(--menu-shadow); z-index:10; overflow:hidden; }
 .cv-hint { position:absolute; left:50%; top:56px; transform:translateX(-50%); background:var(--ds-gray-1000); color:var(--on-ink); font-size:13px; padding:6px 12px; border-radius:6px; z-index:20; display:none; }
 /* D2: guidance is a strip under the toolbar (never over the canvas) — one line folded, full text unfolded; the canvas moves down by its height */
 .cv-banner { position:absolute; left:0; right:0; top:37px; z-index:19; display:grid; grid-template-columns:minmax(0,1fr) auto; column-gap:8px; row-gap:4px; align-items:center; padding:4px 12px; background:var(--surface); border-bottom:1px solid var(--ds-gray-400); }
@@ -112,8 +112,9 @@
 .grp h4 { margin:0 0 4px; font-size:16px; }
 .grp .refrow { display:flex; align-items:center; gap:6px; font-size:12px; padding:4px 0; border-top:1px solid var(--border); }
 #sysview { display:none; position:absolute; inset:0; }
-#cv[data-sys="1"] .cv-banner, #cv[data-sys="1"] > .cv-zoom, #cv[data-sys="1"] .cv-mini, #cv[data-sys="1"] .legend { display:none !important; }
-.legend { position:absolute; left:12px; bottom:52px; z-index:9; font-size:12px; color:var(--fg-3); display:flex; gap:8px; align-items:center; }
+/* system view keeps the bottom controls (zoom · fit · minimap · legend) — only the editing strip and the display-level select go */
+#cv[data-sys="1"] .cv-banner, #cv[data-sys="1"] #lodsel { display:none !important; }
+.legend { position:absolute; left:12px; bottom:calc(56px + var(--cv-cut, 0px)); z-index:9; font-size:12px; color:var(--fg-3); display:flex; gap:8px; align-items:center; }
 /* header: save state · more menu */
 .savest { display:inline-flex; align-items:center; gap:6px; font-size:13px; color:var(--fg-2); white-space:nowrap; }
 .savest .sdot { margin:0; width:8px; height:8px; }
@@ -128,7 +129,7 @@
 .cv-banner .ban-more { align-self:flex-start; } .cv-banner .ban-more[hidden] { display:none !important; }
 /* table view = a body switch, not a floating window */
 body.gridmode #grid { left:0; right:0; top:0; bottom:0; border-radius:0; box-shadow:none; }
-body.gridmode .cv-toolbar, body.gridmode .cv-banner, body.gridmode .legend, body.gridmode .cv-zoom, body.gridmode .cv-mini, body.gridmode .cv-hint { display:none !important; }
+body.gridmode .cv-toolbar, body.gridmode .cv-banner, body.gridmode .legend, body.gridmode .cv-zoom, body.gridmode .cv-mini, body.gridmode .mini-open, body.gridmode .cv-hint { display:none !important; }
 #grid .gscope { font-size:13px; color:var(--fg-2); } #grid .gscope b { color:var(--fg); font-variant-numeric:tabular-nums; }
 /* grid mode */
 #grid { position:absolute; left:12px; right:12px; top:56px; bottom:12px; background:var(--surface); border-radius:var(--r-lg); box-shadow:var(--menu-shadow); z-index:15; display:none; flex-direction:column; overflow:hidden; }
@@ -209,3 +210,15 @@ body.gridmode .cv-toolbar, body.gridmode .cv-banner, body.gridmode .legend, body
 .sys-ban { position:absolute; left:12px; top:60px; z-index:5; max-width:560px; }
 .grp.sys-area { width:270px; min-height:120px; cursor:pointer; } .grp.sys-common { width:340px; }
 .sys-chip { width:34px; height:18px; border-radius:4px; background:var(--surface-2); border:1px solid var(--border); }
+
+/* bottom controls: pinned inside the window (--cv-cut · --cv-cutr from pinCtl) · legend / minimap fold */
+.legend .lg-body { display:flex; gap:8px; align-items:center; }
+.legend #lg-fold { color:var(--fg-3); }
+.cv-mini .mini-x { position:absolute; top:4px; right:4px; background:var(--surface); color:var(--fg-3); }
+.lg-open, .mini-open { display:none; }
+#cv.lg-off .legend .lg-body, #cv.lg-off .legend #lg-fold { display:none; }
+#cv.lg-off .legend .lg-open { display:inline-flex; box-shadow:var(--menu-shadow); }
+#cv.mini-off .cv-mini { display:none; }
+#cv.mini-off .mini-open { display:inline-flex; position:absolute; right:calc(12px + var(--cv-cutr, 0px)); bottom:calc(12px + var(--cv-cut, 0px)); z-index:10; box-shadow:var(--menu-shadow); }
+/* system view: zoomable area cards */
+#sysworld { position:absolute; left:0; top:0; transform-origin:0 0; }.s-cur { background:var(--ink); }

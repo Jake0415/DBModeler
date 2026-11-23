@@ -117,10 +117,12 @@
       </div>
       <div id="sysview"></div>
       <div id="grid"></div>
-      <div class="legend">상태 <span class="dot-i s-ok"></span>표준 <span class="dot-i s-comb"></span>조합 가능 <span class="dot-i s-unreg"></span>미등록 단어 <span class="dot-i s-ex"></span>예외 <span class="dot-i s-na"></span>비대상</div>
-      <div class="cv-zoom"><button id="zo">−</button><span id="zl" class="mono">100%</span><button id="zi">+</button><button id="zfit" title="전체 맞춤 (Shift+1)">맞춤</button>
+      <!-- bottom controls: always inside the window (pinCtl), legend · minimap can be folded and the choice is remembered -->
+      <div class="legend" id="cv-legend"><span class="lg-body" id="lg-body">상태 <span class="dot-i s-ok"></span>표준 <span class="dot-i s-comb"></span>조합 가능 <span class="dot-i s-unreg"></span>미등록 단어 <span class="dot-i s-ex"></span>예외 <span class="dot-i s-na"></span>비대상</span><button class="iconbtn u-w-28 u-h-28" id="lg-fold" aria-expanded="true" aria-controls="lg-body" aria-label="범례 접기" title="범례 접기"><i data-ic=x></i></button><button class="btn sm lg-open" id="lg-open" aria-expanded="false" aria-controls="lg-body">범례</button></div>
+      <div class="cv-zoom" role="group" aria-label="확대 · 축소"><button id="zo" aria-label="축소 (Ctrl+-)" title="축소 (Ctrl+-)">−</button><span id="zl" class="mono" title="100%로 (Ctrl+0)">100%</span><button id="zi" aria-label="확대 (Ctrl++)" title="확대 (Ctrl++)">+</button><button id="zfit" title="전체 맞춤 (Shift+1)">맞춤</button>
         <select class="input" id="lodsel" aria-label="캔버스 표시 단계"><option value="auto">표시: 자동(0.35배 미만 요약)</option><option value="full">전체 속성</option><option value="mid">키만</option><option value="low">요약(이름만)</option></select></div>
-      <div class="cv-mini"><svg id="mini" width="180" height="120"></svg></div>
+      <div class="cv-mini" id="cv-mini"><svg id="mini" width="180" height="120" role="img" aria-label="미니맵 — 전체 중 지금 보이는 범위"></svg><button class="iconbtn u-w-28 u-h-28 mini-x" id="mini-x" aria-expanded="true" aria-controls="cv-mini" aria-label="미니맵 접기" title="미니맵 접기"><i data-ic=x></i></button></div>
+      <button class="btn sm mini-open" id="mini-open" aria-expanded="false" aria-controls="cv-mini">미니맵</button>
     </div>
 
     <aside class="rpanel open" id="rp" data-tabscope>
@@ -1211,6 +1213,12 @@ window.pageInit = function () {
     if (ev.ctrlKey && k === 'z' && ev.shiftKey) { redoFn(); ev.preventDefault(); return; }
     if (ev.ctrlKey && k === 'z') { undo(); ev.preventDefault(); return; }
     if (ev.ctrlKey && k === 'y') { redoFn(); ev.preventDefault(); return; }
+    // canvas zoom from the keyboard (instead of the browser's page zoom) — not while the table view is open
+    if ((ev.ctrlKey || ev.metaKey) && !$('grid').classList.contains('open')) {
+      if (ev.key === '=' || ev.key === '+' || ev.code === 'NumpadAdd') { zoomIn(); ev.preventDefault(); return; }
+      if (ev.key === '-' || ev.code === 'NumpadSubtract') { zoomOut(); ev.preventDefault(); return; }
+      if (ev.key === '0' || ev.code === 'Numpad0') { zoom100(); ev.preventDefault(); return; }
+    }
     if (ev.ctrlKey || ev.metaKey) return;
     const inCanvas = singleKeys() && (document.activeElement === document.body || cv.contains(document.activeElement));
     if (inCanvas && k === 'v') setTool('select'); else if (inCanvas && k === 'e') setTool('entity'); else if (inCanvas && k === 'r') { ev.preventDefault(); if (!canEdit()) guard(); else if (typeof sel === 'string' && ent(sel)) childPicker(sel); else setTool('rel'); }   // preventDefault: the 'r' must not land in the picker's filter box   // read-only: the reason, never the tool mode (post-review CL10)   // keyboard path: a selected entity is the parent
@@ -1220,7 +1228,7 @@ window.pageInit = function () {
     else if (ev.key === 'Enter' && sel) { addAttr(); ev.preventDefault(); }
     else if (ev.key === 'Delete' && sel) { if (!guard()) askDelete(sel); }
     else if (ev.key === 'Delete' && selRel) relDelete(selRel);
-    else if (ev.key === '!' || (ev.shiftKey && ev.code === 'Digit1')) fit();
+    else if (ev.key === '!' || (ev.shiftKey && ev.code === 'Digit1')) fitAny();
   });
   $('dict').addEventListener('dragstart', ev => { const it = ev.target.closest('.dict-item'); if (!it) return; ev.dataTransfer.setData('text/plain', it.dataset.ti); ev.dataTransfer.effectAllowed = 'copy'; cv.classList.add('dropping'); });
   $('dict').addEventListener('dragend', () => { cv.classList.remove('dropping'); nodes.querySelectorAll('.drop').forEach(n => n.classList.remove('drop')); });
@@ -1241,14 +1249,66 @@ window.pageInit = function () {
   cv.addEventListener('wheel', ev => {
     if (ev.target.closest('#grid')) return;
     ev.preventDefault();
+    if (isSys()) {   // system view: Ctrl+wheel zooms around the pointer, wheel pans
+      if (ev.ctrlKey) { const r = cv.getBoundingClientRect(); const mx = ev.clientX - r.left, my = ev.clientY - r.top; const nz = Math.min(2, Math.max(0.3, sysZ * (ev.deltaY < 0 ? 1.1 : 0.9))); sysX = mx - (mx - sysX) * nz / sysZ; sysY = my - (my - sysY) * nz / sysZ; sysZ = nz; }
+      else { sysX -= ev.deltaX; sysY -= ev.deltaY; }
+      sysApply(); return;
+    }
     if (ev.ctrlKey) { const r = cv.getBoundingClientRect(); const mx = ev.clientX - r.left, my = ev.clientY - r.top; const nz = Math.min(2, Math.max(0.15, zoom * (ev.deltaY < 0 ? 1.1 : 0.9))); panX = mx - (mx - panX) * nz / zoom; panY = my - (my - panY) * nz / zoom; zoom = nz; }
     else { panX -= ev.deltaX; panY -= ev.deltaY; }
     applyView();
   }, { passive: false });
-  $('zi').onclick = () => { zoom = Math.min(2, zoom * 1.2); applyView(); };
-  $('zo').onclick = () => { zoom = Math.max(0.15, zoom / 1.2); applyView(); };
+  /* ---- bottom controls (zoom · fit · display level · legend · minimap): always reachable ----
+     1) pinned inside the window: when the canvas runs past the window (short window, 1920/1600 preview frame, page scrolled)
+        the controls move up / left by the hidden amount, so they sit at the bottom of the VISIBLE canvas
+     2) legend and minimap fold; the choice is remembered per user; a narrow canvas folds the minimap on its own */
+  const isSys = () => cv.dataset.sys === '1';
+  const FOLD_KEY = 'dbm-cv-fold-' + ME.id;
+  let fold = (() => { try { return JSON.parse(dbmStore.get(FOLD_KEY, '{}')) || {}; } catch (e) { return {}; } })(), miniPeek = false;
+  function applyFold() {
+    const narrow = cv.clientWidth < 760, lgOff = !!fold.lg, miniOff = !!fold.mini || (narrow && !miniPeek);
+    cv.classList.toggle('lg-off', lgOff); cv.classList.toggle('mini-off', miniOff);
+    $('lg-fold').setAttribute('aria-expanded', String(!lgOff)); $('lg-open').setAttribute('aria-expanded', String(!lgOff));
+    $('mini-x').setAttribute('aria-expanded', String(!miniOff)); $('mini-open').setAttribute('aria-expanded', String(!miniOff));
+    $('mini-open').title = narrow && !fold.mini ? '캔버스가 좁아 미니맵을 접었습니다 — 눌러서 펼치기' : '미니맵 펼치기';
+  }
+  const saveFold = () => dbmStore.set(FOLD_KEY, JSON.stringify(fold));
+  $('lg-fold').onclick = () => { fold.lg = 1; saveFold(); applyFold(); $('lg-open').focus(); };
+  $('lg-open').onclick = () => { fold.lg = 0; saveFold(); applyFold(); $('lg-fold').focus(); };
+  $('mini-x').onclick = () => { fold.mini = 1; miniPeek = false; saveFold(); applyFold(); $('mini-open').focus(); };
+  $('mini-open').onclick = () => { fold.mini = 0; miniPeek = true; saveFold(); applyFold(); isSys() ? miniSys() : mini(); $('mini-x').focus(); };
+  function pinCtl() {
+    const r = cv.getBoundingClientRect(), vh = window.innerHeight, vw = document.documentElement.clientWidth;
+    const cut = Math.max(0, Math.min(r.bottom - vh, r.height - 160)), cutr = Math.max(0, Math.min(r.right - vw, r.width - 220));
+    cv.style.setProperty('--cv-cut', Math.round(cut) + 'px'); cv.style.setProperty('--cv-cutr', Math.round(cutr) + 'px');
+    applyFold();
+  }
+  window.addEventListener('scroll', pinCtl, { passive: true, capture: true });
+  window.addEventListener('resize', pinCtl);
+  new ResizeObserver(pinCtl).observe(cv);
+  /* system view zoom — the area cards sit in #sysworld and use the same zoom bar, wheel and keys as the canvas */
+  let sysZ = 1, sysX = 0, sysY = 0;
+  function sysApply() { const w = $('sysworld'); if (!w) return; w.style.transform = `translate(${sysX}px,${sysY}px) scale(${sysZ})`; $('zl').textContent = Math.round(sysZ * 100) + '%'; miniSys(); }
+  function sysBounds() { const w = $('sysworld'); const cs = w ? [...w.querySelectorAll('.grp')] : []; let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9; cs.forEach(c => { x0 = Math.min(x0, c.offsetLeft); y0 = Math.min(y0, c.offsetTop); x1 = Math.max(x1, c.offsetLeft + c.offsetWidth); y1 = Math.max(y1, c.offsetTop + c.offsetHeight); }); return { cs, x0, y0, x1, y1 }; }
+  function miniSys() {
+    const m = $('mini'), b = sysBounds(); if (!b.cs.length) { m.innerHTML = ''; return; }
+    const W = b.x1 - b.x0 + 120, H = b.y1 - b.y0 + 120, k = Math.min(180 / W, 120 / H), ox = b.x0 - 60, oy = b.y0 - 60;
+    m.innerHTML = b.cs.map(c => `<rect x="${(c.offsetLeft - ox) * k}" y="${(c.offsetTop - oy) * k}" width="${c.offsetWidth * k}" height="${c.offsetHeight * k}" fill="${c.querySelector('.badge') && /지금 영역/.test(c.textContent) ? 'var(--ink)' : 'var(--border-strong)'}" opacity=".6" rx="1"/>`).join('')
+      + `<rect x="${(-sysX / sysZ - ox) * k}" y="${(-sysY / sysZ - oy) * k}" width="${cv.clientWidth / sysZ * k}" height="${cv.clientHeight / sysZ * k}" fill="none" stroke="var(--ink)" stroke-width="1"/>`;
+  }
+  // fit = every card visible, starting below the read-only strip (the strip stays fixed, the cards scale under it) and above the bottom controls
+  function sysFit() { const b = sysBounds(); if (!b.cs.length) return; const ban = $('sysview').querySelector('.sys-ban'), top0 = ban ? ban.offsetTop + ban.offsetHeight + 12 : 20;
+    sysZ = Math.max(0.3, Math.min(1.2, (cv.clientWidth - 80) / b.x1, (cv.clientHeight - top0 - 110) / (b.y1 - b.y0))); sysX = 20; sysY = top0 - b.y0 * sysZ; sysApply(); }
+  const zoomIn = () => { if (isSys()) { sysZ = Math.min(2, sysZ * 1.2); sysApply(); } else { zoom = Math.min(2, zoom * 1.2); applyView(); } };
+  const zoomOut = () => { if (isSys()) { sysZ = Math.max(0.3, sysZ / 1.2); sysApply(); } else { zoom = Math.max(0.15, zoom / 1.2); applyView(); } };
+  const zoom100 = () => { if (isSys()) { sysZ = 1; sysApply(); } else { zoom = 1; applyView(); } };
+  const fitAny = () => isSys() ? sysFit() : fit();
+  $('zi').onclick = zoomIn;
+  $('zo').onclick = zoomOut;
+  $('zl').addEventListener('dblclick', zoom100);
   function fit() { let maxx = 0, maxy = 0; if (!VE().length) { zoom = 1; panX = 40; panY = 80; applyView(); return; } VE().forEach(e => { const b = box(e.id); maxx = Math.max(maxx, b.x + b.w); maxy = Math.max(maxy, b.y + b.h); }); zoom = Math.min(1.2, (cv.clientWidth - 80) / maxx, (cv.clientHeight - 140) / maxy); panX = 40; panY = 80; applyView(); }
-  $('zfit').onclick = fit;
+  $('zfit').onclick = fitAny;
+  pinCtl();
   $('lodsel').onchange = ev => { lodForce = ev.target.value; applyView(); };
   $('b-undo').onclick = undo; $('b-redo').onclick = redoFn;
   document.querySelectorAll('.cv-toolbar .tb[data-tool]').forEach(b => b.addEventListener('click', () => {
@@ -1386,13 +1446,17 @@ window.pageInit = function () {
     $('b-sys').classList.toggle('on', on); cv.dataset.sys = on ? '1' : '';
     if (on) { sel = null; relSrc = null; setTool('select'); closeGrid(); }
     const has = id => !!ent(id);
+    // the legend says what the system view shows; leaving it brings the status legend back
+    if (!window.__lgCanvas) window.__lgCanvas = $('lg-body').innerHTML;
+    $('lg-body').innerHTML = on ? '영역 묶음 보기 <span class="dot-i s-cur"></span>지금 영역 <span class="dot-i s-na"></span>다른 영역 · 카드를 두 번 누르면 그 업무 영역을 엽니다' : window.__lgCanvas;
+    if (!on) { applyView(); }
     if (on) sv.innerHTML = `<div class="banner info sys-ban"><i data-ic=info></i><div class="grow"><b>시스템 전체 ERD · 조회 전용</b> — ${curSys().name}의 모든 업무 영역. 공통 영역의 엔터티는 <b>참조로 가져와</b> 관계를 맺을 수 있습니다.</div></div>
-      ${Object.entries(getModels()).map(([id, m], i) => { const mo = id === AREA && VER === m.ver && !snapDoc ? { E } : modelOf(id, m.ver); const es = mo.E.filter(x => !x.ref); const bad = compOf(mo).bad; const lk = modelLock(id); const st = lk.state === 'review' ? '검토 중' : lk.state === 'confirmed' ? '확정' : `v${m.ver} 작업 중`; const col = i % 3, row = Math.floor(i / 3); return `<div class="grp sys-area" style="left:${60 + col * 300}px;top:${130 + row * 200}px" ondblclick="__go('model.html?area=${id}')" title="더블클릭하면 이 업무 영역을 엽니다"><h4>${m.name}${id === AREA ? ' <span class="badge">지금 영역</span>' : ''}</h4><div class="caption muted">엔터티 ${es.length} · 미준수 ${bad} · ${st}</div><div class="u-flex u-wrap u-gap-4 u-mt-12">${'<span class="sys-chip"></span>'.repeat(Math.min(es.length, 18))}</div><div class="caption faint u-mt-8"><a href="model.html?area=${id}">열기</a> · 더블클릭해도 열립니다</div></div>`; }).join('')}
+      <div id="sysworld">${Object.entries(getModels()).map(([id, m], i) => { const mo = id === AREA && VER === m.ver && !snapDoc ? { E } : modelOf(id, m.ver); const es = mo.E.filter(x => !x.ref); const bad = compOf(mo).bad; const lk = modelLock(id); const st = lk.state === 'review' ? '검토 중' : lk.state === 'confirmed' ? '확정' : `v${m.ver} 작업 중`; const col = i % 3, row = Math.floor(i / 3); return `<div class="grp sys-area" style="left:${60 + col * 300}px;top:${130 + row * 200}px" ondblclick="__go('model.html?area=${id}')" title="더블클릭하면 이 업무 영역을 엽니다"><h4>${m.name}${id === AREA ? ' <span class="badge">지금 영역</span>' : ''}</h4><div class="caption muted">엔터티 ${es.length} · 미준수 ${bad} · ${st}</div><div class="u-flex u-wrap u-gap-4 u-mt-12">${'<span class="sys-chip"></span>'.repeat(Math.min(es.length, 18))}</div><div class="caption faint u-mt-8"><a href="model.html?area=${id}">열기</a> · 더블클릭해도 열립니다</div></div>`; }).join('')}
       <div class="grp sys-common" style="left:${60 + 300 * Math.min(2, Object.keys(getModels()).length % 3)}px;top:${130 + 200 * Math.ceil(Object.keys(getModels()).length / 3)}px"><h4>공통</h4><div class="caption muted u-mb-8">여러 업무 영역이 함께 쓰는 엔터티</div>
         <div class="refrow"><b class="grow">사원기본</b><span class="mono faint">EMP_M</span><span class="badge">사용 중</span></div>
         <div class="refrow"><b class="grow">부서기본</b><span class="mono faint">DEPT_M</span>${has('dept') ? '<span class="badge">참조 중</span>' : '<button class="btn sm" onclick="window.__importRef(\'dept\')">참조로 가져오기</button>'}</div>
-        <div class="refrow"><b class="grow">공통코드기본</b><span class="mono faint">CMMN_CD_M</span>${has('code') ? '<span class="badge">참조 중</span>' : '<button class="btn sm" onclick="window.__importRef(\'code\')">참조로 가져오기</button>'}</div></div>
-      <div class="cv-zoom" style="left:12px;bottom:12px"><span class="caption muted" style="padding:0 8px">15% · 영역 묶음 보기 · 확대하면 엔터티가 펼쳐집니다</span></div>`;
+        <div class="refrow"><b class="grow">공통코드기본</b><span class="mono faint">CMMN_CD_M</span>${has('code') ? '<span class="badge">참조 중</span>' : '<button class="btn sm" onclick="window.__importRef(\'code\')">참조로 가져오기</button>'}</div></div></div>`;
+    if (on) sysFit();   // the shared zoom bar · minimap now drive the system view
   };
 
   // ---- states

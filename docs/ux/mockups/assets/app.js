@@ -1860,7 +1860,7 @@
             <tr><td><kbd>V</kbd> <kbd>E</kbd> <kbd>R</kbd> <kbd>M</kbd></td><td>선택 · 엔터티 · 관계 · 메모 도구</td></tr>
             <tr><td><kbd>Enter</kbd></td><td>선택한 엔터티에 속성 추가</td></tr><tr><td><kbd>Delete</kbd></td><td>선택 삭제 (영향 확인)</td></tr>
             <tr><td><kbd>Ctrl</kbd><kbd>Z</kbd> / <kbd>Ctrl</kbd><kbd>Y</kbd></td><td>내 편집 되돌리기 / 다시 실행</td></tr>
-            <tr><td><kbd>Ctrl</kbd><kbd>F</kbd></td><td>표 보기 · 찾기/바꾸기</td></tr><tr><td><kbd>Shift</kbd><kbd>1</kbd></td><td>전체 맞춤</td></tr><tr><td><kbd>Ctrl</kbd>+휠</td><td>확대·축소</td></tr>
+            <tr><td><kbd>Ctrl</kbd><kbd>F</kbd></td><td>표 보기 · 찾기/바꾸기</td></tr><tr><td><kbd>Shift</kbd><kbd>1</kbd></td><td>전체 맞춤</td></tr><tr><td><kbd>Ctrl</kbd>+휠 · <kbd>Ctrl</kbd><kbd>+</kbd> <kbd>Ctrl</kbd><kbd>-</kbd></td><td>확대·축소</td></tr><tr><td><kbd>Ctrl</kbd><kbd>0</kbd></td><td>100%로</td></tr>
           </tbody></table>
           <label class="flex caption" style="margin-top:12px"><input type="checkbox" id="kb-single" ${store.get('dbm-single-keys', '1') === '1' ? 'checked' : ''}> 한 글자 단축키(V·E·R·M) 사용 — 끄면 화면 낭독기·음성 입력과 충돌하지 않습니다</label>
         </div>

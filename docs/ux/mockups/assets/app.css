@@ -108,7 +108,7 @@ i[data-ic] { font-style:normal; display:inline-flex; vertical-align:-3px; }
 /* window fit (product default, 01 §5): fill the window, never narrower than 1600px; 1920 / 1600 remain fixed preview frames */
 :root.frame-fit, :root.frame-fit body { height:100%; }
 :root.frame-fit body { overflow:auto; background:var(--bg); }
-:root.frame-fit #app { width:100%; min-width:1600px; height:100%; min-height:720px; margin:0; }   /* % of the scrolling body, so a horizontal scrollbar never adds a vertical one */
+:root.frame-fit #app { width:100%; min-width:1600px; height:100%; min-height:600px; margin:0; }   /* 600 (was 720): a short window keeps the whole screen — ERD bottom controls included — without page scrolling */   /* % of the scrolling body, so a horizontal scrollbar never adds a vertical one */
 :root.frame-fit #app.bare { height:auto; min-height:100%; }
 @media (max-width:1919px) { :root.frame-fit { --panel:380px; --dictpanel:240px; } :root.frame-fit .rpanel.wide, :root.frame-fit .rpanel.wide2 { width:480px; flex-basis:480px; } }
 
