@@ -2,7 +2,7 @@
 
 > 요청: [brief-settings-p3](brief-settings-p3.md).
 > 리뷰: Codex [codex-settings-p3](codex-settings-p3.md)(SP-01 ~ 09) · UX [claude-settings-p3](claude-settings-p3.md)(UP-01 ~ 23, 유지 K1 ~ K10).
-> 상태: **개선안 확정 · 적용 전**(2026-11-24).
+> 상태: **Q1 ~ Q3 적용 완료**(2026-11-24) — 기록은 [24 §11](../24-settings-layout-guide.md).
 
 ## 0. 결론
 - **배치는 가이드대로 맞다.**

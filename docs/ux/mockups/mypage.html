@@ -35,14 +35,14 @@
     <div class="pane on set-wrap" data-pane="profile">
       <h3 class="set-sec first">계정</h3>
       <div class="set-row"><div class="l"><b>기본 정보</b><span>조회 전용</span></div>
-        <div class="field-row"><div class="field"><label for="p-company">회사명</label><input class="input" id="p-company" readonly></div><div class="field"><label for="p-org">부서명</label><input class="input" id="p-org" readonly></div><div class="field"><label for="p-name">이름</label><input class="input" id="p-name" readonly></div><div class="field"><label for="p-id">ID</label><input class="input mono" id="p-id" readonly></div></div><div class="aside"><span>회사 · 부서 · 이름은 관리자가 바꿉니다 — 틀렸으면 Admin에게 알려 주세요</span></div></div>
+        <div class="field-row"><div class="field"><label for="p-company">회사명</label><input class="input" id="p-company" readonly></div><div class="field"><label for="p-org">부서명</label><input class="input" id="p-org" readonly></div><div class="field"><label for="p-name">이름</label><input class="input" id="p-name" readonly></div><div class="field"><label for="p-id">ID</label><input class="input mono" id="p-id" readonly></div></div><div class="aside"><span>회사 · 부서 · 이름은 관리자가 바꿉니다.</span><span>틀렸으면 관리자에게 수정을 요청하세요.</span></div></div>
       <div class="set-row"><div class="l"><b>연락처</b></div>
-        <div><div class="field-row"><div class="field"><label for="p-phone">전화번호</label><input class="input mono" id="p-phone" inputmode="tel" placeholder="010-1234-5678"><div class="caption u-danger" id="p-phone-e"></div></div><div class="field"><label for="p-mail">이메일</label><input class="input mono" id="p-mail" type="email"><div class="caption u-danger" id="p-mail-e"></div></div></div></div><div class="aside"><span>결재 알림 메일이 이 주소로 갑니다</span><span>바꾸면 감사 로그에 남습니다</span></div></div>
-      <div class="set-row"><div class="l"><b>표시 이름</b></div><div class="field short"><label for="p-disp">표시 이름</label><input class="input" id="p-disp"><div class="caption u-danger" id="p-disp-e"></div></div><div class="aside"><span>결재 문서 · 공동 편집 커서에 보이는 이름입니다</span></div></div>
+        <div><div class="field-row"><div class="field"><label for="p-phone">전화번호</label><input class="input mono" id="p-phone" inputmode="tel" placeholder="010-1234-5678"><div class="caption u-danger" id="p-phone-e"></div></div><div class="field"><label for="p-mail">이메일</label><input class="input mono" id="p-mail" type="email"><div class="caption u-danger" id="p-mail-e"></div></div></div></div><div class="aside"><span>결재 알림 메일이 이 주소로 갑니다.</span><span>아래 [저장]을 누르면 바로 적용되고 감사 로그에 남습니다.</span></div></div>
+      <div class="set-row"><div class="l"><b>표시 이름</b></div><div class="field short"><label for="p-disp">표시 이름</label><input class="input" id="p-disp"><div class="caption u-danger" id="p-disp-e"></div></div><div class="aside"><span>결재 문서 · 공동 편집 커서에 보이는 이름입니다.</span></div></div>
       <h3 class="set-sec">역할</h3>
       <div class="set-row"><div class="l"><b>내 역할 · 담당 시스템</b><span>조회 전용</span></div>
         <div><div class="u-mb-8" id="p-roles"></div><div class="caption" id="p-sys"></div><div class="caption u-mt-8" id="rr-state"></div></div>
-        <div class="aside"><span>자기 역할은 스스로 바꿀 수 없습니다 — Admin에게 요청하면 처리 결과가 알림으로 옵니다</span><button class="btn sm" data-open="mo-rolereq" id="rr-open">역할 변경 요청</button></div></div>
+        <div class="aside"><span>자기 역할은 스스로 바꿀 수 없습니다.</span><span>관리자에게 요청하면 처리 결과를 알림으로 알려 드립니다.</span><button class="btn sm" data-open="mo-rolereq" id="rr-open">역할 변경 요청</button></div></div>
     </div>
 
     <div class="pane" data-pane="mine">
@@ -99,7 +99,7 @@
 
   <div class="overlay" id="mo-rolereq" role="dialog" aria-modal="true" aria-labelledby="rr-t"><div class="modal">
     <div class="m-head"><h3 id="rr-t">역할 변경 요청</h3></div>
-    <div class="m-body"><div class="caption muted u-mb-8">Admin(이데이터)에게 요청합니다. 자기 역할은 스스로 바꿀 수 없습니다.</div>
+    <div class="m-body"><div class="caption muted u-mb-8">관리자(이데이터)에게 요청합니다. 자기 역할은 스스로 바꿀 수 없습니다.</div>
       <div class="field"><label for="rr-role">요청 역할</label><select class="input" id="rr-role"></select></div>
       <div class="field"><label for="rr-why">사유 *</label><textarea class="input" id="rr-why" rows="2"></textarea></div></div>
     <div class="m-foot"><button class="btn" data-close="mo-rolereq">취소</button><button class="btn primary" data-needs="rr-why" id="rr-go">요청</button></div></div></div>
@@ -170,11 +170,11 @@ window.pageInit = function () {
   const RQ = [['owner', '기관 담당자 추가'], ['da', 'DA 추가'], ['modeler', '모델러 추가'], ['admin', 'Admin 추가']].filter(([r]) => !ME.roles.includes(r)).concat(SYSLIST.filter(s => !(ME.systems || []).includes(s.name) && !(ME.systems || []).includes('전체')).map(s => ['sys:' + s.name, '담당 시스템 추가 — ' + s.name])).concat([['off', '역할 해제']]);
   $('rr-role').innerHTML = RQ.map(([r, n]) => `<option value="${r}">${n}</option>`).join('');
   const q = new URLSearchParams(location.search);
-  const drawRR = () => { const r = JSON.parse(dbmStore.get('dbm-rolereq-' + ME.id, 'null')); $('rr-state').innerHTML = r ? `<span class="badge b-info">요청 중</span> ${r.role} · ${r.at} · Admin 확인 대기 <a href="#" id="rr-cancel">요청 취소</a>` : ''; const c = $('rr-cancel'); if (c) c.onclick = e => { e.preventDefault(); dbmStore.set('dbm-rolereq-' + ME.id, 'null'); drawRR(); toast('역할 변경 요청을 취소했습니다', 'info'); }; };
+  const drawRR = () => { const r = JSON.parse(dbmStore.get('dbm-rolereq-' + ME.id, 'null')); $('rr-state').innerHTML = r ? `<span class="badge b-info">요청 중</span> ${r.role} · ${r.at} · 관리자 확인 대기 <a href="#" id="rr-cancel">요청 취소</a>` : ''; const c = $('rr-cancel'); if (c) c.onclick = e => { e.preventDefault(); dbmStore.set('dbm-rolereq-' + ME.id, 'null'); drawRR(); toast('역할 변경 요청을 취소했습니다', 'info'); }; };
   drawRR();
   if (q.get('req') === 'sys' && q.get('sys')) { const k = 'sys:' + q.get('sys'); if (RQ.some(([r]) => r === k)) { $('rr-role').value = k; $('rr-why').value = q.get('sys') + ' 모델 편집 필요'; $('rr-why').dispatchEvent(new Event('input', { bubbles: true })); setTimeout(() => document.querySelector('[data-open="mo-rolereq"]').click(), 0); } }
   else if (q.get('req')) { const need = q.get('req'); const m = RQ.find(([r]) => need.toLowerCase().includes(r) || (need.includes('DA') && r === 'da') || (need.includes('Admin') && r === 'admin') || (need.includes('기관') && r === 'owner')); if (m) $('rr-role').value = m[0]; $('rr-why').value = q.get('what') ? `${q.get('what')} 화면 사용 필요` : ''; $('rr-why').dispatchEvent(new Event('input', { bubbles: true })); setTimeout(() => document.querySelector('[data-open="mo-rolereq"]').click(), 0); }
-  $('rr-go').onclick = () => { const why = $('rr-why').value.trim(); if (!why) return; const role = $('rr-role').selectedOptions[0].textContent; dbmStore.set('dbm-rolereq-' + ME.id, JSON.stringify({ role, key: $('rr-role').value, why, at: nowStr() })); pushNotif({ to: Object.values(USERS).filter(u => u.status !== 'stopped' && canUser(u, 'users')).map(u => u.id), k: 'sys', t: `역할 · 담당 변경 요청 — ${ME.name}: ${role}`, m: why, href: `settings.html?user=${ME.id}` }); document.getElementById('mo-rolereq').classList.remove('open'); drawRR(); toast(`${josa(role, '을/를')} Admin에게 요청했습니다 — 처리되면 알림으로 알려 드립니다`, 'success'); };
+  $('rr-go').onclick = () => { const why = $('rr-why').value.trim(); if (!why) return; const role = $('rr-role').selectedOptions[0].textContent; dbmStore.set('dbm-rolereq-' + ME.id, JSON.stringify({ role, key: $('rr-role').value, why, at: nowStr() })); pushNotif({ to: Object.values(USERS).filter(u => u.status !== 'stopped' && canUser(u, 'users')).map(u => u.id), k: 'sys', t: `역할 · 담당 변경 요청 — ${ME.name}: ${role}`, m: why, href: `settings.html?user=${ME.id}` }); document.getElementById('mo-rolereq').classList.remove('open'); drawRR(); toast(`${josa(role, '을/를')} 관리자에게 요청했습니다 — 처리되면 알림으로 알려 드립니다`, 'success'); };
   const t = dbmStore.get('dbm-theme', 'light');
   { const syncD = () => { const v = document.documentElement.dataset.density || 'default'; document.querySelectorAll('#env-density button').forEach(b => { b.classList.toggle('on', b.dataset.v === v); b.setAttribute('aria-pressed', b.dataset.v === v); }); };
     document.querySelectorAll('#env-density button').forEach(b => { b.onclick = () => { setDensity(b.dataset.v); syncD(); toast(`표 밀도를 ‘${DENSITY[b.dataset.v]}’ 높이로 바꿨습니다 — 목록 · 표(모델 표 보기 · 속성 그리드 포함)에 바로 적용됩니다`, 'info'); }; }); syncD(); }
@@ -237,6 +237,7 @@ window.pageInit = function () {
     snap(); refreshBar();
     if (done.length) { toast(`저장했습니다 — ${done.join(' · ')}`, 'success'); showSaved(); }
   };
+  document.addEventListener('keydown', e => { if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') { e.preventDefault(); if (dirtyN()) $('sb-save').click(); else toast('바뀐 내용이 없습니다', 'info'); } });   /* R-13 */
   $('content').addEventListener('input', refreshBar); $('content').addEventListener('change', refreshBar);
   window.addEventListener('beforeunload', e => { if (dirtyN()) { e.preventDefault(); e.returnValue = ''; } });
   snap(); refreshBar();
