@@ -104,14 +104,14 @@
     <h3 class="set-sec">타입 · 컬럼</h3>
     <div class="set-row wide"><div class="l"><b>데이터타입 매핑</b><span>도메인의 논리 타입 → 이 시스템 DBMS의 물리 타입. 축약명은 도메인 이름 자동 생성에 쓰임(예: 연월일<b class="mono">C</b>8)</span></div>
       <div>
-        <table class="tbl"><thead><tr><th>논리 타입</th><th>축약명</th><th>Oracle 19c</th><th>길이 조건</th><th>비고</th></tr></thead><tbody>
-          <tr><td>문자(고정)</td><td class="mono">C</td><td><input class="input mono u-w-130" value="CHAR(n)"></td><td class="mono">1~2000</td><td></td></tr>
-          <tr><td>문자(가변)</td><td class="mono">V</td><td><input class="input mono u-w-130" value="VARCHAR2(n)"></td><td class="mono">1~4000</td><td class="caption">4000 초과 → CLOB</td></tr>
-          <tr><td>숫자</td><td class="mono">N</td><td><input class="input mono u-w-130" value="NUMBER(p,s)"></td><td class="mono">p 1~38</td><td></td></tr>
-          <tr><td>일시</td><td class="mono">T</td><td><input class="input mono u-w-130" value="DATE"></td><td class="mono">—</td><td class="caption">밀리초 필요 시 TIMESTAMP</td></tr>
-          <tr><td>대용량 문자</td><td class="mono">L</td><td><input class="input mono u-w-130" value="CLOB"></td><td class="mono">—</td><td></td></tr>
+        <table class="tbl"><thead><tr><th>논리 타입</th><th>축약명</th><th id="tm-h">Oracle 19c</th><th>길이 조건</th><th>비고</th></tr></thead><tbody>
+          <tr><td>문자(고정)</td><td class="mono">C</td><td><input class="input mono u-w-130" value="CHAR(n)" data-tm="0" data-nodirty aria-label="문자(고정) 물리 타입"></td><td class="mono">1~2000</td><td></td></tr>
+          <tr><td>문자(가변)</td><td class="mono">V</td><td><input class="input mono u-w-130" value="VARCHAR2(n)" data-tm="1" data-nodirty aria-label="문자(가변) 물리 타입"></td><td class="mono">1~4000</td><td class="caption">4000 초과 → CLOB</td></tr>
+          <tr><td>숫자</td><td class="mono">N</td><td><input class="input mono u-w-130" value="NUMBER(p,s)" data-tm="2" data-nodirty aria-label="숫자 물리 타입"></td><td class="mono">p 1~38</td><td></td></tr>
+          <tr><td>일시</td><td class="mono">T</td><td><input class="input mono u-w-130" value="DATE" data-tm="3" data-nodirty aria-label="일시 물리 타입"></td><td class="mono">—</td><td class="caption">밀리초 필요 시 TIMESTAMP</td></tr>
+          <tr><td>대용량 문자</td><td class="mono">L</td><td><input class="input mono u-w-130" value="CLOB" data-tm="4" data-nodirty aria-label="대용량 문자 물리 타입"></td><td class="mono">—</td><td></td></tr>
         </tbody></table>
-        <div class="flex u-mt-8"><span class="caption muted">시스템을 등록할 때 그 DBMS의 기본 매핑(Oracle · PostgreSQL · Tibero · MySQL/MariaDB)을 불러온 뒤 고칠 수 있습니다.</span><span class="grow"></span><button class="btn sm" data-toast="기본 매핑으로 되돌렸습니다(Oracle 19c)" data-toast-type="info">기본값으로</button></div>
+        <div class="flex u-mt-8"><span class="caption muted">시스템마다 따로 저장됩니다. 등록할 때 그 DBMS의 기본 매핑을 불러오고, 다른 시스템으로 옮기거나 복제할 때 이 표로 컬럼 타입을 바꿉니다.</span><span class="grow"></span><button class="btn sm" id="tm-def">이 DBMS 기본값으로</button></div>
       </div></div>
     <div class="set-row wide"><div class="l"><b>시스템 컬럼</b><span>물리 반영 때 모든 테이블에 붙는 공통 컬럼. 표준 용어로만 지정</span></div>
       <div>
@@ -258,9 +258,16 @@ window.pageInit = function () {
   // SC-41: the system picker drives the system tab (schema · areas · model final approval); it does not change the top-bar system
   $('sys-pick').innerHTML = SYSLIST.map(s => `<option value="${s.code}">${s.name} · ${s.code}</option>`).join('');
   $('sys-pick').value = curSys().code;
+  /* 25 §7: data-type map per system — working copy TM, last saved TM0; counted in the save bar under 시스템 */
+  let TM0 = {}, TM = {};
+  const tmLoad = () => { TM0 = {}; SYSLIST.forEach(x => { TM0[x.code] = typeMapOf(x.code); }); TM = JSON.parse(JSON.stringify(TM0)); };
+  tmLoad();
+  const tmCode = () => $('sys-pick').value || curSys().code;
+  const tmFill = () => { const c = tmCode(); if (!TM[c]) { TM[c] = typeMapOf(c); TM0[c] = TM[c].slice(); } document.querySelectorAll('[data-tm]').forEach(f => { f.value = TM[c][+f.dataset.tm]; }); const sx = SYSLIST.find(x => x.code === c); if ($('tm-h') && sx) $('tm-h').textContent = sx.db; };
+  const tmDiffs = () => { const out = []; Object.keys(TM).forEach(c => (TM[c] || []).forEach((v, i) => { if (TM0[c] && v !== TM0[c][i]) out.push([c, i, TM0[c][i], v]); })); return out; };
   const drawSys = () => {
     const s = SYSLIST.find(x => x.code === $('sys-pick').value) || SYSLIST[0];
-    $('sys-desc').textContent = s.desc || '';
+    $('sys-desc').textContent = s.desc || ''; tmFill();
     $('sys-ver').value = `${s.dbms ? String(s.db || '').slice(s.dbms.length).trim() : String(s.db || '').replace(/^\S+\s*/, '')} · ${s.schema}`;
     $('sys-dbms').value = s.dbms || String(s.db || 'Oracle').split(' ')[0];
     const mine = Object.entries(areas).filter(([, m]) => (m.system || 'RQMS') === s.code);
@@ -269,6 +276,8 @@ window.pageInit = function () {
     const here = s.code === curSys().code;   // a new area is made in the system chosen in the top bar
     $('sys-area-add').hidden = !here; $('sys-area-hint').textContent = here ? '' : `상단 바에서 ${josa(s.name, '을/를')} 고른 뒤 시스템 홈에서 추가합니다`;
   };
+  document.querySelectorAll('[data-tm]').forEach(f => f.addEventListener('input', () => { const c = tmCode(); TM[c][+f.dataset.tm] = f.value.trim(); refreshBar(); }));
+  $('tm-def').onclick = () => { const c = tmCode(), sx = SYSLIST.find(x => x.code === c); TM[c] = typeMapDefault(sx && (sx.dbms || sx.db)); tmFill(); refreshBar(); toast(`${sx ? sx.db.split(' ')[0] : ''} 기본 매핑을 불러왔습니다 — 저장해야 반영됩니다`, 'info'); };
   $('sys-pick').onchange = drawSys; drawSys();
   /* ---- 25 C-3: [시스템 등록] · [시스템 정보] — DBMS fixed at registration; version · schema · name · description editable; archive / delete when no area is left ---- */
   { const esc3 = x => String(x == null ? '' : x).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
@@ -289,7 +298,8 @@ window.pageInit = function () {
       sum('sr-sum', P); if (P.length) return;
       const s = { code: v('sr-code'), name: v('sr-name'), desc: v('sr-desc'), dbms: $('sr-dbms').value, db: `${$('sr-dbms').value} ${v('sr-ver')}`.trim(), schema: v('sr-schema'), at: today2().slice(0, 10), by: ME.name };
       if (!updateSystems(list => { if (list.some(x => x.code === s.code || x.name === s.name)) return false; list.push(s); })) { sum('sr-sum', [['sr-code', '다른 탭에서 같은 코드 · 이름의 시스템을 먼저 등록했습니다']]); return; }   /* X-06 */
-      pushAudit({ act: '시스템 등록', target: `${s.name} (${s.code})`, why: `${s.db} · 스키마 ${s.schema} — DBMS는 바꿀 수 없음` });
+      saveTypeMap(s.code, typeMapDefault(s.dbms)); TM0[s.code] = typeMapOf(s.code); TM[s.code] = TM0[s.code].slice();
+      pushAudit({ act: '시스템 등록', target: `${s.name} (${s.code})`, why: `${s.db} · 스키마 ${s.schema} — DBMS는 바꿀 수 없음 · ${s.dbms} 기본 타입 매핑` });
       $('mo-sysreg').classList.remove('open'); fillPick(s.code);
       const from = curSys(); toast(`시스템 ‘${s.name}’을(를) 등록했습니다 — 옮길 업무 영역이 있으면 원래 시스템 홈의 영역 ⋯ › [다른 시스템으로 옮기기 · 복제]`, 'success', { label: `${from.name} 시스템 홈`, fn: () => { location.href = `system.html?system=${from.code}`; } }); };   /* X-08 */
     $('sys-info').onclick = () => { if (!can('settings')) return; const s = SYSLIST.find(x => x.code === $('sys-pick').value); if (!s) return;
@@ -336,7 +346,7 @@ window.pageInit = function () {
   const valOf = f => (f.type === 'checkbox' || f.type === 'radio') ? f.checked : f.value;
   let base = {}, sbTimer = 0;
   const snap = () => { base = {}; Object.keys(DT).forEach(t => { base[t] = fieldsOf(t).map(valOf); }); };
-  const diff = () => { const out = {}; Object.keys(DT).forEach(t => { const n = fieldsOf(t).filter((f, i) => valOf(f) !== base[t][i]).length; if (n) out[t] = n; }); return out; };
+  const diff = () => { const out = {}; Object.keys(DT).forEach(t => { const n = fieldsOf(t).filter((f, i) => valOf(f) !== base[t][i]).length; if (n) out[t] = n; }); const tn = tmDiffs().length; if (tn) out.sys = (out.sys || 0) + tn; return out; };
   const dirtyN = () => Object.values(diff()).reduce((a, b) => a + b, 0);
   const hhmm = () => { const d = new Date(); return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; };
   let lastMsg = ''; const setMsg = h => { if (h !== lastMsg) { lastMsg = h; $('sb-msg').innerHTML = h; } };
@@ -365,6 +375,7 @@ window.pageInit = function () {
   $('sb-revert').onclick = () => {
     Object.keys(DT).forEach(t => fieldsOf(t).forEach((f, i) => { if (f.type === 'checkbox' || f.type === 'radio') f.checked = base[t][i]; else f.value = base[t][i]; }));
     if (!document.getElementById('self-on').checked) document.getElementById('self-off').checked = true;   // the pair: 허용 off means 비허용
+    TM = JSON.parse(JSON.stringify(TM0)); tmFill();
     NUM.forEach(([id]) => checkNum(id)); fdT(); refreshBar(); focusTab(); toast('마지막 저장값으로 되돌렸습니다', 'info');
   };
   // [변경 보기] — every unsaved field: row name · field · before → after (24 guide: the bar says what changed)
@@ -374,6 +385,7 @@ window.pageInit = function () {
   function drawDiff() {
     const out = [];
     Object.keys(DT).forEach(t => fieldsOf(t).forEach((f, i) => { const v = valOf(f); if (v !== base[t][i]) out.push(`<li><b>${DT[t]}</b> · ${esc2(fName(f))}<span class="muted"> ${esc2(fShow(f, base[t][i]))} → </span><b>${esc2(fShow(f, v))}</b></li>`); }));
+    tmDiffs().forEach(([c, i, b0, v]) => out.push(`<li><b>${DT.sys}</b> · 데이터타입 매핑 · ${esc2((SYSLIST.find(x => x.code === c) || {}).name || c)} ${TM_ROWS[i][0]}<span class="muted"> ${esc2(b0)} → </span><b>${esc2(v || '(빈 값)')}</b></li>`));
     $('sb-pop').innerHTML = out.length ? `<div class="caption muted u-mb-8">저장하지 않은 변경 ${out.length}건</div><ul class="sb-list">${out.join('')}</ul>` : '<div class="caption muted">바뀐 값이 없습니다</div>';
   }
   const setPop = o => { $('sb-pop').classList.toggle('open', o); $('sb-diff').setAttribute('aria-expanded', o); if (o) { drawDiff(); $('sb-pop').focus(); } };
@@ -413,6 +425,7 @@ window.pageInit = function () {
     if (lineChg) { const fmChg = Object.entries(o.finalModel).filter(([a, v]) => ((JSON.parse(before).finalModel || {})[a] !== false) !== v).map(([a, v]) => (areas[a] ? areas[a].name : a) + ' ' + (v ? '켬' : '끔')); changes.push(`결재선: 사전 최종 승인 ${o.finalDict ? '켬' : '끔'}${fmChg.length ? ` · 모델 최종 승인 ${fmChg.join(', ')}` : ''}`); pushAudit({ act: '설정 변경 — 결재선', target: '기관·시스템 설정', why: changes[changes.length - 1] }); }
     { const ex = {}, rows = new Set(); Object.keys(DT).forEach(t => fieldsOf(t).forEach((f, i) => { if (!isExtra(f)) return; ex[extraKey(f)] = valOf(f); if (valOf(f) !== base[t][i]) rows.add(fName(f).split(' · ')[0]); }));
       if (rows.size) { dbmStore.set('dbm-set-extra', JSON.stringify(ex)); changes.push([...rows].join(' · ')); pushAudit({ act: '설정 변경 — ' + [...rows].join(' · '), target: '기관·시스템 설정', why: '기관 · 시스템 · 검수 기준 항목' }); } }
+    { const td = tmDiffs(); const bySys = [...new Set(td.map(x => x[0]))]; bySys.forEach(c => { saveTypeMap(c, TM[c].slice()); const nm2 = (SYSLIST.find(x => x.code === c) || {}).name || c; const w = td.filter(x => x[0] === c).map(([, i, b0, v]) => `${TM_ROWS[i][0]} ${b0} → ${v}`).join(' · '); changes.push(`데이터타입 매핑(${nm2}): ${w}`); pushAudit({ act: '설정 변경 — 데이터타입 매핑', target: `${nm2} (${c})`, why: w }); }); if (bySys.length) tmLoad(); }
     const p = getPolicy(); const wd = +$('pol-wd').value;
     if (wd !== (p.wordAbbr || 6)) { const nv = { ver: p.ver + 1, at: today2(), by: ME.name, wordAbbr: wd, hist: [{ ver: p.ver + 1, at: today2(), by: ME.name, what: `단어 영문약어명 ${p.wordAbbr || 6}자 → ${wd}자` }].concat(p.hist) }; savePolicy(nv); pushAudit({ act: `검수 기준 v${nv.ver}`, target: '검수 기준', why: nv.hist[0].what }); changes.push(`검수 기준 v${nv.ver}`); drawPol(); }
     toast(changes.length ? `저장했습니다 — ${changes.join(' · ')}. 다음 신청부터 적용되고 감사 로그에 남았습니다` : names.length ? `저장했습니다 — ${names.join(', ')}` : '바뀐 설정이 없습니다', changes.length || names.length ? 'success' : 'info');
@@ -426,7 +439,7 @@ window.pageInit = function () {
   if (qU && USERS[qU]) setTimeout(() => { const tb = document.querySelector('[data-tab="users"]'); if (tb) tb.click(); }, 0);
   const reqOf = id => { try { return JSON.parse(dbmStore.get('dbm-rolereq-' + id, 'null')); } catch (e) { return null; } };
   const RD = { modeler: '모델 편집·사전 신청', da: '1단계 승인·후보 큐', owner: '최종 승인', admin: '설정·사용자' };
-  const SYSOPT = ['전체'].concat(SYSLIST.map(s => s.name));
+  const SYSOPT = [['전체', '전체']].concat(SYSLIST.filter(s => !s.off).map(s => [s.code, s.name]));   /* 25 §7: value = system code, label = name */
   const lastOf = u => u.last || ({ kim: '방금', park: '11/17 18:20', lee: '11/18 08:40', hyun: '11/17 09:10', choi: '11/12 14:02' })[u.id] || '—';
   const stBadge = u => u.status === 'stopped' ? '<span class="badge">사용 중지</span>' : u.status === 'locked' ? '<span class="badge b-warning">잠김</span>' : '<span class="badge b-success">사용</span>';
   const adminCount = () => list().filter(u => u.status !== 'stopped' && (u.roles || []).includes('admin')).length;
@@ -456,7 +469,7 @@ window.pageInit = function () {
     const STN = { active: '사용', stopped: '중지', locked: '잠김' }, fl = q || ust;
     $('u-count').innerHTML = `<b class="u-fg">${fl ? `${list().length}명 중 ${rows.length}명` : `${rows.length}명`}</b>${fl ? ` <span class="fchips">${q ? `<button class="fchip" data-uclr="q" aria-label="검색어 지우기">검색: ${esc(q)}<i data-ic=x data-s=12></i></button>` : ''}${ust ? `<button class="fchip" data-uclr="st" aria-label="상태 필터 지우기">상태: ${STN[ust]}<i data-ic=x data-s=12></i></button>` : ''}<button class="btn ghost sm" data-uclr="all">모두 지우기</button></span>` : ''}`;
     liveCount(`${rows.length}명`);
-    $('u-rows').innerHTML = rows.map(u => `<tr class="click ${u.id === selU && mode !== 'new' ? 'sel' : ''} u-fg3" data-u="${u.id}" tabindex="0"${u.status === 'stopped' ? '' : ''}><td>${esc(u.name)}${u.id === ME.id ? ' <span class="caption muted">(나)</span>' : ''}</td><td class="mono">${esc(u.id)}</td><td>${esc(u.company || '—')} · ${esc(u.org || '—')}</td><td>${(u.roles || []).map(r => ROLE_NAME[r]).join(' · ') || '<span class="faint">조회만</span>'}</td><td>${(u.systems || []).join(', ')}</td><td>${u.auth === 'sso' ? 'SSO' : 'ID · 비밀번호'}</td><td>${stBadge(u)}</td><td class="mono caption">${lastOf(u)}</td></tr>`).join('') || '<tr class="er none"><td colspan="8" class="caption muted u-tc u-p-24"><span class="et">필터에 맞는 사용자가 없습니다</span><button class="btn sm ghost" data-uclr="all">모두 지우기</button></td></tr>';
+    $('u-rows').innerHTML = rows.map(u => `<tr class="click ${u.id === selU && mode !== 'new' ? 'sel' : ''} u-fg3" data-u="${u.id}" tabindex="0"${u.status === 'stopped' ? '' : ''}><td>${esc(u.name)}${u.id === ME.id ? ' <span class="caption muted">(나)</span>' : ''}</td><td class="mono">${esc(u.id)}</td><td>${esc(u.company || '—')} · ${esc(u.org || '—')}</td><td>${(u.roles || []).map(r => ROLE_NAME[r]).join(' · ') || '<span class="faint">조회만</span>'}</td><td>${sysNames(u.systems)}</td><td>${u.auth === 'sso' ? 'SSO' : 'ID · 비밀번호'}</td><td>${stBadge(u)}</td><td class="mono caption">${lastOf(u)}</td></tr>`).join('') || '<tr class="er none"><td colspan="8" class="caption muted u-tc u-p-24"><span class="et">필터에 맞는 사용자가 없습니다</span><button class="btn sm ghost" data-uclr="all">모두 지우기</button></td></tr>';
   }
   // ---- one form for register and edit
   const F = [['company', '회사명', true, '예: 한국데이터진흥원'], ['org', '부서명', true, '예: 데이터정책팀'], ['name', '이름', true, ''], ['phone', '전화번호', true, '010-1234-5678'], ['mail', '이메일', true, 'name@company.co.kr']];
@@ -491,7 +504,7 @@ window.pageInit = function () {
       <label class="flex u-mb-8"><input type="checkbox" id="uf-viewonly" data-nodirty ${u && !(u.roles || []).length ? 'checked' : ''} ${canRole || isNew ? '' : 'disabled'}> 조회만 <span class="caption faint">역할 없이 모델·사전을 보기만</span></label></div>
       <div class="err" id="ue-roles"></div>
       <div class="section-t">담당 시스템</div>
-      <div class="flex" style="flex-wrap:wrap;gap:4px 14px" role="group" aria-label="담당 시스템" aria-describedby="ue-systems">${SYSOPT.map(s => `<label class="flex caption"><input type="checkbox" data-sys="${esc(s)}" data-nodirty ${u ? ((u.systems || []).includes(s) ? 'checked' : '') : (s === curSys().name ? 'checked' : '')} ${ME.has('admin') ? '' : 'disabled'}> ${esc(s)}</label>`).join('')}</div>
+      <div class="flex" style="flex-wrap:wrap;gap:4px 14px" role="group" aria-label="담당 시스템" aria-describedby="ue-systems">${SYSOPT.map(([c, n]) => `<label class="flex caption"><input type="checkbox" data-sys="${esc(c)}" data-nodirty ${u ? ((u.systems || []).map(sysCodeOf).includes(c) ? 'checked' : '') : (c === curSys().code ? 'checked' : '')} ${ME.has('admin') ? '' : 'disabled'}> ${esc(n)}</label>`).join('')}</div>
       <div class="err" id="ue-systems"></div>`;
   }
   function draw() {
@@ -510,7 +523,7 @@ window.pageInit = function () {
         ${reqOf(u.id) ? `<div class="banner info u-mb-12"><i data-ic=info></i><div class="grow"><b>역할 변경 요청</b> — ${esc(reqOf(u.id).role)} · ${esc(reqOf(u.id).at)}<br><span class="caption">${esc(reqOf(u.id).why)}</span></div><button class="btn sm" id="rq-deny">거절</button></div>` : ''}
         <div class="usum" id="uf-sum" role="alert"></div>${formHtml(u, false)}
         <div class="section-t">할 수 있는 일 <span class="caption muted">권한표 기준 · 저장된 역할과 담당 시스템</span></div>
-        <ul class="caption" style="margin:0;padding-left:18px;line-height:20px">${PERMS.filter(p => canUser(u, p.id) && !p.roles.includes('*')).map(p => `<li>${p.n}${p.id.startsWith('appr.') && p.scope === 'sys' ? ` <span class="faint">— 사전 신청은 기관 전체 · 모델 확정은 ${(u.systems || []).includes('전체') ? '모든 시스템' : (u.systems || []).join(', ')}</span>` : p.scope === 'sys' && !(p.adminAll && (u.roles || []).includes('admin')) ? ` <span class="faint">— ${(u.systems || []).includes('전체') ? '모든 시스템' : (u.systems || []).join(', ')}</span>` : ''}</li>`).join('') || '<li>보기만 (모델 · 사전 · DDL · 산출물)</li>'}</ul>
+        <ul class="caption" style="margin:0;padding-left:18px;line-height:20px">${PERMS.filter(p => canUser(u, p.id) && !p.roles.includes('*')).map(p => `<li>${p.n}${p.id.startsWith('appr.') && p.scope === 'sys' ? ` <span class="faint">— 사전 신청은 기관 전체 · 모델 확정은 ${(u.systems || []).includes('전체') ? '모든 시스템' : sysNames(u.systems)}</span>` : p.scope === 'sys' && !(p.adminAll && (u.roles || []).includes('admin')) ? ` <span class="faint">— ${(u.systems || []).includes('전체') ? '모든 시스템' : sysNames(u.systems)}</span>` : ''}</li>`).join('') || '<li>보기만 (모델 · 사전 · DDL · 산출물)</li>'}</ul>
         ${ME.has('admin') && !self ? `<div class="dz"><div class="section-t u-mt-0">계정 관리</div><div class="flex u-wrap u-gap-8">
           ${u.auth !== 'sso' ? '<button class="btn sm" id="ua-reset">비밀번호 초기화</button>' : ''}
           ${u.status === 'locked' ? '<button class="btn sm" id="ua-unlock">잠금 해제</button>' : ''}
@@ -544,7 +557,7 @@ window.pageInit = function () {
       if (!self && ME.has('admin') && u.roles.includes('admin') && !roles.includes('admin') && adminCount() <= 1) { toast('마지막 Admin의 Admin 역할은 뺄 수 없습니다 — 다른 사용자에게 먼저 주세요', 'danger'); return; }
       const prevRoles = u.roles.slice();
       Object.assign(u, { company: v('company'), org: v('org'), name: v('name'), phone: v('phone'), mail: v('mail').toLowerCase() });
-      const prevSys = (u.systems || []).slice();
+      const prevSys = (u.systems || []).map(sysCodeOf);
       if (!self && can('users')) { u.roles = roles; u.systems = systems; }
       if (prevSys.some(s => !u.systems.includes(s) && !u.systems.includes('전체'))) { revokeSessions(u); saveUsers(); }
       if (JSON.stringify([u.company, u.org, u.name, u.phone, u.mail, u.roles, u.systems]) === before) { toast('바뀐 내용이 없습니다', 'info'); return; }
@@ -552,7 +565,7 @@ window.pageInit = function () {
       const roleChg = prevRoles.join() !== u.roles.join();
       if (roleChg && prevRoles.some(r => !u.roles.includes(r))) { revokeSessions(u); saveUsers(); }   // a role taken away ends that person's open sessions
       pushAudit({ act: roleChg ? '역할 변경' : '사용자 정보 수정', target: `${u.name} (${u.id})`, why: roleChg ? `${prevRoles.map(r => ROLE_NAME[r]).join('·') || '조회만'} → ${u.roles.map(r => ROLE_NAME[r]).join('·') || '조회만'}` : '회사 · 부서 · 이름 · 연락처 · 담당 시스템' });
-      const rq0 = reqOf(u.id), sysMet = !!(rq0 && rq0.key && rq0.key.startsWith('sys:') && (u.systems || []).includes(rq0.key.slice(4)));
+      const rq0 = reqOf(u.id), sysMet = !!(rq0 && rq0.key && rq0.key.startsWith('sys:') && (u.systems || []).map(sysCodeOf).includes(sysCodeOf(rq0.key.slice(4))));
       if ((roleChg && !(rq0 && rq0.key && rq0.key.startsWith('sys:'))) || sysMet) { const rq = rq0; if (rq) { dbmStore.set('dbm-rolereq-' + u.id, 'null'); pushNotif({ to: [u.id], k: 'res', t: `역할 변경 요청 처리됨 — ${u.roles.map(r => ROLE_NAME[r]).join('·')}`, m: `${ME.name} · 요청: ${rq.role}`, href: 'mypage.html' }); } }
       draw(); toast(`${u.name} 정보를 저장했습니다 · 감사 로그에 기록`, 'success'); warnGaps();
     };

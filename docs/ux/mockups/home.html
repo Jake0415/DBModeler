@@ -86,7 +86,7 @@ window.pageInit = function () {
   });
   const tot = AREAS.reduce((n, a) => n + a.C.tot, 0), okN = AREAS.reduce((n, a) => n + a.C.tot - a.C.bad, 0);
   const RATE = tot ? Math.floor(okN / tot * 100) : 0;
-  const myAreas = AREAS.filter(a => ME.systems.includes('전체') || ME.systems.includes(a.sys));
+  const myAreas = AREAS.filter(a => inScope(ME, a.sys));
   const areaList = lead === 'modeler' ? myAreas : AREAS;
 
   /* ---- today's work: one table, others waiting on me first ---- */

@@ -127,7 +127,7 @@ window.pageInit = function () {
   }
   $('p-phone').addEventListener('input', () => { const d = $('p-phone').value.replace(/\D/g, '').slice(0, 11); const a = d.startsWith('02') ? 2 : 3; $('p-phone').value = d.length <= a ? d : d.length < a + 5 ? d.slice(0, a) + '-' + d.slice(a) : d.slice(0, a) + '-' + d.slice(a, d.length - 4) + '-' + d.slice(-4); });
   $('p-roles').innerHTML = ME.roles.map(r => `<span class="badge">${ROLE_NAME[r]}</span>`).join(' ');
-  $('p-sys').textContent = '담당 시스템: ' + ME.systems.join(', ');
+  $('p-sys').textContent = '담당 시스템: ' + sysNames(ME.systems);
   const docs = getDocs().filter(d => d.req === ME.id);
   const f = d => ({ live: 'ing', fix: 'fix', done: 'end' })[docGroup(d)];   // same rule as the user menu (CL14-03)
   { const n = k => docs.filter(d => f(d) === k).length;
@@ -167,12 +167,12 @@ window.pageInit = function () {
     return `표시 이름 ‘${v}’ · 연락처`; };
   // 역할 변경 요청 (from 403 too): ?req=da&what=… pre-fills; request goes to Admin as a notification and is kept on this page
   // roles to add, plus systems in charge (a modeler outside a system is sent here from the model screen)
-  const RQ = [['owner', '기관 담당자 추가'], ['da', 'DA 추가'], ['modeler', '모델러 추가'], ['admin', 'Admin 추가']].filter(([r]) => !ME.roles.includes(r)).concat(SYSLIST.filter(s => !(ME.systems || []).includes(s.name) && !(ME.systems || []).includes('전체')).map(s => ['sys:' + s.name, '담당 시스템 추가 — ' + s.name])).concat([['off', '역할 해제']]);
+  const RQ = [['owner', '기관 담당자 추가'], ['da', 'DA 추가'], ['modeler', '모델러 추가'], ['admin', 'Admin 추가']].filter(([r]) => !ME.roles.includes(r)).concat(activeSystems().filter(s => !inScope(ME, s.code)).map(s => ['sys:' + s.code, '담당 시스템 추가 — ' + s.name])).concat([['off', '역할 해제']]);
   $('rr-role').innerHTML = RQ.map(([r, n]) => `<option value="${r}">${n}</option>`).join('');
   const q = new URLSearchParams(location.search);
   const drawRR = () => { const r = JSON.parse(dbmStore.get('dbm-rolereq-' + ME.id, 'null')); $('rr-state').innerHTML = r ? `<span class="badge b-info">요청 중</span> ${r.role} · ${r.at} · 관리자 확인 대기 <a href="#" id="rr-cancel">요청 취소</a>` : ''; const c = $('rr-cancel'); if (c) c.onclick = e => { e.preventDefault(); dbmStore.set('dbm-rolereq-' + ME.id, 'null'); drawRR(); toast('역할 변경 요청을 취소했습니다', 'info'); }; };
   drawRR();
-  if (q.get('req') === 'sys' && q.get('sys')) { const k = 'sys:' + q.get('sys'); if (RQ.some(([r]) => r === k)) { $('rr-role').value = k; $('rr-why').value = q.get('sys') + ' 모델 편집 필요'; $('rr-why').dispatchEvent(new Event('input', { bubbles: true })); setTimeout(() => document.querySelector('[data-open="mo-rolereq"]').click(), 0); } }
+  if (q.get('req') === 'sys' && q.get('sys')) { const k = 'sys:' + sysCodeOf(q.get('sys')); if (RQ.some(([r]) => r === k)) { $('rr-role').value = k; $('rr-why').value = sysNameOf(q.get('sys')) + ' 모델 편집 필요'; $('rr-why').dispatchEvent(new Event('input', { bubbles: true })); setTimeout(() => document.querySelector('[data-open="mo-rolereq"]').click(), 0); } }
   else if (q.get('req')) { const need = q.get('req'); const m = RQ.find(([r]) => need.toLowerCase().includes(r) || (need.includes('DA') && r === 'da') || (need.includes('Admin') && r === 'admin') || (need.includes('기관') && r === 'owner')); if (m) $('rr-role').value = m[0]; $('rr-why').value = q.get('what') ? `${q.get('what')} 화면 사용 필요` : ''; $('rr-why').dispatchEvent(new Event('input', { bubbles: true })); setTimeout(() => document.querySelector('[data-open="mo-rolereq"]').click(), 0); }
   $('rr-go').onclick = () => { const why = $('rr-why').value.trim(); if (!why) return; const role = $('rr-role').selectedOptions[0].textContent; dbmStore.set('dbm-rolereq-' + ME.id, JSON.stringify({ role, key: $('rr-role').value, why, at: nowStr() })); pushNotif({ to: Object.values(USERS).filter(u => u.status !== 'stopped' && canUser(u, 'users')).map(u => u.id), k: 'sys', t: `역할 · 담당 변경 요청 — ${ME.name}: ${role}`, m: why, href: `settings.html?user=${ME.id}` }); document.getElementById('mo-rolereq').classList.remove('open'); drawRR(); toast(`${josa(role, '을/를')} 관리자에게 요청했습니다 — 처리되면 알림으로 알려 드립니다`, 'success'); };
   const t = dbmStore.get('dbm-theme', 'light');

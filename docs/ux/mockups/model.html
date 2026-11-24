@@ -244,6 +244,7 @@ window.pageInit = function () {
   const E = _seed.E, R = _seed.R, M = _seed.M;
   // views (12 §3 · T3): part of the area's model data — positions per view, which entities are placed, hidden relation lines
   const V = viewsOf(AREA);
+  const MOVES = [];   /* 25 §7: entity moves of this version travel with the working copy and the submitted copy (not a global log) */
   let curView = q.get('view') || dbmStore.get('dbm-view-' + AREA, 'all');
   const vCur = () => V.find(v => v.id === curView) || V[0];
   const inView = e => curView === 'all' || ((vCur() || {}).ents || []).includes(e.id);
@@ -308,7 +309,7 @@ window.pageInit = function () {
     // the saved copy never carries an open inline edit: no edit/orig marks, no unnamed new attribute, no unnamed new entity (other screens read it)
     const E2 = E.filter(e => !e.fresh).map(e => Object.assign({}, e, { a: e.a.filter(a => !(a.edit && !a.n)).map(a => { const c = Object.assign({}, a); delete c.edit; delete c.orig; return c; }) }));
     // ERD P1-7: the revision and '저장됨' move only after the write landed — a failed write keeps the edit on screen and offers a retry
-    const wrote = !window.__failSave && setModelData(AREA, VER, { E: E2, R, M, V, rev: myRev + 1 });
+    const wrote = !window.__failSave && setModelData(AREA, VER, { E: E2, R, M, V, moves: MOVES, rev: myRev + 1 });
     if (!wrote) { saveFailed = true; setSave('err', '저장 안 됨', true); agLive('저장하지 못했습니다'); if (!saveFailToast) { saveFailToast = true; toast('저장하지 못했습니다(브라우저 저장 공간 부족 등) — 편집 내용은 화면에 남아 있습니다. [다시 시도]를 누르세요', 'danger', { label: '다시 시도', fn: retrySave }); } return; }
     myRev++; saveFailed = false; saveFailToast = false;
     const n = new Date(); setSave('ok', `저장됨 · ${String(n.getHours()).padStart(2, '0')}:${String(n.getMinutes()).padStart(2, '0')}`);
@@ -982,7 +983,7 @@ window.pageInit = function () {
     if (!can('model.submit', { area: AREA })) { toast('확정 신청 권한이 없습니다 — 담당 시스템의 모델러만 신청합니다', 'danger'); return; }
     { const gaps = lineGaps({ type: 'model', area: AREA, req: ME.id }); if (gaps.length) { toast(`${sysOfArea(AREA)} 모델을 처리할 ${gaps.map(s => STEP_NAME[s]).join(' · ')} 담당자가 없습니다 — 신청하면 결재가 멈춥니다. Admin에게 담당 지정을 요청하세요`, 'danger'); return; } }
     // always a NEW document (requester = current user); same area+version in progress → no duplicate (R2)
-    const r = createDoc({ type: 'model', area: AREA, ver: VER, title: `${curSys().name} › ${LOCK.model.name} v${VER} 확정`, n: E.length, reason: $('cf-why').value.trim(), cc: ccList.slice(), key: `model:${AREA}:v${VER}`, snap: lastComp, model: JSON.parse(JSON.stringify({ E, R, M, V })), sysAt: { code: curSys().code, db: curSys().db, schema: curSys().schema } });   // the document keeps the model as submitted
+    const r = createDoc({ type: 'model', area: AREA, ver: VER, title: `${curSys().name} › ${LOCK.model.name} v${VER} 확정`, n: E.length, reason: $('cf-why').value.trim(), cc: ccList.slice(), key: `model:${AREA}:v${VER}`, snap: lastComp, model: JSON.parse(JSON.stringify({ E, R, M, V, moves: MOVES })), sysAt: { code: curSys().code, db: curSys().db, schema: curSys().schema } });   // the document keeps the model as submitted
     flash(r.dup ? `이미 진행 중인 확정 신청 ${r.doc.id}이 있습니다` : `확정 신청 ${r.doc.id} — 1단계 담당 ${approversFor(r.doc, 'da').length}명에게 알렸습니다. 결재가 끝날 때까지 이 업무 영역은 조회 전용입니다`, 'info');
     go(`model.html?area=${AREA}`);
   };
@@ -1685,7 +1686,7 @@ window.pageInit = function () {
   // ---- states
   const RECIP_WHY = '‘수령자’ 단어 후보(REQ-2026-0012) 승인 전까지 임시 유지';
   // data source (S5): ?state= preset (demo, not saved) → document snapshot (review/confirmed/snap) → saved working data → seed
-  const loadData = d => { if (!d) return false; E.splice(0, E.length, ...JSON.parse(JSON.stringify(d.E))); R.splice(0, R.length, ...JSON.parse(JSON.stringify(d.R))); M.splice(0, M.length, ...JSON.parse(JSON.stringify(d.M || [])));
+  const loadData = d => { if (!d) return false; MOVES.splice(0, MOVES.length, ...JSON.parse(JSON.stringify(d.moves || []))); E.splice(0, E.length, ...JSON.parse(JSON.stringify(d.E))); R.splice(0, R.length, ...JSON.parse(JSON.stringify(d.R))); M.splice(0, M.length, ...JSON.parse(JSON.stringify(d.M || [])));
     if (d.V && d.V.length) V.splice(0, V.length, ...JSON.parse(JSON.stringify(d.V))); return true; };   // a copy without views keeps the seed views
   const snapDoc = SNAP ? SNAPDOC : (locked ? LOCK.doc : null);
   const REVIEW_HIDDEN = !SNAP && LOCK.state === 'review' && LOCK.doc && !canSeeDoc(LOCK.doc);
@@ -1828,7 +1829,7 @@ window.pageInit = function () {
     document.body.classList.add('viewonly'); if (outOfScope) $('ban-view').style.display = 'flex';
     if (!document.body.classList.contains('locked')) { setSave('run', '조회 전용'); $('savest').title = `조회 전용 — 모델 편집은 모델러 역할만 할 수 있습니다 · 지금 역할: ${ME.roles.map(r => ROLE_NAME[r]).join(', ') || '조회만'}`; }
     if ($('ban-view-r')) $('ban-view-r').textContent = ME.roles.map(r => ROLE_NAME[r]).join(', ') || '조회만';
-    if (outOfScope) $('ban-view').querySelector('.grow').innerHTML = `<b>조회 전용</b> — 내 담당 시스템(${(ME.systems || []).join(', ') || '없음'})에 <b>${sysOfArea(AREA)}</b>${josa(sysOfArea(AREA), '이/가').slice(-1)} 없습니다. <a href="mypage.html?req=sys&sys=${encodeURIComponent(sysOfArea(AREA))}">담당 시스템 추가 요청</a>`;
+    if (outOfScope) $('ban-view').querySelector('.grow').innerHTML = `<b>조회 전용</b> — 내 담당 시스템(${sysNames(ME.systems) || '없음'})에 <b>${sysOfArea(AREA)}</b>${josa(sysOfArea(AREA), '이/가').slice(-1)} 없습니다. <a href="mypage.html?req=sys&sys=${encodeURIComponent(sysOfArea(AREA))}">담당 시스템 추가 요청</a>`;
   }
   drawParticipants();
   if (q.get('focus') && ent(q.get('focus'))) setTimeout(() => { focusEnt(q.get('focus')); if (q.get('attr')) { treeOrigin = true; treeAttr = +q.get('attr'); render(); hlAttr(treeAttr); } }, 120);
@@ -2261,8 +2262,9 @@ window.pageInit = function () {
       const ix = E.findIndex(x => x.id === id); const moved = JSON.parse(JSON.stringify(E[ix])); E.splice(ix, 1);
       for (let i = R.length - 1; i >= 0; i--) if (R[i].f === id || R[i].t === id) R.splice(i, 1);
       V.forEach(v => { if (v.ents) v.ents = v.ents.filter(x => x !== id); if (v.pos) delete v.pos[id]; });
+      MOVES.push({ id, n: e.n, p: e.p, to: t, toName: getModel(t).name, at: nowStr(), by: ME.name });
       dirty = true; saveData();
-      if (saveFailed || revConflict) { restore(); dirty = false; render(); toast('이 영역을 저장하지 못해 옮기지 않았습니다 — 새로고침한 뒤 다시 하세요', 'danger'); close(); return; }
+      if (saveFailed || revConflict) { restore(); MOVES.pop(); dirty = false; render(); toast('이 영역을 저장하지 못해 옮기지 않았습니다 — 새로고침한 뒤 다시 하세요', 'danger'); close(); return; }
       // 2) target
       const tv = getModel(t).ver, td = modelOf(t, tv); ['E', 'R', 'M', 'V'].forEach(k => { td[k] = td[k] || []; });
       let nid = id; const refHere = td.E.find(x => x.ref && x.refArea === AREA && (x.refId || x.id) === id);
@@ -2272,8 +2274,8 @@ window.pageInit = function () {
       if (refHere) { c.x = refHere.x != null ? refHere.x : c.x; c.y = refHere.y != null ? refHere.y : c.y; }
       const used = new Set(td.R.map(r => r.g).filter(Boolean));   // X-02: self relations keep their FK group, renamed if the target already uses it
       p.selfR.forEach(r => { const nr = Object.assign(JSON.parse(JSON.stringify(r)), { f: nid, t: nid }); if (nr.g && used.has(nr.g)) { const g2 = nr.g + '_' + nid; c.a.forEach(a => { if (a.fkg === nr.g) a.fkg = g2; }); nr.g = g2; } td.R.push(nr); });
-      td.E.push(c);
-      if (!setModelData(t, tv, Object.assign(td, { rev: (td.rev || 0) + 1 }))) { restore(); dirty = true; saveData(); render(); toast('대상 영역에 저장하지 못해 옮기지 않았습니다 — 이 영역은 원래대로 되돌렸습니다', 'danger'); close(); return; }
+      td.E.push(c); td.moves = (td.moves || []).concat([{ id: nid, n: e.n, p: e.p, from: AREA, fromName: getModel(AREA).name, at: nowStr(), by: ME.name }]);
+      if (!setModelData(t, tv, Object.assign(td, { rev: (td.rev || 0) + 1 }))) { restore(); MOVES.pop(); dirty = true; saveData(); render(); toast('대상 영역에 저장하지 못해 옮기지 않았습니다 — 이 영역은 원래대로 되돌렸습니다', 'danger'); close(); return; }
       // 3) references in other editable areas follow the new source
       const followed = [], later = [];
       Object.entries(getAllModels()).filter(([k]) => k !== AREA && k !== t).forEach(([k, m]) => { let st = null; try { st = modelOf(k, m.ver); } catch (er) {} if (!st) return; const rs = (st.E || []).filter(x => x.ref && x.refArea === AREA && (x.refId || x.id) === id); if (!rs.length) return;
