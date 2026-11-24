@@ -224,15 +224,15 @@
     { id: 'risk', n: '리스크기본', p: 'RISK_M', c: 'M', x: 60, y: 640, px: 60, py: 700, a: [
       { n: '리스크ID', p: 'RISK_ID', t: 'VARCHAR2(10)', pk: 1, nn: 1, s: 'ok' }, { n: '리스크명', p: 'RISK_NM', t: 'VARCHAR2(100)', s: 'ok' }, { n: '리스크등급코드', p: 'RISK_GRD_CD', t: 'CHAR(1)', s: 'ok' }] }
   ], R: [
-    { f: 'prj', t: 'rqrm', k: 'nonid', name: '수행한다' },
-    { f: 'prj', t: 'mbr', k: 'id', name: '구성된다' },
-    { f: 'emp', t: 'mbr', k: 'id', name: '참여한다' },
-    { f: 'rqrm', t: 'dlv', k: 'nonid', name: '산출한다' },
-    { f: 'dlv', t: 'hist', k: 'id', name: '기록된다', noFk: '이력 테이블 · 운영 DB에서 FK를 쓰지 않음(대량 적재)' },
-    { f: 'rqrm', t: 'risk', k: 'mn', name: '관련된다' }
+    { f: 'prj', t: 'rqrm', k: 'nonid', name: '수행' },
+    { f: 'prj', t: 'mbr', k: 'id', name: '구성' },
+    { f: 'emp', t: 'mbr', k: 'id', name: '참여' },
+    { f: 'rqrm', t: 'dlv', k: 'nonid', name: '산출' },
+    { f: 'dlv', t: 'hist', k: 'id', name: '기록', noFk: '이력 테이블 · 운영 DB에서 FK를 쓰지 않음(대량 적재)' },
+    { f: 'rqrm', t: 'risk', k: 'mn', name: '관련' }
   ], M: [{ id: 'm1', mode: 'L', x: 820, y: 330, text: '산출물이력 순번 체계는 DA 확인 후 확정 (11/18 회의)', by: '박설계' }] },
     risk: { E: [{ id: 'risk', n: '리스크기본', p: 'RISK_M', c: 'M', x: 60, y: 60, px: 60, py: 60, a: [{ n: '리스크ID', p: 'RISK_ID', t: 'VARCHAR2(10)', pk: 1, nn: 1, s: 'ok' }, { n: '리스크명', p: 'RISK_NM', t: 'VARCHAR2(100)', s: 'ok' }, { n: '리스크등급코드', p: 'RISK_GRD_CD', t: 'CHAR(1)', s: 'ok' }] },
-      { id: 'rsp', n: '리스크대응내역', p: 'RISK_RSPNS_D', c: 'A', x: 420, y: 60, px: 460, py: 60, a: [{ n: '리스크ID', p: 'RISK_ID', t: 'VARCHAR2(10)', pk: 1, fk: 1, nn: 1, s: 'ok' }, { n: '대응순번', p: 'RSPNS_SN', t: 'NUMBER(5)', pk: 1, nn: 1, s: 'ok' }, { n: '대응내용', p: 'RSPNS_CN', t: 'VARCHAR2(1000)', s: 'ok' }] }], R: [{ f: 'risk', t: 'rsp', k: 'id', name: '대응한다' }], M: [] }
+      { id: 'rsp', n: '리스크대응내역', p: 'RISK_RSPNS_D', c: 'A', x: 420, y: 60, px: 460, py: 60, a: [{ n: '리스크ID', p: 'RISK_ID', t: 'VARCHAR2(10)', pk: 1, fk: 1, nn: 1, s: 'ok' }, { n: '대응순번', p: 'RSPNS_SN', t: 'NUMBER(5)', pk: 1, nn: 1, s: 'ok' }, { n: '대응내용', p: 'RSPNS_CN', t: 'VARCHAR2(1000)', s: 'ok' }] }], R: [{ f: 'risk', t: 'rsp', k: 'id', name: '대응' }], M: [] }
   };
   /* FK of a relation: ok (constraint made) · ex (left out with a reason) · miss (no FK column / table name) · mn (resolve first) */
   window.fkOf = (r, E) => {

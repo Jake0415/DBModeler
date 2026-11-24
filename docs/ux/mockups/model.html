@@ -1225,7 +1225,7 @@ window.pageInit = function () {
     if (ent(id)) { toast(ent(id).ref ? '이미 이 영역에서 참조 중입니다' : `이 업무 영역에 ‘${ent(id).n}’이(가) 이미 있어 참조로 가져올 필요가 없습니다`, 'info'); return; }
     snap(); E.push(lib[id]);
     const emp = ent('emp'), linkEmp = id === 'dept' && emp && !emp.ref && !emp.a.some(a => a.p === 'DEPT_CD');   // only when this area has its own 사원기본 without a 부서코드 yet
-    if (linkEmp) { R.push({ f: 'dept', t: 'emp', k: 'nonid', name: '소속된다' }); emp.a.push({ n: '부서코드', p: 'DEPT_CD', t: 'VARCHAR2(10)', fk: 1, s: 'ok' }); }
+    if (linkEmp) { R.push({ f: 'dept', t: 'emp', k: 'nonid', name: '소속' }); emp.a.push({ n: '부서코드', p: 'DEPT_CD', t: 'VARCHAR2(10)', fk: 1, s: 'ok' }); }
     $('b-sys').click(); sel = id; showRP(); render();
     toast(`공통 영역의 ‘${lib[id].n}’을(를) 참조로 가져왔습니다 — 원본은 공통 영역에서만 수정됩니다${linkEmp ? ' · 사원기본에 부서코드(FK) 추가' : ''}`);
   };
@@ -1986,7 +1986,7 @@ window.pageInit = function () {
       <div class="relhd"><b>${hx(p.n)}</b><svg width="96" height="14" aria-hidden="true"><path d="M2,7 H94" stroke="var(--fg-2)" stroke-width="1.2" ${ident || r.k === 'one' ? '' : 'stroke-dasharray="5 4"'} marker-start="${st.opt === 'may' ? 'url(#m-one0)' : 'url(#m-one)'}" marker-end="${r.k === 'mn' ? 'url(#m-many)' : ({ '0n': 'url(#m-many0)', '1n': 'url(#m-many)', '01': 'url(#m-one0)', '1': 'url(#m-one)' })[st.card]}"/></svg><b>${hx(c.n)}</b>${r.xg ? '<span class="badge">배타</span>' : ''}</div>
       ${ro ? `<div class="caption muted u-mb-8">조회 전용 — ${c.ref ? '참조 엔터티의 관계는 원본 영역에서 고칩니다' : review ? '결재 중인 제출본이라 고칠 수 없습니다' : confirmed ? '확정본이라 고칠 수 없습니다 · 새 버전에서 고치세요' : '이 영역을 고칠 권한이 없습니다'}.</div>` : ''}
       <div class="section-t">모델</div>
-      <div class="field"><label for="rel-name">관계명 (동사구)</label><input class="input" id="rel-name" value="${hx(r.name || '')}" placeholder="예: ${hx(p.n.replace(/(기본|내역|이력)$/, ''))}이(가) ${hx(c.n.replace(/(기본|내역|이력)$/, ''))}을(를) 가진다"${D}></div>
+      <div class="field"><label for="rel-name">관계명</label><input class="input" id="rel-name" value="${hx(r.name || '')}" placeholder="예: 소속 · 담당 · 포함 · 주문" aria-describedby="rel-name-h"${D}><span class="help" id="rel-name-h">명사로 짧게 — 두 엔터티가 어떤 관계인지(소속 · 담당 · 포함). 같은 두 엔터티 사이 관계가 둘 이상이면 역할로 구분(출발 · 도착)</span></div>
       ${r.k === 'mn' ? '' : `<div class="field"><label id="rel-k-l">유형</label><div class="seg" role="group" aria-labelledby="rel-k-l"><button type="button" data-rk="nonid" aria-pressed="${!ident}"${!ident ? ' class="on"' : ''}${D || (self ? ' disabled title="재귀 관계는 비식별입니다"' : '')}>비식별</button><button type="button" data-rk="id" aria-pressed="${ident}"${ident ? ' class="on"' : ''}${D || (self ? ' disabled title="재귀 관계는 비식별입니다"' : '')}>식별</button></div><span class="help">식별: FK가 ${hx(c.n)}의 식별자(PK)에 들어가고 손자까지 이어집니다</span></div>
       <div class="field"><label id="rel-cs-l">카디널리티 · 선택성</label>
         <div class="relsent" aria-labelledby="rel-cs-l">${hx(p.n)} 1개는 ${hx(c.n)}을(를) <select class="input" data-rcard aria-label="자식 쪽 개수"${D}>${Object.entries(KCARD).map(([v, l]) => `<option value="${v}"${st.card === v ? ' selected' : ''}>${l}</option>`).join('')}</select> 가진다</div>
