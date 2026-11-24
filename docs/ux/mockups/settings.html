@@ -9,35 +9,11 @@
 <link rel="stylesheet" href="assets/app.css">
 <script src="assets/app.js"></script>
 <style>
-  /* 24-settings-layout-guide P1: every tab uses the full body width (no 960 box); a row = label 240 │ input ≤760 │ aside (last change · when it applies · impact · links) */
-  .set-wrap { max-width:none; }
-  .set-row { display:grid; grid-template-columns:240px minmax(480px, 760px) minmax(280px, 1fr); column-gap:24px; padding:16px 0; border-bottom:1px solid var(--border); align-items:start; }
-  .set-row > .aside { grid-column:3; margin-left:8px; max-width:520px; display:flex; flex-direction:column; gap:4px; font-size:12px; line-height:18px; color:var(--fg-2); }
-  .set-row > .aside .lastchg:empty { display:none; }
-  .set-row > .aside .warn { color:var(--ds-amber-900); display:flex; gap:4px; align-items:flex-start; }
-  .set-row > .aside .btn { align-self:flex-start; margin-top:4px; }
-  /* a row holding a table uses the input + aside columns together, up to 1200 */
-  .set-row.wide { grid-template-columns:240px minmax(480px, 1200px) 1fr; }
-  .set-row.wide > :nth-child(2) { grid-column:2; min-width:0; }
-  .set-row.wide > .aside { grid-column:2; margin:8px 0 0; max-width:none; }
-  .set-tbl { max-width:1200px; }
-  /* 24 guide P2: topic groups inside a tab (15px/600, 32 above · 8 below, no rule under it) */
-  .set-sec { font-size:15px; font-weight:600; margin:32px 0 8px; } .set-sec.first { margin-top:8px; }
   /* permission matrix: role columns fixed, the note column takes the rest (it was 694px of 1870) */
   #perm-tbl { table-layout:fixed; } #perm-tbl .pm-c1 { width:480px; } #perm-tbl .pm-cr { width:120px; }
   .tl-cards { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:12px; }
-  .set-row .l b { display:block; font-size:14px; } .set-row .l span { font-size:12px; color:var(--fg-3); }
   .tline { display:grid; grid-template-columns:28px 1fr 180px 90px; gap:8px; align-items:center; padding:6px 0; }
-  .set-row .lastchg { display:block; font-size:12px; color:var(--fg-2); }
   .self-opt { display:grid; gap:8px; } .self-opt label { gap:8px; align-items:flex-start; cursor:pointer; } .self-opt input { margin-top:3px; }
-  .set-row .l .lastchg:empty { display:none; }
-  .tabs .tdot { display:none; width:6px; height:6px; margin:0 0 0 6px; vertical-align:2px; }
-  .tabs button.dirty .tdot { display:inline-block; }
-  .setbar { display:none; align-items:center; gap:8px; height:56px; padding:0 20px; border-top:1px solid var(--ds-gray-400); background:var(--surface); flex:none; }
-  .setbar.show { display:flex; }
-  .menu.sb-pop { position:absolute; bottom:40px; left:0; width:440px; max-height:320px; overflow:auto; padding:12px; background:var(--surface); border-radius:var(--r-xl); box-shadow:var(--menu-shadow); display:none; z-index:40; }
-  .menu.sb-pop.open { display:block; }
-  .sb-list { margin:0; padding-left:16px; display:grid; gap:6px; font-size:13px; }
   .authbar { display:flex; align-items:center; gap:12px; flex-wrap:wrap; padding:12px 16px; margin-bottom:12px; border-radius:var(--r-lg); box-shadow:var(--ring); background:var(--surface); }
   .authbar .k { font-weight:500; } .authbar .grow { flex:1; }
   .ufield { margin-bottom:12px; } .ufield label { display:block; font-size:14px; margin-bottom:4px; } .ufield label b { color:var(--danger); font-weight:500; }

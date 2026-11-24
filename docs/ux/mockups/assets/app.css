@@ -870,3 +870,28 @@ body.scr-on #content { margin-right:380px; }
 .mstep .ms-dot.none, .mstep .ms-ln.none { visibility:hidden; }
 .mstep .ms-ln { width:10px; height:1.5px; background:var(--border-strong); flex:none; }
 .mstep .ms-ln.done { background:var(--fg-2); }
+/* ---- 설정형 화면 공통 (24-settings-layout-guide): 설정 · 마이페이지 — row = label 240 │ input ≤760 │ aside, wide rows ≤1200, topic groups, one bottom save bar ---- */
+/* 24-settings-layout-guide P1: every tab uses the full body width (no 960 box); a row = label 240 │ input ≤760 │ aside (last change · when it applies · impact · links) */
+.set-wrap { max-width:none; }
+.set-row { display:grid; grid-template-columns:240px minmax(480px, 760px) minmax(280px, 1fr); column-gap:24px; padding:16px 0; border-bottom:1px solid var(--border); align-items:start; }
+.set-row > .aside { grid-column:3; margin-left:8px; max-width:520px; display:flex; flex-direction:column; gap:4px; font-size:12px; line-height:18px; color:var(--fg-2); }
+.set-row > .aside .lastchg:empty { display:none; }
+.set-row > .aside .warn { color:var(--ds-amber-900); display:flex; gap:4px; align-items:flex-start; }
+.set-row > .aside .btn { align-self:flex-start; margin-top:4px; }
+/* a row holding a table uses the input + aside columns together, up to 1200 */
+.set-row.wide { grid-template-columns:240px minmax(480px, 1200px) 1fr; }
+.set-row.wide > :nth-child(2) { grid-column:2; min-width:0; }
+.set-row.wide > .aside { grid-column:2; margin:8px 0 0; max-width:none; }
+.set-tbl { max-width:1200px; }
+/* 24 guide P2: topic groups inside a tab (15px/600, 32 above · 8 below, no rule under it) */
+.set-sec { font-size:15px; font-weight:600; margin:32px 0 8px; } .set-sec.first { margin-top:8px; }
+.set-row .l b { display:block; font-size:14px; } .set-row .l span { font-size:12px; color:var(--fg-3); }
+.set-row .lastchg { display:block; font-size:12px; color:var(--fg-2); }
+.set-row .l .lastchg:empty { display:none; }
+.setbar { display:none; align-items:center; gap:8px; height:56px; padding:0 20px; border-top:1px solid var(--ds-gray-400); background:var(--surface); flex:none; }
+.setbar.show { display:flex; }
+.menu.sb-pop { position:absolute; bottom:40px; left:0; width:440px; max-height:320px; overflow:auto; padding:12px; background:var(--surface); border-radius:var(--r-xl); box-shadow:var(--menu-shadow); display:none; z-index:40; }
+.menu.sb-pop.open { display:block; }
+.sb-list { margin:0; padding-left:16px; display:grid; gap:6px; font-size:13px; }
+.tabs .tdot { display:none; width:6px; height:6px; margin:0 0 0 6px; vertical-align:2px; }
+.tabs button.dirty .tdot { display:inline-block; }

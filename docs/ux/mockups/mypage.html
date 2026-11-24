@@ -9,9 +9,6 @@
 <link rel="stylesheet" href="assets/app.css">
 <script src="assets/app.js"></script>
 <style>
-  .set-wrap { max-width:920px; }
-  .set-row { display:grid; grid-template-columns:220px 1fr; gap:24px; padding:16px 0; border-bottom:1px solid var(--border); }
-  .set-row .l b { display:block; font-size:14px; } .set-row .l span { font-size:12px; color:var(--fg-2); }
   .ntbl td, .ntbl th { text-align:center; } .ntbl td:first-child, .ntbl th:first-child { text-align:left; }
   /* fixed widths live in the page style, not inline (17 §6.2) */
   #av { width:36px; height:36px; font-size:15px; } #sec-pw { max-width:360px; }
@@ -25,24 +22,25 @@
     <h1 id="nm">마이페이지</h1><span class="role-tag" id="rb"></span>
   </div>
   <div class="tabs" style="margin:0;padding:0 20px;background:var(--surface)">
-    <button class="on" data-tab="profile">프로필</button>
+    <button class="on" data-tab="profile">프로필<span class="sdot run tdot" aria-hidden="true"></span></button>
     <button data-tab="mine">내 신청</button>
     <button data-tab="work">내 작업</button>
-    <button data-tab="notify">알림 설정</button>
+    <button data-tab="notify">알림 설정<span class="sdot run tdot" aria-hidden="true"></span></button>
     <button data-tab="security">보안</button>
-    <button data-tab="env">환경</button>
+    <button data-tab="env">환경<span class="sdot run tdot" aria-hidden="true"></span></button>
   </div>
   <div class="scroll"><div class="pad">
     <div class="pane on set-wrap" data-pane="profile">
-      <div class="set-row"><div class="l"><b>기본 정보</b><span>회사 · 부서 · 이름은 관리자가 바꿉니다</span></div>
-        <div class="field-row"><div class="field"><label for="p-company">회사명</label><input class="input" id="p-company" readonly></div><div class="field"><label for="p-org">부서명</label><input class="input" id="p-org" readonly></div><div class="field"><label for="p-name">이름</label><input class="input" id="p-name" readonly></div><div class="field"><label for="p-id">ID</label><input class="input mono" id="p-id" readonly></div></div></div>
-      <div class="set-row"><div class="l"><b>연락처</b><span>결재 알림 메일이 이 주소로 갑니다</span></div>
-        <div class="field-row"><div class="field"><label for="p-phone">전화번호</label><input class="input mono" id="p-phone" inputmode="tel" placeholder="010-1234-5678"></div><div class="field"><label for="p-mail">이메일</label><input class="input mono" id="p-mail" type="email"></div></div><div class="caption u-danger" id="p-cerr" role="alert"></div></div>
-      <div class="set-row"><div class="l"><b>표시 이름</b><span>결재·공동 편집 커서에 보이는 이름</span></div><div class="field"><label for="p-disp">표시 이름</label><input class="input" id="p-disp"></div></div>
-      <div class="set-row"><div class="l"><b>내 역할 · 담당 시스템</b><span>조회 전용 — 바꾸려면 Admin에게 요청합니다</span></div>
-        <div><div class="u-mb-8" id="p-roles"></div><div class="caption" id="p-sys"></div>
-          <button class="btn sm u-mt-8" data-open="mo-rolereq" id="rr-open">역할 변경 요청</button><div class="caption u-mt-8" id="rr-state"></div></div></div>
-      <div class="flex u-mt-16"><span class="grow"></span><button class="btn primary" id="p-save">저장</button></div>
+      <h3 class="set-sec first">계정</h3>
+      <div class="set-row"><div class="l"><b>기본 정보</b><span>조회 전용</span></div>
+        <div class="field-row"><div class="field"><label for="p-company">회사명</label><input class="input" id="p-company" readonly></div><div class="field"><label for="p-org">부서명</label><input class="input" id="p-org" readonly></div><div class="field"><label for="p-name">이름</label><input class="input" id="p-name" readonly></div><div class="field"><label for="p-id">ID</label><input class="input mono" id="p-id" readonly></div></div><div class="aside"><span>회사 · 부서 · 이름은 관리자가 바꿉니다 — 틀렸으면 Admin에게 알려 주세요</span></div></div>
+      <div class="set-row"><div class="l"><b>연락처</b></div>
+        <div><div class="field-row"><div class="field"><label for="p-phone">전화번호</label><input class="input mono" id="p-phone" inputmode="tel" placeholder="010-1234-5678"></div><div class="field"><label for="p-mail">이메일</label><input class="input mono" id="p-mail" type="email"></div></div><div class="caption u-danger" id="p-cerr" role="alert"></div></div><div class="aside"><span>결재 알림 메일이 이 주소로 갑니다</span><span>바꾸면 감사 로그에 남습니다</span></div></div>
+      <div class="set-row"><div class="l"><b>표시 이름</b></div><div class="field"><label for="p-disp">표시 이름</label><input class="input" id="p-disp"></div><div class="aside"><span>결재 문서 · 공동 편집 커서에 보이는 이름입니다</span></div></div>
+      <h3 class="set-sec">역할</h3>
+      <div class="set-row"><div class="l"><b>내 역할 · 담당 시스템</b><span>조회 전용</span></div>
+        <div><div class="u-mb-8" id="p-roles"></div><div class="caption" id="p-sys"></div><div class="caption u-mt-8" id="rr-state"></div></div>
+        <div class="aside"><span>자기 역할은 스스로 바꿀 수 없습니다 — Admin에게 요청하면 처리 결과가 알림으로 옵니다</span><button class="btn sm" data-open="mo-rolereq" id="rr-open">역할 변경 요청</button></div></div>
     </div>
 
     <div class="pane" data-pane="mine">
@@ -58,35 +56,41 @@
     </div>
 
     <div class="pane set-wrap" data-pane="notify">
-      <div class="caption muted u-mb-12">메일은 기관 정책상 <b>결재선 담당자</b>에게만 갑니다. 정책 범위 안에서만 끌 수 있습니다.</div>
-      <table class="tbl ntbl"><thead><tr><th>종류</th><th>앱 알림</th><th>메일</th></tr></thead><tbody id="nt-body"></tbody></table>
-      <div class="flex u-mt-12"><span class="caption muted" id="nt-state"></span><span class="grow"></span><button class="btn primary" id="nt-save">저장</button></div>
+      <div class="set-row wide"><div class="l"><b>알림 받기</b><span>종류마다 앱 알림 · 메일</span></div>
+        <div><table class="tbl ntbl set-tbl"><thead><tr><th>종류</th><th>앱 알림</th><th>메일</th></tr></thead><tbody id="nt-body"></tbody></table></div>
+        <div class="aside"><span>메일은 기관 정책상 <b>결재선 담당자</b>에게만 갑니다. ‘필수’는 끌 수 없습니다 · 끈 종류는 알림 목록에 오지 않습니다</span><span class="lastchg" id="nt-state"></span></div></div>
     </div>
 
     <div class="pane set-wrap" data-pane="security">
-      <div class="set-row"><div class="l"><b>인증 방식</b></div><div id="sec-auth"></div></div>
+      <div class="set-row"><div class="l"><b>인증 방식</b></div><div id="sec-auth"></div><div class="aside"><span>로그인 방식은 관리자가 정합니다</span></div></div>
       <div class="set-row" id="sec-pwrow"><div class="l"><b>비밀번호 변경</b><span id="sec-pwat"></span></div>
         <form id="sec-pw" novalidate><div class="field"><label for="s-cur">지금 비밀번호</label><input class="input mono" id="s-cur" type="password" autocomplete="current-password"></div>
           <div class="field"><label for="s-n1">새 비밀번호</label><input class="input mono" id="s-n1" type="password" autocomplete="new-password"></div>
           <div class="field"><label for="s-n2">새 비밀번호 확인</label><input class="input mono" id="s-n2" type="password" autocomplete="new-password"></div>
           <div class="caption muted" id="s-rule"></div><div class="caption" id="s-err" role="alert" style="color:var(--danger-deep);min-height:16px;margin-top:4px"></div>
-          <button class="btn primary u-mt-8" type="submit">비밀번호 변경</button></form></div>
-      <div class="set-row"><div class="l"><b>접속 중인 세션</b><span>세션은 30분 동안 입력이 없으면 만료되고, 5분 전에 알립니다</span></div>
-        <div><table class="tbl"><thead><tr><th>기기 · 브라우저</th><th>IP</th><th>마지막 활동</th><th></th></tr></thead><tbody>
+          <button class="btn primary u-mt-8" type="submit">비밀번호 변경</button></form>
+        <div class="aside"><span>이 버튼으로 바로 바뀝니다 — 아래 저장 막대와 따로입니다</span><span>바꾸면 다른 기기의 세션은 다시 로그인해야 합니다</span></div></div>
+      <div class="set-row wide"><div class="l"><b>접속 중인 세션</b></div>
+        <div><table class="tbl set-tbl"><thead><tr><th>기기 · 브라우저</th><th>IP</th><th>마지막 활동</th><th></th></tr></thead><tbody>
           <tr><td>Windows · Chrome <span class="badge b-success">이 기기</span></td><td class="mono">10.12.3.41</td><td class="mono">방금</td><td></td></tr>
           <tr id="s2"><td>Windows · Edge</td><td class="mono">10.12.7.18</td><td class="mono">11/16 18:40</td><td><button class="btn sm" onclick="document.getElementById('s2').remove();toast('다른 세션을 로그아웃했습니다')">로그아웃</button></td></tr>
-        </tbody></table></div></div>
+        </tbody></table></div><div class="aside"><span>세션은 30분 동안 입력이 없으면 만료되고, 5분 전에 알립니다</span></div></div>
       <div class="set-row"><div class="l"><b>최근 로그인</b></div><div class="caption mono">11/18 08:52 · 10.12.3.41 · 성공<br>11/17 08:47 · 10.12.3.41 · 성공<br>11/16 18:40 · 10.12.7.18 · 성공</div></div>
     </div>
 
     <div class="pane set-wrap" data-pane="env">
-      <div class="set-row"><div class="l"><b>테마</b></div><div class="seg" id="env-theme"><button data-v="light">라이트</button><button data-v="dark">다크</button><button data-v="system">시스템</button></div></div>
-      <div class="set-row"><div class="l"><b>표 밀도</b><span>목록 · 표의 한 줄 높이. 행이 많은 사전 · 표준 맞추기는 촘촘을 권합니다. 두 줄 칸은 내용만큼 높아집니다</span></div><div class="seg" id="env-density" role="group" aria-label="표 밀도"><button data-v="compact">촘촘 32</button><button data-v="default">기본 36</button><button data-v="comfy">넓게 44</button></div></div>
-      <div class="set-row"><div class="l"><b>시작 화면</b></div><div class="field"><label for="env-start">로그인 후 첫 화면</label><select class="input u-w-240" id="env-start"><option>홈</option><option>결재함</option><option>최근 업무 영역</option></select></div></div>
-      <div class="set-row"><div class="l"><b>단축키</b><span>화면 낭독기·음성 입력을 쓰면 끄세요</span></div><label class="flex"><input type="checkbox" id="kb-single2"> 한 글자 단축키(V·E·R·M) 사용</label></div>
-      <div class="flex u-mt-12"><span class="grow"></span><button class="btn primary" id="env-save">저장</button></div>
+      <div class="set-row"><div class="l"><b>테마</b></div><div class="seg" id="env-theme"><button data-v="light">라이트</button><button data-v="dark">다크</button><button data-v="system">시스템</button></div><div class="aside"><span>누르면 바로 적용됩니다</span></div></div>
+      <div class="set-row"><div class="l"><b>표 밀도</b><span>목록 · 표의 한 줄 높이</span></div><div class="seg" id="env-density" role="group" aria-label="표 밀도"><button data-v="compact">촘촘 32</button><button data-v="default">기본 36</button><button data-v="comfy">넓게 44</button></div><div class="aside"><span>누르면 바로 적용됩니다 · 행이 많은 표준 사전 · 표준 맞추기는 촘촘을 권합니다</span><span>두 줄 칸은 내용만큼 높아집니다</span></div></div>
+      <div class="set-row"><div class="l"><b>시작 화면</b></div><div class="field"><label for="env-start">로그인 후 첫 화면</label><select class="input u-w-240" id="env-start"><option>홈</option><option>결재함</option><option>최근 업무 영역</option></select></div><div class="aside"><span>아래 [저장] 뒤 다음 로그인부터 적용됩니다</span></div></div>
+      <div class="set-row"><div class="l"><b>단축키</b></div><label class="flex"><input type="checkbox" id="kb-single2"> 한 글자 단축키(V·E·R·M) 사용</label><div class="aside"><span>바로 적용됩니다 · 화면 낭독기 · 음성 입력을 쓰면 끄세요</span></div></div>
     </div>
   </div></div>
+  <!-- 24 guide P3: one save bar for 프로필 · 알림 설정 · 환경 (theme · density · shortcuts · password apply at once) -->
+  <div class="setbar" id="setbar" role="region" aria-label="저장하지 않은 변경">
+    <span id="sb-msg" aria-live="polite"></span><span class="u-rel"><button type="button" class="btn ghost sm" id="sb-diff" aria-expanded="false" aria-controls="sb-pop">변경 보기</button><div class="menu sb-pop" id="sb-pop" role="dialog" aria-label="저장하지 않은 변경"></div></span><span class="grow"></span>
+    <button class="btn" id="sb-revert" title="화면 값을 마지막 저장값으로 되돌립니다">되돌리기</button>
+    <button class="btn primary" id="sb-save">저장</button>
+  </div>
 
   <div class="overlay" id="mo-rolereq" role="dialog" aria-modal="true" aria-labelledby="rr-t"><div class="modal">
     <div class="m-head"><h3 id="rr-t">역할 변경 요청</h3></div>
@@ -138,19 +142,19 @@ window.pageInit = function () {
   // 알림 설정: saved per user and honoured by pushNotif (app channel); mail follows the organisation policy
   const pref = getNotifyPref(ME.id);
   $('nt-body').innerHTML = NOTIFY_KINDS.map(([k, n, mail]) => { const p = pref[k] || {}; return `<tr><td>${n}</td><td><input type="checkbox" data-nk="${k}" data-ch="app" ${p.app !== false ? 'checked' : ''} ${mail === 'must' ? 'disabled' : ''} aria-label="${n} 앱 알림">${mail === 'must' ? ' <span class="caption faint">필수</span>' : ''}</td><td>${mail === 'must' ? `<input type="checkbox" checked disabled aria-label="${n} 메일(정책상 필수)"> <span class="caption faint">필수</span>` : mail === 'opt' ? `<input type="checkbox" data-nk="${k}" data-ch="mail" ${p.mail !== false ? 'checked' : ''} aria-label="${n} 메일">` : '<span class="caption faint">—</span>'}</td></tr>`; }).join('');
-  $('nt-save').onclick = () => { const np = {}; document.querySelectorAll('[data-nk]').forEach(c => { (np[c.dataset.nk] = np[c.dataset.nk] || {})[c.dataset.ch] = c.checked; }); saveNotifyPref(ME.id, np); const off = NOTIFY_KINDS.filter(([k]) => np[k] && np[k].app === false).map(x => x[1].split(' (')[0]); $('nt-state').textContent = off.length ? `앱 알림 끔: ${off.join(', ')}` : '모든 앱 알림 받음'; toast('알림 설정을 저장했습니다 — 끈 종류는 앞으로 알림 목록에 오지 않습니다', 'success'); };
+  const saveNotify = () => { const np = {}; document.querySelectorAll('[data-nk]').forEach(c => { (np[c.dataset.nk] = np[c.dataset.nk] || {})[c.dataset.ch] = c.checked; }); saveNotifyPref(ME.id, np); const off = NOTIFY_KINDS.filter(([k]) => np[k] && np[k].app === false).map(x => x[1].split(' (')[0]); $('nt-state').textContent = off.length ? `앱 알림 끔: ${off.join(', ')}` : '모든 앱 알림 받음'; return '알림 설정'; };
   { const off = NOTIFY_KINDS.filter(([k]) => pref[k] && pref[k].app === false).map(x => x[1].split(' (')[0]); $('nt-state').textContent = off.length ? `앱 알림 끔: ${off.join(', ')}` : ''; }
   // 표시 이름
   const dn = dbmStore.get('dbm-disp-' + ME.id, ''); if (dn) $('p-disp').value = dn;
-  $('p-save').onclick = () => {
-    const v = $('p-disp').value.trim(); if (!v) { toast('표시 이름을 입력하세요', 'danger'); return; }
+  const saveProfile = () => {
+    const v = $('p-disp').value.trim(); if (!v) { toast('표시 이름을 입력하세요', 'danger'); $('p-disp').focus(); return false; }
     const ph = $('p-phone').value.trim(), ml = $('p-mail').value.trim().toLowerCase(); $('p-cerr').textContent = '';
-    if (!/^(02-\d{3,4}|0\d{2}-\d{3,4})-\d{4}$/.test(ph)) { $('p-cerr').textContent = '전화번호 형식이 맞지 않습니다 (예: 010-1234-5678, 02-123-4567)'; $('p-phone').setAttribute('aria-describedby', 'p-cerr'); $('p-phone').focus(); return; }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(ml)) { $('p-cerr').textContent = '이메일 형식이 맞지 않습니다'; $('p-mail').focus(); return; }
-    if (Object.values(USERS).some(x => x.id !== ME.id && (x.mail || '').toLowerCase() === ml.toLowerCase())) { $('p-cerr').textContent = '다른 사용자가 쓰는 이메일입니다'; $('p-mail').focus(); return; }
+    if (!/^(02-\d{3,4}|0\d{2}-\d{3,4})-\d{4}$/.test(ph)) { $('p-cerr').textContent = '전화번호 형식이 맞지 않습니다 (예: 010-1234-5678, 02-123-4567)'; $('p-phone').setAttribute('aria-describedby', 'p-cerr'); $('p-phone').focus(); return false; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(ml)) { $('p-cerr').textContent = '이메일 형식이 맞지 않습니다'; $('p-mail').focus(); return false; }
+    if (Object.values(USERS).some(x => x.id !== ME.id && (x.mail || '').toLowerCase() === ml.toLowerCase())) { $('p-cerr').textContent = '다른 사용자가 쓰는 이메일입니다'; $('p-mail').focus(); return false; }
     dbmStore.set('dbm-disp-' + ME.id, v);
     const U2 = USERS[ME.id]; if (U2 && (U2.phone !== ph || U2.mail !== ml)) { U2.phone = ph; U2.mail = ml; saveUsers(); pushAudit({ act: '내 연락처 수정', target: `${U2.name} (${U2.id})` }); }
-    toast(`저장했습니다 — 표시 이름 ‘${v}’ · 연락처`, 'success'); };
+    return `표시 이름 ‘${v}’ · 연락처`; };
   // 역할 변경 요청 (from 403 too): ?req=da&what=… pre-fills; request goes to Admin as a notification and is kept on this page
   // roles to add, plus systems in charge (a modeler outside a system is sent here from the model screen)
   const RQ = [['owner', '기관 담당자 추가'], ['da', 'DA 추가'], ['modeler', '모델러 추가'], ['admin', 'Admin 추가']].filter(([r]) => !ME.roles.includes(r)).concat(SYSLIST.filter(s => !(ME.systems || []).includes(s.name) && !(ME.systems || []).includes('전체')).map(s => ['sys:' + s.name, '담당 시스템 추가 — ' + s.name])).concat([['off', '역할 해제']]);
@@ -167,8 +171,62 @@ window.pageInit = function () {
   document.querySelectorAll('#env-theme button').forEach(b => { b.classList.toggle('on', b.dataset.v === t); b.setAttribute('aria-pressed', b.dataset.v === t); b.onclick = () => { dbmStore.set('dbm-theme', b.dataset.v); location.reload(); }; });
   // 시작 화면: saved and read by login.html after sign-in (theme · density · shortcuts apply at once)
   $('env-start').value = dbmStore.get('dbm-start', '') || '홈';
-  $('env-save').onclick = () => { dbmStore.set('dbm-start', $('env-start').value); toast(`환경 설정을 저장했습니다 — 로그인 후 첫 화면: ${$('env-start').value}`, 'success'); };
-  const k = $('kb-single2'); k.checked = dbmStore.get('dbm-single-keys', '1') === '1'; k.onchange = () => dbmStore.set('dbm-single-keys', k.checked ? '1' : '0');
+  const saveEnv = () => { dbmStore.set('dbm-start', $('env-start').value); return `로그인 후 첫 화면 ‘${$('env-start').value}’`; };
+  const k = $('kb-single2'); k.checked = dbmStore.get('dbm-single-keys', '1') === '1'; k.onchange = () => { dbmStore.set('dbm-single-keys', k.checked ? '1' : '0'); toast(k.checked ? '한 글자 단축키를 켰습니다' : '한 글자 단축키를 껐습니다', 'info'); };
+  /* ---- 24 guide P3: one save bar — 프로필(연락처 · 표시 이름) · 알림 설정 · 환경(시작 화면); same behaviour as 설정 ---- */
+  const DT = { profile: '프로필', notify: '알림 설정', env: '환경' };
+  const SAVED = '#p-phone, #p-mail, #p-disp, [data-nk], #env-start';
+  const SAVER = { profile: saveProfile, notify: saveNotify, env: saveEnv };
+  const fieldsOf = t => [...document.querySelectorAll(`.pane[data-pane="${t}"] input, .pane[data-pane="${t}"] select`)].filter(f => f.matches(SAVED));
+  const valOf = f => f.type === 'checkbox' ? f.checked : f.value;
+  let base = {}, sbTimer = 0;
+  const snap = () => { base = {}; Object.keys(DT).forEach(t => { base[t] = fieldsOf(t).map(valOf); }); };
+  const diff = () => { const out = {}; Object.keys(DT).forEach(t => { const n = fieldsOf(t).filter((f, i) => valOf(f) !== base[t][i]).length; if (n) out[t] = n; }); return out; };
+  const dirtyN = () => Object.values(diff()).reduce((a, b) => a + b, 0);
+  const hhmm = () => { const d = new Date(); return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; };
+  function refreshBar() {
+    const d = diff(), n = Object.values(d).reduce((a, b) => a + b, 0), bar = $('setbar');
+    $('sb-diff').hidden = !n;
+    document.querySelectorAll('.tabs button[data-tab]').forEach(b => { const on = !!d[b.dataset.tab]; b.classList.toggle('dirty', on); if (on) b.title = `저장하지 않은 변경 ${d[b.dataset.tab]}건`; else b.removeAttribute('title'); });
+    if (!n) { if (!sbTimer) bar.classList.remove('show'); return; }
+    clearTimeout(sbTimer); sbTimer = 0;
+    $('sb-msg').innerHTML = `<span class="savest"><span class="sdot run"></span>저장하지 않은 변경 <b class="mono">${n}</b>건 · ${Object.keys(d).map(t => DT[t]).join(', ')}</span>`;
+    $('sb-revert').style.display = ''; $('sb-save').style.display = ''; bar.classList.add('show');
+  }
+  function showSaved() {
+    const bar = $('setbar'); $('sb-msg').innerHTML = `<span class="savest"><span class="sdot ok"></span>저장됨 · ${hhmm()}</span>`;
+    $('sb-revert').style.display = 'none'; $('sb-save').style.display = 'none'; $('sb-diff').hidden = true; bar.classList.add('show');
+    clearTimeout(sbTimer); sbTimer = setTimeout(() => { sbTimer = 0; if (!dirtyN()) bar.classList.remove('show'); }, 2500);
+  }
+  $('sb-revert').onclick = () => { Object.keys(DT).forEach(t => fieldsOf(t).forEach((f, i) => { if (f.type === 'checkbox') f.checked = base[t][i]; else f.value = base[t][i]; })); $('p-cerr').textContent = ''; refreshBar(); toast('마지막 저장값으로 되돌렸습니다', 'info'); };
+  // [변경 보기] — row · field · before → after
+  const esc2 = x => String(x).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+  const fName = f => { const lab = (f.getAttribute('aria-label') || (f.labels && f.labels[0] ? f.labels[0].textContent : '')).replace(/\s+/g, ' ').trim(); const row = f.closest('.set-row'), rn = row && row.querySelector('.l b') ? row.querySelector('.l b').textContent : ''; return [rn, lab && lab !== rn ? lab : ''].filter(Boolean).join(' · ') || f.id; };
+  const fShow = (f, v) => f.type === 'checkbox' ? (v ? '켬' : '끔') : (v === '' ? '(빈 값)' : v);
+  function drawDiff() {
+    const out = [];
+    Object.keys(DT).forEach(t => fieldsOf(t).forEach((f, i) => { const v = valOf(f); if (v !== base[t][i]) out.push(`<li><b>${DT[t]}</b> · ${esc2(fName(f))}<span class="muted"> ${esc2(fShow(f, base[t][i]))} → </span><b>${esc2(fShow(f, v))}</b></li>`); }));
+    $('sb-pop').innerHTML = out.length ? `<div class="caption muted u-mb-8">저장하지 않은 변경 ${out.length}건</div><ul class="sb-list">${out.join('')}</ul>` : '<div class="caption muted">바뀐 값이 없습니다</div>';
+  }
+  const setPop = o => { $('sb-pop').classList.toggle('open', o); $('sb-diff').setAttribute('aria-expanded', o); if (o) drawDiff(); };
+  $('sb-diff').onclick = e => { e.stopPropagation(); setPop(!$('sb-pop').classList.contains('open')); };
+  document.addEventListener('click', e => { if (!e.target.closest('#sb-pop, #sb-diff')) setPop(false); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('sb-pop').classList.contains('open')) { setPop(false); $('sb-diff').focus(); } });
+  // save only the changed tabs; a tab that fails its check stays unsaved and is opened so the error is visible
+  $('sb-save').onclick = () => {
+    const done = [], savedT = [];
+    const rebase = () => savedT.forEach(t => { base[t] = fieldsOf(t).map(valOf); });   // only the tabs that were really saved
+    for (const t of Object.keys(diff())) {
+      const r = SAVER[t]();
+      if (r === false) { const b = document.querySelector(`.tabs button[data-tab="${t}"]`); if (b && !b.classList.contains('on')) b.click(); if (done.length) toast(`${done.join(' · ')}만 저장했습니다 — ${DT[t]}의 오류를 고친 뒤 다시 저장하세요`, 'danger'); rebase(); refreshBar(); return; }
+      done.push(r); savedT.push(t);
+    }
+    rebase(); refreshBar();
+    if (done.length) { toast(`저장했습니다 — ${done.join(' · ')}`, 'success'); showSaved(); }
+  };
+  $('content').addEventListener('input', refreshBar); $('content').addEventListener('change', refreshBar);
+  window.addEventListener('beforeunload', e => { if (dirtyN()) { e.preventDefault(); e.returnValue = ''; } });
+  snap(); refreshBar();
 };
 </script>
 </body>
