@@ -172,12 +172,15 @@
   /* ---- model versions & locks: computed from documents, never from the URL ---- */
   const MODEL0 = { rq: { ver: 5, base: 4, name: '요구사항 · 프로젝트' }, risk: { ver: 2, base: 1, name: '리스크' } };
   /* systems (13): 요구사항관리 (original sample) and 통합ERP (business sample). Areas carry system; screens see the selected system's areas. */
-  const SYSLIST = [{ code: 'RQMS', name: '요구사항관리', db: 'Oracle 19c', schema: 'RQMS', desc: '요구사항 · 프로젝트 관리 시스템' }, { code: 'ERP', name: '통합ERP', db: 'Oracle 19c', schema: 'ERP', desc: '영업 · 구매 · 재고 · 생산 · 회계 · 인사 통합 시스템' }];
+  const SYS0 = [{ code: 'RQMS', name: '요구사항관리', db: 'Oracle 19c', schema: 'RQMS', desc: '요구사항 · 프로젝트 관리 시스템' }, { code: 'ERP', name: '통합ERP', db: 'Oracle 19c', schema: 'ERP', desc: '영업 · 구매 · 재고 · 생산 · 회계 · 인사 통합 시스템' }];
+  const SYSLIST = J('dbm-systems', null) || clone(SYS0);   /* 25 C-3: registered systems are stored; DBMS is fixed at registration */
   window.SYSLIST = SYSLIST;
+  window.saveSystems = () => S('dbm-systems', SYSLIST);
+  window.activeSystems = () => SYSLIST.filter(x => !x.off);
   window.curSys = () => { const c = store.get('dbm-sys', 'ERP'); return SYSLIST.find(s => s.code === c) || SYSLIST[0]; };
   window.getAllModels = () => { const all = J('dbm-model', clone(MODEL0)); Object.keys(MODEL0).forEach(k => { if (!all[k]) all[k] = clone(MODEL0[k]); }); return all; };
   const AREA_ORDER = ['e_hr', 'e_tr', 'e_fi', 'e_sd', 'e_mm', 'e_wm', 'e_pp'];
-  window.getModels = () => { const c = curSys().code; const ent = Object.entries(getAllModels()).filter(([, m]) => (m.system || 'RQMS') === c); ent.sort((a, b) => { const x = AREA_ORDER.indexOf(a[0]), y = AREA_ORDER.indexOf(b[0]); return (x < 0 ? 99 : x) - (y < 0 ? 99 : y); }); return Object.fromEntries(ent); };
+  window.getModels = () => { const c = curSys().code; const ent = Object.entries(getAllModels()).filter(([, m]) => (m.system || 'RQMS') === c && !m.off); ent.sort((a, b) => { const x = AREA_ORDER.indexOf(a[0]), y = AREA_ORDER.indexOf(b[0]); return (x < 0 ? 99 : x) - (y < 0 ? 99 : y); }); return Object.fromEntries(ent); };
   window.defArea = () => Object.keys(getModels())[0] || 'rq';
   window.getModel = area => getAllModels()[area] || MODEL0.rq;
   /* new business area (system home [+ 업무 영역], DDL import): id, name, v1 working version, optional imported structure */
@@ -188,6 +191,47 @@
     return id;
   };
   window.setModel = (area, m) => { const all = getAllModels(); all[area] = m; S('dbm-model', all); };
+  /* ---- 25 바로잡기: what an area has — decides delete (nothing) vs archive (history) and move (no confirmed copy) vs copy ---- */
+  window.areaUse = id => {
+    const all = getAllModels(), m = all[id] || {};
+    const docs = getDocs().filter(d => d.type === 'model' && d.area === id);
+    const refs = Object.keys(all).filter(a => a !== id && !all[a].off).filter(a => { try { return (modelOf(a, all[a].ver).E || []).some(e => e.ref && e.refArea === id); } catch (er) { return false; } }).map(a => all[a].name);
+    let ents = 0; try { ents = (modelOf(id, m.ver).E || []).filter(e => !e.ref).length; } catch (er) {}
+    return { confirmed: (m.base || 0) > 0, docs: docs.length, review: modelLock(id).state === 'review', refs, ents };
+  };
+  window.areaHasHistory = u => u.confirmed || u.docs > 0 || u.refs.length > 0;
+  window.saveAreaInfo = (id, info) => {
+    const all = getAllModels(), m = all[id]; if (!m) return 0;
+    const un = v => (USERS[v] || {}).name || '—', LB = { name: '이름', desc: '설명', owner: '담당' };
+    const ch = ['name', 'desc', 'owner'].filter(k => (m[k] || '') !== (info[k] || '')).map(k => `${LB[k]} ${k === 'owner' ? un(m[k]) : m[k] || '—'} → ${k === 'owner' ? un(info[k]) : info[k] || '—'}`);
+    Object.assign(m, info); S('dbm-model', all);
+    if (ch.length) pushAudit({ act: '업무 영역 정보 수정', target: `${m.name} (${id})`, why: ch.join(' · ') });
+    return ch.length;
+  };
+  window.archiveArea = (id, why) => { const all = getAllModels(), m = all[id]; m.off = true; m.offAt = now(); m.offBy = ME.name; m.offWhy = why; S('dbm-model', all); pushAudit({ act: '업무 영역 사용 중지', target: `${m.name} (${id})`, why }); };
+  window.restoreArea = id => { const all = getAllModels(), m = all[id]; delete m.off; delete m.offAt; delete m.offBy; delete m.offWhy; S('dbm-model', all); pushAudit({ act: '업무 영역 다시 사용', target: `${m.name} (${id})` }); };
+  window.deleteArea = id => {
+    const all = getAllModels(), m = all[id]; if (!m || areaHasHistory(areaUse(id))) return false;
+    delete all[id]; S('dbm-model', all);
+    try { Object.keys(localStorage).filter(k => k.startsWith(`dbm-mdata-${id}-v`) || k === 'dbm-area-seed-' + id).forEach(k => localStorage.removeItem(k)); } catch (er) {}
+    pushAudit({ act: '업무 영역 삭제', target: `${m.name} (${id})`, why: '이력 없음 — 엔터티와 함께 삭제' }); return true;
+  };
+  const sysNm = c => (SYSLIST.find(x => x.code === c) || {}).name || c;
+  /* move: only without a confirmed copy or documents; the physical model is rebuilt with the target system's rules */
+  window.moveAreaToSystem = (id, code) => {
+    const all = getAllModels(), m = all[id], from = m.system || 'RQMS', u = areaUse(id); if (u.confirmed || u.docs) return false;
+    m.system = code; S('dbm-model', all);
+    pushAudit({ act: '업무 영역 시스템 이동', target: `${m.name} (${id})`, why: `${sysNm(from)} → ${sysNm(code)}` }); return true;
+  };
+  /* copy: a new v1 working area in the target system from the current working structure; the original stays (then archive it) */
+  window.copyAreaToSystem = (id, code, name) => {
+    const m = getModel(id), st = modelOf(id, m.ver); const refIds = new Set((st.E || []).filter(e => e.ref).map(e => e.id));   /* references cannot cross systems — dropped with their relations */
+    const nid = addArea(name || m.name, { E: (st.E || []).filter(e => !e.ref), R: (st.R || []).filter(r => !refIds.has(r.f) && !refIds.has(r.t)), M: st.M || [], V: (st.V || []).map(v => Object.assign({}, v, { ents: (v.ents || []).filter(x => !refIds.has(x)) })) }, { system: code, desc: m.desc || '', owner: m.owner || '', copiedFrom: id });
+    pushAudit({ act: '업무 영역 다른 시스템으로 복제', target: `${m.name} (${id}) → ${name || m.name} (${nid})`, why: `대상 ${sysNm(code)} · v1 작업 중` }); return nid;
+  };
+  /* entity moves between areas (25 §3-4) are logged so the version diff of both areas can say '이동' */
+  window.moveLog = () => J('dbm-moves', []);
+  window.pushMove = mv => { const l = moveLog(); l.unshift(Object.assign({ at: now(), by: ME.name }, mv)); S('dbm-moves', l.slice(0, 200)); };
   window.modelLock = area => {
     const m = getModel(area);
     const d = getDocs().filter(x => x.type === 'model' && x.area === area && x.ver === m.ver).sort((a, b) => b.id.localeCompare(a.id))[0];
@@ -972,8 +1016,9 @@
     const out = []; if (!a || !b) return null;
     const ea = new Map(a.E.map(e => [e.id, e])), eb = new Map(b.E.map(e => [e.id, e]));
     const refTxt = e => `${e.refName || e.refArea || '다른 영역'} v${e.refVer || '?'} 확정본`;
-    b.E.forEach(e => { if (!ea.has(e.id)) out.push(e.ref ? ['참조 추가', `${e.n} ${e.p}`, '—', refTxt(e)] : ['추가', `${e.n} ${e.p}`, '—', `엔터티 · 속성 ${e.a.length}`]); });
-    a.E.forEach(e => { if (!eb.has(e.id)) out.push(e.ref ? ['참조 해제', `${e.n} ${e.p}`, refTxt(e), '—'] : ['삭제', `${e.n} ${e.p}`, `엔터티 · 속성 ${e.a.length}`, '—']); });
+    const aName = x => (getAllModels()[x] || {}).name || x, mv = moveLog();   /* 25 §3-4: moved entities show as 이동 (→ / ←) */
+    b.E.forEach(e => { if (!ea.has(e.id)) out.push(e.ref ? ['참조 추가', `${e.n} ${e.p}`, '—', refTxt(e)] : e.movedFrom ? ['이동', `${e.n} ${e.p}`, `← ${aName(e.movedFrom)}`, `엔터티 · 속성 ${e.a.length}`] : ['추가', `${e.n} ${e.p}`, '—', `엔터티 · 속성 ${e.a.length}`]); });
+    a.E.forEach(e => { if (!eb.has(e.id)) { const m2 = !e.ref && mv.find(x => x.id === e.id && x.n === e.n); out.push(e.ref ? ['참조 해제', `${e.n} ${e.p}`, refTxt(e), '—'] : m2 ? ['이동', `${e.n} ${e.p}`, `엔터티 · 속성 ${e.a.length}`, `→ ${aName(m2.to)}`] : ['삭제', `${e.n} ${e.p}`, `엔터티 · 속성 ${e.a.length}`, '—']); } });
     b.E.forEach(e => { const o = ea.get(e.id); if (!o || !e.ref) return; if ((o.refVer || 0) !== (e.refVer || 0)) out.push(['참조 갱신', `${e.n} ${e.p}`, refTxt(o), refTxt(e)]); });
     // relations (18): structure changes are rows of the main table; ON DELETE / 1:1 UK change how the operating DB behaves — flagged 'db'
     // a relation is the same one by its FK group; copies saved before groups existed fall back to parent › child › name, then parent › child when only one is left
@@ -1479,7 +1524,7 @@
   /* ---- model tree (12 · DA#-style object explorer, T1 read tree):
      system › business area › (shortcuts · views · objects · used standards) › object › attribute.
      The tree shows the same area · version · logical/physical mode the canvas opened — model.html supplies window.treeData(). ---- */
-  const SYSTEMS_OF = () => SYSLIST.map(s => Object.assign({}, s, { href: 'system.html?system=' + s.code, cur: s.code === curSys().code }));
+  const SYSTEMS_OF = () => activeSystems().map(s => Object.assign({}, s, { href: 'system.html?system=' + s.code, cur: s.code === curSys().code }));
   const treeKey = () => 'dbm-tree3-' + ME.id;
   function drawTree(nav) {
     const page = document.body.dataset.page, file = curFile(), qp = new URLSearchParams(location.search);
@@ -1803,7 +1848,7 @@
         const sm = getModels()[r.area]; if (!sm || !sm.base) return `${(sm || {}).name || '원본'}에는 아직 확정본이 없어 참조할 수 없습니다 — 원본이 확정된 뒤 참조합니다`;
         if (lv.E.some(x => x.ref && x.refArea === r.area && (x.refId || x.id) === r.ent)) return '이미 지금 영역에서 참조하고 있습니다';
         return null; };
-      if (r.kind === 'area') return [I('open', '모델 열기'), I('std', '표준 맞추기'), I('ddl', 'DDL 만들기'), I('outputs', '산출물'), SEP, I('hist', '결재함 열기'), ed('vnew', '보기 추가', { ent: null }), I('dup', '영역 복제', { mock: '영역 복제는 목업에서 시연만 합니다 — 복제본은 새 업무 영역 v1 작업 중으로 만들어집니다' }), SEP, ...fold];
+      if (r.kind === 'area') return [I('open', '모델 열기'), I('std', '표준 맞추기'), I('ddl', 'DDL 만들기'), I('outputs', '산출물'), SEP, I('hist', '결재함 열기'), ed('vnew', '보기 추가', { ent: null }), I('dup', '영역 복제', { mock: '영역 복제는 목업에서 시연만 합니다 — 복제본은 새 업무 영역 v1 작업 중으로 만들어집니다' }), SEP, I('areaedit', '영역 정보 수정…'), I('areamove', '다른 시스템으로 옮기기 · 복제…'), I('areaoff', '사용 중지 · 삭제…'), SEP, ...fold];
       if (r.kind === 'folder') {
         if (r.nid === 'f:ents' || r.nid === 'f:tbls') return [ed('newent', P ? '새 테이블' : '새 엔터티', { ent: null, key: 'E' }), I('grid', '표 보기 · 일괄 편집'), SEP, ...fold];
         if (r.nid === 'f:views') return [ed('vnew', '새 보기', { ent: null }), SEP, ...fold];
@@ -1819,7 +1864,7 @@
         const place = ed('place', '보기에 배치…', { ent: null });
         if (e.ref) { const st = refStale(e);
           return [...addRef, I('select', '선택'), I('fit', '위치 맞춤'), I('src', `원본 열기${e.refName ? ' · ' + e.refName : ''}`), ed('refresh', st ? `갱신 · 원본 v${st} 확정본으로` : '갱신', { ent: null, why: editWhy(r, null) || (st ? null : `원본 v${e.refVer || '?'} 확정본과 같습니다 — 갱신할 것이 없습니다`) }), I('used', '사용처 (관계)'), SEP, place, unplace, ed('delete', '참조 해제', { ent: null, key: 'Delete', danger: 1 })]; }
-        return [...addRef, I('select', '선택'), I('fit', '위치 맞춤'), SEP, ed('rename', '이름 바꾸기', { key: 'F2' }), ed('addattr', P ? '컬럼 추가' : '속성 추가', { key: 'Insert' }), I('std', '표준 맞추기'), I('ddl', 'DDL 미리보기'), I('used', '사용처 (관계)'), SEP, place, unplace, ed('delete', P ? '테이블 삭제' : '엔터티 삭제', { key: 'Delete', danger: 1 })];
+        return [...addRef, I('select', '선택'), I('fit', '위치 맞춤'), SEP, ed('rename', '이름 바꾸기', { key: 'F2' }), ed('addattr', P ? '컬럼 추가' : '속성 추가', { key: 'Insert' }), I('std', '표준 맞추기'), I('ddl', 'DDL 미리보기'), I('used', '사용처 (관계)'), SEP, place, unplace, ed('moveto', '다른 영역으로 옮기기…'), ed('delete', P ? '테이블 삭제' : '엔터티 삭제', { key: 'Delete', danger: 1 })];
       }
       if (r.kind === 'attr' || r.kind === 'col') {
         const a = e && e.a[r.ai]; if (!a || a.edit) return [];
@@ -1859,7 +1904,7 @@
         if (window.dispatchEvent(ev)) toast(msg, 'info'); return;
       }
       const term = r.term || r.dom || (e && r.ai != null && e.a[r.ai] ? e.a[r.ai].n : '');
-      const NAV = { open: `model.html?area=${r.area}${sn}`, std: `standardize.html?area=${r.area}&f=todo`, ddl: `ddl.html?area=${r.area}${sn}${r.ent ? '&focus=' + r.ent : ''}`, outputs: `outputs.html?area=${r.area}${sn}`, hist: 'approvals.html', cand: 'candidates.html', dictopen: 'dictionary.html',
+      const NAV = { open: `model.html?area=${r.area}${sn}`, std: `standardize.html?area=${r.area}&f=todo`, ddl: `ddl.html?area=${r.area}${sn}${r.ent ? '&focus=' + r.ent : ''}`, outputs: `outputs.html?area=${r.area}${sn}`, hist: 'approvals.html', areaedit: `system.html?area=${r.area}&act=edit`, areamove: `system.html?area=${r.area}&act=move`, areaoff: `system.html?area=${r.area}&act=off`, cand: 'candidates.html', dictopen: 'dictionary.html',
         dict: `dictionary.html?q=${encodeURIComponent(term)}`, dreq: `dictionary.html?q=${encodeURIComponent(term)}`, src: e && e.refArea ? `model.html?area=${e.refArea}&focus=${r.ent}` : '' };
       if (c in NAV) { if (c === 'dict' && window.openDictTab && document.getElementById('dict-q')) { openDictTab(term, true); return; } if (NAV[c]) go(NAV[c]); else toast('원본 영역을 찾지 못했습니다', 'danger'); return; }
       // object commands: the page with this area open runs them; otherwise the model screen opens and runs it

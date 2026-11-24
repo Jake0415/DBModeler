@@ -2213,6 +2213,44 @@ window.pageInit = function () {
   // a tree entity dropped on the canvas: same area → place in this view · another area → reference (12 §3.2)
   window.addEventListener('dbm-tree-drag', ev => cv.classList.toggle('placing', !!(ev.detail && ev.detail.on) && cv.dataset.sys !== '1'));
 
+  /* ---- 25 §3-4: [다른 영역으로 옮기기…] — the modeler moves an entity to another area of the same system (both areas editable);
+     relations to entities left behind are cut (listed first); both areas' next confirmation shows it as 이동 and DA checks it ---- */
+  function askMove(id) {
+    const e = ent(id); if (!e) return;
+    const others = Object.entries(getModels()).filter(([k]) => k !== AREA);
+    const st = k => { const L = modelLock(k); if (!liveCanEdit(k)) return '편집 권한 없음'; if (L.state === 'review') return '결재 중 — 회수 필요'; if (L.state === 'confirmed') return '확정본 — 새 작업 버전을 먼저 시작'; return ''; };
+    const cut = R.filter(r => (r.f === id) !== (r.t === id));
+    const selfR = R.filter(r => r.f === id && r.t === id);
+    const nm = x => (ent(x) || {}).n || x;
+    const ov = document.createElement('div'); ov.className = 'overlay open'; ov.id = 'mo-entmove'; ov.setAttribute('role', 'dialog'); ov.setAttribute('aria-modal', 'true'); ov.setAttribute('aria-labelledby', 'em-t');
+    ov.innerHTML = `<div class="modal"><div class="m-head"><h3 id="em-t">‘${e.n}’ 다른 영역으로 옮기기</h3></div><div class="m-body">
+      <div class="field"><label for="em-to">옮길 업무 영역</label><select class="input" id="em-to">${others.map(([k, m]) => `<option value="${k}"${st(k) ? ' disabled' : ''}>${m.name}${st(k) ? ' — ' + st(k) : ''}</option>`).join('') || '<option value="">같은 시스템에 다른 업무 영역이 없습니다</option>'}</select></div>
+      <ul class="caption" style="margin:8px 0 0;padding-left:16px;line-height:20px">
+        <li>속성 <b>${e.a.length}</b>개${selfR.length ? ` · 자기 참조 관계 ${selfR.length}개` : ''}가 함께 옮겨집니다</li>
+        ${cut.length ? `<li class="u-danger">이 영역에 남는 엔터티와의 관계 <b>${cut.length}</b>개는 끊깁니다: ${cut.map(r => `${nm(r.f)} → ${nm(r.t)}`).join(', ')} — 대상 영역이 확정된 뒤 참조로 다시 잇습니다</li>` : '<li>이 영역에 남는 엔터티와의 관계는 없습니다</li>'}
+        <li>두 영역의 다음 확정 결재 변경 내역에 <b>이동</b>으로 보이고 DA가 확인합니다 · 감사 로그에 남습니다</li>
+        <li>Ctrl+Z로 되돌릴 수 없습니다 — 되돌리려면 대상 영역에서 다시 옮깁니다</li></ul></div>
+      <div class="m-foot"><button class="btn" id="em-no">취소</button><button class="btn primary" id="em-go">옮기기</button></div></div>`;
+    document.body.appendChild(ov);
+    const first = ov.querySelector('#em-to option:not([disabled])'); if (first) $('em-to').value = first.value;
+    $('em-go').disabled = !first; const close = () => { ov.remove(); cv.focus(); };
+    $('em-no').onclick = close; ov.addEventListener('keydown', ev => { if (ev.key === 'Escape') close(); }); setTimeout(() => (first ? $('em-to') : $('em-no')).focus(), 0);
+    $('em-go').onclick = () => {
+      const t = $('em-to').value; if (!t || st(t)) return;
+      const tv = getModel(t).ver, td = modelOf(t, tv); ['E', 'R', 'M', 'V'].forEach(k => { td[k] = td[k] || []; });
+      let nid = id; while (td.E.some(x => x.id === nid)) nid = id + '_' + Math.random().toString(36).slice(2, 5);
+      const c = JSON.parse(JSON.stringify(e)); c.id = nid; c.movedFrom = AREA; delete c.fresh;
+      td.E.push(c); selfR.forEach(r => td.R.push(Object.assign(JSON.parse(JSON.stringify(r)), { f: nid, t: nid })));
+      if (!setModelData(t, tv, Object.assign(td, { rev: (td.rev || 0) + 1 }))) { toast('대상 영역에 저장하지 못했습니다 — 옮기지 않았습니다', 'danger'); return; }
+      E.splice(E.indexOf(e), 1); for (let i = R.length - 1; i >= 0; i--) if (R[i].f === id || R[i].t === id) R.splice(i, 1);
+      V.forEach(v => { if (v.ents) v.ents = v.ents.filter(x => x !== id); if (v.pos) delete v.pos[id]; });
+      const tn = getModel(t).name, sn = getModel(AREA).name;
+      pushMove({ id, n: e.n, from: AREA, to: t, nid });
+      pushAudit({ act: '엔터티 영역 이동', target: `${e.n} (${e.p})`, why: `${sn} → ${tn}${cut.length ? ` · 끊긴 관계 ${cut.length}` : ''}` });
+      ov.remove(); sel = null; dirty = true; render();
+      toast(`‘${e.n}’을(를) ${tn}(으)로 옮겼습니다${cut.length ? ` · 관계 ${cut.length}개 끊김` : ''}`, 'success', { label: `${tn} 열기`, fn: () => { location.href = `model.html?area=${t}&focus=${nid}`; } });
+    };
+  }
   // ---- tree menu commands (12 §4.3 · T2): the same functions as the canvas and the attribute grid — same checks, same undo
   function runTreeCmd(d) {
     // T3 commands that do not need an entity of this area
@@ -2237,6 +2275,7 @@ window.pageInit = function () {
       case 'rename': if (attr) { pickEnt(); agRename(e, d.ai); return; } if (guard() || refGuard(e)) return; closeGrid(); focusEnt(e.id); renaming = e.id; render(); return;
       case 'addattr': if (guard() || refGuard(e)) return; closeGrid(); focusEnt(e.id); addAttr(); return;
       case 'delete': if (attr) { pickEnt(); agDelAsk(e, d.ai); return; } if (guard()) return; closeGrid(); focusEnt(e.id); askDelete(e.id); return;
+      case 'moveto': if (guard() || refGuard(e)) return; closeGrid(); askMove(e.id); return;   /* 25 §3-4 */
       case 'up': case 'down': pickEnt(); agMove(e, d.ai, d.cmd === 'up' ? -1 : 1); return;
       case 'pk': pickEnt(); agEdit(e, d.ai, 'pk', !attr.pk); return;
       case 'place': placeIn(e.id); return;
