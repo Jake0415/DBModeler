@@ -1478,7 +1478,8 @@
     { file: 'model.html', ids: 'SC-31 · PN-32 · PN-33 · PN-31G · PN-39 · PN-35 · PN-38', name: '모델(ERD 캔버스 · 사전 패널 · 엔터티 패널 · 표 보기 · 모델 검토 · 게이트 A · 확정 신청)', menu: '시스템', docs: [['03 ERD 편집기', D.erd], ['02 §5.1~5.4·5.7', D.flows], ['22 §6 SWS 비교 결정', D.sws], ['23 §6-2·5·6 캔버스 숫자', D.perf]], states: [['요구사항·프로젝트(편집)', 'model.html'], ['리스크(검토 중)', 'model.html?area=risk'], ['v4 확정본 사본', 'model.html?area=rq&snap=REQ-2026-0003'], ['예시: 미준수 해결 후(조회 전용)', 'model.html?state=resolved']] },
     { file: 'standardize.html', ids: 'SC-34', name: '표준 맞추기', menu: '시스템', docs: [['02 §5.3', D.flows], ['30 MD-42·50~55', D.meta]], states: [['요구사항·프로젝트', 'standardize.html'], ['예외만', 'standardize.html?f=ex'], ['DDL 가져오기 직후', 'standardize.html?from=import'], ['리스크(대상 없음)', 'standardize.html?area=risk']] },
     { file: 'term-wizard.html', ids: 'SC-35', name: '용어 자동분석(모델 → 용어 → 모델)', menu: '시스템', docs: [['30 MD-56', D.meta]], states: [['요구사항·프로젝트', 'term-wizard.html?area=rq'], ['인사관리', 'term-wizard.html?area=e_hr']] },
-    { file: 'import.html', ids: 'SC-36', name: '가져오기(엑셀·DDL → 모델)', menu: '시스템', docs: [['02 §5.6', D.flows]], states: [['기본', 'import.html']] },
+    { file: 'import-excel.html', ids: 'SC-36a', name: '엑셀로 가져오기(테이블 설계 → 모델)', menu: '시스템', docs: [['26 엑셀로 ERD 시작하기', '../26-erd-excel-import.md']], states: [['기본', 'import-excel.html'], ['오류 예시', 'import-excel.html']] },
+    { file: 'import.html', ids: 'SC-36', name: '가져오기(DDL → 모델)', menu: '시스템', docs: [['02 §5.6', D.flows]], states: [['기본', 'import.html']] },
     { file: 'ddl.html', ids: 'SC-37 · PN-37', name: 'DDL 출력 · 게이트 B · DBMS 비교', menu: '시스템', docs: [['02 §5.5', D.flows]], states: [['기본', 'ddl.html']] },
     { file: 'outputs.html', ids: 'SC-38', name: '산출물', menu: '시스템', docs: [['05 §8 DA# 비교', D.da]], states: [['테이블 정의서', 'outputs.html?k=tbl']] },
     { file: 'settings.html', ids: 'SC-40 · SC-41 · SC-42 · SC-43', name: '설정(기관 · 시스템 · 사용자·역할 · 검수 기준)', menu: '관리', docs: [['02 §6 설정 흐름', D.flows], ['30 §4 검수 기준', D.meta]], states: [['기관(이데이터 Admin)', 'settings.html?as=lee'], ['시스템', 'settings.html?as=lee#sys'], ['검수 기준', 'settings.html?as=lee#rules'], ['Admin 아님 → 403', 'settings.html?as=kim']] },
@@ -1492,7 +1493,7 @@
     'dictionary.html': [['사전 목록 가상화(행 40개만 그림) — 목업은 일부만 표시, 구현 단계', '23 §6-3'], ['상세 패널 재검토 사유를 진단 코드 목록으로', '30 v1.2 ⑥']],
     'excel-import.html': [['결과 표 가상화 — 구현 단계', '23 §6-3']],
     'model.html': [['카드 안 편집은 속성 추가·이름 바꾸기만, 나머지는 오른쪽 패널', '03 §0'], ['관계선을 FK 속성 행에 붙이기(컬럼 단위)', '22 §6-5'], ['부모 PK를 자식에 끌어다 놓아 키 전달', '22 §6-5'], ['ERD 편집 완결(남은 범위)', '06 남은 범위']],
-    'import.html': [['엑셀 테이블 정의서 → ERD 초안(가져올 때 중복만, 표준 검사는 표준 맞추기)', '20 · W2 후보']],
+    'import-excel.html': [['서버 검증 · 대용량 파일 · 동시 편집 잠금 — 구현 단계', '26 §3']],
     'settings.html': [['T11 가져오기·출력 결과물 / T12 운영·관리 테마', '06 남은 범위']]
   };
   SCREENS.forEach(s => { s.todo = TODO[s.file] || []; });
@@ -1776,6 +1777,7 @@
           <div role="tree" id="tr-tree" class="otree"></div>
           <div class="tsep"></div>
           <a class="tl${file === 'model.html' && qp.get('sys') ? ' on" aria-current="page' : ''}" href="model.html?sys=1"><i data-ic=compare></i>시스템 전체 ERD</a>
+          <a class="tl${file === 'import-excel.html' ? ' on" aria-current="page' : ''}" href="import-excel.html${qp.get('area') ? '?area=' + encodeURIComponent(qp.get('area')) : ''}"><i data-ic=upload></i>엑셀로 가져오기</a>
           <a class="tl${file === 'import.html' ? ' on" aria-current="page' : ''}" href="import.html${qp.get('area') ? '?area=' + encodeURIComponent(qp.get('area')) : ''}"><i data-ic=upload></i>DDL 가져오기</a>
           <div class="tsec"><span>최근 연 엔터티</span></div>
           <div id="tr-rec"></div>
@@ -1787,10 +1789,10 @@
         <a class="tm-i${page === 'system' ? ' on" aria-current="page' : ''}" href="system.html" title="시스템 홈 · ${sys.name}" aria-label="시스템 홈"><i data-ic=table></i></a>
         ${Object.entries(models0).map(([id, m]) => `<a class="tm-i tm-a${id === famArea ? ' on" aria-current="true' : ''}" href="model.html?area=${id}" title="${esc(m.name)}" aria-label="${esc(m.name)}">${esc(String(m.name).trim()[0])}</a>`).join('')}
         <a class="tm-i${file === 'model.html' && qp.get('sys') ? ' on" aria-current="page' : ''}" href="model.html?sys=1" title="시스템 전체 ERD" aria-label="시스템 전체 ERD"><i data-ic=compare></i></a>
-        <a class="tm-i${file === 'import.html' ? ' on" aria-current="page' : ''}" href="import.html${qp.get('area') ? '?area=' + encodeURIComponent(qp.get('area')) : ''}" title="DDL 가져오기" aria-label="DDL 가져오기"><i data-ic=upload></i></a>
+        <a class="tm-i${['import.html', 'import-excel.html'].includes(file) ? ' on" aria-current="page' : ''}" href="import-excel.html${qp.get('area') ? '?area=' + encodeURIComponent(qp.get('area')) : ''}" title="가져오기(엑셀 · DDL)" aria-label="가져오기(엑셀 · DDL)"><i data-ic=upload></i></a>
       </div>
       <button class="tcollapse" id="tr-min" type="button"></button>
-      <div class="tresize" id="tr-rs" role="separator"${['model.html', 'standardize.html', 'ddl.html', 'outputs.html', 'import.html'].includes(file) ? '' : ' hidden'} aria-orientation="vertical" aria-label="모델 트리 폭" tabindex="0" title="끌어서 폭 조절 · 두 번 누르면 내용에 맞춤"></div>`;
+      <div class="tresize" id="tr-rs" role="separator"${['model.html', 'standardize.html', 'ddl.html', 'outputs.html', 'import.html', 'import-excel.html'].includes(file) ? '' : ' hidden'} aria-orientation="vertical" aria-label="모델 트리 폭" tabindex="0" title="끌어서 폭 조절 · 두 번 누르면 내용에 맞춤"></div>`;
     const tree = nav.querySelector('#tr-tree'), qIn = nav.querySelector('#tr-q');
     const recHtml = () => { const models = getModels(); const rec = J(recKey(), []).filter(r => models[r.area] && (modelOf(r.area, models[r.area].ver).E || []).some(e => e.id === r.id));
       return rec.length ? rec.map(r => `<a class="tl" href="model.html?area=${r.area}&focus=${r.id}"><i data-ic=history></i><span class="tt">${esc(r.n)}</span><span class="tn">${esc(models[r.area].name)}</span></a>`).join('') : '<div class="tempty">모델에서 엔터티를 열면 여기에 남습니다</div>'; };

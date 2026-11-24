@@ -21,6 +21,7 @@
       <!-- ERD P2-11: the head = path · area screens · state · ⋯ · the one goal action; everything that changes the canvas lives in the canvas toolbar -->
       <span class="u-rel"><button class="btn u-w-32 u-p-0 u-jc-c" id="b-more" aria-haspopup="true" aria-expanded="false" aria-label="더 보기"><i data-ic=more></i></button>
         <div class="menu" id="moremenu" role="menu">
+          <a class="mi" role="menuitem" href="import-excel.html"><i data-ic=upload></i>엑셀로 가져오기</a>
           <a class="mi" role="menuitem" href="import.html"><i data-ic=upload></i>DDL 가져오기</a>
           <button class="mi" role="menuitem" id="mi-export"><i data-ic=download></i>이미지로 내보내기</button>
           <div class="msep"></div>
@@ -1756,7 +1757,7 @@ window.pageInit = function () {
   const bdoc = getDocs().find(x => x.type === 'model' && x.area === AREA && x.ver === BASE && x.step === 'done');
   // base version lives in the ⋯ menu and the version badge tooltip (header keeps one line)
   $('ver').title = BASE ? `v${BASE} 확정본 기준` : '확정본 없음 — 첫 작업 버전';
-  { const im = $('moremenu').querySelector('a[href="import.html"]'); if (im) im.setAttribute('href', `import.html?area=${AREA}`); }   // import keeps the area: its [취소] comes back here, "add to existing" preselects it
+  { const im = $('moremenu').querySelector('a[href="import.html"]'); if (im) im.setAttribute('href', `import.html?area=${AREA}`); const ix = $('moremenu').querySelector('a[href="import-excel.html"]'); if (ix) ix.setAttribute('href', `import-excel.html?area=${AREA}`); }   // import keeps the area: its [취소] comes back here, "add to existing" preselects it
   { const mm = $('moremenu'); const cmp =mm.querySelector('[data-toast*="확정본 대비"]'); if (cmp) { if (BASE) { cmp.lastChild.textContent = `v${BASE} 확정본과 비교`;
       // the counts come from this area's base copy at click time (was a fixed ‘v4 · +2 · +6 · 5’ on every area)
       cmp.removeAttribute('data-toast'); cmp.onclick = () => { setMore(false); let b = null; try { b = modelOf(AREA, BASE); } catch (x) { b = null; } if (!b || !b.E) { toast(`v${BASE} 확정본을 읽을 수 없습니다`, 'info'); return; }
