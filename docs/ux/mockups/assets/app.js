@@ -1198,6 +1198,66 @@
      docs are relative to /mockups/ — serve.ps1 serves ../*.md (docs/ux) and ../../spec/*.md (docs/spec) read-only */
   const D = { flows: '../02-flows.md', erd: '../03-erd-editor.md', plan: '../06-ux-review-plan.md', excel: '../07-dict-excel-roundtrip.md', da: '../05-mockup-vs-da.md', meta: '../../spec/da-feature-spec/30-metadata-design.md', prio: '../../spec/da-feature-spec/20-priority.md', sws: '../../spec/da-feature-spec/22-sws-comparison.md', perf: '../../spec/da-feature-spec/23-performance-spike.md', guide: '../01-design-guide.md' };
   // the dictionary screens, in groups (find · write | bring in | flow · history | reference) — one list for the top menu and the tab row
+  /* ---- 사전 화면 안내 (one component for every 사전 menu · review docs/ux/review/claude-dict-guide.md):
+     one line that always says what the screen is for + a foldable "사용 방법" (3 steps · 언제 / 누가 / 참고 · related screens).
+     Copy rules: the line is one sentence ending "~합니다." · steps end "~합니다" · [ ] quotes the on-screen button label exactly ·
+     links read "조건 → 화면". v = role variants (first match overrides) — a read-only user never gets "write and submit".
+     Open on the first visit of a screen, folded from the second visit unless the user opened it; [다른 화면도 접기] folds all (dbm-guide-<id>). */
+  const PAGE_GUIDE = {
+    'dictionary.html': { n: '통합 검색', d: '표준 단어 · 용어 · 도메인 · 코드를 찾아보고, 고칠 항목을 바구니에 모아 신청합니다.',
+      s: ['이름 · 영문약어 · 동의어 · 금칙어 · 초성으로 찾습니다', '행을 열어 정의 · 사용처 · 변경 이력을 봅니다', '[바구니에 담기] 후 [바구니 · 품의]에서 한 번에 신청합니다'],
+      when: '새 항목을 만들기 전, 이미 표준에 있는지 확인할 때', l: [['dict-grid.html', '몇 건 새로 → 직접 등록'], ['excel-import.html', '많은 건 → 엑셀 가져오기']],
+      v: [{ if: () => !can('dict.request'), s: ['이름 · 영문약어 · 동의어 · 금칙어 · 초성으로 찾습니다', '행을 열어 정의 · 사용처 · 변경 이력을 봅니다', '필요하면 엑셀로 내려받습니다'], who: '찾기 · 내려받기만 가능 — 신청은 모델러 · DA', l: [] }] },
+    'excel-import.html': { n: '엑셀 가져오기', d: '종류 하나를 골라 엑셀 파일로 여러 건을 한꺼번에 추가 · 변경 신청합니다.',
+      s: ['(1~2단계) 방식 · 종류를 고르고 파일을 올립니다', '(3~5단계) 자동 검사 결과에서 오류 행을 고칩니다', '(6단계) 정상 행을 [신청]하거나 [바구니로 보내기]로 묶습니다'],
+      when: '수십 ~ 수천 건을 한 번에 올리거나 고칠 때', note: '올린 파일은 30일 보관', l: [['uploads.html', '지난 업로드 → 업로드 이력'], ['dict-grid.html', '몇 건뿐 → 직접 등록']],
+      v: [{ if: () => !can('dict.request'), d: '엑셀 파일을 올려 사전 등록 전 자동 검사 결과를 봅니다.', s: ['(1~2단계) 방식 · 종류를 고르고 파일을 올립니다', '(3~5단계) 자동 검사 결과와 오류를 봅니다', '고치기 · 신청은 모델러 · DA에게 요청합니다'], who: '검사 결과 보기까지만 — 고치기 · 신청은 모델러 · DA', ro: 1, l: [['uploads.html', '지난 업로드 → 업로드 이력']] }] },
+    'uploads.html': { n: '업로드 이력', d: '내가 올린 엑셀 묶음의 검사 · 신청 · 반영 상태를 보고, 멈춘 작업을 이어 갑니다.',
+      s: ['상태(임시 저장 · 신청됨 · 반영됨 …)로 묶음을 거릅니다', '임시 저장 묶음은 [이어서 작업]으로 멈춘 단계부터 합니다', '반영된 묶음은 [반영본 다시 올려 확인]으로 사전과 맞춰 봅니다'],
+      when: '올린 파일이 어디까지 갔는지 확인할 때', note: '파일은 30일 보관 · 원본은 올린 사람과 DA만 열람', l: [['excel-import.html', '새 파일 → 엑셀 가져오기']],
+      v: [{ if: () => can('excel.viewall'), d: '기관에서 올린 엑셀 묶음의 검사 · 신청 · 반영 상태를 보고, 멈춘 작업을 이어 갑니다.', who: 'DA는 모든 사람의 묶음을 봅니다 — 다른 사람 묶음은 열람만' }] },
+    'dict-grid.html': { n: '직접 등록', d: '표에 몇 건을 바로 써서 등록을 신청합니다. [기존 항목 고치기]로 변경도 신청합니다.',
+      s: ['종류 탭을 1 도메인분류부터 번호 순서로 고릅니다', '한 줄에 한 건씩 씁니다(엑셀 표를 붙여 넣어도 됩니다)', '[정상 행 바구니에 담기] 후 바구니에서 한 번에 신청합니다'],
+      when: '몇 건 ~ 수십 건을 바로 등록하거나 고칠 때', note: '쓰던 내용은 이 브라우저에 자동 저장 · 단축키는 표 위 [⌨ 단축키]', l: [['excel-import.html', '많은 건 → 엑셀 가져오기'], ['dictionary.html', '있는지 먼저 → 통합 검색']],
+      v: [{ if: () => !can('dict.request'), d: '표에 써서 사전 등록을 신청하는 화면입니다.', s: ['종류 탭을 골라 작성 양식을 봅니다', '어떤 칸을 써야 하는지 확인합니다', '등록이 필요하면 모델러 · DA에게 요청합니다'], who: '보기만 가능 — 신청은 모델러 · DA(사전 신청 권한 필요)', ro: 1, note: '', l: [['dictionary.html', '있는지 먼저 → 통합 검색']] }] },
+    'candidates.html': { n: '후보 큐', d: '사전에 없어 \'후보\'로 올라온 단어 · 용어를 DA가 검토해 처리합니다.',
+      s: ['대기 후보를 열어 발생 위치와 비슷한 표준어를 봅니다', '[… 신청으로 전환] · [기존 표준어 사용 안내] · [반려] 중 고릅니다', '결과는 요청자에게 알림으로 가고, 상태는 결재를 따라 바뀝니다'],
+      when: '모델의 미준수 단어 · 용어를 정리할 때', who: '처리는 DA, 모델러는 상태 확인', l: [['dictionary.html', '비슷한 표준어 → 통합 검색']],
+      v: [{ if: () => !can('cand.decide'), s: ['내가 올린 후보의 상태를 봅니다', '\'기존 표준어 안내\'면 안내된 표준어로 모델을 고칩니다', '\'등록 완료\'면 모델에서 그 표준어를 씁니다'], who: '처리는 DA — 이 화면에서는 상태만 확인' }] },
+    'dict-history.html': { n: '변경 내역', d: '결재로 사전에 반영된 변경 기록입니다. 누가 · 언제 · 무엇을 바꿨는지 봅니다.',
+      s: ['작업(추가 · 변경 · 미사용 · 공표)과 기간으로 거르거나 신청번호로 찾습니다', '행을 열어 바뀌기 전 · 후를 비교하고 신청 문서로 갑니다', '기간을 \'직전 공표 이후\'로 두면 다음 공표에 묶일 변경이 보입니다'],
+      when: '변경 이유를 추적하거나 공표를 준비할 때', who: '[공표]는 DA만 — 기관 사전의 제정 차수를 올립니다', l: [['approvals.html', '진행 중인 신청 → 결재함']] },
+    'domain-groups.html': { n: '도메인 그룹 · 분류', d: '도메인을 묶는 상위 체계(도메인그룹 → 도메인분류)를 관리합니다. 사전을 만들 때 가장 먼저 정합니다.',
+      s: ['[그룹 추가]로 도메인그룹을 만듭니다 — 결재 없이 사유만 남깁니다', '그룹 아래 [분류 추가 신청]으로 도메인분류를 신청합니다', '이어서 직접 등록에서 단어 → 도메인 → 용어 순서로 씁니다'],
+      when: '사전을 처음 만들거나 새 업무 분야가 생길 때', who: '그룹 추가는 DA · 관리자, 분류 신청은 모델러 · DA', note: '공통(행안부) 그룹 · 분류는 읽기 전용 — 그 아래 기관 분류는 신청 가능', l: [['dict-grid.html', '단어 · 도메인 · 용어 쓰기 → 직접 등록']],
+      v: [{ if: () => !can('dict.request') && !can('dict.group'), s: ['도메인그룹과 그 아래 도메인분류를 봅니다', '분류를 눌러 연결된 형식단어와 도메인을 봅니다', '추가 · 변경이 필요하면 DA에게 요청합니다'], who: '보기만 가능 — 그룹은 DA · 관리자, 분류 신청은 모델러 · DA', l: [] }] },
+    'std-common.html': { n: '공통표준 · 행정표준코드', d: '행안부 공통표준 판과 행정표준코드를 봅니다. 원문은 못 고치고, 새 판은 품의로 반영합니다.',
+      s: ['[행정표준코드] 탭에서 코드와 코드값을 찾아봅니다', '새 판이 나오면 [새 판 반영]에서 원본을 올려 지금 판과 비교합니다', '반영할 차이를 골라 품의를 올립니다 — 최종 승인 뒤 반영됩니다'],
+      when: '행안부가 새 판을 배포했을 때 · 공통 코드값을 확인할 때', who: '새 판 품의는 DA · 관리자만', note: '기관 항목과 충돌하면 DA가 따로 정리 · 폐기 항목은 지우지 않고 미사용으로', l: [['dict-history.html', '반영 결과 → 변경 내역']] }
+  };
+  function pageGuide(after) {
+    const base = PAGE_GUIDE[curFile()]; if (!base || !after || document.querySelector('.pguide')) return;
+    const g = Object.assign({}, base, (base.v || []).find(x => x.if()) || {});
+    window.__pgRo = !!g.ro;   // the screen's own read-only banner is folded into this guide (one box, not two)
+    const K = 'dbm-guide-' + ME.id, st = J(K, {}), file = curFile();
+    // first visit → open; second visit → folded unless the user opened it; [다른 화면도 접기] → folded everywhere until opened
+    const v0 = st[file], open = v0 === 1 || (v0 == null && st._all !== 0);
+    if (v0 == null) { st[file] = 'seen'; S(K, st); }
+    const meta = [['언제', g.when], ['누가', g.who], ['참고', g.note]].filter(x => x[1]);
+    const box = document.createElement('section'); box.className = 'pguide' + (g.ro ? ' ro' : ''); box.setAttribute('aria-label', `${g.n} 화면 안내`);
+    const tgl = o => `사용 방법 ${o ? '접기' : '보기'}<i data-ic=${o ? 'up' : 'down'} data-s=14></i>`;
+    box.innerHTML = `<div class="pg-line"><i data-ic=${g.ro ? 'lock' : 'info'} data-s=14 aria-hidden="true"></i><p class="pg-d">${g.d}${g.ro ? ` <b class="pg-ro">${g.who}</b>` : ''}</p>
+        <button type="button" class="btn ghost sm pg-tg" aria-expanded="${open}" aria-controls="pg-more">${tgl(open)}</button></div>
+      <div class="pg-more" id="pg-more"${open ? '' : ' hidden'}><ol class="pg-steps">${g.s.map(x => `<li>${x}</li>`).join('')}</ol>
+        <div class="pg-meta">${meta.filter(x => !(g.ro && x[0] === '누가')).map(([k, t]) => `<span><b>${k}</b>${t}</span>`).join('')}${g.l.length ? `<span class="pg-links">${g.l.map(([h, t]) => `<a href="${h}">${t}</a>`).join('')}</span>` : ''}<button type="button" class="linkbtn pg-all">다른 화면도 접기</button></div></div>`;
+    after.insertAdjacentElement('afterend', box);
+    const tg = box.querySelector('.pg-tg'), more = box.querySelector('.pg-more');
+    const set = o => { more.hidden = !o; tg.setAttribute('aria-expanded', o); tg.innerHTML = tgl(o); };
+    tg.addEventListener('click', () => { const o = more.hidden; set(o); const s2 = J(K, {}); s2[file] = o ? 1 : 0; S(K, s2); });
+    box.querySelector('.pg-all').addEventListener('click', () => { const s2 = J(K, {}); Object.keys(s2).forEach(k => { if (s2[k] === 1) s2[k] = 0; }); s2._all = 0; s2[file] = 0; S(K, s2); set(false); tg.focus(); toast('사전 화면 안내를 모두 접었습니다 — 화면마다 [사용 방법 보기]로 다시 펼칩니다', 'info'); });
+    // ? (outside text fields) opens / folds the guide
+    document.addEventListener('keydown', e => { if (e.key !== '?' || e.ctrlKey || e.metaKey || e.altKey || (e.target.closest && e.target.closest('input,textarea,select,[contenteditable="true"]'))) return; e.preventDefault(); tg.click(); });
+  }
   const DICT_TABS = [['dictionary.html', '통합 검색'], ['excel-import.html', '엑셀 가져오기', ['uploads.html']], 0, ['dict-grid.html', '직접 등록'], 0, ['candidates.html', '후보 큐'], ['dict-history.html', '변경 내역'], 0, ['domain-groups.html', '도메인 그룹 · 분류'], ['std-common.html', '공통표준 · 행정표준코드']];
   const SCREENS = [
     { file: 'home.html', ids: 'SC-55', name: '홈', menu: '홈', docs: [['02 §1 화면 목록', D.flows], ['06 §3 새 화면 명세', D.plan]], states: [['김모델(모델러·DA)', 'home.html?as=kim'], ['박설계(모델러)', 'home.html?as=park'], ['이현업(기관 담당자)', 'home.html?as=hyun']] },
@@ -1903,7 +1963,8 @@
     { const DT = DICT_TABS;
       const here = t => t && (t[0] === curFile() || (t[2] || []).includes(curFile()));
       const ph = DT.some(here) && document.querySelector('#content .page-header');
-      if (ph && !document.querySelector('.dtabs')) ph.insertAdjacentHTML('afterend', `<nav class="tabs dtabs" aria-label="사전 화면">${DT.map(t => !t ? '<span class="dsep" aria-hidden="true"></span>' : `<a href="${t[0]}"${here(t) ? ' class="on" aria-current="page"' : ''}>${t[1]}</a>`).join('')}</nav>`); }
+      if (ph && !document.querySelector('.dtabs')) ph.insertAdjacentHTML('afterend', `<nav class="tabs dtabs" aria-label="사전 화면">${DT.map(t => !t ? '<span class="dsep" aria-hidden="true"></span>' : `<a href="${t[0]}"${here(t) ? ' class="on" aria-current="page"' : ''}>${t[1]}</a>`).join('')}</nav>`);
+      if (ph) pageGuide(document.querySelector('.dtabs')); }
     drawTree(nav);
     const toasts = document.createElement('div');
     toasts.className = 'toasts'; toasts.id = 'toasts';

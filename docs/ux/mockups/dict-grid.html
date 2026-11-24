@@ -98,7 +98,6 @@
           <button type="button" data-mode="edit">기존 항목 고치기</button>
           <button type="button" data-mode="basket">바구니 열기</button>
         </div>
-        <div class="flowline"><i data-ic=flow></i>표준화 담당자 흐름: 도메인분류 → 단어(형식단어) → 도메인 → 용어 · 코드 순으로 쓰면 오류가 적습니다</div>
       </div>
     </div>
     <div class="tabs ktabs" id="ktabs" role="tablist" aria-label="종류"></div>
@@ -107,7 +106,12 @@
     <div class="gbar" id="gbar">
       <button class="btn sm" id="b-add1"><i data-ic=plus></i>행 추가</button>
       <button class="btn sm" id="b-add5"><i data-ic=plus></i>5행 추가</button>
-      <span class="caption muted">Tab · Shift+Tab 칸 이동 · Enter 다음 행 첫 칸(Tab을 시작한 열 · 마지막 행이면 새 행) · 목록 칸은 글자를 쳐서 고르고 Enter(타입은 C · V · N · D · T 한 글자) · Ctrl+Enter 행 추가 · 빈 행에서 Delete 삭제 · 엑셀이나 표를 복사해 칸에 붙여 넣으면 그 칸부터 채웁니다</span>
+      <!-- the long key line moved into a [⌨ 단축키] popover (claude-dict-guide DG-12) -->
+      <span class="u-rel"><button type="button" class="btn ghost sm" id="kb-tg" aria-expanded="false" aria-controls="kb-help">⌨ 단축키</button>
+        <div class="menu kbhelp" id="kb-help" role="note"><ul class="caption">
+          <li><kbd>Tab</kbd> · <kbd>Shift+Tab</kbd> 칸 이동</li><li><kbd>Enter</kbd> 다음 행 첫 칸(Tab을 시작한 열 · 마지막 행이면 새 행)</li>
+          <li>목록 칸은 글자를 쳐서 고르고 <kbd>Enter</kbd>(타입은 C · V · N · D · T 한 글자)</li><li><kbd>Ctrl+Enter</kbd> 행 추가 · 빈 행에서 <kbd>Delete</kbd> 삭제</li>
+          <li>엑셀이나 표를 복사해 칸에 붙여 넣으면 그 칸부터 채웁니다</li></ul></div></span>
     </div>
 
     <div class="esearch" id="esearch" hidden>
@@ -922,6 +926,10 @@ window.pageInit = function () {
   $('ktabs').onmousedown = e => { if (e.button !== 0) return; const b = e.target.closest('[data-k]'); if (b && b.dataset.k !== S.tab) switchTab(b.dataset.k); };
   $('ktabs').onclick = e => { const b = e.target.closest('[data-k]'); if (!b || b.dataset.k === S.tab) return; switchTab(b.dataset.k); };
   $('ktabs').onkeydown = e => { if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return; e.preventDefault(); const i = KINDS.indexOf(S.tab), j = (i + (e.key === 'ArrowRight' ? 1 : KINDS.length - 1)) % KINDS.length; S.tab = KINDS[j]; save(); render(); const b = $('ktabs').querySelector(`[data-k="${S.tab}"]`); b && b.focus(); };
+  { const kb = $('kb-tg'), kh = $('kb-help'); const setKb = o => { kh.classList.toggle('open', o); kb.setAttribute('aria-expanded', o); };
+    kb.onclick = ev => { ev.stopPropagation(); setKb(!kh.classList.contains('open')); };
+    document.addEventListener('click', ev => { if (!ev.target.closest('#kb-help, #kb-tg')) setKb(false); });
+    kh.addEventListener('keydown', ev => { if (ev.key === 'Escape') { setKb(false); kb.focus(); } }); kb.addEventListener('keydown', ev => { if (ev.key === 'Escape') setKb(false); }); }
   $('b-add1').onclick = () => { addRows(1); focusCell(R()[S.tab].length - 1, firstEd()); };
   $('b-add5').onclick = () => { const n = R()[S.tab].length; addRows(5); focusCell(n, firstEd()); };
   function drawSearch() {
@@ -962,7 +970,7 @@ window.pageInit = function () {
   migrate(S); migrate(S.bk);
   // rows already sent to the basket are not 'unfinished work'; opening the basket table (?mode=basket) is not about those rows either
   restored = qs.get('mode') === 'basket' ? 0 : KINDS.reduce((n, k) => n + S.rows[k].filter(r => !isEmpty(k, r) && !r.sent).length, 0) + S.edit.filter(r => !r.sent).length;
-  $('ro-banner').hidden = !RO;
+  $('ro-banner').hidden = !RO || !!window.__pgRo;   // the 사전 화면 안내 already says it (one box, not two — claude-dict-guide DG-05)
   ['b-add1', 'b-add5'].forEach(id => { $(id).disabled = RO; });
   if (restored) { $('restore-t').textContent = `이전에 쓰던 ${restored}행을 불러왔습니다 — 자동 저장(이 브라우저 · ${ME.name})`; $('restore-banner').hidden = false; }
   if (qs.get('ids')) {   // ?ids=W-0102,T-0410 — preload rows to fix (the dictionary's multi-select can link here)

@@ -613,6 +613,25 @@ input[type=checkbox]:focus-visible, input[type=radio]:focus-visible { outline:2p
 /* the dictionary screens' shared tab row (links) */
 .tabs.dtabs { margin:0; padding:0 20px; background:var(--surface); flex:none; }
 .tabs.dtabs .dsep { width:1px; align-self:center; height:16px; background:var(--ds-gray-400); margin:0 8px; }
+/* 사전 화면 안내 (pageGuide): one line always visible + foldable steps — same place and shape on every 사전 menu */
+.pguide { flex:none; padding:4px 20px; background:var(--surface); border-bottom:1px solid var(--border); font-size:14px; color:var(--fg-2); }
+.pguide .pg-line { display:flex; align-items:center; gap:8px; min-height:28px; }
+.pguide .pg-line > .ic, .pguide .pg-line > i { color:var(--ds-blue-700); flex:none; }
+.pguide.ro .pg-line > .ic, .pguide.ro .pg-line > i { color:var(--ds-amber-900); }
+.pguide .pg-d { margin:0; flex:1; min-width:0; color:var(--fg-2); line-height:20px; }
+.pguide .pg-ro { font-weight:600; color:var(--ds-amber-900); margin-left:4px; }
+.pguide .pg-all { margin-left:auto; color:var(--fg-2); font-size:12px; }
+.menu.kbhelp { position:absolute; top:32px; left:0; width:380px; padding:10px 12px; background:var(--surface); border-radius:var(--r-xl); box-shadow:var(--menu-shadow); display:none; z-index:40; }
+.menu.kbhelp.open { display:block; }
+.kbhelp ul { margin:0; padding-left:16px; display:grid; gap:4px; color:var(--fg-2); }
+.pguide .pg-tg { flex:none; gap:4px; }
+.pguide .pg-more { padding:4px 0 4px 22px; }
+.pguide .pg-steps { margin:0; padding:0; list-style:none; counter-reset:pg; display:flex; flex-wrap:wrap; gap:6px 20px; }
+.pguide .pg-steps li { counter-increment:pg; display:flex; gap:6px; align-items:baseline; line-height:20px; }
+.pguide .pg-steps li::before { content:counter(pg); flex:none; display:inline-grid; place-items:center; width:18px; height:18px; border-radius:50%; background:var(--ds-gray-100); color:var(--fg); font:600 12px var(--font-mono); box-shadow:inset 0 0 0 1px var(--ds-gray-400); }
+.pguide .pg-meta { display:flex; flex-wrap:wrap; align-items:center; gap:4px 16px; margin-top:6px; font-size:12px; line-height:18px; }
+.pguide .pg-meta b { font-weight:600; color:var(--fg); margin-right:6px; }
+.pguide .pg-links { display:inline-flex; gap:12px; flex-wrap:wrap; }
 .tabs a { display:inline-flex; align-items:center; font:400 14px/20px var(--font-sans); color:var(--fg-2); padding:14px 2px; border-bottom:2px solid transparent; text-decoration:none; }
 .tabs a:hover { color:var(--fg); text-decoration:none; }
 .tabs a.on { color:var(--fg); border-bottom-color:var(--ds-gray-1000); }
