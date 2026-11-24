@@ -55,6 +55,27 @@
   #tb[hidden], #listwrap[hidden], #stats[hidden] { display:none !important; }
   #stats .tbl :is(th, td) { white-space:normal; }   /* 1600: the 8-column requester table fits its grid cell */
   .stats-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(360px, 1fr)); gap:16px 24px; }
+  /* 집계 redesign (2026-11-24): toolbar · KPI cards · two cards (waiting / state mix) · requester table */
+  .st-bar { display:flex; flex-wrap:wrap; gap:8px 12px; align-items:center; margin-bottom:16px; }
+  .kpi-row { display:grid; grid-template-columns:repeat(5, minmax(0, 1fr)); gap:12px; margin-bottom:16px; }
+  .kpi { border:1px solid var(--border); border-radius:var(--r-lg); padding:12px 16px; background:var(--surface); }
+  .kpi.warn { border-color:var(--ds-red-400); }
+  .kpi-n { font:600 24px/32px var(--font-sans); font-variant-numeric:tabular-nums; color:var(--fg); }
+  .kpi-l { font-size:13px; color:var(--fg); margin-top:2px; }
+  .kpi-s { font-size:12px; color:var(--fg-2); margin-top:4px; display:flex; align-items:center; gap:4px; }
+  .st-grid { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:16px; }
+  .st-card { border:1px solid var(--border); border-radius:var(--r-lg); padding:14px 16px; background:var(--surface); min-width:0; }
+  .st-card h3 { margin:0 0 10px; font-size:14px; font-weight:600; }
+  .st-sub { font-size:12px; font-weight:600; color:var(--fg); margin:14px 0 6px; }
+  .st-old { list-style:none; margin:0; padding:0; display:grid; gap:4px; }
+  .st-old li { display:flex; gap:10px; align-items:center; font-size:13px; min-width:0; }
+  .st-old li .grow { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--fg-2); }
+  .st-stack { display:flex; height:12px; border-radius:6px; overflow:hidden; background:var(--surface-2); gap:2px; }
+  .st-leg { list-style:none; margin:10px 0 0; padding:0; display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:6px 16px; font-size:13px; }
+  .st-leg li { display:flex; align-items:center; gap:8px; }
+  .st-leg i { width:10px; height:10px; border-radius:2px; flex:none; }
+  .st-leg b { margin-left:auto; font-weight:600; }
+  .st-w { width:160px; }
   .statbar { display:block; width:100%; min-width:80px; height:6px; border:0; border-radius:3px; background:var(--surface-2); appearance:none; -webkit-appearance:none; overflow:hidden; }
   .statbar::-webkit-progress-bar { background:var(--surface-2); border-radius:3px; }
   .statbar::-webkit-progress-value { background:var(--ink); border-radius:3px; }
@@ -206,39 +227,68 @@ window.pageInit = function () {
   let period = 'month';
   const PERIOD = { week: '이번 주', month: '이번 달', all: '전체' };
   const dur = ms => ms < 36e5 ? `${Math.max(1, Math.round(ms / 6e4))}분` : ms < 48 * 36e5 ? `${(ms / 36e5).toFixed(1)}시간` : `${(ms / 864e5).toFixed(1)}일`;
+  // 집계 (DX-21, redesigned 2026-11-24): big numbers first → where documents are waiting (actionable) → state mix + reject reasons → per requester
+  let stType = '';
+  const STYPE = { '': '전체', dict: '표준 사전', model: '모델 확정' };
   function drawStats() {
     const now = new Date(); let from = -Infinity;
-    if (period === 'week') { const s = new Date(now.getFullYear(), now.getMonth(), now.getDate()); s.setDate(s.getDate() - ((s.getDay() + 6) % 7)); from = s.getTime(); }
+    if (period === 'week') { const s0 = new Date(now.getFullYear(), now.getMonth(), now.getDate()); s0.setDate(s0.getDate() - ((s0.getDay() + 6) % 7)); from = s0.getTime(); }
     if (period === 'month') from = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
-    const all = getDocs().filter(d => d.type === 'dict');
+    const all = getDocs().filter(d => d.type === 'dict' || d.type === 'model').filter(d => !stType || d.type === stType);
     const D = all.filter(d => { const t = parseAt(d.submittedAt || d.date); return period === 'all' || (!isNaN(t) && t >= from); });
-    const ST = [['live', '진행 중', d => ['da', 'final'].includes(d.step), ''], ['done', '완료', d => d.step === 'done', 'ok'], ['rejected', '반려', d => d.step === 'rejected', 'err'], ['withdrawn', '회수', d => d.step === 'withdrawn', '']];
-    const cnt = ST.map(s => [s, D.filter(s[2]).length]);
+    const ST = [['live', '진행 중', d => ['da', 'final'].includes(d.step), 'var(--fg-3)'], ['done', '완료', d => d.step === 'done', 'var(--success)'], ['rejected', '반려', d => d.step === 'rejected', 'var(--danger)'], ['withdrawn', '회수', d => d.step === 'withdrawn', 'var(--ds-gray-500)']];
+    const cnt = Object.fromEntries(ST.map(x => [x[0], D.filter(x[2]).length]));
+    const live = D.filter(d => ['da', 'final'].includes(d.step)), late = live.filter(docLate);
     const items = D.reduce((n, d) => n + (+d.n || (d.items || []).length || 0), 0);
     const itemRej = D.reduce((n, d) => n + (d.items || []).filter(it => it.rej).length, 0);
-    // processing time: request → last history entry, for finished documents with a parsable history
     const times = D.filter(d => ['done', 'rejected', 'withdrawn'].includes(d.step) && (d.hist || []).length).map(d => parseAt(d.hist[d.hist.length - 1].at) - parseAt(d.submittedAt || d.date)).filter(x => isFinite(x) && x >= 0);
-    const avg = times.length ? dur(times.reduce((a, b) => a + b, 0) / times.length) : '—';
-    // reject reasons: whole-document rejections (history) + per-item rejections (item reason)
+    const avg = times.length ? dur(times.reduce((x, y) => x + y, 0) / times.length) : '—';
+    const decided = cnt.done + cnt.rejected, aprRate = decided ? Math.round(cnt.done * 100 / decided) : null;
     const R = {};
     const addR = (txt, kind) => { const k = String(txt || '').replace(/<[^>]*>/g, '').trim().slice(0, 60) || '(사유 없음)'; R[k] = R[k] || { n: 0, kinds: new Set() }; R[k].n++; R[k].kinds.add(kind); };
     D.forEach(d => { (d.hist || []).filter(h => h.act === '반려').forEach(h => addR(h.why, '문서 반려')); (d.items || []).filter(it => it.rej).forEach(it => addR(it.rejWhy, '항목 반려')); });
-    const topR = Object.entries(R).sort((a, b) => b[1].n - a[1].n).slice(0, 5);
-    // per requester
-    const P = {}; D.forEach(d => { const p = P[d.req] = P[d.req] || { n: 0, live: 0, done: 0, rejected: 0, withdrawn: 0, items: 0 }; p.n++; p[docGroup(d) === 'live' ? 'live' : d.step]++; p.items += +d.n || 0; });
-    const PL = Object.entries(P).sort((a, b) => b[1].n - a[1].n); const maxP = Math.max(1, ...PL.map(x => x[1].n));
+    const topR = Object.entries(R).sort((x, y) => y[1].n - x[1].n).slice(0, 5);
+    const P = {}; D.forEach(d => { const q = P[d.req] = P[d.req] || { n: 0, live: 0, done: 0, rejected: 0, withdrawn: 0, items: 0, late: 0 }; q.n++; q[docGroup(d) === 'live' ? 'live' : d.step]++; q.items += +d.n || 0; if (docLate(d)) q.late++; });
+    const PL = Object.entries(P).sort((x, y) => y[1].n - x[1].n); const maxP = Math.max(1, ...PL.map(x => x[1].n));
     const pct = n => D.length ? Math.round(n * 100 / D.length) : 0;
-    $('stats').innerHTML = `<div class="u-flex u-gap-12 u-wrap u-mb-12">
-        <div class="seg" role="group" aria-label="집계 기간">${Object.entries(PERIOD).map(([k, l]) => `<button type="button" data-period="${k}" aria-pressed="${period === k}" class="${period === k ? 'on' : ''}">${l}</button>`).join('')}</div>
-        <span class="caption muted">사전 신청 ${D.length}건 · 신청일 기준${period !== 'all' ? ` · 전체 ${all.length}건 중` : ''}</span></div>
-      <div class="mline">${cnt.map(([s, n]) => `<span><b>${n}</b>${s[1]}</span>`).join('')}<span><b>${items}</b>항목</span><span><b>${itemRej}</b>항목 반려</span><span><b>${avg}</b>평균 처리 시간</span></div>
-      ${!D.length ? `<div class="banner">${icon('info')}<div>${PERIOD[period]}에 들어온 사전 신청이 없습니다. 기간을 넓혀 보세요.</div></div>` : `<div class="stats-grid">
-        <section aria-labelledby="st-s"><div class="section-t" id="st-s">상태별</div><table class="tbl"><thead><tr><th>상태</th><th class="r">건수</th><th>비율</th><th class="r">%</th></tr></thead><tbody>${cnt.map(([s, n]) => `<tr><td>${s[1]}</td><td class="num">${n}</td><td><progress class="statbar ${s[3]}" max="${D.length}" value="${n}" aria-label="${s[1]} ${pct(n)}%"></progress></td><td class="num muted">${pct(n)}%</td></tr>`).join('')}</tbody></table>
-          <div class="caption muted u-mt-8">평균 처리 시간: 끝난 문서 ${times.length}건의 신청 → 마지막 처리(승인·반려·회수) 시각 차이</div></section>
-        <section aria-labelledby="st-r"><div class="section-t" id="st-r">반려 사유 상위 ${topR.length ? `<span class="mono muted">${topR.length}</span>` : ''}</div>${topR.length ? `<table class="tbl"><thead><tr><th>사유</th><th>구분</th><th class="r">횟수</th></tr></thead><tbody>${topR.map(([k, v]) => `<tr><td class="wrap">${esc(k)}</td><td class="muted u-nowrap">${[...v.kinds].join(' · ')}</td><td class="num">${v.n}</td></tr>`).join('')}</tbody></table>` : '<div class="caption muted">이 기간에 반려가 없습니다.</div>'}</section>
-        <section aria-labelledby="st-p"><div class="section-t" id="st-p">요청자별</div><table class="tbl"><thead><tr><th>요청자</th><th class="r">전체</th><th class="r">진행 중</th><th class="r">완료</th><th class="r">반려</th><th class="r">회수</th><th class="r">항목</th><th>비중</th></tr></thead><tbody>${PL.map(([id, p]) => `<tr><td>${esc(nameOf(id))}${id === ME.id ? ' <span class="muted">(나)</span>' : ''}</td><td class="num">${p.n}</td><td class="num">${p.live}</td><td class="num">${p.done}</td><td class="num">${p.rejected ? `<span class="u-danger">${p.rejected}</span>` : 0}</td><td class="num">${p.withdrawn}</td><td class="num">${p.items}</td><td><progress class="statbar" max="${maxP}" value="${p.n}" aria-label="${esc(nameOf(id))} ${p.n}건"></progress></td></tr>`).join('')}</tbody></table></section>
-      </div>`}`;
-    $('stats').querySelectorAll('[data-period]').forEach(b => b.onclick = () => { period = b.dataset.period; drawStats(); const nb = $('stats').querySelector(`[data-period="${period}"]`); if (nb) nb.focus(); });
+    const fmt = t => { const d0 = new Date(t); return (d0.getMonth() + 1) + '/' + d0.getDate(); };
+    const range = period === 'all' ? '전체 기간' : fmt(from) + ' ~ 오늘';
+    const sla = (getOrg && getOrg().sla) || 3;
+    // waiting: by step, and the oldest open documents (each opens the document)
+    const byStep = [['da', 'DA 승인 대기', 'DA'], ['final', '최종 승인 대기', '기관 담당자']].map(([k, l, who]) => { const L = live.filter(d => d.step === k); return { k, l, who, n: L.length, late: L.filter(docLate).length }; });
+    const oldest = live.slice().sort((x, y) => docAge(y) - docAge(x)).slice(0, 4);
+    const kpi = (n, l, sub, cls) => `<div class="kpi ${cls || ''}"><div class="kpi-n">${n}</div><div class="kpi-l">${l}</div><div class="kpi-s">${sub || '&nbsp;'}</div></div>`;
+    const seg = (label, obj, cur, attr) => `<div class="seg" role="group" aria-label="${label}">${Object.entries(obj).map(([k, l]) => `<button type="button" data-${attr}="${k}" aria-pressed="${cur === k}" class="${cur === k ? 'on' : ''}">${l}</button>`).join('')}</div>`;
+    let html = `<div class="st-bar">${seg('집계 기간', PERIOD, period, 'period')}${seg('문서 유형', STYPE, stType, 'stype')}
+      <span class="caption muted">${range} · 신청일 기준 · 문서 <b class="u-fg">${D.length}</b>건${period !== 'all' ? ` (전체 기간 ${all.length}건)` : ''}</span></div>`;
+    if (!D.length) html += `<div class="banner">${icon('info')}<div>${PERIOD[period]}에 들어온 ${stType ? STYPE[stType] + ' ' : ''}문서가 없습니다. 기간을 넓혀 보세요.</div></div>`;
+    else {
+      html += `<div class="kpi-row">
+        ${kpi(live.length, '진행 중', late.length ? `<span class="u-danger">${icon('err', 12)} 기한 넘김 ${late.length}</span>` : '기한 넘김 없음', late.length ? 'warn' : '')}
+        ${kpi(cnt.done, '완료', aprRate == null ? '결정된 문서 없음' : `승인율 ${aprRate}%`)}
+        ${kpi(`${cnt.rejected} · ${cnt.withdrawn}`, '반려 · 회수', `항목 반려 ${itemRej}건`)}
+        ${kpi(avg, '평균 처리 시간', times.length ? `끝난 문서 ${times.length}건 기준` : '끝난 문서 없음')}
+        ${kpi(items, '처리 항목', `문서 ${D.length}건에 든 항목`)}</div>
+      <div class="st-grid">
+        <section class="st-card" aria-labelledby="st-w"><h3 id="st-w">진행 중 — 어디서 기다리나</h3>
+          <table class="tbl"><thead><tr><th>단계</th><th>처리할 사람</th><th class="r">건수</th><th class="r">기한 넘김</th></tr></thead><tbody>
+          ${byStep.map(x => `<tr><td>${x.l}</td><td class="muted">${x.who}</td><td class="num">${x.n}</td><td class="num">${x.late ? `<span class="u-danger">${x.late}</span>` : 0}</td></tr>`).join('')}</tbody></table>
+          ${oldest.length ? `<div class="st-sub">가장 오래 기다린 문서</div><ul class="st-old">${oldest.map(d => `<li><a href="approvals.html?doc=${d.id}" class="mono">${d.id}</a><span class="grow">${esc(d.title)}</span><span class="num ${docLate(d) ? 'u-danger' : 'muted'}">${docAge(d)}일</span></li>`).join('')}</ul>` : '<div class="caption muted u-mt-8">진행 중인 문서가 없습니다.</div>'}
+          <div class="caption muted u-mt-8">기한 = 설정 › 기관 › 운영 목표의 결재 기한(${sla}일)</div></section>
+        <section class="st-card" aria-labelledby="st-s"><h3 id="st-s">상태 분포</h3>
+          <div class="st-stack" role="img" aria-label="${ST.map(x => `${x[1]} ${cnt[x[0]]}건`).join(', ')}">${ST.map(x => cnt[x[0]] ? `<span style="flex:${cnt[x[0]]};background:${x[3]}"></span>` : '').join('')}</div>
+          <ul class="st-leg">${ST.map(x => `<li><i style="background:${x[3]}"></i>${x[1]}<b class="num">${cnt[x[0]]}</b><span class="muted num">${pct(cnt[x[0]])}%</span></li>`).join('')}</ul>
+          <div class="st-sub">반려 사유 상위${topR.length ? ` <span class="mono muted">${topR.length}</span>` : ''}</div>
+          ${topR.length ? `<table class="tbl"><thead><tr><th>사유</th><th>구분</th><th class="r">횟수</th></tr></thead><tbody>${topR.map(([k, v]) => `<tr><td class="wrap">${esc(k)}</td><td class="muted u-nowrap">${[...v.kinds].join(' · ')}</td><td class="num">${v.n}</td></tr>`).join('')}</tbody></table>` : '<div class="caption muted">이 기간에 반려가 없습니다.</div>'}
+          <div class="caption muted u-mt-8">평균 처리 시간 = 끝난 문서의 신청 → 마지막 처리(승인 · 반려 · 회수)까지</div></section>
+      </div>
+      <section class="st-card u-mt-16" aria-labelledby="st-p"><h3 id="st-p">요청자별</h3><table class="tbl"><thead><tr><th>요청자</th><th class="r">전체</th><th class="r">진행 중</th><th class="r">기한 넘김</th><th class="r">완료</th><th class="r">반려</th><th class="r">회수</th><th class="r">항목</th><th class="st-w">비중</th></tr></thead><tbody>
+        ${PL.map(([id, q]) => `<tr><td>${esc(nameOf(id))}${id === ME.id ? ' <span class="muted">(나)</span>' : ''}</td><td class="num">${q.n}</td><td class="num">${q.live}</td><td class="num">${q.late ? `<span class="u-danger">${q.late}</span>` : 0}</td><td class="num">${q.done}</td><td class="num">${q.rejected ? `<span class="u-danger">${q.rejected}</span>` : 0}</td><td class="num">${q.withdrawn}</td><td class="num">${q.items}</td><td><progress class="statbar" max="${maxP}" value="${q.n}" aria-label="${esc(nameOf(id))} ${Math.round(q.n * 100 / D.length)}%"></progress></td></tr>`).join('')}
+      </tbody></table></section>`;
+    }
+    $('stats').innerHTML = html;
+    $('stats').querySelectorAll('[data-period]').forEach(x => x.onclick = () => { period = x.dataset.period; drawStats(); const nb = $('stats').querySelector(`[data-period="${period}"]`); if (nb) nb.focus(); });
+    $('stats').querySelectorAll('[data-stype]').forEach(x => x.onclick = () => { stType = x.dataset.stype; drawStats(); const nb = $('stats').querySelector(`[data-stype="${stType}"]`); if (nb) nb.focus(); });
   }
   function line(d) {
     const h = d.hist || [];
