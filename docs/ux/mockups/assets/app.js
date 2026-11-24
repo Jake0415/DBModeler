@@ -1245,9 +1245,34 @@
       when: '결재 알림을 받았거나 내 신청이 어디까지 갔는지 볼 때', who: '승인 · 반려는 그 단계 결재자, 회수는 신청자', l: [['dict-history.html', '반영된 결과 → 표준 사전 변경 내역']],
       v: [{ if: () => !(ME.has('da') || ME.has('owner')), s: ['[내 신청]에서 올린 문서의 단계를 봅니다', '반려되면 의견을 보고 고쳐서 다시 신청합니다', '결재가 끝나기 전이면 [회수]로 거둘 수 있습니다'], who: '결재 역할이 없어 [내 신청] · [참조함]만 봅니다' }] },
     'settings.html': { n: '설정', d: '기관 · 시스템 · 사용자 역할 · 권한 · 검수 기준을 정합니다. 바꾼 내용은 감사 로그에 남습니다.',
-      s: ['위 탭(기관 · 시스템 · 사용자 · 역할 · 권한표 · 검수 기준)에서 고칠 곳을 고릅니다', '값을 바꾸면 탭에 점이 붙고 아래 [저장] 막대가 나타납니다', '[저장]으로 반영하거나 [되돌리기]로 마지막 저장값으로 돌립니다'],
-      x: [{ h: '탭별로 정하는 것', items: [['기관', '기관명 · 결재선 템플릿 · 최종 승인 여부 · 자기 승인 · 메일 알림'], ['시스템', '대상 DBMS · 명명 템플릿 · 타입 매핑 · 시스템 컬럼 · 모델 확정 최종 승인'], ['사용자 · 역할', '사람별 역할(모델러 · DA · 기관 담당자 · 관리자)과 담당 시스템'], ['권한표', '역할마다 할 수 있는 일 — 읽기 전용 표'], ['검수 기준', '표준 준수 검사에서 빼는 대상 · 규칙']] }],
-      when: '처음 도입할 때 · 사람이나 결재선이 바뀔 때', who: '관리자만 — 다른 역할은 이 화면을 열 수 없습니다', note: '저장하지 않고 다른 화면으로 가면 확인을 묻습니다', l: [['audit.html', '바꾼 기록 → 감사 로그']] },
+      s: ['위 탭에서 고칠 곳을 고릅니다', '값을 바꾸면 탭에 점이 붙고 아래 [저장] 막대가 나타납니다', '[저장]으로 반영하거나 [되돌리기]로 마지막 저장값으로 돌립니다'],
+      when: '처음 도입할 때 · 사람이나 결재선이 바뀔 때', who: '관리자만 — 다른 역할은 이 화면을 열 수 없습니다', l: [['audit.html', '바꾼 기록 → 감사 로그']],
+      // the panel follows the open tab — what this tab decides, in its own words
+      tabSel: '.tabs button[data-tab]',
+      t: {
+        org: { n: '설정 · 기관', d: '기관 전체에 같이 적용되는 결재 · 운영 규칙을 정합니다.',
+          s: ['결재선(사전 신청 최종 승인 · 결재선 템플릿 · 자기 승인)을 정합니다', '운영 목표(준수율 목표 · 결재 기한)와 메일 알림을 정합니다', '아래 [저장] — 다음 신청부터 적용되고 감사 로그에 남습니다'],
+          x: [{ h: '이 탭의 항목', items: [['기관', '기관명 · 로고 — 상단 바와 산출물에 표시'], ['사전 신청 최종 승인', '켜면 DA 승인 뒤 기관 담당자가 한 번 더 승인'], ['운영 목표', '홈 · 통계의 준수율 목표선과 ‘기한 넘김’ 기준 일수'], ['결재선 템플릿', '문서 종류별 결재 단계 — 신청자는 단계를 지울 수 없고 참조자만 추가']] },
+            { h: ' ', items: [['도메인그룹 · 분류', '표준 사전 필터 · 도메인 신청 · 엑셀 가져오기에 쓰는 분류 체계'], ['자기 승인', '허용(사유 필수 · 감사 로그 표시) / 비허용(다른 결재자가 승인)'], ['메일 알림', '결재선 담당자에게만 — 나머지는 앱 알림']] }],
+          when: '기관 결재 규칙이나 목표가 바뀔 때', note: '항목 이름 아래 ‘마지막 변경’에 누가 · 언제 바꿨는지 보입니다' },
+        sys: { n: '설정 · 시스템', d: '시스템(DB)마다 다른 물리 설계 규칙을 정합니다. 위쪽에서 시스템을 골라 하나씩 정합니다.',
+          s: ['정할 시스템을 고릅니다', '대상 DBMS · 명명 템플릿 · 데이터타입 매핑 · 시스템 컬럼을 정합니다', '모델 확정 최종 승인을 업무 영역별로 켜고 끕니다'],
+          x: [{ h: '이 탭의 항목', items: [['대상 DBMS', '타입 매핑 · 이름 길이 · 예약어 정책의 기준(예: Oracle 19c)'], ['명명 템플릿', '표준 물리명 + 분류어 접미로 테이블 · 컬럼 이름 생성'], ['데이터타입 매핑', '도메인의 논리 타입 → 이 DBMS의 물리 타입(축약명은 도메인 이름 생성에 사용)']] },
+            { h: ' ', items: [['시스템 컬럼', '물리 반영 때 모든 테이블에 붙는 공통 컬럼(등록일시 등) — 표준 용어로만'], ['모델 확정 최종 승인', '업무 영역별로 기관 담당자 승인 추가'], ['업무 영역', '목록만 보입니다 — 새 영역은 시스템 홈에서 만듭니다']] }],
+          when: '새 시스템을 들이거나 DBMS · 명명 규칙이 바뀔 때', note: '바꾼 규칙은 다음 DDL 만들기 · 물리 반영부터 적용됩니다' },
+        users: { n: '설정 · 사용자 · 역할', d: '사용자 계정과 역할(모델러 · DA · 기관 담당자 · 관리자), 담당 시스템, 로그인 방식을 관리합니다.',
+          s: ['[사용자 등록]으로 계정을 만들고 역할 · 담당 시스템을 고릅니다', '행을 눌러 수정 · 비밀번호 초기화 · 사용 중지 · 잠금 해제를 합니다', '위쪽 ‘인증 방식’에서 ID/비밀번호 · SSO 로그인을 고릅니다'],
+          x: [{ h: '역할', items: [['모델러', '모델 편집 · 표준 사전 신청 · 후보 등록'], ['DA', '표준 검토 · 결재(DA 승인) · 후보 처리'], ['기관 담당자', '최종 승인 · 조회'], ['관리자', '설정 · 사용자 관리 · 감사 로그']] },
+            { h: '지키는 규칙', items: [['역할 겹침', '여러 역할을 가지면 할 수 있는 일을 합칩니다'], ['담당 시스템', '시스템 범위인 일은 담당 시스템에서만(전체 = 모든 시스템)'], ['스스로 바꾸기', '자기 역할 · 계정 상태는 스스로 못 바꿈, 마지막 관리자는 뺄 수 없음'], ['임시 비밀번호', '한 번만 보입니다 — 24시간 안에 첫 로그인해서 바꿔야 함']] }],
+          when: '사람이 오거나 떠날 때 · 담당 업무가 바뀔 때', note: '권한을 빼면 그 사람의 열린 세션이 끝납니다 · 바꾼 기록은 감사 로그 ‘역할 · 권한’에' },
+        perms: { n: '설정 · 권한표', d: '역할마다 할 수 있는 일을 한눈에 보는 읽기 전용 표입니다. 바꾸려면 [사용자 · 역할]에서 사람의 역할을 바꿉니다.',
+          s: ['행(할 수 있는 일)과 열(역할)이 만나는 칸에서 허용 여부를 봅니다', '‘담당 시스템’ 표시가 있는 일은 그 사람의 담당 시스템에서만 됩니다', '아래 ‘함께 지키는 규칙’에서 역할 겸임 · 자기 승인 규칙을 확인합니다'],
+          when: '누가 무엇을 할 수 있는지 설명하거나 점검할 때', note: '자기 승인 허용 여부는 [기관] 탭에서 정합니다', l: [['audit.html', '역할 변경 기록 → 감사 로그']] },
+        rules: { n: '설정 · 검수 기준', d: '표준 사전 신청을 검사하는 규칙(이름 길이 · 글자 종류)과 준수율 계산에서 빼는 대상을 정합니다.',
+          s: ['단어명 · 영문약어명 · 영문명 · 설명의 길이와 허용 글자를 정합니다', '‘표준 제외 규칙’에서 자동으로 비대상이 되는 엔터티 · 속성 유형과 이름을 정합니다', '[저장] — 정책 버전이 하나 오르고 다음 신청부터 적용됩니다'],
+          x: [{ h: '이 탭의 항목', items: [['검사 규칙', '항목별 길이 · 허용 글자 — 어기면 차단 또는 경고'], ['엔터티 제외', '가상 · 외부 · 공통 참조 · 삭제 예정 유형은 자동 비대상'], ['속성 · 컬럼 제외', '유형 · 이름 규칙으로 자동 비대상'], ['직접 지정', '모델의 [표 보기] · [표준 맞추기]에서 비대상으로 바꾼 것(사유 필수)']] }],
+          when: '검사가 너무 엄격하거나 느슨할 때 · 제외 대상이 바뀔 때', note: '이전 기준으로 검사한 엑셀 묶음은 업로드 이력에 ‘재검증 필요’로 표시됩니다', l: [['uploads.html', '재검증할 묶음 → 업로드 이력']] }
+      } },
     'audit.html': { n: '감사 로그', d: '누가 · 언제 · 무엇을 했는지 남는 기록입니다. 고치거나 지울 수 없고 5년 동안 보관합니다.',
       s: ['검색창과 종류 칩으로 찾을 기록을 좁힙니다', '기간(최근 30일 · 1년 · 전체)을 고릅니다', '점검 자료가 필요하면 [엑셀]로 내려받습니다'],
       x: [{ h: '종류 칩', items: [['자기 승인', '신청자가 자기 문서를 직접 승인한 경우(설정에서 허용했을 때)'], ['영구 삭제', '사전 항목을 지운 기록 — 사유와 함께'], ['결재', '승인 · 반려 · 회수'], ['역할 · 권한', '역할 부여 · 회수, 담당 시스템 변경'], ['설정', '설정 화면에서 바꾼 값'], ['더보기', '표준 사전 반영 · 모델 확정']] }],
@@ -1263,19 +1288,24 @@
     const K = 'dbm-guide-' + ME.id, file = curFile(), open = J(K, {})[file] === 1;
     const btn = document.createElement('button'); btn.type = 'button'; btn.className = 'pg-btn'; btn.setAttribute('aria-controls', 'pg-panel');
     tabs.appendChild(btn);
-    const meta = [['언제', g.when], ['누가', g.who], ['참고', g.note]].filter(x => x[1]);
-    const box = document.createElement('section'); box.className = 'pguide' + (g.ro ? ' ro' : ''); box.id = 'pg-panel'; box.setAttribute('aria-label', `${g.n} 화면 안내`);
-    box.innerHTML = `<div class="pg-line"><i data-ic=info data-s=14 aria-hidden="true"></i><p class="pg-d">${g.d}</p>
+    const box = document.createElement('section'); box.className = 'pguide' + (g.ro ? ' ro' : ''); box.id = 'pg-panel';
+    const tabNow = () => { const b = g.tabSel && document.querySelector(g.tabSel + '.on'); return b && g.t && g.t[b.dataset.tab] ? b.dataset.tab : null; };
+    let shown = null;
+    const draw = () => { const tk = tabNow(); if (shown !== null && tk === shown) return; shown = tk; const G = Object.assign({}, g, tk ? g.t[tk] : {});
+    const meta = [['언제', G.when], ['누가', G.who], ['참고', G.note]].filter(x => x[1]);
+    box.setAttribute('aria-label', `${G.n} 화면 안내`);
+    box.innerHTML = `<div class="pg-line"><i data-ic=info data-s=14 aria-hidden="true"></i><p class="pg-d">${G.d}</p>
         <button type="button" class="iconbtn sm pg-x" aria-label="화면 안내 접기" title="접기 (?)"><i data-ic=up data-s=14></i></button></div>
-      <ol class="pg-steps">${g.s.map(x => `<li>${x}</li>`).join('')}</ol>
-      ${(g.x || []).length ? `<div class="pg-x3">${g.x.map(sec => `<div class="pg-sec"><h3>${sec.h}</h3><dl>${sec.items.map(([t, v]) => `<dt>${t}</dt><dd>${v}</dd>`).join('')}</dl></div>`).join('')}</div>` : ''}
-      <div class="pg-meta">${meta.map(([k, t]) => `<span><b>${k}</b>${t}</span>`).join('')}${g.l.length ? `<span class="pg-links">${g.l.map(([h, t]) => `<a href="${h}">${t}</a>`).join('')}</span>` : ''}</div>`;
-    after.insertAdjacentElement('afterend', box);
+      <ol class="pg-steps">${G.s.map(x => `<li>${x}</li>`).join('')}</ol>
+      ${(G.x || []).length ? `<div class="pg-x3">${G.x.map(sec => `<div class="pg-sec"><h3>${sec.h}</h3><dl>${sec.items.map(([t, v]) => `<dt>${t}</dt><dd>${v}</dd>`).join('')}</dl></div>`).join('')}</div>` : ''}
+      <div class="pg-meta">${meta.map(([k, t]) => `<span><b>${k}</b>${t}</span>`).join('')}${(G.l || []).length ? `<span class="pg-links">${G.l.map(([h, t]) => `<a href="${h}">${t}</a>`).join('')}</span>` : ''}</div>`;
+    const x = box.querySelector('.pg-x'); if (x) x.addEventListener('click', () => { set(false, true); btn.focus(); }); };
+    draw(); after.insertAdjacentElement('afterend', box);
+    if (g.tabSel) { const row = document.querySelector(g.tabSel) && document.querySelector(g.tabSel).parentElement; if (row) new MutationObserver(draw).observe(row, { attributes: true, subtree: true, attributeFilter: ['class'] }); }   // switching tabs redraws the panel
     const set = (o, save) => { box.hidden = !o; btn.setAttribute('aria-expanded', o); btn.innerHTML = `<i data-ic=info data-s=14></i>화면 안내<i data-ic=${o ? 'up' : 'down'} data-s=12></i>`; btn.title = o ? '화면 안내 접기 (?)' : '이 화면에서 무엇을 하는지 · 사용 방법 (?)';
       if (save) { const s2 = J(K, {}); s2[file] = o ? 1 : 0; S(K, s2); } };
     set(open, false);
     btn.addEventListener('click', () => set(box.hidden, true));
-    box.querySelector('.pg-x').addEventListener('click', () => { set(false, true); btn.focus(); });
     box.addEventListener('keydown', e => { if (e.key === 'Escape') { set(false, true); btn.focus(); } });
     document.addEventListener('keydown', e => { if (e.key !== '?' || e.ctrlKey || e.metaKey || e.altKey || (e.target.closest && e.target.closest('input,textarea,select,[contenteditable="true"]'))) return; e.preventDefault(); set(box.hidden, true); if (!box.hidden) box.querySelector('.pg-x').focus(); });
   }
