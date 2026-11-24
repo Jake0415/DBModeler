@@ -1237,12 +1237,27 @@
       v: [{ if: () => !can('dict.request') && !can('dict.group'), s: ['도메인그룹과 그 아래 도메인분류를 봅니다', '분류를 눌러 연결된 형식단어와 도메인을 봅니다', '추가 · 변경이 필요하면 DA에게 요청합니다'], who: '보기만 가능 — 그룹은 DA · 관리자, 분류 신청은 모델러 · DA', l: [] }] },
     'std-common.html': { n: '공통표준 · 행정표준코드', d: '행안부 공통표준 판과 행정표준코드를 봅니다. 원문은 못 고치고, 새 판은 품의로 반영합니다.',
       s: ['[행정표준코드] 탭에서 코드와 코드값을 찾아봅니다', '새 판이 나오면 [새 판 반영]에서 원본을 올려 지금 판과 비교합니다', '반영할 차이를 골라 품의를 올립니다 — 최종 승인 뒤 반영됩니다'],
-      when: '행안부가 새 판을 배포했을 때 · 공통 코드값을 확인할 때', who: '새 판 품의는 DA · 관리자만', note: '기관 항목과 충돌하면 DA가 따로 정리 · 폐기 항목은 지우지 않고 미사용으로', l: [['dict-history.html', '반영 결과 → 변경 내역']] }
+      when: '행안부가 새 판을 배포했을 때 · 공통 코드값을 확인할 때', who: '새 판 품의는 DA · 관리자만', note: '기관 항목과 충돌하면 DA가 따로 정리 · 폐기 항목은 지우지 않고 미사용으로', l: [['dict-history.html', '반영 결과 → 변경 내역']] },
+    'approvals.html': { n: '결재함', d: '표준 사전 신청 · 모델 확정 같은 결재 문서를 처리하고, 내가 올린 신청이 어디까지 갔는지 봅니다.',
+      s: ['[대기함]에서 지금 내 차례인 문서를 엽니다(기한을 넘기면 일수가 빨갛게)', '내용 · 비교를 확인하고 [승인]하거나 의견을 남겨 [반려]합니다', '내가 올린 문서는 [내 신청]에서 보고, 결재가 끝나기 전이면 [회수]합니다'],
+      x: [{ h: '함 구분', items: [['대기함', 'DA · 기관 담당자의 지금 차례 문서'], ['내 신청', '내가 올린 문서 — 단계 · 결과 확인, 회수'], ['참조함', '참조자로 지정된 문서 — 읽기만'], ['집계', '처리 건수 · 기간(권한 있는 사람만)']] },
+        { h: '결재 흐름', items: [['DA 승인', '표준 검토 — 모든 문서에 필수'], ['최종 승인', '기관 담당자 — 설정에서 켠 문서만'], ['승인할 때 재검사', '미준수가 다시 생겼으면 승인되지 않고 이력에 남습니다'], ['반려 · 회수', '반려는 의견 필수, 회수는 사유 필수']] }],
+      when: '결재 알림을 받았거나 내 신청이 어디까지 갔는지 볼 때', who: '승인 · 반려는 그 단계 결재자, 회수는 신청자', l: [['dict-history.html', '반영된 결과 → 표준 사전 변경 내역']],
+      v: [{ if: () => !(ME.has('da') || ME.has('owner')), s: ['[내 신청]에서 올린 문서의 단계를 봅니다', '반려되면 의견을 보고 고쳐서 다시 신청합니다', '결재가 끝나기 전이면 [회수]로 거둘 수 있습니다'], who: '결재 역할이 없어 [내 신청] · [참조함]만 봅니다' }] },
+    'settings.html': { n: '설정', d: '기관 · 시스템 · 사용자 역할 · 권한 · 검수 기준을 정합니다. 바꾼 내용은 감사 로그에 남습니다.',
+      s: ['위 탭(기관 · 시스템 · 사용자 · 역할 · 권한표 · 검수 기준)에서 고칠 곳을 고릅니다', '값을 바꾸면 탭에 점이 붙고 아래 [저장] 막대가 나타납니다', '[저장]으로 반영하거나 [되돌리기]로 마지막 저장값으로 돌립니다'],
+      x: [{ h: '탭별로 정하는 것', items: [['기관', '기관명 · 결재선 템플릿 · 최종 승인 여부 · 자기 승인 · 메일 알림'], ['시스템', '대상 DBMS · 명명 템플릿 · 타입 매핑 · 시스템 컬럼 · 모델 확정 최종 승인'], ['사용자 · 역할', '사람별 역할(모델러 · DA · 기관 담당자 · 관리자)과 담당 시스템'], ['권한표', '역할마다 할 수 있는 일 — 읽기 전용 표'], ['검수 기준', '표준 준수 검사에서 빼는 대상 · 규칙']] }],
+      when: '처음 도입할 때 · 사람이나 결재선이 바뀔 때', who: '관리자만 — 다른 역할은 이 화면을 열 수 없습니다', note: '저장하지 않고 다른 화면으로 가면 확인을 묻습니다', l: [['audit.html', '바꾼 기록 → 감사 로그']] },
+    'audit.html': { n: '감사 로그', d: '누가 · 언제 · 무엇을 했는지 남는 기록입니다. 고치거나 지울 수 없고 5년 동안 보관합니다.',
+      s: ['검색창과 종류 칩으로 찾을 기록을 좁힙니다', '기간(최근 30일 · 1년 · 전체)을 고릅니다', '점검 자료가 필요하면 [엑셀]로 내려받습니다'],
+      x: [{ h: '종류 칩', items: [['자기 승인', '신청자가 자기 문서를 직접 승인한 경우(설정에서 허용했을 때)'], ['영구 삭제', '사전 항목을 지운 기록 — 사유와 함께'], ['결재', '승인 · 반려 · 회수'], ['역할 · 권한', '역할 부여 · 회수, 담당 시스템 변경'], ['설정', '설정 화면에서 바꾼 값'], ['더보기', '표준 사전 반영 · 모델 확정']] }],
+      when: '변경의 책임자를 확인하거나 감사 · 점검 자료를 낼 때', who: 'DA · 관리자 등 감사 권한이 있는 사람', l: [['dict-history.html', '사전 내용 변화 → 표준 사전 변경 내역'], ['approvals.html', '결재 문서 → 결재함']] }
   };
   // folded by default and costs no height: a [ⓘ 화면 안내] button at the right end of the 사전 tab bar opens the panel under it.
   // the panel stays open only where the user opened it (dbm-guide-<id>[file] = 1) · ? key toggles (outside text fields)
-  function pageGuide(tabs) {
+  function pageGuide(tabs, after) {
     const base = PAGE_GUIDE[curFile()]; if (!base || !tabs || document.querySelector('.pguide')) return;
+    after = after || tabs;   // the button goes at the end of 'tabs' (a tab row or the page head), the panel opens right under 'after'
     const g = Object.assign({}, base, (base.v || []).find(x => x.if()) || {});
     window.__pgRo = false;   // folded by default → the screen keeps its own read-only banner
     const K = 'dbm-guide-' + ME.id, file = curFile(), open = J(K, {})[file] === 1;
@@ -1255,7 +1270,7 @@
       <ol class="pg-steps">${g.s.map(x => `<li>${x}</li>`).join('')}</ol>
       ${(g.x || []).length ? `<div class="pg-x3">${g.x.map(sec => `<div class="pg-sec"><h3>${sec.h}</h3><dl>${sec.items.map(([t, v]) => `<dt>${t}</dt><dd>${v}</dd>`).join('')}</dl></div>`).join('')}</div>` : ''}
       <div class="pg-meta">${meta.map(([k, t]) => `<span><b>${k}</b>${t}</span>`).join('')}${g.l.length ? `<span class="pg-links">${g.l.map(([h, t]) => `<a href="${h}">${t}</a>`).join('')}</span>` : ''}</div>`;
-    tabs.insertAdjacentElement('afterend', box);
+    after.insertAdjacentElement('afterend', box);
     const set = (o, save) => { box.hidden = !o; btn.setAttribute('aria-expanded', o); btn.innerHTML = `<i data-ic=info data-s=14></i>화면 안내<i data-ic=${o ? 'up' : 'down'} data-s=12></i>`; btn.title = o ? '화면 안내 접기 (?)' : '이 화면에서 무엇을 하는지 · 사용 방법 (?)';
       if (save) { const s2 = J(K, {}); s2[file] = o ? 1 : 0; S(K, s2); } };
     set(open, false);
@@ -1970,7 +1985,10 @@
       const here = t => t && (t[0] === curFile() || (t[2] || []).includes(curFile()));
       const ph = DT.some(here) && document.querySelector('#content .page-header');
       if (ph && !document.querySelector('.dtabs')) ph.insertAdjacentHTML('afterend', `<nav class="tabs dtabs" aria-label="표준 사전 화면">${DT.map(t => !t ? '<span class="dsep" aria-hidden="true"></span>' : `<a href="${t[0]}"${here(t) ? ' class="on" aria-current="page"' : ''}>${t[1]}</a>`).join('')}</nav>`);
-      if (ph) pageGuide(document.querySelector('.dtabs')); }
+      if (ph) pageGuide(document.querySelector('.dtabs'));
+      // 결재함 · 설정 · 감사 로그: same guide — button at the end of the page head, panel under the head (설정: under its tab row)
+      const ph2 = document.querySelector('#content .page-header'), f2 = curFile();
+      if (ph2 && ['approvals.html', 'audit.html', 'settings.html'].includes(f2)) { const nx = ph2.nextElementSibling; pageGuide(ph2, f2 === 'settings.html' && nx && nx.matches('.tabs') ? nx : ph2); } }
     drawTree(nav);
     const toasts = document.createElement('div');
     toasts.className = 'toasts'; toasts.id = 'toasts';
