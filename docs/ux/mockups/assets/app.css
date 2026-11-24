@@ -856,3 +856,17 @@ td[contenteditable="true"]:focus { outline:2px solid var(--focus); background:va
 
 /* the review panel (목업 › 화면 정보) takes its own column instead of covering the page's bottom bars and buttons */
 body.scr-on #content { margin-right:380px; }
+/* mini stepper in list rows (결재함 · 마이페이지 '현재 단계'): fixed 50px, dots first so they line up down the column, then the state tag.
+   shapes (not only colour, review claude-list-stepper): done = filled · current = blue ring · waiting = ring · rejected = ✕ · not taken = bar · halted (withdrawn) = grey thick ring · no final in the line = empty slot */
+.mstep { display:inline-flex; align-items:center; vertical-align:middle; width:50px; margin-right:6px; }
+.mstep .ms-dot { position:relative; width:8px; height:8px; border-radius:50%; box-sizing:border-box; border:1.5px solid var(--fg-3); background:var(--surface); flex:none; }
+.mstep .ms-dot.done { background:var(--fg-2); border-color:var(--fg-2); }
+.mstep .ms-dot.cur { width:10px; height:10px; border:3px solid var(--ds-blue-700); }
+.mstep .ms-dot.halt { width:10px; height:10px; border:3px solid var(--fg-3); }
+.mstep .ms-dot.rej { border:0; background:none; width:10px; height:10px; }
+.mstep .ms-dot.rej::before, .mstep .ms-dot.rej::after { content:''; position:absolute; left:4px; top:-1px; width:2px; height:12px; border-radius:1px; background:var(--danger); transform:rotate(45deg); }
+.mstep .ms-dot.rej::after { transform:rotate(-45deg); }
+.mstep .ms-dot.skip { border:0; border-radius:1px; width:8px; height:2px; background:var(--fg-3); }
+.mstep .ms-dot.none, .mstep .ms-ln.none { visibility:hidden; }
+.mstep .ms-ln { width:10px; height:1.5px; background:var(--border-strong); flex:none; }
+.mstep .ms-ln.done { background:var(--fg-2); }

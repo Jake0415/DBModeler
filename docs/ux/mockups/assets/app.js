@@ -1194,7 +1194,25 @@
     if (d.step === 'withdrawn') return tag('end', STEP_NAME[d.step]);
     if (d.step === 'done') return tag('ok', '완료');
     return tag(mineTurn ? 'mine' : 'run', STEP_NAME[d.step] + (mineTurn ? ' · 내 차례' : '')); };
-
+  /* mini stepper for list rows: 신청 → DA 승인 → 최종 승인 as three dots (where the document is, out of the whole line) + the state tag.
+     same states as the detail stepper: done ✓ · current ring · waiting ○ · rejected ✕ · not taken (dashed, no final / skipped / after reject · withdraw) */
+  window.docSteps = d => {
+    // review claude-list-stepper: shapes differ, not only colour (✕ rejected · bar not taken · grey thick ring halted by withdraw),
+    // a line without final approval leaves the 3rd slot empty (dots stay aligned), screen readers get one short phrase (no title, no repeated names)
+    const h = d.hist || [], rj = h.filter(x => /반려/.test(x.act || '') && !/취소/.test(x.act || '')).pop();
+    const okS = s => h.some(x => x.step === s && /승인/.test(x.act || '') && !/실패|취소|생략/.test(x.act || ''));
+    const noLine = !hasFinal(d), skipped = !noLine && h.some(x => x.step === 'final' && /생략/.test(x.act || ''));
+    const doneS = s => okS(s) || (s === 'da' && ['final', 'done'].includes(d.step)) || (s === 'final' && d.step === 'done');
+    const rejAt = d.step === 'rejected' ? (rj && rj.step) || (doneS('da') ? 'final' : 'da') : null;
+    const haltAt = d.step === 'withdrawn' ? (doneS('da') && !noLine && !skipped ? 'final' : 'da') : null;
+    const st = s => { if (s === 'final' && noLine) return 'none'; if (s === 'final' && skipped) return 'skip';
+      if (rejAt === s) return 'rej'; if (haltAt === s) return 'halt'; if (d.step === s) return 'cur'; if (doneS(s)) return 'done';
+      return rejAt || haltAt ? 'skip' : 'wait'; };
+    const S3 = [['신청', 'done'], ['DA 승인', st('da')], ['최종 승인', st('final')]], total = noLine ? 2 : 3;
+    const at = S3.findIndex(x => ['cur', 'rej', 'halt'].includes(x[1]));
+    const sr = at >= 0 ? `${total}단계 중 ${at + 1}단계, ` : d.step === 'done' ? `${total}단계 모두 완료, ` : '';
+    return `<span class="mstep" aria-hidden="true">${S3.map((x, i) => `${i ? `<i class="ms-ln${S3[i - 1][1] === 'done' && ['done', 'cur', 'rej', 'halt'].includes(x[1]) ? ' done' : ''}${x[1] === 'none' ? ' none' : ''}"></i>` : ''}<i class="ms-dot ${x[1]}"></i>`).join('')}</span><span class="sr-only">${sr}</span>${skipped && d.step === 'done' ? tag('ok', '완료 · 최종 승인 생략') : docTag(d)}`;
+  };
   /* ---- screen map (mockup review tool): one registry for the per-screen info panel and the index map ----
      docs are relative to /mockups/ — serve.ps1 serves ../*.md (docs/ux) and ../../spec/*.md (docs/spec) read-only */
   const D = { flows: '../02-flows.md', erd: '../03-erd-editor.md', plan: '../06-ux-review-plan.md', excel: '../07-dict-excel-roundtrip.md', da: '../05-mockup-vs-da.md', meta: '../../spec/da-feature-spec/30-metadata-design.md', prio: '../../spec/da-feature-spec/20-priority.md', sws: '../../spec/da-feature-spec/22-sws-comparison.md', perf: '../../spec/da-feature-spec/23-performance-spike.md', guide: '../01-design-guide.md' };
@@ -1241,7 +1259,7 @@
     'approvals.html': { n: '결재함', d: '표준 사전 신청 · 모델 확정 같은 결재 문서를 처리하고, 내가 올린 신청이 어디까지 갔는지 봅니다.',
       s: ['[대기함]에서 지금 내 차례인 문서를 엽니다(기한을 넘기면 일수가 빨갛게)', '내용 · 비교를 확인하고 [승인]하거나 의견을 남겨 [반려]합니다', '내가 올린 문서는 [내 신청]에서 보고, 결재가 끝나기 전이면 [회수]합니다'],
       x: [{ h: '함 구분', items: [['대기함', 'DA · 기관 담당자의 지금 차례 문서'], ['내 신청', '내가 올린 문서 — 단계 · 결과 확인, 회수'], ['참조함', '참조자로 지정된 문서 — 읽기만'], ['집계', '처리 건수 · 기간(권한 있는 사람만)']] },
-        { h: '결재 흐름', items: [['DA 승인', '표준 검토 — 모든 문서에 필수'], ['최종 승인', '기관 담당자 — 설정에서 켠 문서만'], ['승인할 때 재검사', '미준수가 다시 생겼으면 승인되지 않고 이력에 남습니다'], ['반려 · 회수', '반려는 의견 필수, 회수는 사유 필수']] }],
+        { h: '결재 흐름', items: [['DA 승인', '표준 검토 — 모든 문서에 필수'], ['최종 승인', '기관 담당자 — 설정에서 켠 문서만'], ['승인할 때 재검사', '미준수가 다시 생겼으면 승인되지 않고 이력에 남습니다'], ['반려 · 회수', '반려는 의견 필수, 회수는 사유 필수'], ['목록의 단계 점', '신청 → DA 승인 → 최종 승인 — 채운 점 완료 · 파란 고리 지금 · 빈 고리 대기 · ✕ 반려 · 짧은 막대 진행 안 함 · 회색 굵은 고리 회수로 멈춤']] }],
       when: '결재 알림을 받았거나 내 신청이 어디까지 갔는지 볼 때', who: '승인 · 반려는 그 단계 결재자, 회수는 신청자', l: [['dict-history.html', '반영된 결과 → 표준 사전 변경 내역']],
       v: [{ if: () => !(ME.has('da') || ME.has('owner')), s: ['[내 신청]에서 올린 문서의 단계를 봅니다', '반려되면 의견을 보고 고쳐서 다시 신청합니다', '결재가 끝나기 전이면 [회수]로 거둘 수 있습니다'], who: '결재 역할이 없어 [내 신청] · [참조함]만 봅니다' }] },
     'settings.html': { n: '설정', d: '기관 · 시스템 · 사용자 역할 · 권한 · 검수 기준을 정합니다. 바꾼 내용은 감사 로그에 남습니다.',
