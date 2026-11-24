@@ -1202,7 +1202,7 @@
      one line that always says what the screen is for + a foldable "사용 방법" (3 steps · 언제 / 누가 / 참고 · related screens).
      Copy rules: the line is one sentence ending "~합니다." · steps end "~합니다" · [ ] quotes the on-screen button label exactly ·
      links read "조건 → 화면". v = role variants (first match overrides) — a read-only user never gets "write and submit".
-     Open on the first visit of a screen, folded from the second visit unless the user opened it; [다른 화면도 접기] folds all (dbm-guide-<id>). */
+     Folded by default (space is short): the [ⓘ 화면 안내] button on the tab bar opens it; x = extra sections (용어 · 처리 방법 · 상태 뜻). */
   const PAGE_GUIDE = {
     'dictionary.html': { n: '통합 검색', d: '표준 단어 · 용어 · 도메인 · 코드를 찾아보고, 고칠 항목을 바구니에 모아 신청합니다.',
       s: ['이름 · 영문약어 · 동의어 · 금칙어 · 초성으로 찾습니다', '행을 열어 정의 · 사용처 · 변경 이력을 봅니다', '[바구니에 담기] 후 [바구니 · 품의]에서 한 번에 신청합니다'],
@@ -1220,10 +1220,13 @@
       s: ['종류 탭을 1 도메인분류부터 번호 순서로 고릅니다', '한 줄에 한 건씩 씁니다(엑셀 표를 붙여 넣어도 됩니다)', '[정상 행 바구니에 담기] 후 바구니에서 한 번에 신청합니다'],
       when: '몇 건 ~ 수십 건을 바로 등록하거나 고칠 때', note: '쓰던 내용은 이 브라우저에 자동 저장 · 단축키는 표 위 [⌨ 단축키]', l: [['excel-import.html', '많은 건 → 엑셀 가져오기'], ['dictionary.html', '있는지 먼저 → 통합 검색']],
       v: [{ if: () => !can('dict.request'), d: '표에 써서 사전 등록을 신청하는 화면입니다.', s: ['종류 탭을 골라 작성 양식을 봅니다', '어떤 칸을 써야 하는지 확인합니다', '등록이 필요하면 모델러 · DA에게 요청합니다'], who: '보기만 가능 — 신청은 모델러 · DA(사전 신청 권한 필요)', ro: 1, note: '', l: [['dictionary.html', '있는지 먼저 → 통합 검색']] }] },
-    'candidates.html': { n: '후보 큐', d: '사전에 없어 \'후보\'로 올라온 단어 · 용어를 DA가 검토해 처리합니다.',
-      s: ['대기 후보를 열어 발생 위치와 비슷한 표준어를 봅니다', '[… 신청으로 전환] · [기존 표준어 사용 안내] · [반려] 중 고릅니다', '결과는 요청자에게 알림으로 가고, 상태는 결재를 따라 바뀝니다'],
-      when: '모델의 미준수 단어 · 용어를 정리할 때', who: '처리는 DA, 모델러는 상태 확인', l: [['dictionary.html', '비슷한 표준어 → 통합 검색']],
-      v: [{ if: () => !can('cand.decide'), s: ['내가 올린 후보의 상태를 봅니다', '\'기존 표준어 안내\'면 안내된 표준어로 모델을 고칩니다', '\'등록 완료\'면 모델에서 그 표준어를 씁니다'], who: '처리는 DA — 이 화면에서는 상태만 확인' }] },
+    'candidates.html': { n: '후보 큐', d: '모델에서 사전에 없는 단어 · 용어를 쓰면 \'후보\'로 올라옵니다. DA가 검토해 사전에 넣을지 정합니다.',
+      s: ['대기 후보를 열어 발생 위치(어느 모델의 어느 속성)와 비슷한 표준어 경고를 봅니다', '아래 세 가지 처리 중 하나를 고릅니다', '처리 결과는 요청자에게 앱 알림으로 가고, 상태 칩이 바뀝니다'],
+      x: [{ h: '후보란?', items: [['어디서 오나', '모델러가 모델 · 표준 맞추기에서 사전에 없는 단어를 [후보 등록]하면 여기로 옵니다'], ['같은 이름', '여러 모델에서 올라와도 한 행으로 묶고, 발생 위치를 모두 보여 줍니다'], ['그동안', '사전에 등록되기 전까지 그 속성은 모델에서 미준수로 셉니다']] },
+        { h: '처리 세 가지 (DA)', items: [['[… 신청으로 전환]', '후보 내용으로 채운 등록 신청서를 엽니다 → 결재 → 승인되면 \'등록 완료\', 모델 속성이 표준이 됩니다'], ['[기존 표준어 사용 안내]', '같은 뜻의 표준어가 이미 있을 때(노란 경고) — 요청자에게 안내하고, 발생 위치에 \'○○로 바꾸기\' 제안이 붙습니다'], ['[반려]', '사유를 꼭 남깁니다 — 속성은 미준수로 남고, 요청자가 다른 이름을 고릅니다']] },
+        { h: '상태 뜻', items: [['대기', '아직 아무도 처리하지 않음'], ['신청 전환', '등록 신청이 결재 중'], ['등록 완료', '사전에 들어감 — 모델에서 바로 표준으로 씀'], ['반려 · 기존 표준어 안내', '닫힌 후보 — 필요하면 [다시 열기]']] }],
+      when: '모델의 미준수 단어 · 용어를 정리할 때', who: '처리는 DA, 모델러는 내가 올린 후보의 상태 확인', note: '같은 이름을 이미 신청 중이면 새 신청 대신 [REQ-… 에 연결]이 나옵니다', l: [['dictionary.html', '비슷한 표준어 → 통합 검색']],
+      v: [{ if: () => !can('cand.decide'), s: ['내가 올린 후보의 상태를 봅니다', '\'기존 표준어 안내\'면 안내된 표준어로 모델 속성을 고칩니다', '\'등록 완료\'면 모델에서 그 표준어를 그대로 씁니다'], who: '처리는 DA — 이 화면에서는 상태만 확인' }] },
     'dict-history.html': { n: '변경 내역', d: '결재로 사전에 반영된 변경 기록입니다. 누가 · 언제 · 무엇을 바꿨는지 봅니다.',
       s: ['작업(추가 · 변경 · 미사용 · 공표)과 기간으로 거르거나 신청번호로 찾습니다', '행을 열어 바뀌기 전 · 후를 비교하고 신청 문서로 갑니다', '기간을 \'직전 공표 이후\'로 두면 다음 공표에 묶일 변경이 보입니다'],
       when: '변경 이유를 추적하거나 공표를 준비할 때', who: '[공표]는 DA만 — 기관 사전의 제정 차수를 올립니다', l: [['approvals.html', '진행 중인 신청 → 결재함']] },
@@ -1235,28 +1238,30 @@
       s: ['[행정표준코드] 탭에서 코드와 코드값을 찾아봅니다', '새 판이 나오면 [새 판 반영]에서 원본을 올려 지금 판과 비교합니다', '반영할 차이를 골라 품의를 올립니다 — 최종 승인 뒤 반영됩니다'],
       when: '행안부가 새 판을 배포했을 때 · 공통 코드값을 확인할 때', who: '새 판 품의는 DA · 관리자만', note: '기관 항목과 충돌하면 DA가 따로 정리 · 폐기 항목은 지우지 않고 미사용으로', l: [['dict-history.html', '반영 결과 → 변경 내역']] }
   };
-  function pageGuide(after) {
-    const base = PAGE_GUIDE[curFile()]; if (!base || !after || document.querySelector('.pguide')) return;
+  // folded by default and costs no height: a [ⓘ 화면 안내] button at the right end of the 사전 tab bar opens the panel under it.
+  // the panel stays open only where the user opened it (dbm-guide-<id>[file] = 1) · ? key toggles (outside text fields)
+  function pageGuide(tabs) {
+    const base = PAGE_GUIDE[curFile()]; if (!base || !tabs || document.querySelector('.pguide')) return;
     const g = Object.assign({}, base, (base.v || []).find(x => x.if()) || {});
-    window.__pgRo = !!g.ro;   // the screen's own read-only banner is folded into this guide (one box, not two)
-    const K = 'dbm-guide-' + ME.id, st = J(K, {}), file = curFile();
-    // first visit → open; second visit → folded unless the user opened it; [다른 화면도 접기] → folded everywhere until opened
-    const v0 = st[file], open = v0 === 1 || (v0 == null && st._all !== 0);
-    if (v0 == null) { st[file] = 'seen'; S(K, st); }
+    window.__pgRo = false;   // folded by default → the screen keeps its own read-only banner
+    const K = 'dbm-guide-' + ME.id, file = curFile(), open = J(K, {})[file] === 1;
+    const btn = document.createElement('button'); btn.type = 'button'; btn.className = 'pg-btn'; btn.setAttribute('aria-controls', 'pg-panel');
+    tabs.appendChild(btn);
     const meta = [['언제', g.when], ['누가', g.who], ['참고', g.note]].filter(x => x[1]);
-    const box = document.createElement('section'); box.className = 'pguide' + (g.ro ? ' ro' : ''); box.setAttribute('aria-label', `${g.n} 화면 안내`);
-    const tgl = o => `사용 방법 ${o ? '접기' : '보기'}<i data-ic=${o ? 'up' : 'down'} data-s=14></i>`;
-    box.innerHTML = `<div class="pg-line"><i data-ic=${g.ro ? 'lock' : 'info'} data-s=14 aria-hidden="true"></i><p class="pg-d">${g.d}${g.ro ? ` <b class="pg-ro">${g.who}</b>` : ''}</p>
-        <button type="button" class="btn ghost sm pg-tg" aria-expanded="${open}" aria-controls="pg-more">${tgl(open)}</button></div>
-      <div class="pg-more" id="pg-more"${open ? '' : ' hidden'}><ol class="pg-steps">${g.s.map(x => `<li>${x}</li>`).join('')}</ol>
-        <div class="pg-meta">${meta.filter(x => !(g.ro && x[0] === '누가')).map(([k, t]) => `<span><b>${k}</b>${t}</span>`).join('')}${g.l.length ? `<span class="pg-links">${g.l.map(([h, t]) => `<a href="${h}">${t}</a>`).join('')}</span>` : ''}<button type="button" class="linkbtn pg-all">다른 화면도 접기</button></div></div>`;
-    after.insertAdjacentElement('afterend', box);
-    const tg = box.querySelector('.pg-tg'), more = box.querySelector('.pg-more');
-    const set = o => { more.hidden = !o; tg.setAttribute('aria-expanded', o); tg.innerHTML = tgl(o); };
-    tg.addEventListener('click', () => { const o = more.hidden; set(o); const s2 = J(K, {}); s2[file] = o ? 1 : 0; S(K, s2); });
-    box.querySelector('.pg-all').addEventListener('click', () => { const s2 = J(K, {}); Object.keys(s2).forEach(k => { if (s2[k] === 1) s2[k] = 0; }); s2._all = 0; s2[file] = 0; S(K, s2); set(false); tg.focus(); toast('사전 화면 안내를 모두 접었습니다 — 화면마다 [사용 방법 보기]로 다시 펼칩니다', 'info'); });
-    // ? (outside text fields) opens / folds the guide
-    document.addEventListener('keydown', e => { if (e.key !== '?' || e.ctrlKey || e.metaKey || e.altKey || (e.target.closest && e.target.closest('input,textarea,select,[contenteditable="true"]'))) return; e.preventDefault(); tg.click(); });
+    const box = document.createElement('section'); box.className = 'pguide' + (g.ro ? ' ro' : ''); box.id = 'pg-panel'; box.setAttribute('aria-label', `${g.n} 화면 안내`);
+    box.innerHTML = `<div class="pg-line"><i data-ic=info data-s=14 aria-hidden="true"></i><p class="pg-d">${g.d}</p>
+        <button type="button" class="iconbtn sm pg-x" aria-label="화면 안내 접기" title="접기 (?)"><i data-ic=up data-s=14></i></button></div>
+      <ol class="pg-steps">${g.s.map(x => `<li>${x}</li>`).join('')}</ol>
+      ${(g.x || []).length ? `<div class="pg-x3">${g.x.map(sec => `<div class="pg-sec"><h3>${sec.h}</h3><dl>${sec.items.map(([t, v]) => `<dt>${t}</dt><dd>${v}</dd>`).join('')}</dl></div>`).join('')}</div>` : ''}
+      <div class="pg-meta">${meta.map(([k, t]) => `<span><b>${k}</b>${t}</span>`).join('')}${g.l.length ? `<span class="pg-links">${g.l.map(([h, t]) => `<a href="${h}">${t}</a>`).join('')}</span>` : ''}</div>`;
+    tabs.insertAdjacentElement('afterend', box);
+    const set = (o, save) => { box.hidden = !o; btn.setAttribute('aria-expanded', o); btn.innerHTML = `<i data-ic=info data-s=14></i>화면 안내<i data-ic=${o ? 'up' : 'down'} data-s=12></i>`; btn.title = o ? '화면 안내 접기 (?)' : '이 화면에서 무엇을 하는지 · 사용 방법 (?)';
+      if (save) { const s2 = J(K, {}); s2[file] = o ? 1 : 0; S(K, s2); } };
+    set(open, false);
+    btn.addEventListener('click', () => set(box.hidden, true));
+    box.querySelector('.pg-x').addEventListener('click', () => { set(false, true); btn.focus(); });
+    box.addEventListener('keydown', e => { if (e.key === 'Escape') { set(false, true); btn.focus(); } });
+    document.addEventListener('keydown', e => { if (e.key !== '?' || e.ctrlKey || e.metaKey || e.altKey || (e.target.closest && e.target.closest('input,textarea,select,[contenteditable="true"]'))) return; e.preventDefault(); set(box.hidden, true); if (!box.hidden) box.querySelector('.pg-x').focus(); });
   }
   const DICT_TABS = [['dictionary.html', '통합 검색'], ['excel-import.html', '엑셀 가져오기', ['uploads.html']], 0, ['dict-grid.html', '직접 등록'], 0, ['candidates.html', '후보 큐'], ['dict-history.html', '변경 내역'], 0, ['domain-groups.html', '도메인 그룹 · 분류'], ['std-common.html', '공통표준 · 행정표준코드']];
   const SCREENS = [
