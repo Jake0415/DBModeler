@@ -1300,13 +1300,15 @@ window.pageInit = function () {
   let drag = null, pan = null;
   cv.addEventListener('mousedown', ev => {
     if (ev.target.closest('.cv-toolbar,.cv-zoom,.cv-mini,.cv-banner,.pop,.acl,#sysview,#grid,.hit,input,.mb,[data-mdel]')) return;
+    if (ev.button === 0 && !ev.target.closest('input,textarea,select,[contenteditable="true"],.legend,.side-tab,.rp-tab')) ev.preventDefault();   /* the canvas moves the view — never a page text selection that drags the head and toolbar along */
     const md = ev.target.closest('[data-mdrag]');
     if (md && canEdit()) { const m = M.find(x => x.id === md.dataset.mdrag), w = toWorld(ev); drag = { memo: m, dx: w.x - memoXY(m).x, dy: w.y - memoXY(m).y, moved: false }; return; }
     const nh = ev.target.closest('[data-drag]'), node = ev.target.closest('.node');
     if (tool === 'select' && node) {
       const e = ent(node.id.slice(2));
       if (nh && canEdit()) { const p = pos(e), w = toWorld(ev); drag = { e, dx: w.x - p.x, dy: w.y - p.y, moved: false }; }
-      if (!selectOnly(e.id)) { sel = e.id; showRP(); render(); } return;
+      if (!nh || !canEdit()) pan = { x: ev.clientX - panX, y: ev.clientY - panY };   /* 조회 전용 · 머리 밖: dragging an entity moves the view */
+      if (!selectOnly(e.id)) { sel = e.id; showRP(); render(); } if (pan) cv.classList.add('panning'); return;
     }
     if (!node && tool === 'select') { if (sel || selRel) { if (!selectOnly(null)) { sel = null; selRel = null; render(); } } pan = { x: ev.clientX - panX, y: ev.clientY - panY }; cv.classList.add('panning'); }
   });
