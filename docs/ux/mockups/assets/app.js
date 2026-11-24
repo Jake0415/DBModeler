@@ -100,8 +100,8 @@
     if (p.scope !== 'sys' || !ctx) return true;
     if (p.adminAll && roles.includes('admin')) return true;
     const d = ctx.doc; if (d && d.type === 'dict') return true;   // dictionary requests are agency-wide
-    const sysName = ctx.system || (ctx.area ? sysOfArea(ctx.area) : d ? (d.sys || sysOfArea(d.area)) : null);
-    return !!sysName && inScope(u, sysName);
+    const sysKey = ctx.system ? sysCodeOf(ctx.system) : ctx.area ? sysCodeOfArea(ctx.area) : d ? ((d.sysAt && d.sysAt.code) || sysCodeOfArea(d.area) || (d.sys && sysCodeOf(d.sys))) : null;   /* Y-01: by code */
+    return !!sysKey && inScope(u, sysKey);
   };
   window.can = (pid, ctx) => canUser(USERS[ME.id] || ME, pid, ctx);
   // whose turn: the document's step, the role for that step, and (model documents) the system in charge
@@ -180,6 +180,7 @@
   window.sysCodeOf = v => v === '전체' ? v : ((SYSLIST.find(s => s.code === v) || SYSLIST.find(s => s.name === v) || {}).code || v);
   window.sysNameOf = v => v === '전체' ? '전체' : ((SYSLIST.find(s => s.code === v) || SYSLIST.find(s => s.name === v) || {}).name || v);
   window.sysNames = list => (list || []).map(sysNameOf).join(', ');
+  window.sysCodeOfArea = a => { const m = getAllModels()[a]; return m ? (m.system || 'RQMS') : null; };
   { let changed = false; Object.values(USERS).forEach(u => { if (!Array.isArray(u.systems)) return; const c = [...new Set(u.systems.map(sysCodeOf))]; if (c.join() !== u.systems.join()) { u.systems = c; changed = true; } });
     if (Array.isArray(ME.systems)) ME.systems = [...new Set(ME.systems.map(sysCodeOf))];
     if (changed && store.get('dbm-users', null)) saveUsers(); }
@@ -247,7 +248,8 @@
   const TM_DEF = { Oracle: ['CHAR(n)', 'VARCHAR2(n)', 'NUMBER(p,s)', 'DATE', 'CLOB'], Tibero: ['CHAR(n)', 'VARCHAR2(n)', 'NUMBER(p,s)', 'DATE', 'CLOB'], PostgreSQL: ['CHAR(n)', 'VARCHAR(n)', 'NUMERIC(p,s)', 'TIMESTAMP', 'TEXT'], MySQL: ['CHAR(n)', 'VARCHAR(n)', 'DECIMAL(p,s)', 'DATETIME', 'LONGTEXT'] };
   window.TM_ROWS = TM_ROWS;
   window.typeMapDefault = dbms => (TM_DEF[String(dbms || 'Oracle').split(' ')[0]] || TM_DEF.Oracle).slice();
-  window.typeMapOf = code => { const v = J('dbm-typemap-' + code, null); return Array.isArray(v) && v.length === TM_ROWS.length ? v : typeMapDefault(dbmsOfSys(code)); };
+  window.typeMapCellErr = (v, row, all) => { const t = String(v || '').trim(); if (!t) return '타입을 입력하세요'; if (!/^[A-Za-z][A-Za-z0-9_ ]*(\((n|p|p,s|n,m)\))?$/.test(t)) return '형식: 영문 타입 + (n) 또는 (p,s) — 예: VARCHAR(n)'; const b = t.replace(/\(.*$/, '').trim().toUpperCase(); if ((all || []).some((x, i) => i !== row && String(x || '').replace(/\(.*$/, '').trim().toUpperCase() === b)) return '다른 행과 같은 타입입니다'; return ''; };
+  window.typeMapOf = code => { const v = J('dbm-typemap-' + code, null), d = typeMapDefault(dbmsOfSys(code)); if (!(Array.isArray(v) && v.length === TM_ROWS.length)) return d; return v.map((x, i) => typeMapCellErr(x, i, v) ? d[i] : x); };
   window.saveTypeMap = (code, arr) => S('dbm-typemap-' + code, arr);
   const tmBase = x => String(x || '').replace(/\(.*$/, '').trim().toUpperCase();
   window.convertTypeByMap = (t, fromCode, toCode) => { if (!t || t === '—') return t; const fm = typeMapOf(fromCode), tm = typeMapOf(toCode), b = tmBase(t); const i = fm.findIndex(x => tmBase(x) === b);
@@ -261,9 +263,9 @@
     const all = getAllModels(), m = all[id], from = m.system || 'RQMS', u = areaUse(id); if (u.confirmed || u.docs || areaNameTaken(m.name, code, id)) return false;
     const st = modelOf(id, m.ver), n = convertStructure(st, from, code);
     const copies = Object.fromEntries(Object.entries(all).filter(([, x]) => (x.system || 'RQMS') === code && x.copiedFrom && !x.off).map(([k, x]) => [x.copiedFrom, k])); let relinked = 0;
-    (st.E || []).forEach(e => { if (e.ref && copies[e.refArea]) { e.refArea = copies[e.refArea]; e.refName = (all[e.refArea] || {}).name || e.refName; relinked++; } });
-    if (n || relinked) setModelData(id, m.ver, Object.assign(st, { rev: (st.rev || 0) + 1 }));
-    m.system = code; S('dbm-model', all);
+    (st.E || []).forEach(e => { if (e.ref && copies[e.refArea]) { e.refArea = copies[e.refArea]; e.refName = (all[e.refArea] || {}).name || e.refName; e.refVer = 0; e.refWait = 1; relinked++; } });   /* Y-03: the copy has no confirmed version yet */
+    if ((n || relinked) && setModelData(id, m.ver, Object.assign(st, { rev: (st.rev || 0) + 1 })) === false) return false;   /* Y-02: a failed write stops here */
+    m.system = code; if (S('dbm-model', all) === false) return false;
     pushAudit({ act: '업무 영역 시스템 이동', target: `${m.name} (${id})`, why: `${sysNm(from)} → ${sysNm(code)}${n ? ` · 컬럼 타입 ${n}개 변환` : ''}${relinked ? ` · 참조 ${relinked}개 다시 이음` : ''}` }); return { converted: n, relinked };
   };
   /* copy: a new v1 working area in the target system; references to areas already copied there are re-linked to those copies, the rest are left out */
@@ -271,21 +273,26 @@
     if (areaActWhy(id, 'move')) return false;
     const m = getModel(id), st = clone(modelOf(id, m.ver)); const nm = name || m.name; if (areaNameTaken(nm, code)) return false;
     const copies = Object.fromEntries(Object.entries(getAllModels()).filter(([, x]) => (x.system || 'RQMS') === code && x.copiedFrom && !x.off).map(([k, x]) => [x.copiedFrom, k]));
-    const drop = new Set(); let relinked = 0;
-    (st.E || []).forEach(e => { if (!e.ref) return; if (copies[e.refArea]) { e.refArea = copies[e.refArea]; e.refName = (getAllModels()[e.refArea] || {}).name || e.refName; relinked++; } else if (((getAllModels()[e.refArea] || {}).system || 'RQMS') === code) { /* that area was moved there — the reference stays valid */ } else if (pending && pending.has(e.refArea)) { /* re-linked by relinkRefsIn */ } else drop.add(e.id); });
+    const drop = new Set(); let relinked = 0, waiting = 0;
+    (st.E || []).forEach(e => { if (!e.ref) return; if (copies[e.refArea]) { e.refArea = copies[e.refArea]; e.refName = (getAllModels()[e.refArea] || {}).name || e.refName; e.refVer = 0; e.refWait = 1; relinked++; } else if (((getAllModels()[e.refArea] || {}).system || 'RQMS') === code) { /* that area was moved there — the reference stays valid */ } else if (pending && pending.has(e.refArea)) { waiting++; /* re-linked by relinkRefsIn after the run */ } else drop.add(e.id); });
     const n = convertStructure(st, m.system || 'RQMS', code);
     const nid = addArea(nm, { E: (st.E || []).filter(e => !drop.has(e.id)), R: (st.R || []).filter(r => !drop.has(r.f) && !drop.has(r.t)), M: st.M || [], V: (st.V || []).map(v => Object.assign({}, v, { ents: (v.ents || []).filter(x => !drop.has(x)) })) }, { system: code, desc: m.desc || '', owner: m.owner || '', copiedFrom: id });
+    // Y-02: the copy counts only when both its entry and its structure landed — otherwise it is removed again
+    if (!getAllModels()[nid] || !getModelData(nid, 1)) { const all2 = getAllModels(); delete all2[nid]; S('dbm-model', all2); try { localStorage.removeItem(`dbm-mdata-${nid}-v1`); localStorage.removeItem('dbm-area-seed-' + nid); } catch (er) {} return false; }
     pushAudit({ act: '업무 영역 다른 시스템으로 복제', target: `${m.name} (${id}) → ${nm} (${nid})`, why: `대상 ${sysNm(code)} · v1 작업 중${n ? ` · 컬럼 타입 ${n}개 변환` : ''}${relinked ? ` · 참조 ${relinked}개 다시 이음` : ''}${drop.size ? ` · 참조 ${drop.size}개 제외` : ''}` });
-    return { nid, converted: n, relinked, dropped: drop.size };
+    return { nid, converted: n, relinked, dropped: drop.size, waiting };
   };
-  /* after a bulk run: references still pointing at an original whose copy now lives in this system are re-linked to the copy */
-  window.relinkRefsIn = code => { const all = getAllModels(); const copies = Object.fromEntries(Object.entries(all).filter(([, x]) => (x.system || 'RQMS') === code && x.copiedFrom && !x.off).map(([k, x]) => [x.copiedFrom, k])); let n = 0;
-    Object.entries(all).filter(([, x]) => (x.system || 'RQMS') === code && !x.off).forEach(([k, x]) => { let st = null; try { st = modelOf(k, x.ver); } catch (er) {} if (!st) return; let c = 0; (st.E || []).forEach(e => { if (e.ref && copies[e.refArea] && copies[e.refArea] !== k) { e.refArea = copies[e.refArea]; e.refName = (all[e.refArea] || {}).name || e.refName; c++; } }); if (c) { setModelData(k, x.ver, Object.assign(st, { rev: (st.rev || 0) + 1 })); n += c; } });
-    return n; };
-  /* how a copy would treat this area's references in the target system (shown before copying) */
-  window.copyRefPlan = (id, code) => { const m = getModel(id); let st = { E: [] }; try { st = modelOf(id, m.ver); } catch (er) {}
+  /* Y-03: after a bulk run — only the areas this run created or moved (map: original → area now in the target), only while they are editable;
+     references still pointing at an original are re-linked to its new area and marked as waiting for its first confirmation */
+  window.relinkRefsIn = (code, map) => { const all = getAllModels(); let n = 0, left = 0; const ids = new Set(Object.values(map || {}));
+    ids.forEach(k => { const x = all[k]; if (!x || (x.system || 'RQMS') !== code || modelLock(k).state !== 'edit') return; let st = null; try { st = modelOf(k, x.ver); } catch (er) {} if (!st) return; let c = 0;
+      (st.E || []).forEach(e => { if (!e.ref) return; const t = map[e.refArea]; if (t && t !== k) { e.refArea = t; e.refName = (all[t] || {}).name || e.refName; e.refVer = 0; e.refWait = 1; c++; } else if (((all[e.refArea] || {}).system || 'RQMS') !== code) left++; });
+      if (c && setModelData(k, x.ver, Object.assign(st, { rev: (st.rev || 0) + 1 })) !== false) n += c; });
+    return { relinked: n, left }; };
+  /* how a copy would treat this area's references in the target system (shown before copying); pending = areas handled in the same run */
+  window.copyRefPlan = (id, code, pending) => { const m = getModel(id); let st = { E: [] }; try { st = modelOf(id, m.ver); } catch (er) {}
     const copies = new Set(Object.values(getAllModels()).filter(x => (x.system || 'RQMS') === code && x.copiedFrom && !x.off).map(x => x.copiedFrom));
-    const refs = (st.E || []).filter(e => e.ref); const inT = e => copies.has(e.refArea) || ((getAllModels()[e.refArea] || {}).system || 'RQMS') === code; const keep = refs.filter(inT); const lost = refs.filter(e => !inT(e));
+    const refs = (st.E || []).filter(e => e.ref); const inT = e => copies.has(e.refArea) || ((getAllModels()[e.refArea] || {}).system || 'RQMS') === code || !!(pending && pending.has(e.refArea)); const keep = refs.filter(inT); const lost = refs.filter(e => !inT(e));
     return { keep: keep.length, lost: lost.length, lostAreas: [...new Set(lost.map(e => (getAllModels()[e.refArea] || {}).name || e.refArea))] }; };
   /* entity moves between areas (25 §3-4) are logged so the version diff of both areas can say '이동' */
   window.moveLog = () => J('dbm-moves', []);
@@ -305,7 +312,7 @@
     if (expectVer != null && (m.ver !== expectVer || modelLock(area).state !== 'confirmed')) return { ok: false, ver: m.ver };
     // the next working version starts from the confirmed version's structure
     const lk = modelLock(area); const base = (lk.doc && lk.doc.model) || getModelData(area, m.ver);
-    if (base) setModelData(area, m.ver + 1, Object.assign({}, base, { rev: 0 }));
+    if (base) setModelData(area, m.ver + 1, Object.assign({}, base, { rev: 0, moves: [] }));
     setModel(area, Object.assign({}, m, { ver: m.ver + 1, base: m.ver }));
     return { ok: true, ver: m.ver + 1 };
   };
@@ -1595,7 +1602,7 @@
     const famArea = fam ? (models0[qp.get('area')] ? qp.get('area') : defArea()) : null;
     if (famArea) store.set('dbm-last-area', famArea);
     const cur = famArea || (models0[store.get('dbm-last-area', '')] ? store.get('dbm-last-area', '') : defArea());
-    const canNew = can('area.create', { system: curSys().name });
+    const canNew = can('area.create', { system: curSys().code });
     const SYSTEMS = SYSTEMS_OF(); const sys = SYSTEMS.find(s => s.cur);
     const ST = Object.assign({ tog: {}, w: 0, manual: false, tab: 'm' }, J(treeKey(), {}));
     const save = () => S(treeKey(), ST);

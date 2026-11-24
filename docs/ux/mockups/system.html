@@ -22,7 +22,7 @@
     <span class="badge" id="sys-badge">Oracle 19c · RQMS</span>
     <div class="actions">
       <a class="btn" href="settings.html#sys" id="sys-set">시스템 설정</a>
-      <button class="btn" id="bulk-btn" hidden>모든 영역 옮기기 · 복제</button><a class="btn" href="model.html?sys=1">시스템 전체 ERD</a><button class="btn primary" id="add-area"><i data-ic=plus></i>업무 영역</button>
+      <button class="btn" id="bulk-btn" hidden>사용 중인 영역 모두 옮기기 · 복제</button><a class="btn" href="model.html?sys=1">시스템 전체 ERD</a><button class="btn primary" id="add-area"><i data-ic=plus></i>업무 영역</button>
     </div>
   </div>
   <div class="scroll"><div class="pad">
@@ -43,13 +43,15 @@
     <div class="overlay" id="mo-area" role="dialog" aria-modal="true" aria-labelledby="ma-t"><div class="modal"><div class="m-head"><h3 id="ma-t">새 업무 영역</h3></div>
       <div class="m-body"><div class="field"><label for="ma-name">이름 *</label><input class="input" id="ma-name" placeholder="예: 산출물 관리"></div><div class="caption muted">빈 영역(v1 작업 버전)을 만들고 모델 화면으로 엽니다. 기존 DB가 있으면 [가져오기]로 DDL에서 만드세요.</div></div>
       <div class="m-foot"><button class="btn" data-close="mo-area">취소</button><a class="btn" href="import.html">DDL로 만들기</a><button class="btn primary" id="ma-go" data-needs="ma-name">만들기</button></div></div></div>
-    <!-- 25 §7: every area of this system to another system at once (DBMS correction) -->
-    <div class="overlay" id="mo-bulk" role="dialog" aria-modal="true" aria-labelledby="bk-t"><div class="modal" style="width:720px;max-width:calc(100vw - 32px)"><div class="m-head"><h3 id="bk-t">모든 업무 영역 다른 시스템으로</h3></div>
-      <div class="m-body"><div class="caption muted u-mb-8">DBMS를 잘못 넣은 시스템을 바로잡을 때 씁니다. 다른 영역이 참조하는 영역부터 차례로 처리해, 복제본끼리 참조가 이어집니다.</div>
+    <!-- 25 §8: every area in use of this system to another system at once (DBMS correction) -->
+    <div class="overlay" id="mo-bulk" role="dialog" aria-modal="true" aria-labelledby="bk-t"><div class="modal" style="width:760px;max-width:calc(100vw - 32px)"><div class="m-head"><h3 id="bk-t">사용 중인 업무 영역 모두 다른 시스템으로</h3></div>
+      <div class="m-body"><div id="bk-plan"><div class="caption muted u-mb-8">DBMS를 잘못 넣은 시스템을 바로잡을 때 씁니다. 다른 영역이 참조하는 영역부터 차례로 처리하고, 서로 참조하는 영역은 끝난 뒤 새 영역끼리 다시 잇습니다. 사용 중지한 영역은 대상이 아닙니다.</div>
         <div class="field"><label for="bk-sys">대상 시스템</label><select class="input" id="bk-sys"></select></div>
         <table class="tbl u-mt-8"><thead><tr><th>순서</th><th>업무 영역</th><th>처리</th><th>타입 변환</th><th>참조</th></tr></thead><tbody id="bk-rows"></tbody></table>
         <label class="flex u-mt-8"><input type="checkbox" id="bk-off" checked> 복제한 원본 영역은 사용 중지합니다(사유: 대상 시스템으로 복제함)</label>
-        <div id="bk-done" class="u-mt-8"></div></div>
+        <div id="bk-own" class="u-mt-8"><label class="flex"><input type="checkbox" id="bk-own-on" checked> 담당 시스템도 함께 옮기기 — <span id="bk-own-t"></span>에게 대상 시스템 담당을 더합니다</label><div class="caption muted">끄면 이분들은 새 시스템의 모델을 편집 · 결재할 수 없습니다. 나중에 설정 › 사용자 · 역할에서 바꿀 수 있습니다.</div></div></div>
+        <div id="bk-warn" class="u-mt-8" role="status"></div>
+        <div id="bk-done" class="u-mt-8" role="status"></div></div>
       <div class="m-foot"><button class="btn" data-close="mo-bulk" id="bk-cancel">취소</button><button class="btn primary" id="bk-go">모두 처리</button></div></div></div>
     <!-- 25 바로잡기: area info · move/copy to another system · archive/delete -->
     <div class="overlay" id="mo-aedit" role="dialog" aria-modal="true" aria-labelledby="ae-t"><div class="modal"><div class="m-head"><h3 id="ae-t">영역 정보 수정</h3></div>
@@ -88,12 +90,12 @@ window.pageInit = function () {
   $('k-final').innerHTML = ids.map(a => `${getModels()[a].name} <span class="${getOrg().finalModel[a] !== false ? '' : 'muted'}">${getOrg().finalModel[a] !== false ? '사용' : '안 함'}</span>`).join('<span class="faint">, </span>');
   $('sys-set').hidden = !can('settings');   // settings are Admin-only — no link into a 403 for everyone else
   // creating an area is for modelers / admin; others only browse (CX12-20)
-  if (!can('area.create', { system: curSys().name })) { $('add-area').disabled = true; $('add-area').title = ME.has('modeler') ? `내 담당 시스템에 ${josa(curSys().name, '이/가')} 없어 업무 영역을 만들 수 없습니다` : '업무 영역은 모델러 · Admin만 만들 수 있습니다'; }
+  if (!can('area.create', { system: curSys().code })) { $('add-area').disabled = true; $('add-area').title = ME.has('modeler') ? `내 담당 시스템에 ${josa(curSys().name, '이/가')} 없어 업무 영역을 만들 수 없습니다` : '업무 영역은 모델러 · Admin만 만들 수 있습니다'; }
   $('add-area').onclick = () => { if ($('add-area').disabled) return; $('mo-area').classList.add('open'); $('ma-name').focus(); };
   // model tree [+] → system.html#new (also when already here); the hash is cleared so a reload doesn't reopen it
   const openNew = () => { if (location.hash !== '#new') return; history.replaceState(null, '', location.pathname + location.search); setTimeout(() => $('add-area').click(), 0); };
   openNew(); window.addEventListener('hashchange', openNew);
-  $('ma-go').onclick = () => { const nm = $('ma-name').value.trim(); if (!nm) return; if (liveRoleChanged()) { staleRoleToast(); return; } if (!can('area.create', { system: curSys().name })) { toast('이 시스템에 업무 영역을 만들 권한이 없습니다', 'danger'); return; } if (!Object.values(USERS).some(u => u.status !== 'stopped' && canUser(u, 'model.edit', { system: curSys().name }))) toast(`${josa(curSys().name, '을/를')} 맡은 모델러가 없어 아무도 이 영역을 편집할 수 없습니다 — 담당 지정이 필요합니다`, 'danger'); const id = addArea(nm, { E: [], R: [], M: [] }); flash(`업무 영역 ‘${nm}’을 만들었습니다 — v1 작업 버전`, 'success'); go(`model.html?area=${id}`); };
+  $('ma-go').onclick = () => { const nm = $('ma-name').value.trim(); if (!nm) return; if (liveRoleChanged()) { staleRoleToast(); return; } if (!can('area.create', { system: curSys().code })) { toast('이 시스템에 업무 영역을 만들 권한이 없습니다', 'danger'); return; } if (!Object.values(USERS).some(u => u.status !== 'stopped' && canUser(u, 'model.edit', { system: curSys().code }))) toast(`${josa(curSys().name, '을/를')} 맡은 모델러가 없어 아무도 이 영역을 편집할 수 없습니다 — 담당 지정이 필요합니다`, 'danger'); const id = addArea(nm, { E: [], R: [], M: [] }); flash(`업무 영역 ‘${nm}’을 만들었습니다 — v1 작업 버전`, 'success'); go(`model.html?area=${id}`); };
   document.getElementById('areas').innerHTML = ids.map(a => {
     const L = modelLock(a), c = getComp(a);
     const st = L.state === 'review' ? `<span class="badge b-info">검토 중 · ${L.doc.id}</span>` : L.state === 'confirmed' ? '<span class="badge b-success">확정본</span>' : '<span class="badge">작업 중</span>';
@@ -121,7 +123,7 @@ window.pageInit = function () {
   const targetsOf = a => activeSystems().filter(s => s.code !== (AM[a].system || 'RQMS'));
   const actOf = { edit: a => {
       cur = a; const m = AM[a]; $('ae-name').value = m.name; $('ae-desc').value = m.desc || ''; $('ae-name-e').textContent = ''; $('ae-name').removeAttribute('aria-invalid');
-      const eds = Object.values(USERS).filter(u => u.status !== 'stopped' && canUser(u, 'model.edit', { system: curSys().name }));
+      const eds = Object.values(USERS).filter(u => u.status !== 'stopped' && canUser(u, 'model.edit', { system: curSys().code }));
       $('ae-owner').innerHTML = '<option value="">(정하지 않음)</option>' + eds.map(u => `<option value="${u.id}">${esc(u.name)} · ${esc(u.org || '')}</option>`).join('');
       $('ae-owner').value = m.owner || (eds.find(u => u.name === ownerOf(a)) || {}).id || ''; open('mo-aedit', 'ae-name'); },
     move: a => {
@@ -142,6 +144,7 @@ window.pageInit = function () {
           ${!copy && outRefs.length ? `<li class="u-danger">이 영역이 참조하던 ${outRefs.map(esc).join(', ')} — 원래 시스템에 남아 참조가 끊깁니다</li>` : ''}
           ${rp && (rp.keep || rp.lost) ? `<li${rp.lost ? ' class="u-danger"' : ''}>참조 ${rp.keep ? `<b>${rp.keep}</b>개는 먼저 복제한 영역으로 다시 잇고` : ''}${rp.keep && rp.lost ? ', ' : ''}${rp.lost ? `<b>${rp.lost}</b>개는 빠집니다 — ${rp.lostAreas.map(esc).join(', ')}을(를) 먼저 복제하면 이어집니다` : ''}</li>` : ''}
           ${nameHit ? `<li class="u-danger">${esc(s.name)}에 같은 이름의 업무 영역이 있어 옮길 수 없습니다 — 먼저 [영역 정보 수정]으로 이름을 바꾸세요</li>` : ''}
+          ${Object.values(USERS).some(x => x.status !== 'stopped' && canUser(x, 'model.edit', { system: s.code })) ? '' : `<li class="u-danger">${esc(s.name)}을(를) 맡은 모델러가 없습니다 — 옮긴 뒤 <a href="settings.html#users">설정 › 사용자 · 역할</a>에서 담당 시스템을 지정하세요</li>`}
           <li>${copy ? '복제본은 v1 작업 중으로 시작하고 확정 결재를 다시 받습니다' : '버전 · 작업 내용은 그대로입니다'} · 감사 로그에 남습니다</li></ul>`;
         $('am-go').disabled = !!w || nameHit; };
       $('am-sys').onchange = imp; imp(); open('mo-amove', w || !targets.length ? 'am-cancel' : 'am-sys'); },
@@ -187,34 +190,48 @@ window.pageInit = function () {
     $('arch-body').addEventListener('click', e => { const b = e.target.closest('[data-restore]'); if (!b) return; const id = b.dataset.restore;
       if (!restoreArea(id)) { toast(areaActWhy(id, 'restore') || `같은 이름 ‘${AM[id].name}’의 업무 영역이 있어 다시 쓸 수 없습니다 — 그 영역 이름을 먼저 바꾸세요`, 'danger'); return; }
       reload(`‘${AM[id].name}’을(를) 다시 씁니다`); }); }
-  /* ---- 25 §7: [모든 영역 옮기기 · 복제] — the whole system in one go; referenced areas first so the copies re-link their references ---- */
+  /* ---- 25 §8: [사용 중인 영역 모두 옮기기 · 복제] — the whole system in one go; referenced areas first, cycles re-linked after the run (Y-02 · 03 · 05 · 09 · 10) ---- */
   { const live = () => Object.keys(getModels());
     const order = () => { const ids = live(), seen = new Set(), out = []; const visit = a => { if (seen.has(a)) return; seen.add(a); areaUse(a).refsTo.filter(x => ids.includes(x)).forEach(visit); out.push(a); }; ids.forEach(visit); return out; };
-    $('bulk-btn').hidden = !can('settings') || !live().length || !activeSystems().some(s => s.code !== curSys().code);
-    const plan = code => order().map(a => { const m = AM[a], u = areaUse(a), w = areaActWhy(a, 'move'), copy = u.confirmed || u.docs > 0;
-      const nameHit = areaNameTaken(m.name, code, copy ? undefined : a);
-      return { a, m, copy, block: w || (nameHit ? `${(SYSLIST.find(x => x.code === code) || {}).name}에 같은 이름이 있음` : ''), conv: areaTypeChanges(a, code), refs: u.refsTo.length }; });
-    const draw = () => { const code = $('bk-sys').value; const P = plan(code);
-      $('bk-rows').innerHTML = P.map((p, i) => `<tr><td class="mono">${i + 1}</td><td><b>${esc(p.m.name)}</b></td><td>${p.block ? `<span class="u-danger">건너뜀 — ${esc(p.block)}</span>` : p.copy ? '복제(확정본 있음)' : '옮기기'}</td><td class="mono">${p.conv || '—'}</td><td class="mono">${p.refs || '—'}</td></tr>`).join('');
+    const fromCode = curSys().code;
+    const owners = () => Object.values(USERS).filter(u => u.status !== 'stopped' && (u.systems || []).map(sysCodeOf).includes(fromCode));
+    $('bulk-btn').hidden = !can('settings') || !live().length || !activeSystems().some(s => s.code !== fromCode);
+    const plan = code => { const ids = order(); const pend = new Set(ids);
+      return ids.map(a => { const m = AM[a], u = areaUse(a), w = areaActWhy(a, 'move'), copy = u.confirmed || u.docs > 0;
+        const hit = Object.entries(getAllModels()).find(([k, x]) => k !== a && (x.system || 'RQMS') === code && x.name === m.name);
+        const rp = copyRefPlan(a, code, pend);
+        return { a, m, copy, why: copy ? (u.confirmed ? '확정본' : '결재 이력') : '', block: w || (hit ? `${(SYSLIST.find(x => x.code === code) || {}).name}에 같은 이름 ‘${m.name}’이 있음${hit[1].copiedFrom === a ? '(이미 복제함)' : ''}` : ''), conv: areaTypeChanges(a, code), keep: rp.keep, lost: rp.lost }; }); };
+    const draw = () => { const code = $('bk-sys').value; const P = plan(code); delete $('bk-go').dataset.armed; $('bk-go').textContent = '모두 처리';
+      $('bk-rows').innerHTML = P.map((p, i) => `<tr><td class="mono">${i + 1}</td><td><b>${esc(p.m.name)}</b></td><td>${p.block ? `<span class="u-danger">건너뜀 — ${esc(p.block)}</span>` : p.copy ? `복제 <span class="caption muted">— ${p.why} 있음 · 확정 결재 다시 받음</span>` : '옮기기'}</td><td class="mono">${p.conv || '—'}</td><td class="caption">${p.keep || p.lost ? `이음 ${p.keep}${p.lost ? ` · <span class="u-danger">빠짐 ${p.lost}</span>` : ''}` : '—'}</td></tr>`).join('');
+      const ow = owners(); $('bk-own').hidden = !ow.length; $('bk-own-t').textContent = ow.map(u => u.name).join(', ');
       $('bk-go').disabled = !P.some(p => !p.block); };
-    $('bulk-btn').onclick = () => { const t = activeSystems().filter(s => s.code !== curSys().code); $('bk-sys').innerHTML = t.map(s => `<option value="${s.code}">${esc(s.name)} · ${esc(s.db)}</option>`).join(''); $('bk-sys').value = t[t.length - 1].code;
-      $('bk-done').innerHTML = ''; $('bk-go').hidden = false; draw(); $('mo-bulk')._opener = $('bulk-btn'); $('mo-bulk').classList.add('open'); setTimeout(() => $('bk-sys').focus(), 0); };
+    $('bulk-btn').onclick = () => { const t = activeSystems().filter(s => s.code !== fromCode); $('bk-sys').innerHTML = t.map(s => `<option value="${s.code}">${esc(s.name)} · ${esc(s.db)}</option>`).join(''); $('bk-sys').value = t[t.length - 1].code;
+      $('bk-done').innerHTML = ''; $('bk-go').hidden = false; $('bk-plan').hidden = false; draw(); $('mo-bulk')._opener = $('bulk-btn'); $('mo-bulk').classList.add('open'); setTimeout(() => $('bk-sys').focus(), 0); };
     $('bk-sys').onchange = draw;
+    let ran = false;   // Y-09: closing after a run (Esc or [닫기]) redraws the page
+    new MutationObserver(() => { if (ran && !$('mo-bulk').classList.contains('open')) location.reload(); }).observe($('mo-bulk'), { attributes: true, attributeFilter: ['class'] });
     $('bk-go').onclick = () => { if (!can('settings')) { toast('관리자만 할 수 있습니다', 'danger'); return; }
-      const code = $('bk-sys').value, s = SYSLIST.find(x => x.code === code), res = [];
-      const P = plan(code), pending = new Set(P.filter(p => !p.block).map(p => p.a));
-      P.forEach(p => { if (p.block) { res.push(`${p.m.name} — 건너뜀(${p.block})`); return; }
-        if (p.copy) { const r = copyAreaToSystem(p.a, code, p.m.name, pending); if (!r) { res.push(`${p.m.name} — 복제 실패`); return; }
-          if ($('bk-off').checked) archiveArea(p.a, `‘${s.name}’ 시스템으로 복제함 — 복제본 ‘${p.m.name}’`);
-          res.push(`${p.m.name} — 복제${r.converted ? ` · 타입 ${r.converted}` : ''}${r.relinked ? ` · 참조 ${r.relinked} 이음` : ''}${r.dropped ? ` · 참조 ${r.dropped} 제외` : ''}${$('bk-off').checked ? ' · 원본 사용 중지' : ''}`); }
-        else { const r = moveAreaToSystem(p.a, code); res.push(r ? `${p.m.name} — 옮김${r.converted ? ` · 타입 ${r.converted}` : ''}${r.relinked ? ` · 참조 ${r.relinked} 이음` : ''}` : `${p.m.name} — 옮기기 실패`); } });
-      const rl = relinkRefsIn(code); if (rl) res.push(`서로 참조하던 영역의 참조 ${rl}개를 복제본끼리 다시 이었습니다`);
-      pushAudit({ act: '시스템 전체 업무 영역 옮기기', target: `${curSys().name} → ${s.name}`, why: res.join(' / ') });
+      const code = $('bk-sys').value, s = SYSLIST.find(x => x.code === code), P = plan(code), todo = P.filter(p => !p.block);
+      if (!$('bk-go').dataset.armed) { $('bk-go').dataset.armed = '1'; $('bk-go').textContent = `${todo.length}개 처리 확인`; $('bk-warn').innerHTML = `<b class="u-danger">한 번 더 누르면 ${todo.length}개 영역을 ${esc(s.name)}(으)로 처리합니다${todo.some(p => p.copy) ? ` — 복제한 ${todo.filter(p => p.copy).length}개는 확정 결재를 다시 받습니다` : ''}.</b>`; return; }
+      const pending = new Set(todo.map(p => p.a)), map = {}, res = [];
+      P.forEach(p => { if (p.block) { res.push(['skip', `${p.m.name} — 건너뜀(${p.block})`]); return; }
+        try {
+          if (p.copy) { const r = copyAreaToSystem(p.a, code, p.m.name, pending); if (!r) { res.push(['fail', `${p.m.name} — 복제 실패(저장 안 됨) · 원본은 그대로`]); return; }
+            map[p.a] = r.nid; const off = $('bk-off').checked && archiveArea(p.a, `‘${s.name}’ 시스템으로 복제함 — 복제본 ‘${p.m.name}’`);
+            res.push(['ok', `${p.m.name} — 복제${r.converted ? ` · 타입 ${r.converted}` : ''}${r.relinked ? ` · 참조 ${r.relinked} 이음` : ''}${r.dropped ? ` · 참조 ${r.dropped} 빠짐` : ''}${off ? ' · 원본 사용 중지' : ''}`, r.nid]); }
+          else { const r = moveAreaToSystem(p.a, code); if (!r) { res.push(['fail', `${p.m.name} — 옮기기 실패(저장 안 됨)`]); return; } map[p.a] = p.a; res.push(['ok', `${p.m.name} — 옮김${r.converted ? ` · 타입 ${r.converted}` : ''}${r.relinked ? ` · 참조 ${r.relinked} 이음` : ''}`, p.a]); }
+        } catch (er) { res.push(['fail', `${p.m.name} — 처리 중 오류 · 원본은 그대로`]); } });
+      const rl = relinkRefsIn(code, map); if (rl.relinked) res.push(['ok', `서로 참조하던 영역의 참조 ${rl.relinked}개를 새 영역끼리 다시 이었습니다(대상 확정 전이라 ‘확정본 기다림’)`]);
+      let moved = 0; if ($('bk-own-on').checked && Object.keys(map).length) { owners().forEach(u => { const c = (u.systems || []).map(sysCodeOf); if (!c.includes(code)) { u.systems = c.concat([code]); moved++; } }); if (moved) { saveUsers(); res.push(['ok', `담당자 ${moved}명에게 ${s.name} 담당을 더했습니다`]); } }   /* Y-05 */
+      const okN = res.filter(r => r[0] === 'ok').length, failN = res.filter(r => r[0] === 'fail').length, skipN = res.filter(r => r[0] === 'skip').length;
+      pushAudit({ act: '시스템 전체 업무 영역 옮기기', target: `${curSys().name} → ${s.name}`, why: `완료 ${Object.keys(map).length} · 실패 ${failN} · 건너뜀 ${skipN} / ` + res.map(r => r[1]).join(' / ') });
+      ran = true; $('bk-plan').hidden = true; $('bk-go').hidden = true; $('bk-warn').innerHTML = '';
       const left = Object.keys(getModels()).length;
-      $('bk-rows').innerHTML = ''; $('bk-go').hidden = true;
-      $('bk-done').innerHTML = `<div class="banner ${left ? 'warning' : 'info'}">${icon(left ? 'warn' : 'check')}<div><ul style="margin:0;padding-left:16px;line-height:20px">${res.map(x => `<li>${esc(x)}</li>`).join('')}</ul>
-        ${left ? `<div class="u-mt-8">남은 업무 영역 ${left}개 — 하나씩 정리한 뒤 시스템을 정리합니다.</div>` : `<div class="u-mt-8"><b>${esc(curSys().name)}</b>에 남은 업무 영역이 없습니다. <a href="settings.html#sys">설정 › 시스템 › [시스템 정보]에서 이 시스템 사용 중지 ↗</a> · <a href="system.html?system=${code}">${esc(s.name)} 시스템 홈 ↗</a></div>`}</div></div>`;
-      $('bk-cancel').textContent = '닫기'; $('bk-cancel').onclick = () => location.reload(); };
+      $('bk-done').innerHTML = `<h4 id="bk-res-t" tabindex="-1" class="u-mt-0">처리 결과 — 완료 ${Object.keys(map).length} · 실패 ${failN} · 건너뜀 ${skipN}</h4>
+        <ul style="margin:0;padding-left:16px;line-height:22px">${res.map(([k, t, id]) => `<li class="${k === 'fail' ? 'u-danger' : k === 'skip' ? 'muted' : ''}">${esc(t)}${id ? ` <a href="model.html?area=${id}">열기 ↗</a>` : ''}</li>`).join('')}</ul>
+        <div class="banner ${left ? 'warning' : 'info'} u-mt-8">${icon(left ? 'warn' : 'check')}<div>${left ? `<b>${esc(curSys().name)}</b>에 남은 업무 영역 ${left}개 — 행 끝 ⋯에서 하나씩 정리한 뒤 시스템을 정리합니다.` : `<b>${esc(curSys().name)}</b>에 남은 업무 영역이 없습니다. <a href="settings.html#sys">설정 › 시스템 › [시스템 정보]에서 이 시스템 사용 중지 ↗</a>`}
+          <br><a href="system.html?system=${code}">${esc(s.name)} 시스템 홈 ↗</a>${!left ? `<div class="caption u-mt-4">원래 이름 ‘${esc(curSys().name)}’을 새 시스템에 쓰려면: 이 시스템을 사용 중지한 뒤 [시스템 정보]에서 ‘${esc(s.name)}’의 이름을 바꿉니다(코드는 바꾸지 않습니다).</div>` : ''}</div></div>`;
+      $('bk-cancel').textContent = '닫기'; setTimeout(() => $('bk-res-t').focus(), 0); };
   }
   // the model tree's area menu (and the copy flow) land here: ?area=…&act=edit|move|off
   { const a = qs.get('area'), act = qs.get('act'); if (a && actOf[act] && getModels()[a]) setTimeout(() => { const b = document.querySelector(`[data-aact="${act}"][data-area="${a}"]`); opener = document.querySelector(`#area-${a} [data-menu-btn]`); if (b && b.getAttribute('aria-disabled') === 'true') toast(b.title, 'info'); else actOf[act](a); }, 0); }

@@ -82,11 +82,12 @@ window.pageInit = function () {
     const open = [...new Set(linked)].filter(x => linkState(x).s === 'live');
     const ents = (mo.E || []).filter(e => !e.ref).length;
     const stage = L.state === 'confirmed' ? '확정' : L.state === 'review' ? '검토' : !ents ? '작업' : C.bad ? '표준 맞추기' : '확정 신청 전';
-    return { id, m, L, C, open, ents, stage, sys: m.sys || '요구사항관리', dbms: m.dbms || 'Oracle' };
+    const sc = m.system || 'RQMS', sx = SYSLIST.find(x => x.code === sc) || {};   /* Y-06: the area's system by code, not the old m.sys field */
+    return { id, m, L, C, open, ents, stage, sys: sx.name || sc, sysCode: sc, dbms: String(sx.dbms || sx.db || 'Oracle').split(' ')[0] };
   });
   const tot = AREAS.reduce((n, a) => n + a.C.tot, 0), okN = AREAS.reduce((n, a) => n + a.C.tot - a.C.bad, 0);
   const RATE = tot ? Math.floor(okN / tot * 100) : 0;
-  const myAreas = AREAS.filter(a => inScope(ME, a.sys));
+  const myAreas = AREAS.filter(a => inScope(ME, a.sysCode));
   const areaList = lead === 'modeler' ? myAreas : AREAS;
 
   /* ---- today's work: one table, others waiting on me first ---- */
