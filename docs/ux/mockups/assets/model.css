@@ -259,3 +259,7 @@ body.gridmode .cv-banner, body.gridmode .legend, body.gridmode .cv-zoom, body.gr
 #cv.mini-off .mini-open { display:inline-flex; position:absolute; right:calc(12px + var(--cv-cutr, 0px)); bottom:calc(12px + var(--cv-cut, 0px)); z-index:10; box-shadow:var(--menu-shadow); }
 /* system view: zoomable area cards */
 #sysworld { position:absolute; left:0; top:0; transform-origin:0 0; }.s-cur { background:var(--ink); }
+/* legend: row 1 = status dots · minimap colours, row 2 = relation lines and ends (IE) — 23-erd-notation §4-2 */
+.legend .lg-body { flex-direction:column; align-items:flex-start; gap:4px; }
+.legend .lg-row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+.legend .lg-ln { flex:none; margin-right:-4px; }
