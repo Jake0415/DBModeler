@@ -21,6 +21,7 @@
       <!-- ERD P2-11: the head = path · area screens · state · ⋯ · the one goal action; everything that changes the canvas lives in the canvas toolbar -->
       <span class="u-rel"><button class="btn u-w-32 u-p-0 u-jc-c" id="b-more" aria-haspopup="true" aria-expanded="false" aria-label="더 보기"><i data-ic=more></i></button>
         <div class="menu" id="moremenu" role="menu">
+          <a class="mi" role="menuitem" href="import-excel.html"><i data-ic=upload></i>엑셀로 가져오기</a>
           <a class="mi" role="menuitem" href="import.html"><i data-ic=upload></i>DDL 가져오기</a>
           <button class="mi" role="menuitem" id="mi-export"><i data-ic=download></i>이미지로 내보내기</button>
           <div class="msep"></div>
@@ -78,7 +79,7 @@
         <button class="tb" data-tool="memo" data-edit title="메모 (M)"><i data-ic=pen></i>메모 <kbd>M</kbd></button>
         <span class="sep"></span>
         <span class="seg tseg" id="vw" role="group" aria-label="보기"><button class="on" data-v="erd" aria-pressed="true">다이어그램</button><button data-v="grid" aria-pressed="false" id="b-grid" title="표 보기 · 일괄편집 · 찾기/바꾸기 (Ctrl+F)">표</button></span>
-        <span class="seg tseg" id="lp" role="group" aria-label="논리·물리"><button class="on" data-v="L" aria-pressed="true">논리</button><button data-v="P" aria-pressed="false">물리</button></span>
+        <span class="seg tseg" id="lp" role="group" aria-label="논리 · 물리 · 통합"><button class="on" data-v="L" aria-pressed="true" title="논리 (Alt+1)">논리</button><button data-v="P" aria-pressed="false" title="물리 (Alt+2)">물리</button><button data-v="A" aria-pressed="false" title="통합 — 논리 + 물리 (Alt+3)">통합</button></span>
         <span class="sep"></span>
         <button class="tb" id="b-layout" data-edit>자동 배치</button>
         <button class="tb" id="b-sys">시스템 전체</button>
@@ -96,7 +97,7 @@
         <div class="banner warning" id="ban-left"><i data-ic=warn></i><div class="grow" id="ban-left-t"></div><a class="btn sm" id="ban-left-b" href="candidates.html">후보 보기</a></div>
         <div class="banner" id="ban-view"><i data-ic=info></i><div class="grow"><b>조회 전용</b> — 모델 편집은 <b>모델러</b> 역할만 할 수 있습니다. 지금 역할: <span id="ban-view-r"></span></div></div>
         <div class="banner danger" id="ban-off"><i data-ic=warn></i><div class="grow"><b>연결 끊김</b> — 편집 내용은 이 브라우저에 보관하고, 다시 연결되면 병합합니다.</div><button class="btn sm" id="b-reconnect">다시 연결</button></div>
-        <div class="banner warning" id="ban-gate"><i data-ic=warn></i><div class="grow" id="ban-gate-t"></div><button class="btn sm" id="b-gate">점검 보기</button></div>
+        <div class="banner warning" id="ban-gate"><i data-ic=warn></i><div class="grow" id="ban-gate-t"></div><button class="btn sm" id="b-nextum" hidden>다음 미매핑으로</button><button class="btn sm ghost" id="b-pmemo" hidden></button><button class="btn sm" id="b-gate">점검 보기</button></div>
         <div class="banner warning" id="ban-big" style="display:none"><i data-ic=warn></i><div class="grow" id="ban-big-t"></div></div>
         <div class="banner info" id="ban-sync"><i data-ic=info></i><div class="grow"><b>논리 변경 2건 대기</b> — 물리에 자동 반영하지 않습니다.</div><button class="btn sm" data-toast="논리 변경 2건을 물리에 반영했습니다 · 컬럼 +2" data-toast-type="info">미리보기 · 반영</button></div>
       </div>
@@ -117,7 +118,7 @@
       <div id="grid"></div>
       <!-- bottom controls: always inside the window (pinCtl), legend · minimap can be folded and the choice is remembered -->
       <!-- ERD P3-20: one row at the bottom — the legend is a popover from [ⓘ] in the zoom bar (open on first use, then only on request) -->
-      <div class="legend" id="cv-legend" role="region" aria-label="범례"><span class="lg-body" id="lg-body"><span class="lg-row">상태 <span class="dot-i s-ok"></span>표준 <span class="dot-i s-comb"></span>조합 가능 <span class="dot-i s-unreg"></span>미등록 단어 <span class="dot-i s-ex"></span>예외 <span class="dot-i s-na"></span>비대상 <span class="lg-sep" aria-hidden="true"></span>미니맵 <span class="lg-sw lg-w"></span>미준수 있음 <span class="lg-sw lg-p"></span>함께 편집 중</span><span class="lg-row lg-rel">관계 <svg class="lg-ln" width="26" height="12" viewBox="0 0 26 12" aria-hidden="true" fill="none" stroke="var(--fg-2)" stroke-width="1.3"><path d="M1 6H25"/></svg>식별 <svg class="lg-ln" width="26" height="12" viewBox="0 0 26 12" aria-hidden="true" fill="none" stroke="var(--fg-2)" stroke-width="1.3"><path d="M1 6H25" stroke-dasharray="4 3"/></svg>비식별 <svg class="lg-ln" width="26" height="12" viewBox="0 0 26 12" aria-hidden="true" fill="none" stroke="var(--fg-2)" stroke-width="1.3"><path d="M1 6H25M25 1L17 6L25 11"/></svg>다수 <svg class="lg-ln" width="26" height="12" viewBox="0 0 26 12" aria-hidden="true" fill="none" stroke="var(--fg-2)" stroke-width="1.3"><path d="M1 6H25M19 1V11"/></svg>하나 <svg class="lg-ln" width="26" height="12" viewBox="0 0 26 12" aria-hidden="true" fill="none" stroke="var(--fg-2)" stroke-width="1.3"><path d="M1 6H13M21 6H25"/><circle cx="17" cy="6" r="3.2"/></svg>없을 수 있음 <svg class="lg-ln" width="26" height="12" viewBox="0 0 26 12" aria-hidden="true" fill="none" stroke="var(--fg-2)" stroke-width="1.3"><rect x="1" y="5" width="10" height="6" rx="1"/><path d="M11 7H17V1H6V5"/></svg>재귀 <svg class="lg-ln" width="26" height="12" viewBox="0 0 26 12" aria-hidden="true" fill="none" stroke="var(--fg-2)" stroke-width="1.3" style="stroke:var(--violet)"><path d="M2 11Q13 -3 24 11"/></svg>배타</span></span><button class="iconbtn u-w-28 u-h-28" id="lg-fold" aria-expanded="true" aria-controls="cv-legend" aria-label="범례 닫기" title="범례 닫기"><i data-ic=x></i></button></div>
+      <div class="legend" id="cv-legend" role="region" aria-label="범례"><span class="lg-row lg-introw" id="lg-int" hidden>통합 한 줄 = 논리명 │ <span class="mono">물리명</span> │ 타입 <span class="lg-sep" aria-hidden="true"></span><i>— 미매핑</i> 물리 이름 없음 · <i>— 타입 미정</i> 도메인 없음</span><span class="lg-body" id="lg-body"><span class="lg-row">상태 <span class="dot-i s-ok"></span>표준 <span class="dot-i s-comb"></span>조합 가능 <span class="dot-i s-unreg"></span>미등록 단어 <span class="dot-i s-ex"></span>예외 <span class="dot-i s-na"></span>비대상 <span class="lg-sep" aria-hidden="true"></span>미니맵 <span class="lg-sw lg-w"></span>미준수 있음 <span class="lg-sw lg-p"></span>함께 편집 중</span><span class="lg-row lg-rel">관계 <svg class="lg-ln" width="26" height="12" viewBox="0 0 26 12" aria-hidden="true" fill="none" stroke="var(--fg-2)" stroke-width="1.3"><path d="M1 6H25"/></svg>식별 <svg class="lg-ln" width="26" height="12" viewBox="0 0 26 12" aria-hidden="true" fill="none" stroke="var(--fg-2)" stroke-width="1.3"><path d="M1 6H25" stroke-dasharray="4 3"/></svg>비식별 <svg class="lg-ln" width="26" height="12" viewBox="0 0 26 12" aria-hidden="true" fill="none" stroke="var(--fg-2)" stroke-width="1.3"><path d="M1 6H25M25 1L17 6L25 11"/></svg>다수 <svg class="lg-ln" width="26" height="12" viewBox="0 0 26 12" aria-hidden="true" fill="none" stroke="var(--fg-2)" stroke-width="1.3"><path d="M1 6H25M19 1V11"/></svg>하나 <svg class="lg-ln" width="26" height="12" viewBox="0 0 26 12" aria-hidden="true" fill="none" stroke="var(--fg-2)" stroke-width="1.3"><path d="M1 6H13M21 6H25"/><circle cx="17" cy="6" r="3.2"/></svg>없을 수 있음 <svg class="lg-ln" width="26" height="12" viewBox="0 0 26 12" aria-hidden="true" fill="none" stroke="var(--fg-2)" stroke-width="1.3"><rect x="1" y="5" width="10" height="6" rx="1"/><path d="M11 7H17V1H6V5"/></svg>재귀 <svg class="lg-ln" width="26" height="12" viewBox="0 0 26 12" aria-hidden="true" fill="none" stroke="var(--fg-2)" stroke-width="1.3" style="stroke:var(--violet)"><path d="M2 11Q13 -3 24 11"/></svg>배타</span></span><button class="iconbtn u-w-28 u-h-28" id="lg-fold" aria-expanded="true" aria-controls="cv-legend" aria-label="범례 닫기" title="범례 닫기"><i data-ic=x></i></button></div>
       <div class="cv-zoom" role="group" aria-label="확대 · 축소"><button id="zo" aria-label="축소 (Ctrl+-)" title="축소 (Ctrl+-)">−</button><button type="button" id="zl" class="mono" title="100%로 (Ctrl+0)" aria-label="지금 배율 — 눌러서 100%로 (Ctrl+0)">100%</button><button id="zi" aria-label="확대 (Ctrl++)" title="확대 (Ctrl++)">+</button><button id="zfit" title="전체 맞춤 (Shift+1)">맞춤</button>
         <select class="input" id="lodsel" aria-label="캔버스 표시 단계"><option value="auto" title="글자가 11px 이상이면 전체 속성, 9~11px이면 키만, 9px 미만이면 이름만">표시: 자동</option><option value="full">전체 속성</option><option value="mid">키만</option><option value="low">요약(이름만)</option></select><button type="button" id="lg-open" class="lg-i" aria-expanded="false" aria-controls="cv-legend" aria-label="범례" title="범례 — 상태 점 · 미니맵 색"><i data-ic=info data-s=14></i></button></div>
       <div class="cv-mini" id="cv-mini"><svg id="mini" width="180" height="120" role="img" aria-label="미니맵 — 전체 중 지금 보이는 범위"></svg><button class="iconbtn u-w-28 u-h-28 mini-x" id="mini-x" aria-expanded="true" aria-controls="cv-mini" aria-label="미니맵 접기" title="미니맵 접기"><i data-ic=x></i></button></div>
@@ -254,6 +255,8 @@ window.pageInit = function () {
   const VE = () => E.filter(inView);
   const cv = $('cv'), world = $('world'), nodes = $('nodes'), eg = $('eg'), preview = $('preview');
   let lodTimer = null, lodHinted = false;
+  let SX = 1, SY = 1, LW = 240, LH = 220, spreadBusy = false, needSpread = true, needL = true, aKey = '', lKey = '';
+  const spreadKey = () => curView + ':' + E.length + ':' + E.reduce((n, e) => n + e.a.length + (e.n || '').length, 0);   /* 28 §7-1: 통합 spreads the logical layout by SX · SY, measured per area */
   let mode = 'L', tool = 'select', relType = 'nonid', zoom = 1, panX = 40, panY = 50, sel = null, relSrc = null, lodForce = 'auto', kbNode = false;
   let gateSeen = false, offline = false, remoteSel = 'rqrm', renaming = null, xorPick = [];
   const STATE = q.get('state') || '';          // only a data preset now (applied / resolved) — never the lock
@@ -276,10 +279,13 @@ window.pageInit = function () {
   const outOfScope = ME.has('modeler') && viewOnly;
   const singleKeys = () => dbmStore.get('dbm-single-keys', '1') === '1';
   // a view other than 전체 keeps its own positions ([x, y, px, py]); without one the entity's own position is used
-  const pos = e => { const v = curView !== 'all' && vCur(), p = v && v.pos && v.pos[e.id]; if (p) return mode === 'L' ? { x: p[0], y: p[1] } : { x: p[2], y: p[3] }; return mode === 'L' ? { x: e.x, y: e.y } : { x: e.px, y: e.py }; };
+  const pos = e => { const v = curView !== 'all' && vCur(), p = v && v.pos && v.pos[e.id]; const l = p ? { x: p[0], y: p[1] } : { x: e.x, y: e.y };
+    if (mode === 'A') return { x: Math.round(l.x * SX), y: Math.round(l.y * SY) }; if (p) return mode === 'L' ? l : { x: p[2], y: p[3] }; return mode === 'L' ? l : { x: e.px, y: e.py }; };
+  let aMoveTold = dbmStore.get(`dbm-amove-${ME.id}`, '') === '1';
   const setPos = (e, x, y) => { const v = curView !== 'all' && vCur();
-    if (v) { v.pos = v.pos || {}; const p = v.pos[e.id] || [e.x, e.y, e.px, e.py]; if (mode === 'L') { p[0] = x; p[1] = y; } else { p[2] = x; p[3] = y; } v.pos[e.id] = p; return; }
-    if (mode === 'L') { e.x = x; e.y = y; } else { e.px = x; e.py = y; } };
+    if (mode === 'A') { x = Math.round(x / SX / 8) * 8; y = Math.round(y / SY / 8) * 8; if (!aMoveTold) { aMoveTold = true; dbmStore.set(`dbm-amove-${ME.id}`, '1'); setTimeout(() => toast('통합에서 옮긴 위치는 논리 배치에도 반영됩니다 · 물리 배치는 그대로입니다', 'info'), 0); } }   /* stored in the logical slots */
+    if (v) { v.pos = v.pos || {}; const p = v.pos[e.id] || [e.x, e.y, e.px, e.py]; if (mode !== 'P') { p[0] = x; p[1] = y; } else { p[2] = x; p[3] = y; } v.pos[e.id] = p; return; }
+    if (mode !== 'P') { e.x = x; e.y = y; } else { e.px = x; e.py = y; } };
   const ent = id => E.find(x => x.id === id);
   const bad = e => e.a.filter(a => a.s === 'comb' || a.s === 'unreg').length;
   const guard = () => {
@@ -440,23 +446,36 @@ window.pageInit = function () {
     const pk = e.a.filter(a => a.pk), rest = e.a.filter(a => !a.pk);
     const row = a => {
       const idx = e.a.indexOf(a);
-      const name = mode === 'L' ? a.n : a.p, right = mode === 'L' ? a.p : a.t;
-      if (a.edit) return `<div class="ar"><span class="dot-i s-na"></span><input data-e="${e.id}" data-i="${idx}" class="attr-in" placeholder="속성명 입력 · Enter" value="${a.n}"></div>`;
-      return `<div class="ar ${a.pk ? 'pkr' : ''} ${a.fk ? 'fk' : ''} ${a.remote ? 'new' : ''} ${a.s === 'na' ? 'excl' : ''}" data-e="${e.id}" data-i="${idx}"><span class="dot-i s-${a.s}" title="${({ ok: '표준', comb: '조합 가능', unreg: '미등록 단어', ex: '예외', na: '비대상', req: '용어 신청 중' })[a.s]}"></span><span class="n">${a.pk ? '# ' : ''}${name}${a.fk ? ' (FK)' : ''}</span>${['comb', 'unreg', 'ex', 'req'].includes(a.s) ? `<span class="stw ${a.s}">${({ comb: '조합', unreg: '미등록', ex: '예외', req: '신청 중' })[a.s]}</span>` : ''}${a.sec ? LOCKI : ''}<span class="p">${right}</span></div>`;
+      const name = mode !== 'P' ? a.n : a.p, right = mode === 'L' ? a.p : a.t;
+      if (a.edit) return `<div class="ar"><span class="dot-i s-na"></span><input data-e="${e.id}" data-i="${idx}" class="attr-in" placeholder="속성명 입력 · Enter" value="${a.n}">${mode === 'A' ? `<span class="pv mono" aria-live="polite">${a.n ? '물리 → ' + hx(decompose(a.n).abbr) : '물리명은 이름에서 만듭니다'}</span>` : ''}</div>`;   /* 28 §7-2: the canvas name is the logical name — the physical one is previewed */
+      const um = a.s !== 'na' && a.p === '—', tm = a.s !== 'na' && a.t === '—';
+      const mid = mode === 'A' ? `<span class="pp${um ? ' um' : ''}" title="${um ? '물리명 없음' : hx(a.p)}"><span class="sr-only">물리 </span>${um ? '— 미매핑' : hx(a.p)}</span>` : '', rt = mode === 'A' ? (tm ? '<span class="um">— 타입 미정</span>' : hx(right)) : right;
+      return `<div class="ar ${a.pk ? 'pkr' : ''} ${a.fk ? 'fk' : ''} ${a.remote ? 'new' : ''} ${a.s === 'na' ? 'excl' : ''}" data-e="${e.id}" data-i="${idx}"><span class="dot-i s-${a.s}" title="${({ ok: '표준', comb: '조합 가능', unreg: '미등록 단어', ex: '예외', na: '비대상', req: '용어 신청 중' })[a.s]}"></span><span class="n">${a.pk ? '<span aria-hidden="true"># </span>' : ''}${name}${a.fk ? ' (FK)' : ''}${a.pk && mode === 'A' ? '<span class="sr-only">, PK</span>' : ''}</span>${['comb', 'unreg', 'ex', 'req'].includes(a.s) ? `<span class="stw ${a.s}">${({ comb: '조합', unreg: '미등록', ex: '예외', req: '신청 중' })[a.s]}</span>` : ''}${a.sec ? LOCKI : ''}${mid}<span class="p">${rt}</span></div>`;
     };
     const b = bad(e);
-    const title = renaming === e.id ? `<input class="ren-in" data-e="${e.id}" value="${e.fresh ? '' : e.n}" list="ent-terms" autocomplete="off" aria-label="엔터티 이름" placeholder="엔터티 이름 · 예: 산출물검수기본">` : `<span class="title" data-e="${e.id}">${mode === 'L' ? e.n : e.p}</span>`;
+    const title = renaming === e.id ? `<input class="ren-in" data-e="${e.id}" value="${e.fresh ? '' : e.n}" list="ent-terms" autocomplete="off" aria-label="엔터티 이름" placeholder="엔터티 이름 · 예: 산출물검수기본">${mode === 'A' ? `<span class="pv mono" aria-live="polite">${e.fresh || !e.n ? '물리명은 이름에서 만듭니다' : '물리 → ' + hx(decompose(e.n).abbr)}</span>` : ''}` : `<span class="title" data-e="${e.id}">${mode !== 'P' ? e.n : e.p}</span>`;
     const stl = refStale(e);
     const tag = e.ref ? `<span class="rtag reft" title="${hx(e.refName || '다른 영역')} v${e.refVer || '?'} 확정본을 읽기 전용으로 가져온 참조">${hx(e.refName || '공통')} v${e.refVer || '?'} · 참조${stl ? ` · 원본 v${stl} 확정 — 갱신` : ''}</span>` : remoteSel === e.id && !offline ? '<span class="rtag">홍설계 편집 중</span>' : '';
-    const subt = e.sub ? (mode === 'L'
-      ? `<div class="subt"><div class="cap"><b>${e.sub.kind === '배타' ? 'X' : 'O'}</b>서브타입 · ${e.sub.kind} · 구분 ${e.sub.disc}</div><div class="kids">${e.sub.kids.map(k => `<span>${k}</span>`).join('')}</div></div>`
-      : `<div class="subt"><div class="cap">서브타입 → 한 테이블로 통합 · 구분 컬럼 <span class="mono">DLVRBL_TYPE_CD</span></div></div>`) : '';
-    const sysc = mode === 'P' && !e.ref ? `<div class="sysc">시스템 컬럼 ${SYS_COLS.length} · ${SYS_COLS.map(c => c[1]).join(' · ')}</div>` : '';
-    return `${tag}<div class="nh" data-drag="${e.id}"><span class="cls">${e.c}</span>${title}${b ? `<span class="nbad" title="미준수 속성 ${b}개">미준수 ${b}</span>` : ''}${e.st ? '<span class="dot-i s-comb" title="엔터티 용어 신청 중"></span>' : ''}<span class="sub">${mode === 'L' ? e.p : e.n}</span></div>
+    const subL = e.sub ? `<div class="subt"><div class="cap"><b>${e.sub.kind === '배타' ? 'X' : 'O'}</b>서브타입 · ${e.sub.kind} · 구분 ${e.sub.disc}</div><div class="kids">${e.sub.kids.map(k => `<span>${k}</span>`).join('')}</div></div>` : '';
+    const subP = e.sub ? `<div class="subt"><div class="cap">${mode === 'A' ? '물리: ' : '서브타입 → '}한 테이블로 합침 · 구분 컬럼 <span class="mono">DLVRBL_TYPE_CD</span></div></div>` : '';   /* 28 §7-4: '합침', so it never reads like the 통합 view */
+    const subt = mode === 'L' ? subL : mode === 'P' ? subP : subL + subP;
+    const umN = e.ref ? 0 : (e.p === '—' ? 1 : 0) + e.a.filter(a => !a.edit && a.s !== 'na' && (a.p === '—' || a.t === '—')).length;
+    const sysc = mode !== 'L' && !e.ref ? `<div class="sysc">시스템 컬럼 ${SYS_COLS.length} · ${SYS_COLS.map(c => c[1]).join(' · ')}</div>` : '';
+    return `${tag}<div class="nh" data-drag="${e.id}"><span class="cls">${e.c}</span>${title}${b ? `<span class="nbad" title="미준수 속성 ${b}개">미준수 ${b}</span>` : ''}${mode === 'A' && umN ? `<span class="nbad num" title="물리명 · 타입이 없는 항목 ${umN}개">미매핑 ${umN}</span>` : ''}${e.st ? '<span class="dot-i s-comb" title="엔터티 용어 신청 중"></span>' : ''}<span class="sub">${mode === 'A' && e.p === '—' ? '<span class="um">— 미매핑</span>' : mode !== 'P' ? e.p : e.n}</span></div>
       <div class="pk">${pk.map(row).join('')}</div>${rest.map(row).join('')}<div class="more">+ ${rest.length}개 속성</div>${subt}${sysc}`;
   }
+  function spreadAfter() {
+    if (spreadBusy || !nodes || !((mode === 'L' && needL) || (mode === 'A' && needSpread))) return; const w = $('world'); const ns = [...nodes.querySelectorAll('.node')]; if (!ns.length) return;
+    const lod = w ? (w.className.match(/lod-(mid|low)/) || [])[0] : null; if (lod) w.classList.remove(lod);   // measured at full detail even when zoomed out
+    const mw = Math.max(...ns.map(n => n.offsetWidth)), mh = Math.max(...ns.map(n => n.offsetHeight)); if (lod) w.classList.add(lod); if (!mw) return;
+    if (mode === 'L') { LW = mw; LH = mh; needL = false; return; } needSpread = false;
+    const sx = Math.min(2.4, Math.max(1, (mw + 48) / (LW + 48))), sy = Math.min(1.8, Math.max(1, (mh + 40) / (LH + 40)));
+    if (Math.abs(sx - SX) > 0.04 || Math.abs(sy - SY) > 0.04) { SX = sx; SY = sy; spreadBusy = true; try { render(); } finally { spreadBusy = false; } }
+  }
+  { const r0 = render; render = function () { const out = r0.apply(this, arguments); spreadAfter(); return out; }; }
+  const memoXY = m => mode === 'A' && m.mode === 'L' ? { x: Math.round(m.x * SX), y: Math.round(m.y * SY) } : { x: m.x, y: m.y };
   function renderMemos() {
-    $('memos').innerHTML = M.filter(m => m.mode === mode).map(m => `<div class="memo" id="m-${m.id}" style="left:${m.x}px;top:${m.y}px"><div class="mh" data-mdrag="${m.id}">메모 · ${m.by}<button data-mdel="${m.id}" title="메모 삭제" aria-label="메모 삭제"><i data-ic=x></i></button></div><div class="mb" contenteditable="${canEdit()}" data-mid="${m.id}">${m.text}</div></div>`).join('');
+    $('memos').innerHTML = M.filter(m => m.mode === mode || (mode === 'A' && m.mode === 'L')).map(m => `<div class="memo" id="m-${m.id}" style="left:${memoXY(m).x}px;top:${memoXY(m).y}px"><div class="mh" data-mdrag="${m.id}">메모${mode === 'A' ? ' <span class="mtag">논리</span>' : ''} · ${m.by}<button data-mdel="${m.id}" title="메모 삭제" aria-label="메모 삭제"><i data-ic=x></i></button></div><div class="mb" contenteditable="${canEdit()}" data-mid="${m.id}">${m.text}</div></div>`).join('');
   }
   // model tree (12 · T1): the tree reads this canvas's own data and follows its selection
   let lastTreeSel, treeAttr = null, treeOrigin = false, dictAutoFor = '';
@@ -476,10 +495,10 @@ window.pageInit = function () {
     // speed (300 entities): nodes are kept and only the ones whose markup changed are swapped — laying out all 300 again cost ≈150ms per edit
     const have = new Map([...nodes.children].map(n => [n.id, n])), tpl = document.createElement('template');
     list.forEach(e => {
-      const p = pos(e), nb = bad(e), cls = 'node' + (sel === e.id ? ' sel' : '') + (relSrc === e.id ? ' relsrc' : '') + (remoteSel === e.id && !offline ? ' remote' : '') + (e.ref ? ' ref' : '');
+      const p = pos(e), nb = bad(e), cls = 'node' + (mode === 'A' ? ' int' : '') + (sel === e.id ? ' sel' : '') + (relSrc === e.id ? ' relsrc' : '') + (remoteSel === e.id && !offline ? ' remote' : '') + (e.ref ? ' ref' : '');
       // ERD P2-16: nodes are reachable from the keyboard — one Tab stop (the selected node, else the first), arrows walk between nodes
       const ti = (sel === e.id || (!selOk && e === first)) ? 0 : -1;
-      const h = `<div class="${cls}" id="n-${e.id}" tabindex="${ti}" role="group" aria-roledescription="엔터티" aria-label="${hx(e.n)}${e.ref ? ' (참조)' : ''}, 속성 ${e.a.length}개${nb ? `, 미준수 ${nb}` : ''}${sel === e.id ? ', 선택됨' : ''}" style="left:${p.x}px;top:${p.y}px">${nodeHTML(e)}</div>`;
+      const h = `<div class="${cls}" id="n-${e.id}" tabindex="${ti}" role="group" aria-roledescription="엔터티" aria-label="${hx(e.n)}${mode === 'A' && e.p !== '—' ? ', 물리 ' + hx(e.p) : ''}${e.ref ? ' (참조)' : ''}, 속성 ${e.a.length}개${nb ? `, 미준수 ${nb}` : ''}${sel === e.id ? ', 선택됨' : ''}" style="left:${p.x}px;top:${p.y}px">${nodeHTML(e)}</div>`;
       const old = have.get('n-' + e.id); have.delete('n-' + e.id);
       if (old && old.__h === h) return;
       tpl.innerHTML = h; const el = tpl.content.firstElementChild; el.__h = h;
@@ -548,6 +567,7 @@ window.pageInit = function () {
       const startM = r.k === 'mn' ? 'url(#m-many)' : rs.opt === 'may' ? 'url(#m-one0)' : 'url(#m-one)';
       s += `<path class="hit ${xorPick.includes(i) ? 'pick' : ''}" d="${p.d}" data-r="${i}"/><path d="${p.d}" fill="none" stroke="var(--fg-2)" stroke-width="1.2" ${dash} marker-start="${startM}" marker-end="${endM}"/>`;
       s += `<text class="relname" x="${p.lx}" y="${p.ly}">${r.name || ''}</text>`;
+      if (mode === 'A' && r.k !== 'mn') { const fk = fkOf(r, E); s += `<text class="relname relfk${fk.st === 'ok' ? '' : ' miss'}" x="${p.lx}" y="${p.ly + (r.n ? 13 : 0)}">${fk.why ? `<title>${hx(fk.why)}</title>` : ''}${fk.st === 'ok' ? hx(fk.name) : fk.st === 'ex' ? 'FK 제외' : 'FK 누락'}</text>`; }   /* 28 §3-4 */
       if (r.k === 'mn') s += `<text class="relname" x="${p.lx}" y="${p.ly + 14}" style="fill:var(--warning-deep)">M:N 해소 필요</text>`;
       if (r.xg) { const pt = along(p.d, 22); if (pt) (groups[r.xg] = groups[r.xg] || { f: r.f, pts: [] }).pts.push(pt); }
     });
@@ -674,12 +694,12 @@ window.pageInit = function () {
   const curAttr = () => { const e = sel && typeof sel === 'string' && ent(sel); return e && treeAttr != null && e.a[treeAttr] && !e.a[treeAttr].edit ? [e, e.a[treeAttr], treeAttr] : [e, null, null]; };
   const pickRow = (ai, f) => { treeOrigin = true; treeAttr = ai; gFocus = { e: sel, ai, f: f || 'row' }; render(); };
   function attrGrid(e, sysRows) {
-    const L = mode === 'L', ro = !canEdit() || !!e.ref;
+    const L = mode !== 'P', ro = !canEdit() || !!e.ref;
     const doms = domList();
     const rows = e.a.map((a, ai) => {
       if (a.edit) return `<tr class="ag-new" data-ai="${ai}"><td class="ag-st"><span class="dot-i s-na"></span></td><td class="ag-c"></td><td class="ag-n" colspan="3"><span class="caption">입력 중 — 캔버스의 입력 칸에서 용어를 고르세요 · Enter 저장 · Esc 취소</span></td></tr>`;
       const lp = lockWhy(a, 'pk'), ln = lockWhy(a, 'nn'), ld = lockWhy(a, 'dom'), d = domOf(a), on = treeAttr === ai;
-      const nm = L ? a.n : a.p, sub = L ? a.p : `${a.n} · ${a.t}`;
+      const nm = L ? a.n : a.p, sub = mode === 'A' ? `${a.p} · ${a.t}` : L ? a.p : `${a.n} · ${a.t}`;
       const domCell = ro || ld ? `<span class="ag-fix" title="${hx(ld || '')}">${hx(d || '—')}${ld && !ro ? icon('lock', 12) : ''}</span>`
         : `<select class="ag-sel" data-f="dom" tabindex="-1" aria-label="${hx(a.n)} 도메인"><option value="">${d ? '' : '선택'}</option>${doms.map(x => `<option${x === d ? ' selected' : ''}>${hx(x)}</option>`).join('')}</select>`;
       return `<tr data-ai="${ai}" tabindex="${(treeAttr == null ? ai === 0 : on) ? 0 : -1}" aria-selected="${on}"${on ? ' class="hl"' : ''} aria-label="${hx(a.n)}${a.pk ? ', PK' : ''}${a.fk ? ', FK' : ''}, ${ST_NAME[a.s] || ''}">
@@ -689,8 +709,8 @@ window.pageInit = function () {
         <td class="ag-d">${domCell}</td>
         <td class="ag-c"><input type="checkbox" data-f="nn" tabindex="-1" aria-label="${hx(a.n)} 필수"${a.nn || a.pk ? ' checked' : ''}${ro || ln ? ' disabled' : ''} title="${hx(ln || '필수')}"></td></tr>`;
     }).join('');
-    const table = `<table class="tbl ag" aria-label="${L ? '속성' : '컬럼'} 편집 — ↑↓ 행 이동"><thead><tr><th class="ag-st"><span class="sr-only">상태</span></th><th class="ag-c" title="식별자(Primary Key)">PK</th><th>${L ? '속성명' : '컬럼명'} <span class="faint u-fw-400">${L ? '/ 물리명' : '/ 논리명 · 타입'}</span></th><th class="ag-d">도메인</th><th class="ag-c" title="필수">필수</th></tr></thead><tbody>${rows || `<tr><td colspan="5" class="caption muted">${L ? '속성' : '컬럼'}이 없습니다</td></tr>`}${sysRows || ''}</tbody></table>`;
-    const add = `<div class="flex u-mt-8">${ro ? '' : `<button class="btn sm" id="rp-add"><i data-ic=plus></i>${L ? '속성' : '컬럼'} 추가 (Alt+Enter)</button>`}<span class="grow"></span><span class="caption muted">${mode === 'P' ? '시스템 컬럼은 <a href="settings.html#sys">시스템 설정</a>에서 관리' : '입력하면 표준 용어를 바로 제안합니다'}</span></div>`;
+    const table = `<table class="tbl ag" aria-label="${L ? '속성' : '컬럼'} 편집 — ↑↓ 행 이동"><thead><tr><th class="ag-st"><span class="sr-only">상태</span></th><th class="ag-c" title="식별자(Primary Key)">PK</th><th>${L ? '속성명' : '컬럼명'} <span class="faint u-fw-400">${mode === 'A' ? '(논리) / 물리명 · 타입(물리)' : L ? '/ 물리명' : '/ 논리명 · 타입'}</span></th><th class="ag-d">도메인</th><th class="ag-c" title="필수">필수</th></tr></thead><tbody>${rows || `<tr><td colspan="5" class="caption muted">${L ? '속성' : '컬럼'}이 없습니다</td></tr>`}${sysRows || ''}</tbody></table>`;
+    const add = `<div class="flex u-mt-8">${ro ? '' : `<button class="btn sm" id="rp-add"><i data-ic=plus></i>${L ? '속성' : '컬럼'} 추가 (Alt+Enter)</button>`}<span class="grow"></span><span class="caption muted">${mode === 'P' ? '시스템 컬럼은 <a href="settings.html#sys">시스템 설정</a>에서 관리' : mode === 'A' ? '이름은 논리명 — 물리명 · 타입은 표준 용어 · 도메인에서 정해집니다(도메인을 바꾸면 타입이 바뀜)' : '입력하면 표준 용어를 바로 제안합니다'}</span></div>`;
     return table + (ro ? '<button id="rp-add" hidden></button>' : add) + agPend(e) + agDetail(e, ro);
   }
   // confirmation for changes that reach other entities or relations
@@ -717,7 +737,7 @@ window.pageInit = function () {
     const [, a, ai] = curAttr();
     const keys = `<div class="ag-keys">행을 고르면 순서 · 이름 · 정의를 고칠 수 있습니다. <kbd>↑</kbd><kbd>↓</kbd> 행 이동 · <kbd>Alt</kbd>+<kbd>↑↓</kbd> 순서 · <kbd>Space</kbd> PK · <kbd>N</kbd> 필수 · <kbd>Enter</kbd> 상세로 · <kbd>F2</kbd> 이름 · <kbd>Delete</kbd> 삭제 · <kbd>Alt</kbd>+<kbd>Enter</kbd> 추가</div>`;
     if (!a || gPend) return a ? '' : keys;
-    const L = mode === 'L', grp = e.a.filter(x => !!x.pk === !!a.pk), gi = grp.indexOf(a);
+    const L = mode !== 'P', grp = e.a.filter(x => !!x.pk === !!a.pk), gi = grp.indexOf(a);
     const st = a.s === 'ok' ? '사전의 표준 용어와 같습니다' : a.s === 'req' ? `용어 신청 중${a.reqDoc ? ` — <a class="mono" href="approvals.html?doc=${a.reqDoc}">${a.reqDoc}</a>` : ''}` : a.s === 'ex' ? `예외 — ${hx(a.exReason || '사유 없음')}` : a.s === 'na' ? `표준 비대상${a.naReason ? ' — ' + hx(a.naReason) : ''}` : a.s === 'comb' ? '단어를 조합하면 표준이 됩니다 — 용어로 등록하거나 맞추세요' : '사전에 없는 단어가 있습니다 — 후보로 올리거나 예외로 남기세요';
     const fix = !ro && (a.s === 'unreg' || a.s === 'comb') ? `<div class="flex u-gap-8 u-mt-4 u-wrap"><a class="btn sm" href="${stdUrl(e, a)}">표준 맞추기</a><a class="btn sm ghost" href="${wizUrl(e, a)}">용어 자동분석</a><button class="btn sm ghost" data-f="ex">예외로 유지</button></div>` : '';
     const field = (id, f, lab, ph, tag) => ro ? (a[f] ? `<dt>${lab}</dt><dd>${hx(a[f])}</dd>` : '')
@@ -875,8 +895,8 @@ window.pageInit = function () {
   function secRows(e) {
     const list = e.a.filter(a => a.sec);
     return `<div class="caption muted u-mb-8">도메인의 보안 속성을 상속합니다. 직접 바꾸면 사유가 남고 확정 결재에서 DA가 확인합니다.</div>
-      <table class="tbl"><thead><tr><th>${mode === 'L' ? '속성' : '컬럼'}</th><th>개인정보</th><th>암호화</th><th>출처</th></tr></thead><tbody>
-      ${e.a.map(a => `<tr><td>${mode === 'L' ? a.n : a.p}</td><td>${a.sec ? `<span class="badge b-danger">${a.sec}</span>` : '<span class="faint">—</span>'}</td><td>${a.enc && a.enc !== '없음' ? `<span class="mono">${a.enc}</span>` : '<span class="faint">없음</span>'}</td><td class="caption">${a.sec ? (a.secSrc || '도메인 상속') : ''} <a href="#" data-toast="사유를 입력하면 보안 속성을 직접 지정할 수 있습니다(목업)" data-toast-type="info">변경</a></td></tr>`).join('')}</tbody></table>
+      <table class="tbl"><thead><tr><th>${mode === 'L' ? '속성' : mode === 'A' ? '속성 · 컬럼' : '컬럼'}</th><th>개인정보</th><th>암호화</th><th>출처</th></tr></thead><tbody>
+      ${e.a.map(a => `<tr><td>${mode === 'L' ? a.n : mode === 'A' ? `${a.n} <span class="mono faint">${a.p}</span>` : a.p}</td><td>${a.sec ? `<span class="badge b-danger">${a.sec}</span>` : '<span class="faint">—</span>'}</td><td>${a.enc && a.enc !== '없음' ? `<span class="mono">${a.enc}</span>` : '<span class="faint">없음</span>'}</td><td class="caption">${a.sec ? (a.secSrc || '도메인 상속') : ''} <a href="#" data-toast="사유를 입력하면 보안 속성을 직접 지정할 수 있습니다(목업)" data-toast-type="info">변경</a></td></tr>`).join('')}</tbody></table>
       ${list.length ? `<div class="caption u-mt-8">개인정보 ${list.length}개 · 암호화 ${list.filter(a => a.enc && a.enc !== '없음').length}개 — 산출물 ‘개인정보 컬럼 목록’에 포함됩니다.</div>` : ''}`;
   }
   function panel() {
@@ -885,7 +905,7 @@ window.pageInit = function () {
     const t = $('rp-title'), sub = $('rp-sub'), body = $('rp-body');
     $('sel-info').textContent = sel ? `선택: ${ent(sel).n}` : '선택 없음';
     if (!sel) {
-      t.textContent = '업무 영역 요약'; sub.textContent = mode === 'L' ? `${LOCK.model.name} · 논리` : `${LOCK.model.name} · 물리(Oracle)`;
+      t.textContent = '업무 영역 요약'; sub.textContent = mode === 'L' ? `${LOCK.model.name} · 논리` : mode === 'A' ? `${LOCK.model.name} · 논리 · 물리 통합` : `${LOCK.model.name} · 물리(Oracle)`;
       body.innerHTML = `<div class="mline"><span><b>${E.length}</b>엔터티</span><span><b>${R.length}</b>관계</span></div>
         <div class="section-t">미준수 엔터티</div>
         ${E.filter(bad).map(e => `<div class="cand" data-goto="${e.id}"><span class="grow">${e.n}</span><span class="badge b-warning">${bad(e)}</span></div>`).join('')}
@@ -899,19 +919,19 @@ window.pageInit = function () {
       return;
     }
     const e = ent(sel);
-    t.textContent = mode === 'L' ? e.n : e.p; sub.textContent = (mode === 'L' ? e.p : e.n) + ' · 분류 ' + e.c + (e.ref ? ' · 공통 참조' : '');
+    t.textContent = mode !== 'P' ? e.n : e.p; sub.textContent = (mode !== 'P' ? e.p : e.n) + ' · 분류 ' + e.c + (e.ref ? ' · 공통 참조' : '');
     const rels = R.filter(r => r.f === e.id || r.t === e.id).map(r => `${ent(r.f).n} → ${ent(r.t).n} <span class="faint">(${({ nonid: '1:N 비식별', id: '1:N 식별', one: '1:1', mn: 'M:N' })[r.k]}${r.xg ? ' · 배타' : ''})</span>`);
-    const sysRows = mode === 'P' && !e.ref ? SYS_COLS.map(c => `<tr class="ag-sys"><td colspan="2"><span class="badge">시스템</span></td><td class="ag-n">${c[1]}<span class="s2">${c[0]} · ${c[2]}</span></td><td class="faint">—</td><td></td></tr>`).join('') : '';
+    const sysRows = mode !== 'L' && !e.ref ? SYS_COLS.map(c => `<tr class="ag-sys"><td colspan="2"><span class="badge">시스템</span></td><td class="ag-n">${c[1]}<span class="s2">${c[0]} · ${c[2]}</span></td><td class="faint">—</td><td></td></tr>`).join('') : '';
     const rst = refStale(e);
     body.innerHTML = `${e.ref ? `<div class="banner${rst ? ' warning' : ''} u-mb-12"><i data-ic=${rst ? 'warn' : 'info'}></i><div class="grow"><b>${hx(e.refName || '공통 영역')} v${e.refVer || '?'} 확정본의 참조</b>입니다. 이 영역에서는 관계만 맺고, 수정은 원본 영역에서 합니다.${rst ? `<br><b>원본 v${rst} 확정본</b>이 나왔습니다 — 갱신하면 속성이 새 확정본으로 바뀝니다.` : ''}
       <div class="flex u-gap-8 u-mt-8">${e.refArea ? `<a class="btn sm" href="model.html?area=${e.refArea}&focus=${e.refId || e.id}">원본 열기</a>` : ''}${rst && canEdit() ? `<button class="btn sm primary" id="ref-up">원본 v${rst}로 갱신</button>` : ''}</div></div></div>` : ''}
       ${remoteSel === e.id && !offline ? '<div class="banner u-mb-12"><i data-ic=info></i><div><b>홍설계가 이 엔터티를 편집 중</b>입니다. 같이 고칠 수 있고, 같은 칸을 동시에 고치면 마지막 입력이 남습니다.</div></div>' : ''}
       ${e.st ? '<div class="flex u-mb-8 u-gap-8"><span class="badge b-info">엔터티 용어 신청 중</span><span class="caption muted">분류어 ‘기본’ → _M</span></div>' : ''}
-      <div class="tabs"><button class="on" data-tab="attrs">${mode === 'L' ? '속성' : '컬럼'} <span class="n">${e.a.length}</span></button>${mode === 'P' ? '<button data-tab="cons">제약·인덱스</button>' : ''}<button data-tab="sec">보안</button><button data-tab="ent">${mode === 'L' ? '엔터티' : '테이블'}</button><button data-tab="rel">관계 <span class="n">${rels.length}</span></button></div>
+      <div class="tabs"><button class="on" data-tab="attrs">${mode === 'L' ? '속성' : mode === 'A' ? '속성 · 컬럼' : '컬럼'} <span class="n">${e.a.length}</span></button>${mode !== 'L' ? '<button data-tab="cons">제약·인덱스</button>' : ''}<button data-tab="sec">보안</button><button data-tab="ent">${mode === 'L' ? '엔터티' : mode === 'A' ? '엔터티 · 테이블' : '테이블'}</button><button data-tab="rel">관계 <span class="n">${rels.length}</span></button></div>
       <div class="pane on" data-pane="attrs">${attrGrid(e, sysRows)}</div>
-      ${mode === 'P' ? `<div class="pane" data-pane="cons">${consRows(e)}</div>` : ''}
+      ${mode !== 'L' ? `<div class="pane" data-pane="cons">${consRows(e)}</div>` : ''}
       <div class="pane" data-pane="sec">${secRows(e)}</div>
-      <div class="pane" data-pane="ent"><dl class="kv"><dt>엔터티명</dt><dd>${e.n}</dd><dt>테이블명</dt><dd class="mono">${e.p}</dd><dt>분류</dt><dd>${e.c}</dd><dt>표준화</dt><dd>대상</dd>${e.sub ? `<dt>서브타입</dt><dd>${e.sub.kind} · 구분 ${e.sub.disc} · ${e.sub.kids.join(', ')}<br><span class="caption muted">물리 변환: 한 테이블로 통합(기본) · <a href="#" data-toast="서브타입별 테이블로 분할하는 변환을 미리 봅니다(목업)" data-toast-type="info">분할 미리보기</a></span></dd>` : ''}</dl></div>
+      <div class="pane" data-pane="ent"><dl class="kv"><dt>엔터티명</dt><dd>${e.n}</dd><dt>테이블명</dt><dd class="mono">${e.p}</dd><dt>분류</dt><dd>${e.c}</dd><dt>표준화</dt><dd>대상</dd>${e.sub ? `<dt>서브타입</dt><dd>${e.sub.kind} · 구분 ${e.sub.disc} · ${e.sub.kids.join(', ')}<br><span class="caption muted">물리 변환: 한 테이블로 합침(기본) · <a href="#" data-toast="서브타입별 테이블로 분할하는 변환을 미리 봅니다(목업)" data-toast-type="info">분할 미리보기</a></span></dd>` : ''}</dl></div>
       <div class="pane" data-pane="rel"><div class="caption u-lh-22">${rels.join('<br>') || '관계 없음'}</div></div>`;
     $('rp-add').onclick = () => addAttr();
     agRestore(body);
@@ -1028,19 +1048,19 @@ window.pageInit = function () {
     const ae = document.activeElement, gact = ae && g.contains(ae) ? (ae.id ? '#' + ae.id : ae.dataset.k ? `[data-k="${ae.dataset.k}"]` : ae.dataset.gf ? `[data-gf="${ae.dataset.gf}"]` : null) : null;
     let total = 0; E.forEach(e => e.a.forEach(a => { if (!a.edit) total++; }));
     [...gsel].forEach(k => { const t = gFind(k); if (!t || t[1].edit) gsel.delete(k); });   // a deleted (or re-created by undo) attribute leaves the selection
-    const rowsAll = []; E.forEach(e => e.a.forEach(a => { if (gpass(a) && (!fv || a.n.includes(fv))) rowsAll.push({ e, a, k: gKey(e, a) }); }));   // find narrows the rows (list standard 22) — and the matches are never past the first 300
+    const rowsAll = []; E.forEach(e => e.a.forEach(a => { if (gpass(a) && (!fv || a.n.includes(fv) || (mode === 'A' && a.p.includes(fv.toUpperCase())))) rowsAll.push({ e, a, k: gKey(e, a) }); }));   // find narrows the rows (list standard 22) — and the matches are never past the first 300
     // speed (2,900 attributes): the table shows 300 rows at a time — [다음 300개] adds more; find and the chips narrow it (all 2,900 took 1–2s to lay out)
     const rows = rowsAll.slice(0, gLimit), more = rowsAll.length - rows.length;
     gvis = new Set(rows.map(r => r.k)); const selVis = [...gsel].filter(k => gvis.has(k)).length, selHid = gsel.size - selVis;
     const selNames = [...gsel].map(gFind).filter(Boolean).map(([e, a]) => e.n + '.' + a.n);
     const hl = s => fv ? esc(s).split(esc(fv)).join(`<mark>${esc(fv)}</mark>`) : esc(s);
-    const hits = fv ? rowsAll.filter(r => r.a.n.includes(fv)).length : 0;
+    const hits = fv ? rows.filter(r => r.a.n.includes(fv)).length : 0, found = fv ? rowsAll.length : 0;
     // list standard: filter chips are the shared 32px <button class="chip"> (were 26px inline-styled spans)
     g.innerHTML = `<div class="gbar"><h2 class="u-fs-14 g-title" tabindex="-1">속성 표 보기</h2><span class="caption muted" aria-live="polite">${gfilter === 'all' ? `${rowsAll.length}개` : `${rowsAll.length}개 / 전체 ${total}개`}${more ? ` · ${rows.length}개 표시` : ''}</span>
         <span class="flex u-gap-8" role="group" aria-label="속성 거르기">${['all:전체', 'bad:미준수 속성', 'sec:보안', 'na:비대상'].map(x => { const [k, l] = x.split(':'); return `<button type="button" class="chip ${gfilter === k ? 'on' : ''}" data-gf="${k}" aria-pressed="${gfilter === k}">${l}</button>`; }).join('')}</span>
         <span class="grow"></span>
-        <input class="input u-w-150" id="g-find" placeholder="찾기 (논리명)" aria-label="찾기 (논리명)" value="${esc(fv)}">${gRepOpen ? `<input class="input edit-only u-w-130" id="g-rep" placeholder="바꿀 말" aria-label="바꿀 말" value="${esc(rv)}">` : '<button class="btn sm ghost edit-only" id="g-rep-open">바꾸기…</button>'}
-        <span class="caption muted g-hits">${fv ? `보이는 행 ${hits}건` : ''}</span>${gRepOpen ? `<button class="btn sm edit-only" id="g-replace" ${hits && rv ? '' : 'disabled'}>보이는 행 바꾸기</button>` : ''}
+        <input class="input u-w-150" id="g-find" placeholder="${mode === 'A' ? '찾기 (논리명 · 물리명)' : '찾기 (논리명)'}" aria-label="${mode === 'A' ? '찾기 (논리명 · 물리명)' : '찾기 (논리명)'}" value="${esc(fv)}">${gRepOpen ? `<input class="input edit-only u-w-130" id="g-rep" placeholder="바꿀 말" aria-label="바꿀 말" value="${esc(rv)}">` : '<button class="btn sm ghost edit-only" id="g-rep-open">바꾸기…</button>'}
+        <span class="caption muted g-hits">${fv ? `찾은 행 ${found}건${mode === 'A' && found !== hits ? ` · 논리명 ${hits}건` : ''}` : ''}</span>${gRepOpen ? `<button class="btn sm edit-only" id="g-replace" ${hits && rv ? '' : 'disabled'}>보이는 행 논리명 바꾸기</button>` : ''}
         <button class="btn sm ghost" id="g-close">다이어그램으로 (Esc)</button></div>
       <div class="gbulk edit-only ${gsel.size ? 'on' : ''}"><span class="gscope has-tip" tabindex="0" data-tip="${esc(selNames.slice(0, 8).join(', ') + (selNames.length > 8 ? ` 외 ${selNames.length - 8}개` : ''))}" aria-label="선택한 속성: ${esc(selNames.join(', '))}">표시된 선택 <b>${selVis}</b>${selHid ? ` · 숨겨진 선택 <b>${selHid}</b>` : ''}</span>
         <span class="caption muted">도메인</span><select class="input u-w-130" id="g-dom"><option value="">유지</option>${Object.keys(DOMS).map(d => `<option>${d}</option>`).join('')}</select>
@@ -1049,7 +1069,7 @@ window.pageInit = function () {
         <input class="input" id="g-why" placeholder="비대상 사유 *" aria-label="비대상 사유" value="${esc(gwhy)}"${gstd === 'na' ? '' : ' hidden'}>
         <span class="grow"></span><button class="btn sm" id="g-clear">선택 해제</button>${selHid ? `<button class="btn sm" id="g-apply-all">${gAllArm ? `한 번 더 눌러 숨겨진 ${selHid}개 포함 적용` : `숨겨진 ${selHid}개 포함…`}</button>` : ''}<button class="btn sm primary" id="g-apply" ${selVis ? '' : 'disabled'}>표시된 ${selVis}개 적용</button></div>
       <div class="gbody"><table class="tbl"><thead><tr><th class="u-w-32"><input type="checkbox" id="g-all" class="edit-only" aria-label="보이는 행 모두 선택" ${rows.length && rows.every(r => gsel.has(r.k)) ? 'checked' : ''}></th><th></th><th>엔터티</th><th>속성명</th><th>물리명</th><th>타입</th><th>필수</th><th>보안</th></tr></thead><tbody>
-      ${rows.map(r => `<tr><td><input type="checkbox" class="edit-only" data-k="${r.k}" aria-label="${esc(r.e.n + '.' + r.a.n)} 선택" ${gsel.has(r.k) ? 'checked' : ''}></td><td>${stBadge(r.a.s)}</td><td>${r.e.n}${r.e.ref ? ' <span class="muted">· 참조</span>' : ''}</td><td>${r.a.pk ? '# ' : ''}${hl(r.a.n)}${r.a.fk ? ' <span class="faint">(FK)</span>' : ''}</td><td class="mono">${r.a.p}</td><td class="mono">${r.a.t}</td><td>${r.a.nn || r.a.pk ? '예' : '<span class="faint">아니오</span>'}</td><td>${r.a.sec ? `<span class="badge b-danger">${r.a.sec}</span>` : ''}</td></tr>`).join('') || `<tr class="none"><td colspan="8" class="caption muted">조건에 맞는 속성이 없습니다. <button type="button" class="linkbtn" data-gf="all">거르기 해제</button></td></tr>`}</tbody></table>${more ? `<div class="g-more"><button type="button" class="btn sm" id="g-more">다음 ${Math.min(300, more)}개 보기</button><span class="caption muted">남은 ${more}개 · 찾기나 거르기로 좁히면 빠릅니다</span></div>` : ''}</div>`;
+      ${rows.map(r => `<tr><td><input type="checkbox" class="edit-only" data-k="${r.k}" aria-label="${esc(r.e.n + '.' + r.a.n)} 선택" ${gsel.has(r.k) ? 'checked' : ''}></td><td>${stBadge(r.a.s)}</td><td>${r.e.n}${r.e.ref ? ' <span class="muted">· 참조</span>' : ''}</td><td>${r.a.pk ? '# ' : ''}${hl(r.a.n)}${r.a.fk ? ' <span class="faint">(FK)</span>' : ''}</td><td class="mono">${mode === 'A' && fv ? esc(r.a.p).split(esc(fv.toUpperCase())).join(`<mark>${esc(fv.toUpperCase())}</mark>`) : r.a.p}</td><td class="mono">${r.a.t}</td><td>${r.a.nn || r.a.pk ? '예' : '<span class="faint">아니오</span>'}</td><td>${r.a.sec ? `<span class="badge b-danger">${r.a.sec}</span>` : ''}</td></tr>`).join('') || `<tr class="none"><td colspan="8" class="caption muted">조건에 맞는 속성이 없습니다. <button type="button" class="linkbtn" data-gf="all">거르기 해제</button></td></tr>`}</tbody></table>${more ? `<div class="g-more"><button type="button" class="btn sm" id="g-more">다음 ${Math.min(300, more)}개 보기</button><span class="caption muted">남은 ${more}개 · 찾기나 거르기로 좁히면 빠릅니다</span></div>` : ''}</div>`;
     const all = g.querySelector('#g-all'); if (all) { const n = rows.filter(r => gsel.has(r.k)).length; all.indeterminate = n > 0 && n < rows.length; }   // part of the visible rows selected
     if (gdom && g.querySelector('#g-dom')) g.querySelector('#g-dom').value = gdom; if (gnn && g.querySelector('#g-nn')) g.querySelector('#g-nn').value = gnn;
     const gb = g.querySelector('.gbody'); if (gb) gb.scrollTop = gscroll;
@@ -1077,7 +1097,7 @@ window.pageInit = function () {
     if (ev.target.id === 'g-clear') { gsel.clear(); gAllArm = null; renderGrid(); return; }
     if (ev.target.id === 'g-replace') {
       if (guard()) return; const fv = $('g-find').value, rv = $('g-rep').value; let n = 0; snap();
-      E.forEach(e => { if (e.ref) return; e.a.forEach(a => { if (gpass(a) && a.n.includes(fv)) { a.n = a.n.split(fv).join(rv); a.s = a.s === 'na' ? 'na' : 'comb'; n++; } }); });
+      E.forEach(e => { if (e.ref) return; e.a.forEach(a => { if (gpass(a) && gvis.has(gKey(e, a)) && a.n.includes(fv)) { a.n = a.n.split(fv).join(rv); a.s = a.s === 'na' ? 'na' : 'comb'; n++; } }); });
       render(); toast(`보이는 행 ${n}건에서 ‘${esc(fv)}’ → ‘${esc(rv)}’로 바꿨습니다(숨긴 행은 그대로) — 표준 매칭을 다시 확인합니다`, 'info', undoAction()); return;
     }
     const sig = () => [...gsel].sort().join(',') + '|' + ['g-dom', 'g-nn', 'g-std', 'g-why'].map(id => ($(id) || {}).value || '').join('|');
@@ -1279,7 +1299,7 @@ window.pageInit = function () {
   cv.addEventListener('mousedown', ev => {
     if (ev.target.closest('.cv-toolbar,.cv-zoom,.cv-mini,.cv-banner,.pop,.acl,#sysview,#grid,.hit,input,.mb,[data-mdel]')) return;
     const md = ev.target.closest('[data-mdrag]');
-    if (md && canEdit()) { const m = M.find(x => x.id === md.dataset.mdrag), w = toWorld(ev); drag = { memo: m, dx: w.x - m.x, dy: w.y - m.y, moved: false }; return; }
+    if (md && canEdit()) { const m = M.find(x => x.id === md.dataset.mdrag), w = toWorld(ev); drag = { memo: m, dx: w.x - memoXY(m).x, dy: w.y - memoXY(m).y, moved: false }; return; }
     const nh = ev.target.closest('[data-drag]'), node = ev.target.closest('.node');
     if (tool === 'select' && node) {
       const e = ent(node.id.slice(2));
@@ -1291,7 +1311,7 @@ window.pageInit = function () {
   window.addEventListener('mousemove', ev => {
     if (drag) {
       if (!drag.moved) { snap(); drag.moved = true; } const w = toWorld(ev);
-      if (drag.memo) { drag.memo.x = Math.round(w.x - drag.dx); drag.memo.y = Math.round(w.y - drag.dy); const el = $('m-' + drag.memo.id); el.style.left = drag.memo.x + 'px'; el.style.top = drag.memo.y + 'px'; return; }
+      if (drag.memo) { const sx = mode === 'A' && drag.memo.mode === 'L' ? SX : 1, sy = mode === 'A' && drag.memo.mode === 'L' ? SY : 1; drag.memo.x = Math.round((w.x - drag.dx) / sx); drag.memo.y = Math.round((w.y - drag.dy) / sy); const el = $('m-' + drag.memo.id); el.style.left = memoXY(drag.memo).x + 'px'; el.style.top = memoXY(drag.memo).y + 'px'; return; }
       setPos(drag.e, Math.round((w.x - drag.dx) / 8) * 8, Math.round((w.y - drag.dy) / 8) * 8); const d = $('n-' + drag.e.id); const p = pos(drag.e); d.style.left = p.x + 'px'; d.style.top = p.y + 'px'; dragDraw();
     }
     if (pan) { panX = ev.clientX - pan.x; panY = ev.clientY - pan.y; applyView(); }
@@ -1322,7 +1342,7 @@ window.pageInit = function () {
   }
   function placeEntity(w) {
     if (guard()) { setTool('select'); return; }
-    const id = 'e' + Date.now(); snap();
+    const id = 'e' + Date.now(); snap(); if (mode === 'A') w = { x: w.x / SX, y: w.y / SY };   /* 28 §7-1: 통합 shows logical × spread */
     // D3: the name comes first (like F2, with entity-term suggestions); Enter goes on to the identifier — no '새엔터티' left behind
     E.push({ id, n: '새엔터티', p: '—', c: 'M', x: Math.round(w.x), y: Math.round(w.y), px: Math.round(w.x), py: Math.round(w.y), a: [], fresh: 1 });
     if (curView !== 'all') { const v = vCur(); (v.ents = v.ents || []).push(id); }   // made in a view → placed in it (and always in 전체)
@@ -1344,7 +1364,7 @@ window.pageInit = function () {
     const node = ev.target.closest('.node');
     if (tool === 'memo' && !node) {
       const w = toWorld(ev), id = 'm' + Date.now(); snap();
-      M.push({ id, mode, x: Math.round(w.x), y: Math.round(w.y), text: '', by: ME.name });
+      M.push({ id, mode: mode === 'A' ? 'L' : mode, x: Math.round(w.x / (mode === 'A' ? SX : 1)), y: Math.round(w.y / (mode === 'A' ? SY : 1)), text: '', by: ME.name });   /* 28 §7-1: a memo made in 통합 is a logical memo */
       setTool('select'); const mb = document.querySelector(`[data-mid="${id}"]`); if (mb) mb.focus(); return;
     }
     if (tool === 'entity' && !node) { placeEntity(toWorld(ev)); return; }
@@ -1364,7 +1384,8 @@ window.pageInit = function () {
     if (!ev.target.closest('.node,' + CV_UI) && tool === 'select' && !locked) { setTool('entity'); cv.dispatchEvent(new MouseEvent('click', { clientX: ev.clientX, clientY: ev.clientY, bubbles: true })); }
   });
   cv.addEventListener('input', ev => {
-    if (ev.target.classList.contains('attr-in')) { acIdx = 0; acSim = false; showAC(ev.target); }
+    if (ev.target.classList.contains('ren-in')) { const pv = ev.target.parentElement.querySelector('.pv'); if (pv) { const v = ev.target.value.trim(); pv.textContent = v ? '물리 → ' + decompose(v).abbr : '물리명은 이름에서 만듭니다'; } }
+    if (ev.target.classList.contains('attr-in')) { acIdx = 0; acSim = false; showAC(ev.target); const pv = ev.target.parentElement.querySelector('.pv'); if (pv) { const v = ev.target.value.trim(); pv.textContent = v ? '물리 → ' + decompose(v).abbr : '물리명은 이름에서 만듭니다'; } }
     const mb = ev.target.closest && ev.target.closest('.mb'); if (mb) { const m = M.find(x => x.id === mb.dataset.mid); if (m) m.text = mb.textContent; }
   });
   // ERD P2-16: a node reached with Tab is selected (the panel follows), so Enter · F2 · Delete act on what has focus
@@ -1590,31 +1611,43 @@ window.pageInit = function () {
   }
   $('b-layout').onclick = () => {
     if (guard() || !confirm('계층 자동 배치를 적용합니다.\n접속 중인 2명(홍설계·박설계)의 화면도 같이 바뀝니다. 계속할까요?')) return;
-    let cancelled = false; $('b-layout').disabled = true; $('b-layout').textContent = '배치 계산 중…';
+    let cancelled = false; const m0 = mode, v0 = curView; $('b-layout').disabled = true; $('b-layout').textContent = '배치 계산 중…';
     toast(`자동 배치 계산 중 — 엔터티 ${E.length}개 · 별도 작업자에서 계산해 편집은 막지 않습니다`, 'info', { label: '취소', fn: () => { cancelled = true; } });
     setTimeout(() => {
       $('b-layout').disabled = false; $('b-layout').textContent = '자동 배치';
       if (cancelled) { toast('자동 배치를 취소했습니다 — 위치는 그대로입니다', 'info'); return; }
+      if (mode !== m0 || curView !== v0) { toast('보기가 바뀌어 자동 배치를 취소했습니다 — 위치는 그대로입니다', 'info'); return; }
+      const kx = mode === 'A' ? SX : 1, ky = mode === 'A' ? SY : 1; if (mode === 'A') { aMoveTold = true; }
       if (guard()) return;
       snap(); const cols = { prj: [0, 0], emp: [1, 0], dept: [2, 0], mbr: [1, 1], code: [2, 1], rqrm: [0, 1], dlv: [1, 2], hist: [2, 2], risk: [0, 2], rr: [0.5, 3] };
       // entities without a fixed slot (every ERP area) go on a 4-column grid after the fixed ones — never one tall column
       const fixedMax = AREA === 'rq' || AREA === 'risk'; let k = 0;
-      E.forEach(e => { const c = (fixedMax && cols[e.id]) || (fixedMax ? [3 + (k % 2), Math.floor(k++ / 2)] : [k % 4, Math.floor(k++ / 4)]); setPos(e, 60 + c[0] * 380, 60 + c[1] * 250); }); render(); toast('계층 자동 배치를 적용했습니다 · 모든 접속자에게 반영 · Ctrl+Z로 되돌리기', 'info');
+      E.forEach(e => { const c = (fixedMax && cols[e.id]) || (fixedMax ? [3 + (k % 2), Math.floor(k++ / 2)] : [k % 4, Math.floor(k++ / 4)]); setPos(e, (64 + c[0] * 380) * kx, (64 + c[1] * 248) * ky); }); render(); toast(`계층 자동 배치를 적용했습니다${m0 === 'A' ? ' · 논리 배치에 저장(물리 배치는 그대로)' : ''} · 모든 접속자에게 반영 · Ctrl+Z로 되돌리기`, 'info');
     }, 1200);
   };
   if (AREA === 'risk') remoteSel = 'rsp';
   if (remoteSel && !ent(remoteSel)) { const o = E.find(e => !e.ref && e.c === 'A') || E.find(e => !e.ref); remoteSel = o ? o.id : null; }   // other areas (ERP): the co-editor works on one of this area's entities
   $('jump-bad').onclick = ev => { ev.preventDefault(); const t = E.find(bad); if (!t) { toast('미준수 항목이 없습니다', 'info'); return; } focusEnt(t.id); toast(`미준수 속성이 있는 ‘${t.n}’으로 이동했습니다`, 'info'); };
+  let quietMode = false;
   function setMode(v) {
-    mode = v; document.querySelectorAll('#lp button').forEach(b => { b.classList.toggle('on', b.dataset.v === v); b.setAttribute('aria-pressed', b.dataset.v === v); });   // ERD P3-21 groundwork: pressed state is announced
-    $('ban-gate').style.display = $('ban-sync').style.display = v === 'P' ? 'flex' : 'none'; if (v === 'P') drawGate();
-    sel = null; showRP(); render(); toast(v === 'P' ? '물리 캔버스 — 배치는 논리와 따로 저장됩니다 · 시스템 컬럼 4개 포함' : '논리 캔버스', 'info');
+    const keep = typeof sel === 'string' && ent(sel) ? sel : null, b0 = keep && $('n-' + keep) ? $('n-' + keep).getBoundingClientRect() : null, vr = viewRect(), scx = (vr.left + vr.right) / 2, scy = (vr.top + vr.bottom) / 2 - world.offsetTop;   /* 28 §7-1: the selection (or the canvas centre) stays where it is */
+    const k0x = mode === 'A' ? SX : 1, k0y = mode === 'A' ? SY : 1, lc = { x: (scx - panX) / zoom / k0x, y: (scy - panY) / zoom / k0y }, was = mode; const sk = spreadKey(); if (v === 'A' && sk !== aKey) { needSpread = true; aKey = sk; } if (v === 'L' && sk !== lKey) { needL = true; lKey = sk; }   /* re-measured only when the content or view changed */
+    mode = v; document.querySelectorAll('#lp button').forEach(b => { b.classList.toggle('on', b.dataset.v === v); b.setAttribute('aria-pressed', b.dataset.v === v); });
+    try { dbmStore.set(`dbm-mode-${ME.id}-${AREA}`, v); } catch (er) {}
+    $('world').classList.toggle('int', v === 'A'); $('lg-int').hidden = v !== 'A' || cv.dataset.sys === '1'; $('b-nextum').hidden = v !== 'A';   // ERD P3-21 groundwork: pressed state is announced
+    $('ban-gate').style.display = $('ban-sync').style.display = v !== 'L' ? 'flex' : 'none'; if (v !== 'L') drawGate();
+    sel = keep; showRP(); render();
+    if (keep && b0 && $('n-' + keep)) { const b1 = $('n-' + keep).getBoundingClientRect(); panX += b0.left + b0.width / 2 - b1.left - b1.width / 2; panY += b0.top + b0.height / 2 - b1.top - b1.height / 2; applyView(); setTimeout(() => { const d = $('n-' + keep); if (!d) return; const b2 = d.getBoundingClientRect(); panX += b0.left + b0.width / 2 - b2.left - b2.width / 2; panY += b0.top + b0.height / 2 - b2.top - b2.height / 2; applyView(); }, 30); }   /* screen centre — the banner stack differs per view and settles a moment later */
+    else if (was !== 'P' && v !== 'P') { const k1x = v === 'A' ? SX : 1, k1y = v === 'A' ? SY : 1; panX = scx - lc.x * k1x * zoom; panY = (vr.top + vr.bottom) / 2 - world.offsetTop - lc.y * k1y * zoom; applyView(); }
+    exTitle(); pmemoChip();
+    if (!quietMode) toast(v === 'P' ? '물리 캔버스 — 배치는 논리와 따로 저장됩니다 · 시스템 컬럼 4개 포함' : v === 'A' ? '통합 — 논리 + 물리를 함께 봅니다 · 배치는 논리 배치를 펼쳐 보여 줍니다' : '논리 캔버스', 'info');
   }
-  $('lp').addEventListener('click', ev => {
-    const v = ev.target.dataset.v; if (!v || v === mode) return;
-    if (v === 'P' && !gateSeen) { if (drawGate()) { openPanel('pn-gate'); return; } gateSeen = true; }   // nothing to check → straight to physical
-    setMode(v);
-  });
+  // 28 §7-5: Alt+1 · 2 · 3 = 논리 · 물리 · 통합 (Shift+1 · 2 are fit-all / fit-selection)
+  document.addEventListener('keydown', ev => { const dk = ({ Digit1: '1', Digit2: '2', Digit3: '3' })[ev.code]; if (!ev.altKey || ev.ctrlKey || ev.metaKey || !dk || cv.dataset.sys === '1') return; const t = ev.target; if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return; const b = document.querySelector(`#lp button[data-v="${({ 1: 'L', 2: 'P', 3: 'A' })[dk]}"]`); if (b) { ev.preventDefault(); b.click(); } });
+  function enterMode(v) { if (!v || v === mode) return; if (v === 'P' && !gateSeen) { if (drawGate()) { $('gate-go').textContent = '경고 확인 후 계속'; openPanel('pn-gate'); return; } gateSeen = true; } setMode(v); }   // nothing to check → straight to physical; 통합 never opens the window (28 §6-4)
+  $('lp').addEventListener('click', ev => { if (cv.dataset.sys === '1') return; enterMode(ev.target.dataset.v); });
+  setTimeout(() => { let m0 = new URLSearchParams(location.search).get('mode'); if (!m0) { try { m0 = dbmStore.get(`dbm-mode-${ME.id}-${AREA}`, 'L'); } catch (er) { m0 = 'L'; } }
+    if (['P', 'A'].includes(m0) && cv.dataset.sys !== '1') { quietMode = true; enterMode(m0); quietMode = false; } }, 0);
   function gateRows() {
     const rows = [];
     E.forEach(e => { if (e.ref) return; if (e.p === '—') rows.push([e, null, '테이블명 미정', e.st ? '엔터티 용어 신청 중' : '맞추기']);
@@ -1624,16 +1657,18 @@ window.pageInit = function () {
   }
   function drawGate() {
     const rows = gateRows(), um = rows.filter(r => r[2].includes('미매핑') || r[2].includes('테이블명')).length, tn = rows.filter(r => r[2].includes('타입')).length;
-    $('ban-gate-t').innerHTML = rows.length ? `<b>게이트 A · 경고 ${rows.length}</b> — 미매핑 ${um} · 타입 미정 ${tn}. 진행은 막지 않습니다.` : '<b>게이트 A · 통과</b> — 물리 반영 전 점검에서 남은 경고가 없습니다.';
+    $('ban-gate-t').innerHTML = rows.length ? `<b>게이트 A · 경고 ${rows.length}</b> — 미매핑 ${um} · 타입 미정 ${tn}. ${mode === 'A' ? '물리에 반영하기 전에 고칠 항목입니다 — [다음 미매핑으로]로 차례로 보세요.' : '진행은 막지 않습니다.'}` : '<b>게이트 A · 통과</b> — 물리 반영 전 점검에서 남은 경고가 없습니다.';
     $('ban-gate').className = 'banner ' + (rows.length ? 'warning' : 'success');
     $('gate-body').innerHTML = `<div class="mline"><span><b>${um}</b>미매핑</span><span><b>${tn}</b>타입 미정</span></div>` +
       (rows.length ? `<table class="tbl"><thead><tr><th>위치</th><th>문제</th><th></th></tr></thead><tbody>${rows.map(([e, a, w, act]) => `<tr><td>${e.n}${a ? '.' + a.n : ' (테이블명)'}</td><td><span class="badge ${w.includes('미등록') ? 'b-warning' : 'b-info'}">${w}</span></td><td>${act === 'ex' && a && a.s !== 'ex' ? `<a href="#" data-gex="${e.id}|${a.n}">예외</a>` : act === '엔터티 용어 신청 중' ? '<span class="faint">대기</span>' : `<a href="${stdUrl(e, a)}">맞추기</a>`}</td></tr>`).join('')}</tbody></table>` : '<div class="banner success"><i data-ic=check></i><div>점검할 항목이 없습니다.</div></div>');
     $('gate-body').querySelectorAll('[data-gex]').forEach(x => x.onclick = ev => { ev.preventDefault(); const [eid, an] = x.dataset.gex.split('|'); window.__openEx(eid, an); });
     return rows.length;
   }
-  $('gate-go').onclick = () => { gateSeen = true; const n = gateRows().length; setMode('P'); toast(n ? `경고 ${n}건을 남긴 채 물리 모델을 열었습니다` : '점검 통과 — 물리 모델을 열었습니다', 'info'); };
+  $('gate-go').onclick = () => { gateSeen = true;  const n = gateRows().length; setMode('P'); toast(n ? `경고 ${n}건을 남긴 채 물리 모델을 열었습니다` : '점검 통과 — 물리 모델을 열었습니다', 'info'); };
   $('gate-x').onclick = showRP;
-  $('b-gate').onclick = () => { drawGate(); openPanel('pn-gate'); };
+  $('b-nextum').onclick = () => { const um = e => !e.ref && (e.p === '—' || e.a.some(a => !a.edit && a.s !== 'na' && (a.p === '—' || a.t === '—'))); const list = E.filter(um).sort((p, q) => (p.y - q.y) || (p.x - q.x)); if (!list.length) { toast('미매핑 항목이 없습니다', 'info'); return; }
+    const i = list.findIndex(e => e.id === sel); const t = list[(i + 1) % list.length]; focusEnt(t.id); toast(`‘${t.n}’ — 미매핑 ${(t.p === '—' ? 1 : 0) + t.a.filter(a => !a.edit && a.s !== 'na' && (a.p === '—' || a.t === '—')).length}개 · ${i + 2 > list.length ? 1 : i + 2}/${list.length}`, 'info'); };
+  $('b-gate').onclick = () => { drawGate(); $('gate-go').textContent = mode === 'A' ? '물리 보기로 열기' : '경고 확인 후 계속'; openPanel('pn-gate'); };
   $('b-reconnect').onclick = () => setOffline(false);
   $('b-export').onclick = ev => { ev.stopPropagation(); $('expmenu').classList.toggle('open'); };
   const moreM = $('moremenu'), moreB = $('b-more');
@@ -1655,14 +1690,17 @@ window.pageInit = function () {
       box.hidden = !vis.length; box.classList.toggle('min', !all);
       const longOne = vis.length === 1 && vis[0].querySelector('.grow') && vis[0].querySelector('.grow').scrollWidth > vis[0].querySelector('.grow').clientWidth + 1;
       tg.hidden = !vis.length || (!all && vis.length < 2 && !longOne);
-      tg.textContent = all ? '접기' : vis.length > 1 ? `외 ${vis.length - 1}건 ▸` : '자세히 ▸'; tg.setAttribute('aria-expanded', all); tg.setAttribute('aria-label', all ? '안내 접기' : `안내 ${vis.length}건 모두 펼치기`);   // ERD P2-14
+      tg.textContent = all ? '접기' : vis.length > 1 ? `외 ${vis.length - 1}건` : '자세히'; tg.setAttribute('aria-expanded', all); tg.setAttribute('aria-label', all ? '안내 접기' : `안내 ${vis.length}건 모두 펼치기`);   // ERD P2-14
       fit(); busy = false; };
     tg.onclick = () => { all = !all; const m = hintMap(); m[ME.id] = all ? 'open' : 'min'; dbmStore.set(HK, JSON.stringify(m)); arrange(); };
     new MutationObserver(recs => { if (recs.some(r => r.target !== box)) arrange(); }).observe(box, { attributes: true, subtree: true, attributeFilter: ['style'] }); arrange();
     if (window.ResizeObserver) new ResizeObserver(fit).observe(box); window.addEventListener('resize', arrange); }
   $('expmenu').addEventListener('click', ev => { ev.stopPropagation(); const b = ev.target.closest('.seg button'); if (b) b.parentElement.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); });
+  function exTitle() { const t = $('ex-title-1'); if (t) t.textContent = `${curSys().name} › ${LOCK.model.name} · ${({ L: '논리', P: '물리', A: '논리 · 물리 통합' })[mode]} ERD`; }
+  function pmemoChip() { const b = $('b-pmemo'); if (!b) return; const n = M.filter(m => m.mode === 'P').length; b.hidden = mode !== 'A' || !n; b.textContent = `물리 메모 ${n} — 물리에서 보기`; }
+  $('b-pmemo').onclick = () => enterMode('P');
   (() => { const bd = getDocs().find(x => x.type === 'model' && x.area === AREA && x.ver === BASE && x.step === 'done');
-    $('ex-title-1').textContent = `${curSys().name} › ${LOCK.model.name} · ${mode === 'L' ? '논리' : '물리'} ERD`;
+    exTitle();
     if (bd) { const who = (bd.hist || []).filter(h => /승인/.test(h.act)).map(h => h.who).join(', '); $('ex-title-2').textContent = `v${bd.ver} · 확정 ${bd.date} · 승인 ${who || '—'} · ${bd.id}`; $('ex-official-t').textContent = `확정본(v${bd.ver}) 배치 기준 · 표제란에 버전·확정일·승인자`; }
     else { $('ex-official').disabled = true; $('ex-official-t').textContent = '이 업무 영역에는 아직 확정본이 없어 공식 산출물을 만들 수 없습니다'; } })();
   $('ex-official').onchange = ev => { $('ex-title').style.display = ev.target.checked ? 'block' : 'none'; if (ev.target.checked) $('ex-scope').children[1].click(); };
@@ -1673,7 +1711,7 @@ window.pageInit = function () {
     const sc = $('ex-scope').querySelector('.on').textContent, f = $('ex-fmt').querySelector('.on').textContent, off = $('ex-official').checked;
     $('expmenu').classList.remove('open');
     const bd = getDocs().find(x => x.type === 'model' && x.area === AREA && x.ver === BASE && x.step === 'done');   // the file name follows this area, not a fixed sample (요구사항_프로젝트)
-    toast(`${off && bd ? `공식 산출물(v${bd.ver} 확정본 배치·표제란) ` : ''}${sc} · ${f}로 내보냈습니다 — ${expBase()}_${mode === 'L' ? '논리' : '물리'}_ERD.${f.toLowerCase()}`);
+    toast(`${off && bd ? `공식 산출물(v${bd.ver} 확정본 배치·표제란) ` : ''}${sc} · ${f}로 내보냈습니다 — ${expBase()}_${({ L: '논리', P: '물리', A: '논리물리통합' })[mode]}_ERD.${f.toLowerCase()}`);
   };
   document.addEventListener('click', () => { $('expmenu').classList.remove('open'); });
   $('b-sys').onclick = () => {
@@ -1685,6 +1723,7 @@ window.pageInit = function () {
     // the legend says what the system view shows; leaving it brings the status legend back
     if (!window.__lgCanvas) window.__lgCanvas = $('lg-body').innerHTML;
     $('lg-body').innerHTML = on ? '영역 묶음 보기 <span class="dot-i s-cur"></span>지금 영역 <span class="dot-i s-na"></span>다른 영역 · 카드를 두 번 누르면 그 업무 영역을 엽니다' : window.__lgCanvas;
+    $('lg-int').hidden = on || mode !== 'A';
     if (!on) { applyView(); }
     if (on) sv.innerHTML = `<div class="banner info sys-ban"><i data-ic=info></i><div class="grow"><b>시스템 전체 ERD · 조회 전용</b> — ${curSys().name}의 모든 업무 영역. 공통 영역의 엔터티는 <b>참조로 가져와</b> 관계를 맺을 수 있습니다.</div></div>
       <div id="sysworld">${Object.entries(getModels()).map(([id, m], i) => { const mo = id === AREA && VER === m.ver && !snapDoc ? { E } : modelOf(id, m.ver); const es = mo.E.filter(x => !x.ref); const bad = compOf(mo).bad; const lk = modelLock(id); const st = lk.state === 'review' ? '검토 중' : lk.state === 'confirmed' ? '확정' : `v${m.ver} 작업 중`; const col = i % 3, row = Math.floor(i / 3); return `<div class="grp sys-area" style="left:${60 + col * 300}px;top:${130 + row * 200}px" ondblclick="__go('model.html?area=${id}')" title="더블클릭하면 이 업무 영역을 엽니다"><h4>${m.name}${id === AREA ? ' <span class="badge">지금 영역</span>' : ''}</h4><div class="caption muted">엔터티 ${es.length} · 미준수 ${bad} · ${st}</div><div class="u-flex u-wrap u-gap-4 u-mt-12">${'<span class="sys-chip"></span>'.repeat(Math.min(es.length, 18))}</div><div class="caption faint u-mt-8"><a href="model.html?area=${id}">열기</a> · 더블클릭해도 열립니다</div></div>`; }).join('')}
@@ -1768,7 +1807,7 @@ window.pageInit = function () {
   const bdoc = getDocs().find(x => x.type === 'model' && x.area === AREA && x.ver === BASE && x.step === 'done');
   // base version lives in the ⋯ menu and the version badge tooltip (header keeps one line)
   $('ver').title = BASE ? `v${BASE} 확정본 기준` : '확정본 없음 — 첫 작업 버전';
-  { const im = $('moremenu').querySelector('a[href="import.html"]'); if (im) im.setAttribute('href', `import.html?area=${AREA}`); }   // import keeps the area: its [취소] comes back here, "add to existing" preselects it
+  { const im = $('moremenu').querySelector('a[href="import.html"]'); if (im) im.setAttribute('href', `import.html?area=${AREA}`); const ix = $('moremenu').querySelector('a[href="import-excel.html"]'); if (ix) ix.setAttribute('href', `import-excel.html?area=${AREA}`); }   // import keeps the area: its [취소] comes back here, "add to existing" preselects it
   { const mm = $('moremenu'); const cmp =mm.querySelector('[data-toast*="확정본 대비"]'); if (cmp) { if (BASE) { cmp.lastChild.textContent = `v${BASE} 확정본과 비교`;
       // the counts come from this area's base copy at click time (was a fixed ‘v4 · +2 · +6 · 5’ on every area)
       cmp.removeAttribute('data-toast'); cmp.onclick = () => { setMore(false); let b = null; try { b = modelOf(AREA, BASE); } catch (x) { b = null; } if (!b || !b.E) { toast(`v${BASE} 확정본을 읽을 수 없습니다`, 'info'); return; }
@@ -1866,7 +1905,7 @@ window.pageInit = function () {
     ev.preventDefault();
     treeOrigin = true; treeAttr = d.ai;
     if (d.fit && !$('grid').classList.contains('open')) focusEnt(d.id); else { sel = d.id; showRP(); render(); }   // the table view stays open
-    const tab = (d.kind === 'rel' || d.kind === 'prel') ? 'rel' : (d.kind === 'cons' || d.kind === 'ix') && mode === 'P' ? 'cons' : null;
+    const tab = (d.kind === 'rel' || d.kind === 'prel') ? 'rel' : (d.kind === 'cons' || d.kind === 'ix') && mode !== 'L' ? 'cons' : null;
     if (tab) { const b = document.querySelector(`#rp [data-tab="${tab}"]`); if (b) b.click(); }
     if (d.ai != null) hlAttr(d.ai);
   });
@@ -1990,7 +2029,8 @@ window.pageInit = function () {
   function relPanel(r) {
     const p = ent(r.f), c = ent(r.t); if (!p || !c) return;
     const ro = !canEdit() || !!c.ref, st = relOf(r), cols = relCols(r), f = fkOf(r, E), self = r.f === r.t, ident = r.k === 'id', D = ro ? ' disabled' : '';
-    $('rp-title').textContent = '관계'; $('rp-sub').textContent = `${p.n} → ${c.n}`;
+    const pN = self ? `상위 ${p.n}` : p.n, cN = self ? `하위 ${c.n}` : c.n;   /* a recursive relation reads by role, not '부서기본 1개는 부서기본을' */
+    $('rp-title').textContent = self ? '관계 · 재귀' : '관계'; $('rp-sub').textContent = self ? `${p.n} — 상위 → 하위` : `${p.n} → ${c.n}`;
     const pkList = p.a.filter(a => a.pk);
     const pairRows = pkList.map((k, i) => { const x = cols.find(a => a.fkp === k.p) || cols.find(a => !a.fkp && fkMatch(r, k)(a)) || (cols.length === pkList.length && !cols[i].fkp ? cols[i] : null);   // a grouped column without fkp pairs by position
       return `<tr><td><span class="mono">${hx(k.p)}</span><span class="sub2">${hx(k.n)}</span></td><td class="faint">→</td><td>${ro ? (x ? `<span class="mono">${hx(x.p)}</span><span class="sub2">${hx(x.n)}</span>` : '<span class="u-warning">없음 · FK 누락</span>') :
@@ -2005,14 +2045,14 @@ window.pageInit = function () {
       <div class="field"><label for="rel-name">관계명</label><input class="input" id="rel-name" value="${hx(r.name || '')}" placeholder="예: 소속 · 담당 · 포함 · 주문" aria-describedby="rel-name-h"${D}><span class="help" id="rel-name-h">명사로 짧게 — 두 엔터티가 어떤 관계인지(소속 · 담당 · 포함). 같은 두 엔터티 사이 관계가 둘 이상이면 역할로 구분(출발 · 도착)</span></div>
       ${r.k === 'mn' ? '' : `<div class="field"><label id="rel-k-l">유형</label><div class="seg" role="group" aria-labelledby="rel-k-l"><button type="button" data-rk="nonid" aria-pressed="${!ident}"${!ident ? ' class="on"' : ''}${D || (self ? ' disabled title="재귀 관계는 비식별입니다"' : '')}>비식별</button><button type="button" data-rk="id" aria-pressed="${ident}"${ident ? ' class="on"' : ''}${D || (self ? ' disabled title="재귀 관계는 비식별입니다"' : '')}>식별</button></div><span class="help">식별: FK가 ${hx(c.n)}의 식별자(PK)에 들어가고 손자까지 이어집니다</span></div>
       <div class="field"><label id="rel-cs-l">카디널리티 · 선택성</label>
-        <div class="relsent" aria-labelledby="rel-cs-l">${hx(p.n)} 1개는 ${hx(c.n)}을(를) <select class="input" data-rcard aria-label="자식 쪽 개수"${D}>${Object.entries(KCARD).map(([v, l]) => `<option value="${v}"${st.card === v ? ' selected' : ''}>${l}</option>`).join('')}</select> 가진다</div>
-        <div class="relsent">${hx(c.n)} 1개는 ${hx(p.n)}이(가) <select class="input" data-ropt aria-label="부모 쪽 필수 여부"${D || (ident ? ' disabled title="식별 관계는 부모가 반드시 있습니다"' : '')}>${Object.entries(KOPT).map(([v, l]) => `<option value="${v}"${st.opt === v ? ' selected' : ''}>${l}</option>`).join('')}</select></div>
+        <div class="relsent" aria-labelledby="rel-cs-l">${hx(pN)} 1개는 ${hx(cN)}을(를) <select class="input" data-rcard aria-label="자식 쪽 개수"${D}>${Object.entries(KCARD).map(([v, l]) => `<option value="${v}"${st.card === v ? ' selected' : ''}>${l}</option>`).join('')}</select> 가진다</div>
+        <div class="relsent">${hx(cN)} 1개는 ${hx(pN)}이(가) <select class="input" data-ropt aria-label="부모 쪽 필수 여부"${D || (ident ? ' disabled title="식별 관계는 부모가 반드시 있습니다"' : '')}>${Object.entries(KOPT).map(([v, l]) => `<option value="${v}"${st.opt === v ? ' selected' : ''}>${l}</option>`).join('')}</select></div>
         <span class="help">부모 쪽 값이 FK 컬럼의 필수 여부를 정합니다${ident ? ' · 식별 관계는 반드시 있음으로 고정' : ''}${r.uk ? ' · 자식 쪽 최대 1개는 FK에 UK를 붙여 보장합니다' : ''}${['1', '1n'].includes(st.card) ? ' · 자식 쪽 ‘최소 1개’는 FK로 강제할 수 없는 업무 규칙입니다' : ''}</span></div>
       <div class="field"><label>FK 짝 <span class="faint">— 부모 식별자 → ${hx(c.n)} 컬럼</span></label>${pkList.length ? `<table class="tbl box"><tbody>${pairRows}</tbody></table>` : `<div class="banner warning"><i data-ic=warn></i><div class="grow"><b>FK 대기</b> — ${hx(p.n)}에 식별자가 없습니다. 식별자를 정하면 FK가 채워집니다.${ro ? '' : ' <a href="#" id="rel-gopk">식별자 지정</a>'}</div></div>`}
         <span class="help">${!pkList.length ? '' : f.st === 'ok' ? `FK 반영 · <span class="mono">${hx(f.name)}</span>` : f.st === 'ex' ? 'FK 제외 · ' + hx(f.why) : f.st === 'miss' ? `<span class="u-warning">FK 누락 · ${hx(f.why)}</span>` : ''}</span></div>`}
       ${r.xg ? `<div class="flex u-mb-8"><span class="caption muted">배타 관계 묶음 — 한 행은 둘 중 하나와만 관계를 가집니다</span><span class="grow"></span><button class="btn sm" id="xor-off"${D}>배타 해제</button></div>` : ''}
       ${r.k === 'mn' ? (pl => `<div class="banner warning"><i data-ic=warn></i><div class="grow"><b>M:N 해소 필요</b><div class="caption">교차 엔터티 제안: <b>${hx(pl.n)}</b> <span class="mono">${hx(pl.p)}</span> · 식별 관계 2개 · PK = ${pl.cols.map(hx).join(', ') || '—'}${pl.wait.length ? `<br><span class="u-warning">${pl.wait.map(hx).join(', ')}에 식별자가 없어 아직 해소할 수 없습니다</span>` : ''}</div></div></div><div class="flex u-mt-8 u-mb-8"><span class="grow"></span><button class="btn primary sm" id="mn-go"${D || (pl.wait.length ? ' disabled' : '')}>교차 엔터티로 해소</button></div>`)(mnPlan(r)) : ''}
-      ${r.k === 'mn' ? '' : `<details class="reldb"${mode === 'P' || st.del !== 'none' ? ' open' : ''}><summary><b>DB 반영 (물리)</b> <span class="caption muted">${st.del === 'none' ? '부모 행을 지울 때: 막기' : DELS[st.del]}</span></summary>
+      ${r.k === 'mn' ? '' : `<details class="reldb"${mode !== 'L' || st.del !== 'none' ? ' open' : ''}><summary><b>DB 반영 (물리)</b> <span class="caption muted">${st.del === 'none' ? '부모 행을 지울 때: 막기' : DELS[st.del]}</span></summary>
         <div class="field u-mt-8"><label for="rel-ondel">부모 행을 지울 때 (ON DELETE)</label><select class="input" id="rel-ondel"${D}>${Object.entries(DELS).map(([v, l]) => `<option value="${v}"${st.del === v ? ' selected' : ''}${v === 'setnull' && !nullable(r) && st.del !== 'setnull' ? ' disabled' : ''}>${l}${v === 'setnull' && !nullable(r) ? ' — FK가 필수라 쓸 수 없음' : ''}</option>`).join('')}</select>
           <span class="help">운영 DB에서 ${hx(p.n)} 행을 지울 때 ${hx(c.n)} 행을 어떻게 할지입니다. DDL의 FOREIGN KEY … ON DELETE에만 들어가고, 모델 편집에는 영향이 없습니다. Oracle은 ‘막기’를 따로 쓰지 않습니다(NO ACTION).</span></div>
         ${chain.length ? `<div class="banner warning u-mb-8"><i data-ic=warn></i><div class="grow">${hx(p.n)} 1행을 지우면 <b>${chain.length}개 테이블</b>의 참조 행이 함께 지워집니다: ${chain.map(eNm).join(', ')}${bl.under.length ? `<div class="caption u-mt-4">그 아래 ${bl.under.map(eNm).join(', ')}은(는) ‘막기’라 참조 행이 남아 있으면 삭제 전체가 실패할 수 있습니다.</div>` : ''}${bl.sib.length ? `<div class="caption u-mt-4">이 관계와 별도로 ${hx(p.n)} 행 삭제를 막는 관계: ${bl.sib.map(id => hx(p.n) + ' → ' + eNm(id)).join(', ')} (막기)</div>` : ''}</div></div>` : ''}
@@ -2060,13 +2100,13 @@ window.pageInit = function () {
   }
   function relSetCard(r, v) {
     if (guard()) return; snap(); r.card = v; if (v === '1') { if (r.k !== 'id') r.k = 'one'; } else if (r.k === 'one') r.k = 'nonid';
-    const u = syncUk(r); relAfter(r, `${ent(r.f).n} 1개는 ${ent(r.t).n}을(를) ${KCARD[v]} 가집니다${u === 1 ? ' · 1:1 보장 UK를 붙였습니다' : u === -1 ? ' · 1:1 보장 UK를 지웠습니다' : ''}`);
+    const u = syncUk(r); relAfter(r, `${r.f === r.t ? '상위 ' : ''}${ent(r.f).n} 1개는 ${r.f === r.t ? '하위 ' : ''}${ent(r.t).n}을(를) ${KCARD[v]} 가집니다${u === 1 ? ' · 1:1 보장 UK를 붙였습니다' : u === -1 ? ' · 1:1 보장 UK를 지웠습니다' : ''}`);
   }
   function relSetOpt(r, v) {
     if (guard()) return; if (r.k === 'id') { toast('식별 관계는 부모가 반드시 있습니다', 'info'); return; }
     snap(); r.opt = v; relCols(r).forEach(a => { if (!a.pk) a.nn = v === 'must' ? 1 : 0; });
     let note = ''; if (v === 'must' && r.del === 'setnull') { r.del = 'none'; note = ' · FK가 필수라 ON DELETE를 ‘막기’로 바꿨습니다'; }
-    relAfter(r, `${ent(r.t).n}에는 ${ent(r.f).n}이(가) ${KOPT[v]} — FK ${v === 'must' ? '필수' : '비워 둘 수 있음'}${note}`);
+    relAfter(r, `${r.f === r.t ? '하위 ' : ''}${ent(r.t).n}에는 ${r.f === r.t ? '상위 ' : ''}${ent(r.f).n}이(가) ${KOPT[v]} — FK ${v === 'must' ? '필수' : '비워 둘 수 있음'}${note}`);
   }
   function relSetDel(r, v) {
     if (guard()) return; if (v === 'setnull' && !nullable(r)) { toast('FK가 필수라 비울 수 없습니다 — 선택성을 ‘없어도 된다’로 바꾸세요', 'info'); render(); return; }

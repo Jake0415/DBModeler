@@ -21,7 +21,7 @@
     <h1>가져오기</h1>
     
     <div class="actions">
-      <span class="seg"><button id="src-xls" aria-disabled="true" title="엑셀 테이블 정의서 → ERD 초안은 다음 단계 후보입니다">엑셀 정의서</button><button class="on" aria-pressed="true">DDL</button></span>
+      <span class="seg"><button id="src-xls" aria-pressed="false">엑셀 정의서</button><button class="on" aria-pressed="true">DDL</button></span>
     </div>
   </div>
   <div class="page-body">
@@ -57,7 +57,7 @@ window.pageInit = function () {
   { const c = document.querySelector('.crumbs a'); if (c) c.textContent = curSys().name; }   // was a fixed ‘요구사항관리’
   if (FROM) $('cancel').setAttribute('href', `model.html?area=${FROM}`);
   // the seg used to have a dead ‘엑셀 정의서’ button: say plainly it is not here yet and keep DDL selected
-  $('src-xls').onclick = ev => { ev.preventDefault(); ev.stopPropagation(); toast('엑셀 테이블 정의서 → ERD 초안 가져오기는 다음 단계 후보입니다 — 지금은 DDL로 가져오세요. 사전(용어)용 엑셀은 [사전 › 엑셀 가져오기]입니다', 'info'); };
+  $('src-xls').onclick = () => { location.href = 'import-excel.html' + (FROM ? `?area=${FROM}` : ''); };   /* 26: the Excel (table design) import lives on its own page */
   const SAMPLE = `CREATE TABLE RQMS.RQRM_D ( -- 요구사항내역
   DEMND_MATER_ID   VARCHAR2(10) NOT NULL, -- 요구사항ID
   RQRM_NM          VARCHAR2(100), -- 요구사항명
