@@ -1,0 +1,17 @@
+# 개발용 PostgreSQL (운영 구성은 B0 후반에 infra/compose.prod.yml로)
+services:
+  db:
+    image: postgres:16
+    container_name: neodb-dev-db
+    environment:
+      POSTGRES_DB: neodb
+      POSTGRES_USER: neodb
+      POSTGRES_PASSWORD: neodb-dev
+    ports:
+      - "55432:5432"
+    volumes:
+      - ./data/pg:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U neodb -d neodb"]
+      interval: 5s
+      retries: 10

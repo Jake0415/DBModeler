@@ -5,3 +5,13 @@
 spikes/**/node_modules/
 spikes/yjs-sync/store/
 
+
+# NeoDB monorepo (B0)
+node_modules/
+dist/
+coverage/
+*.tsbuildinfo
+.env
+.env.*
+!.env.example
+infra/data/

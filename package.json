@@ -1,0 +1,24 @@
+{
+  "name": "neodb",
+  "private": true,
+  "version": "0.1.0",
+  "description": "NeoDB — 데이터 표준 · 모델링 (모노레포)",
+  "workspaces": ["packages/*", "apps/*"],
+  "engines": { "node": ">=24" },
+  "scripts": {
+    "build": "tsc -b packages/domain packages/rules packages/db apps/api",
+    "test": "vitest run",
+    "typecheck": "tsc -b packages/domain packages/rules packages/db apps/api --dry --verbose",
+    "db:up": "docker compose -f infra/docker-compose.dev.yml up -d",
+    "db:down": "docker compose -f infra/docker-compose.dev.yml down",
+    "db:generate": "npm run generate -w @neodb/db",
+    "db:migrate": "npm run migrate -w @neodb/db",
+    "db:seed": "npm run seed -w @neodb/db",
+    "dev:api": "npm run dev -w @neodb/api"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.0",
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.4"
+  }
+}
