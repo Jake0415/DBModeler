@@ -1145,7 +1145,7 @@ window.pageInit = function () {
     render();
   }
   function toWorld(ev) { const r = cv.getBoundingClientRect(); return { x: (ev.clientX - r.left - panX) / zoom, y: (ev.clientY - r.top - world.offsetTop - panY) / zoom }; }   // world sits under the toolbar + guidance strip (D2)
-  function focusEnt(id) { if (ent(id) && !inView(ent(id))) { curView = 'all'; dbmStore.set('dbm-view-' + AREA, 'all'); toast('지금 보기에 없어 전체 보기로 바꿨습니다', 'info'); } sel = id; showRP(); render(); const b = box(id); panX = cv.clientWidth / 2 - (b.x + b.w / 2) * zoom; panY = cv.clientHeight / 2 - (b.y + b.h / 2) * zoom; applyView(); }
+  function focusEnt(id) { viewTouched = true; if (ent(id) && !inView(ent(id))) { curView = 'all'; dbmStore.set('dbm-view-' + AREA, 'all'); toast('지금 보기에 없어 전체 보기로 바꿨습니다', 'info'); } sel = id; showRP(); render(); const b = box(id); panX = cv.clientWidth / 2 - (b.x + b.w / 2) * zoom; panY = cv.clientHeight / 2 - (b.y + b.h / 2) * zoom; applyView(); }
   function addAttr() {
     if (!sel || guard()) return; const e = ent(sel); if (refGuard(e)) return;
     e.a.forEach(a => delete a.edit); editHid = snap(); e.a.push({ n: '', p: '—', t: '—', s: 'na', edit: 1 }); render();
@@ -1318,7 +1318,7 @@ window.pageInit = function () {
       if (drag.memo) { const sx = mode === 'A' && drag.memo.mode === 'L' ? SX : 1, sy = mode === 'A' && drag.memo.mode === 'L' ? SY : 1; drag.memo.x = Math.round((w.x - drag.dx) / sx); drag.memo.y = Math.round((w.y - drag.dy) / sy); const el = $('m-' + drag.memo.id); el.style.left = memoXY(drag.memo).x + 'px'; el.style.top = memoXY(drag.memo).y + 'px'; return; }
       setPos(drag.e, Math.round((w.x - drag.dx) / 8) * 8, Math.round((w.y - drag.dy) / 8) * 8); const d = $('n-' + drag.e.id); const p = pos(drag.e); d.style.left = p.x + 'px'; d.style.top = p.y + 'px'; dragDraw();
     }
-    if (pan) { panX = ev.clientX - pan.x; panY = ev.clientY - pan.y; applyView(); }
+    if (pan) { viewTouched = true; panX = ev.clientX - pan.x; panY = ev.clientY - pan.y; applyView(); }
     if (tool === 'rel' && relSrc) { const a = box(relSrc), w = toWorld(ev); preview.setAttribute('d', `M${a.x + a.w / 2},${a.y + a.h / 2} L${w.x},${w.y}`); }
   });
   // a finished move is an edit boundary: positions are saved like any other change (CX9-05)
@@ -1486,7 +1486,7 @@ window.pageInit = function () {
     e.a.push(fromTerm(t)); sel = e.id; showRP(); render();
     toast(`‘${t.n}’을(를) ${e.n}에 속성으로 추가했습니다 · ${t.p}${t.sec ? ' · 개인정보 상속' : ''}`);
   });
-  cv.addEventListener('wheel', ev => {
+  cv.addEventListener('wheel', ev => { viewTouched = true;
     if (ev.target.closest('#grid')) return;
     ev.preventDefault();
     if (isSys()) {   // system view: Ctrl+wheel zooms around the pointer, wheel pans
@@ -1540,10 +1540,10 @@ window.pageInit = function () {
   // fit = every card visible, starting below the read-only strip (the strip stays fixed, the cards scale under it) and above the bottom controls
   function sysFit() { const b = sysBounds(); if (!b.cs.length) return; const ban = $('sysview').querySelector('.sys-ban'), top0 = ban ? ban.offsetTop + ban.offsetHeight + 12 : 20;
     sysZ = Math.max(0.3, Math.min(1.2, (cv.clientWidth - 80) / b.x1, (cv.clientHeight - top0 - 110) / (b.y1 - b.y0))); sysX = 20; sysY = top0 - b.y0 * sysZ; sysApply(); }
-  const zoomIn = () => { if (isSys()) { sysZ = Math.min(2, sysZ * 1.2); sysApply(); } else { zoom = Math.min(2, zoom * 1.2); applyView(); } };
-  const zoomOut = () => { if (isSys()) { sysZ = Math.max(0.3, sysZ / 1.2); sysApply(); } else { zoom = Math.max(0.15, zoom / 1.2); applyView(); } };
-  const zoom100 = () => { if (isSys()) { sysZ = 1; sysApply(); } else { zoom = 1; applyView(); } };
-  const fitAny = () => isSys() ? sysFit() : fit();
+  const zoomIn = () => { viewTouched = true; if (isSys()) { sysZ = Math.min(2, sysZ * 1.2); sysApply(); } else { zoom = Math.min(2, zoom * 1.2); applyView(); } };
+  const zoomOut = () => { viewTouched = true; if (isSys()) { sysZ = Math.max(0.3, sysZ / 1.2); sysApply(); } else { zoom = Math.max(0.15, zoom / 1.2); applyView(); } };
+  const zoom100 = () => { viewTouched = true; if (isSys()) { sysZ = 1; sysApply(); } else { zoom = 1; applyView(); } };
+  const fitAny = () => { viewTouched = true; return isSys() ? sysFit() : fit(); };
   $('zi').onclick = zoomIn;
   $('zo').onclick = zoomOut;
   $('zl').addEventListener('click', zoom100);   // ERD P2-16: a real button (was a span with a double-click)
@@ -1556,6 +1556,13 @@ window.pageInit = function () {
     const zb = cv.querySelector('.cv-zoom'); if (zb && zb.offsetHeight) bottom = Math.min(bottom, zb.getBoundingClientRect().top - cr.top);
     const right = Math.min(cv.clientWidth, document.documentElement.clientWidth - cr.left);
     return { left: 16, top: top + 16, right: right - 16, bottom: bottom - 12 };
+  }
+  /* 처음 들어올 때는 100%로 — 다이어그램 왼쪽 위를 캔버스 왼쪽 위에 둔다(맞춤은 [맞춤] · Shift+1로만). 사용자가 화면을 움직인 뒤에는 안내 띠가 바뀌어도 다시 맞추지 않는다 */
+  let viewTouched = false;
+  function home() {
+    zoom = 1; if (!VE().length) { panX = 40; panY = 80; applyView(); return; }
+    let x0 = 1e9, y0 = 1e9; VE().forEach(e => { const b = box(e.id); if (b.none) return; x0 = Math.min(x0, b.x); y0 = Math.min(y0, b.y); });
+    const v = viewRect(); panX = v.left + 24 - x0; panY = v.top - world.offsetTop + 16 - y0; applyView();
   }
   function fit() {
     if (!VE().length) { zoom = 1; panX = 40; panY = 80; applyView(); return; }
@@ -1695,7 +1702,7 @@ window.pageInit = function () {
       const longOne = vis.length === 1 && vis[0].querySelector('.grow') && vis[0].querySelector('.grow').scrollWidth > vis[0].querySelector('.grow').clientWidth + 1;
       tg.hidden = !vis.length || (!all && vis.length < 2 && !longOne);
       tg.textContent = all ? '접기' : vis.length > 1 ? `외 ${vis.length - 1}건` : '자세히'; tg.setAttribute('aria-expanded', all); tg.setAttribute('aria-label', all ? '안내 접기' : `안내 ${vis.length}건 모두 펼치기`);   // ERD P2-14
-      fit(); busy = false; };
+      if (!viewTouched) home(); busy = false; };
     tg.onclick = () => { all = !all; const m = hintMap(); m[ME.id] = all ? 'open' : 'min'; dbmStore.set(HK, JSON.stringify(m)); arrange(); };
     new MutationObserver(recs => { if (recs.some(r => r.target !== box)) arrange(); }).observe(box, { attributes: true, subtree: true, attributeFilter: ['style'] }); arrange();
     if (window.ResizeObserver) new ResizeObserver(fit).observe(box); window.addEventListener('resize', arrange); }
@@ -2409,7 +2416,7 @@ window.pageInit = function () {
   if (q.get('sys')) setTimeout(() => $('b-sys').click(), 150);
   // DDL / outputs open for THIS area (and this submitted copy when viewing one) — CX12-30
   document.querySelectorAll('a[href="ddl.html"], a[href^="outputs.html"]').forEach(a => { const u = new URL(a.getAttribute('href'), location.href); u.searchParams.set('area', AREA); if (SNAP && SNAPDOC) u.searchParams.set('snap', SNAPDOC.id); a.setAttribute('href', u.pathname.split('/').pop() + u.search); });   // system home → whole-system ERD (area group view)
-  setTool('select'); applyView(); render(); renderReview(); setTimeout(() => { fit(); moveCursors(); }, 60);
+  setTool('select'); applyView(); render(); renderReview(); setTimeout(() => { if (!viewTouched) home(); moveCursors(); }, 60);
 };
 </script>
 </body>
