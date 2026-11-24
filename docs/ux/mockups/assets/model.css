@@ -263,3 +263,15 @@ body.gridmode .cv-banner, body.gridmode .legend, body.gridmode .cv-zoom, body.gr
 .legend .lg-body { flex-direction:column; align-items:flex-start; gap:4px; }
 .legend .lg-row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
 .legend .lg-ln { flex:none; margin-right:-4px; }
+/* 28 통합 보기: one row = 논리명 │ 물리명 │ 타입; unmapped shown in words too (print), physical-only lines kept */
+#world.int .node, .node.int { max-width:520px; }
+.node.int .ar .pp { margin-left:auto; padding-left:14px; width:164px; flex:none; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font:400 12px var(--font-mono); color:var(--fg-2); }
+.node.int .ar .p { margin-left:10px; padding-left:0; width:112px; flex:none; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; text-align:left; }
+.node .ar .um { color:var(--fg-3); font-style:italic; font-family:var(--font-sans); }
+.node .ar .pv { margin-left:8px; font-size:12px; color:var(--fg-2); }
+.node .nh .nbad.num { background:var(--bg); color:var(--ds-amber-900); box-shadow:inset 0 0 0 1px var(--ds-amber-700); }
+#world.lod-low .node .nh .nbad.num { display:inline-flex; }
+.relname.relfk { font:400 12px var(--font-mono); fill:var(--fg-3); }
+.relname.relfk.miss { fill:var(--ds-amber-900); }
+.memo .mh .mtag { padding:0 4px; border-radius:3px; box-shadow:inset 0 0 0 1px var(--border); font-size:12px; }
+.legend .lg-introw:not([hidden]) { display:flex; }

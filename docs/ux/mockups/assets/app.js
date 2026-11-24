@@ -1639,7 +1639,7 @@
     const termIndex = () => { if (termIdxMemo) return termIdxMemo; const m = new Map(); getDict().forEach(d => { if (d.k === 'term' && !m.has(d.name)) m.set(d.name, d); }); termIdxMemo = m; setTimeout(() => { termIdxMemo = null; }, 0); return m; };
     // ---- build the node tree (hierarchical), then flatten what is open
     function build() {
-      const models = getModels(), P = pageMode() === 'P', qq = q.trim(); let found = 0;
+      const models = getModels(), P = pageMode() === 'P', INT = pageMode() === 'A', qq = q.trim(); let found = 0;   /* 28: 통합 shows the physical name next to the logical one */
       const out = [];
       Object.entries(models).forEach(([area, m]) => {
         const s = src(area), k = SYS + ':' + area + '@' + s.ver, tog = ST.tog[k] || {};
@@ -1660,8 +1660,8 @@
           const attrs = eOpen ? e.a.map((a, i) => ({ a, i })).filter(x => !qq || areaHit || eh || ah.includes(x.i)) : [];
           const kids = attrs.map(({ a, i }) => N('a:' + e.id + ':' + i, P ? 'col' : 'attr', {
             ent: e.id, ai: i, selectable: true, pk: !!a.pk, fk: !!a.fk,
-            html: P ? (a.p === '—' ? `<span class="tn1">${mark(a.n)}</span><span class="tmeta ts-miss">물리명 없음</span>` : `<span class="tn1 mono">${mark(a.p)}</span><span class="tmeta">${esc(a.t)}${a.pk ? ' · PK' : ''}${a.fk ? ' · FK' : ''}</span>`) : `<span class="tn1">${mark(a.n)}</span><span class="tmeta">${a.pk ? 'PK' : ''}${a.fk ? (a.pk ? ' · ' : '') + 'FK' : ''}${STC[a.s] ? `${a.pk || a.fk ? ' · ' : ''}<span class="ts-${a.s}">${STC[a.s]}</span>` : ''}</span>`,
-            aria: `${P ? a.p : a.n}${a.pk ? ', PK' : ''}${a.fk ? ', FK' : ''}${STC[a.s] ? ', ' + STC[a.s] : ''}`, title: P ? a.n : `${a.p} · ${a.t}` }));
+            html: P ? (a.p === '—' ? `<span class="tn1">${mark(a.n)}</span><span class="tmeta ts-miss">물리명 없음</span>` : `<span class="tn1 mono">${mark(a.p)}</span><span class="tmeta">${esc(a.t)}${a.pk ? ' · PK' : ''}${a.fk ? ' · FK' : ''}</span>`) : `<span class="tn1">${mark(a.n)}</span>${INT ? `<span class="tmeta mono${a.p === '—' ? ' ts-miss' : ''}">${a.p === '—' ? '미매핑' : mark(a.p)}</span>` : ''}<span class="tmeta">${a.pk ? 'PK' : ''}${a.fk ? (a.pk ? ' · ' : '') + 'FK' : ''}${STC[a.s] ? `${a.pk || a.fk ? ' · ' : ''}<span class="ts-${a.s}">${STC[a.s]}</span>` : ''}</span>`,
+            aria: `${P ? a.p : a.n}${INT ? (a.p === '—' ? ', 미매핑' : `, 물리 ${a.p}`) : ''}${a.pk ? ', PK' : ''}${a.fk ? ', FK' : ''}${STC[a.s] ? ', ' + STC[a.s] : ''}`, title: P ? a.n : `${a.p} · ${a.t}` }));
           const ahNote = qq && !eh && ah.length ? `<span class="tmeta">${P ? '컬럼' : '속성'} ${ah.length}</span>` : '';
           return N('e:' + e.id, P ? 'table' : 'ent', {
             ent: e.id, selectable: true, st: e.ref ? 'ref' : entBad(e) ? 'bad' : e.a.some(a => a.s === 'ex') ? 'ex' : 'ok', gray: (P && !e.ref && (e.px == null || e.py == null)) || (!!cvV && !(cvV.ents || []).includes(e.id)), drag: true,
@@ -1822,7 +1822,7 @@
       });
       tree.innerHTML = html || '<div class="tempty">맞는 객체가 없습니다</div>';
       const l = live(); const curName = (getModels()[cur] || {}).name || '';
-      tree.setAttribute('aria-label', `모델 트리 · ${curName}${l && l.label ? ' ' + l.label : ''} · ${pageMode() === 'P' ? '물리' : '논리'}`);
+      tree.setAttribute('aria-label', `모델 트리 · ${curName}${l && l.label ? ' ' + l.label : ''} · ${({ P: '물리', A: '통합' })[pageMode()] || '논리'}`);
       nav.querySelector('#tr-ro').hidden = true;   // merged into the area badge (stateBadge) — no separate line that comes and goes
       nav.querySelector('#tr-live').textContent = q.trim() ? (found ? `${found}건 찾음` : '맞는 객체가 없습니다') : '';
       const fb = nav.querySelector('#tr-fbar'); fb.hidden = !fltOn();
