@@ -132,7 +132,7 @@
   <!-- SC-42 users -->
   <div class="pane" data-pane="users">
     <div class="authbar" id="authbar"></div>
-    <div class="page-body u-users" style="border-top:1px solid var(--ds-gray-400);overflow:hidden;height:calc(100vh - 310px);min-height:480px">
+    <div class="page-body u-users" style="border-top:1px solid var(--ds-gray-400);overflow:hidden;height:560px">
       <div class="main"><div class="flex" style="padding:8px 12px;border-bottom:1px solid var(--ds-gray-400);gap:8px">
           <input class="input" id="u-q" type="search" placeholder="이름 · ID · 회사 · 부서 찾기" aria-label="사용자 찾기" data-nodirty>
           <span class="flex u-gap-8" id="u-st" role="group" aria-label="상태"><button class="chip on" data-v="">전체</button><button class="chip" data-v="active">사용</button><button class="chip" data-v="stopped">중지</button><button class="chip" data-v="locked">잠김</button></span>
@@ -505,7 +505,7 @@ window.pageInit = function () {
   const formDraft = () => { const P = $('pn-acct'); if (!P.querySelector('#uf-save')) return false; if (mode === 'new') return [...P.querySelectorAll('.input')].some(i => i.id !== 'uf-company' && i.value.trim()); const u = USERS[selU]; if (!u) return false; const v = id => ($('uf-' + id) || {}).value; const rolesNow = [...P.querySelectorAll('[data-role]:checked')].map(c => c.dataset.role).join(); return ['company', 'org', 'name', 'phone', 'mail'].some(k => (v(k) || '') !== (u[k] || '')) || ((u.roles || []).join() !== rolesNow && !P.querySelector('[data-role]').disabled); };
   $('u-rows').addEventListener('click', e => { const r = e.target.closest('[data-u]'); if (!r) return; if ((r.dataset.u !== selU || mode === 'new') && formDraft() && !confirm('저장하지 않은 입력이 있습니다. 버리고 다른 사용자를 볼까요?')) return; selU = r.dataset.u; mode = 'view'; draw(); });
   $('u-rows').addEventListener('keydown', e => { if (e.key === 'Enter') { const r = e.target.closest('[data-u]'); if (r) r.click(); } });
-  $('u-new').onclick = () => { if (!can('users')) { toast('사용자 등록은 Admin만 할 수 있습니다', 'danger'); return; } if (formDraft() && !confirm('저장하지 않은 입력이 있습니다. 버리고 새로 등록할까요?')) return; mode = 'new'; draw(); };
+  $('u-new').onclick = () => { if (!can('users')) { toast('사용자 등록은 Admin만 할 수 있습니다', 'danger'); return; } if (formDraft() && !confirm('저장하지 않은 입력이 있습니다. 버리고 새로 등록할까요?')) return; mode = 'new'; draw(); document.querySelector('.u-users').scrollIntoView({ block: 'nearest' }); };
   $('u-q').addEventListener('input', () => { uq = $('u-q').value; drawList(); });
   const setUst = v => { ust = v; $('u-st').querySelectorAll('button').forEach(x => x.classList.toggle('on', x.dataset.v === v)); };
   $('u-st').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; setUst(b.dataset.v); drawList(); });
@@ -517,7 +517,12 @@ window.pageInit = function () {
   { const COLS = [['modeler', '모델러'], ['da', 'DA'], ['owner', '기관 담당자'], ['admin', 'Admin'], ['_view', '조회만']];
     const cell = (p, r) => { const has = p.roles.includes('*') || p.roles.includes(r) || (p.extra || []).includes(r); if (!has) return '<td class="faint" aria-label="없음">—</td>'; const sc = p.scope === 'sys' && !(p.adminAll && r === 'admin') ? '담당 시스템' : '전체'; return `<td><span class="badge${sc === '전체' ? '' : ' b-info'}">${sc}</span></td>`; };
     let g0 = ''; $('perm-tbl').innerHTML = `<colgroup><col class="pm-c1">${COLS.map(() => '<col class="pm-cr">').join('')}<col></colgroup><thead><tr><th>할 수 있는 일</th>${COLS.map(c => `<th>${c[1]}</th>`).join('')}<th>참고</th></tr></thead><tbody>${PERMS.map(p => { const head = p.g !== g0 ? `<tr class="grp"><td colspan="${COLS.length + 2}"><b>${p.g}</b></td></tr>` : ''; g0 = p.g; return head + `<tr><td>${p.n} <span class="caption faint mono">${p.id}</span></td>${COLS.map(c => c[0] === '_view' ? (p.roles.includes('*') ? '<td><span class="badge">전체</span></td>' : '<td class="faint">—</td>') : cell(p, c[0])).join('')}<td class="caption muted">${p.note || ''}</td></tr>`; }).join('')}</tbody>`; }
-  draw(); snap(); drawLast(); refreshBar();
+  /* the user list + account panel fill the space under the tab row, so the panel's [등록] · [저장] stay on screen
+     (guide open, save bar shown, small windows) — a fixed calc(100vh - 310px) pushed them below the fold */
+  const fitUsers = () => { const el = document.querySelector('.u-users'), sc = el && el.closest('.scroll'); if (!el || !el.offsetParent || !sc) return; const top = el.getBoundingClientRect().top - sc.getBoundingClientRect().top + sc.scrollTop; el.style.height = Math.max(420, sc.clientHeight - top - 20) + 'px'; };
+  { const sc = document.querySelector('.u-users').closest('.scroll'); const ro = new ResizeObserver(fitUsers); ro.observe(sc); ro.observe($('authbar')); }
+  document.querySelector('.tabs').addEventListener('click', () => setTimeout(fitUsers, 0)); window.addEventListener('resize', fitUsers);
+  draw(); snap(); drawLast(); refreshBar(); fitUsers();
 };
 </script>
 </body>
