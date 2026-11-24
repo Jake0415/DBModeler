@@ -140,6 +140,7 @@ window.pageInit = function () {
         const outRefs = u.refsTo.map(x => (AM[x] || {}).name || x);
         $('am-impact').innerHTML = `<ul style="margin:8px 0 0;padding-left:16px;line-height:20px">
           <li>${n ? `컬럼 타입 <b>${n}</b>개를 ${esc(s.db.split(' ')[0])}에 맞게 바꿉니다(예: VARCHAR2 → VARCHAR)` : '컬럼 타입은 그대로입니다(같은 DBMS)'} · 이름은 대상 시스템의 명명 템플릿으로 다음 DDL부터 만듭니다</li>
+          ${(() => { const bl = areaTypeBlocked(a, s.code); return bl.length ? `<li class="u-danger">변환 불가 <b>${bl.length}</b>개 — ${bl.slice(0, 3).map(esc).join(', ')}${bl.length > 3 ? ' 외' : ''}: ${esc(s.name)}에 없는 타입(DBMS 전용 · 시스템 전용 · 매핑 없음)이라 그대로 남습니다. 옮긴 뒤 대상 타입을 고르거나 대용량 문자(L)로 바꾸세요 — <a href="datatypes.html?sys=${encodeURIComponent(s.code)}#map">${esc(s.name)} 매핑</a></li>` : ''; })()}
           ${!copy && u.refs.length ? `<li class="u-danger">이 영역을 참조하는 영역 ${u.refs.map(esc).join(', ')} — 시스템이 달라져 참조가 끊깁니다</li>` : ''}
           ${!copy && outRefs.length ? `<li class="u-danger">이 영역이 참조하던 ${outRefs.map(esc).join(', ')} — 원래 시스템에 남아 참조가 끊깁니다</li>` : ''}
           ${rp && (rp.keep || rp.lost) ? `<li${rp.lost ? ' class="u-danger"' : ''}>참조 ${rp.keep ? `<b>${rp.keep}</b>개는 먼저 복제한 영역으로 다시 잇고` : ''}${rp.keep && rp.lost ? ', ' : ''}${rp.lost ? `<b>${rp.lost}</b>개는 빠집니다 — ${rp.lostAreas.map(esc).join(', ')}을(를) 먼저 복제하면 이어집니다` : ''}</li>` : ''}

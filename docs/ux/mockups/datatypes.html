@@ -1,0 +1,446 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>데이터 타입 · 축약명 · NeoDB 목업</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="assets/app.css">
+<script src="assets/app.js"></script>
+<style>
+  tr.off td { color:var(--fg-3); }
+  .ab { font:600 14px/20px var(--font-mono); }
+  .cnt-n { font-variant-numeric:tabular-nums; }
+  .trules { display:flex; flex-direction:column; gap:4px; }
+  .trule { display:flex; align-items:center; gap:4px; flex-wrap:wrap; }
+  .trule .rng { width:84px; }
+  .trule .ty { width:150px; }
+  .trule .sep { color:var(--fg-3); font-size:12px; }
+  .trule .iconbtn { width:24px; height:24px; }
+  .tm-st { font-size:12px; }
+  .tm-st.bad { color:var(--danger-deep); }
+  .tm-st.wrn { color:var(--ds-amber-900); }
+  tr.chg td:first-child { box-shadow:inset 3px 0 0 var(--success); }
+  .logl { list-style:none; margin:0; padding:0; }
+  .logl li { padding:8px 0; border-bottom:1px solid var(--border); font-size:14px; }
+  .logl li:last-child { border-bottom:0; }
+  .logl .meta { font-size:12px; color:var(--fg-3); }
+  .dlist { display:flex; flex-wrap:wrap; gap:6px; }
+  .dlist span { font:500 12px/22px var(--font-mono); padding:0 8px; border-radius:9999px; box-shadow:inset 0 0 0 1px var(--ds-gray-400); }
+  .probs { list-style:none; margin:8px 0 0; padding:0; font-size:12px; }
+  .probs li { padding:2px 0; }
+  .probs .blk { color:var(--danger-deep); } .probs .wrn { color:var(--ds-amber-900); } .probs .okk { color:var(--success); }
+  .ren { font:500 12px/20px var(--font-mono); }
+  .ren .ar { color:var(--fg-3); padding:0 4px; }
+  .phys-grid { display:grid; grid-template-columns:110px 1fr; gap:6px 8px; align-items:center; }
+  .phys-grid label { font-size:12px; color:var(--fg-2); }
+  .impact { margin-top:12px; }
+  .pane { display:none; } .pane.on { display:block; }
+  .set-note { max-width:1200px; }
+</style>
+</head>
+<body data-page="datatypes">
+<div id="app">
+<div id="content" class="page">
+  <div class="page-header">
+    <h1>데이터 타입 · 축약명</h1>
+    <span class="badge" id="sum"></span>
+    <div class="actions">
+      <span id="req-w"><button class="btn" id="b-req"><i data-ic=ext></i>타입 추가 요청</button></span>
+      <span id="add-w"><button class="btn primary" id="b-add"><i data-ic=plus></i>타입 등록</button></span>
+    </div>
+  </div>
+  <div class="tabs" style="margin:0;padding:0 20px;background:var(--surface)">
+    <button class="on" data-tab="types">논리 타입 · 축약명</button>
+    <button data-tab="map">시스템별 매핑</button>
+    <button data-tab="reqs">타입 추가 요청 <span class="badge" id="req-n" hidden></span></button>
+    <button data-tab="log">변경 이력</button>
+  </div>
+
+  <div class="page-body">
+    <div class="main">
+      <!-- 1. logical types -->
+      <div class="pane on" data-pane="types">
+        <div class="toolbar">
+          <div class="search"><i data-ic=search data-s=14></i><input class="input" id="q" type="search" placeholder="축약명 · 이름 · 물리 타입 검색" aria-label="축약명 · 이름 · 물리 타입 검색"></div>
+          <span class="flex u-gap-8" id="f-kind" role="group" aria-label="종류"><button class="chip on" data-v="">전체</button><button class="chip" data-v="std">표준</button><button class="chip" data-v="add">추가</button><button class="chip" data-v="dbms">DBMS 전용</button></span>
+          <span class="flex u-gap-8" id="f-st" role="group" aria-label="상태"><button class="chip on" data-v="사용">사용</button><button class="chip" data-v="">사용 중지 포함</button></span>
+        </div>
+        <div class="listhead" id="lh"></div>
+        <div class="scroll">
+          <table class="tbl" id="tbl">
+            <thead><tr><th>축약명</th><th>논리 타입</th><th>인자</th><th>종류</th><th>적용 범위</th><th>예 · <span id="ex-sys"></span></th><th class="num">도메인</th><th class="num">속성</th><th>상태</th></tr></thead>
+            <tbody id="rows"></tbody>
+          </table>
+        </div>
+        <div class="caption muted u-mt-8 set-note">축약명은 도메인 이름(분류명 + 축약명 + 길이)에 들어갑니다 — 표준은 영문 대문자 <b>1자</b>, 추가 · DBMS 전용은 <b>2~3자</b>. 쓰는 곳이 있는 축약명은 바꾸지 않고 [새 축약명으로 옮기기]로 도메인 이름까지 함께 바꿉니다.</div>
+      </div>
+
+      <!-- 2. per-system map -->
+      <div class="pane" data-pane="map">
+        <div class="toolbar">
+          <select class="input u-w-240" id="sys-pick" aria-label="매핑을 볼 시스템"></select>
+          <span class="caption muted" id="sys-db"></span>
+          <span class="grow"></span>
+          <button class="btn sm" id="tm-def">이 DBMS 기본값으로</button>
+          <button class="btn sm" id="tm-undo" disabled>되돌리기</button>
+          <button class="btn sm primary" id="tm-save" disabled>저장</button>
+        </div>
+        <div id="tm-ro"></div>
+        <div class="scroll">
+          <table class="tbl" id="tm-tbl">
+            <thead><tr><th>축약명</th><th>논리 타입</th><th>종류</th><th>길이 범위 → 물리 타입</th><th>점검</th></tr></thead>
+            <tbody id="tm-rows"></tbody>
+          </table>
+        </div>
+        <div class="caption u-danger u-mt-4" id="tm-err" role="alert"></div>
+        <div class="caption muted u-mt-8 set-note">범위는 길이(숫자는 정밀도, 일시는 초 아래 자릿수) 기준입니다. 끝을 비우면 ‘끝없음’. 범위가 겹치거나 빈 구간이 있으면 저장되지 않습니다. 매핑이 빈 타입을 쓰는 컬럼은 DDL 전 점검에서 막습니다. 다른 시스템으로 옮기거나 복제할 때도 이 규칙으로 타입을 바꿉니다.</div>
+      </div>
+
+      <!-- 3. requests -->
+      <div class="pane" data-pane="reqs">
+        <div class="listhead" id="rq-lh"></div>
+        <div class="scroll">
+          <table class="tbl"><thead><tr><th>요청</th><th>요청자</th><th>시스템</th><th>필요한 물리 타입</th><th>쓰려는 곳</th><th>이유</th><th>상태</th><th></th></tr></thead><tbody id="rq-rows"></tbody></table>
+        </div>
+      </div>
+
+      <!-- 4. log -->
+      <div class="pane" data-pane="log">
+        <div class="listhead">결재 없이 반영된 변경입니다. 감사 로그에도 같은 내용이 남습니다. 정책 버전 <b class="mono" id="ver"></b></div>
+        <ul class="logl set-note" id="log"></ul>
+      </div>
+    </div>
+    <aside class="rpanel" id="pn-detail" aria-label="타입 상세"></aside>
+  </div>
+
+  <!-- register / edit a type (DA · Admin, direct, recorded) -->
+  <div class="overlay" id="mo-type" role="dialog" aria-modal="true" aria-labelledby="mt-t"><div class="modal" style="width:640px;max-width:calc(100vw - 32px)">
+    <div class="m-head"><h3 id="mt-t">타입 등록</h3></div>
+    <div class="m-body">
+      <div class="caption muted u-mb-12" id="mt-lead">결재 없이 바로 반영됩니다. 사유는 변경 이력과 감사 로그에 남습니다.</div>
+      <div class="field-row">
+        <div class="field"><label for="t-kind">종류 *</label><select class="input" id="t-kind"><option value="add">추가 타입</option><option value="dbms">DBMS 전용 타입</option><option value="std">표준 타입</option></select></div>
+        <div class="field" id="t-dbms-f"><label for="t-dbms">대상 DBMS *</label><select class="input" id="t-dbms"></select></div>
+        <div class="field"><label for="t-scope">적용 범위 *</label><select class="input" id="t-scope"></select></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label for="t-ab">축약명 *</label><input class="input mono" id="t-ab" maxlength="3" autocomplete="off"><span class="help" id="t-ab-h">추가 · DBMS 전용은 영문 대문자 2~3자</span></div>
+        <div class="field"><label for="t-n">논리 타입 이름 *</label><input class="input" id="t-n" maxlength="30" placeholder="예: JSON 문서"></div>
+        <div class="field"><label for="t-arg">인자 *</label><select class="input" id="t-arg"></select></div>
+      </div>
+      <div class="field"><label>물리 타입 <span class="faint">— 비워 두면 ‘매핑 없음’으로 남고, 그 시스템의 DDL 전 점검에서 막습니다</span></label><div class="phys-grid" id="t-phys"></div></div>
+      <div class="field"><label for="t-desc">설명</label><input class="input" id="t-desc" maxlength="100"></div>
+      <div class="field"><label for="t-why">변경 사유 *</label><input class="input" id="t-why" placeholder="예: 외부 연계 JSON 원문 보관"></div>
+      <ul class="probs" id="t-probs" aria-live="polite"></ul>
+      <div class="banner warning impact" id="t-imp" hidden></div>
+    </div>
+    <div class="m-foot"><button class="btn" data-close="mo-type">취소</button><button class="btn primary" id="t-go">저장</button></div></div></div>
+
+  <!-- move to a new abbreviation / promote to standard -->
+  <div class="overlay" id="mo-move" role="dialog" aria-modal="true" aria-labelledby="mm-t"><div class="modal" style="width:640px;max-width:calc(100vw - 32px)">
+    <div class="m-head"><h3 id="mm-t">새 축약명으로 옮기기</h3></div>
+    <div class="m-body">
+      <div class="caption muted u-mb-12" id="mm-lead"></div>
+      <div class="field-row">
+        <div class="field"><label for="m-ab">새 축약명 *</label><input class="input mono" id="m-ab" maxlength="3" autocomplete="off"><span class="help" id="m-ab-h"></span></div>
+        <div class="field"><label for="m-why">변경 사유 *</label><input class="input" id="m-why"></div>
+      </div>
+      <div class="section-t">바뀌는 도메인 이름 <span class="badge" id="m-dn">0</span></div>
+      <div id="m-ren" class="ren"></div>
+      <ul class="probs" id="m-probs" aria-live="polite"></ul>
+    </div>
+    <div class="m-foot"><button class="btn" data-close="mo-move">취소</button><button class="btn primary" id="m-go">옮기기</button></div></div></div>
+
+  <!-- stop / reuse -->
+  <div class="overlay" id="mo-st" role="dialog" aria-modal="true" aria-labelledby="ms-t"><div class="modal u-w-560">
+    <div class="m-head"><h3 id="ms-t">사용 중지</h3></div>
+    <div class="m-body"><div id="ms-sum" class="u-mb-12"></div><div class="field"><label for="s-why">변경 사유 *</label><input class="input" id="s-why"></div></div>
+    <div class="m-foot"><button class="btn" data-close="mo-st">취소</button><button class="btn primary" id="s-go">저장</button></div></div></div>
+
+  <!-- request (modeler) -->
+  <div class="overlay" id="mo-req" role="dialog" aria-modal="true" aria-labelledby="mr-t"><div class="modal u-w-560">
+    <div class="m-head"><h3 id="mr-t">타입 추가 요청</h3></div>
+    <div class="m-body">
+      <div class="caption muted u-mb-12">DA · Admin에게 알림이 갑니다. 등록되면 알림으로 알려 드리고, 모델의 도메인 칸 목록에 나타납니다. 그동안 그 속성은 직접 입력 + 예외(사유)로 둘 수 있습니다.</div>
+      <div class="field-row">
+        <div class="field"><label for="r-sys">시스템 *</label><select class="input" id="r-sys"></select></div>
+        <div class="field"><label for="r-phys">필요한 물리 타입 *</label><input class="input mono" id="r-phys" placeholder="예: JSONB, XMLTYPE"></div>
+      </div>
+      <div class="field"><label for="r-where">쓰려는 곳</label><input class="input" id="r-where" placeholder="예: 영업 · 주문연계내역.연계원문"></div>
+      <div class="field"><label for="r-why">이유 *</label><input class="input" id="r-why"></div>
+      <ul class="probs" id="r-probs" aria-live="polite"></ul>
+    </div>
+    <div class="m-foot"><button class="btn" data-close="mo-req">취소</button><button class="btn primary" id="r-go"><i data-ic=ext></i>요청 보내기</button></div></div></div>
+
+  <!-- reject a request -->
+  <div class="overlay" id="mo-rej" role="dialog" aria-modal="true" aria-labelledby="mj-t"><div class="modal u-w-560">
+    <div class="m-head"><h3 id="mj-t">요청 반려</h3></div>
+    <div class="m-body"><div id="mj-sum" class="u-mb-12"></div><div class="field"><label for="j-why">반려 사유 *</label><input class="input" id="j-why" placeholder="예: 기존 대용량 문자(L)로 충분 — L을 쓰세요"></div></div>
+    <div class="m-foot"><button class="btn" data-close="mo-rej">취소</button><button class="btn danger" id="j-go">반려</button></div></div></div>
+</div>
+</div>
+<script>
+window.pageInit = function () {
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  const qs = new URLSearchParams(location.search);
+  const ymd = () => { const d = window.MOCK_TODAY || new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
+  const CAN_STD = can('type.std'), CAN_ADD = can('type.add'), CAN_REQ = can('type.request') && !CAN_ADD;
+  const canMap = code => can('type.map', { system: code });
+  const SYS = () => activeSystems();
+  let q = '', fKind = '', fSt = '사용', sel = null, fromReq = null;
+
+  /* ---- shared bits ---- */
+  const kindTag = t => `<span class="badge ${t.kind === 'std' ? 'b-common' : t.kind === 'dbms' ? 'b-warning' : 'b-org'}">${TYPE_KIND[t.kind]}${t.kind === 'dbms' ? ' · ' + esc(dbmsKey(t.dbms)) : ''}</span>`;
+  const scopeTxt = t => t.scope === '공통' ? '기관 공통' : esc(sysNameOf(t.scope)) + ' 전용';
+  const stTag = t => t.st === '사용' ? tag('ok', '사용') : tag('end', '사용 중지');
+  const usageCache = {}; const usage = ab => usageCache[ab] || (usageCache[ab] = typeUsage(ab));
+  const resetUsage = () => Object.keys(usageCache).forEach(k => delete usageCache[k]);
+  const exSys = () => curSys().code;
+  const sample = t => { const L = t.arg === 'n' ? 10 : t.arg === 'p,s' ? 15 : t.arg === 'f' ? 0 : ''; if (!typeFits(t, exSys())) return '<span class="faint">이 시스템 대상 아님</span>'; const r = physOf(exSys(), t.ab, L, ''); return r.t ? `<span class="mono">${esc(r.t)}</span>` : '<span class="tm-st wrn">매핑 없음</span>'; };
+  const audit = (act, target, why) => pushAudit({ act: '데이터 타입 — ' + act, target, why });
+  const toTop = () => { $('sum').textContent = `정책 v${typeVer()} · 표준 ${getTypes().filter(t => t.kind === 'std' && t.st === '사용').length} · 추가 ${getTypes().filter(t => t.kind !== 'std' && t.st === '사용').length}`; };
+  const fixBtns = () => {
+    $('add-w').hidden = !CAN_ADD; $('req-w').hidden = !CAN_REQ;
+    if (!CAN_ADD && !CAN_REQ) { $('req-w').hidden = false; $('b-req').disabled = true; $('req-w').title = '타입 추가 요청은 담당 시스템의 모델러, 등록은 DA · Admin'; }
+  };
+
+  /* ---- 1. logical types table ---- */
+  function draw() {
+    resetUsage(); const all = getTypes();
+    const list = all.filter(t => (!fKind || t.kind === fKind) && (!fSt || t.st === fSt) && listMatch(q, [t.ab, t.n, t.desc, ...Object.values(t.phys || {})], 'name'));
+    $('ex-sys').textContent = curSys().name;
+    $('rows').innerHTML = list.map(t => { const u = usage(t.ab);
+      return `<tr class="click${t.st !== '사용' ? ' off' : ''}${sel === t.ab ? ' sel' : ''}" data-ab="${esc(t.ab)}" tabindex="0">
+        <td class="ab">${esc(t.ab)}</td><td>${esc(t.n)}<div class="caption muted">${esc(t.desc || '')}</div></td><td class="caption">${TYPE_ARG[t.arg]}</td><td>${kindTag(t)}</td><td class="caption">${scopeTxt(t)}</td>
+        <td>${sample(t)}</td><td class="num cnt-n">${u.doms.length}</td><td class="num cnt-n">${u.attrs}</td><td>${stTag(t)}</td></tr>`; }).join('')
+      || `<tr class="er none"><td colspan="9" class="caption muted u-tc u-p-32">조건에 맞는 타입이 없습니다</td></tr>`;
+    $('lh').innerHTML = `<b class="u-fg">${list.length}개</b> (전체 ${all.length}) · 표준 1자 · 추가 2~3자`;
+    $('rows').querySelectorAll('tr[data-ab]').forEach(r => { r.onclick = () => { sel = r.dataset.ab; draw(); }; r.onkeydown = e => { if (e.key === 'Enter') r.click(); }; });
+    toTop(); if (sel) panel();
+  }
+  document.querySelectorAll('#f-kind .chip').forEach(b => b.onclick = () => { fKind = b.dataset.v; document.querySelectorAll('#f-kind .chip').forEach(x => x.classList.toggle('on', x === b)); draw(); });
+  document.querySelectorAll('#f-st .chip').forEach(b => b.onclick = () => { fSt = b.dataset.v; document.querySelectorAll('#f-st .chip').forEach(x => x.classList.toggle('on', x === b)); draw(); });
+  $('q').addEventListener('input', () => { q = $('q').value.trim(); draw(); });
+
+  /* ---- detail panel ---- */
+  function panel() {
+    const t = typeOf(sel), p = $('pn-detail'); if (!t) { sel = null; p.classList.remove('open'); return; }
+    const u = usage(t.ab), used = u.doms.length + u.attrs > 0;
+    const canEdit = t.kind === 'std' ? CAN_STD : CAN_ADD;
+    const sysRows = SYS().map(s => { if (!typeFits(t, s.code)) return `<tr><td>${esc(s.name)}</td><td class="faint" colspan="2">대상 아님 (${t.kind === 'dbms' ? esc(dbmsKey(t.dbms)) + ' 전용' : esc(sysNameOf(t.scope)) + ' 전용'})</td></tr>`;
+      const rules = typeMapOf(s.code)[t.ab] || []; return `<tr><td>${esc(s.name)}</td><td class="caption">${esc(s.db)}</td><td class="mono">${rules.length ? rules.map(r => t.arg === '' ? esc(r.t) : `${r.lo}~${r.hi == null ? '' : r.hi} → ${esc(r.t)}`).join('<br>') : '<span class="tm-st wrn">매핑 없음</span>'}</td></tr>`; }).join('');
+    const log = J2('dbm-audit').filter(e => String(e.act).startsWith('데이터 타입') && String(e.target).split(/[ ·(]/).includes(t.ab)).slice(0, 8);
+    const blkEdit = !canEdit ? (t.kind === 'std' ? '표준 타입은 DA · Admin만 고칩니다' : '타입 등록 권한(DA · Admin)이 필요합니다') : '';
+    const blkMove = blkEdit || (!used ? '쓰는 곳이 없어 [수정]에서 바로 바꿀 수 있습니다' : '');
+    const blkStop = blkEdit || (used ? `쓰는 곳(도메인 ${u.doms.length} · 속성 ${u.attrs})이 있어 사용 중지할 수 없습니다` : '');
+    p.innerHTML = `<div class="rp-head"><div class="t">${kindTag(t)}${stTag(t)}<button class="iconbtn close u-w-28 u-h-28" data-close="pn-detail" aria-label="상세 닫기" title="상세 닫기"><i data-ic=x></i></button></div><h2 class="u-mt-8"><span class="mono">${esc(t.ab)}</span> · ${esc(t.n)}</h2><div class="caption muted">${scopeTxt(t)} · ${esc(t.by || '')} ${esc(t.at || '')}</div></div>
+      <div class="rp-body">
+        ${t.movedTo ? `<div class="banner u-mb-12"><i data-ic=info></i><div>새 축약명 <b class="mono">${esc(t.movedTo)}</b>(으)로 옮겼습니다 — 이 축약명은 다시 쓰지 않습니다.</div></div>` : ''}
+        <dl class="kv"><dt>인자</dt><dd>${TYPE_ARG[t.arg]}</dd><dt>설명</dt><dd>${esc(t.desc || '—')}</dd>${t.why ? `<dt>등록 사유</dt><dd>${esc(t.why)}</dd>` : ''}<dt>도메인 예</dt><dd class="mono">${esc(domName('코드', t.ab, t.arg === 'f' ? '3' : '10', ''))}</dd></dl>
+        <div class="section-t">시스템별 물리 타입</div><table class="tbl"><tbody>${sysRows}</tbody></table>
+        <div class="section-t">쓰는 도메인 <span class="badge">${u.doms.length}</span></div>${u.doms.length ? `<div class="dlist">${u.doms.map(d => `<span>${esc(d)}</span>`).join('')}</div>` : '<div class="caption muted">없음</div>'}
+        <div class="section-t">직접 고른 속성(표준 외 타입) <span class="badge">${u.direct.length}</span></div>${u.direct.length ? `<ul class="logl">${u.direct.slice(0, 10).map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : '<div class="caption muted">없음</div>'}
+        <div class="section-t">변경 기록</div>${log.length ? `<ul class="logl">${log.map(e => `<li><b>${esc(String(e.act).replace('데이터 타입 — ', ''))}</b> · ${esc(e.target)}<div>${esc(e.why || '—')}</div><div class="meta">${esc(e.at)} · ${esc(e.who)}</div></li>`).join('')}</ul>` : '<div class="caption muted">기록 없음</div>'}
+      </div>
+      <div class="rp-foot"><span class="grow"></span>
+        <span title="${esc(blkEdit)}"><button class="btn sm" id="d-edit"${blkEdit || t.st !== '사용' ? ' disabled' : ''}><i data-ic=pen data-s=12></i>수정</button></span>
+        <span title="${esc(blkMove)}"><button class="btn sm" id="d-move"${blkMove || t.st !== '사용' ? ' disabled' : ''}>새 축약명으로 옮기기</button></span>
+        ${t.kind !== 'std' ? `<span title="${esc(CAN_STD ? '' : '표준으로 올리기는 DA · Admin')}"><button class="btn sm" id="d-promo"${!CAN_STD || t.st !== '사용' || t.kind === 'dbms' ? ' disabled' : ''}${t.kind === 'dbms' ? ' title="DBMS 전용 타입은 표준으로 올릴 수 없습니다 — 모든 DBMS의 물리 타입이 필요"' : ''}>표준으로 올리기</button></span>` : ''}
+        ${t.st === '사용' ? `<span title="${esc(blkStop)}"><button class="btn sm danger" id="d-stop"${blkStop ? ' disabled' : ''}>사용 중지</button></span>` : `<span title="${esc(blkEdit || (t.movedTo ? '옮긴 축약명은 다시 쓰지 않습니다' : ''))}"><button class="btn sm" id="d-reuse"${blkEdit || t.movedTo ? ' disabled' : ''}>다시 사용</button></span>`}
+      </div>`;
+    p.classList.add('open');
+    const on = (id, f) => { const b = $(id); if (b) b.onclick = f; };
+    on('d-edit', () => openType(t)); on('d-move', () => openMove(t, 'move')); on('d-promo', () => openMove(t, 'promote'));
+    on('d-stop', () => openSt(t, '사용 중지')); on('d-reuse', () => openSt(t, '사용'));
+  }
+  const J2 = k => { try { return JSON.parse(dbmStore.get(k, '[]')) || []; } catch (e) { return []; } };
+
+  /* ---- register / edit ---- */
+  let editAb = null;
+  $('t-dbms').innerHTML = DBMS_LIST.map(d => `<option>${d}</option>`).join('');
+  $('t-arg').innerHTML = Object.entries(TYPE_ARG).map(([v, n]) => `<option value="${v}">${n}</option>`).join('');
+  const fillScope = () => { const k = $('t-kind').value, v = $('t-scope').value;
+    $('t-scope').innerHTML = (k === 'std' ? [['공통', '기관 공통']] : [['공통', '기관 공통']].concat(SYS().map(s => [s.code, s.name + ' 전용']))).map(([a, b]) => `<option value="${a}">${b}</option>`).join('');
+    if ([...$('t-scope').options].some(o => o.value === v)) $('t-scope').value = v; };
+  // which DBMS need a physical type: common → every DBMS in use (std: all four) · system → that system's DBMS · DBMS-only → that DBMS
+  const physTargets = () => { const k = $('t-kind').value, sc = $('t-scope').value;
+    if (k === 'dbms') return [dbmsKey($('t-dbms').value)];
+    if (sc !== '공통') return [dbmsOfSys(sc)];
+    return k === 'std' ? DBMS_LIST.slice() : [...new Set(SYS().map(s => dbmsOfSys(s.code)))]; };
+  const drawPhys = keep => { const cur = keep || {}; $('t-phys').innerHTML = physTargets().map(d => `<label for="tp-${d}">${d}</label><input class="input mono" id="tp-${d}" data-dbms="${d}" value="${esc(cur[d] || '')}" placeholder="${$('t-arg').value === '' ? '예: JSONB' : $('t-arg').value === 'p,s' ? '예: NUMBER(p,s)' : '예: VARCHAR2(n)'}">`).join('');
+    $('t-phys').querySelectorAll('input').forEach(i => i.addEventListener('input', tCheck)); };
+  const physVal = () => { const o = {}; $('t-phys').querySelectorAll('input').forEach(i => { if (i.value.trim()) o[i.dataset.dbms] = i.value.trim(); }); return o; };
+  const syncKind = () => { const k = $('t-kind').value; $('t-dbms-f').hidden = k !== 'dbms'; $('t-ab').maxLength = k === 'std' ? 1 : 3;
+    $('t-ab-h').textContent = k === 'std' ? '표준은 영문 대문자 1자' : '추가 · DBMS 전용은 영문 대문자 2~3자 (1자는 표준 전용)';
+    if (k === 'dbms') { $('t-scope').value = '공통'; } fillScope(); drawPhys(physVal()); tCheck(); };
+  ['t-kind', 't-dbms', 't-scope', 't-arg'].forEach(id => $(id).addEventListener('change', () => { if (id === 't-kind') syncKind(); else { drawPhys(physVal()); tCheck(); } }));
+  $('t-ab').addEventListener('input', () => { $('t-ab').value = $('t-ab').value.toUpperCase().replace(/[^A-Z0-9]/g, ''); tCheck(); });
+  ['t-n', 't-why'].forEach(id => $(id).addEventListener('input', tCheck));
+  function tProbs() { const P = [], k = $('t-kind').value, ab = $('t-ab').value.trim(), old = editAb && typeOf(editAb), used = old && (usage(old.ab).doms.length + usage(old.ab).attrs > 0);
+    const e = typeAbbrErr(ab, k, editAb); if (e) P.push(['blk', e]);
+    if (old && used && ab !== old.ab) P.push(['blk', '쓰는 곳이 있는 축약명은 바꾸지 않습니다 — [새 축약명으로 옮기기]를 쓰세요']);
+    if (old && used && $('t-arg').value !== old.arg) P.push(['blk', '쓰는 곳이 있으면 인자를 바꿀 수 없습니다 — 도메인 이름의 길이 해석이 달라집니다']);
+    if (!$('t-n').value.trim()) P.push(['blk', '논리 타입 이름을 입력하세요']); else if (getTypes().some(t => t.n === $('t-n').value.trim() && t.ab !== editAb && t.st === '사용')) P.push(['blk', '같은 이름의 타입이 있습니다']);
+    if (!$('t-why').value.trim()) P.push(['blk', '변경 사유를 입력하세요']);
+    const ph = physVal(), arg = $('t-arg').value;
+    Object.entries(ph).forEach(([d, v]) => { const err = typeRulesErr([{ lo: arg === '' ? null : 0, hi: null, t: v }], { arg }); if (err) P.push(['blk', `${d}: ${err}`]);
+      const same = getTypes().filter(t => t.ab !== editAb && t.st === '사용').sort((a, b) => (a.arg === '' ? 0 : 1) - (b.arg === '' ? 0 : 1)).find(t => { const r = typeRulesDefault(d, t.ab, t); return r.some(x => x.t.replace(/\(.*$/, '').toUpperCase() === v.replace(/\(.*$/, '').toUpperCase()); });
+      if (same) P.push(['wrn', `${d} ${v.replace(/\(.*$/, '')}는 이미 ${same.ab}(${same.n})가 씁니다 — 기존 타입을 쓰는 것이 맞는지 확인하세요`]); });
+    const miss = physTargets().filter(d => !ph[d]); if (miss.length) P.push(['wrn', `${miss.join(' · ')} 물리 타입이 비어 ‘매핑 없음’으로 남습니다`]);
+    return P; }
+  function tCheck() { const P = tProbs(); $('t-probs').innerHTML = P.length ? P.map(([l, m]) => `<li class="${l}">${l === 'blk' ? '⛔' : '⚠'} ${esc(m)}</li>`).join('') : '<li class="okk">✓ 저장할 수 있습니다</li>'; $('t-imp').hidden = true; delete $('t-go').dataset.armed; $('t-go').textContent = '저장'; return P; }
+  function openType(t, pre) {
+    editAb = t ? t.ab : null; fromReq = pre && pre.req || null;
+    $('mt-t').textContent = t ? `타입 수정 — ${t.ab}` : '타입 등록';
+    $('t-kind').innerHTML = [['add', '추가 타입'], ['dbms', 'DBMS 전용 타입']].concat(CAN_STD ? [['std', '표준 타입']] : []).map(([v, n]) => `<option value="${v}">${n}</option>`).join('');
+    $('t-kind').value = t ? t.kind : (pre && pre.kind) || 'add'; $('t-kind').disabled = !!t;
+    $('t-dbms').value = t && t.dbms ? dbmsKey(t.dbms) : (pre && pre.dbms) || 'Oracle'; fillScope(); $('t-scope').value = t ? t.scope : (pre && pre.scope) || '공통'; $('t-scope').disabled = !!t;
+    $('t-ab').value = t ? t.ab : ''; $('t-n').value = t ? t.n : ''; $('t-arg').value = t ? t.arg : ''; $('t-desc').value = t ? t.desc || '' : (pre && pre.desc) || ''; $('t-why').value = (pre && pre.why) || '';
+    syncKind(); const base = t ? Object.fromEntries(physTargets().map(d => [d, (t.phys || {})[d] || ((typeRulesDefault(d, t.ab, t)[0] || {}).t || '')])) : (pre && pre.phys) || {}; drawPhys(base); tCheck();
+    $('mo-type')._opener = document.activeElement; $('mo-type').classList.add('open'); setTimeout(() => (t ? $('t-n') : $('t-ab')).focus(), 0); }
+  $('b-add').onclick = () => openType(null);
+  // impact first, then [확인하고 저장]
+  $('t-go').onclick = () => { const P = $('t-go').dataset.armed ? tProbs() : tCheck(), bad = P.filter(p => p[0] === 'blk'); if (bad.length) { toast(`저장하지 않았습니다 — ${bad[0][1]}`, 'danger'); return; }
+    const k = $('t-kind').value, sc = $('t-scope').value, ab = $('t-ab').value.trim(), old = editAb && typeOf(editAb);
+    const targets = SYS().filter(s => typeFits({ kind: k, scope: sc, dbms: $('t-dbms').value }, s.code)), ph = physVal(), miss = targets.filter(s => !ph[dbmsOfSys(s.code)]);
+    const u = old ? usage(old.ab) : { doms: [], attrs: 0 };
+    if (!$('t-go').dataset.armed) { $('t-imp').hidden = false; $('t-imp').innerHTML = `<i data-ic=warn></i><div><b>${old ? '고치면' : '저장하면'} 바로 반영됩니다</b> — 정책 버전 v${typeVer()} → v${typeVer() + 1}<br>
+      시스템 매핑 ${targets.length}개${old ? '' : '에 행 추가'}${miss.length ? ` · 빈 칸 ${miss.length}개(${miss.map(s => esc(s.name)).join(', ')} — 매핑 없음)` : ''}${old ? ` · 이 타입을 쓰는 도메인 ${u.doms.length} · 속성 ${u.attrs}` : ''}<br>
+      <span class="caption">진행 중인 도메인 신청은 승인 때 다시 검사합니다.</span></div>`; $('t-go').dataset.armed = '1'; $('t-go').textContent = '확인하고 저장'; return; }
+    const list = getTypes(), rec = { ab, n: $('t-n').value.trim(), arg: $('t-arg').value, kind: k, scope: sc, desc: $('t-desc').value.trim(), why: $('t-why').value.trim(), phys: ph, st: '사용', by: ME.name, at: ymd() };
+    if (k === 'dbms') rec.dbms = $('t-dbms').value;
+    if (old) { const i = list.findIndex(x => x.ab === old.ab); const prev = list[i]; list[i] = Object.assign({}, prev, rec, { kind: prev.kind, scope: prev.scope, by: prev.by, at: prev.at });
+      // a changed physical type for a common/standard type also rewrites the first rule in each system that still has the default
+      targets.forEach(s => { const d = dbmsOfSys(s.code), m = typeMapOf(s.code), cur = m[old.ab] || [], was = (prev.phys || {})[d]; if (ph[d] && (!cur.length || (was && cur[0] && cur[0].t === was))) { m[old.ab] = cur.length ? cur.map((r, j) => j === 0 ? Object.assign({}, r, { t: ph[d] }) : r) : [{ lo: rec.arg === '' ? null : 0, hi: null, t: ph[d] }]; saveTypeMap(s.code, m); } });
+    } else list.push(rec);
+    saveTypes(list); const v = bumpTypeVer();
+    const what = old ? `${ab} ${rec.n} 수정` : `${ab} ${rec.n} 등록 (${TYPE_KIND[k]} · ${sc === '공통' ? '기관 공통' : sysNameOf(sc) + ' 전용'})`;
+    audit(old ? '수정' : '등록', `${ab} · ${rec.n}`, `${rec.why} · 정책 v${v}${Object.keys(ph).length ? ' · ' + Object.entries(ph).map(([d, x]) => d + ' ' + x).join(', ') : ''}`);
+    if (fromReq) { const rl = getTypeReqs(), r = rl.find(x => x.id === fromReq); if (r) { r.st = '등록'; r.ab = ab; r.done = `${ME.name} · ${nowStr()}`; saveTypeReqs(rl); pushNotif({ to: [r.by], k: 'dict', t: `타입 추가 요청 ${r.id} 등록됨 — ${ab} ${rec.n}`, m: `${sysNameOf(r.sys)}에서 쓸 수 있습니다. 모델의 도메인 칸 목록에서 고르세요`, href: 'datatypes.html#reqs' }); } fromReq = null; }
+    $('mo-type').classList.remove('open'); sel = ab; draw(); drawMap(); drawReqs(); drawLog();
+    toast(`${what} — 정책 v${v}${miss.length ? ` · 매핑 없음 ${miss.length}곳은 [시스템별 매핑]에서 채우세요` : ''}`, 'success', qs.get('back') ? { label: '모델로 돌아가기', fn: () => { location.href = qs.get('back'); } } : null); };
+
+  /* ---- move to a new abbreviation / promote ---- */
+  let mv = null;
+  function openMove(t, mode) { mv = { t, mode }; const promo = mode === 'promote';
+    $('mm-t').textContent = promo ? `표준으로 올리기 — ${t.ab}` : `새 축약명으로 옮기기 — ${t.ab}`;
+    $('mm-lead').innerHTML = promo ? '표준 축약명(영문 대문자 1자)을 정합니다. 새 표준 타입을 만들고, 이 타입을 쓰는 도메인 이름을 한꺼번에 바꾼 뒤 이 타입은 사용 중지합니다. 시스템 전용이었다면 기관 공통이 됩니다.'
+      : '새 축약명으로 타입을 만들고(정의 · 시스템 매핑 복사), 쓰는 도메인 이름을 한꺼번에 바꾼 뒤 이전 축약명은 사용 중지합니다. 도메인을 쓰는 속성은 도메인을 따라가고, 직접 고른 속성은 새 타입으로 다시 잇습니다.';
+    $('m-ab').value = ''; $('m-ab').maxLength = promo || t.kind === 'std' ? 1 : 3; $('m-ab-h').textContent = promo || t.kind === 'std' ? '표준 — 영문 대문자 1자' : '추가 · DBMS 전용 — 영문 대문자 2~3자'; $('m-why').value = '';
+    $('m-go').textContent = promo ? '표준으로 올리기' : '옮기기'; mCheck(); $('mo-move')._opener = document.activeElement; $('mo-move').classList.add('open'); setTimeout(() => $('m-ab').focus(), 0); }
+  const renames = ab2 => { const u = usage(mv.t.ab); return u.doms.map(d => { const p = parseDomName(d); return [d, p ? p.cls + ab2 + (p.len || '') + (p.sc ? ',' + p.sc : '') : d]; }); };
+  function mCheck() { if (!mv) return []; const ab2 = $('m-ab').value.trim(), kind = mv.mode === 'promote' ? 'std' : mv.t.kind, P = [], e = typeAbbrErr(ab2, kind); if (e) P.push(['blk', e]);
+    if (!$('m-why').value.trim()) P.push(['blk', '변경 사유를 입력하세요']);
+    const R = renames(ab2 || '?'), known = knownDomains(); R.forEach(([, n]) => { if (ab2 && known.has(n)) P.push(['blk', `도메인 ${n}이 이미 있습니다 — 다른 축약명을 고르세요`]); });
+    $('m-dn').textContent = R.length; $('m-ren').innerHTML = R.length ? R.map(([a, b]) => `<div>${esc(a)}<span class="ar">→</span><b>${esc(b)}</b></div>`).join('') : '<div class="caption muted">바뀌는 도메인이 없습니다</div>';
+    const u = usage(mv.t.ab); P.push(['wrn', `속성 ${u.attrs}개가 따라 바뀝니다(직접 고른 속성 ${u.direct.length}개 포함) · 도메인 이름 변경은 사전 변경 이력에 남습니다`]);
+    $('m-probs').innerHTML = P.map(([l, m]) => `<li class="${l}">${l === 'blk' ? '⛔' : '⚠'} ${esc(m)}</li>`).join(''); return P; }
+  ['m-ab', 'm-why'].forEach(id => $(id).addEventListener('input', () => { if (id === 'm-ab') $('m-ab').value = $('m-ab').value.toUpperCase().replace(/[^A-Z0-9]/g, ''); mCheck(); }));
+  $('m-go').onclick = () => { const P = mCheck().filter(p => p[0] === 'blk'); if (P.length) { toast(`진행하지 않았습니다 — ${P[0][1]}`, 'danger'); return; }
+    const t = mv.t, ab2 = $('m-ab').value.trim(), promo = mv.mode === 'promote', why = $('m-why').value.trim(), R = renames(ab2), RM = Object.fromEntries(R);
+    const list = getTypes(), i = list.findIndex(x => x.ab === t.ab);
+    const phys = Object.assign({}, t.phys || {}); SYS().forEach(s => { if (typeFits(t, s.code)) { const r = (typeMapOf(s.code)[t.ab] || [])[0]; if (r && !phys[dbmsOfSys(s.code)]) phys[dbmsOfSys(s.code)] = r.t; } });
+    const nt = Object.assign({}, t, { ab: ab2, phys, by: ME.name, at: ymd(), why, movedFrom: t.ab }); delete nt.movedTo; if (promo) { nt.kind = 'std'; nt.scope = '공통'; delete nt.dbms; }
+    list[i] = Object.assign({}, t, { st: '사용 중지', movedTo: ab2 }); list.push(nt); saveTypes(list);
+    SYS().forEach(s => { const raw = JSON.parse(dbmStore.get('dbm-typemap-' + s.code, 'null') || 'null'); if (raw && !Array.isArray(raw) && raw[t.ab]) { raw[ab2] = raw[t.ab]; saveTypeMap(s.code, raw); } });
+    // dictionary: domain items and the terms that point at them
+    const dict = getDict(); let nd = 0, nt2 = 0; dict.forEach(x => { if (x.k === 'domain' && RM[x.name]) { x.name = RM[x.name]; nd++; } if (x.k === 'term' && RM[x.dom]) { x.dom = RM[x.dom]; nt2++; } }); saveDict(dict);
+    // models: every saved version of every area
+    let na = 0; Object.entries(getAllModels()).forEach(([id, m]) => { for (let v = 1; v <= (m.ver || 1); v++) { const d = getModelData(id, v); if (!d || !d.E) continue; let ch = false; d.E.forEach(e => (e.a || []).forEach(a => { const dm = a.dom || a.d; if (dm && RM[dm]) { a.dom = RM[dm]; delete a.d; ch = true; na++; } if (a.xt === t.ab) { a.xt = ab2; ch = true; na++; } })); if (ch) setModelData(id, v, d); } });
+    const v = bumpTypeVer();
+    audit(promo ? '표준으로 올리기' : '새 축약명으로 옮기기', `${t.ab} → ${ab2} · ${t.n}`, `${why} · 도메인 ${R.length}개 이름 변경 · 용어 ${nt2} · 속성 ${na} · 정책 v${v}`);
+    if (R.length) pushAudit({ act: '사전 — 도메인 이름 변경(축약명 옮김)', target: R.map(([a, b]) => `${a} → ${b}`).join(', '), why });
+    $('mo-move').classList.remove('open'); sel = ab2; mv = null; draw(); drawMap(); drawLog();
+    toast(`${t.ab} → ${ab2} ${promo ? '표준으로 올렸습니다' : '옮겼습니다'} — 도메인 ${nd}개 · 용어 ${nt2}개 · 속성 ${na}개를 함께 바꿨고, ${t.ab}는 사용 중지했습니다`, 'success'); };
+
+  /* ---- stop / reuse ---- */
+  let stT = null, stTo = '';
+  function openSt(t, to) { stT = t; stTo = to; $('ms-t').textContent = to === '사용' ? `다시 사용 — ${t.ab}` : `사용 중지 — ${t.ab}`; $('s-why').value = '';
+    $('ms-sum').innerHTML = to === '사용' ? `<b class="mono">${esc(t.ab)}</b> ${esc(t.n)}를 다시 씁니다. 해당 시스템의 매핑 표와 도메인 신청 목록에 다시 나타납니다.` : `<b class="mono">${esc(t.ab)}</b> ${esc(t.n)} — 쓰는 곳이 없습니다. 사용 중지하면 도메인 신청 · 모델 목록에서 빠지고, 지우지는 않습니다(축약명은 다시 쓸 수 없음).`;
+    $('mo-st')._opener = document.activeElement; $('mo-st').classList.add('open'); setTimeout(() => $('s-why').focus(), 0); }
+  $('s-go').onclick = () => { const why = $('s-why').value.trim(); if (!why) { $('s-why').setAttribute('aria-invalid', 'true'); toast('변경 사유를 입력하세요', 'danger'); return; }
+    if (stTo !== '사용') { resetUsage(); const u = usage(stT.ab); if (u.doms.length + u.attrs) { toast('그사이 쓰는 곳이 생겨 사용 중지하지 않았습니다', 'danger'); $('mo-st').classList.remove('open'); draw(); return; } }
+    const list = getTypes(), x = list.find(t => t.ab === stT.ab); x.st = stTo === '사용' ? '사용' : '사용 중지'; saveTypes(list); const v = bumpTypeVer();
+    audit(stTo === '사용' ? '다시 사용' : '사용 중지', `${stT.ab} · ${stT.n}`, `${why} · 정책 v${v}`); $('mo-st').classList.remove('open'); draw(); drawMap(); drawLog(); toast(`${stT.ab} ${stTo === '사용' ? '다시 사용합니다' : '사용 중지했습니다'}`, 'success'); };
+
+  /* ---- 2. per-system map: working copy WK, saved copy SV for the picked system ---- */
+  let WK = null, SV = null, mapCode = null;
+  $('sys-pick').innerHTML = SYS().map(s => `<option value="${s.code}">${esc(s.name)} · ${s.code}</option>`).join('');
+  $('sys-pick').value = SYS().some(s => s.code === qs.get('sys')) ? qs.get('sys') : curSys().code;
+  const mapDirty = () => JSON.stringify(WK) !== JSON.stringify(SV);
+  function loadMap() { mapCode = $('sys-pick').value; SV = typeMapOf(mapCode); WK = JSON.parse(JSON.stringify(SV)); }
+  function drawMap() { if (!mapCode || !mapDirty()) loadMap(); const code = mapCode, s = SYS().find(x => x.code === code) || {}, ro = !canMap(code);
+    $('sys-db').textContent = `${s.db || ''} · ${dbmsOfSys(code)} 기본 규칙에서 시작`;
+    $('tm-ro').innerHTML = ro ? `<div class="banner u-mb-8"><i data-ic=lock></i><div>보기만 할 수 있습니다 — 매핑 수정은 ${esc(s.name)}을(를) 맡은 DA 또는 Admin${CAN_REQ ? ' · 필요한 타입이 없으면 [타입 추가 요청]' : ''}</div></div>` : '';
+    const types = typesFor(code);
+    $('tm-rows').innerHTML = types.map(t => { const rules = WK[t.ab] || [], err = typeRulesErr(rules, t), chg = JSON.stringify(rules) !== JSON.stringify(SV[t.ab] || []);
+      const rr = rules.map((r, i) => `<div class="trule">${t.arg === '' ? '' : `<input class="input mono rng" data-ab="${t.ab}" data-i="${i}" data-k="lo" value="${r.lo == null ? '' : r.lo}" aria-label="${esc(t.n)} ${i + 1}번째 범위 시작"${ro ? ' disabled' : ''}><span class="sep">~</span><input class="input mono rng" data-ab="${t.ab}" data-i="${i}" data-k="hi" value="${r.hi == null ? '' : r.hi}" placeholder="끝없음" aria-label="${esc(t.n)} ${i + 1}번째 범위 끝"${ro ? ' disabled' : ''}><span class="sep">→</span>`}<input class="input mono ty" data-ab="${t.ab}" data-i="${i}" data-k="t" value="${esc(r.t)}" aria-label="${esc(t.n)} ${i + 1}번째 물리 타입"${ro ? ' disabled' : ''}>${!ro && t.arg !== '' && rules.length > 1 ? `<button class="iconbtn" data-del="${t.ab}" data-i="${i}" aria-label="${i + 1}번째 범위 빼기" title="범위 빼기"><i data-ic=x data-s=12></i></button>` : ''}</div>`).join('');
+      const add = !ro && (t.arg !== '' || !rules.length) ? `<button class="btn ghost sm" data-add="${t.ab}"><i data-ic=plus data-s=12></i>${rules.length ? '범위 추가' : '물리 타입 넣기'}</button>` : '';
+      const stt = err ? `<span class="tm-st bad">⛔ ${esc(err)}</span>` : !rules.length ? '<span class="tm-st wrn">⚠ 매핑 없음 — DDL 전 점검에서 막음</span>' : t.arg === 'f' && rules[rules.length - 1].hi != null && rules[rules.length - 1].hi < 9 ? `<span class="tm-st wrn">⚠ ${rules[rules.length - 1].hi}자리 넘으면 상한으로 줄임</span>` : '<span class="tm-st">✓</span>';
+      return `<tr class="${chg ? 'chg' : ''}"><td class="ab">${esc(t.ab)}</td><td>${esc(t.n)}<div class="caption muted">${TYPE_ARG[t.arg]}</div></td><td>${kindTag(t)}</td><td><div class="trules">${rr || '<span class="faint">—</span>'}${add}</div></td><td>${stt}${chg ? ' <span class="caption muted">· 저장 안 함</span>' : ''}</td></tr>`; }).join('');
+    const bad = types.map(t => [t, typeRulesErr(WK[t.ab] || [], t)]).find(x => x[1]);
+    $('tm-err').textContent = bad ? `${bad[0].ab} ${bad[0].n}: ${bad[1]} — 고쳐야 저장됩니다` : '';
+    const n = types.filter(t => JSON.stringify(WK[t.ab] || []) !== JSON.stringify(SV[t.ab] || [])).length;
+    $('tm-save').disabled = ro || !n || !!bad; $('tm-save').textContent = n ? `저장 (${n})` : '저장'; $('tm-undo').disabled = !n; $('tm-def').disabled = ro;
+    const tb = $('tm-rows');
+    tb.querySelectorAll('input[data-ab]').forEach(inp => inp.addEventListener('change', () => { const r = WK[inp.dataset.ab][+inp.dataset.i], k = inp.dataset.k, v = inp.value.trim(); r[k] = k === 't' ? v : v === '' ? (k === 'hi' ? null : NaN) : Number(v); drawMap(); }));
+    tb.querySelectorAll('[data-add]').forEach(b => b.onclick = () => { const t = typeOf(b.dataset.add), L = WK[t.ab] = WK[t.ab] || [], last = L[L.length - 1]; if (t.arg === '') L.push({ lo: null, hi: null, t: '' }); else { if (last && last.hi == null) last.hi = (last.lo || 0) + 1; L.push({ lo: last ? (last.hi || 0) + 1 : (t.arg === 'f' ? 0 : 1), hi: null, t: '' }); } drawMap(); const f = tb.querySelector(`input[data-ab="${t.ab}"][data-i="${L.length - 1}"][data-k="t"]`); if (f) f.focus(); });
+    tb.querySelectorAll('[data-del]').forEach(b => b.onclick = () => { WK[b.dataset.del].splice(+b.dataset.i, 1); drawMap(); });
+  }
+  $('sys-pick').onchange = () => { if (mapDirty() && !confirm('저장하지 않은 매핑 변경이 있습니다. 버리고 다른 시스템을 볼까요?')) { $('sys-pick').value = mapCode; return; } loadMap(); drawMap(); };
+  $('tm-undo').onclick = () => { WK = JSON.parse(JSON.stringify(SV)); drawMap(); toast('저장하기 전 매핑으로 되돌렸습니다', 'info'); };
+  $('tm-def').onclick = () => { WK = typeMapDefault(dbmsOfSys(mapCode), mapCode); drawMap(); toast(`${dbmsOfSys(mapCode)} 기본 규칙을 불러왔습니다 — 저장해야 반영됩니다`, 'info'); };
+  $('tm-save').onclick = () => { const types = typesFor(mapCode), ch = types.filter(t => JSON.stringify(WK[t.ab] || []) !== JSON.stringify(SV[t.ab] || [])); if (!ch.length) return;
+    const fmt = (t, rs) => (rs || []).map(r => t.arg === '' ? r.t : `${r.lo}~${r.hi == null ? '' : r.hi} ${r.t}`).join(' / ') || '없음';
+    saveTypeMap(mapCode, WK); const nm = sysNameOf(mapCode), w = ch.map(t => `${t.ab} ${fmt(t, SV[t.ab])} → ${fmt(t, WK[t.ab])}`).join(' · ');
+    audit('시스템 매핑 저장', `${nm} (${mapCode}) · ${ch.map(t => t.ab).join(' ')}`, w); loadMap(); drawMap(); draw(); drawLog(); toast(`${nm} 매핑 ${ch.length}건을 저장했습니다 — 다음 DDL 만들기 · 옮기기부터 적용됩니다`, 'success'); };
+  window.addEventListener('beforeunload', e => { if (WK && mapDirty()) { e.preventDefault(); e.returnValue = ''; } });
+
+  /* ---- 3. requests ---- */
+  $('r-sys').innerHTML = SYS().filter(s => can('type.request', { system: s.code })).map(s => `<option value="${s.code}">${esc(s.name)}</option>`).join('') || '<option value="">(담당 시스템 없음)</option>';
+  const rCheck = () => { const P = []; if (!$('r-sys').value) P.push('담당 시스템이 없어 요청할 수 없습니다'); if (!$('r-phys').value.trim()) P.push('필요한 물리 타입을 입력하세요'); if (!$('r-why').value.trim()) P.push('이유를 입력하세요');
+    const ph = $('r-phys').value.trim().replace(/\(.*$/, '').toUpperCase(), code = $('r-sys').value; const hit = ph && code && typesFor(code).sort((a, b) => (a.arg === '' ? 0 : 1) - (b.arg === '' ? 0 : 1)).find(t => (typeMapOf(code)[t.ab] || []).some(r => r.t.replace(/\(.*$/, '').toUpperCase() === ph));
+    $('r-probs').innerHTML = P.map(m => `<li class="blk">⛔ ${esc(m)}</li>`).join('') + (hit ? `<li class="wrn">⚠ ${esc(sysNameOf(code))}에는 이미 ${hit.ab}(${esc(hit.n)})가 ${esc(ph)}로 매핑돼 있습니다 — 그 타입의 도메인을 쓰면 됩니다</li>` : ''); return P; };
+  ['r-sys', 'r-phys', 'r-why', 'r-where'].forEach(id => $(id).addEventListener('input', rCheck));
+  const openReq = () => { if (qs.get('sys') && [...$('r-sys').options].some(o => o.value === sysCodeOf(qs.get('sys')))) $('r-sys').value = sysCodeOf(qs.get('sys')); $('r-where').value = qs.get('where') || ''; $('r-phys').value = qs.get('phys') || ''; $('r-why').value = ''; rCheck(); $('mo-req')._opener = $('b-req'); $('mo-req').classList.add('open'); setTimeout(() => $(qs.get('phys') ? 'r-why' : 'r-phys').focus(), 0); };
+  $('b-req').onclick = openReq;
+  $('r-go').onclick = () => { const P = rCheck(); if (P.length) { toast(`보내지 않았습니다 — ${P[0]}`, 'danger'); return; }
+    const l = getTypeReqs(); let n = l.length + 1; const id = `TR-2026-${String(n).padStart(4, '0')}`;
+    const r = { id, by: ME.id, byName: ME.name, sys: $('r-sys').value, phys: $('r-phys').value.trim(), where: $('r-where').value.trim(), why: $('r-why').value.trim(), at: nowStr(), st: '대기', back: qs.get('back') || '' };
+    l.unshift(r); saveTypeReqs(l);
+    pushNotif({ to: Object.values(USERS).filter(u => u.status !== 'stopped' && canUser(u, 'type.add')).map(u => u.id), k: 'dict', t: `타입 추가 요청 ${id} — ${ME.name}: ${r.phys}`, m: `${sysNameOf(r.sys)} · ${r.why}`, href: 'datatypes.html#reqs' });
+    $('mo-req').classList.remove('open'); drawReqs(); document.querySelector('.tabs button[data-tab="reqs"]').click();
+    toast(`${id} 요청을 보냈습니다 — 등록되면 알림으로 알려 드립니다`, 'success', r.back ? { label: '모델로 돌아가기', fn: () => { location.href = r.back; } } : null); };
+  let rejId = null;
+  function drawReqs() { const l = getTypeReqs(), mine = CAN_ADD ? l : l.filter(r => r.by === ME.id), open = l.filter(r => r.st === '대기').length;
+    $('req-n').hidden = !open || !CAN_ADD; $('req-n').textContent = open;
+    $('rq-lh').innerHTML = CAN_ADD ? `<b class="u-fg">대기 ${open}건</b> · 전체 ${l.length}건 — [등록하기]를 누르면 요청 내용으로 채운 등록 창이 열립니다` : `<b class="u-fg">내 요청 ${mine.length}건</b> — 처리는 DA · Admin`;
+    $('rq-rows').innerHTML = mine.map(r => `<tr><td class="mono">${esc(r.id)}<div class="caption muted">${esc(r.at)}</div></td><td>${esc(r.byName)}</td><td>${esc(sysNameOf(r.sys))}</td><td class="mono">${esc(r.phys)}</td><td class="caption">${esc(r.where || '—')}</td><td class="caption">${esc(r.why)}</td>
+      <td>${r.st === '대기' ? tag('run', '대기') : r.st === '등록' ? tag('ok', '등록 · ' + esc(r.ab || '')) : tag('end', '반려')}${r.st === '반려' ? `<div class="caption muted">${esc(r.rej || '')}</div>` : r.done ? `<div class="caption muted">${esc(r.done)}</div>` : ''}</td>
+      <td>${CAN_ADD && r.st === '대기' ? `<button class="btn sm primary" data-reg="${r.id}">등록하기</button> <button class="btn sm ghost" data-rej="${r.id}">반려</button>` : ''}</td></tr>`).join('') || `<tr class="er none"><td colspan="8" class="caption muted u-tc u-p-32">${CAN_ADD ? '요청이 없습니다' : '보낸 요청이 없습니다'}</td></tr>`;
+    $('rq-rows').querySelectorAll('[data-reg]').forEach(b => b.onclick = () => { const r = l.find(x => x.id === b.dataset.reg), d = dbmsOfSys(r.sys), ph = r.phys.toUpperCase(); openType(null, { req: r.id, kind: 'add', scope: r.sys, phys: { [d]: ph }, desc: r.where ? `${r.where}에서 사용` : '', why: `${r.id} 요청 — ${r.why}` }); });
+    $('rq-rows').querySelectorAll('[data-rej]').forEach(b => b.onclick = () => { rejId = b.dataset.rej; const r = l.find(x => x.id === rejId); $('mj-sum').innerHTML = `<b class="mono">${esc(r.id)}</b> · ${esc(r.byName)} · <span class="mono">${esc(r.phys)}</span> — ${esc(r.why)}`; $('j-why').value = ''; $('mo-rej')._opener = b; $('mo-rej').classList.add('open'); setTimeout(() => $('j-why').focus(), 0); });
+  }
+  $('j-go').onclick = () => { const why = $('j-why').value.trim(); if (!why) { $('j-why').setAttribute('aria-invalid', 'true'); toast('반려 사유를 입력하세요', 'danger'); return; }
+    const l = getTypeReqs(), r = l.find(x => x.id === rejId); r.st = '반려'; r.rej = why; r.done = `${ME.name} · ${nowStr()}`; saveTypeReqs(l);
+    pushNotif({ to: [r.by], k: 'dict', t: `타입 추가 요청 ${r.id} 반려`, m: why, href: 'datatypes.html#reqs' }); audit('요청 반려', `${r.id} · ${r.phys}`, why);
+    $('mo-rej').classList.remove('open'); drawReqs(); drawLog(); toast(`${r.id}를 반려했습니다 — 요청자에게 알렸습니다`, 'info'); };
+
+  /* ---- 4. log ---- */
+  function drawLog() { $('ver').textContent = 'v' + typeVer(); const L = J2('dbm-audit').filter(e => String(e.act).startsWith('데이터 타입') || /축약명 옮김/.test(e.act));
+    $('log').innerHTML = L.length ? L.map(e => `<li><b>${esc(String(e.act).replace('데이터 타입 — ', ''))}</b> · ${esc(e.target)}<div>${esc(e.why || '—')}</div><div class="meta">${esc(e.at)} · ${esc(e.who)}</div></li>`).join('') : '<li class="caption muted">아직 변경이 없습니다</li>'; }
+
+  /* ---- start ---- */
+  fixBtns(); draw(); loadMap(); drawMap(); drawReqs(); drawLog();
+  const HT = { reqs: 'reqs', map: 'map', log: 'log', types: 'types' }; const openHash = () => { const t = HT[location.hash.slice(1)]; const b = t && document.querySelector(`.tabs button[data-tab="${t}"]`); if (b) b.click(); };
+  openHash(); window.addEventListener('hashchange', openHash);
+  if (qs.get('sel') && typeOf(qs.get('sel'))) { sel = qs.get('sel'); draw(); }
+  if (qs.get('req') === '1' && CAN_REQ) openReq();
+  if (qs.get('add') === '1' && CAN_ADD) openType(null, { scope: SYS().some(s => s.code === qs.get('sys')) ? qs.get('sys') : '공통', phys: qs.get('phys') ? { [dbmsOfSys(qs.get('sys') || curSys().code)]: qs.get('phys') } : {}, desc: qs.get('where') ? `${qs.get('where')}에서 사용` : '' });
+};
+</script>
+</body>
+</html>

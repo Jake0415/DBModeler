@@ -79,6 +79,10 @@
     { id: 'dict.group', g: '표준 사전', n: '도메인그룹 직접 관리', roles: ['da', 'admin'], scope: 'org', note: '결재 없이 기록 · 감사 로그. 분류는 품의' },
     { id: 'dict.common', g: '표준 사전', n: '공통표준 새 판 올리기(품의 작성)', roles: ['da', 'admin'], scope: 'org', note: '반영은 일반 품의(DA → 최종 승인)' },
     { id: 'excel.viewall', g: '표준 사전', n: '다른 사람의 엑셀 업로드 묶음 보기', roles: ['da'], scope: 'org', note: '나머지는 자기 묶음만' },
+    { id: 'type.std', g: '표준 사전', n: '표준 논리 타입 추가 · 수정 · 사용 중지', roles: ['da', 'admin'], scope: 'org', note: '결재 없이 바로 — 영향 확인 · 감사 로그 · 되돌리기 (27)' },
+    { id: 'type.add', g: '표준 사전', n: '추가 · DBMS 전용 타입과 축약명 등록', roles: ['da', 'admin'], scope: 'org', note: '공통 또는 시스템 전용 · 축약명 2~3자' },
+    { id: 'type.map', g: '표준 사전', n: '시스템별 데이터타입 매핑 수정', roles: ['da', 'admin'], scope: 'sys', adminAll: true, note: 'DA는 담당 시스템만' },
+    { id: 'type.request', g: '표준 사전', n: '타입 추가 요청', roles: ['modeler'], scope: 'sys', note: '등록은 DA · Admin' },
     { id: 'appr.da', g: '결재', n: '1단계(DA) 승인 · 반려', roles: ['da'], scope: 'sys', note: '사전 신청은 기관 전체, 모델 확정은 담당 시스템만' },
     { id: 'appr.final', g: '결재', n: '최종 승인 · 반려', roles: ['owner'], scope: 'sys', note: '사전 신청은 기관 전체, 모델 확정은 담당 시스템만 · 신청자와 1단계 승인자는 최종 승인할 수 없다' },
     { id: 'appr.viewall', g: '결재', n: '모든 결재 문서 보기', roles: ['da', 'owner'], scope: 'org', note: '나머지 사용자는 자기 신청 · 참조 문서만' },
@@ -243,19 +247,99 @@
   const dbmsOfSys = c => { const s = SYSLIST.find(x => x.code === c) || {}; return (s.dbms || String(s.db || 'Oracle').split(' ')[0]).split(' ')[0]; };
   const TO_ORA = [[/^VARCHAR\(/i, 'VARCHAR2('], [/^(NUMERIC|DECIMAL)\b/i, 'NUMBER'], [/^(TIMESTAMP|DATETIME)\b/i, 'DATE'], [/^(TEXT|LONGTEXT)\b/i, 'CLOB'], [/^(BYTEA|LONGBLOB)\b/i, 'BLOB']];
   const FROM_ORA = { PostgreSQL: [[/^VARCHAR2\(/i, 'VARCHAR('], [/^NUMBER\b/i, 'NUMERIC'], [/^DATE$/i, 'TIMESTAMP'], [/^CLOB$/i, 'TEXT'], [/^BLOB$/i, 'BYTEA']], MySQL: [[/^VARCHAR2\(/i, 'VARCHAR('], [/^NUMBER\b/i, 'DECIMAL'], [/^DATE$/i, 'DATETIME'], [/^CLOB$/i, 'LONGTEXT'], [/^BLOB$/i, 'LONGBLOB']] };
-  /* 25 §7: each system keeps its own type map (logical row → physical type); new systems start from their DBMS's defaults */
-  const TM_ROWS = [['문자(고정)', 'C'], ['문자(가변)', 'V'], ['숫자', 'N'], ['일시', 'T'], ['대용량 문자', 'L']];
-  const TM_DEF = { Oracle: ['CHAR(n)', 'VARCHAR2(n)', 'NUMBER(p,s)', 'DATE', 'CLOB'], Tibero: ['CHAR(n)', 'VARCHAR2(n)', 'NUMBER(p,s)', 'DATE', 'CLOB'], PostgreSQL: ['CHAR(n)', 'VARCHAR(n)', 'NUMERIC(p,s)', 'TIMESTAMP', 'TEXT'], MySQL: ['CHAR(n)', 'VARCHAR(n)', 'DECIMAL(p,s)', 'DATETIME', 'LONGTEXT'] };
-  window.TM_ROWS = TM_ROWS;
-  window.typeMapDefault = dbms => (TM_DEF[String(dbms || 'Oracle').split(' ')[0]] || TM_DEF.Oracle).slice();
-  window.typeMapCellErr = (v, row, all) => { const t = String(v || '').trim(); if (!t) return '타입을 입력하세요'; if (!/^[A-Za-z][A-Za-z0-9_ ]*(\((n|p|p,s|n,m)\))?$/.test(t)) return '형식: 영문 타입 + (n) 또는 (p,s) — 예: VARCHAR(n)'; const b = t.replace(/\(.*$/, '').trim().toUpperCase(); if ((all || []).some((x, i) => i !== row && String(x || '').replace(/\(.*$/, '').trim().toUpperCase() === b)) return '다른 행과 같은 타입입니다'; return ''; };
-  window.typeMapOf = code => { const v = J('dbm-typemap-' + code, null), d = typeMapDefault(dbmsOfSys(code)); if (!(Array.isArray(v) && v.length === TM_ROWS.length)) return d; return v.map((x, i) => typeMapCellErr(x, i, v) ? d[i] : x); };
-  window.saveTypeMap = (code, arr) => S('dbm-typemap-' + code, arr);
+  /* 27: logical types · abbreviations (agency-wide, Admin · DA) + per-system physical rules (length range → physical type).
+     abbreviation: standard = 1 capital letter · added / DBMS-only = 2~3 capital letters (no digits — the domain name is class + abbr + length).
+     arg: 'n' length · 'p,s' precision,scale · 'f' digits below the second (0~9, 일시) · '' none */
+  const DBMS_LIST = ['Oracle', 'Tibero', 'PostgreSQL', 'MySQL'];
+  window.DBMS_LIST = DBMS_LIST;
+  const TYPES0 = [
+    { ab: 'C', n: '문자(고정)', arg: 'n', kind: 'std', scope: '공통', desc: '길이가 정해진 코드 · 여부 · 번호' },
+    { ab: 'V', n: '문자(가변)', arg: 'n', kind: 'std', scope: '공통', desc: '이름 · 내용처럼 길이가 바뀌는 글자' },
+    { ab: 'N', n: '숫자', arg: 'p,s', kind: 'std', scope: '공통', desc: '금액 · 수량 · 일련번호' },
+    { ab: 'D', n: '날짜시각(DATE)', arg: '', kind: 'std', scope: '공통', desc: '공통표준의 DATE형(예: 연월일시분초D). 연월일 8자리는 C8(연월일C8)' },
+    { ab: 'T', n: '일시', arg: 'f', kind: 'std', scope: '공통', desc: '날짜와 시각. 길이 = 초 아래 자릿수(0이면 초 단위)' },
+    { ab: 'L', n: '대용량 문자', arg: '', kind: 'std', scope: '공통', desc: '길이 제한 없이 긴 글' },
+    { ab: 'B', n: '이진 대용량', arg: '', kind: 'std', scope: '공통', desc: '파일 · 이미지 같은 이진 데이터' },
+    { ab: 'XML', n: 'XML 문서', arg: '', kind: 'dbms', dbms: 'Oracle', scope: '공통', phys: { Oracle: 'XMLTYPE' }, desc: '연계 전문 원문 보관', by: '이데이터', at: '2026-11-20', why: '대외 연계 전문 원문을 그대로 보관' }
+  ].map(t => Object.assign({ st: '사용', by: '시스템', at: '2026-11-01' }, t));
+  const TR = (lo, hi, t) => ({ lo, hi, t }), TR1 = t => [{ lo: null, hi: null, t }];
+  const RULES0 = {
+    Oracle: { C: [TR(1, 2000, 'CHAR(n)')], V: [TR(1, 4000, 'VARCHAR2(n)'), TR(4001, null, 'CLOB')], N: [TR(1, 38, 'NUMBER(p,s)')], D: TR1('DATE'), T: [TR(0, 0, 'DATE'), TR(1, 9, 'TIMESTAMP(n)')], L: TR1('CLOB'), B: TR1('BLOB') },
+    PostgreSQL: { C: [TR(1, 10485760, 'CHAR(n)')], V: [TR(1, 10485760, 'VARCHAR(n)')], N: [TR(1, 1000, 'NUMERIC(p,s)')], D: TR1('TIMESTAMP(0)'), T: [TR(0, 6, 'TIMESTAMP(n)')], L: TR1('TEXT'), B: TR1('BYTEA') },
+    MySQL: { C: [TR(1, 255, 'CHAR(n)')], V: [TR(1, 16383, 'VARCHAR(n)'), TR(16384, null, 'LONGTEXT')], N: [TR(1, 65, 'DECIMAL(p,s)')], D: TR1('DATETIME'), T: [TR(0, 0, 'DATETIME'), TR(1, 6, 'DATETIME(n)')], L: TR1('LONGTEXT'), B: TR1('LONGBLOB') }
+  };
+  RULES0.Tibero = RULES0.Oracle;
+  const dbmsKey = d => { const k = String(d || 'Oracle').split(' ')[0]; return DBMS_LIST.includes(k) ? k : k === 'MariaDB' ? 'MySQL' : 'Oracle'; };
+  window.dbmsKey = dbmsKey;
+  window.dbmsOfSys = c => dbmsKey(dbmsOfSys(c));
+  window.getTypes = () => J('dbm-types', clone(TYPES0));
+  window.saveTypes = list => S('dbm-types', list);
+  window.typeOf = ab => getTypes().find(t => t.ab === ab) || null;
+  window.TYPE_KIND = { std: '표준', add: '추가', dbms: 'DBMS 전용' };
+  window.TYPE_ARG = { n: '길이 (n)', 'p,s': '정밀도 · 소수점 (p,s)', f: '초 아래 자릿수 (0~9)', '': '없음' };
+  // a type applies to a system when it is in use, common or that system's own, and (DBMS-only) the system runs that DBMS
+  const typeFits = (t, code) => (t.scope === '공통' || t.scope === code) && (t.kind !== 'dbms' || dbmsKey(t.dbms) === dbmsKey(dbmsOfSys(code)));
+  window.typeFits = typeFits;
+  window.typesFor = (code, all) => getTypes().filter(t => (all || t.st === '사용') && typeFits(t, code));
+  const clone2 = x => JSON.parse(JSON.stringify(x));
+  window.typeRulesDefault = (dbms, ab, t) => { const d = dbmsKey(dbms), base = RULES0[d] && RULES0[d][ab]; if (base) return clone2(base); t = t || typeOf(ab); const p = t && t.phys && (t.phys[d] || (d === 'Tibero' && t.phys.Oracle)); return p ? TR1(p) : []; };
+  // the old 5-row array (C · V · N · T · L) is read once as rules
+  const OLD_ROWS = ['C', 'V', 'N', 'T', 'L'];
   const tmBase = x => String(x || '').replace(/\(.*$/, '').trim().toUpperCase();
-  window.convertTypeByMap = (t, fromCode, toCode) => { if (!t || t === '—') return t; const fm = typeMapOf(fromCode), tm = typeMapOf(toCode), b = tmBase(t); const i = fm.findIndex(x => tmBase(x) === b);
-    if (i < 0) return convertType(t, dbmsOfSys(fromCode), dbmsOfSys(toCode)); const tb = tmBase(tm[i]); if (tb === b) return t; const args = (String(t).match(/\(.*\)$/) || [''])[0]; return tm[i].includes('(') ? tb + args : tb; };
+  window.typeMapDefault = (dbms, code) => { const out = {}; getTypes().filter(t => t.st === '사용' && (code ? typeFits(t, code) : t.scope === '공통' && (t.kind !== 'dbms' || dbmsKey(t.dbms) === dbmsKey(dbms)))).forEach(t => { out[t.ab] = typeRulesDefault(dbms, t.ab, t); }); return out; };
+  window.typeMapOf = code => { const dbms = dbmsOfSys(code); let v = J('dbm-typemap-' + code, null);
+    if (Array.isArray(v)) { const o = {}; OLD_ROWS.forEach((ab, i) => { const d = typeRulesDefault(dbms, ab); if (v[i] && d.length && tmBase(v[i]) !== tmBase(d[0].t)) d[0].t = String(v[i]).trim(); o[ab] = d; }); v = o; }
+    const out = {}; typesFor(code).forEach(t => { out[t.ab] = v && Array.isArray(v[t.ab]) ? v[t.ab] : typeRulesDefault(dbms, t.ab, t); }); return out; };
+  window.saveTypeMap = (code, map) => S('dbm-typemap-' + code, map);
+  const PH_RE = /^[A-Za-z][A-Za-z0-9_ ]*(\((n|p|p,s|\d+)\))?$/;
+  // one rule list checked: type format · ranges (integers, from ≤ to, sorted, no overlap, no gap) — '' when fine
+  window.typeRulesErr = (rules, t) => { if (!rules || !rules.length) return ''; const arg = t ? t.arg : '';
+    for (const r of rules) { const s = String(r.t || '').trim(); if (!s) return '물리 타입을 입력하세요'; if (!PH_RE.test(s)) return '형식: 영문 타입 + (n) · (p,s) — 예: VARCHAR2(n)'; if (arg === '' && /\((n|p|p,s)\)/.test(s)) return '이 논리 타입은 길이를 쓰지 않습니다 — 괄호를 빼세요'; }
+    if (arg === '') return rules.length > 1 ? '길이가 없는 타입은 규칙을 하나만 둡니다' : '';
+    for (let i = 0; i < rules.length; i++) { const r = rules[i], lo = r.lo, hi = r.hi;
+      if (!Number.isInteger(lo) || lo < 0) return `${i + 1}번째 범위: 시작 값을 0 이상 정수로 입력하세요`;
+      if (hi != null && (!Number.isInteger(hi) || hi < lo)) return `${i + 1}번째 범위: 끝 값은 시작 값 이상 정수(비우면 끝없음)`;
+      if (i > 0) { const p = rules[i - 1]; if (p.hi == null) return `${i}번째 범위가 끝없음이라 뒤 범위와 겹칩니다`; if (lo <= p.hi) return `${i}~${i + 1}번째 범위가 겹칩니다(${p.hi} · ${lo})`; if (lo > p.hi + 1) return `${p.hi + 1}~${lo - 1} 구간에 규칙이 없습니다`; } }
+    return ''; };
+  // physical type for (system, abbr, length, scale): { t, warn } — t null when the system has no rule
+  const tyFill = (tpl, L, sc) => String(tpl).replace(/\(p,s\)/, sc !== '' && sc != null ? `(${L},${sc})` : `(${L})`).replace(/\((n|p)\)/, `(${L})`);
+  const physBy = (rules, t, len, sc) => { if (!rules || !rules.length) return { t: null, warn: '매핑 없음' };
+    if (!t || t.arg === '') return { t: rules[0].t, warn: '' };
+    let L = len === '' || len == null ? (t.arg === 'f' ? 0 : NaN) : +len; if (!Number.isFinite(L)) return { t: rules[0].t.replace(/\(.*$/, ''), warn: '길이 없음' };
+    let r = rules.find(x => L >= x.lo && (x.hi == null || L <= x.hi)), warn = '';
+    if (!r) { const last = rules[rules.length - 1]; if (last.hi != null && L > last.hi) { warn = `DBMS 상한 ${last.hi}(으)로 줄임`; L = last.hi; r = last; } else { r = rules[0]; warn = `범위 밖(${L})`; } }
+    return { t: tyFill(r.t, L, sc), warn }; };
+  window.physOf = (code, ab, len, sc) => physBy(typeMapOf(code)[ab], typeOf(ab), len, sc);
+  window.physOfDbms = (dbms, ab, len, sc) => physBy(typeRulesDefault(dbms, ab), typeOf(ab), len, sc);
+  // domain name → { cls, ab, len, sc }: the trailing capitals are matched against registered abbreviations, longest first ('ID V10', '내용XML', '일시T3')
+  window.parseDomName = n => { const m = String(n || '').trim().match(/^(.*?)([A-Z]+)(\d*)(?:,(\d+))?$/); if (!m) return null; const run = m[2], abs = new Set(getTypes().map(t => t.ab)); let ab = '';
+    for (let k = Math.min(3, run.length); k >= 1; k--) if (abs.has(run.slice(-k))) { ab = run.slice(-k); break; }
+    if (!ab) return null; const cls = (m[1] + run.slice(0, run.length - ab.length)).trim(); return cls ? { cls, ab, len: m[3] || '', sc: m[4] || '' } : null; };
+  window.domName = (cls, ab, len, sc) => { const t = typeOf(ab); const a = t ? t.arg : ''; return cls + ab + (a === 'n' ? len : a === 'p,s' ? len + (sc ? ',' + sc : '') : a === 'f' ? (+len > 0 ? len : '') : ''); };
+  window.domPhys = (dom, code) => { const p = parseDomName(dom); if (!p) return { t: null, warn: '도메인 이름을 해석할 수 없음' }; return Object.assign({ ab: p.ab }, physOf(code, p.ab, p.len, p.sc)); };
+  // usage: domains named with the abbreviation, attributes that picked the type directly (표준 외 타입)
+  window.typeUsage = ab => { const doms = [...knownDomains()].filter(n => { const p = parseDomName(n); return p && p.ab === ab; }); let attrs = 0, direct = [];
+    Object.entries(getAllModels()).forEach(([id, m]) => { const d = getModelData(id, m.ver) || {}; (d.E || []).forEach(e => (e.a || []).forEach(a => { const p = parseDomName(a.dom || a.d || ''); if (a.xt === ab) { attrs++; direct.push(`${m.name} · ${e.n}.${a.n}`); } else if (p && p.ab === ab) attrs++; })); });
+    return { doms, attrs, direct }; };
+  window.typeAbbrErr = (ab, kind, except) => { const s = String(ab || '').trim(); if (!s) return '축약명을 입력하세요'; if (/\d/.test(s)) return '숫자는 쓸 수 없습니다 — 도메인 이름의 길이 숫자와 섞입니다';
+    if (!/^[A-Z]+$/.test(s)) return '영문 대문자만 씁니다'; if (kind === 'std' && s.length !== 1) return '표준 축약명은 영문 대문자 1자입니다'; if (kind !== 'std' && (s.length < 2 || s.length > 3)) return '추가 · DBMS 전용 축약명은 영문 대문자 2~3자입니다(1자는 표준 전용)';
+    const dup = getTypes().find(t => t.ab === s && t.ab !== except); if (dup) return `‘${s}’는 이미 있습니다 — ${dup.n}${dup.st !== '사용' ? '(사용 중지)' : ''}${dup.scope !== '공통' ? ' · ' + sysNameOf(dup.scope) + ' 전용' : ''}`; return ''; };
+  window.typeVer = () => +store.get('dbm-type-ver', '1') || 1;
+  window.bumpTypeVer = () => { const v = typeVer() + 1; store.set('dbm-type-ver', String(v)); return v; };
+  window.getTypeReqs = () => J('dbm-type-reqs', [{ id: 'TR-2026-0001', by: 'park', byName: '박설계', sys: 'ERP', phys: 'JSON', where: '통합ERP · 영업 · 주문연계내역.연계원문', why: '외부 쇼핑몰 주문을 JSON 원문 그대로 보관해야 함', at: '2026-11-22 10:12', st: '대기' }]);
+  window.saveTypeReqs = l => S('dbm-type-reqs', l);
+  // type conversion between two systems: literal templates first (CHAR(8) · CLOB · DATE), then by base name with the length kept
+  const matchType = (t, code) => { const map = typeMapOf(code), s = String(t).trim().toUpperCase(), b = tmBase(t), args = (String(t).match(/\(([^)]*)\)$/) || [])[1];
+    for (const [ab, rules] of Object.entries(map)) for (const r of rules) if (!/\((n|p|p,s)\)/.test(r.t) && String(r.t).trim().toUpperCase() === s) return { ab, len: r.lo != null ? r.lo : '', sc: '' };
+    for (const [ab, rules] of Object.entries(map)) for (const r of rules) if (/\((n|p|p,s)\)/.test(r.t) && tmBase(r.t) === b) { const [l, sc] = String(args || '').split(','); return { ab, len: l || '', sc: sc || '' }; }
+    return null; };
+  window.convertTypeByMap = (t, fromCode, toCode) => { if (!t || t === '—' || fromCode === toCode) return t; const m = matchType(t, fromCode);
+    if (!m) return convertType(t, dbmsOfSys(fromCode), dbmsOfSys(toCode)); const r = physOf(toCode, m.ab, m.len, m.sc); return r.t || t; };
+  // types the target system cannot take (DBMS-only · system-only · no rule) — the move preview lists them as 변환 불가
+  window.typeConvBlocked = (t, fromCode, toCode) => { if (!t || t === '—' || fromCode === toCode) return null; const m = matchType(t, fromCode); if (!m) return null; const r = physOf(toCode, m.ab, m.len, m.sc); return r.t ? null : { ab: m.ab, t }; };
   window.convertType = (t, from, to) => { if (!t || t === '—' || from === to) return t; let x = String(t); TO_ORA.forEach(([re, r]) => { x = x.replace(re, r); }); (FROM_ORA[to] || []).forEach(([re, r]) => { x = x.replace(re, r); }); return x; };
   window.convertStructure = (st, fromCode, toCode) => { let n = 0; if (fromCode === toCode) return 0; (st.E || []).forEach(e => (e.a || []).forEach(a => { const v = convertTypeByMap(a.t, fromCode, toCode); if (v !== a.t) { a.t = v; n++; } })); return n; };   /* by the two systems' type maps (25 §7) */
+  window.areaTypeBlocked = (id, toCode) => { const m = getModel(id), from = m.system || 'RQMS', out = []; try { (modelOf(id, m.ver).E || []).forEach(e => (e.a || []).forEach(a => { const b = typeConvBlocked(a.t, from, toCode); if (b) out.push(`${e.n}.${a.n} ${a.t}`); })); } catch (er) {} return out; };   /* 27: 변환 불가 */
   window.areaTypeChanges = (id, toCode) => { const m = getModel(id); try { return convertStructure(clone(modelOf(id, m.ver)), m.system || 'RQMS', toCode); } catch (er) { return 0; } };
   /* move: only without a confirmed copy or documents; the working structure's types follow the target DBMS */
   window.moveAreaToSystem = (id, code) => {
@@ -780,9 +864,13 @@
       if (k === 'entity' && !/(기본|내역|이력|관계|정보)$/.test(name)) Wn('name', '엔터티 분류어(기본 · 내역 · 이력 · 관계 · 정보)로 끝나지 않음');
     }
     if (k === 'domain') {
-      const m = name.match(/^(.+?)([CVNDT])(\d*)(?:,(\d+))?$/);
-      if (!m) B('name', '도메인명은 분류명 + 타입(C/V/N/D/T) + 길이[,소수점] — 예: 금액N15, 금액N18,2');
-      else { const [, cls, ty, len, sc] = m; if ('CVN'.includes(ty) && !len) B('name', `${ty} 타입은 길이가 필요`); if (sc && ty !== 'N') B('name', '소수점은 N 타입만'); if ('DT'.includes(ty) && len) B('name', `${ty} 타입은 길이를 쓰지 않음`);
+      const pd = parseDomName(name), m = pd && [name, pd.cls, pd.ab, pd.len, pd.sc];   /* 27: abbreviations come from the type registry */
+      if (!m) B('name', '도메인명은 분류명 + 축약명(데이터 타입 · 축약명에 등록된 것) + 길이[,소수점] — 예: 금액N15, 금액N18,2, 일시T3');
+      else { const [, cls, ty, len, sc] = m, tt = typeOf(ty) || {};
+        if (tt.st && tt.st !== '사용') B('name', `축약명 ${ty}(${tt.n})는 사용 중지된 타입입니다`);
+        if (['n', 'p,s'].includes(tt.arg) && !len) B('name', `${ty} 타입은 길이가 필요`); if (sc && tt.arg !== 'p,s') B('name', '소수점은 정밀도 · 소수점(p,s) 타입만');
+        if (tt.arg === '' && len) B('name', `${ty} 타입은 길이를 쓰지 않음`); if (tt.arg === 'f' && len && +len > 9) B('name', `${ty} 타입의 길이는 초 아래 자릿수 0~9`);
+        if (tt.scope && tt.scope !== '공통' && (it.scope || '공통') !== tt.scope) B('name', `${ty}는 ${sysNameOf(tt.scope)} 전용 타입 — 도메인도 같은 시스템 전용으로만 만들 수 있음`);
         const c = getGroups().classes.find(x => x.name === cls && x.st === '사용') || batch.find(b => b.k === 'class' && b.name === cls);
         if (!c) B('name', `도메인분류 '${cls}'가 없음 — 분류를 같이 작성하세요`);
         else if (it.dg && c.group && getGroups().groups.find(g => g.id === c.group) && getGroups().groups.find(g => g.id === c.group).name !== it.dg) B('dg', `분류 '${cls}'의 그룹은 '${getGroups().groups.find(g => g.id === c.group).name}'`); }
@@ -862,7 +950,7 @@
         const g = getGroups(), c = g.classes.find(x => x.id === it.id);
         if (!c) res.problems.push(`대상 분류 ${it.id}가 없음`);
         else { if (c.src === '공통' && doc.kind !== 'common') res.problems.push('공통 분류는 기관에서 바꿀 수 없음');
-          const doms = [...knownDomains()].filter(n => new RegExp('^' + c.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\s?[CVNDT]\\d*(,\\d+)?$').test(n));   // 'ID V10' (a space in older names) counts too
+          const doms = [...knownDomains()].filter(n => { const p = parseDomName(n); return p && p.cls === c.name; });   // 'ID V10' (a space in older names) counts too · 27: any registered abbreviation
           if (op === '미사용' && doms.length) res.problems.push(`도메인 ${doms.length}개(${doms.slice(0, 3).join(', ')})가 쓰는 분류 — 미사용으로 바꿀 수 없음`);
           const nn = it.chg && it.chg['분류명']; if (nn && doms.length) res.problems.push('도메인이 쓰는 분류는 이름을 바꿀 수 없음(도메인명이 분류명으로 시작)');
           const fw = it.chg && it.chg['연결 형식단어']; if (fw && !formatWords().includes(String(fw[1])) && !(doc.items || []).some(o => o.k === 'word' && o.name === fw[1] && o.fmt === 'Y')) res.problems.push(`'${fw[1]}'은 형식단어가 아님`);
@@ -1365,6 +1453,10 @@
       s: ['[그룹 추가]로 도메인그룹을 만듭니다 — 결재 없이 사유만 남깁니다', '그룹 아래 [분류 추가 신청]으로 도메인분류를 신청합니다', '이어서 직접 등록에서 단어 → 도메인 → 용어 순서로 씁니다'],
       when: '사전을 처음 만들거나 새 업무 분야가 생길 때', who: '그룹 추가는 DA · 관리자, 분류 신청은 모델러 · DA', note: '공통(행안부) 그룹 · 분류는 읽기 전용 — 그 아래 기관 분류는 신청 가능', l: [['dict-grid.html', '단어 · 도메인 · 용어 쓰기 → 직접 등록']],
       v: [{ if: () => !can('dict.request') && !can('dict.group'), s: ['도메인그룹과 그 아래 도메인분류를 봅니다', '분류를 눌러 연결된 형식단어와 도메인을 봅니다', '추가 · 변경이 필요하면 DA에게 요청합니다'], who: '보기만 가능 — 그룹은 DA · 관리자, 분류 신청은 모델러 · DA', l: [] }] },
+    'datatypes.html': { n: '데이터 타입 · 축약명', d: '도메인 이름에 들어가는 논리 타입과 축약명, 시스템마다 다른 물리 타입 규칙을 한곳에서 관리합니다.',
+      s: ['[논리 타입] 탭에서 표준(1자) · 추가(2~3자) · DBMS 전용 타입과 사용처를 봅니다', '필요한 타입이 없으면 [타입 등록]으로 바로 추가합니다 — 결재 없이 사유와 감사 로그가 남습니다', '[시스템별 매핑] 탭에서 시스템을 고르고 길이 범위별 물리 타입을 정해 저장합니다'],
+      when: '도메인을 만들기 전 · 새 DBMS 시스템을 등록한 뒤 · 모델러가 타입을 요청했을 때', who: '등록 · 매핑은 DA · Admin(매핑은 DA 담당 시스템), 모델러는 [타입 추가 요청]', note: '사용 중인 축약명은 바꾸지 않습니다 — [새 축약명으로 옮기기]로 도메인 이름까지 함께 바꿉니다', l: [['dictionary.html?req=domain', '이 타입으로 도메인 만들기 → 도메인 신청'], ['settings.html#sys', '시스템 등록 → 설정 › 시스템']],
+      v: [{ if: () => !can('type.add'), s: ['쓸 수 있는 논리 타입과 시스템별 물리 타입을 봅니다', '맞는 타입이 없으면 [타입 추가 요청]을 보냅니다', '등록되면 알림이 오고, 모델의 도메인 칸 목록에 나타납니다'], who: '보기 · 요청만 — 등록은 DA · Admin', l: [] }] },
     'std-common.html': { n: '공통표준 · 행정표준코드', d: '행안부 공통표준 판과 행정표준코드를 봅니다. 원문은 못 고치고, 새 판은 품의로 반영합니다.',
       s: ['[행정표준코드] 탭에서 코드와 코드값을 찾아봅니다', '새 판이 나오면 [새 판 반영]에서 원본을 올려 지금 판과 비교합니다', '반영할 차이를 골라 품의를 올립니다 — 최종 승인 뒤 반영됩니다'],
       when: '행안부가 새 판을 배포했을 때 · 공통 코드값을 확인할 때', who: '새 판 품의는 DA · 관리자만', note: '기관 항목과 충돌하면 DA가 따로 정리 · 폐기 항목은 지우지 않고 미사용으로', l: [['dict-history.html', '반영 결과 → 변경 내역']] },
@@ -1462,7 +1554,7 @@
     box.addEventListener('keydown', e => { if (e.key === 'Escape') { set(false, true); btn.focus(); } });
     document.addEventListener('keydown', e => { if (e.key !== '?' || e.ctrlKey || e.metaKey || e.altKey || (e.target.closest && e.target.closest('input,textarea,select,[contenteditable="true"]'))) return; e.preventDefault(); set(box.hidden, true); if (!box.hidden) box.querySelector('.pg-x').focus(); });
   }
-  const DICT_TABS = [['dictionary.html', '통합 검색'], ['excel-import.html', '엑셀 가져오기', ['uploads.html']], 0, ['dict-grid.html', '직접 등록'], 0, ['candidates.html', '후보 큐'], ['dict-history.html', '변경 내역'], 0, ['domain-groups.html', '도메인 그룹 · 분류'], ['std-common.html', '공통표준 · 행정표준코드']];
+  const DICT_TABS = [['dictionary.html', '통합 검색'], ['excel-import.html', '엑셀 가져오기', ['uploads.html']], 0, ['dict-grid.html', '직접 등록'], 0, ['candidates.html', '후보 큐'], ['dict-history.html', '변경 내역'], 0, ['domain-groups.html', '도메인 그룹 · 분류'], ['datatypes.html', '데이터 타입 · 축약명'], ['std-common.html', '공통표준 · 행정표준코드']];
   const SCREENS = [
     { file: 'home.html', ids: 'SC-55', name: '홈', menu: '홈', docs: [['02 §1 화면 목록', D.flows], ['06 §3 새 화면 명세', D.plan]], states: [['김모델(모델러·DA)', 'home.html?as=kim'], ['박설계(모델러)', 'home.html?as=park'], ['이현업(기관 담당자)', 'home.html?as=hyun']] },
     { file: 'dictionary.html', ids: 'SC-10 · PN-11 · PN-12', name: '표준 사전 통합 검색 · 상세 · 등록 신청', menu: '표준 사전', docs: [['02 §3.1~3.2', D.flows], ['30 MD-01~12 사전 규칙', D.meta], ['07 E6 검색', D.excel], ['23 §6-1 검색 숫자', D.perf]], states: [['기본(최근 변경)', 'dictionary.html'], ['도메인 신청', 'dictionary.html?req=domain'], ['편집용 내려받기', 'dictionary.html#download'], ['검색: 산출', 'dictionary.html?q=산출']] },
@@ -1470,6 +1562,7 @@
     { file: 'excel-import.html', ids: 'SC-13', name: '엑셀 가져오기(왕복 편집)', menu: '표준 사전', docs: [['02 §3.3', D.flows], ['07 E1~E4 왕복 편집', D.excel], ['30 MD-08·09', D.meta], ['23 §6-4 행 상한', D.perf]], states: [['1단계부터(실제 작업)', 'excel-import.html'], ['5단계 예시(저장 안 함)', 'excel-import.html?step=5'], ['신청된 묶음 열람', 'excel-import.html?resume=UP-2026-0007'], ['반영본 확인', 'excel-import.html?verify=UP-2026-0007']] },
     { file: 'dict-grid.html', ids: 'SC-11', name: '직접 등록', menu: '표준 사전', docs: [['30 MD-13~19', D.meta]], states: [['단어 탭', 'dict-grid.html'], ['바구니 고치기', 'dict-grid.html?mode=basket']] },
     { file: 'domain-groups.html', ids: 'SC-17', name: '도메인 그룹 · 분류', menu: '표준 사전', docs: [['30 MD-02·03', D.meta]], states: [['DA(이데이터)', 'domain-groups.html?as=lee'], ['모델러(조회)', 'domain-groups.html?as=park']] },
+    { file: 'datatypes.html', ids: 'SC-19', name: '데이터 타입 · 축약명', menu: '표준 사전', docs: [['27 데이터 타입 · 축약명', '../27-datatype-abbreviation.md']], states: [['DA(이데이터)', 'datatypes.html?as=lee'], ['모델러(요청)', 'datatypes.html?as=park'], ['요청 처리', 'datatypes.html?as=lee#reqs']] },
     { file: 'std-common.html', ids: 'SC-18', name: '공통표준 · 행정표준코드', menu: '표준 사전', docs: [['30 v1.5~1.6', D.meta]], states: [['DA(이데이터)', 'std-common.html?as=lee']] },
     { file: 'uploads.html', ids: 'SC-15', name: '업로드 이력', menu: '표준 사전', docs: [['07 E4', D.excel]], states: [['전체', 'uploads.html'], ['UP-2026-0007', 'uploads.html?b=UP-2026-0007']] },
     { file: 'candidates.html', ids: 'SC-14', name: '후보 큐', menu: '표준 사전', docs: [['02 §3.4', D.flows], ['30 MD-42·43', D.meta]], states: [['DA로 보기', 'candidates.html?as=lee'], ['모델러로 보기', 'candidates.html?as=park']] },
@@ -2127,7 +2220,7 @@
     const nUnread = unread();
     const page = document.body.dataset.page;
     // v17 (11 §2.1): top menu = global moves; the active tab follows the screen family
-    const TAB = { system: 'model', model: 'model', dictionary: 'dict', excel: 'dict', candidates: 'dict', 'dict-grid': 'dict', 'domain-groups': 'dict', 'std-common': 'dict', approvals: 'appr', settings: 'admin', audit: 'admin' }[page] || '';
+    const TAB = { system: 'model', model: 'model', dictionary: 'dict', excel: 'dict', candidates: 'dict', 'dict-grid': 'dict', 'domain-groups': 'dict', datatypes: 'dict','std-common': 'dict', approvals: 'appr', settings: 'admin', audit: 'admin' }[page] || '';
     const here = f => curFile() === f ? ' on" aria-current="page' : '';
     const cur = (on, f) => on ? (curFile() === f ? ' aria-current="page"' : ' aria-current="true"') : '';
     const qn0 = queueCount(), late = myQueue(getDocs()).some(d => docLate(d)), cq = candOpenCount();

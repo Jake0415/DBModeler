@@ -137,13 +137,13 @@
             <div class="field"><label for="dm-fw">도메인분류 * <span class="faint">도메인 이름의 앞부분 · 연결 형식단어</span></label><select class="input" id="dm-fw"></select><span class="help">분류가 없으면 <a href="domain-groups.html">도메인 그룹 · 분류</a>에서 신청</span></div>
           </div>
           <div class="field-row">
-            <div class="field"><label for="dm-type">논리 타입 *</label><select class="input" id="dm-type"><option value="C">문자(고정) · C</option><option value="V">문자(가변) · V</option><option value="N">숫자 · N</option><option value="D">날짜 · D</option><option value="T">일시 · T</option></select></div>
-            <div class="field"><label for="dm-len">길이 *</label><input class="input mono" id="dm-len" value="3"></div>
-            <div class="field"><label for="dm-sc">소수점 <span class="faint">N만</span></label><input class="input mono" id="dm-sc" value="" placeholder="—"></div>
+            <div class="field"><label for="dm-type">논리 타입 *</label><select class="input" id="dm-type"></select><span class="help" id="dm-type-h"></span></div>
+            <div class="field"><label for="dm-len" id="dm-len-l">길이 *</label><input class="input mono" id="dm-len" value="3"></div>
+            <div class="field"><label for="dm-sc">소수점 <span class="faint">정밀도 타입만</span></label><input class="input mono" id="dm-sc" value="" placeholder="—"></div>
           </div>
           <div class="card u-bg2 u-mb-12">
-            <div class="caption muted">자동 생성 · 형식단어 + 축약명 + 길이 (<a href="settings.html#sys">데이터타입 매핑</a>)</div>
-            <div class="flex"><b class="mono" id="dm-name" style="font-size:15px">코드C3</b><span class="caption faint">· Oracle <span class="mono" id="dm-phys">CHAR(3)</span> · PostgreSQL <span class="mono" id="dm-pg">CHAR(3)</span></span><span class="grow"></span><span class="badge b-success" id="dm-dup">중복 없음</span></div>
+            <div class="caption muted">자동 생성 · 형식단어 + 축약명 + 길이 (<a href="datatypes.html">데이터 타입 · 축약명</a>)</div>
+            <div class="flex"><b class="mono" id="dm-name" style="font-size:15px">코드C3</b><span class="caption faint">· <span id="dm-sysn">이 시스템</span> <span class="mono" id="dm-phys">CHAR(3)</span> · PostgreSQL 기본 <span class="mono" id="dm-pg">CHAR(3)</span></span><span class="grow"></span><span class="badge b-success" id="dm-dup">중복 없음</span></div>
           </div>
           <div class="field-row">
             <div class="field"><label for="dm-allow">허용 값 범위 · 포맷</label><input class="input mono" id="dm-allow" value="[A-Z0-9]{3}"></div>
@@ -566,7 +566,7 @@ window.pageInit = function () {
     else if (kk === 'word') { $('wd-name').value = d.name; $('wd-abbr').value = d.abbr; $('wd-eng').value = d.eng || ''; }
     else if (kk === 'entity') { $('en-name').value = d.name; $('en-desc').value = d.desc || ''; anEntity(); }
     else if (kk === 'code') { $('cd-name').value = d.name; $('cd-abbr').value = d.abbr; $('cd-dom').value = d.dom; $('cd-scope').value = d.scope || '공통'; $('cd-vals').value = fmtLines(d.vals); chkCode(); }
-    else if (kk === 'domain') { const m = String(d.name).match(/([CVNT])(\d*)$/); if (m) { $('dm-type').value = m[1]; $('dm-len').value = m[2] || ''; } upd(); }
+    else if (kk === 'domain') { const m = parseDomName(d.name); if (m) { $('dm-type').value = m.ab; $('dm-len').value = m.len || ''; $('dm-sc').value = m.sc || ''; } upd(); }
     toast(`‘${d.name}’ 값으로 새 신청을 시작합니다 — 이름을 바꾸고 [바구니에 담기]를 누르세요`, 'info');
     const f = document.querySelector('#pn-request .rq-form:not([hidden]) input'); if (f) { f.focus(); f.select(); }
   }
@@ -662,7 +662,7 @@ window.pageInit = function () {
     else if (it.k === 'word') { $('wd-name').value = it.name; $('wd-abbr').value = it.abbr || ''; $('wd-eng').value = it.eng || ''; $('wd-fmt').value = it.fmt || 'N'; $('wd-fmt').onchange(); $('wd-cls').value = it.cls || ''; $('wd-syn').value = (it.syn || []).join(', '); $('wd-forbid').value = (it.forbid || []).join(', '); $('wd-desc').value = it.desc || ''; }
     else if (it.k === 'entity') { $('en-name').value = it.name; $('en-desc').value = it.desc || ''; anEntity(); }
     else if (it.k === 'code') { $('cd-name').value = it.name; $('cd-abbr').value = it.abbr; $('cd-dom').value = it.dom; $('cd-scope').value = it.scope || '공통'; if (it.sys) $('cd-sys').value = it.sys; $('cd-type').value = it.ctype || '자체'; $('cd-vals').value = fmtLines(it.vals); chkCode(); }
-    else if (it.k === 'domain') { const g = getGroups().groups.find(x => x.name === it.dg); if (g) { $('dm-grp').value = g.id; fillCls(); } const m = String(it.name).match(/^(.+?)([CVNDT])(\d*)(?:,(\d+))?$/); if (m) { $('dm-fw').value = m[1]; $('dm-type').value = m[2]; $('dm-len').value = m[3] || ''; $('dm-sc').value = m[4] || ''; } $('dm-allow').value = it.allow || ''; $('dm-sec').value = it.sec || '없음'; $('dm-desc').value = it.desc || ''; upd(); }
+    else if (it.k === 'domain') { const g = getGroups().groups.find(x => x.name === it.dg); if (g) { $('dm-grp').value = g.id; fillCls(); } const m = parseDomName(it.name); if (m) { $('dm-fw').value = m.cls; $('dm-type').value = m.ab; $('dm-len').value = m.len || ''; $('dm-sc').value = m.sc || ''; } $('dm-allow').value = it.allow || ''; $('dm-sec').value = it.sec || '없음'; $('dm-desc').value = it.desc || ''; upd(); }
     else if (it.k === 'class') { queue.push(it); drawQueue(); location.href = 'domain-groups.html'; return; }
     formDirty = true; toast(`‘${it.name}’${jo(it.name, '을/를')} 폼으로 불러왔습니다 — 고친 뒤 [바구니에 담기]`, 'info');
   });
@@ -768,7 +768,10 @@ window.pageInit = function () {
   if (!can('dict.request')) { panel.querySelector('.rp-body').insertAdjacentHTML('afterbegin', '<div class="banner u-mb-12"><i data-ic=info></i><div>조회 전용 — 사전 품의는 모델러 · DA만 올릴 수 있습니다.</div></div>');
     panel.querySelectorAll('.rp-body button, .rp-foot button:not([data-close]), #dr-save, #dr-open').forEach(b => { b.disabled = true; b.title = '사전 품의 권한이 없습니다'; });
     ['bk-grid', 'bk-chg', 'bk-same', 'bk-unuse', 'bk-del'].forEach(id => { $(id).disabled = true; $(id).title = '사전 품의 권한이 없습니다'; }); }
-  const MAP = { C: ['CHAR', 'CHAR'], V: ['VARCHAR2', 'VARCHAR'], N: ['NUMBER', 'NUMERIC'], D: ['DATE', 'DATE'], T: ['TIMESTAMP', 'TIMESTAMP'] };
+  /* 27: logical types come from 표준 사전 › 데이터 타입 · 축약명 — common types plus the current system's own (그 시스템 전용 도메인이 됨) */
+  const DSYS = curSys().code, DTYPES = typesFor(DSYS);
+  $('dm-type').innerHTML = DTYPES.map(t => `<option value="${t.ab}">${t.n} · ${t.ab}${t.kind !== 'std' ? ` (${TYPE_KIND[t.kind]}${t.scope !== '공통' ? ' · ' + sysNameOf(t.scope) + ' 전용' : ''})` : ''}</option>`).join('');
+  $('dm-sysn').textContent = `${curSys().name}(${dbmsOfSys(DSYS)})`;
   // G1: group → class from the dictionary's domain classes (the class name is the front of the domain name)
   const GR = getGroups();
   $('dm-grp').innerHTML = GR.groups.filter(g => g.st === '사용').map(g => `<option value="${g.id}"${g.name === '코드' ? ' selected' : ''}>${g.name}</option>`).join('');
@@ -776,13 +779,19 @@ window.pageInit = function () {
   const fillCls = () => { const g = $('dm-grp').value, bk = queue.filter(q => q.k === 'class' && opOf(q) === '추가' && q.group === g);
     $('dm-fw').innerHTML = (GR.classes.filter(c => c.group === g && c.st === '사용').map(c => `<option value="${c.name}">${c.name} · 형식단어 ${c.fw}</option>`).join('') + bk.map(c => `<option value="${c.name}">${c.name} · 형식단어 ${c.fw} (바구니)</option>`).join('')) || '<option value="">(이 그룹에 분류 없음)</option>'; };
   const domItem = () => { const cls = $('dm-fw').value, ty = $('dm-type').value, len = $('dm-len').value.trim(), sc = $('dm-sc').value.trim();
-    const name = cls + ty + ('DT'.includes(ty) ? '' : len + (sc && ty === 'N' ? ',' + sc : ''));
-    const phys = ty === 'D' || ty === 'T' ? MAP[ty][0] : `${MAP[ty][0]}(${len}${sc && ty === 'N' ? ',' + sc : ''})`;
-    return { k: 'domain', name, abbr: '', dom: phys, pg: ty === 'D' || ty === 'T' ? MAP[ty][1] : `${MAP[ty][1]}(${len}${sc && ty === 'N' ? ',' + sc : ''})`, dg: (GR.groups.find(g => g.id === $('dm-grp').value) || {}).name, allow: $('dm-allow').value.trim(), sec: $('dm-sec').value, desc: $('dm-desc').value.trim() }; };
+    const tt = typeOf(ty) || { arg: '' }, sc2 = tt.arg === 'p,s' ? sc : '', len2 = tt.arg === '' ? '' : len;
+    const name = domName(cls, ty, len2, sc2), ph = physOf(DSYS, ty, len2, sc2), pg = physOfDbms('PostgreSQL', ty, len2, sc2);
+    const it = { k: 'domain', name, abbr: '', dom: ph.t || '(매핑 없음)', pg: pg.t || '—', physWarn: ph.warn, dg: (GR.groups.find(g => g.id === $('dm-grp').value) || {}).name, allow: $('dm-allow').value.trim(), sec: $('dm-sec').value, desc: $('dm-desc').value.trim() };
+    if (tt.scope && tt.scope !== '공통') it.scope = tt.scope;   // a system-only type makes a system-only domain
+    return it; };
   const upd = () => {
-    $('dm-sc').disabled = $('dm-type').value !== 'N'; $('dm-len').disabled = 'DT'.includes($('dm-type').value);
+    const tt = typeOf($('dm-type').value) || { arg: '' };
+    $('dm-sc').disabled = tt.arg !== 'p,s'; $('dm-len').disabled = tt.arg === '';
+    $('dm-len-l').textContent = tt.arg === 'f' ? '초 아래 자릿수 (0~9)' : tt.arg === 'p,s' ? '정밀도 *' : tt.arg === '' ? '길이 — 쓰지 않음' : '길이 *';
+    if (tt.arg === 'f' && $('dm-len').value.trim() === '') $('dm-len').placeholder = '0';
+    $('dm-type-h').textContent = tt.arg === 'f' ? '0이면 초 단위(이름에 숫자 안 붙음) · 1~9면 밀리초 등' : tt.scope && tt.scope !== '공통' ? `${sysNameOf(tt.scope)} 전용 타입 — 이 도메인도 그 시스템 전용` : tt.kind === 'dbms' ? `${dbmsKey(tt.dbms)} 전용 — 다른 DBMS 시스템에서는 변환 불가` : '';
     const it = domItem(), probs = checkItem(it, { batch: queue }).filter(p => p.lvl === 'block');
-    $('dm-name').textContent = it.name; $('dm-phys').textContent = it.dom; $('dm-pg').textContent = it.pg;
+    $('dm-name').textContent = it.name; $('dm-phys').textContent = it.dom + (it.physWarn && it.physWarn !== '매핑 없음' ? ` (${it.physWarn})` : ''); $('dm-pg').textContent = it.pg;
     const dup = probs.some(p => /사전에 있음|신청 중/.test(p.msg)); const b = $('dm-dup');
     b.textContent = probs.length ? (dup ? '이미 있음 · 기존 도메인 사용' : '규칙 확인') : '중복 없음 · 규칙 통과'; b.className = 'badge ' + (probs.length ? (dup ? 'b-warning' : 'b-danger') : 'b-success');
     $('dm-err').textContent = probs.map(p => p.msg).join(' · ');

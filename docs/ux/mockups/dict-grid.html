@@ -254,7 +254,7 @@ window.pageInit = function () {
     const parts = decomp(name), last = parts[parts.length - 1]; if (!last || last.unknown) return '';
     const w = last.w, c = classOfFw(w) || (newClasses().find(r => t(r.v.fw) === w) ? { name: t(newClasses().find(r => t(r.v.fw) === w).v.name) } : null) || bkAdds('class').find(x => x.fw === w);
     if (!c) return '';
-    const re = new RegExp('^' + c.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\s?[CVNDT]'), use = {};
+    const use = {}, re = { test: d => { const p = parseDomName(d); return !!p && p.cls === c.name; } };   /* 27: any registered abbreviation */
     getDict().forEach(x => { if (x.k === 'term' && x.dom) use[x.dom] = (use[x.dom] || 0) + 1; });
     const L = domList().map(x => x[0]).filter(d => re.test(d));
     return L.sort((a, b) => (use[b] || 0) - (use[a] || 0))[0] || '';
@@ -663,7 +663,7 @@ window.pageInit = function () {
     if (col.t === 'sel') {
       if (!v) v = (DEF[k] && DEF[k][col.f]) || (isEdit() ? r.orig[col.f] || '' : '');
       else if (col.f === 'fmt' || col.f === '형식단어') v = /^(y|예|o|형식|true|1)$/i.test(v) ? 'Y' : /^(n|아니오|아니요|x|false|0)$/i.test(v) ? 'N' : v;
-      else if (col.f === 'ty') { const u = v.toUpperCase(); v = /^[CVNDT](\s|$)/.test(u) ? u[0] : TYMAP[u] || TYMAP[v] || v; }
+      else if (col.f === 'ty') { const u = v.toUpperCase(); { const ab = u.split(/\s/)[0]; v = typeOf(ab) ? ab : TYMAP[u] || TYMAP[v] || (getTypes().find(t => t.n === v) || {}).ab || v; } }
       else if (col.f === 'sec' || col.f === '보안 속성') v = v === '없음' ? '' : v;
       else { const o = resolveOpt(col, r, v); if (o !== null) v = o; }   // value · name · label
       if (v && !optsOf(col, r).some(x => x[0] === v)) bad = true;
@@ -824,7 +824,7 @@ window.pageInit = function () {
     if (k === 'word') Object.assign(v, { abbr: x.abbr || '', eng: x.eng || '', fmt: x.fmt === 'Y' ? 'Y' : 'N', syn: (x.syn || []).join(', '), forbid: (x.forbid || []).join(', ') });
     if (k === 'term') Object.assign(v, { abbr: x.abbr || '', dom: x.dom || '', eng: x.eng || '' });
     if (k === 'class') Object.assign(v, { group: x.group || '', fw: x.fw || '' });
-    if (k === 'domain') { const m = String(x.name || '').match(/^(.+?)([CVNDT])(\d*)(?:,(\d+))?$/); Object.assign(v, m ? { cls: m[1], ty: m[2], len: m[3] || '', sc: m[4] || '' } : { cls: x.name || '' }, { allow: x.allow || '', sec: x.sec || '' }); delete v.name; }
+    if (k === 'domain') { const m = parseDomName(x.name); Object.assign(v, m ? { cls: m.cls, ty: m.ab, len: m.len, sc: m.sc } : { cls: x.name || '' }, { allow: x.allow || '', sec: x.sec || '' }); delete v.name; }
     if (k === 'code') { Object.assign(v, { abbr: x.abbr || '', dom: x.dom || '', scope: x.scope === '시스템' ? '시스템' : '공통', sys: x.sys || '', ctype: x.ctype || '자체' }); r.vals = valRows(x.vals); }
     if (k === 'term' || k === 'entity') r.an = v.name;
     return r;

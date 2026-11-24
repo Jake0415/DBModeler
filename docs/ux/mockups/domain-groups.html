@@ -135,7 +135,7 @@ window.pageInit = function () {
   let cMode = null;   // class panel inline form: null | 'chg' | 'unuse' (for sel.id)
 
   /* ---- derived data ---- */
-  const parseDom = n => { const m = String(n).match(/^(.+?)([CVNDT])(\d*)(?:,(\d+))?$/); return m ? m[1].trim() : null; };
+  const parseDom = n => { const m = parseDomName(n); return m ? m.cls : null; };   /* 27: abbreviations from the type registry */
   function model() {
     const g = getGroups(), dict = getDict();
     const domItems = dict.filter(x => x.k === 'domain' && x.st !== '삭제 보관');
@@ -362,7 +362,7 @@ window.pageInit = function () {
       else { const g = getGroups();
         if (g.classes.some(x => x.id !== c.id && x.name === v && x.st === '사용')) B(`같은 이름의 분류 ${jo(v, '이/가')} 있습니다`);
         else if (getBasket().items.concat(openItems().map(x => x.it)).some(x => x.k === 'class' && opOf(x) === '추가' && x.name === v)) B(`같은 이름의 분류 ${jo(v, '을/를')} 신청 중이거나 바구니에 담았습니다`);
-        if (/\d|[CVNDT]$/.test(v)) W('분류명이 숫자나 타입 글자(C·V·N·D·T)로 끝나면 도메인명 해석이 어긋날 수 있습니다'); } }
+        if (/[\dA-Z]$/.test(v)) W('분류명이 숫자나 영문 대문자로 끝나면 축약명과 붙어 도메인명 해석이 어긋날 수 있습니다'); } }
     const fw = it.chg['연결 형식단어'];
     if (fw) { if (!fw[1]) B('연결 형식단어를 고르세요');
       else { const o = classOfFw(fw[1]); if (o && o.id !== c.id) W(`${jo(fw[1], '은/는')} 이미 분류 ‘${o.name}’에 연결됨 — 형식단어 하나에 분류 하나가 원칙입니다(용어 검사가 첫 분류만 봄)`); }
@@ -500,7 +500,7 @@ window.pageInit = function () {
   function cCheck() {
     const it = cItem(), pr = it.name ? checkItem(it, { batch: getBasket().items }) : [];
     const c = it.fw && classOfFw(it.fw); if (c) pr.push({ f: 'fw', msg: `${jo(it.fw, '은/는')} 이미 분류 ‘${c.name}’에 연결됨 — 형식단어 하나에 분류 하나가 원칙입니다(용어 검사가 첫 분류만 봄)`, lvl: 'warn' });
-    if (it.name && /\d|[CVNDT]$/.test(it.name)) pr.push({ f: 'name', msg: '분류명이 숫자나 타입 글자(C·V·N·D·T)로 끝나면 도메인명 해석이 어긋날 수 있습니다', lvl: 'warn' });
+    if (it.name && /[\dA-Z]$/.test(it.name)) pr.push({ f: 'name', msg: '분류명이 숫자나 영문 대문자로 끝나면 축약명과 붙어 도메인명 해석이 어긋날 수 있습니다', lvl: 'warn' });
     if (it.name) $('c-name-h').textContent = `도메인명 = 분류명 + 타입 + 길이 — 예: ${it.name}C8, ${it.name}V100`;
     const blk = pr.filter(x => x.lvl === 'block');
     $('c-probs').innerHTML = !it.name ? '' : pr.length ? pr.map(x => `<li class="${x.lvl === 'block' ? 'blk' : 'wrn'}">${x.lvl === 'block' ? '막힘' : '주의'} · ${esc(x.msg)}</li>`).join('') : '<li class="okk">검사 통과 — 바구니에 담을 수 있습니다</li>';

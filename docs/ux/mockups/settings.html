@@ -102,18 +102,8 @@
         <div class="card u-bg2"><div class="caption muted">미리보기 · 산출물기본 → 요구사항내역</div><div class="mono">DLVRBL_M · DLVRBL_M_PK · DLVRBL_M_RQRM_D_FK1</div></div>
       </div><div class="aside"><span>다음 DDL 만들기 · 물리 반영부터 적용됩니다.</span><span>영향 범위는 위 ‘대상 DBMS’의 [영향 미리보기]로 확인합니다.</span></div></div>
     <h3 class="set-sec">타입 · 컬럼</h3>
-    <div class="set-row wide"><div class="l"><b>데이터타입 매핑</b><span>도메인의 논리 타입 → 이 시스템 DBMS의 물리 타입. 축약명은 도메인 이름 자동 생성에 쓰임(예: 연월일<b class="mono">C</b>8)</span></div>
-      <div>
-        <table class="tbl"><thead><tr><th>논리 타입</th><th>축약명</th><th id="tm-h">Oracle 19c</th><th>길이 조건</th><th>비고</th></tr></thead><tbody>
-          <tr><td>문자(고정)</td><td class="mono">C</td><td><input class="input mono u-w-130" value="CHAR(n)" data-tm="0" data-nodirty aria-label="문자(고정) 물리 타입"></td><td class="mono" data-tml="0">1~2000</td><td class="caption" data-tmn="0"></td></tr>
-          <tr><td>문자(가변)</td><td class="mono">V</td><td><input class="input mono u-w-130" value="VARCHAR2(n)" data-tm="1" data-nodirty aria-label="문자(가변) 물리 타입"></td><td class="mono" data-tml="1">1~4000</td><td class="caption" data-tmn="1">4000 초과 → CLOB</td></tr>
-          <tr><td>숫자</td><td class="mono">N</td><td><input class="input mono u-w-130" value="NUMBER(p,s)" data-tm="2" data-nodirty aria-label="숫자 물리 타입"></td><td class="mono" data-tml="2">p 1~38</td><td class="caption" data-tmn="2"></td></tr>
-          <tr><td>일시</td><td class="mono">T</td><td><input class="input mono u-w-130" value="DATE" data-tm="3" data-nodirty aria-label="일시 물리 타입"></td><td class="mono" data-tml="3">—</td><td class="caption" data-tmn="3">밀리초 필요 시 TIMESTAMP</td></tr>
-          <tr><td>대용량 문자</td><td class="mono">L</td><td><input class="input mono u-w-130" value="CLOB" data-tm="4" data-nodirty aria-label="대용량 문자 물리 타입"></td><td class="mono" data-tml="4">—</td><td class="caption" data-tmn="4"></td></tr>
-        </tbody></table>
-        <div class="caption u-danger u-mt-4" id="tm-err" role="alert"></div>
-        <div class="flex u-mt-8"><span class="caption muted">시스템마다 따로 저장됩니다. 등록할 때 그 DBMS의 기본 매핑을 불러오고, 다른 시스템으로 옮기거나 복제할 때 이 표로 컬럼 타입을 바꿉니다.</span><span class="grow"></span><button class="btn sm" id="tm-def">이 DBMS 기본값으로</button></div>
-      </div></div>
+    <div class="set-row"><div class="l"><b>데이터타입 매핑</b><span>논리 타입 · 축약명과 시스템별 물리 타입 규칙(길이 범위 → 타입)</span></div>
+      <div><div class="caption u-mb-4" id="tm-sum"></div><a id="tm-link" href="datatypes.html#map">표준 사전 › 데이터 타입 · 축약명에서 관리합니다 ↗</a></div><div class="aside"><span>타입 등록 · 매핑은 DA · Admin이 바로 저장합니다(사유 · 감사 로그).</span><span>새 시스템은 등록할 때 그 DBMS의 기본 규칙으로 시작합니다.</span></div></div>
     <div class="set-row wide"><div class="l"><b>시스템 컬럼</b><span>물리 반영 때 모든 테이블에 붙는 공통 컬럼. 표준 용어로만 지정 · 모든 시스템 공통</span></div>
       <div>
         <table class="tbl"><thead><tr><th>#</th><th>용어</th><th>컬럼명</th><th>타입</th><th>필수</th><th>표준 검사</th></tr></thead><tbody>
@@ -259,20 +249,10 @@ window.pageInit = function () {
   // SC-41: the system picker drives the system tab (schema · areas · model final approval); it does not change the top-bar system
   $('sys-pick').innerHTML = SYSLIST.map(s => `<option value="${s.code}">${s.name} · ${s.code}</option>`).join('');
   $('sys-pick').value = curSys().code;
-  /* 25 §7: data-type map per system — working copy TM, last saved TM0; counted in the save bar under 시스템 */
-  let TM0 = {}, TM = {};
-  const tmLoad = () => { TM0 = {}; SYSLIST.forEach(x => { TM0[x.code] = typeMapOf(x.code); }); TM = JSON.parse(JSON.stringify(TM0)); };
-  tmLoad();
-  const tmCode = () => $('sys-pick').value || curSys().code;
-  const tmFill = () => { const c = tmCode(); if (!TM[c]) { TM[c] = typeMapOf(c); TM0[c] = TM[c].slice(); } document.querySelectorAll('[data-tm]').forEach(f => { f.value = TM[c][+f.dataset.tm]; }); const sx = SYSLIST.find(x => x.code === c); if ($('tm-h') && sx) $('tm-h').textContent = `${sx.name} (${sx.code}) · ${sx.db}`;
-    const D = (sx && (sx.dbms || sx.db) || 'Oracle').split(' ')[0], INFO = { Oracle: [['1~2000', ''], ['1~4000', '4000 초과 → CLOB'], ['p 1~38', ''], ['—', '밀리초 필요 시 TIMESTAMP'], ['—', '']], Tibero: [['1~2000', ''], ['1~4000', '4000 초과 → CLOB'], ['p 1~38', ''], ['—', ''], ['—', '']], PostgreSQL: [['1~10485760', ''], ['1~10485760', '길이 없이 쓰면 TEXT와 같음'], ['p 1~1000', ''], ['—', '시간대가 필요하면 TIMESTAMPTZ'], ['—', '']], MySQL: [['1~255', ''], ['1~65535', '행 전체 65,535바이트 제한'], ['p 1~65', ''], ['—', ''], ['—', '']] }[D] || [];
-    document.querySelectorAll('[data-tml]').forEach(td => { td.textContent = (INFO[+td.dataset.tml] || ['—'])[0]; }); document.querySelectorAll('[data-tmn]').forEach(td => { td.textContent = (INFO[+td.dataset.tmn] || ['', ''])[1]; });
-    tmCheck(); tmMark(); };
-  // Y-04: every cell checked as you type; errors block the save
-  const tmCheck = () => { const c = tmCode(); let first = ''; document.querySelectorAll('[data-tm]').forEach(f => { const m = typeMapCellErr(TM[c][+f.dataset.tm], +f.dataset.tm, TM[c]); if (m) { f.setAttribute('aria-invalid', 'true'); f.title = m; if (!first) first = `${TM_ROWS[+f.dataset.tm][0]}: ${m}`; } else { f.removeAttribute('aria-invalid'); f.removeAttribute('title'); } }); if ($('tm-err')) $('tm-err').textContent = first; return first; };
-  const tmBad = () => { for (const c of Object.keys(TM)) { const i = (TM[c] || []).findIndex((v, k) => typeMapCellErr(v, k, TM[c])); if (i >= 0) return [c, i, typeMapCellErr(TM[c][i], i, TM[c])]; } return null; };
-  const tmMark = () => { const d = new Set(tmDiffs().map(x => x[0])); [...$('sys-pick').options].forEach(o => { const sx = SYSLIST.find(x => x.code === o.value); if (sx) o.textContent = `${sx.name} · ${sx.code}${sx.off ? ' (사용 중지)' : ''}${d.has(sx.code) ? ' · 저장 안 함' : ''}`; }); };
-  const tmDiffs = () => { const out = []; Object.keys(TM).forEach(c => (TM[c] || []).forEach((v, i) => { if (TM0[c] && v !== TM0[c][i]) out.push([c, i, TM0[c][i], v]); })); return out; };
+  /* 27: the type map moved to 표준 사전 › 데이터 타입 · 축약명 — here only a summary of the picked system */
+  const tmFill = () => { const c = $('sys-pick').value || curSys().code, ts = typesFor(c), m = typeMapOf(c), miss = ts.filter(t => !(m[t.ab] || []).length), add = ts.filter(t => t.kind !== 'std');
+    $('tm-sum').innerHTML = `논리 타입 <b>${ts.length}</b>개 (표준 ${ts.length - add.length} · 추가 · DBMS 전용 ${add.length})${miss.length ? ` · <span class="u-danger">매핑 없음 ${miss.length} — ${miss.map(t => t.ab).join(', ')}</span>` : ' · 모두 매핑됨'} · 정책 v${typeVer()}`;
+    $('tm-link').href = 'datatypes.html?sys=' + encodeURIComponent(c) + '#map'; };
   const drawSys = () => {
     const s = SYSLIST.find(x => x.code === $('sys-pick').value) || SYSLIST[0];
     $('sys-desc').textContent = s.desc || ''; tmFill();
@@ -284,8 +264,6 @@ window.pageInit = function () {
     const here = s.code === curSys().code;   // a new area is made in the system chosen in the top bar
     $('sys-area-add').hidden = !here; $('sys-area-hint').textContent = here ? '' : `상단 바에서 ${josa(s.name, '을/를')} 고른 뒤 시스템 홈에서 추가합니다`;
   };
-  document.querySelectorAll('[data-tm]').forEach(f => f.addEventListener('input', () => { const c = tmCode(); TM[c][+f.dataset.tm] = f.value.trim(); setTimeout(tmCheck, 0); tmMark(); refreshBar(); }));   /* after the page's generic input handler */
-  $('tm-def').onclick = () => { const c = tmCode(), sx = SYSLIST.find(x => x.code === c); TM[c] = typeMapDefault(sx && (sx.dbms || sx.db)); tmFill(); refreshBar(); toast(`${sx ? sx.db.split(' ')[0] : ''} 기본 매핑을 불러왔습니다 — 저장해야 반영됩니다`, 'info'); };
   $('sys-pick').onchange = drawSys; drawSys();
   /* ---- 25 C-3: [시스템 등록] · [시스템 정보] — DBMS fixed at registration; version · schema · name · description editable; archive / delete when no area is left ---- */
   { const esc3 = x => String(x == null ? '' : x).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
@@ -306,7 +284,7 @@ window.pageInit = function () {
       sum('sr-sum', P); if (P.length) return;
       const s = { code: v('sr-code'), name: v('sr-name'), desc: v('sr-desc'), dbms: $('sr-dbms').value, db: `${$('sr-dbms').value} ${v('sr-ver')}`.trim(), schema: v('sr-schema'), at: today2().slice(0, 10), by: ME.name };
       if (!updateSystems(list => { if (list.some(x => x.code === s.code || (!x.off && x.name === s.name) || x.code === s.name || x.name === s.code)) return false; list.push(s); })) { sum('sr-sum', [['sr-code', '다른 탭에서 같은 코드 · 이름의 시스템을 먼저 등록했습니다']]); return; }   /* X-06 */
-      saveTypeMap(s.code, typeMapDefault(s.dbms)); TM0[s.code] = typeMapOf(s.code); TM[s.code] = TM0[s.code].slice();
+      saveTypeMap(s.code, typeMapDefault(s.dbms, s.code));   /* 27: a new system starts from its DBMS rules (표준 사전 › 데이터 타입 · 축약명) */
       pushAudit({ act: '시스템 등록', target: `${s.name} (${s.code})`, why: `${s.db} · 스키마 ${s.schema} — DBMS는 바꿀 수 없음 · ${s.dbms} 기본 타입 매핑` });
       $('mo-sysreg').classList.remove('open'); fillPick(s.code);
       const from = curSys(); toast(`시스템 ‘${s.name}’을(를) 등록했습니다 — 옮길 업무 영역이 있으면 원래 시스템 홈의 영역 ⋯ › [다른 시스템으로 옮기기 · 복제]`, 'success', { label: `${from.name} 시스템 홈`, fn: () => { location.href = `system.html?system=${from.code}`; } }); };   /* X-08 */
@@ -354,7 +332,7 @@ window.pageInit = function () {
   const valOf = f => (f.type === 'checkbox' || f.type === 'radio') ? f.checked : f.value;
   let base = {}, sbTimer = 0;
   const snap = () => { base = {}; Object.keys(DT).forEach(t => { base[t] = fieldsOf(t).map(valOf); }); };
-  const diff = () => { const out = {}; Object.keys(DT).forEach(t => { const n = fieldsOf(t).filter((f, i) => valOf(f) !== base[t][i]).length; if (n) out[t] = n; }); const tn = tmDiffs().length; if (tn) out.sys = (out.sys || 0) + tn; return out; };
+  const diff = () => { const out = {}; Object.keys(DT).forEach(t => { const n = fieldsOf(t).filter((f, i) => valOf(f) !== base[t][i]).length; if (n) out[t] = n; }); return out; };
   const dirtyN = () => Object.values(diff()).reduce((a, b) => a + b, 0);
   const hhmm = () => { const d = new Date(); return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; };
   let lastMsg = ''; const setMsg = h => { if (h !== lastMsg) { lastMsg = h; $('sb-msg').innerHTML = h; } };
@@ -383,7 +361,7 @@ window.pageInit = function () {
   $('sb-revert').onclick = () => {
     Object.keys(DT).forEach(t => fieldsOf(t).forEach((f, i) => { if (f.type === 'checkbox' || f.type === 'radio') f.checked = base[t][i]; else f.value = base[t][i]; }));
     if (!document.getElementById('self-on').checked) document.getElementById('self-off').checked = true;   // the pair: 허용 off means 비허용
-    TM = JSON.parse(JSON.stringify(TM0)); tmFill(); tmMark();
+    tmFill();
     NUM.forEach(([id]) => checkNum(id)); fdT(); refreshBar(); focusTab(); toast('마지막 저장값으로 되돌렸습니다', 'info');
   };
   // [변경 보기] — every unsaved field: row name · field · before → after (24 guide: the bar says what changed)
@@ -393,7 +371,6 @@ window.pageInit = function () {
   function drawDiff() {
     const out = [];
     Object.keys(DT).forEach(t => fieldsOf(t).forEach((f, i) => { const v = valOf(f); if (v !== base[t][i]) out.push(`<li><b>${DT[t]}</b> · ${esc2(fName(f))}<span class="muted"> ${esc2(fShow(f, base[t][i]))} → </span><b>${esc2(fShow(f, v))}</b></li>`); }));
-    tmDiffs().forEach(([c, i, b0, v]) => out.push(`<li><b>${DT.sys}</b> · 데이터타입 매핑 · ${esc2((SYSLIST.find(x => x.code === c) || {}).name || c)} ${TM_ROWS[i][0]}<span class="muted"> ${esc2(b0)} → </span><b>${esc2(v || '(빈 값)')}</b></li>`));
     $('sb-pop').innerHTML = out.length ? `<div class="caption muted u-mb-8">저장하지 않은 변경 ${out.length}건</div><ul class="sb-list">${out.join('')}</ul>` : '<div class="caption muted">바뀐 값이 없습니다</div>';
   }
   const setPop = o => { $('sb-pop').classList.toggle('open', o); $('sb-diff').setAttribute('aria-expanded', o); if (o) { drawDiff(); $('sb-pop').focus(); } };
@@ -412,7 +389,6 @@ window.pageInit = function () {
   function saveAll() {
     if (liveRoleChanged()) { staleRoleToast(); return; }
     // R-01: check every value first — an error holds the whole save before any impact dialog
-    { const tb = tmBad(); if (tb) { const b = document.querySelector('.tabs button[data-tab="sys"]'); if (b && !b.classList.contains('on')) b.click(); if ($('sys-pick').value !== tb[0]) { $('sys-pick').value = tb[0]; drawSys(); } const f = document.querySelector(`[data-tm="${tb[1]}"]`); if (f) f.focus(); toast(`저장하지 않았습니다 — 데이터타입 매핑 ${TM_ROWS[tb[1]][0]}: ${tb[2]}`, 'danger'); return; } }
     const bad = NUM.filter(([id]) => checkNum(id));
     if (bad.length) { const [id, , , , tab] = bad[0]; const b = document.querySelector(`.tabs button[data-tab="${tab}"]`); if (b && !b.classList.contains('on')) b.click(); $(id).focus(); toast(`저장하지 않았습니다 — 허용 범위를 벗어난 값 ${bad.length}건을 고쳐 주세요`, 'danger'); return; }
     const pw = $('pol-wd'), p0 = getPolicy();
@@ -434,7 +410,6 @@ window.pageInit = function () {
     if (lineChg) { const fmChg = Object.entries(o.finalModel).filter(([a, v]) => ((JSON.parse(before).finalModel || {})[a] !== false) !== v).map(([a, v]) => (areas[a] ? areas[a].name : a) + ' ' + (v ? '켬' : '끔')); changes.push(`결재선: 사전 최종 승인 ${o.finalDict ? '켬' : '끔'}${fmChg.length ? ` · 모델 최종 승인 ${fmChg.join(', ')}` : ''}`); pushAudit({ act: '설정 변경 — 결재선', target: '기관·시스템 설정', why: changes[changes.length - 1] }); }
     { const ex = {}, rows = new Set(); Object.keys(DT).forEach(t => fieldsOf(t).forEach((f, i) => { if (!isExtra(f)) return; ex[extraKey(f)] = valOf(f); if (valOf(f) !== base[t][i]) rows.add(fName(f).split(' · ')[0]); }));
       if (rows.size) { dbmStore.set('dbm-set-extra', JSON.stringify(ex)); changes.push([...rows].join(' · ')); pushAudit({ act: '설정 변경 — ' + [...rows].join(' · '), target: '기관·시스템 설정', why: '기관 · 시스템 · 검수 기준 항목' }); } }
-    { const td = tmDiffs(); const bySys = [...new Set(td.map(x => x[0]))]; bySys.forEach(c => { if (saveTypeMap(c, TM[c].slice()) === false) return; const nm2 = (SYSLIST.find(x => x.code === c) || {}).name || c; const w = td.filter(x => x[0] === c).map(([, i, b0, v]) => `${TM_ROWS[i][0]} ${b0} → ${v}`).join(' · '); changes.push(`데이터타입 매핑(${nm2}): ${w}`); pushAudit({ act: '설정 변경 — 데이터타입 매핑', target: `${nm2} (${c})`, why: w }); }); if (bySys.length) { tmLoad(); tmMark(); } }
     const p = getPolicy(); const wd = +$('pol-wd').value;
     if (wd !== (p.wordAbbr || 6)) { const nv = { ver: p.ver + 1, at: today2(), by: ME.name, wordAbbr: wd, hist: [{ ver: p.ver + 1, at: today2(), by: ME.name, what: `단어 영문약어명 ${p.wordAbbr || 6}자 → ${wd}자` }].concat(p.hist) }; savePolicy(nv); pushAudit({ act: `검수 기준 v${nv.ver}`, target: '검수 기준', why: nv.hist[0].what }); changes.push(`검수 기준 v${nv.ver}`); drawPol(); }
     toast(changes.length ? `저장했습니다 — ${changes.join(' · ')}. 다음 신청부터 적용되고 감사 로그에 남았습니다` : names.length ? `저장했습니다 — ${names.join(', ')}` : '바뀐 설정이 없습니다', changes.length || names.length ? 'success' : 'info');

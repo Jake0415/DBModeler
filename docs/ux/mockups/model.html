@@ -198,11 +198,14 @@ window.pageInit = function () {
   // script-driven moves keep the review role (&audit=1&as=) the same way the shared shell keeps it on plain links
   const go = u => { const as = q.has('audit') && q.get('as'); if (as && !/[?&]as=/.test(u)) { const [p, h] = u.split('#'); u = p + (p.includes('?') ? '&' : '?') + 'audit=1&as=' + as + (h ? '#' + h : ''); } location.href = u; };
   window.__go = go;
-  const DOMT = { '연월일C8': 'CHAR(8)', '명V100': 'VARCHAR2(100)', 'ID V10': 'VARCHAR2(10)', '코드C2': 'CHAR(2)', '코드C1': 'CHAR(1)', '여부C1': 'CHAR(1)', '내용V1000': 'VARCHAR2(1000)', '금액N15': 'NUMBER(15)', '일련번호N10': 'NUMBER(10)', '일시T': 'DATE', '순위N3': 'NUMBER(3)' };
+  /* 27: domain → physical type by the area's system map (표준 사전 › 데이터 타입 · 축약명), no fixed table */
+  const MSYS = (() => { const a = new URLSearchParams(location.search).get('area'); return (a && sysCodeOfArea(a)) || (getModels()[defArea()] || {}).system || curSys().code; })();
+  const DOMT = Object.fromEntries([...new Set([...knownDomains(), '순위N3'])].map(d => [d, domPhys(d, MSYS).t]).filter(x => x[1]));
   const TERMS = getDict().filter(x => x.k === 'term' && x.st === '사용' && x.ver > 0 && x.dom !== '엔터티 용어').map(x => ({ n: x.name, p: x.abbr, d: x.dom, t: DOMT[x.dom] || 'VARCHAR2(100)', s: 'ok', tag: x.src }))
     .concat(openItems().filter(o => o.it.k === 'term' && (o.it.act || '추가') === '추가' && o.it.dom !== '엔터티').map(o => ({ n: o.it.name, p: o.it.abbr, d: o.it.dom, t: DOMT[o.it.dom] || 'VARCHAR2(100)', s: 'req', tag: '신청 중', doc: o.doc })))
     .concat([{ n: '제출일자', p: 'SBMT_YMD', d: '연월일C8', t: 'CHAR(8)', s: 'ok', tag: '공통' }, { n: '제출여부', p: 'SBMT_YN', d: '여부C1', t: 'CHAR(1)', s: 'ok', tag: '공통' }, { n: '등록일시', p: 'REG_DT', d: '일시T', t: 'DATE', s: 'ok', tag: '공통' }, { n: '비고내용', p: 'RMRK_CN', d: '내용V1000', t: 'VARCHAR2(1000)', s: 'ok', tag: '공통' }, { n: '제출자명', p: 'SBMTR_NM', d: '명V100', t: 'VARCHAR2(100)', s: 'ok', tag: '기관', sec: '개인정보', enc: '없음' }]);
-  const DOMS = { '연월일C8': 'CHAR(8)', '명V100': 'VARCHAR2(100)', 'ID V10': 'VARCHAR2(10)', '코드C2': 'CHAR(2)', '여부C1': 'CHAR(1)' };
+  const DOMS = DOMT;   // 27: the bulk domain change offers every domain the system can map
+  const XTYPES = typesFor(MSYS).filter(t => t.kind !== 'std');   // 27: added · DBMS-only types this system can take (표준 외 타입)
   const SYS_COLS = [['등록일시', 'REG_DT', 'DATE'], ['등록자ID', 'REGR_ID', 'VARCHAR2(20)'], ['수정일시', 'MDFCN_DT', 'DATE'], ['수정자ID', 'MDFR_ID', 'VARCHAR2(20)']];
   const tagCls = t => t === '공통' ? 'b-common' : t === '신청 중' ? 'b-info' : 'b-org';
   const renderDict = () => { const v = ($('dict-q').value || '').trim(); const A = TERMS.map((t, i) => [t, i]).filter(([t]) => !v || t.n.includes(v) || t.p.includes(v.toUpperCase())), L = A.slice(0, 80);   // 13,000+ common terms: draw the first 80, the rest by typing
@@ -613,7 +616,8 @@ window.pageInit = function () {
   const ST_NAME = { ok: '표준', comb: '조합 가능', unreg: '미등록 단어', ex: '예외', na: '비대상', req: '용어 신청 중' };
   const jr = (w, p) => josa(w, p).slice(String(w).length);
   const domOf = a => a.dom || a.d || '';
-  const domType = d => { if (!d) return null; if (/T$/.test(d)) return 'DATE'; const m = d.match(/([VCN])\s?(\d+)$/); return m ? `${({ V: 'VARCHAR2', C: 'CHAR', N: 'NUMBER' })[m[1]]}(${m[2]})` : null; };
+  const domType = d => d ? (domPhys(d, MSYS).t || null) : null;   /* 27: by the system's length-range rules */
+  const typeHref = (k, e, a) => `datatypes.html?${k}=1&sys=${encodeURIComponent(MSYS)}&where=${encodeURIComponent(`${(getModel(AREA) || {}).name || ''} · ${e.n}.${a.n}`)}&back=${encodeURIComponent((location.pathname.split('/').pop() || 'model.html') + location.search)}`;
   const domList = () => [...new Set(Object.keys(DOMT).concat(E.flatMap(e => e.a.map(domOf))).filter(Boolean))].sort((x, y) => x.localeCompare(y, 'ko'));
   const agLive = t => { const l = $('ag-live'); if (l) { l.textContent = ''; setTimeout(() => { l.textContent = t; }, 30); } };
   // why a cell is fixed (null = the user may change it)
@@ -721,10 +725,12 @@ window.pageInit = function () {
     return `<div class="ag-det" aria-label="선택한 ${L ? '속성' : '컬럼'}">
       <div class="ag-h">${a.pk ? icon('key', 12) : a.fk ? icon('link', 12) : icon('col', 12)}<span>${hx(L ? a.n : a.p)}</span><span class="grow"></span>
         ${ro ? '' : `<button class="btn sm ghost" data-f="up" title="위로 (Alt+↑)" aria-label="위로"${gi <= 0 ? ' disabled' : ''}><i data-ic=up data-s=12></i></button><button class="btn sm ghost" data-f="down" title="아래로 (Alt+↓)" aria-label="아래로"${gi >= grp.length - 1 ? ' disabled' : ''}><i data-ic=down data-s=12></i></button><button class="btn sm ghost" data-f="ren" title="이름 바꾸기 (F2)"><i data-ic=pen data-s=12></i>이름</button><button class="btn sm ghost u-danger" data-f="del" title="삭제 (Delete)"><i data-ic=trash data-s=12></i>삭제</button>`}</div>
-      <dl class="kv"><dt>${L ? '물리명' : '논리명'}</dt><dd class="${L ? 'mono' : ''}">${hx(L ? a.p : a.n)}</dd><dt>타입</dt><dd class="mono">${hx(a.t)}${domOf(a) ? ` <span class="faint">· ${hx(domOf(a))}</span>` : ''}</dd><dt>표준</dt><dd>${st}${fix}</dd>${a.fk ? `<dt>관계</dt><dd>${fkRels(e, a).map(r => hx((ent(r.f) || {}).n || r.f) + '에서 받은 FK').join(', ') || '<span class="faint">연결된 관계 없음</span>'}</dd>` : ''}${a.sec ? `<dt>보안</dt><dd>${hx(a.sec)}${a.enc && a.enc !== '없음' ? ' · ' + hx(a.enc) : ''}</dd>` : ''}
+      <dl class="kv"><dt>${L ? '물리명' : '논리명'}</dt><dd class="${L ? 'mono' : ''}">${hx(L ? a.p : a.n)}</dd><dt>타입</dt><dd class="mono">${hx(a.t)}${domOf(a) ? ` <span class="faint">· ${hx(domOf(a))}</span>` : ''}${a.xt ? ` <span class="badge b-warning" title="추가 · DBMS 전용 타입을 직접 골랐습니다 — 위반은 아니고 검수 보고서에서 따로 셉니다">표준 외 타입 · ${hx(a.xt)}</span>` : ''}</dd><dt>표준</dt><dd>${st}${fix}</dd>${a.fk ? `<dt>관계</dt><dd>${fkRels(e, a).map(r => hx((ent(r.f) || {}).n || r.f) + '에서 받은 FK').join(', ') || '<span class="faint">연결된 관계 없음</span>'}</dd>` : ''}${a.sec ? `<dt>보안</dt><dd>${hx(a.sec)}${a.enc && a.enc !== '없음' ? ' · ' + hx(a.enc) : ''}</dd>` : ''}
       ${ro ? field('', 'desc', '정의') + field('', 'def', '기본값') : ''}</dl>
       ${ro ? '' : (() => { const ld = lockWhy(a, 'dom'), ln = lockWhy(a, 'nn'), d = domOf(a);   // the row's 필수 · 도메인 again, reachable with Tab (the row cells are mouse shortcuts)
-        return `<div class="ag-two"><div class="field"><label for="ag-dom">도메인</label>${ld ? `<div class="ag-fix" id="ag-dom-why">${hx(d || '—')} ${icon('lock', 12)} <span class="caption muted">${hx(ld)}</span></div>` : `<select class="input mono" id="ag-dom" data-f="dom"><option value="">${d ? '(없음)' : '선택'}</option>${domList().map(x => `<option${x === d ? ' selected' : ''}>${hx(x)}</option>`).join('')}</select>`}</div>
+        return `<div class="ag-two"><div class="field"><label for="ag-dom">도메인</label>${ld ? `<div class="ag-fix" id="ag-dom-why">${hx(d || '—')} ${icon('lock', 12)} <span class="caption muted">${hx(ld)}</span></div>` : `<select class="input mono" id="ag-dom" data-f="dom"><option value="">${d || a.xt ? '(없음)' : '선택'}</option><optgroup label="표준 도메인">${domList().map(x => `<option${x === d ? ' selected' : ''}>${hx(x)}</option>`).join('')}</optgroup>${XTYPES.length ? `<optgroup label="추가 · DBMS 전용 타입 — 표준 외">${XTYPES.map(t => `<option value="@${t.ab}"${a.xt === t.ab ? ' selected' : ''}>${t.ab} · ${hx(t.n)}${t.kind === 'dbms' ? ' (' + dbmsKey(t.dbms) + ' 전용)' : t.scope !== '공통' ? ' (시스템 전용)' : ''}</option>`).join('')}</optgroup>` : ''}</select>
+          ${a.xt && (typeOf(a.xt) || {}).arg ? `<div class="flex u-gap-8 u-mt-4"><label class="caption" for="ag-xlen">${(typeOf(a.xt) || {}).arg === 'f' ? '초 아래 자릿수' : '길이'}</label><input class="input mono u-w-130" id="ag-xlen" data-f="xlen" value="${hx(a.xlen || '')}"></div>` : ''}
+          <div class="caption muted u-mt-4">맞는 타입이 없으면 ${can('type.add') ? `<a href="${typeHref('add', e, a)}">타입 등록 ↗</a>` : can('type.request', { system: MSYS }) ? `<a href="${typeHref('req', e, a)}">타입 추가 요청 ↗</a> · 그동안 예외(사유)로 둘 수 있습니다` : 'DA에게 타입 추가를 요청하세요'}</div>`}</div>
           <label class="ag-nn"><input type="checkbox" id="ag-nn" data-f="nn"${a.nn || a.pk ? ' checked' : ''}${ln ? ` disabled aria-describedby="ag-nn-why"` : ''}> 필수${ln ? `<span class="caption muted" id="ag-nn-why"> — ${hx(ln)}</span>` : ''}</label></div>`; })()}
       ${ro ? '' : field('ag-desc', 'desc', '정의 <span class="faint">— 테이블 정의서와 컬럼 주석(COMMENT)에 들어갑니다</span>', '예: 이 자금이 들어오거나 나간 날짜', 'ta') + field('ag-def', 'def', '기본값 <span class="faint">— DDL DEFAULT</span>', "예: 'N' · SYSDATE · 0")}
       ${ro ? '' : keys.replace('행을 고르면 순서 · 이름 · 정의를 고칠 수 있습니다. ', '')}</div>`;
@@ -748,7 +754,11 @@ window.pageInit = function () {
       render(); toast(v ? `‘${a.n}’${jr(a.n, '을/를')} 식별자(PK)로 지정했습니다 — 필수가 켜졌습니다${n ? ` · 자식 엔터티에 FK ${n}개를 추가했습니다` : ''}` : `‘${a.n}’${jr(a.n, '을/를')} 식별자에서 뺐습니다`, 'info', undoAction()); return;
     }
     if (f === 'nn') { a.nn = v ? 1 : 0; agLive(`${a.n} 필수 ${v ? '켬' : '끔'}`); }
-    if (f === 'dom') { a.dom = v; delete a.d; const t = domType(v); if (t) a.t = t; const kids = a.pk ? pkReach(e, a) : []; kids.forEach(([, x]) => { x.dom = v; if (t) x.t = t; }); toast(`‘${a.n}’ 도메인을 ${v || '(없음)'}(으)로 바꿨습니다${t ? ` · 타입 ${t}` : ''}${kids.length ? ` · 자식 FK ${kids.length}개도 같이` : ''}`, 'info', undoAction()); }
+    if (f === 'dom' && String(v).startsWith('@')) {   /* 27: an added / DBMS-only type picked directly → 표준 외 타입 */
+      const ab = String(v).slice(1), tt = typeOf(ab); a.xt = ab; a.dom = ''; delete a.d; const r = physOf(MSYS, ab, a.xlen || (tt && tt.arg === 'f' ? 0 : ''), ''); if (r.t) a.t = r.t;
+      toast(`‘${a.n}’ 타입을 ${ab}(${tt ? tt.n : ''})로 골랐습니다 — 표준 외 타입 · ${r.t || '매핑 없음'}${tt && tt.arg && !a.xlen ? ' · 길이를 입력하세요' : ''}`, 'info', undoAction()); gFocus = { e: e.id, ai, f: 'det-dom' }; render(); return; }
+    if (f === 'xlen') { const tt = typeOf(a.xt), s = String(v).trim(); if (s && !/^\d+$/.test(s)) { toast('길이는 숫자로 입력하세요', 'danger'); render(); return; } a.xlen = s; const r = physOf(MSYS, a.xt, s, ''); if (r.t) a.t = r.t; agLive(`길이 ${s} · ${r.t || '매핑 없음'}${r.warn ? ' · ' + r.warn : ''}`); if (tt && r.warn && r.warn !== '매핑 없음') toast(r.warn, 'info'); render(); return; }
+    if (f === 'dom') { delete a.xt; delete a.xlen; a.dom = v; delete a.d; const t = domType(v); if (t) a.t = t; const kids = a.pk ? pkReach(e, a) : []; kids.forEach(([, x]) => { x.dom = v; if (t) x.t = t; }); toast(`‘${a.n}’ 도메인을 ${v || '(없음)'}(으)로 바꿨습니다${t ? ` · 타입 ${t}` : ''}${kids.length ? ` · 자식 FK ${kids.length}개도 같이` : ''}`, 'info', undoAction()); }
     if (f === 'desc' || f === 'def') {   // saved in place: no redraw, so the click that took the focus away (a row, [삭제]) still lands
       const s = String(v).trim(); if (s) a[f] = s; else delete a[f];
       const inp = $(f === 'desc' ? 'ag-desc' : 'ag-def'); if (inp) { inp.value = a[f] || ''; inp.removeAttribute('aria-invalid'); }
@@ -824,6 +834,7 @@ window.pageInit = function () {
     if (tr && (f === 'pk' || f === 'nn')) { treeOrigin = true; treeAttr = +tr.dataset.ai; gFocus = { e: e.id, ai: treeAttr, f }; agEdit(e, treeAttr, f, t.checked); }
     else if (tr && f === 'dom') { treeOrigin = true; treeAttr = +tr.dataset.ai; gFocus = { e: e.id, ai: treeAttr, f }; agEdit(e, treeAttr, f, t.value); }
     else if (!tr && (f === 'nn' || f === 'dom')) { const [, a, ai] = curAttr(); if (a) { gFocus = { e: e.id, ai, f: 'det-' + f }; agEdit(e, ai, f, f === 'nn' ? t.checked : t.value); } }   // the same two in the detail (keyboard path)
+    else if (f === 'xlen') { const [, a, ai] = curAttr(); if (a) { gFocus = { e: e.id, ai, f: 'xlen' }; agEdit(e, ai, f, t.value); } }   // 27: length of a directly picked type
     else if (f === 'desc' || f === 'def') { const [, a, ai] = curAttr(); if (a && String(t.value).trim() !== (a[f] || '')) agEdit(e, ai, f, t.value); }
   });
   rpb.addEventListener('keydown', ev => {
@@ -923,6 +934,7 @@ window.pageInit = function () {
     $('rev-body').innerHTML = `<div class="mline"><span><b>6</b>점검 항목</span><span><b>${total}</b>확인 필요</span></div>` +
       sec('관계 · M:N 미해소', mn, 'b-warning', r => `<tr data-goto="${r.f}" class="click"><td>${ent(r.f).n} ↔ ${ent(r.t).n}</td><td class="caption">교차 엔터티 필요</td></tr>`) +
       sec('물리 정보 · 타입 미정', typeless, 'b-warning', ([e, a]) => `<tr data-goto="${e.id}" class="click"><td>${e.n}.${a.n}</td><td class="caption">표준 맞추기</td></tr>`) +
+      (() => { const xt = []; E.forEach(e => e.a.forEach(a => { if (a.xt) xt.push([e, a]); })); return sec('표준 외 타입 <span class="caption muted">— 위반 아님 · 검수 보고서에서 따로 셈</span>', xt, 'b-info', ([e, a]) => `<tr data-goto="${e.id}" class="click"><td>${e.n}.${a.n}</td><td class="caption mono">${hx(a.xt)} · ${hx(a.t)}</td></tr>`); })() +
       sec('명칭 중복 · 같은 이름 다른 엔터티', nameDup, 'b-info', ([e, a]) => `<tr data-goto="${e.id}" class="click"><td>${e.n}.${a.n}</td><td class="caption">FK가 아닌데 이름이 같음</td></tr>`) +
       sec('식별자 없음', noPk, 'b-danger', e => `<tr data-goto="${e.id}" class="click"><td>${e.n}</td><td class="caption">PK 지정 필요</td></tr>`) +
       sec('참조 없는 엔터티', noRel, 'b-info', e => `<tr data-goto="${e.id}" class="click"><td>${e.n}</td><td class="caption">관계 없음</td></tr>`) +
