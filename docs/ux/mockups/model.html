@@ -683,9 +683,9 @@ window.pageInit = function () {
         <td class="ag-c"><input type="checkbox" data-f="pk" tabindex="-1" aria-label="${hx(a.n)} 식별자(PK)"${a.pk ? ' checked' : ''}${ro || lp ? ' disabled' : ''} title="${hx(lp || '식별자(PK)')}"></td>
         <td class="ag-n"><span class="${a.fk ? 'fkm' : ''}">${hx(nm)}</span>${a.fk ? ' <span class="faint">(FK)</span>' : ''}${a.sec ? ' ' + LOCKI : ''}${a.cand ? ' <span class="caption muted">· 후보</span>' : ''}<span class="s2">${hx(sub)}</span></td>
         <td class="ag-d">${domCell}</td>
-        <td class="ag-c"><input type="checkbox" data-f="nn" tabindex="-1" aria-label="${hx(a.n)} 필수(NOT NULL)"${a.nn || a.pk ? ' checked' : ''}${ro || ln ? ' disabled' : ''} title="${hx(ln || '필수(NOT NULL)')}"></td></tr>`;
+        <td class="ag-c"><input type="checkbox" data-f="nn" tabindex="-1" aria-label="${hx(a.n)} 필수"${a.nn || a.pk ? ' checked' : ''}${ro || ln ? ' disabled' : ''} title="${hx(ln || '필수')}"></td></tr>`;
     }).join('');
-    const table = `<table class="tbl ag" aria-label="${L ? '속성' : '컬럼'} 편집 — ↑↓ 행 이동"><thead><tr><th class="ag-st"><span class="sr-only">상태</span></th><th class="ag-c" title="식별자(Primary Key)">PK</th><th>${L ? '속성명' : '컬럼명'} <span class="faint u-fw-400">${L ? '/ 물리명' : '/ 논리명 · 타입'}</span></th><th class="ag-d">도메인</th><th class="ag-c" title="필수(NOT NULL)">필수</th></tr></thead><tbody>${rows || `<tr><td colspan="5" class="caption muted">${L ? '속성' : '컬럼'}이 없습니다</td></tr>`}${sysRows || ''}</tbody></table>`;
+    const table = `<table class="tbl ag" aria-label="${L ? '속성' : '컬럼'} 편집 — ↑↓ 행 이동"><thead><tr><th class="ag-st"><span class="sr-only">상태</span></th><th class="ag-c" title="식별자(Primary Key)">PK</th><th>${L ? '속성명' : '컬럼명'} <span class="faint u-fw-400">${L ? '/ 물리명' : '/ 논리명 · 타입'}</span></th><th class="ag-d">도메인</th><th class="ag-c" title="필수">필수</th></tr></thead><tbody>${rows || `<tr><td colspan="5" class="caption muted">${L ? '속성' : '컬럼'}이 없습니다</td></tr>`}${sysRows || ''}</tbody></table>`;
     const add = `<div class="flex u-mt-8">${ro ? '' : `<button class="btn sm" id="rp-add"><i data-ic=plus></i>${L ? '속성' : '컬럼'} 추가 (Alt+Enter)</button>`}<span class="grow"></span><span class="caption muted">${mode === 'P' ? '시스템 컬럼은 <a href="settings.html#sys">시스템 설정</a>에서 관리' : '입력하면 표준 용어를 바로 제안합니다'}</span></div>`;
     return table + (ro ? '<button id="rp-add" hidden></button>' : add) + agPend(e) + agDetail(e, ro);
   }
@@ -725,7 +725,7 @@ window.pageInit = function () {
       ${ro ? field('', 'desc', '정의') + field('', 'def', '기본값') : ''}</dl>
       ${ro ? '' : (() => { const ld = lockWhy(a, 'dom'), ln = lockWhy(a, 'nn'), d = domOf(a);   // the row's 필수 · 도메인 again, reachable with Tab (the row cells are mouse shortcuts)
         return `<div class="ag-two"><div class="field"><label for="ag-dom">도메인</label>${ld ? `<div class="ag-fix" id="ag-dom-why">${hx(d || '—')} ${icon('lock', 12)} <span class="caption muted">${hx(ld)}</span></div>` : `<select class="input mono" id="ag-dom" data-f="dom"><option value="">${d ? '(없음)' : '선택'}</option>${domList().map(x => `<option${x === d ? ' selected' : ''}>${hx(x)}</option>`).join('')}</select>`}</div>
-          <label class="ag-nn"><input type="checkbox" id="ag-nn" data-f="nn"${a.nn || a.pk ? ' checked' : ''}${ln ? ` disabled aria-describedby="ag-nn-why"` : ''}> 필수 (NOT NULL)${ln ? `<span class="caption muted" id="ag-nn-why"> — ${hx(ln)}</span>` : ''}</label></div>`; })()}
+          <label class="ag-nn"><input type="checkbox" id="ag-nn" data-f="nn"${a.nn || a.pk ? ' checked' : ''}${ln ? ` disabled aria-describedby="ag-nn-why"` : ''}> 필수${ln ? `<span class="caption muted" id="ag-nn-why"> — ${hx(ln)}</span>` : ''}</label></div>`; })()}
       ${ro ? '' : field('ag-desc', 'desc', '정의 <span class="faint">— 테이블 정의서와 컬럼 주석(COMMENT)에 들어갑니다</span>', '예: 이 자금이 들어오거나 나간 날짜', 'ta') + field('ag-def', 'def', '기본값 <span class="faint">— DDL DEFAULT</span>', "예: 'N' · SYSDATE · 0")}
       ${ro ? '' : keys.replace('행을 고르면 순서 · 이름 · 정의를 고칠 수 있습니다. ', '')}</div>`;
   }
@@ -1995,7 +1995,7 @@ window.pageInit = function () {
       <div class="field"><label id="rel-cs-l">카디널리티 · 선택성</label>
         <div class="relsent" aria-labelledby="rel-cs-l">${hx(p.n)} 1개는 ${hx(c.n)}을(를) <select class="input" data-rcard aria-label="자식 쪽 개수"${D}>${Object.entries(KCARD).map(([v, l]) => `<option value="${v}"${st.card === v ? ' selected' : ''}>${l}</option>`).join('')}</select> 가진다</div>
         <div class="relsent">${hx(c.n)} 1개는 ${hx(p.n)}이(가) <select class="input" data-ropt aria-label="부모 쪽 필수 여부"${D || (ident ? ' disabled title="식별 관계는 부모가 반드시 있습니다"' : '')}>${Object.entries(KOPT).map(([v, l]) => `<option value="${v}"${st.opt === v ? ' selected' : ''}>${l}</option>`).join('')}</select></div>
-        <span class="help">부모 쪽 값이 FK 컬럼의 필수(NOT NULL)를 정합니다${ident ? ' · 식별 관계는 반드시 있음으로 고정' : ''}${r.uk ? ' · 자식 쪽 최대 1개는 FK에 UK를 붙여 보장합니다' : ''}${['1', '1n'].includes(st.card) ? ' · 자식 쪽 ‘최소 1개’는 FK로 강제할 수 없는 업무 규칙입니다' : ''}</span></div>
+        <span class="help">부모 쪽 값이 FK 컬럼의 필수 여부를 정합니다${ident ? ' · 식별 관계는 반드시 있음으로 고정' : ''}${r.uk ? ' · 자식 쪽 최대 1개는 FK에 UK를 붙여 보장합니다' : ''}${['1', '1n'].includes(st.card) ? ' · 자식 쪽 ‘최소 1개’는 FK로 강제할 수 없는 업무 규칙입니다' : ''}</span></div>
       <div class="field"><label>FK 짝 <span class="faint">— 부모 식별자 → ${hx(c.n)} 컬럼</span></label>${pkList.length ? `<table class="tbl box"><tbody>${pairRows}</tbody></table>` : `<div class="banner warning"><i data-ic=warn></i><div class="grow"><b>FK 대기</b> — ${hx(p.n)}에 식별자가 없습니다. 식별자를 정하면 FK가 채워집니다.${ro ? '' : ' <a href="#" id="rel-gopk">식별자 지정</a>'}</div></div>`}
         <span class="help">${!pkList.length ? '' : f.st === 'ok' ? `FK 반영 · <span class="mono">${hx(f.name)}</span>` : f.st === 'ex' ? 'FK 제외 · ' + hx(f.why) : f.st === 'miss' ? `<span class="u-warning">FK 누락 · ${hx(f.why)}</span>` : ''}</span></div>`}
       ${r.xg ? `<div class="flex u-mb-8"><span class="caption muted">배타 관계 묶음 — 한 행은 둘 중 하나와만 관계를 가집니다</span><span class="grow"></span><button class="btn sm" id="xor-off"${D}>배타 해제</button></div>` : ''}
@@ -2054,7 +2054,7 @@ window.pageInit = function () {
     if (guard()) return; if (r.k === 'id') { toast('식별 관계는 부모가 반드시 있습니다', 'info'); return; }
     snap(); r.opt = v; relCols(r).forEach(a => { if (!a.pk) a.nn = v === 'must' ? 1 : 0; });
     let note = ''; if (v === 'must' && r.del === 'setnull') { r.del = 'none'; note = ' · FK가 필수라 ON DELETE를 ‘막기’로 바꿨습니다'; }
-    relAfter(r, `${ent(r.t).n}에는 ${ent(r.f).n}이(가) ${KOPT[v]} — FK ${v === 'must' ? '필수(NOT NULL)' : '비워 둘 수 있음'}${note}`);
+    relAfter(r, `${ent(r.t).n}에는 ${ent(r.f).n}이(가) ${KOPT[v]} — FK ${v === 'must' ? '필수' : '비워 둘 수 있음'}${note}`);
   }
   function relSetDel(r, v) {
     if (guard()) return; if (v === 'setnull' && !nullable(r)) { toast('FK가 필수라 비울 수 없습니다 — 선택성을 ‘없어도 된다’로 바꾸세요', 'info'); render(); return; }

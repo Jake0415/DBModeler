@@ -34,7 +34,7 @@
     <div class="main"><div class="scroll"><div class="pad">
       <div class="section-t u-mt-0">표준화 산출물</div>
       <div class="ocards" id="cards">
-        <div class="ocard on" data-k="tbl"><b>테이블 정의서</b><div class="caption muted">테이블·컬럼·타입·PK/FK·NULL·설명. 기관 양식 시트 구성</div><div class="f"><span class="badge">xlsx</span><span class="badge">pdf</span></div></div>
+        <div class="ocard on" data-k="tbl"><b>테이블 정의서</b><div class="caption muted">테이블·컬럼·타입·PK/FK·필수·설명. 기관 양식 시트 구성</div><div class="f"><span class="badge">xlsx</span><span class="badge">pdf</span></div></div>
         <div class="ocard" data-k="cmp"><b>표준 준수검사 결과</b><div class="caption muted">준수율 요약 + 엔터티별·속성별 상태, 예외 사유 목록</div><div class="f"><span class="badge">xlsx</span></div></div>
         <div class="ocard" data-k="term"><b>용어 사용 현황</b><div class="caption muted">이 영역이 쓰는 표준 용어·도메인과 사용 위치</div><div class="f"><span class="badge">xlsx</span></div></div>
         <div class="ocard" data-k="sec"><b>개인정보 컬럼 목록</b><div class="caption muted">개인정보·암호화 지정 컬럼, 도메인 상속/직접 지정 구분</div><div class="f"><span class="badge">xlsx</span><span class="badge">pdf</span></div></div>
@@ -74,7 +74,7 @@
 <script>
 window.pageInit = function () {
   const P = {
-    tbl: ['테이블 정의서', '시트 1/9 · DLVRBL_M 산출물기본', ['컬럼명', '논리명', '타입', 'PK', 'NULL', '도메인'], [['DLVRBL_ID', '산출물ID', 'VARCHAR2(10)', 'Y', 'N', 'ID V10'], ['DLVRBL_NM', '산출물명', 'VARCHAR2(100)', '', 'N', '명V100'], ['DLVRBL_SBMT_DATE', '산출물제출일자', 'CHAR(8)', '', 'Y', '연월일C8'], ['DEMND_MATER_ID', '요구사항ID', 'VARCHAR2(10)', '', 'Y', 'ID V10'], ['REG_DT', '등록일시', 'DATE', '', 'N', '일시T']]],
+    tbl: ['테이블 정의서', '시트 1/9 · DLVRBL_M 산출물기본', ['컬럼명', '논리명', '타입', 'PK', '필수', '도메인'], [['DLVRBL_ID', '산출물ID', 'VARCHAR2(10)', 'Y', 'Y', 'ID V10'], ['DLVRBL_NM', '산출물명', 'VARCHAR2(100)', '', 'Y', '명V100'], ['DLVRBL_SBMT_DATE', '산출물제출일자', 'CHAR(8)', '', '', '연월일C8'], ['DEMND_MATER_ID', '요구사항ID', 'VARCHAR2(10)', '', '', 'ID V10'], ['REG_DT', '등록일시', 'DATE', '', 'Y', '일시T']]],
     cmp: ['표준 준수검사 결과', '요약 · 준수율 100% (예외 3, 비대상 3)', ['엔터티', '대상', '표준', '예외', '비대상', '준수율'], [['프로젝트기본', '5', '4', '1', '0', '100%'], ['요구사항내역', '5', '4', '1', '0', '100%'], ['산출물기본', '5', '4', '1', '0', '100%'], ['리스크기본', '3', '3', '0', '0', '100%']]],
     term: ['용어 사용 현황', '표준 용어 41 · 도메인 12', ['용어', '물리명', '도메인', '사용 위치 수'], [['프로젝트ID', 'PRJ_ID', 'ID V10', '3'], ['요구사항ID', 'DEMND_MATER_ID', 'ID V10', '3'], ['등록일시', 'REG_DT', '일시T', '9'], ['산출물명', 'DLVRBL_NM', '명V100', '1']]],
     sec: ['개인정보 컬럼 목록', '개인정보 3 · 암호화 1', ['테이블.컬럼', '개인정보', '암호화', '출처'], [['EMP_M.EMP_NM', '개인정보', '없음', '도메인 상속'], ['EMP_M.MBTL_NO', '개인정보', '양방향(ARIA)', '도메인 상속'], ['RQRM_D.REQ_CUST_NM', '개인정보', '없음', '직접 지정 · 사유 있음']]],
@@ -114,7 +114,7 @@ window.pageInit = function () {
     const m = mdl(), E = m.E.filter(e => !e.ref); const first = E.find(e => e.id === pickEnt) || E[0]; const fi = Math.max(0, E.indexOf(first));
     const cnt = st => E.reduce((s, e) => s + e.a.filter(a => a.s === st).length, 0);
     const tot = E.reduce((s, e) => s + e.a.length, 0), na = cnt('na'), ok = cnt('ok') + cnt('ex'), tgt = tot - na;
-    P.tbl = ['테이블 정의서', first ? `시트 ${fi + 1}/${E.length} · ${first.p} ${first.n}` : '테이블 없음', ['컬럼명', '논리명', '타입', 'PK', 'NULL', '기본값', '도메인', '정의'], first ? first.a.filter(a => !a.edit).slice(0, 6).map(a => [a.p || '—', a.n, a.t || '—', a.pk ? 'Y' : '', a.nn || a.pk ? 'N' : 'Y', a.def || '', a.dom || a.d || '—', a.desc || '']) : []];
+    P.tbl = ['테이블 정의서', first ? `시트 ${fi + 1}/${E.length} · ${first.p} ${first.n}` : '테이블 없음', ['컬럼명', '논리명', '타입', 'PK', '필수', '기본값', '도메인', '정의'], first ? first.a.filter(a => !a.edit).slice(0, 6).map(a => [a.p || '—', a.n, a.t || '—', a.pk ? 'Y' : '', a.nn || a.pk ? 'Y' : '', a.def || '', a.dom || a.d || '—', a.desc || '']) : []];
     const C = compOf(m); P.cmp = ['표준 준수검사 결과', `요약 · 준수율 ${C.rate}% (미준수 ${C.bad}, 예외 ${C.ex}, 신청 중 ${C.req}, 비대상 ${C.na}) — 모델 화면과 같은 계산`, ['엔터티', '대상', '미준수', '예외', '비대상', '준수율'], E.slice(0, 6).map(e => { const c = compOf({ E: [e] }); return [e.n, String(c.tot), String(c.bad), String(c.ex), String(c.na), c.rate + '%']; })];
     const terms = {}; E.forEach(e => e.a.filter(a => a.s === 'ok').forEach(a => { terms[a.n] = terms[a.n] || [a.n, a.p, a.dom || '—', 0]; terms[a.n][3]++; }));
     const tl = Object.values(terms).sort((a, b) => b[3] - a[3]); P.term = ['용어 사용 현황', `표준 용어 ${tl.length}`, ['용어', '물리명', '도메인', '사용 위치 수'], tl.slice(0, 6).map(r => [r[0], r[1], r[2], String(r[3])])];
