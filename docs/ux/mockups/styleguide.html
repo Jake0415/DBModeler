@@ -21,6 +21,9 @@
   .type-row { display:grid; grid-template-columns:140px 1fr 160px; align-items:baseline; gap:16px; padding:8px 0; border-bottom:1px solid var(--border); }
   .demo-hdr { height:56px; padding:0; border-bottom:1px solid var(--border); background:none; }
   .demo-box { border:1px solid var(--border); border-radius:var(--r-lg); overflow:hidden; }
+  /* the settings row shown at reduced width (real: 240 │ 480~760 │ aside) */
+  .demo-set .set-row { grid-template-columns:150px minmax(0, 1fr) minmax(160px, 220px); gap:16px; }
+  .demo-set .set-row > .aside { margin-left:0; }
   .sg-lg { display:flex; flex-wrap:wrap; gap:6px 14px; align-items:center; color:var(--fg-2); } .sg-lg > span { display:inline-flex; align-items:center; gap:4px; } .sg-lg > span:first-child { font-weight:600; color:var(--fg); }
 </style>
 </head>
@@ -104,7 +107,22 @@ window.pageInit = function () {
           <ol class="pg-steps"><li>대기 후보를 열어 발생 위치와 비슷한 표준어 경고를 봅니다</li><li>처리 세 가지 중 하나를 고릅니다</li><li>결과는 요청자에게 앱 알림으로 갑니다</li></ol>
           <div class="pg-x3"><div class="pg-sec"><h3>처리 세 가지 (DA)</h3><dl><dt>[… 신청으로 전환]</dt><dd>등록 신청서를 엽니다 → 결재 → 등록 완료</dd><dt>[기존 표준어 사용 안내]</dt><dd>같은 뜻의 표준어가 있을 때</dd><dt>[반려]</dt><dd>사유 필수 — 속성은 미준수로 남음</dd></dl></div></div>
           <div class="pg-meta"><span><b>언제</b>모델의 미준수 단어를 정리할 때</span><span><b>누가</b>처리는 DA</span><span class="pg-links"><a href="#">비슷한 표준어 → 통합 검색</a></span></div></section></div>
-      <div class="caption muted u-mt-8">화면 안내 규칙 — 한 줄 설명(“~합니다.”) · 3단계(“~합니다”) · 추가 칸(용어 · 처리 · 상태 뜻) · 언제 / 누가 / 참고 · “조건 → 화면” 링크, [ ]는 화면 버튼 이름 그대로. 탭 줄이 없는 화면(결재함 · 감사 로그 · 설정)은 머리 오른쪽 끝에 같은 버튼, 탭이 있는 화면(설정)은 지금 탭에 맞춰 내용이 바뀜 · <span class="mono">?</span> 키 · Esc</div></section>
+      <div class="caption muted u-mt-8">화면 안내 규칙 — 한 줄 설명(“~합니다.”) · 3단계(“~합니다”) · 추가 칸(용어 · 처리 · 상태 뜻) · 언제 / 누가 / 참고 · “조건 → 화면” 링크, [ ]는 화면 버튼 이름 그대로. 탭 줄이 없는 화면(결재함 · 감사 로그)은 머리 오른쪽 끝에 같은 버튼, 탭이 있는 화면(설정 · 마이페이지)은 탭 줄 오른쪽 끝 · 지금 탭에 맞춰 내용이 바뀜 · <span class="mono">?</span> 키 · Esc</div></section>
+
+    <section class="sec"><div class="sec-h"><h2>설정형 화면</h2><span class="end muted">설정 · 마이페이지 — 24-settings-layout-guide</span></div>
+      <div class="caption muted">한 줄 = 라벨 240 │ 입력 480~760 │ 보조 칸(마지막 변경 · 적용 시점 · 영향 · 링크). 표는 넓은 행(≤1200). 견본은 줄인 폭으로 보입니다</div>
+      <div class="demo-box demo-set u-mt-8">
+        <div class="tabs" style="margin:0;padding:0 16px"><button class="on dirty" aria-current="true" aria-label="기관 — 저장하지 않은 변경 2건">기관<span class="tabdot" aria-hidden="true"></span></button><button>시스템</button><button>검수 기준</button><span class="grow"></span><button type="button" class="pg-btn btn ghost sm" aria-expanded="false">${icon('info', 14)}화면 안내</button></div>
+        <div style="padding:0 16px">
+          <h3 class="set-sec first">결재</h3>
+          <div class="set-row"><div class="l"><b>운영 목표</b><span>준수율 · 결재 기한</span></div><div class="field-row"><div class="field"><label for="sg-goal">준수율 목표</label><input class="input mono" id="sg-goal" value="95"></div><div class="field"><label for="sg-sla">결재 기한(일)</label><input class="input mono" id="sg-sla" value="3"></div></div><div class="aside"><span class="lastchg">마지막 변경: 이데이터 · 2026-11-20</span><span>저장하면 다음 신청부터 적용됩니다.</span><a href="#">홈 현황에서 보기 ↗</a></div></div>
+          <div class="set-row"><div class="l"><b>테마</b></div><div class="flex u-gap-8"><div class="seg" role="group" aria-label="테마(견본)"><button class="on">라이트</button><button>다크</button></div><span class="now-tag">바로 적용</span></div><div class="aside"><span>저장 막대에 묶이지 않는 동작은 컨트롤 옆에 ‘바로 적용’.</span></div></div>
+        </div>
+        <div class="setbar show" style="position:static"><span class="savest"><span class="sdot run"></span>저장하지 않은 변경 <b class="mono">2</b>건 · 기관</span><button type="button" class="btn ghost sm">변경 보기</button><span class="grow"></span><button class="btn">되돌리기</button><button class="btn primary">저장</button></div>
+      </div>
+      <div class="caption muted u-mt-8">[변경 보기] — 항목 · 이전 → 이후</div>
+      <ul class="sb-list u-mt-4"><li><b>기관</b> · 운영 목표 · 준수율 목표<span class="muted"> 90 → </span><b>95</b></li><li><b>기관</b> · 자기 승인<span class="muted"> 허용 → </span><b>비허용</b></li></ul>
+      <ul class="rule-list"><li>탭 안 [저장] 없음 — 아래 저장 막대 하나. 바뀐 탭에 파란 점 <span class="mono">.tabdot</span>, 낭독기에는 “기관 — 저장하지 않은 변경 2건”</li><li>저장 실패: 전부 먼저 검사 → 전부 보류 → 첫 오류 탭을 열고 그 칸에 포커스 · 칸 아래 사유</li><li>한 탭 안에 바로 적용과 막대 저장을 섞지 않습니다 · Ctrl+S 저장</li><li>편집할 수 있는 칸은 모두 저장 대상 — 저장 경로가 없으면 조회 전용</li></ul></section>
 
     <section class="sec"><div class="sec-h"><h2>안내 · 결재선</h2></div>
       <div class="banner danger">${icon('err')}<div class="grow">연결 용어 신청 REQ-2026-0013이 진행 중입니다. 완료해야 확정할 수 있습니다.</div></div>
