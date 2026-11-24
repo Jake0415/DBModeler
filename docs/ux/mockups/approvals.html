@@ -242,17 +242,28 @@ window.pageInit = function () {
   }
   function line(d) {
     const h = d.hist || [];
-    const ok = s => h.filter(x => x.step === s && /승인/.test(x.act || '') && !/실패|취소/.test(x.act || '')).pop();
-    const rj = h.filter(x => /반려/.test(x.act || '')).pop();
+    // review claude-approval-line: '승인 생략' is not an approval (AL-01); state is told in words, not only by shape/colour (AL-02 · 03 · 04)
+    const ok = s => h.filter(x => x.step === s && /승인/.test(x.act || '') && !/실패|취소|생략/.test(x.act || '')).pop();
+    const rj = h.filter(x => /반려/.test(x.act || '') && !/취소/.test(x.act || '')).pop();
+    const skipF = h.find(x => x.step === 'final' && /생략/.test(x.act || ''));
+    const wd = d.step === 'withdrawn', wdH = h.filter(x => /회수/.test(x.act || '')).pop(), ended = d.step === 'rejected' || wd;
     const daH = ok('da') || (rj && rj.step === 'da' ? rj : null), fH = ok('final') || (rj && rj.step === 'final' ? rj : null);
-    const cls = s => (d.step === 'rejected' && rj && rj.step === s ? 'rej' : d.step === s ? 'cur' : (s === 'da' && ['final', 'done'].includes(d.step)) || (s === 'final' && d.step === 'done') ? 'done' : '');
+    const cls = s => (d.step === 'rejected' && rj && rj.step === s ? 'rej' : d.step === s ? 'cur' : ok(s) || (s === 'da' && ['final', 'done'].includes(d.step)) || (s === 'final' && d.step === 'done') ? 'done' : ended ? 'skip' : '');   // an approved step stays done even if a later step rejected
     const pt = c => `<span class="pt">${c === 'done' ? icon('check', 12) : c === 'rej' ? icon('x', 12) : ''}</span>`;
-    const who = (x, s) => x ? `${x.who} · ${x.at}${x.self ? ' <span class="muted">(자기 승인)</span>' : ''}` : d.step === s ? (inQueue(d) ? '<b class="u-accent">내 차례</b>' : `${stepRole(s)} 처리 대기`) : '';
-    return `<div class="approval-line">
-      <div class="al-step done">${pt('done')}<div><b>신청</b><div class="caption muted">${nameOf(d.req)} · ${d.date}</div></div></div>
-      <div class="al-step ${cls('da')}">${pt(cls('da'))}<div><b>DA 승인</b><div class="caption muted">${who(daH, 'da')}</div></div></div>
-      ${hasFinal(d) ? `<div class="al-step ${cls('final')}">${pt(cls('final'))}<div><b>최종 승인 (기관 담당자)</b><div class="caption muted">${who(fH, 'final') || (d.type === 'model' ? '시스템 설정: 모델 확정 최종 승인 사용(신청 당시)' : '기관 설정: 사전 신청 최종 승인 사용(신청 당시)')}</div></div></div>` : '<div class="al-step skip"><span class="pt"></span><div><b>최종 승인 · 사용 안 함</b><div class="caption muted">신청 당시 설정에 따라 DA 승인으로 완료됩니다</div></div></div>'}
-    </div>`;
+    const ST = { done: '완료', cur: '진행 중', rej: '반려', skip: '진행 안 함', '': '대기' };
+    const who = (x, s, c) => x ? `${x === rj ? '<b class="u-danger">반려</b> · ' : ''}${x.who} · ${x.at}`
+      : c === 'skip' ? `진행 안 함 · ${wd ? '회수' : '반려로 종료'}` : d.step === s ? (inQueue(d) ? '<b class="u-accent">내 차례</b>' : `${stepRole(s)} 처리 대기`) : '';
+    const selfTag = x => x && x.self ? ' <span class="badge b-violet sm">자기 승인</span>' : '';
+    const stepOf = (c, label, sub) => `<li class="al-step ${c}"${c === 'cur' ? ' aria-current="step"' : ''}>${pt(c)}<div class="al-t"><span class="sr-only">${ST[c]}: </span><b>${label}</b><div class="caption muted">${sub || '&nbsp;'}</div></div></li>`;
+    const hasF = hasFinal(d) && !skipF, cD = cls('da'), cF = hasF ? cls('final') : 'skip';
+    // what the line is based on — a visible footnote, not a hover-only tooltip (AL-05)
+    const note = skipF ? '결재선은 신청 당시 설정 기준 — 최종 승인 끔(생략)' : !hasFinal(d) ? '결재선은 신청 당시 설정 기준 — 최종 승인 없음, DA 승인으로 완료'
+      : `결재선은 신청 당시 설정 기준 — ${d.type === 'model' ? '시스템 설정: 모델 확정 최종 승인 사용' : '기관 설정: 사전 신청 최종 승인 사용'}`;
+    return `<ol class="approval-line h" aria-label="결재선 3단계">
+      ${stepOf('done', '신청', `${nameOf(d.req)} · ${d.date}${wd && wdH ? ` · <b>회수</b> ${wdH.at}` : ''}`)}
+      ${stepOf(cD, 'DA 승인' + selfTag(daH), who(daH, 'da', cD) || 'DA')}
+      ${stepOf(cF, hasF ? '최종 승인' + selfTag(fH) : (skipF ? '최종 승인 생략' : '최종 승인 없음'), hasF ? (who(fH, 'final', cF) || '기관 담당자') : (skipF ? '신청 당시 설정: 최종 승인 끔' : 'DA 승인으로 완료'))}
+    </ol><div class="caption faint al-note"><i data-ic=info data-s=12></i>${note}</div>`;
   }
   const KN = { word: '단어', term: '용어', domain: '도메인', code: '코드', entity: '엔터티 용어', class: '도메인분류' };
   // opOf: the shared one from app.js (추가 · 변경 · 미사용 · 삭제)

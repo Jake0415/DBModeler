@@ -712,6 +712,23 @@ input[type=checkbox]:focus-visible, input[type=radio]:focus-visible { outline:2p
 .al-step.skip .pt { border-style:dashed; }
 .al-step.skip b { color:var(--fg-3); font-weight:500; }
 .al-step:not(:last-child)::before { content:""; position:absolute; left:6.5px; top:20px; bottom:-6px; width:1px; background:var(--border); }
+/* horizontal stepper (결재함 상세): one row, connector between the dots, label + one-line caption under each (long notes in the tooltip) */
+.approval-line.h { flex-direction:row; align-items:flex-start; margin:0; padding:0; list-style:none; }
+.approval-line.h .al-step { flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:6px; padding:0 12px 0 0; }
+.approval-line.h .al-step .pt { margin:0; position:relative; z-index:1; }
+.approval-line.h .al-step:not(:last-child)::before { left:20px; right:6px; top:7px; bottom:auto; width:auto; height:1px; }
+.approval-line.h .al-step.done:not(:last-child)::before { background:var(--fg-3); }
+.approval-line.h .al-t { min-width:0; }
+.approval-line.h .al-t b { display:block; font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.approval-line.h .al-t .caption { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.approval-line.h .al-step.cur b { color:var(--ds-blue-900); }
+/* review claude-approval-line AL-07 · 08: waiting dots meet 3:1, "not taken" is a clearly dashed ring, the segment after a rejection is dashed */
+.approval-line.h .al-step:not(.done):not(.cur):not(.rej) .pt { border-color:var(--fg-3); }
+.approval-line.h .al-step.skip .pt { border:1.5px dashed var(--fg-3); background:transparent; }
+.approval-line.h .al-step.skip b { color:var(--fg-3); font-weight:500; }
+.approval-line.h .al-step.rej:not(:last-child)::before, .approval-line.h .al-step.skip:not(:last-child)::before { background:none; border-top:1px dashed var(--fg-3); height:0; }
+.approval-line.h .al-t b .badge { vertical-align:1px; margin-left:4px; }
+.al-note { display:flex; align-items:center; gap:4px; margin-top:6px; }
 .progress { height:6px; border-radius:3px; background:var(--surface-2); overflow:hidden; }
 .progress > i { display:block; height:100%; background:var(--ink); }
 .codeblock { background:var(--surface-2); border-radius:var(--r-lg); padding:12px 0; font:400 13px/20px var(--font-mono); overflow:auto; }

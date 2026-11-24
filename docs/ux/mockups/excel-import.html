@@ -214,10 +214,12 @@
     <label class="flex caption u-mt-12" id="ack6-w" hidden><input type="checkbox" id="ack6"> <span id="ack6-t"></span></label>
     <div class="field u-mt-16"><label for="why6">신청 사유 * <span class="faint">1~1,000자</span></label><textarea class="input" id="why6" rows="3"></textarea></div>
     <div class="section-t">결재선</div>
-    <div class="approval-line">
-      <div class="al-step"><span class="pt"></span><div><b>DA 승인</b> <span class="caption faint">필수</span></div></div>
-      <div class="al-step" id="x-final"><span class="pt"></span><div><b>최종 승인 (기관 담당자)</b> <span class="caption faint">기관 설정 사용 중</span></div></div>
-    </div>
+    <!-- same horizontal stepper as 결재함 (review claude-approval-line): 신청(나) → DA 승인 → 최종 승인, a preview before submitting -->
+    <ol class="approval-line h" aria-label="결재선 미리보기">
+      <li class="al-step cur" aria-current="step"><span class="pt"></span><div class="al-t"><span class="sr-only">지금: </span><b>신청</b><div class="caption muted">나 · 지금</div></div></li>
+      <li class="al-step"><span class="pt"></span><div class="al-t"><span class="sr-only">다음: </span><b>DA 승인</b><div class="caption muted">필수</div></div></li>
+      <li class="al-step" id="x-final"><span class="pt"></span><div class="al-t"><span class="sr-only">그다음: </span><b>최종 승인</b><div class="caption muted">기관 담당자 · 기관 설정 사용 중</div></div></li>
+    </ol>
   </div></section>
 
   <div class="rp-foot xfoot u-bg">
@@ -501,7 +503,7 @@ window.pageInit = function () {
   // baseline scope (CX14-05): a filtered download only covers the items it listed — "파일에서 빠짐" is judged inside that set
   let outRows = [];   // E-05: rows outside the baseline scope stay in the corrected file (with their status), they are only left out of comparison
   const applyScope = () => { window.__scopeNote = ''; outRows = []; if (mode !== 'round' || B || verifyId || kind !== '용어') return; /* the sample baseline is a term download */ const bl = latestBaseline(); const m = /(?:필터: |검색 결과\()([^)]+)\)?$/.exec(bl.scope || ''); const ids = Array.isArray(bl.ids) && bl.ids.length ? new Set(bl.ids) : null; if (ids || (m && m[1].trim() && m[1].trim() !== '최근 변경')) { const kw = m ? m[1].trim() : ''; const inScope = r => !r.id || (ids ? ids.has(r.id) : r.name.includes(kw)); const out = ROWS.filter(r => r.id && !inScope(r) && ['missing', 'same', 'chg'].includes(r.st)); ROWS = ROWS.filter(r => !out.includes(r)); outRows = out; window.__scopeNote = `기준본 ${bl.id} 범위(${bl.scope}) 밖 ${out.length}행은 비교·신청에서 뺐습니다`; } }; applyScope();
-  { const xf = $('x-final'); if (xf) xf.style.display = lineFor('dict').includes('final') ? '' : 'none'; }   // the line follows settings (CL14-10)
+  { const xf = $('x-final'); if (xf && !lineFor('dict').includes('final')) { xf.className = 'al-step skip'; xf.querySelector('b').textContent = '최종 승인 없음'; xf.querySelector('.caption').textContent = 'DA 승인으로 완료(기관 설정)'; } }   // the line follows settings (CL14-10)
   let cur = missingB ? 1 : (resumeId || verifyId) ? 5 : parseInt(q.get('step') || '1', 10), file = !missingB && !!(resumeId || verifyId), timer = null, sel = null;
   var upFile = null;   // the file the user dropped / picked (name · size only in the mockup); null = the kind's sample file
   const fmtSize = n => n >= 1048576 ? (n / 1048576).toFixed(1) + 'MB' : Math.max(1, Math.round(n / 1024)) + 'KB';
