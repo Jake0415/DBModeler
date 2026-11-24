@@ -2,7 +2,7 @@
 services:
   db:
     image: postgres:16
-    container_name: neodb-dev-db
+    container_name: neodb-dev-postgres
     environment:
       POSTGRES_DB: neodb
       POSTGRES_USER: neodb
