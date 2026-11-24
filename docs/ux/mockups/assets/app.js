@@ -27,7 +27,7 @@
   window.PRODUCT = PRODUCT;
   const USERS = {
     kim: { id: 'kim', name: '김모델', company: '한국데이터진흥원', org: '데이터정책팀', phone: '010-2345-1101', mail: 'kim@kda.go.kr', roles: ['modeler', 'da'], systems: ['요구사항관리', '통합ERP'] },
-    park: { id: 'park', name: '박설계', company: '(주)한빛정보', org: '정보화사업팀', phone: '010-3456-2202', mail: 'park@hanbit.co.kr', roles: ['modeler'], systems: ['요구사항관리', '통합ERP'] },
+    park: { id: 'park', name: '박설계', company: '(주)한빛정보', org: '정보화사업팀', phone: '010-3456-2202', mail: 'park@hanbit.co.kr', roles: ['modeler'], systems: ['요구사항관리', '통합ERP'], kind: 'out', project: 'PJ-01', until: '2026-12-31', viewScope: 'org', viewWhy: '요구사항관리 · 통합ERP 연계 설계 — 두 시스템 모두 담당' },
     lee: { id: 'lee', name: '이데이터', company: '한국데이터진흥원', org: '데이터정책팀', phone: '010-4567-3303', mail: 'lee@kda.go.kr', roles: ['da', 'admin'], systems: ['전체'] },
     hyun: { id: 'hyun', name: '이현업', company: '한국데이터진흥원', org: '기획조정실', phone: '010-5678-4404', mail: 'hyun@kda.go.kr', roles: ['owner'], systems: ['전체'] },
     choi: { id: 'choi', name: '최담당', company: '한국데이터진흥원', org: '재무회계팀', phone: '010-6789-5505', mail: 'choi@kda.go.kr', roles: ['owner', 'modeler'], systems: ['통합ERP'] }
@@ -37,7 +37,8 @@
   window.pwHash = (id, pw) => { let h = 2166136261; const s = String(id).toLowerCase() + ':' + pw + ':neodb-mock-salt'; for (let i = 0; i < s.length; i++) h = Math.imul(h ^ s.charCodeAt(i), 16777619); return 'm1$' + (h >>> 0).toString(16); };
   const SEED_PW = 'Neodb!2026';   // mock only — every seeded account uses it; new accounts get the password the admin types
   Object.values(USERS).forEach(u => Object.assign(u, { status: 'active', auth: 'local', pwHash: pwHash(u.id, SEED_PW), pwAt: '2026-10-01', pwTemp: false, fails: 0, created: '2026-09-01', last: '' }));
-  const ROLE_NAME = { modeler: '모델러', da: 'DA', owner: '기관 담당자', admin: 'Admin' };
+  const ROLE_NAME = { modeler: '모델러', da: 'DA', owner: '기관 담당자', admin: 'Admin', auditor: '감리' };   /* R-12: 감리 = 읽기 전용 + 끝난 결재 · 감사 로그 · 산출물 */
+  window.HIGH_ROLES = ['da', 'owner', 'admin', 'auditor'];   /* R-03: giving these needs 기관 담당자 확인 */
   window.USERS = USERS; window.ROLE_NAME = ROLE_NAME;
   // roles changed in settings (SC-42) apply to everyone — the mock "server" copy of user roles
   try { const ov = JSON.parse(store.get('dbm-user-roles', 'null')); if (ov) Object.entries(ov).forEach(([id, r]) => { if (USERS[id]) USERS[id].roles = r; }); } catch (e) {}
@@ -67,40 +68,56 @@
   /* RBAC (15): role × permission × scope. scope 'sys' = only the systems the user is in charge of (담당 시스템, '전체' = all),
      'org' = the whole agency (기관 사전 · 설정), 'own' = what the user made. Viewers (no role) only read. */
   const PERMS = [
-    { id: 'model.view', g: '모델', n: '모델 · DDL · 산출물 보기', roles: ['*'], scope: 'org', note: '모든 시스템을 읽을 수 있다 (표준 준수 확인용)' },
+    { id: 'model.view', g: '모델', n: '모델 · DDL · 산출물 보기', roles: ['*'], scope: 'view', note: '계정의 조회 범위대로 — 내부는 기관 전체, 외주 · 감리는 담당 시스템만 (R-11)' },
     { id: 'model.edit', g: '모델', n: '모델 편집 · 표준 맞추기 · DDL 가져오기', roles: ['modeler'], scope: 'sys' },
-    { id: 'area.create', g: '모델', n: '업무 영역 만들기', roles: ['modeler', 'admin'], scope: 'sys', adminAll: true },
-    { id: 'model.submit', g: '모델', n: '모델 확정 신청 · 회수', roles: ['modeler'], scope: 'sys' },
+    { id: 'area.create', g: '모델', n: '업무 영역 만들기', roles: ['modeler', 'da', 'admin'], scope: 'sys', adminAll: true, note: 'DA는 주제 영역 체계를 먼저 잡는다 (R-19)' },
+    { id: 'area.info', g: '모델', n: '업무 영역 이름 · 설명 · 담당 바꾸기', roles: ['modeler', 'admin'], scope: 'sys', adminAll: true, note: '결재 없이 감사 로그 (25)' },
+    { id: 'area.manage', g: '모델', n: '업무 영역 옮기기 · 복제 · 사용 중지 · 삭제', roles: ['admin'], scope: 'org', note: '결재 중인 영역은 회수 뒤 (25)' },
+    { id: 'model.submit', g: '모델', n: '모델 확정 신청', roles: ['modeler'], scope: 'sys', note: '회수는 신청한 사람만 — 사업 종료 인계 때는 인수자 · DA' },
+    { id: 'out.export', g: '모델', n: 'DDL · ERD · 산출물 내려받기', roles: ['modeler', 'da', 'owner', 'auditor'], scope: 'view', note: '모델러는 담당 시스템 · 내려받을 때마다 감사 로그 · 개인정보 컬럼 목록은 DA · 기관 담당자 · 감리만, 사유 (R-14)' },
     { id: 'dict.view', g: '표준 사전', n: '표준 사전 · 변경 내역 보기', roles: ['*'], scope: 'org' },
     { id: 'dict.request', g: '표준 사전', n: '사전 신청 · 엑셀 가져오기 · 후보 등록', roles: ['modeler', 'da'], scope: 'org' },
     { id: 'cand.decide', g: '표준 사전', n: '후보 큐 판단', roles: ['da'], scope: 'org' },
     { id: 'dict.publish', g: '표준 사전', n: '사전 공표', roles: ['da'], scope: 'org' },
-    { id: 'dict.purge', g: '표준 사전', n: '삭제 보관 항목 영구 삭제', roles: ['da', 'admin'], scope: 'org' },
-    { id: 'dict.group', g: '표준 사전', n: '도메인그룹 직접 관리', roles: ['da', 'admin'], scope: 'org', note: '결재 없이 기록 · 감사 로그. 분류는 품의' },
+    { id: 'dict.purge', g: '표준 사전', n: '삭제 보관 항목 영구 삭제', roles: ['da'], scope: 'org', note: 'Admin은 표준 내용을 바꾸지 않는다 (R-04)' },
+    { id: 'dict.group', g: '표준 사전', n: '도메인그룹 직접 관리', roles: ['da'], scope: 'org', note: '결재 없이 기록 · 감사 로그. 분류는 품의' },
     { id: 'dict.common', g: '표준 사전', n: '공통표준 새 판 올리기(품의 작성)', roles: ['da', 'admin'], scope: 'org', note: '반영은 일반 품의(DA → 최종 승인)' },
     { id: 'excel.viewall', g: '표준 사전', n: '다른 사람의 엑셀 업로드 묶음 보기', roles: ['da'], scope: 'org', note: '나머지는 자기 묶음만' },
-    { id: 'type.std', g: '표준 사전', n: '표준 논리 타입 추가 · 수정 · 사용 중지', roles: ['da', 'admin'], scope: 'org', note: '결재 없이 바로 — 영향 확인 · 감사 로그 · 되돌리기 (27)' },
-    { id: 'type.add', g: '표준 사전', n: '추가 · DBMS 전용 타입과 축약명 등록', roles: ['da', 'admin'], scope: 'org', note: '공통 또는 시스템 전용 · 축약명 2~3자' },
-    { id: 'type.map', g: '표준 사전', n: '시스템별 데이터타입 매핑 수정', roles: ['da', 'admin'], scope: 'sys', adminAll: true, note: 'DA는 담당 시스템만' },
-    { id: 'type.request', g: '표준 사전', n: '타입 추가 요청', roles: ['modeler'], scope: 'sys', note: '등록은 DA · Admin' },
+    { id: 'type.std', g: '표준 사전', n: '표준 논리 타입 추가 · 수정 · 사용 중지', roles: ['da'], scope: 'org', note: '결재 없이 바로 — 영향 확인 · 감사 로그 · 되돌리기 (27)' },
+    { id: 'type.add', g: '표준 사전', n: '추가 · DBMS 전용 타입과 축약명 등록', roles: ['da'], scope: 'org', note: '공통 또는 시스템 전용 · 축약명 2~3자' },
+    { id: 'type.map', g: '표준 사전', n: '시스템별 데이터타입 매핑 수정', roles: ['da'], scope: 'sys', note: '담당 시스템만 · 시스템을 등록하면 기본 매핑이 자동으로 생긴다' },
+    { id: 'type.request', g: '표준 사전', n: '타입 추가 요청', roles: ['modeler'], scope: 'sys', note: '등록은 DA' },
     { id: 'appr.da', g: '결재', n: '1단계(DA) 승인 · 반려', roles: ['da'], scope: 'sys', note: '사전 신청은 기관 전체, 모델 확정은 담당 시스템만' },
     { id: 'appr.final', g: '결재', n: '최종 승인 · 반려', roles: ['owner'], scope: 'sys', note: '사전 신청은 기관 전체, 모델 확정은 담당 시스템만 · 신청자와 1단계 승인자는 최종 승인할 수 없다' },
-    { id: 'appr.viewall', g: '결재', n: '모든 결재 문서 보기', roles: ['da', 'owner'], scope: 'org', note: '나머지 사용자는 자기 신청 · 참조 문서만' },
-    { id: 'audit.view', g: '관리', n: '감사 로그 보기', roles: ['da', 'admin'], scope: 'org' },
-    { id: 'settings', g: '관리', n: '기관 · 시스템 · 검수 기준 설정', roles: ['admin'], scope: 'org' },
-    { id: 'users', g: '관리', n: '사용자 · 역할 · 인증 관리', roles: ['admin'], scope: 'org', note: '자기 역할 · 상태는 바꿀 수 없다' }
+    { id: 'appr.viewall', g: '결재', n: '끝난 결재 문서 보기', roles: ['da', 'owner', 'auditor'], scope: 'view', note: '결재 중 문서는 품의자 · 결재선만 · 감리는 조회 범위 안 · 나머지는 자기 신청 · 참조 문서만' },
+    { id: 'admin.confirm', g: '결재', n: '관리 변경 확인 — 느슨해지는 결재 정책 · 높은 역할 부여', roles: ['owner'], scope: 'org', note: '신청자 · 역할을 받는 사람은 확인할 수 없다 · 7일 지나면 자동 취소 (R-01 · R-03)' },
+    { id: 'audit.view', g: '관리', n: '감사 로그 보기', roles: ['da', 'admin', 'owner', 'auditor'], scope: 'org', note: '감리는 기관 관리 기록(설정 · 계정) 빼고 조회 범위 안 (R-12 · R-15)' },
+    { id: 'settings', g: '관리', n: '기관 · 시스템 · 사업 설정', roles: ['admin'], scope: 'org', note: '느슨해지는 결재 정책은 기관 담당자 확인 뒤 적용 (R-01)' },
+    { id: 'rules.edit', g: '관리', n: '검수 기준 고치기', roles: ['da', 'admin'], scope: 'org', note: '표준 사전 › 검수 기준 — 모두 읽기 (R-19)' },
+    { id: 'users', g: '관리', n: '사용자 · 역할 · 인증 관리', roles: ['admin'], scope: 'org', note: '자기 역할 · 상태는 바꿀 수 없다 · DA · 기관 담당자 · Admin · 감리 부여는 기관 담당자 확인 (R-03)' }
   ];
   window.PERMS = PERMS;
   window.sysOfArea = area => { const m = getAllModels()[area]; if (!m) return null; const s = SYSLIST.find(x => x.code === (m.system || 'RQMS')); return s ? s.name : (m.sys || null); };
   // Korean particle after a word (받침 → 은/이, 없으면 는/가)
   window.josa = (w, pair) => { const c = String(w).charCodeAt(String(w).length - 1); const has = c >= 0xAC00 && c <= 0xD7A3 && (c - 0xAC00) % 28 > 0; const [a, b] = pair.split('/'); return w + (has ? a : b); };
+  /* R-09 · R-11: 소속(내부 · 외주 · 감리) · 사용 기한 · 조회 범위 — 범위는 소속에서 정하고 예외만 사유와 함께 */
+  window.ACCT_KIND = { in: '내부', out: '외주', aud: '감리' };
+  window.viewScopeOf = u => (u && u.viewScope) || (u && ['out', 'aud'].includes(u.kind) ? 'sys' : 'org');
+  window.isoToday = () => { const t = window.MOCK_TODAY || new Date(); return `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, '0')}-${String(t.getDate()).padStart(2, '0')}`; };
+  window.expiredUser = u => !!(u && u.until && u.until < isoToday());
+  window.daysLeft = u => u && u.until ? Math.round((new Date(u.until) - new Date(isoToday())) / 86400000) : null;
+  const APPR_PERMS = ['appr.da', 'appr.final', 'admin.confirm', 'cand.decide', 'dict.publish'];   // R-05: opened only after the person changed the temporary password
+  { const me1 = USERS[ME.id], pgx = location.pathname; if (me1 && expiredUser(me1) && !/login\.html|error\.html/.test(pgx)) location.replace('login.html?expired=1'); }
   window.inScope = (u, sys) => { const s = u.systems || []; if (s.includes('전체')) return true; const c = sysCodeOf(sys); return s.some(x => sysCodeOf(x) === c); };   /* 25 §7: compared by system code */
   // can(user, permission, { system | area | doc }) — the only question every screen asks
   window.canUser = (u, pid, ctx) => {
-    const p = PERMS.find(x => x.id === pid); if (!p || !u || u.status === 'stopped') return false;
+    const p = PERMS.find(x => x.id === pid); if (!p || !u || u.status === 'stopped' || expiredUser(u)) return false;
+    if (u.pwTemp && APPR_PERMS.includes(pid)) return false;
     const roles = u.roles || [];
     const roleOk = p.roles.includes('*') || p.roles.some(r => roles.includes(r)) || (p.extra || []).some(r => roles.includes(r));
     if (!roleOk) return false;
+    if (p.scope === 'view') { if (pid === 'out.export' && ctx && !roles.some(r => ['da', 'owner', 'auditor'].includes(r))) return !!(ctx.system || ctx.area) && inScope(u, ctx.system ? sysCodeOf(ctx.system) : sysCodeOfArea(ctx.area));
+      if (!ctx || viewScopeOf(u) === 'org' || (ctx.doc && ctx.doc.type === 'dict')) return true; const sk = ctx.system ? sysCodeOf(ctx.system) : ctx.area ? sysCodeOfArea(ctx.area) : ctx.doc ? ((ctx.doc.sysAt && ctx.doc.sysAt.code) || sysCodeOfArea(ctx.doc.area) || (ctx.doc.sys && sysCodeOf(ctx.doc.sys))) : null; return !!sk && inScope(u, sk); }   /* R-11: 사전 문서는 기관 전체 · 시스템을 모르면 막는다 */
     if (p.scope !== 'sys' || !ctx) return true;
     if (p.adminAll && roles.includes('admin')) return true;
     const d = ctx.doc; if (d && d.type === 'dict') return true;   // dictionary requests are agency-wide
@@ -110,12 +127,25 @@
   window.can = (pid, ctx) => canUser(USERS[ME.id] || ME, pid, ctx);
   // whose turn: the document's step, the role for that step, and (model documents) the system in charge
   const daApprover = d => { const h = (d.hist || []).filter(x => x.step === 'da' && /승인/.test(x.act || '') && !/취소|실패/.test(x.act || '')).slice(-1)[0]; return h ? (h.whoId || (Object.values(USERS).find(u => u.name === h.who) || {}).id) : null; };
-  window.canUserAct = (u, d, step) => { if (!u || !d) return false; if (step === 'da') return canUser(u, 'appr.da', { doc: d }); if (step === 'final') return canUser(u, 'appr.final', { doc: d }) && d.req !== u.id && daApprover(d) !== u.id; return false; };
+  const daIds = d => { const h = (d.hist || []).filter(x => x.step === 'da' && /승인/.test(x.act || '') && !/취소|실패/.test(x.act || '')).slice(-1)[0]; return h ? [h.whoId || (Object.values(USERS).find(u => u.name === h.who) || {}).id, h.forId].filter(Boolean) : []; };   /* the DA step's actual approver and whom they stood in for */
+  window.daIds = daIds;
+  const actSelf = (u, d, step) => { if (!u || !d) return false; if (step === 'da') return canUser(u, 'appr.da', { doc: d }) && (d.req !== u.id || getOrg().selfAppr !== false); if (step === 'final') return canUser(u, 'appr.final', { doc: d }) && d.req !== u.id && !daIds(d).includes(u.id); return false; };   /* R-06: 자기 승인 비허용이면 자기 신청은 내 차례가 아니다 */
+  // R-08: 결재 위임 — someone away names a stand-in for a period; checked at run time, no re-delegation, the stand-in never approves their own request
+  window.delegActive = x => !!(x && x.deleg && x.deleg.to && x.deleg.from <= isoToday() && isoToday() <= x.deleg.until && x.status !== 'stopped' && !expiredUser(x));
+  window.delegFor = u => Object.values(USERS).filter(x => x.id !== u.id && delegActive(x) && x.deleg.to === u.id);
+  window.canUserAct = (u, d, step) => { if (!u || !d || u.status === 'stopped' || expiredUser(u)) return false; if (actSelf(u, d, step)) return true;
+    if (u.pwTemp || !(u.roles || []).includes(step === 'da' ? 'da' : 'owner')) return false;   // R-08: the stand-in has the same role
+    return delegFor(u).some(x => actSelf(x, d, step) && d.req !== u.id && (step !== 'final' || !daIds(d).includes(u.id))); };
+  window.actingFor = (u, d, step) => actSelf(u, d, step) ? null : (canUserAct(u, d, step) ? delegFor(u).find(x => actSelf(x, d, step)) || null : null);
+  window.delegCandidates = me => Object.values(USERS).filter(u => u.id !== me.id && u.status !== 'stopped' && !expiredUser(u) && !u.pwTemp && (u.kind || 'in') === 'in' && (me.roles || []).filter(r => ['da', 'owner'].includes(r)).some(r => (u.roles || []).includes(r)));
   window.canActOn = d => !!d && ['da', 'final'].includes(d.step) && canUserAct(USERS[ME.id] || ME, d, d.step);
   // who can take a step (active accounts only) — also the notification list
   window.approversFor = (d, step) => Object.values(USERS).filter(u => u.status !== 'stopped' && canUserAct(u, d, step));
   // steps of the line nobody could take (checked before submitting and after account changes)
-  window.lineGaps = d => (d.line || lineFor(d.type, d.area)).filter(s => !approversFor(Object.assign({ hist: [] }, d), s).filter(u => s !== 'final' || u.id !== d.req).length);
+  window.lineGaps = d => { const line = d.line || lineFor(d.type, d.area), d0 = Object.assign({ hist: [] }, d); const das = approversFor(d0, 'da'); if (!das.length) return line.slice();
+    const needFinal = c => line.includes('final') || c.id === d.req;   // 자기 승인 adds a final step
+    const ok = das.some(c => !needFinal(c) || approversFor(Object.assign({}, d0, { line: ['da', 'final'], hist: [{ step: 'da', act: 'DA 승인', whoId: c.id }] }), 'final').some(f => f.id !== d.req && f.id !== c.id));
+    return ok ? [] : ['final']; };   /* R-06: a working DA → final pair, not just a head count per step */
   window.roleBadges = u => u.roles.map(r => `<span class="badge">${ROLE_NAME[r]}</span>`).join(' ');
 
   /* ================= v5 shared state layer =================
@@ -189,11 +219,13 @@
     if (Array.isArray(ME.systems)) ME.systems = [...new Set(ME.systems.map(sysCodeOf))];
     if (changed && store.get('dbm-users', null)) saveUsers(); }
   window.activeSystems = () => SYSLIST.filter(x => !x.off);
-  window.curSys = () => { const c = store.get('dbm-sys', 'ERP'); return SYSLIST.find(s => s.code === c) || SYSLIST[0]; };
+  window.curSys = () => { const c = store.get('dbm-sys', 'ERP'); const s0 = SYSLIST.find(s => s.code === c) || SYSLIST[0];
+    if (window.can && window.USERS && window.ME && !can('model.view', { system: s0.code })) { const v = SYSLIST.find(s => !s.off && can('model.view', { system: s.code })); if (v) return v; }   /* R-11: 담당 시스템만 보는 계정은 담당 시스템으로 */
+    return s0; };
   window.getAllModels = () => { const all = J('dbm-model', clone(MODEL0)), del = J('dbm-area-del', []); Object.keys(MODEL0).forEach(k => { if (!all[k] && !del.includes(k)) all[k] = clone(MODEL0[k]); }); del.forEach(k => { delete all[k]; }); return all; };
   const AREA_ORDER = ['e_hr', 'e_tr', 'e_fi', 'e_sd', 'e_mm', 'e_wm', 'e_pp'];
   window.getModels = () => { const c = curSys().code; const ent = Object.entries(getAllModels()).filter(([, m]) => (m.system || 'RQMS') === c && !m.off); ent.sort((a, b) => { const x = AREA_ORDER.indexOf(a[0]), y = AREA_ORDER.indexOf(b[0]); return (x < 0 ? 99 : x) - (y < 0 ? 99 : y); }); return Object.fromEntries(ent); };
-  window.defArea = () => Object.keys(getModels())[0] || 'rq';
+  window.defArea = () => { const ks = Object.keys(getModels()); return ks.find(a => can('model.edit', { area: a })) || ks[0] || 'rq'; };   /* R-18: the first area I can work on */
   window.getModel = area => getAllModels()[area] || MODEL0.rq;
   /* new business area (system home [+ 업무 영역], DDL import): id, name, v1 working version, optional imported structure */
   window.addArea = (name, structure, meta) => {
@@ -218,8 +250,8 @@
   window.areaActWhy = (id, kind) => {
     const m = getAllModels()[id]; if (!m) return '업무 영역을 찾지 못했습니다 — 다른 곳에서 지웠을 수 있습니다';
     if (liveRoleChanged()) return '권한이 바뀌었습니다 — 새로고침한 뒤 다시 하세요';
-    if (kind === 'info') return can('model.edit', { area: id }) || can('settings') ? '' : '이 영역을 편집할 권한이 없습니다';
-    if (!can('settings')) return '관리자만 할 수 있습니다';
+    if (kind === 'info') return can('area.info', { area: id }) ? '' : '이 영역을 바꿀 권한이 없습니다(담당 모델러 · Admin)';
+    if (!can('area.manage')) return '업무 영역 옮기기 · 복제 · 사용 중지 · 삭제는 Admin만 할 수 있습니다';
     if (kind !== 'restore' && modelLock(id).state === 'review') return '결재가 진행 중입니다 — 결재함에서 회수한 뒤 다시 하세요';
     return '';
   };
@@ -642,6 +674,10 @@
   ['e_hr', 'e_tr', 'e_fi', 'e_sd', 'e_mm', 'e_wm', 'e_pp'].forEach(k => { if (ERP_BUILT.meta[k]) MODEL0[k] = ERP_BUILT.meta[k]; });
   // the address decides the system: ?system=ERP, or an area / snapshot that belongs to another system
   { const sy = qs.get('system'), ar = qs.get('area'); if (ar && getAllModels()[ar]) store.set('dbm-sys', getAllModels()[ar].system || 'RQMS'); else if (sy && SYSLIST.some(s => s.code === sy)) store.set('dbm-sys', sy); }
+  /* R-11: an area or system outside my view scope opened by address → say so (never quietly show another area) */
+  { const ar = qs.get('area'), sy = qs.get('system'), pg0 = location.pathname; if (!/error.html|login.html/.test(pg0) && ((ar && getAllModels()[ar] && !can('model.view', { area: ar })) || (sy && SYSLIST.some(s => s.code === sy) && !can('model.view', { system: sy })))) { location.replace('error.html?code=403&need=' + encodeURIComponent('이 시스템 조회 범위 — 외주 · 감리는 담당 시스템만') + '&what=' + encodeURIComponent((ar ? sysOfArea(ar) : (SYSLIST.find(s => s.code === sy) || {}).name) || '이 시스템')); } }
+  /* R-18: with no system in the address, a modeler starts in a system they are in charge of */
+  if (!qs.get('system') && !qs.get('area') && !qs.get('doc') && ME.has('modeler')) { const c0 = store.get('dbm-sys', 'ERP'); if (!inScope(USERS[ME.id] || ME, c0)) { const mine = SYSLIST.find(s => !s.off && inScope(USERS[ME.id] || ME, s.code)); if (mine) store.set('dbm-sys', mine.code); } }
   // views belong to the area's model data (they follow its version and approval); seed views until the area is saved
   window.viewsOf = area => { const m = getAllModels()[area]; const d = m && getModelData(area, m.ver); return clone((d && d.V && d.V.length && d.V) || J('dbm-views-' + area, null) || VIEWS0[area] || [{ id: 'all', n: '전체' }]); };
   // a reference is stale when its source area has a newer confirmed copy than the one it points at
@@ -1088,6 +1124,35 @@
   window.pushAudit = e => { e = Object.assign({}, e, { target: txt(e.target), why: txt(e.why) }); const all = J('dbm-audit', []); all.unshift(Object.assign({ id: 'au' + Date.now() + Math.random().toString(36).slice(2, 5), at: today() + ' ' + now().split(' ')[1], who: ME.name, whoId: ME.id }, e)); S('dbm-audit', all.slice(0, 300)); };
   window.getAudit = () => J('dbm-audit', []);
 
+  /* ---- R-01 · R-03: 관리 변경 확인 — loosening approval policy · giving a high role waits for a 기관 담당자 (not the requester, not the target) ---- */
+  const AR_DAYS = 7;
+  window.getAdminReqs = () => { const L = J('dbm-admin-reqs', []); let ch = false; L.forEach(r => { if (r.status === 'wait' && Date.now() > r.untilMs) { r.status = 'expired'; r.decidedAt = nowStr(); ch = true; } }); if (ch) S('dbm-admin-reqs', L); return L; };
+  window.saveAdminReqs = L => { S('dbm-admin-reqs', L); if (window.refreshTop) window.refreshTop(); };
+  window.ownersActive = () => Object.values(USERS).filter(u => u.status !== 'stopped' && !expiredUser(u) && (u.roles || []).includes('owner'));
+  window.canConfirmAR = (u, r) => !!u && !!r && r.status === 'wait' && canUser(u, 'admin.confirm') && r.req !== u.id && r.target !== u.id;
+  window.confirmersFor = r => Object.values(USERS).filter(u => canConfirmAR(u, r));
+  window.pendingRolesOf = id => getAdminReqs().filter(r => r.status === 'wait' && r.kind === 'role' && r.target === id);
+  window.createAdminReq = o => { const L = getAdminReqs(); const id = 'AR-' + String(L.length + 1).padStart(3, '0'); const r = Object.assign({ id, req: ME.id, at: nowStr(), status: 'wait', untilMs: Date.now() + AR_DAYS * 86400000 }, o); L.unshift(r); saveAdminReqs(L);
+    pushAudit({ act: '관리 변경 확인 요청', target: r.title, why: r.why }); const to = confirmersFor(r).map(u => u.id); if (to.length) pushNotif({ to, k: 'appr', t: `${id} 확인 요청 — ${r.title}`, m: `${ME.name} · ${r.why}`, href: `approvals.html?box=confirm&ar=${id}` }); return r; };
+  // re-checked just before it applies: the value it starts from must still be the current one (Codex R-01)
+  window.arStale = r => { reloadUsers(); if (r.kind === 'policy') { const o = getOrg(); return Object.keys(r.after).some(k => k === 'finalModel' ? Object.keys(r.after.finalModel).filter(a => r.after.finalModel[a] === false).some(a => (o.finalModel || {})[a] === false) : k === 'selfAppr' ? (o.selfAppr !== false) !== (r.before.selfAppr !== false) : JSON.stringify(o[k]) !== JSON.stringify(r.before[k])); }
+    const u = USERS[r.target], N = L => JSON.stringify((L || []).map(x => sysCodeOf(x)).sort()); return !u || u.status === 'stopped' || expiredUser(u) || JSON.stringify((u.roles || []).slice().sort()) !== JSON.stringify((r.before.roles || []).slice().sort()) || N(u.systems) !== N(r.before.systems); };
+  window.askReason = (title, label, hint) => new Promise(res => { const ov = document.createElement('div'); ov.className = 'overlay open'; ov.setAttribute('role', 'dialog'); ov.setAttribute('aria-modal', 'true');
+    ov.innerHTML = `<div class="modal"><div class="m-head"><h3 id="ar-q-t">${title}</h3></div><div class="m-body">${hint ? `<p class="caption muted u-mt-0">${hint}</p>` : ''}<label for="ar-q-in">${label} <b>*</b></label><textarea class="input" id="ar-q-in" rows="3" aria-required="true"></textarea><div class="err" id="ar-q-e"></div></div><div class="m-foot"><button class="btn" id="ar-q-no">취소</button><span class="grow"></span><button class="btn primary" id="ar-q-ok">확인</button></div></div>`;
+    ov.setAttribute('aria-labelledby', 'ar-q-t'); document.body.appendChild(ov); const inp = ov.querySelector('#ar-q-in'); setTimeout(() => inp.focus(), 0);
+    const done = v => { ov.remove(); res(v); }; ov.querySelector('#ar-q-no').onclick = () => done(null); ov.addEventListener('keydown', e => { if (e.key === 'Escape') done(null); });
+    ov.querySelector('#ar-q-ok').onclick = () => { const v = inp.value.trim(); if (!v) { ov.querySelector('#ar-q-e').textContent = label + '을(를) 적어 주세요'; inp.setAttribute('aria-invalid', 'true'); inp.focus(); return; } done(v); }; });
+  window.reloadUsers = () => { try { const db = JSON.parse(store.get('dbm-users', 'null')); if (db) Object.entries(db).forEach(([k, u]) => { USERS[k] = Object.assign(USERS[k] || {}, u); }); } catch (e) {} };
+  window.applyAdminReq = r => { if (r.kind === 'policy') { const o = getOrg(); Object.entries(r.after).forEach(([k, v]) => { if (k === 'finalModel') { o.finalModel = Object.assign({}, o.finalModel); Object.keys(v).filter(a => v[a] === false).forEach(a => { o.finalModel[a] = false; }); } else o[k] = v; }); saveOrg(o); return; } reloadUsers(); const u = USERS[r.target]; if (!u) return; u.roles = r.after.roles.slice(); if (r.after.systems) u.systems = r.after.systems.slice(); saveUsers(); };
+
+  /* ---- N-03: 사업 — the unit outside accounts belong to (기간 · 대상 시스템 · 용역사); 사업 종료 stops them together after a hand-over ---- */
+  const PROJ0 = [
+    { id: 'PJ-01', name: '통합ERP 고도화 2단계', vendor: '(주)한빛정보', kind: 'out', from: '2026-03-01', to: '2026-12-31', systems: ['ERP'] },
+    { id: 'PJ-02', name: '2026 정보시스템 감리', vendor: '(주)바른감리', kind: 'aud', from: '2026-11-01', to: '2026-12-15', systems: ['ERP', 'RQMS'] }
+  ];
+  window.getProjects = () => J('dbm-projects', clone(PROJ0));
+  window.saveProjects = L => S('dbm-projects', L);
+
   /* ---- validation policy (검수 기준) with a version number — documents and upload validations remember the version they were checked with ---- */
   window.getPolicy = () => J('dbm-policy', { ver: 3, at: '2026-11-10 09:00', by: '이데이터', hist: [{ ver: 3, at: '2026-11-10 09:00', by: '이데이터', what: '용어 영문약어명 상한 30자(Oracle 기준)' }, { ver: 2, at: '2026-10-20 14:00', by: '이데이터', what: '단어 영문약어명 6자 이내' }] });
   window.savePolicy = p => S('dbm-policy', p);
@@ -1159,8 +1224,8 @@
   };
   /* one visibility rule for lists, deep links and file actions */
   window.inReview = d => !!d && ['da', 'final'].includes(d.step);
-  window.onLine = (u, d) => !!u && u.status !== 'stopped' && (canUser(u, 'appr.da', { doc: d }) || ((d.line || ['da', 'final']).includes('final') && canUser(u, 'appr.final', { doc: d })) || (d.hist || []).some(h => h.whoId === u.id));
-  window.canUserSeeDoc = (u, d) => !!d && !!u && (d.req === u.id || (inReview(d) ? onLine(u, d) : (canUser(u, 'appr.viewall') || (d.cc || []).includes(u.id) || onLine(u, d))));
+  window.onLine = (u, d) => !!u && u.status !== 'stopped' && (canUserAct(u, d, d.step) || canUser(u, 'appr.da', { doc: d }) || ((d.line || ['da', 'final']).includes('final') && canUser(u, 'appr.final', { doc: d })) || (d.hist || []).some(h => h.whoId === u.id));
+  window.canUserSeeDoc = (u, d) => !!d && !!u && (d.req === u.id || (inReview(d) ? onLine(u, d) : (canUser(u, 'appr.viewall', { doc: d }) || (d.cc || []).includes(u.id) || onLine(u, d))));
   window.canSeeDoc = d => canUserSeeDoc(USERS[ME.id] || ME, d);
   // what a viewer may see of an area: a version under review is shown only to its requester and approvers — others see the last confirmed copy
   window.confirmedCopy = area => { const m = getModel(area); if (!m.base) return null; const d = getDocs().find(x => x.type === 'model' && x.area === area && x.ver === m.base && x.step === 'done'); return (d && d.model) || getModelData(area, m.base) || modelSeed(area); };
@@ -1453,9 +1518,12 @@
       s: ['[그룹 추가]로 도메인그룹을 만듭니다 — 결재 없이 사유만 남깁니다', '그룹 아래 [분류 추가 신청]으로 도메인분류를 신청합니다', '이어서 직접 등록에서 단어 → 도메인 → 용어 순서로 씁니다'],
       when: '사전을 처음 만들거나 새 업무 분야가 생길 때', who: '그룹 추가는 DA · 관리자, 분류 신청은 모델러 · DA', note: '공통(행안부) 그룹 · 분류는 읽기 전용 — 그 아래 기관 분류는 신청 가능', l: [['dict-grid.html', '단어 · 도메인 · 용어 쓰기 → 직접 등록']],
       v: [{ if: () => !can('dict.request') && !can('dict.group'), s: ['도메인그룹과 그 아래 도메인분류를 봅니다', '분류를 눌러 연결된 형식단어와 도메인을 봅니다', '추가 · 변경이 필요하면 DA에게 요청합니다'], who: '보기만 가능 — 그룹은 DA · 관리자, 분류 신청은 모델러 · DA', l: [] }] },
+    'rules.html': { n: '검수 기준', d: '단어 · 도메인 · 용어 · 코드의 필수 항목 · 길이 · 허용 문자와 표준 제외 규칙입니다. 신청 · 표준 맞추기 · 엑셀 검사가 이 기준으로 막거나 경고합니다.',
+      s: ['항목 칩으로 단어 · 도메인 · 용어 · 코드 규칙을 봅니다', 'DA · Admin은 길이 같은 값을 고치고 [저장]하면 정책 버전이 하나 오릅니다', '이전 기준으로 검사한 엑셀 묶음은 다시 검증하라고 안내됩니다'],
+      when: '신청이 막힌 이유를 확인하거나 기관 기준을 바꿀 때', who: 'DA · Admin 고침 · 모두 읽기', note: '설정에 있던 검수 기준을 표준 사전으로 옮겼습니다 — 설정은 Admin 화면' },
     'datatypes.html': { n: '데이터 타입 · 축약명', d: '도메인 이름에 들어가는 논리 타입과 축약명, 시스템마다 다른 물리 타입 규칙을 한곳에서 관리합니다.',
       s: ['[논리 타입] 탭에서 표준(1자) · 추가(2~3자) · DBMS 전용 타입과 사용처를 봅니다', '필요한 타입이 없으면 [타입 등록]으로 바로 추가합니다 — 결재 없이 사유와 감사 로그가 남습니다', '[시스템별 매핑] 탭에서 시스템을 고르고 길이 범위별 물리 타입을 정해 저장합니다'],
-      when: '도메인을 만들기 전 · 새 DBMS 시스템을 등록한 뒤 · 모델러가 타입을 요청했을 때', who: '등록 · 매핑은 DA · Admin(매핑은 DA 담당 시스템), 모델러는 [타입 추가 요청]', note: '사용 중인 축약명은 바꾸지 않습니다 — [새 축약명으로 옮기기]로 도메인 이름까지 함께 바꿉니다', l: [['dictionary.html?req=domain', '이 타입으로 도메인 만들기 → 도메인 신청'], ['settings.html#sys', '시스템 등록 → 설정 › 시스템']],
+      when: '도메인을 만들기 전 · 새 DBMS 시스템을 등록한 뒤 · 모델러가 타입을 요청했을 때', who: '등록 · 매핑은 DA(매핑은 담당 시스템), 모델러는 [타입 추가 요청]', note: '사용 중인 축약명은 바꾸지 않습니다 — [새 축약명으로 옮기기]로 도메인 이름까지 함께 바꿉니다', l: [['dictionary.html?req=domain', '이 타입으로 도메인 만들기 → 도메인 신청'], ['settings.html#sys', '시스템 등록 → 설정 › 시스템']],
       v: [{ if: () => !can('type.add'), s: ['쓸 수 있는 논리 타입과 시스템별 물리 타입을 봅니다', '맞는 타입이 없으면 [타입 추가 요청]을 보냅니다', '등록되면 알림이 오고, 모델의 도메인 칸 목록에 나타납니다'], who: '보기 · 요청만 — 등록은 DA · Admin', l: [] }] },
     'std-common.html': { n: '공통표준 · 행정표준코드', d: '행안부 공통표준 판과 행정표준코드를 봅니다. 원문은 못 고치고, 새 판은 품의로 반영합니다.',
       s: ['[행정표준코드] 탭에서 코드와 코드값을 찾아봅니다', '새 판이 나오면 [새 판 반영]에서 원본을 올려 지금 판과 비교합니다', '반영할 차이를 골라 품의를 올립니다 — 최종 승인 뒤 반영됩니다'],
@@ -1554,7 +1622,7 @@
     box.addEventListener('keydown', e => { if (e.key === 'Escape') { set(false, true); btn.focus(); } });
     document.addEventListener('keydown', e => { if (e.key !== '?' || e.ctrlKey || e.metaKey || e.altKey || (e.target.closest && e.target.closest('input,textarea,select,[contenteditable="true"]'))) return; e.preventDefault(); set(box.hidden, true); if (!box.hidden) box.querySelector('.pg-x').focus(); });
   }
-  const DICT_TABS = [['dictionary.html', '통합 검색'], ['excel-import.html', '엑셀 가져오기', ['uploads.html']], 0, ['dict-grid.html', '직접 등록'], 0, ['candidates.html', '후보 큐'], ['dict-history.html', '변경 내역'], 0, ['domain-groups.html', '도메인 그룹 · 분류'], ['datatypes.html', '데이터 타입 · 축약명'], ['std-common.html', '공통표준 · 행정표준코드']];
+  const DICT_TABS = [['dictionary.html', '통합 검색'], ['excel-import.html', '엑셀 가져오기', ['uploads.html']], 0, ['dict-grid.html', '직접 등록'], 0, ['candidates.html', '후보 큐'], ['dict-history.html', '변경 내역'], 0, ['domain-groups.html', '도메인 그룹 · 분류'], ['datatypes.html', '데이터 타입 · 축약명'], ['rules.html', '검수 기준'], ['std-common.html', '공통표준 · 행정표준코드']];
   const SCREENS = [
     { file: 'home.html', ids: 'SC-55', name: '홈', menu: '홈', docs: [['02 §1 화면 목록', D.flows], ['06 §3 새 화면 명세', D.plan]], states: [['김모델(모델러·DA)', 'home.html?as=kim'], ['박설계(모델러)', 'home.html?as=park'], ['이현업(기관 담당자)', 'home.html?as=hyun']] },
     { file: 'dictionary.html', ids: 'SC-10 · PN-11 · PN-12', name: '표준 사전 통합 검색 · 상세 · 등록 신청', menu: '표준 사전', docs: [['02 §3.1~3.2', D.flows], ['30 MD-01~12 사전 규칙', D.meta], ['07 E6 검색', D.excel], ['23 §6-1 검색 숫자', D.perf]], states: [['기본(최근 변경)', 'dictionary.html'], ['도메인 신청', 'dictionary.html?req=domain'], ['편집용 내려받기', 'dictionary.html#download'], ['검색: 산출', 'dictionary.html?q=산출']] },
@@ -1562,6 +1630,7 @@
     { file: 'excel-import.html', ids: 'SC-13', name: '엑셀 가져오기(왕복 편집)', menu: '표준 사전', docs: [['02 §3.3', D.flows], ['07 E1~E4 왕복 편집', D.excel], ['30 MD-08·09', D.meta], ['23 §6-4 행 상한', D.perf]], states: [['1단계부터(실제 작업)', 'excel-import.html'], ['5단계 예시(저장 안 함)', 'excel-import.html?step=5'], ['신청된 묶음 열람', 'excel-import.html?resume=UP-2026-0007'], ['반영본 확인', 'excel-import.html?verify=UP-2026-0007']] },
     { file: 'dict-grid.html', ids: 'SC-11', name: '직접 등록', menu: '표준 사전', docs: [['30 MD-13~19', D.meta]], states: [['단어 탭', 'dict-grid.html'], ['바구니 고치기', 'dict-grid.html?mode=basket']] },
     { file: 'domain-groups.html', ids: 'SC-17', name: '도메인 그룹 · 분류', menu: '표준 사전', docs: [['30 MD-02·03', D.meta]], states: [['DA(이데이터)', 'domain-groups.html?as=lee'], ['모델러(조회)', 'domain-groups.html?as=park']] },
+    { file: 'rules.html', ids: 'SC-43', name: '검수 기준', menu: '표준 사전', docs: [['29 RBAC 2차 검토', '../29-rbac-r2.md'], ['15 역할 · 권한', '../15-rbac.md']], states: [['DA(이데이터) — 고침', 'rules.html?as=lee'], ['모델러(박설계) — 읽기', 'rules.html?as=park']] },
     { file: 'datatypes.html', ids: 'SC-19', name: '데이터 타입 · 축약명', menu: '표준 사전', docs: [['27 데이터 타입 · 축약명', '../27-datatype-abbreviation.md']], states: [['DA(이데이터)', 'datatypes.html?as=lee'], ['모델러(요청)', 'datatypes.html?as=park'], ['요청 처리', 'datatypes.html?as=lee#reqs']] },
     { file: 'std-common.html', ids: 'SC-18', name: '공통표준 · 행정표준코드', menu: '표준 사전', docs: [['30 v1.5~1.6', D.meta]], states: [['DA(이데이터)', 'std-common.html?as=lee']] },
     { file: 'uploads.html', ids: 'SC-15', name: '업로드 이력', menu: '표준 사전', docs: [['07 E4', D.excel]], states: [['전체', 'uploads.html'], ['UP-2026-0007', 'uploads.html?b=UP-2026-0007']] },
@@ -1685,7 +1754,7 @@
   /* ---- model tree (12 · DA#-style object explorer, T1 read tree):
      system › business area › (shortcuts · views · objects · used standards) › object › attribute.
      The tree shows the same area · version · logical/physical mode the canvas opened — model.html supplies window.treeData(). ---- */
-  const SYSTEMS_OF = () => activeSystems().map(s => Object.assign({}, s, { href: 'system.html?system=' + s.code, cur: s.code === curSys().code }));
+  const SYSTEMS_OF = () => activeSystems().filter(s => can('model.view', { system: s.code })).map(s => Object.assign({}, s, { href: 'system.html?system=' + s.code, cur: s.code === curSys().code }));
   const treeKey = () => 'dbm-tree3-' + ME.id;
   function drawTree(nav) {
     const page = document.body.dataset.page, file = curFile(), qp = new URLSearchParams(location.search);
@@ -2222,11 +2291,11 @@
     const nUnread = unread();
     const page = document.body.dataset.page;
     // v17 (11 §2.1): top menu = global moves; the active tab follows the screen family
-    const TAB = { system: 'model', model: 'model', dictionary: 'dict', excel: 'dict', candidates: 'dict', 'dict-grid': 'dict', 'domain-groups': 'dict', datatypes: 'dict','std-common': 'dict', approvals: 'appr', settings: 'admin', audit: 'admin' }[page] || '';
+    const TAB = { system: 'model', model: 'model', dictionary: 'dict', excel: 'dict', candidates: 'dict', 'dict-grid': 'dict', 'domain-groups': 'dict', datatypes: 'dict', rules: 'dict', 'std-common': 'dict', approvals: 'appr', settings: 'admin', audit: 'admin' }[page] || '';
     const here = f => curFile() === f ? ' on" aria-current="page' : '';
     const cur = (on, f) => on ? (curFile() === f ? ' aria-current="page"' : ' aria-current="true"') : '';
     const qn0 = queueCount(), late = myQueue(getDocs()).some(d => docLate(d)), cq = candOpenCount();
-    const canAdmin = ME.has('admin'), canAudit = ME.has('da') || ME.has('admin');
+    const canAdmin = can('settings') || can('users'), canAudit = can('audit.view');   /* SC-19: menus follow the permission table */
     top.innerHTML = `
       <a class="brand" href="home.html" aria-label="NeoDB 홈"${page === 'home' ? ' aria-current="page"' : ''}>${MARK(20)}<span class="wm">NeoDB</span></a>
       <span class="org">한국데이터진흥원</span>

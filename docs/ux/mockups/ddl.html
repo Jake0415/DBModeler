@@ -77,6 +77,7 @@ window.pageInit = function () {
   const $ = id => document.getElementById(id), q = new URLSearchParams(location.search);
   // area + version (or a submitted copy) come from where the user started (CX12-30 · CL12-42)
   const AREA = getModels()[q.get('area')] ? q.get('area') : defArea();
+  if (!can('model.view', { area: AREA })) { location.replace('error.html?code=403&need=' + encodeURIComponent('이 시스템 조회 범위') + '&what=' + encodeURIComponent(sysOfArea(AREA) + ' DDL')); return; }   /* R-11 */
   const L = modelLock(AREA); const snapDoc = q.get('snap') ? getDocs().find(x => x.id === q.get('snap') && x.type === 'model' && x.area === AREA) : null;
   const snapHidden = !!snapDoc && inReview(snapDoc) && !canSeeDoc(snapDoc); const view = areaView(AREA);
   const src = snapHidden ? { E: [], R: [], M: [] } : snapDoc ? (snapDoc.model || modelSeed(AREA)) : view.model;
@@ -163,12 +164,15 @@ window.pageInit = function () {
   const sqlText = () => [...$('sql').querySelectorAll('.ln')].map(l => { const c = l.cloneNode(true); const i = c.querySelector('i'); if (i) i.remove(); return c.textContent; }).join('\n');
   $('copy').onclick = () => { const txt = sqlText(); (navigator.clipboard ? navigator.clipboard.writeText(txt) : Promise.reject()).then(() => toast(`SQL ${txt.split('\n').length}줄을 클립보드에 복사했습니다`, 'success'), () => window.prompt('복사해서 쓰세요', txt)); };
   // D9: a real UTF-8 .sql file made from the preview text (BOM so Windows editors read Korean comments correctly)
+  if (!can('out.export', { area: AREA })) setTimeout(() => { const b = $('dl'); b.disabled = true; b.title = ME.has('modeler') ? '담당 시스템의 DDL만 내려받을 수 있습니다' : '조회 전용 — 내려받기는 모델러 · DA · 기관 담당자 · 감리'; }, 0);   /* UI-13 */
   $('dl').onclick = () => {
     if ($('dl').disabled) return;
+    if (!can('out.export', { area: AREA })) { toast(ME.has('modeler') ? '담당 시스템의 DDL만 내려받을 수 있습니다 — 미리보기는 볼 수 있습니다' : 'DDL 내려받기는 모델러 · DA · 기관 담당자 · 감리만 할 수 있습니다 — 조회 전용 계정은 미리보기만', 'info'); return; }   /* R-14 */
     const txt = sqlText(), name = `${SCH}_${AREA}_${label.split(' ')[0]}${$('preset').value === 'alter' ? '_ALTER' : ''}.sql`;
     const url = URL.createObjectURL(new Blob(['﻿' + txt + '\n'], { type: 'application/sql;charset=utf-8' }));
     const a = document.createElement('a'); a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000);
-    toast(`${name}을(를) 내려받았습니다 — ${txt.split('\n').length}줄 · UTF-8`, 'success');
+    pushAudit({ act: '내려받기 — DDL', target: name, why: `${sysOfArea(AREA)} · ${txt.split('\n').length}줄` });   /* R-14: every export is recorded */
+    toast(`${name}을(를) 내려받았습니다 — ${txt.split('\n').length}줄 · UTF-8 · 감사 로그에 기록`, 'success');
   };
   draw();
   window.addEventListener('dbm-tree-select', ev => {

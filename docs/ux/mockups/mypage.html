@@ -41,8 +41,9 @@
       <div class="set-row"><div class="l"><b>표시 이름</b></div><div class="field short"><label for="p-disp">표시 이름</label><input class="input" id="p-disp"><div class="caption u-danger" id="p-disp-e"></div></div><div class="aside"><span>결재 문서 · 공동 편집 커서에 보이는 이름입니다.</span></div></div>
       <h3 class="set-sec">역할</h3>
       <div class="set-row"><div class="l"><b>내 역할 · 담당 시스템</b><span>조회 전용</span></div>
-        <div><div class="u-mb-8" id="p-roles"></div><div class="caption" id="p-sys"></div><div class="caption u-mt-8" id="rr-state"></div></div>
+        <div><div class="u-mb-8" id="p-roles"></div><div class="caption" id="p-sys"></div><div class="u-mt-8" id="p-acct"></div><div class="caption u-mt-8" id="rr-state"></div></div>
         <div class="aside"><span>자기 역할은 스스로 바꿀 수 없습니다.</span><span>관리자에게 요청하면 처리 결과를 알림으로 알려 드립니다.</span><button class="btn sm" data-open="mo-rolereq" id="rr-open">역할 변경 요청</button></div></div>
+      <div class="set-row"><div class="l"><b>결재 위임</b><span>부재 중 대리</span></div><div id="p-deleg"></div><div class="aside"><span>기간 동안 대리인이 내 차례의 결재를 처리합니다. 이력에 ‘대리(원 담당자)’로 남습니다.</span><span>대리인은 자기 신청을 대리 승인할 수 없고, 다시 위임할 수 없습니다.</span><span>대리인은 나와 같은 결재 역할(DA · 기관 담당자)을 가진 내부 사용자만 고를 수 있습니다.</span></div></div>
     </div>
 
     <div class="pane" data-pane="mine">
@@ -242,6 +243,35 @@ window.pageInit = function () {
   window.addEventListener('beforeunload', e => { if (dirtyN()) { e.preventDefault(); e.returnValue = ''; } });
   snap(); refreshBar();
 };
+</script>
+<script>
+/* R-09 · R-11 · R-21 · R-08: my account kind · expiry · view scope, the permission table (read-only) and 결재 위임 */
+(() => {
+  const $ = id => document.getElementById(id), me = USERS[ME.id] || ME, esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+  const box = $('p-acct'); if (!box) return;
+  const pj = getProjects().find(p => p.id === me.project);
+  box.innerHTML = `<div>${ACCT_KIND[me.kind || 'in']}${pj ? ` · 사업 ${esc(pj.name)}` : ''}${me.until ? ` · 사용 기한 <b class="mono">${me.until}</b>${daysLeft(me) !== null && daysLeft(me) <= 30 ? ` <span class="badge b-warning">D-${daysLeft(me)}</span>` : ''}` : ''}</div>
+    <div class="caption u-mt-4">조회 범위: <b>${viewScopeOf(me) === 'org' ? '기관 전체' : '담당 시스템만'}</b>${me.viewScope ? ` (예외 — ${esc(me.viewWhy || '')})` : ` — ${ACCT_KIND[me.kind || 'in']} 기본`}${pendingRolesOf(me.id).length ? ` · <span class="badge b-warning">역할 확인 대기</span> ${pendingRolesOf(me.id).map(r => esc(r.title)).join(' · ')}` : ''}${me.pwTemp ? ' · <span class="badge b-warning">임시 비밀번호</span> 바꾸기 전에는 결재 역할이 열리지 않습니다' : ''}</div>
+    <div class="u-mt-8"><button class="btn sm" id="p-perms-open" aria-expanded="false">권한표 보기</button></div><div id="p-perms" hidden></div>`;
+  $('p-perms-open').onclick = () => { const p = $('p-perms'), on = p.hidden; p.hidden = !on; $('p-perms-open').setAttribute('aria-expanded', String(on)); if (!on) return;
+    const COLS = [['modeler', '모델러'], ['da', 'DA'], ['owner', '기관 담당자'], ['admin', 'Admin'], ['auditor', '감리']];
+    p.innerHTML = `<table class="tbl set-tbl u-mt-8"><thead><tr><th>할 수 있는 일</th>${COLS.map(c => `<th class="pm-r">${c[1]}</th>`).join('')}<th class="pm-r">나</th></tr></thead><tbody>${PERMS.map(x => `<tr><td>${esc(x.n)}</td>${COLS.map(c => `<td class="pm-r">${x.roles.includes('*') || x.roles.includes(c[0]) ? '●' : '<span class="faint">—</span>'}</td>`).join('')}<td class="pm-r">${canUser(me, x.id) ? '<b>●</b>' : '<span class="faint">—</span>'}</td></tr>`).join('')}</tbody></table><div class="caption muted u-mt-4">설정 › 권한표와 같은 데이터입니다. 범위(전체 · 담당 시스템 · 조회 범위)는 설정 › 권한표에서 봅니다.</div>`; };
+  // 결재 위임: only for someone who approves; the stand-in must be an active internal account, not me
+  const dbox = $('p-deleg'); if (!dbox) return;
+  const approver = (me.roles || []).some(r => ['da', 'owner'].includes(r));
+  if (!approver) { dbox.closest('.set-row').hidden = true; return; }
+  const cand = delegCandidates(me);   /* R-08: same approval role, internal, active */
+  const draw = () => { const d = me.deleg || {}; const active = delegActive(me);
+    dbox.innerHTML = `${d.to ? `<div class="u-mb-8">${active ? '<span class="badge b-info">위임 중</span>' : '<span class="badge">예약</span>'} ${esc((USERS[d.to] || {}).name || d.to)} · <span class="mono">${d.from} ~ ${d.until}</span> <button class="btn sm ghost" id="dg-end">위임 끝내기</button></div>` : ''}
+      ${cand.length ? '' : '<div class="caption u-warning u-mb-8">같은 결재 역할을 가진 다른 사용자가 없습니다 — Admin에게 역할 부여를 요청하세요.</div>'}<div class="field-row"><div class="field"><label for="dg-to">대리인</label><select class="input" id="dg-to">${cand.map(u => `<option value="${u.id}" ${d.to === u.id ? 'selected' : ''}>${esc(u.name)} · ${(u.roles || []).map(r => ROLE_NAME[r]).join('·') || '조회만'}</option>`).join('')}</select></div>
+      <div class="field"><label for="dg-from">시작</label><input class="input mono" type="date" id="dg-from" value="${d.from || isoToday()}"></div><div class="field"><label for="dg-until">끝</label><input class="input mono" type="date" id="dg-until" value="${d.until || ''}"></div></div>
+      <div class="flex u-mt-8"><button class="btn sm primary" id="dg-save">위임 저장</button></div>`;
+    $('dg-save').onclick = () => { const to = $('dg-to').value, f = $('dg-from').value, u = $('dg-until').value; if (!to || !f || !u || u < f) { toast('대리인 · 시작 · 끝(시작 뒤)을 정하세요', 'danger'); return; } reloadUsers(); if (!delegCandidates(me).some(x => x.id === to)) { toast('그 사람은 지금 대리인이 될 수 없습니다(역할 · 상태가 바뀜)', 'danger'); draw(); return; }
+      if (USERS[to].deleg && delegActive(USERS[to]) && USERS[to].deleg.to === me.id) { toast('그 사람이 이미 나에게 위임 중입니다 — 서로 위임할 수 없습니다', 'danger'); return; }
+      me.deleg = { to, from: f, until: u }; saveUsers(); pushAudit({ act: '결재 위임', target: `${me.name} → ${USERS[to].name}`, why: `${f} ~ ${u}` }); pushNotif({ to: [to], k: 'sys', t: `결재 위임 — ${me.name}`, m: `${f} ~ ${u} · 이 기간에 ${me.name}님 차례의 결재를 대신 처리합니다(본인 신청은 제외)`, href: 'approvals.html?box=queue' }); draw(); toast(`${USERS[to].name}님에게 ${f} ~ ${u} 결재를 위임했습니다 · 이력에 ‘대리’로 남습니다`, 'success'); };
+    const e = $('dg-end'); if (e) e.onclick = () => { pushAudit({ act: '결재 위임 끝', target: `${me.name} → ${(USERS[me.deleg.to] || {}).name || ''}`, why: '' }); delete me.deleg; saveUsers(); draw(); toast('위임을 끝냈습니다', 'info'); }; };
+  draw();
+})();
 </script>
 </body>
 </html>

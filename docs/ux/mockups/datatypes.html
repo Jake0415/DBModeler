@@ -54,7 +54,7 @@
   <div class="tabs" style="margin:0;padding:0 20px;background:var(--surface)">
     <button class="on" data-tab="types">논리 타입 · 축약명</button>
     <button data-tab="map">시스템별 매핑</button>
-    <button data-tab="reqs">타입 추가 요청 <span class="badge" id="req-n" hidden></span></button>
+    <button data-tab="reqs" id="tab-reqs">타입 추가 요청 <span class="badge" id="req-n" hidden></span></button>
     <button data-tab="log">변경 이력</button>
   </div>
 
@@ -115,7 +115,7 @@
     <aside class="rpanel" id="pn-detail" aria-label="타입 상세"></aside>
   </div>
 
-  <!-- register / edit a type (DA · Admin, direct, recorded) -->
+  <!-- register / edit a type (DA, direct, recorded) -->
   <div class="overlay" id="mo-type" role="dialog" aria-modal="true" aria-labelledby="mt-t"><div class="modal" style="width:640px;max-width:calc(100vw - 32px)">
     <div class="m-head"><h3 id="mt-t">타입 등록</h3></div>
     <div class="m-body">
@@ -163,7 +163,7 @@
   <div class="overlay" id="mo-req" role="dialog" aria-modal="true" aria-labelledby="mr-t"><div class="modal u-w-560">
     <div class="m-head"><h3 id="mr-t">타입 추가 요청</h3></div>
     <div class="m-body">
-      <div class="caption muted u-mb-12">DA · Admin에게 알림이 갑니다. 등록되면 알림으로 알려 드리고, 모델의 도메인 칸 목록에 나타납니다. 그동안 그 속성은 직접 입력 + 예외(사유)로 둘 수 있습니다.</div>
+      <div class="caption muted u-mb-12">DA에게 알림이 갑니다. 등록되면 알림으로 알려 드리고, 모델의 도메인 칸 목록에 나타납니다. 그동안 그 속성은 직접 입력 + 예외(사유)로 둘 수 있습니다.</div>
       <div class="field-row">
         <div class="field"><label for="r-sys">시스템 *</label><select class="input" id="r-sys"></select></div>
         <div class="field"><label for="r-phys">필요한 물리 타입 *</label><input class="input mono" id="r-phys" placeholder="예: JSONB, XMLTYPE"></div>
@@ -204,7 +204,7 @@ window.pageInit = function () {
   const toTop = () => { $('sum').textContent = `정책 v${typeVer()} · 표준 ${getTypes().filter(t => t.kind === 'std' && t.st === '사용').length} · 추가 ${getTypes().filter(t => t.kind !== 'std' && t.st === '사용').length}`; };
   const fixBtns = () => {
     $('add-w').hidden = !CAN_ADD; $('req-w').hidden = !CAN_REQ;
-    if (!CAN_ADD && !CAN_REQ) { $('req-w').hidden = false; $('b-req').disabled = true; $('req-w').title = '타입 추가 요청은 담당 시스템의 모델러, 등록은 DA · Admin'; }
+    if (!CAN_ADD && !CAN_REQ) { $('req-w').hidden = false; $('b-req').disabled = true; $('req-w').title = '타입 추가 요청은 담당 시스템의 모델러, 등록은 DA'; }
   };
 
   /* ---- 1. logical types table ---- */
@@ -233,7 +233,7 @@ window.pageInit = function () {
     const sysRows = SYS().map(s => { if (!typeFits(t, s.code)) return `<tr><td>${esc(s.name)}</td><td class="faint" colspan="2">대상 아님 (${t.kind === 'dbms' ? esc(dbmsKey(t.dbms)) + ' 전용' : esc(sysNameOf(t.scope)) + ' 전용'})</td></tr>`;
       const rules = typeMapOf(s.code)[t.ab] || []; return `<tr><td>${esc(s.name)}</td><td class="caption">${esc(s.db)}</td><td class="mono">${rules.length ? rules.map(r => t.arg === '' ? esc(r.t) : `${r.lo}~${r.hi == null ? '' : r.hi} → ${esc(r.t)}`).join('<br>') : '<span class="tm-st wrn">매핑 없음</span>'}</td></tr>`; }).join('');
     const log = J2('dbm-audit').filter(e => String(e.act).startsWith('데이터 타입') && String(e.target).split(/[ ·(]/).includes(t.ab)).slice(0, 8);
-    const blkEdit = !canEdit ? (t.kind === 'std' ? '표준 타입은 DA · Admin만 고칩니다' : '타입 등록 권한(DA · Admin)이 필요합니다') : '';
+    const blkEdit = !canEdit ? (t.kind === 'std' ? '표준 타입은 DA만 고칩니다' : '타입 등록 권한(DA)이 필요합니다') : '';
     const blkMove = blkEdit || (!used ? '쓰는 곳이 없어 [수정]에서 바로 바꿀 수 있습니다' : '');
     const blkStop = blkEdit || (used ? `쓰는 곳(도메인 ${u.doms.length} · 속성 ${u.attrs})이 있어 사용 중지할 수 없습니다` : '');
     p.innerHTML = `<div class="rp-head"><div class="t">${kindTag(t)}${stTag(t)}<button class="iconbtn close u-w-28 u-h-28" data-close="pn-detail" aria-label="상세 닫기" title="상세 닫기"><i data-ic=x></i></button></div><h2 class="u-mt-8"><span class="mono">${esc(t.ab)}</span> · ${esc(t.n)}</h2><div class="caption muted">${scopeTxt(t)} · ${esc(t.by || '')} ${esc(t.at || '')}</div></div>
@@ -248,7 +248,7 @@ window.pageInit = function () {
       <div class="rp-foot"><span class="grow"></span>
         <span title="${esc(blkEdit)}"><button class="btn sm" id="d-edit"${blkEdit || t.st !== '사용' ? ' disabled' : ''}><i data-ic=pen data-s=12></i>수정</button></span>
         <span title="${esc(blkMove)}"><button class="btn sm" id="d-move"${blkMove || t.st !== '사용' ? ' disabled' : ''}>새 축약명으로 옮기기</button></span>
-        ${t.kind !== 'std' ? `<span title="${esc(CAN_STD ? '' : '표준으로 올리기는 DA · Admin')}"><button class="btn sm" id="d-promo"${!CAN_STD || t.st !== '사용' || t.kind === 'dbms' ? ' disabled' : ''}${t.kind === 'dbms' ? ' title="DBMS 전용 타입은 표준으로 올릴 수 없습니다 — 모든 DBMS의 물리 타입이 필요"' : ''}>표준으로 올리기</button></span>` : ''}
+        ${t.kind !== 'std' ? `<span title="${esc(CAN_STD ? '' : '표준으로 올리기는 DA')}"><button class="btn sm" id="d-promo"${!CAN_STD || t.st !== '사용' || t.kind === 'dbms' ? ' disabled' : ''}${t.kind === 'dbms' ? ' title="DBMS 전용 타입은 표준으로 올릴 수 없습니다 — 모든 DBMS의 물리 타입이 필요"' : ''}>표준으로 올리기</button></span>` : ''}
         ${t.st === '사용' ? `<span title="${esc(blkStop)}"><button class="btn sm danger" id="d-stop"${blkStop ? ' disabled' : ''}>사용 중지</button></span>` : `<span title="${esc(blkEdit || (t.movedTo ? '옮긴 축약명은 다시 쓰지 않습니다' : ''))}"><button class="btn sm" id="d-reuse"${blkEdit || t.movedTo ? ' disabled' : ''}>다시 사용</button></span>`}
       </div>`;
     p.classList.add('open');
@@ -417,7 +417,7 @@ window.pageInit = function () {
   let rejId = null;
   function drawReqs() { const l = getTypeReqs(), mine = CAN_ADD ? l : l.filter(r => r.by === ME.id), open = l.filter(r => r.st === '대기').length;
     $('req-n').hidden = !open || !CAN_ADD; $('req-n').textContent = open;
-    $('rq-lh').innerHTML = CAN_ADD ? `<b class="u-fg">대기 ${open}건</b> · 전체 ${l.length}건 — [등록하기]를 누르면 요청 내용으로 채운 등록 창이 열립니다` : `<b class="u-fg">내 요청 ${mine.length}건</b> — 처리는 DA · Admin`;
+    $('rq-lh').innerHTML = CAN_ADD ? `<b class="u-fg">대기 ${open}건</b> · 전체 ${l.length}건 — [등록하기]를 누르면 요청 내용으로 채운 등록 창이 열립니다` : `<b class="u-fg">내 요청 ${mine.length}건</b> — 처리는 DA`;
     $('rq-rows').innerHTML = mine.map(r => `<tr><td class="mono">${esc(r.id)}<div class="caption muted">${esc(r.at)}</div></td><td>${esc(r.byName)}</td><td>${esc(sysNameOf(r.sys))}</td><td class="mono">${esc(r.phys)}</td><td class="caption">${esc(r.where || '—')}</td><td class="caption">${esc(r.why)}</td>
       <td>${r.st === '대기' ? tag('run', '대기') : r.st === '등록' ? tag('ok', '등록 · ' + esc(r.ab || '')) : tag('end', '반려')}${r.st === '반려' ? `<div class="caption muted">${esc(r.rej || '')}</div>` : r.done ? `<div class="caption muted">${esc(r.done)}</div>` : ''}</td>
       <td>${CAN_ADD && r.st === '대기' ? `<button class="btn sm primary" data-reg="${r.id}">등록하기</button> <button class="btn sm ghost" data-rej="${r.id}">반려</button>` : ''}</td></tr>`).join('') || `<tr class="er none"><td colspan="8" class="caption muted u-tc u-p-32">${CAN_ADD ? '요청이 없습니다' : '보낸 요청이 없습니다'}</td></tr>`;
@@ -442,5 +442,6 @@ window.pageInit = function () {
   if (qs.get('add') === '1' && CAN_ADD) openType(null, { scope: SYS().some(s => s.code === qs.get('sys')) ? qs.get('sys') : '공통', phys: qs.get('phys') ? { [dbmsOfSys(qs.get('sys') || curSys().code)]: qs.get('phys') } : {}, desc: qs.get('where') ? `${qs.get('where')}에서 사용` : '' });
 };
 </script>
+<script>(() => { if (!can('type.request') && !can('type.add')) { const t = document.getElementById('tab-reqs'); if (t) t.hidden = true; const w = document.getElementById('req-w'); if (w) w.hidden = true; } })();   /* R-24 */</script>
 </body>
 </html>

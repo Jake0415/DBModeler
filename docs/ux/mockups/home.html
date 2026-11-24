@@ -94,7 +94,8 @@ window.pageInit = function () {
   const T = [];
   const q = myQueue(docs);
   const oldest = L => L.length ? Math.max(...L.map(docAge)) : null;
-  if (ME.has('da') || ME.has('owner')) { const lt = q.filter(docLate); T.push({ w: 100 + lt.length, t: '결재 대기 · 내 차례', n: q.length, old: oldest(q), st: lt.length ? tag('err', `기한 넘김 ${lt.length}`) : '', go: ['결재함', 'approvals.html?box=queue'] }); }
+  if (can('admin.confirm')) { const ar = getAdminReqs().filter(r => canConfirmAR(USERS[ME.id] || ME, r)); if (ar.length) T.push({ w: 110, t: '관리 변경 확인 요청', n: ar.length, old: null, st: tag('warn', '7일 안 확인'), go: ['확인 요청', 'approvals.html?box=confirm'] }); }
+  if (ME.has('da') || ME.has('owner') || delegFor(USERS[ME.id] || ME).length) { const lt = q.filter(docLate); T.push({ w: 100 + lt.length, t: '결재 대기 · 내 차례', n: q.length, old: oldest(q), st: lt.length ? tag('err', `기한 넘김 ${lt.length}`) : '', go: ['결재함', 'approvals.html?box=queue'] }); }
   if (ME.has('da')) {
     const c = getCands().filter(x => candState(x) === '대기'); T.push({ w: 90, t: '후보 큐 · 판단 대기', n: c.length, old: null, st: '', go: ['후보 큐', 'candidates.html'] });
     const fail = live.filter(d => (d.hist || []).some(h => /재검사 실패/.test(h.act || ''))); if (fail.length) T.push({ w: 95, t: '재검사 실패 · 신청자 보완', n: fail.length, old: oldest(fail), st: tag('err', '실패'), go: [fail[0].id, `approvals.html?doc=${fail[0].id}`] });
@@ -102,8 +103,13 @@ window.pageInit = function () {
   if (ME.has('admin')) {
     const rq = Object.values(USERS).map(u => { try { const r = JSON.parse(dbmStore.get('dbm-rolereq-' + u.id) || 'null'); return r ? Object.assign({ u }, r) : null; } catch (e) { return null; } }).filter(Boolean);
     T.push({ w: 92, t: '역할 요청', n: rq.length, old: null, st: '', go: rq.length ? [rq[0].u.name, `settings.html?user=${rq[0].u.id}`] : ['사용자·역할', 'settings.html'] });
+    const soon = Object.values(USERS).filter(u => u.status !== 'stopped' && daysLeft(u) !== null && daysLeft(u) >= 0 && daysLeft(u) <= 7); T.push({ w: 93, t: '7일 안 만료 계정', n: soon.length, old: null, st: soon.length ? tag('warn', soon.map(u => `${u.name} D-${daysLeft(u)}`).join(' · ')) : '', go: ['사용자 · 역할', 'settings.html?tab=users'] });
+    const myAR = getAdminReqs().filter(r => r.status === 'wait' && r.req === ME.id); if (myAR.length) T.push({ w: 91, t: '기관 담당자 확인 대기 · 내 신청', n: myAR.length, old: null, st: '', go: ['확인 요청', 'approvals.html?box=confirm'] });
+    const gaps = SYSLIST.filter(s => !s.off).map(s => { const a = Object.keys(getAllModels()).find(k => (getAllModels()[k].system || 'RQMS') === s.code); return a && lineGaps({ type: 'model', area: a, req: '_none' }).length ? s.name : null; }).filter(Boolean); if (gaps.length) T.push({ w: 96, t: '결재 공백 — 처리할 사람이 없는 시스템', n: gaps.length, old: null, st: tag('err', gaps.join(' · ')), go: ['사용자 · 역할', 'settings.html?tab=users'] });
     const al = live.filter(docLate); T.push({ w: 80 + al.length, t: '기한 넘긴 결재 · 기관 전체', n: al.length, old: oldest(al), st: al.length ? tag('err', `${SLA}일 넘김`) : '', go: ['오래 머무는 결재', '#stale'] });
   }
+  { const me0 = USERS[ME.id] || ME; if (me0.until && daysLeft(me0) !== null && daysLeft(me0) <= 14) { const mine0 = docs.filter(d => ['da', 'final'].includes(d.step) && d.req === ME.id).length; T.push({ w: 120, t: `내 계정 사용 기한 D-${daysLeft(me0)} (${me0.until})`, n: mine0, old: null, st: tag('warn', '남은 일: 진행 중 신청'), go: ['내 신청', 'approvals.html?box=mine'] }); } }   /* N-04 */
+  if (!ME.roles.length || (ME.roles.length === 1 && ME.has('auditor'))) { T.push({ w: 50, t: ME.has('auditor') ? '감리 — 끝난 결재 문서' : '조회 — 표준 사전', n: ME.has('auditor') ? docs.filter(d => d.step === 'done' && canSeeDoc(d)).length : getDict().length, old: null, st: '', go: ME.has('auditor') ? ['결재함 전체', 'approvals.html?box=all'] : ['표준 사전', 'dictionary.html'] }); if (ME.has('auditor')) T.push({ w: 49, t: '감리 — 감사 로그 · 산출물', n: null, old: null, st: '', go: ['감사 로그', 'audit.html'] }); }   /* R-23 */
   if (ME.has('modeler')) {
     const bad = myAreas.filter(a => a.L.state === 'edit' && a.C.bad > 0); const nb = bad.reduce((n, a) => n + a.C.bad, 0);
     T.push({ w: 60 + nb, t: '미준수 · 내 업무 영역', n: nb, old: null, st: '', go: bad.length ? ['표준 맞추기', `standardize.html?area=${bad[0].id}&f=todo`] : ['업무 영역', '#areas'] });

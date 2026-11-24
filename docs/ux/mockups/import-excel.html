@@ -423,6 +423,7 @@ window.pageInit = function () {
       <div class="caption muted u-mt-8" id="xi-undo-t">다음 순서: 모델에서 테이블 · 관계 다듬기 → 표준 맞추기 → 구조 점검 → 확정 신청. [가져오기 취소]는 이 화면에서 한 번, 다른 편집 전에만 됩니다.</div></div>`;
     setTimeout(() => $('xi-done-t').focus(), 0);
     $('xi-undo').onclick = () => {
+      if (liveRoleChanged() || !liveCanEdit(area) || modelLock(area).state !== 'edit' || getDocs().some(d => d.area === area && ['da', 'final'].includes(d.step))) { $('xi-undo').disabled = true; $('xi-undo-t').innerHTML = '<b class="u-danger">권한 · 결재 상태가 바뀌어 되돌릴 수 없습니다(편집 권한 회수 · 확정 신청 · 잠금) — 모델에서 직접 고치세요.</b>'; return; }   /* R-26: re-checked at cancel time */
       const cur = getModelData(area, UNDO.ver); if (!cur || (cur.rev || 0) !== UNDO.rev || getModel(area).ver !== UNDO.ver) { $('xi-undo').disabled = true; $('xi-undo-t').innerHTML = '<b class="u-danger">가져온 뒤 다른 편집이 있어 되돌릴 수 없습니다 — 모델에서 직접 고치세요.</b>'; return; }
       if (!$('xi-undo').dataset.armed) { $('xi-undo').dataset.armed = '1'; $('xi-undo').textContent = '취소 확인'; $('xi-undo-t').innerHTML = `<b class="u-danger">한 번 더 누르면 ${UNDO.isNew ? `업무 영역 ‘${esc(m.name)}’을(를) 지웁니다` : '가져오기 전 상태로 돌립니다'}.</b>`; return; }
       let ok;

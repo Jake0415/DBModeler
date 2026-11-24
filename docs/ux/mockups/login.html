@@ -85,6 +85,7 @@ window.pageInit = function () {
     }
     // identity confirmed — now the account's own state may be told
     if (u.status === 'stopped') return err('사용이 중지된 계정입니다. 관리자에게 문의하세요');
+    if (expiredUser(u)) return err(`사용 기한(${u.until})이 지난 계정입니다. 사업 담당자나 관리자에게 기한 연장을 요청하세요`);
     if (u.status === 'locked') return err(`비밀번호를 여러 번 틀려 계정이 잠겼습니다. ${Math.max(1, Math.ceil((u.lockUntil - Date.now()) / 60000))}분 뒤 다시 시도하거나 관리자에게 잠금 해제를 요청하세요`);
     if (ssoOnly && !(breakGlass && (u.roles || []).includes('admin'))) return err('지금은 SSO 로그인만 허용됩니다. 비상 로그인은 관리자만 할 수 있습니다');
     if (u.pwTemp && u.tempUntil && Date.now() > u.tempUntil) return err('임시 비밀번호의 사용 기한(24시간)이 지났습니다. 관리자에게 다시 발급을 요청하세요');

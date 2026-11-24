@@ -275,7 +275,9 @@ window.pageInit = function () {
   const confirmed = LOCK.state === 'confirmed' && !SNAP, review = LOCK.state === 'review' || !!SNAP;
   const locked = review || confirmed;
   const VER = LOCK.model.ver, BASE = LOCK.model.base;
+  if (!can('model.view', { area: AREA })) { location.replace('error.html?code=403&need=' + encodeURIComponent('이 시스템 조회 범위(내 담당 시스템)') + '&what=' + encodeURIComponent(sysOfArea(AREA) + ' 모델')); return; }   /* R-11: 외주 · 감리는 담당 시스템만 */
   const viewOnly = !can('model.edit', { area: AREA }) || AREA_OFF;   // modeler AND this system is one of theirs (15)
+  const noEditRole = viewOnly && !ME.has('modeler') && !AREA_OFF;   /* R-17: no editing role at all → editing tools are hidden, not just dimmed */
   const outOfScope = ME.has('modeler') && viewOnly;
   const singleKeys = () => dbmStore.get('dbm-single-keys', '1') === '1';
   // a view other than 전체 keeps its own positions ([x, y, px, py]); without one the entity's own position is used
@@ -1708,9 +1710,11 @@ window.pageInit = function () {
   $('rev-xls').dataset.toast = `모델 검토 결과를 엑셀로 내려받았습니다 — ${expBase()}_검토_v${VER}.xlsx`;
   $('ex-cancel').onclick = () => $('expmenu').classList.remove('open');
   $('ex-go').onclick = () => {
+    if (!can('out.export', { area: AREA })) { $('expmenu').classList.remove('open'); toast(ME.has('modeler') ? '담당 시스템의 ERD만 내보낼 수 있습니다' : 'ERD 내보내기는 모델러 · DA · 기관 담당자 · 감리만 할 수 있습니다', 'info'); return; }   /* R-14 · CI-16 */
     const sc = $('ex-scope').querySelector('.on').textContent, f = $('ex-fmt').querySelector('.on').textContent, off = $('ex-official').checked;
     $('expmenu').classList.remove('open');
     const bd = getDocs().find(x => x.type === 'model' && x.area === AREA && x.ver === BASE && x.step === 'done');   // the file name follows this area, not a fixed sample (요구사항_프로젝트)
+    pushAudit({ act: '내려받기 — ERD', target: `${expBase()}_${({ L: '논리', P: '물리', A: '논리물리통합' })[mode]}_ERD.${f.toLowerCase()}`, why: `${sysOfArea(AREA)} · ${sc}${off && bd ? ' · 공식 v' + bd.ver : ''}` });
     toast(`${off && bd ? `공식 산출물(v${bd.ver} 확정본 배치·표제란) ` : ''}${sc} · ${f}로 내보냈습니다 — ${expBase()}_${({ L: '논리', P: '물리', A: '논리물리통합' })[mode]}_ERD.${f.toLowerCase()}`);
   };
   document.addEventListener('click', () => { $('expmenu').classList.remove('open'); });
@@ -1877,7 +1881,8 @@ window.pageInit = function () {
   if (viewOnly && !locked) {
     // ERD P2-14: a plain read-only role is said once in the head (state + its reason in the tooltip) and by the dimmed tools — no strip over the canvas.
     // the strip stays only when it carries something to do (담당 시스템 추가 요청)
-    document.body.classList.add('viewonly'); if (outOfScope) $('ban-view').style.display = 'flex';
+    document.body.classList.add('viewonly'); if (noEditRole) document.body.classList.add('norole'); if (outOfScope) $('ban-view').style.display = 'flex';
+    document.querySelectorAll('.cv-toolbar .tb[data-edit]').forEach(b => { b.setAttribute('aria-disabled', 'true'); b.tabIndex = -1; b.title = (b.title ? b.title + ' — ' : '') + (AREA_OFF ? '사용 중지한 업무 영역이라 편집할 수 없습니다' : outOfScope ? '담당 시스템이 아니라 편집할 수 없습니다' : '모델 편집은 모델러 역할만'); });
     if (!document.body.classList.contains('locked')) { setSave('run', '조회 전용'); $('savest').title = `조회 전용 — 모델 편집은 모델러 역할만 할 수 있습니다 · 지금 역할: ${ME.roles.map(r => ROLE_NAME[r]).join(', ') || '조회만'}`; }
     if ($('ban-view-r')) $('ban-view-r').textContent = ME.roles.map(r => ROLE_NAME[r]).join(', ') || '조회만';
     if (outOfScope) $('ban-view').querySelector('.grow').innerHTML = `<b>조회 전용</b> — 내 담당 시스템(${sysNames(ME.systems) || '없음'})에 <b>${sysOfArea(AREA)}</b>${josa(sysOfArea(AREA), '이/가').slice(-1)} 없습니다. <a href="mypage.html?req=sys&sys=${encodeURIComponent(sysOfArea(AREA))}">담당 시스템 추가 요청</a>`;

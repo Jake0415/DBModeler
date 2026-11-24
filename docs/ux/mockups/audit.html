@@ -42,14 +42,16 @@
 window.pageInit = function () {
   // review mode (&audit=1&as=) carries its role into the 403 page, so it reports the reviewed role, not the saved one
   const auQ = (() => { const s = new URLSearchParams(location.search); return s.has('audit') && s.get('as') ? '&audit=1&as=' + s.get('as') : ''; })();
-  if (!can('audit.view')) { location.replace('error.html?code=403&need=DA 또는 Admin&what=감사 로그' + auQ); return; }
+  if (!can('audit.view')) { location.replace('error.html?code=403&need=DA · 기관 담당자 · Admin · 감리&what=감사 로그' + auQ); return; }
   // single source (CX13-14): approval history of every document + dictionary publications + settings/role/candidate audit entries + permanent deletions.
   // nothing is typed into the page; every row comes from the shared state, sorted by time
   const key = at => { at = String(at || ''); if (/^\d\d\/\d\d/.test(at)) return '2026-' + at.slice(0, 2) + '-' + at.slice(3); return at.replace('T', ' ').slice(0, 16); };
   const docLink = id => /^REQ-/.test(id) ? `<a class="mono" href="approvals.html?doc=${id}">${id}</a>` : `<span class="mono">${id}</span>`;
   const rows = [];
+  const audOnly = ME.has('auditor') && !ME.roles.some(r => ['da', 'admin', 'owner'].includes(r));   /* R-12: 감리 — 조회 범위의 끝난 결재 · 사전 반영 · 공표만, 기관 관리 기록(설정 · 계정)은 빼고 */
+  if (audOnly) document.querySelector('.page-header').insertAdjacentHTML('afterend', '<div class="pad u-pb-0"><div class="banner info"><i data-ic=info></i><div class="caption"><b>감리 보기</b> — 조회 범위(' + (sysNames((USERS[ME.id] || ME).systems) || '—') + ')의 끝난 결재 · 사전 반영 · 공표 · 영구 삭제 기록만 보입니다. 기관 관리 기록(설정 · 계정)은 기관 담당자에게 요청하세요.</div></div></div>');
   const FIXED = [];   // only events that happened in this state (CX14-12)
-  getDocs().forEach(d => (d.hist || []).forEach(h => rows.push({ at: key(h.at), who: h.who, f: 'appr' + (h.self ? ' self' : '') + (d.type === 'model' && (h.step === 'final' || /확정/.test(h.act)) ? ' model' : '') + (d.type === 'dict' && /승인/.test(h.act) && d.step === 'done' && h === d.hist[d.hist.length - 1] ? ' dict' : ''),
+  getDocs().filter(d => !audOnly || (d.step === 'done' && canSeeDoc(d))).forEach(d => (d.hist || []).forEach(h => rows.push({ at: key(h.at), who: h.who, f: 'appr' + (h.self ? ' self' : '') + (d.type === 'model' && (h.step === 'final' || /확정/.test(h.act)) ? ' model' : '') + (d.type === 'dict' && /승인/.test(h.act) && d.step === 'done' && h === d.hist[d.hist.length - 1] ? ' dict' : ''),
     kind: h.self ? '<span class="badge b-violet">자기 승인</span>' : /반려/.test(h.act) ? `<span class="badge b-danger">${h.act}</span>` : `<span class="badge">${h.act}</span>`, tgt: docLink(d.id), what: d.title + (d.step === 'done' && h === d.hist[d.hist.length - 1] ? (d.type === 'model' ? ' · <b>확정본</b>' : ' · <b>사전 반영</b>') : ''), why: h.why || '' })));
   // a publication row opens the change history with that edition highlighted (E9)
   // the current edition (getPub) is a publication too, even when the seed has no change-history row for it
@@ -57,7 +59,7 @@ window.pageInit = function () {
   getChanges().filter(c => c.act === '공표').forEach(c => { const n = c.pub || (String(c.item).match(/(\d+)차/) || [])[1]; rows.push({ at: key(c.at), who: c.by, f: 'dict', kind: '<span class="badge b-violet">공표</span>', tgt: n ? `<a href="dict-history.html?pub=${n}#pub-${n}" title="변경 내역에서 제정 ${n}차 보기">${c.item}</a>` : `<a href="dict-history.html">${c.item}</a>`, what: '기관 사전 제정차수 +1', why: c.diff || '' }); });
   // account changes (등록 · 중지 · 삭제 · 인증 방식) belong to 역할·권한
   const F2 = a => /역할|계정|사용자|인증|비밀번호|잠금/.test(a) ? 'role' : /설정|검수 기준/.test(a) ? 'set' : /후보/.test(a) ? 'dict' : 'set';
-  getAudit().filter(a => a.act !== '영구 삭제').forEach(a => rows.push({ at: key(a.at), who: a.who, f: F2(a.act), kind: `<span class="badge ${/역할/.test(a.act) ? 'b-warning' : ''}">${a.act}</span>`, tgt: a.target || '', what: a.what || a.why || '', why: a.what ? (a.why || '') : '' }));
+  getAudit().filter(a => a.act !== '영구 삭제' && (!audOnly || /^내려받기|공표|사전 반영/.test(a.act))).forEach(a => rows.push({ at: key(a.at), who: a.who, f: F2(a.act), kind: `<span class="badge ${/역할/.test(a.act) ? 'b-warning' : ''}">${a.act}</span>`, tgt: a.target || '', what: a.what || a.why || '', why: a.what ? (a.why || '') : '' }));
   JSON.parse(dbmStore.get('dbm-purge', '[]')).forEach(p => rows.push({ at: key(p.at), who: p.who, f: 'purge', kind: '<span class="badge b-danger">영구 삭제</span>', tgt: `<span class="mono">${p.id}</span> ${p.name}`, what: `${p.kind || ''} 항목 영구 삭제 · 근거 ${p.doc !== '—' ? docLink(p.doc) : '—'}`, why: p.why || '' }));
   rows.push(...FIXED); rows.sort((a, b) => b.at.localeCompare(a.at));
   const ab = document.getElementById('ab');

@@ -85,6 +85,7 @@ window.pageInit = function () {
   const $ = id => document.getElementById(id), qp = new URLSearchParams(location.search);
   // area + versions from the documents (CX12-32): confirmed copies are official, the working version is a draft
   const AREA = getModels()[qp.get('area')] ? qp.get('area') : defArea(); const L = modelLock(AREA);
+  if (!can('model.view', { area: AREA })) { location.replace('error.html?code=403&need=' + encodeURIComponent('이 시스템 조회 범위') + '&what=' + encodeURIComponent(sysOfArea(AREA) + ' 산출물')); return; }   /* R-11 */
   $('crumb-area').textContent = L.model.name; { const cl = document.getElementById('crumb-link'); if (cl) cl.href = `model.html?area=${AREA}`; }
   areaNav(AREA, 'out', { snap: qp.get('snap') || '' });   // the head's '영역 화면' menu (resolution-tree-menu)
   { const c = document.querySelector('.crumbs a'); if (c) c.textContent = sysOfArea(AREA) || curSys().name; }   // the area's own system (markup had a fixed ‘요구사항관리’)
@@ -140,12 +141,15 @@ window.pageInit = function () {
   $('o-ver').onchange = () => { show(cur); window.dispatchEvent(new Event('dbm-tree-refresh')); };
   setTimeout(() => window.dispatchEvent(new Event('dbm-tree-refresh')), 0);
   // generation shows progress and the version it was made from; official ERD is rendered on the server (03 ERD-Q2 보강) — the mockup shows the states
+  const exportOk = can('out.export', { area: AREA }); if (!exportOk) setTimeout(() => { $('o-go').disabled = true; $('o-go').title = ME.has('modeler') ? '담당 시스템의 산출물만 내려받을 수 있습니다' : '조회 전용 — 내려받기는 모델러 · DA · 기관 담당자 · 감리'; }, 0);   /* UI-13 */
   $('o-go').onclick = () => {
     const t = $('o-title').textContent, d = verDoc(), f = $('o-fmt').value;
     if (!$('o-ver').value) { toast('기준 버전을 고르세요', 'info'); return; }
+    if (!can('out.export', { area: AREA })) { toast(ME.has('modeler') ? '담당 시스템의 산출물만 내려받을 수 있습니다 — 미리보기는 볼 수 있습니다' : '산출물 내려받기는 모델러 · DA · 기관 담당자 · 감리만 할 수 있습니다 — 조회 전용 계정은 미리보기만', 'info'); return; }
+    let secWhy = ''; if (cur === 'sec') { if (!ME.roles.some(r => ['da', 'owner', 'auditor'].includes(r))) { toast('개인정보 컬럼 목록은 DA · 기관 담당자 · 감리만 내려받을 수 있습니다', 'info'); return; } if (!$('o-go').dataset.why) { askReason('개인정보 컬럼 목록 내려받기', '사유', '내려받기 기록과 함께 감사 로그에 남습니다').then(w => { if (w) { $('o-go').dataset.why = w; $('o-go').click(); } }); return; } secWhy = $('o-go').dataset.why; delete $('o-go').dataset.why; }   /* R-14 */
     $('o-go').disabled = true; $('o-prog').textContent = `${cur === 'erd' && d ? '서버에서 공식 ERD를 그리는 중' : '만드는 중'}… (${d ? `v${d.ver} 확정본` : '작업본 초안'})`;
     setTimeout(() => { $('o-go').disabled = false; $('o-prog').textContent = '다운로드 시연(목업) — 실제 파일은 만들지 않습니다';
-      const fname = `${L.model.name}_${t}_${d ? 'v' + d.ver : '초안'}.${f}`;
+      const fname = `${L.model.name}_${t}_${d ? 'v' + d.ver : '초안'}.${f}`; pushAudit({ act: '내려받기 — ' + t, target: fname, why: secWhy || `${sysOfArea(AREA)} · ${d ? 'v' + d.ver + ' 확정본' : '초안'}` });
       $('recent').querySelectorAll('tr.er').forEach(r => r.remove());
       $('recent').insertAdjacentHTML('afterbegin', `<tr><td class="mono">${nowStr()}</td><td>${t}${cur === 'erd' && d ? ' (공식)' : ''}</td><td>${L.model.name} · ${d ? `v${d.ver} 확정본` : `v${L.model.ver} 초안`}</td><td>${ME.name}</td><td><a href="#" data-toast="다운로드 시연(목업) — 받을 파일: ${fname}" data-toast-type="info">내려받기 시연</a></td></tr>`);
       // D9: a demo — say which file the product would create, not that a file was downloaded

@@ -275,3 +275,5 @@ body.gridmode .cv-banner, body.gridmode .legend, body.gridmode .cv-zoom, body.gr
 .relname.relfk.miss { fill:var(--ds-amber-900); }
 .memo .mh .mtag { padding:0 4px; border-radius:3px; box-shadow:inset 0 0 0 1px var(--border); font-size:12px; }
 .legend .lg-introw:not([hidden]) { display:flex; }
+/* R-17: a role with nothing to edit does not see the editing tools; a modeler who only can't right now sees them dimmed with the reason */
+.norole .cv-toolbar .tb[data-edit], .norole .cv-toolbar .tsep-edit { display:none !important; }
