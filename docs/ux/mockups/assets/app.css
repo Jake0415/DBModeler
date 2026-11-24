@@ -344,7 +344,7 @@ body.dict-in-tree .side-tab, body.dict-in-tree #side [data-toggle="side"] { disp
 .tgrp::after { content:''; flex:1; height:1px; background:var(--ds-gray-400); margin-right:8px; }
 .tdesc { padding:0 8px 4px calc((var(--lv) - 1) * 16px + 22px); font-size:12px; line-height:16px; color:var(--fg-2); }
 .tico { width:16px; height:16px; flex:none; display:grid; place-items:center; color:var(--fg-2); }
-.tico.ti-db { color:var(--fg); }
+.tico.ti-db, .tico.ti-area { color:var(--fg); }
 .tico.ti-ok { color:var(--ds-gray-900, var(--fg-2)); }
 .tico.ti-bad { color:var(--ds-amber-700); }
 .tico.ti-ex { color:var(--violet); }

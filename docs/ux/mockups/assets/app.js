@@ -1144,6 +1144,7 @@
     undo: '<path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/>',
     redo: '<path d="M21 7v6h-6"/><path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3l3 2.7"/>',
     db: '<ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5V19A9 3 0 0 0 21 19V5"/><path d="M3 12A9 3 0 0 0 21 12"/>',
+    area: '<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M3 13h18"/>',   /* 업무 영역 = 가방(업무) — the system keeps the DB cylinder */
     col: '<rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 3v18"/><path d="M15 3v18"/>',
     key: '<path d="m15.5 7.5 2.3 2.3a1 1 0 0 0 1.4 0l2.1-2.1a1 1 0 0 0 0-1.4L19 4"/><path d="m21 2-9.6 9.6"/><circle cx="7.5" cy="15.5" r="5.5"/>',
     link: '<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>',
@@ -1607,7 +1608,7 @@
       if (!focusId || !rowMap[focusId]) { const anc = lastFocus.parents.find(p => rowMap[p]); focusId = anc || (rows[Math.min(lastFocus.idx, rows.length - 1)] || {}).id || (selId && rowMap[selId] ? selId : null); }
       let html = '';
       const FICON = { 'f:views': 'flow', 'f:ents': 'table', 'f:tbls': 'table', 'f:rels': 'link', 'f:prels': 'link', 'f:subs': 'layers', 'f:std': 'term', 'f:terms': 'term', 'f:doms': 'tag', 'f:cons': 'shield', 'f:ix': 'list', 'f:refs': 'ext' };
-      const KICON = { area: 'db', view: 'flow', rel: 'link', prel: 'link', cons: 'shield', ix: 'list', term: 'term', dom: 'tag' };
+      const KICON = { area: 'area', view: 'flow', rel: 'link', prel: 'link', cons: 'shield', ix: 'list', term: 'term', dom: 'tag' };
       const iconOf = r => r.kind === 'folder' ? FICON[r.nid] : r.kind === 'ent' || r.kind === 'table' ? 'table' : r.kind === 'attr' || r.kind === 'col' ? (r.pk ? 'key' : r.fk ? 'link' : 'col') : KICON[r.kind];
       const icoCls = r => r.kind === 'ent' || r.kind === 'table' ? ' ti-' + (r.st || 'ok') : r.kind === 'attr' || r.kind === 'col' ? (r.pk ? ' ti-pk' : r.fk ? ' ti-fk' : '') : r.kind === 'area' ? ' ti-db' : '';
       rows.forEach((r, i) => {
