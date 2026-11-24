@@ -178,7 +178,7 @@
   window.saveSystems = () => S('dbm-systems', SYSLIST);
   window.activeSystems = () => SYSLIST.filter(x => !x.off);
   window.curSys = () => { const c = store.get('dbm-sys', 'ERP'); return SYSLIST.find(s => s.code === c) || SYSLIST[0]; };
-  window.getAllModels = () => { const all = J('dbm-model', clone(MODEL0)); Object.keys(MODEL0).forEach(k => { if (!all[k]) all[k] = clone(MODEL0[k]); }); return all; };
+  window.getAllModels = () => { const all = J('dbm-model', clone(MODEL0)), del = J('dbm-area-del', []); Object.keys(MODEL0).forEach(k => { if (!all[k] && !del.includes(k)) all[k] = clone(MODEL0[k]); }); del.forEach(k => { delete all[k]; }); return all; };
   const AREA_ORDER = ['e_hr', 'e_tr', 'e_fi', 'e_sd', 'e_mm', 'e_wm', 'e_pp'];
   window.getModels = () => { const c = curSys().code; const ent = Object.entries(getAllModels()).filter(([, m]) => (m.system || 'RQMS') === c && !m.off); ent.sort((a, b) => { const x = AREA_ORDER.indexOf(a[0]), y = AREA_ORDER.indexOf(b[0]); return (x < 0 ? 99 : x) - (y < 0 ? 99 : y); }); return Object.fromEntries(ent); };
   window.defArea = () => Object.keys(getModels())[0] || 'rq';
@@ -192,46 +192,82 @@
   };
   window.setModel = (area, m) => { const all = getAllModels(); all[area] = m; S('dbm-model', all); };
   /* ---- 25 바로잡기: what an area has — decides delete (nothing) vs archive (history) and move (no confirmed copy) vs copy ---- */
+  const sysNm = c => (SYSLIST.find(x => x.code === c) || {}).name || c;
   window.areaUse = id => {
     const all = getAllModels(), m = all[id] || {};
     const docs = getDocs().filter(d => d.type === 'model' && d.area === id);
-    const refs = Object.keys(all).filter(a => a !== id && !all[a].off).filter(a => { try { return (modelOf(a, all[a].ver).E || []).some(e => e.ref && e.refArea === id); } catch (er) { return false; } }).map(a => all[a].name);
-    let ents = 0; try { ents = (modelOf(id, m.ver).E || []).filter(e => !e.ref).length; } catch (er) {}
-    return { confirmed: (m.base || 0) > 0, docs: docs.length, review: modelLock(id).state === 'review', refs, ents };
+    const refBy = Object.keys(all).filter(a => a !== id).filter(a => { try { return (modelOf(a, all[a].ver).E || []).some(e => e.ref && e.refArea === id); } catch (er) { return false; } });   /* archived areas count too (X-05) */
+    let st = { E: [] }; try { st = modelOf(id, m.ver); } catch (er) {}
+    const refsTo = [...new Set((st.E || []).filter(e => e.ref && e.refArea && e.refArea !== id).map(e => e.refArea))];
+    return { confirmed: (m.base || 0) > 0, docs: docs.length, review: modelLock(id).state === 'review', refs: refBy.map(a => all[a].name + (all[a].off ? '(보관)' : '')), refBy, refsTo, ents: (st.E || []).filter(e => !e.ref).length };
   };
   window.areaHasHistory = u => u.confirmed || u.docs > 0 || u.refs.length > 0;
+  /* X-04: every area action checks again at run time — permission, approval in progress */
+  window.areaActWhy = (id, kind) => {
+    const m = getAllModels()[id]; if (!m) return '업무 영역을 찾지 못했습니다 — 다른 곳에서 지웠을 수 있습니다';
+    if (liveRoleChanged()) return '권한이 바뀌었습니다 — 새로고침한 뒤 다시 하세요';
+    if (kind === 'info') return can('model.edit', { area: id }) || can('settings') ? '' : '이 영역을 편집할 권한이 없습니다';
+    if (!can('settings')) return '관리자만 할 수 있습니다';
+    if (kind !== 'restore' && modelLock(id).state === 'review') return '결재가 진행 중입니다 — 결재함에서 회수한 뒤 다시 하세요';
+    return '';
+  };
+  /* X-10: one name per system, archived areas included */
+  window.areaNameTaken = (name, code, except) => Object.entries(getAllModels()).some(([k, m]) => k !== except && (m.system || 'RQMS') === code && m.name === name);
   window.saveAreaInfo = (id, info) => {
-    const all = getAllModels(), m = all[id]; if (!m) return 0;
+    if (areaActWhy(id, 'info')) return 0;
+    const all = getAllModels(), m = all[id];
     const un = v => (USERS[v] || {}).name || '—', LB = { name: '이름', desc: '설명', owner: '담당' };
     const ch = ['name', 'desc', 'owner'].filter(k => (m[k] || '') !== (info[k] || '')).map(k => `${LB[k]} ${k === 'owner' ? un(m[k]) : m[k] || '—'} → ${k === 'owner' ? un(info[k]) : info[k] || '—'}`);
     Object.assign(m, info); S('dbm-model', all);
     if (ch.length) pushAudit({ act: '업무 영역 정보 수정', target: `${m.name} (${id})`, why: ch.join(' · ') });
     return ch.length;
   };
-  window.archiveArea = (id, why) => { const all = getAllModels(), m = all[id]; m.off = true; m.offAt = now(); m.offBy = ME.name; m.offWhy = why; S('dbm-model', all); pushAudit({ act: '업무 영역 사용 중지', target: `${m.name} (${id})`, why }); };
-  window.restoreArea = id => { const all = getAllModels(), m = all[id]; delete m.off; delete m.offAt; delete m.offBy; delete m.offWhy; S('dbm-model', all); pushAudit({ act: '업무 영역 다시 사용', target: `${m.name} (${id})` }); };
+  window.archiveArea = (id, why) => { if (areaActWhy(id, 'off')) return false; const all = getAllModels(), m = all[id]; m.off = true; m.offAt = now(); m.offBy = ME.name; m.offWhy = why; S('dbm-model', all); pushAudit({ act: '업무 영역 사용 중지', target: `${m.name} (${id})`, why }); return true; };
+  window.restoreArea = id => { if (areaActWhy(id, 'restore')) return false; const all = getAllModels(), m = all[id]; if (Object.entries(all).some(([k, x]) => k !== id && !x.off && (x.system || 'RQMS') === (m.system || 'RQMS') && x.name === m.name)) return false;
+    delete m.off; delete m.offAt; delete m.offBy; delete m.offWhy; S('dbm-model', all); pushAudit({ act: '업무 영역 다시 사용', target: `${m.name} (${id})` }); return true; };
   window.deleteArea = id => {
-    const all = getAllModels(), m = all[id]; if (!m || areaHasHistory(areaUse(id))) return false;
-    delete all[id]; S('dbm-model', all);
+    if (areaActWhy(id, 'off')) return false; const all = getAllModels(), m = all[id]; if (areaHasHistory(areaUse(id))) return false;
+    delete all[id]; S('dbm-model', all); S('dbm-area-del', J('dbm-area-del', []).concat([id]));   /* X-05: recorded so seed data never brings it back */
     try { Object.keys(localStorage).filter(k => k.startsWith(`dbm-mdata-${id}-v`) || k === 'dbm-area-seed-' + id).forEach(k => localStorage.removeItem(k)); } catch (er) {}
     pushAudit({ act: '업무 영역 삭제', target: `${m.name} (${id})`, why: '이력 없음 — 엔터티와 함께 삭제' }); return true;
   };
-  const sysNm = c => (SYSLIST.find(x => x.code === c) || {}).name || c;
-  /* move: only without a confirmed copy or documents; the physical model is rebuilt with the target system's rules */
+  /* X-07: column types follow the target DBMS when an area changes system (Oracle · Tibero ↔ PostgreSQL ↔ MySQL) */
+  const dbmsOfSys = c => { const s = SYSLIST.find(x => x.code === c) || {}; return (s.dbms || String(s.db || 'Oracle').split(' ')[0]).split(' ')[0]; };
+  const TO_ORA = [[/^VARCHAR\(/i, 'VARCHAR2('], [/^(NUMERIC|DECIMAL)\b/i, 'NUMBER'], [/^(TIMESTAMP|DATETIME)\b/i, 'DATE'], [/^(TEXT|LONGTEXT)\b/i, 'CLOB'], [/^(BYTEA|LONGBLOB)\b/i, 'BLOB']];
+  const FROM_ORA = { PostgreSQL: [[/^VARCHAR2\(/i, 'VARCHAR('], [/^NUMBER\b/i, 'NUMERIC'], [/^DATE$/i, 'TIMESTAMP'], [/^CLOB$/i, 'TEXT'], [/^BLOB$/i, 'BYTEA']], MySQL: [[/^VARCHAR2\(/i, 'VARCHAR('], [/^NUMBER\b/i, 'DECIMAL'], [/^DATE$/i, 'DATETIME'], [/^CLOB$/i, 'LONGTEXT'], [/^BLOB$/i, 'LONGBLOB']] };
+  window.convertType = (t, from, to) => { if (!t || t === '—' || from === to) return t; let x = String(t); TO_ORA.forEach(([re, r]) => { x = x.replace(re, r); }); (FROM_ORA[to] || []).forEach(([re, r]) => { x = x.replace(re, r); }); return x; };
+  window.convertStructure = (st, fromCode, toCode) => { const f = dbmsOfSys(fromCode), t = dbmsOfSys(toCode); let n = 0; if (f === t) return 0; (st.E || []).forEach(e => (e.a || []).forEach(a => { const v = convertType(a.t, f, t); if (v !== a.t) { a.t = v; n++; } })); return n; };
+  window.areaTypeChanges = (id, toCode) => { const m = getModel(id); try { return convertStructure(clone(modelOf(id, m.ver)), m.system || 'RQMS', toCode); } catch (er) { return 0; } };
+  /* move: only without a confirmed copy or documents; the working structure's types follow the target DBMS */
   window.moveAreaToSystem = (id, code) => {
-    const all = getAllModels(), m = all[id], from = m.system || 'RQMS', u = areaUse(id); if (u.confirmed || u.docs) return false;
+    if (areaActWhy(id, 'move')) return false;
+    const all = getAllModels(), m = all[id], from = m.system || 'RQMS', u = areaUse(id); if (u.confirmed || u.docs || areaNameTaken(m.name, code, id)) return false;
+    const st = modelOf(id, m.ver), n = convertStructure(st, from, code); if (n) setModelData(id, m.ver, Object.assign(st, { rev: (st.rev || 0) + 1 }));
     m.system = code; S('dbm-model', all);
-    pushAudit({ act: '업무 영역 시스템 이동', target: `${m.name} (${id})`, why: `${sysNm(from)} → ${sysNm(code)}` }); return true;
+    pushAudit({ act: '업무 영역 시스템 이동', target: `${m.name} (${id})`, why: `${sysNm(from)} → ${sysNm(code)}${n ? ` · 컬럼 타입 ${n}개 변환` : ''}` }); return { converted: n };
   };
-  /* copy: a new v1 working area in the target system from the current working structure; the original stays (then archive it) */
+  /* copy: a new v1 working area in the target system; references to areas already copied there are re-linked to those copies, the rest are left out */
   window.copyAreaToSystem = (id, code, name) => {
-    const m = getModel(id), st = modelOf(id, m.ver); const refIds = new Set((st.E || []).filter(e => e.ref).map(e => e.id));   /* references cannot cross systems — dropped with their relations */
-    const nid = addArea(name || m.name, { E: (st.E || []).filter(e => !e.ref), R: (st.R || []).filter(r => !refIds.has(r.f) && !refIds.has(r.t)), M: st.M || [], V: (st.V || []).map(v => Object.assign({}, v, { ents: (v.ents || []).filter(x => !refIds.has(x)) })) }, { system: code, desc: m.desc || '', owner: m.owner || '', copiedFrom: id });
-    pushAudit({ act: '업무 영역 다른 시스템으로 복제', target: `${m.name} (${id}) → ${name || m.name} (${nid})`, why: `대상 ${sysNm(code)} · v1 작업 중` }); return nid;
+    if (areaActWhy(id, 'move')) return false;
+    const m = getModel(id), st = clone(modelOf(id, m.ver)); const nm = name || m.name; if (areaNameTaken(nm, code)) return false;
+    const copies = Object.fromEntries(Object.entries(getAllModels()).filter(([, x]) => (x.system || 'RQMS') === code && x.copiedFrom && !x.off).map(([k, x]) => [x.copiedFrom, k]));
+    const drop = new Set(); let relinked = 0;
+    (st.E || []).forEach(e => { if (!e.ref) return; if (copies[e.refArea]) { e.refArea = copies[e.refArea]; e.refName = (getAllModels()[e.refArea] || {}).name || e.refName; relinked++; } else drop.add(e.id); });
+    const n = convertStructure(st, m.system || 'RQMS', code);
+    const nid = addArea(nm, { E: (st.E || []).filter(e => !drop.has(e.id)), R: (st.R || []).filter(r => !drop.has(r.f) && !drop.has(r.t)), M: st.M || [], V: (st.V || []).map(v => Object.assign({}, v, { ents: (v.ents || []).filter(x => !drop.has(x)) })) }, { system: code, desc: m.desc || '', owner: m.owner || '', copiedFrom: id });
+    pushAudit({ act: '업무 영역 다른 시스템으로 복제', target: `${m.name} (${id}) → ${nm} (${nid})`, why: `대상 ${sysNm(code)} · v1 작업 중${n ? ` · 컬럼 타입 ${n}개 변환` : ''}${relinked ? ` · 참조 ${relinked}개 다시 이음` : ''}${drop.size ? ` · 참조 ${drop.size}개 제외` : ''}` });
+    return { nid, converted: n, relinked, dropped: drop.size };
   };
+  /* how a copy would treat this area's references in the target system (shown before copying) */
+  window.copyRefPlan = (id, code) => { const m = getModel(id); let st = { E: [] }; try { st = modelOf(id, m.ver); } catch (er) {}
+    const copies = new Set(Object.values(getAllModels()).filter(x => (x.system || 'RQMS') === code && x.copiedFrom && !x.off).map(x => x.copiedFrom));
+    const refs = (st.E || []).filter(e => e.ref); const keep = refs.filter(e => copies.has(e.refArea)); const lost = refs.filter(e => !copies.has(e.refArea));
+    return { keep: keep.length, lost: lost.length, lostAreas: [...new Set(lost.map(e => (getAllModels()[e.refArea] || {}).name || e.refArea))] }; };
   /* entity moves between areas (25 §3-4) are logged so the version diff of both areas can say '이동' */
   window.moveLog = () => J('dbm-moves', []);
   window.pushMove = mv => { const l = moveLog(); l.unshift(Object.assign({ at: now(), by: ME.name }, mv)); S('dbm-moves', l.slice(0, 200)); };
+  /* X-06: systems are re-read just before a write — two settings tabs never drop each other's registration */
+  window.updateSystems = fn => { const fresh = J('dbm-systems', null) || clone(SYS0); const r = fn(fresh); if (r === false) return false; S('dbm-systems', fresh); SYSLIST.splice(0, SYSLIST.length, ...fresh); return true; };
   window.modelLock = area => {
     const m = getModel(area);
     const d = getDocs().filter(x => x.type === 'model' && x.area === area && x.ver === m.ver).sort((a, b) => b.id.localeCompare(a.id))[0];
@@ -1848,7 +1884,7 @@
         const sm = getModels()[r.area]; if (!sm || !sm.base) return `${(sm || {}).name || '원본'}에는 아직 확정본이 없어 참조할 수 없습니다 — 원본이 확정된 뒤 참조합니다`;
         if (lv.E.some(x => x.ref && x.refArea === r.area && (x.refId || x.id) === r.ent)) return '이미 지금 영역에서 참조하고 있습니다';
         return null; };
-      if (r.kind === 'area') return [I('open', '모델 열기'), I('std', '표준 맞추기'), I('ddl', 'DDL 만들기'), I('outputs', '산출물'), SEP, I('hist', '결재함 열기'), ed('vnew', '보기 추가', { ent: null }), I('dup', '영역 복제', { mock: '영역 복제는 목업에서 시연만 합니다 — 복제본은 새 업무 영역 v1 작업 중으로 만들어집니다' }), SEP, I('areaedit', '영역 정보 수정…'), I('areamove', '다른 시스템으로 옮기기 · 복제…'), I('areaoff', '사용 중지 · 삭제…'), SEP, ...fold];
+      if (r.kind === 'area') return [I('open', '모델 열기'), I('std', '표준 맞추기'), I('ddl', 'DDL 만들기'), I('outputs', '산출물'), SEP, I('hist', '결재함 열기'), ed('vnew', '보기 추가', { ent: null }), SEP, I('areaedit', '영역 정보 수정…', { why: areaActWhy(r.area, 'info') || null }), I('areamove', '다른 시스템으로 옮기기 · 복제…', { why: can('settings') ? null : '관리자만 할 수 있습니다' }), I('areaoff', '사용 중지 · 삭제…', { why: can('settings') ? null : '관리자만 할 수 있습니다' }), SEP, ...fold];
       if (r.kind === 'folder') {
         if (r.nid === 'f:ents' || r.nid === 'f:tbls') return [ed('newent', P ? '새 테이블' : '새 엔터티', { ent: null, key: 'E' }), I('grid', '표 보기 · 일괄 편집'), SEP, ...fold];
         if (r.nid === 'f:views') return [ed('vnew', '새 보기', { ent: null }), SEP, ...fold];

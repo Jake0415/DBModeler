@@ -111,7 +111,7 @@
           <tr><td>일시</td><td class="mono">T</td><td><input class="input mono u-w-130" value="DATE"></td><td class="mono">—</td><td class="caption">밀리초 필요 시 TIMESTAMP</td></tr>
           <tr><td>대용량 문자</td><td class="mono">L</td><td><input class="input mono u-w-130" value="CLOB"></td><td class="mono">—</td><td></td></tr>
         </tbody></table>
-        <div class="flex u-mt-8"><span class="caption muted">DBMS를 바꾸면 기본 매핑(PostgreSQL·Tibero·MySQL/MariaDB)을 불러온 뒤 고칠 수 있습니다.</span><span class="grow"></span><button class="btn sm" data-toast="기본 매핑으로 되돌렸습니다(Oracle 19c)" data-toast-type="info">기본값으로</button></div>
+        <div class="flex u-mt-8"><span class="caption muted">시스템을 등록할 때 그 DBMS의 기본 매핑(Oracle · PostgreSQL · Tibero · MySQL/MariaDB)을 불러온 뒤 고칠 수 있습니다.</span><span class="grow"></span><button class="btn sm" data-toast="기본 매핑으로 되돌렸습니다(Oracle 19c)" data-toast-type="info">기본값으로</button></div>
       </div></div>
     <div class="set-row wide"><div class="l"><b>시스템 컬럼</b><span>물리 반영 때 모든 테이블에 붙는 공통 컬럼. 표준 용어로만 지정</span></div>
       <div>
@@ -276,38 +276,46 @@ window.pageInit = function () {
     const verOf = s => s.dbms ? String(s.db || '').slice(s.dbms.length).trim() : String(s.db || '').replace(/^\S+\s*/, '');
     const areasOf = code => Object.entries(getAllModels()).filter(([, m]) => (m.system || 'RQMS') === code);
     const fillPick = v => { $('sys-pick').innerHTML = SYSLIST.map(s => `<option value="${s.code}">${esc3(s.name)} · ${s.code}${s.off ? ' (사용 중지)' : ''}</option>`).join(''); $('sys-pick').value = v; drawSys(); };
-    const sum = (id, list) => { $(id).innerHTML = list.length ? `<div class="banner danger u-mb-8"><i data-ic=err></i><div>${list.map(esc3).join('<br>')}</div></div>` : ''; };
-    $('sys-reg').onclick = () => { if (!can('settings')) return; ['sr-name', 'sr-code', 'sr-desc', 'sr-ver', 'sr-schema'].forEach(i => { $(i).value = ''; }); $('sr-ok').checked = false; $('sr-sum').innerHTML = ''; $('mo-sysreg').classList.add('open'); setTimeout(() => $('sr-name').focus(), 0); };
+    const sum = (id, list) => { document.querySelectorAll('#' + id.replace('-sum', '') .replace('sr', 'mo-sysreg').replace('si', 'mo-sysinfo') + ' [aria-invalid]').forEach(f => f.removeAttribute('aria-invalid'));
+      $(id).innerHTML = list.length ? `<div class="banner danger u-mb-8"><i data-ic=err></i><div>저장하지 않았습니다 — 오류 ${list.length}건<br>${list.map(x => esc3(x[1])).join('<br>')}</div></div>` : '';
+      list.forEach(([f]) => { if ($(f)) $(f).setAttribute('aria-invalid', 'true'); }); if (list.length && $(list[0][0])) $(list[0][0]).focus(); };
+    $('sys-reg').onclick = () => { if (!can('settings')) return; ['sr-name', 'sr-code', 'sr-desc', 'sr-ver', 'sr-schema'].forEach(i => { $(i).value = ''; }); $('sr-ok').checked = false; $('sr-sum').innerHTML = ''; $('mo-sysreg')._opener = $('sys-reg'); $('mo-sysreg').classList.add('open'); setTimeout(() => $('sr-name').focus(), 0); };
     $('sr-code').addEventListener('input', () => { $('sr-code').value = $('sr-code').value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 10); });
     $('sr-go').onclick = () => { const v = i => $(i).value.trim(), P = [];
-      if (!v('sr-name')) P.push('시스템 이름을 입력하세요'); else if (SYSLIST.some(s => s.name === v('sr-name'))) P.push('같은 이름의 시스템이 있습니다');
-      if (!/^[A-Z][A-Z0-9]{1,9}$/.test(v('sr-code'))) P.push('코드는 영문 대문자로 시작하는 2~10자입니다'); else if (SYSLIST.some(s => s.code === v('sr-code'))) P.push('같은 코드의 시스템이 있습니다');
-      if (!v('sr-schema')) P.push('기본 스키마를 입력하세요');
-      if (!$('sr-ok').checked) P.push('DBMS를 바꿀 수 없다는 것을 확인해 주세요');
+      if (!v('sr-name')) P.push(['sr-name', '시스템 이름을 입력하세요']); else if (SYSLIST.some(s => s.name === v('sr-name'))) P.push(['sr-name', '같은 이름의 시스템이 있습니다']);
+      if (!/^[A-Z][A-Z0-9]{1,9}$/.test(v('sr-code'))) P.push(['sr-code', '코드는 영문 대문자로 시작하는 2~10자입니다']); else if (SYSLIST.some(s => s.code === v('sr-code'))) P.push(['sr-code', '같은 코드의 시스템이 있습니다']);
+      if (!v('sr-schema')) P.push(['sr-schema', '기본 스키마를 입력하세요']);
+      if (!$('sr-ok').checked) P.push(['sr-ok', 'DBMS를 바꿀 수 없다는 것을 확인해 주세요']);
       sum('sr-sum', P); if (P.length) return;
       const s = { code: v('sr-code'), name: v('sr-name'), desc: v('sr-desc'), dbms: $('sr-dbms').value, db: `${$('sr-dbms').value} ${v('sr-ver')}`.trim(), schema: v('sr-schema'), at: today2().slice(0, 10), by: ME.name };
-      SYSLIST.push(s); saveSystems(); pushAudit({ act: '시스템 등록', target: `${s.name} (${s.code})`, why: `${s.db} · 스키마 ${s.schema} — DBMS는 바꿀 수 없음` });
-      $('mo-sysreg').classList.remove('open'); fillPick(s.code); toast(`시스템 ‘${s.name}’을(를) 등록했습니다 — 시스템 홈에서 업무 영역을 만들거나 다른 시스템의 영역을 옮겨 오세요`, 'success'); };
+      if (!updateSystems(list => { if (list.some(x => x.code === s.code || x.name === s.name)) return false; list.push(s); })) { sum('sr-sum', [['sr-code', '다른 탭에서 같은 코드 · 이름의 시스템을 먼저 등록했습니다']]); return; }   /* X-06 */
+      pushAudit({ act: '시스템 등록', target: `${s.name} (${s.code})`, why: `${s.db} · 스키마 ${s.schema} — DBMS는 바꿀 수 없음` });
+      $('mo-sysreg').classList.remove('open'); fillPick(s.code);
+      const from = curSys(); toast(`시스템 ‘${s.name}’을(를) 등록했습니다 — 옮길 업무 영역이 있으면 원래 시스템 홈의 영역 ⋯ › [다른 시스템으로 옮기기 · 복제]`, 'success', { label: `${from.name} 시스템 홈`, fn: () => { location.href = `system.html?system=${from.code}`; } }); };   /* X-08 */
     $('sys-info').onclick = () => { if (!can('settings')) return; const s = SYSLIST.find(x => x.code === $('sys-pick').value); if (!s) return;
       $('si-name').value = s.name; $('si-code').value = s.code; $('si-desc').value = s.desc || ''; $('si-dbms').value = dbmsOf(s); $('si-ver').value = verOf(s); $('si-schema').value = s.schema; $('si-sum').innerHTML = '';
       const live = areasOf(s.code).filter(([, m]) => !m.off), all = areasOf(s.code);
-      $('si-off').textContent = s.off ? '다시 사용' : all.length ? '사용 중지' : '삭제';
+      delete $('si-off').dataset.armed; $('si-off').textContent = s.off ? '다시 사용' : all.length ? '사용 중지' : '삭제';
       $('si-off').disabled = !s.off && live.length > 0;
       $('si-off-t').textContent = s.off ? '사용 중지한 시스템입니다. 다시 쓰면 상단 시스템 목록에 나타납니다.' : live.length ? `업무 영역 ${live.length}개(${live.map(([, m]) => m.name).join(', ')})가 있어 정리할 수 없습니다 — 먼저 옮기거나 사용 중지하세요.` : all.length ? '사용 중지한 업무 영역만 남아 있어 시스템을 사용 중지할 수 있습니다. 이력은 그대로 남습니다.' : '업무 영역이 없어 삭제할 수 있습니다. 되돌릴 수 없습니다.';
-      $('mo-sysinfo').classList.add('open'); setTimeout(() => $('si-name').focus(), 0); };
+      $('mo-sysinfo')._opener = $('sys-info'); $('mo-sysinfo').classList.add('open'); setTimeout(() => $('si-name').focus(), 0); };
     $('si-go').onclick = () => { const s = SYSLIST.find(x => x.code === $('si-code').value); const v = i => $(i).value.trim(), P = [];
-      if (!v('si-name')) P.push('시스템 이름을 입력하세요'); else if (SYSLIST.some(x => x !== s && x.name === v('si-name'))) P.push('같은 이름의 시스템이 있습니다');
-      if (!v('si-schema')) P.push('기본 스키마를 입력하세요'); sum('si-sum', P); if (P.length) return;
+      if (!v('si-name')) P.push(['si-name', '시스템 이름을 입력하세요']); else if (SYSLIST.some(x => x !== s && x.name === v('si-name'))) P.push(['si-name', '같은 이름의 시스템이 있습니다']);
+      if (!v('si-schema')) P.push(['si-schema', '기본 스키마를 입력하세요']); sum('si-sum', P); if (P.length) return;
+      if (!can('settings')) { toast('관리자만 할 수 있습니다', 'danger'); return; }
       const before = `${s.name} · ${s.db} · ${s.schema} · ${s.desc || ''}`; const d = dbmsOf(s);
-      Object.assign(s, { name: v('si-name'), desc: v('si-desc'), dbms: d, db: `${d} ${v('si-ver')}`.trim(), schema: v('si-schema') });
-      const after = `${s.name} · ${s.db} · ${s.schema} · ${s.desc || ''}`; $('mo-sysinfo').classList.remove('open');
+      const nv = { name: v('si-name'), desc: v('si-desc'), dbms: d, db: `${d} ${v('si-ver')}`.trim(), schema: v('si-schema') };
+      const after = `${nv.name} · ${nv.db} · ${nv.schema} · ${nv.desc || ''}`; $('mo-sysinfo').classList.remove('open');
       if (before === after) { toast('바뀐 내용이 없습니다', 'info'); return; }
-      saveSystems(); pushAudit({ act: '시스템 정보 수정', target: `${s.name} (${s.code})`, why: `${before} → ${after}` }); fillPick(s.code); toast('시스템 정보를 저장했습니다 — 확정본과 이미 만든 DDL은 당시 값으로 남습니다 · 감사 로그에 기록', 'success'); };
+      updateSystems(list => { const x = list.find(y => y.code === s.code); if (!x) return false; Object.assign(x, nv); });   /* X-06: only this system, on the latest list */ pushAudit({ act: '시스템 정보 수정', target: `${s.name} (${s.code})`, why: `${before} → ${after}` }); fillPick(s.code); toast('시스템 정보를 저장했습니다 — 확정본과 이미 만든 DDL은 당시 값으로 남습니다 · 감사 로그에 기록', 'success'); };
     $('si-off').onclick = () => { const s = SYSLIST.find(x => x.code === $('si-code').value); const all = areasOf(s.code);
-      if (s.off) { delete s.off; saveSystems(); pushAudit({ act: '시스템 다시 사용', target: `${s.name} (${s.code})` }); $('mo-sysinfo').classList.remove('open'); fillPick(s.code); toast(`‘${s.name}’을(를) 다시 씁니다`, 'success'); return; }
+      if (!can('settings')) { toast('관리자만 할 수 있습니다', 'danger'); return; }
+      if (!s.off && !$('si-off').dataset.armed) { $('si-off').dataset.armed = '1'; $('si-off-t').innerHTML = `<b class="u-danger">${all.length ? '한 번 더 누르면 사용 중지합니다 — 상단 시스템 목록에서 빠집니다.' : '한 번 더 누르면 삭제합니다 — 되돌릴 수 없습니다.'}</b>`; $('si-off').textContent = all.length ? '사용 중지 확인' : '삭제 확인'; return; }
+      delete $('si-off').dataset.armed;
+      if (s.off) { updateSystems(list => { const x = list.find(y => y.code === s.code); if (x) delete x.off; }); pushAudit({ act: '시스템 다시 사용', target: `${s.name} (${s.code})` }); $('mo-sysinfo').classList.remove('open'); fillPick(s.code); toast(`‘${s.name}’을(를) 다시 씁니다`, 'success'); return; }
       if (all.some(([, m]) => !m.off)) return;
-      if (!all.length) { if (!confirm(`‘${s.name}’ 시스템을 삭제할까요? 되돌릴 수 없습니다.`)) return; SYSLIST.splice(SYSLIST.indexOf(s), 1); saveSystems(); pushAudit({ act: '시스템 삭제', target: `${s.name} (${s.code})`, why: '업무 영역 없음' }); $('mo-sysinfo').classList.remove('open'); fillPick(curSys().code); toast(`‘${s.name}’ 시스템을 삭제했습니다`, 'info'); return; }
-      s.off = true; saveSystems(); pushAudit({ act: '시스템 사용 중지', target: `${s.name} (${s.code})`, why: '남은 업무 영역 모두 사용 중지' }); $('mo-sysinfo').classList.remove('open'); fillPick(s.code); toast(`‘${s.name}’을(를) 사용 중지했습니다 — 상단 시스템 목록에서 빠집니다`, 'info'); };
+      if (!all.length) { updateSystems(list => { const i = list.findIndex(y => y.code === s.code); if (i < 0) return false; list.splice(i, 1); }); pushAudit({ act: '시스템 삭제', target: `${s.name} (${s.code})`, why: '업무 영역 없음' }); $('mo-sysinfo').classList.remove('open'); fillPick(curSys().code); toast(`‘${s.name}’ 시스템을 삭제했습니다`, 'info'); return; }
+      updateSystems(list => { const x = list.find(y => y.code === s.code); if (x) x.off = true; }); pushAudit({ act: '시스템 사용 중지', target: `${s.name} (${s.code})`, why: '남은 업무 영역 모두 사용 중지' }); $('mo-sysinfo').classList.remove('open'); fillPick(s.code); toast(`‘${s.name}’을(를) 사용 중지했습니다 — 상단 시스템 목록에서 빠집니다`, 'info'); };
   }
   const pol = getPolicy();
   const drawPol = () => { const p = getPolicy(); $('pol-head').innerHTML = `<b>검수 기준 v${p.ver}</b> · 적용 ${p.at} · ${p.by}`; $('pol-hist').innerHTML = p.hist.map(h => `<tr><td class="mono">v${h.ver}</td><td class="mono">${h.at}</td><td>${h.by}</td><td class="caption">${h.what}</td></tr>`).join(''); };

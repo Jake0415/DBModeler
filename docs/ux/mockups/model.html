@@ -231,7 +231,9 @@ window.pageInit = function () {
   };
 
   // ---- business area: seed structure comes from the shared state layer (app.js modelSeed)
-  const AREA = getModels()[q.get('area')] ? q.get('area') : defArea();
+  const AREA = getModels()[q.get('area')] ? q.get('area') : (getAllModels()[q.get('area')] && getAllModels()[q.get('area')].off ? q.get('area') : defArea());
+  const AREA_OFF = !!getModel(AREA).off;   /* 25 X-09: archived — read-only, kept for its documents and references */
+  if (AREA_OFF) setTimeout(() => toast('사용 중지한 업무 영역입니다 — 조회 전용 · 다시 쓰려면 시스템 홈 보관함에서 [다시 사용]', 'info'), 0);
   // context hand-off (D4): the entity · attribute travel to standardize / term-wizard, which highlight that row and come back with &focus=
   const ctxQ = (e, a) => e ? `&e=${encodeURIComponent(e.id)}${a ? '&a=' + encodeURIComponent(a.n) : ''}` : '';
   const stdUrl = (e, a) => `standardize.html?area=${AREA}&f=todo${ctxQ(e, a)}`;
@@ -266,7 +268,7 @@ window.pageInit = function () {
   const confirmed = LOCK.state === 'confirmed' && !SNAP, review = LOCK.state === 'review' || !!SNAP;
   const locked = review || confirmed;
   const VER = LOCK.model.ver, BASE = LOCK.model.base;
-  const viewOnly = !can('model.edit', { area: AREA });   // modeler AND this system is one of theirs (15)
+  const viewOnly = !can('model.edit', { area: AREA }) || AREA_OFF;   // modeler AND this system is one of theirs (15)
   const outOfScope = ME.has('modeler') && viewOnly;
   const singleKeys = () => dbmStore.get('dbm-single-keys', '1') === '1';
   // a view other than 전체 keeps its own positions ([x, y, px, py]); without one the entity's own position is used
@@ -299,6 +301,7 @@ window.pageInit = function () {
     if (PERF) { setSave('run', '속도 측정 · 저장 안 함'); return; }   // the role box saves everything at once when it closes
     if (!liveCanEdit(AREA)) { revConflict = true; setSave('err', '저장 안 됨 · 권한 변경'); toast('편집 권한이 회수되어 이 탭의 편집은 저장하지 않았습니다 — 새로고침하세요', 'danger', { label: '새로고침', fn: () => location.reload() }); return; }
     // this version may have been submitted / confirmed in another tab meanwhile — never write into it then (CL11-01)
+    if (!getAllModels()[AREA] || getAllModels()[AREA].off) { revConflict = true; setSave('err', '저장 안 됨 · 영역 정리됨'); toast('이 업무 영역이 다른 곳에서 삭제되거나 사용 중지되어 저장하지 않았습니다', 'danger'); return; }
     const lk = modelLock(AREA); if (lk.state !== 'edit' || lk.model.ver !== VER) { revConflict = true; toast(`v${VER}은 다른 탭에서 ${lk.state === 'edit' ? `확정되고 v${lk.model.ver} 작업이 시작됐습니다` : lk.state === 'review' ? '확정 신청됐습니다' : '확정됐습니다'} — 이 탭의 편집은 저장하지 않았습니다`, 'danger', { label: '새로고침', fn: () => location.reload() }); return; }
     const cur = getModelData(AREA, VER);
     if (cur && (cur.rev || 0) !== myRev) { revConflict = true; setSave('err', '저장 안 됨 · 최신본 확인'); toast('다른 탭에서 이 버전을 먼저 저장했습니다 — 이 탭의 편집은 저장하지 않았습니다. 새로고침해서 최신 내용으로 이어가세요', 'danger', { label: '새로고침', fn: () => location.reload() }); return; }
@@ -979,7 +982,7 @@ window.pageInit = function () {
     if (!can('model.submit', { area: AREA })) { toast('확정 신청 권한이 없습니다 — 담당 시스템의 모델러만 신청합니다', 'danger'); return; }
     { const gaps = lineGaps({ type: 'model', area: AREA, req: ME.id }); if (gaps.length) { toast(`${sysOfArea(AREA)} 모델을 처리할 ${gaps.map(s => STEP_NAME[s]).join(' · ')} 담당자가 없습니다 — 신청하면 결재가 멈춥니다. Admin에게 담당 지정을 요청하세요`, 'danger'); return; } }
     // always a NEW document (requester = current user); same area+version in progress → no duplicate (R2)
-    const r = createDoc({ type: 'model', area: AREA, ver: VER, title: `${curSys().name} › ${LOCK.model.name} v${VER} 확정`, n: E.length, reason: $('cf-why').value.trim(), cc: ccList.slice(), key: `model:${AREA}:v${VER}`, snap: lastComp, model: JSON.parse(JSON.stringify({ E, R, M, V })) });   // the document keeps the model as submitted
+    const r = createDoc({ type: 'model', area: AREA, ver: VER, title: `${curSys().name} › ${LOCK.model.name} v${VER} 확정`, n: E.length, reason: $('cf-why').value.trim(), cc: ccList.slice(), key: `model:${AREA}:v${VER}`, snap: lastComp, model: JSON.parse(JSON.stringify({ E, R, M, V })), sysAt: { code: curSys().code, db: curSys().db, schema: curSys().schema } });   // the document keeps the model as submitted
     flash(r.dup ? `이미 진행 중인 확정 신청 ${r.doc.id}이 있습니다` : `확정 신청 ${r.doc.id} — 1단계 담당 ${approversFor(r.doc, 'da').length}명에게 알렸습니다. 결재가 끝날 때까지 이 업무 영역은 조회 전용입니다`, 'info');
     go(`model.html?area=${AREA}`);
   };
@@ -2213,42 +2216,74 @@ window.pageInit = function () {
   // a tree entity dropped on the canvas: same area → place in this view · another area → reference (12 §3.2)
   window.addEventListener('dbm-tree-drag', ev => cv.classList.toggle('placing', !!(ev.detail && ev.detail.on) && cv.dataset.sys !== '1'));
 
-  /* ---- 25 §3-4: [다른 영역으로 옮기기…] — the modeler moves an entity to another area of the same system (both areas editable);
-     relations to entities left behind are cut (listed first); both areas' next confirmation shows it as 이동 and DA checks it ---- */
+  /* ---- 25 §3-4: [다른 영역으로 옮기기…] — the modeler moves an entity to another area of the same system (both areas editable).
+     X-01 one unit: re-checked at run time, the source is saved first (nothing moves if that fails), the target second (the source is put back if that fails),
+     and the undo history ends here. X-02 FK attributes of cut relations become ordinary attributes. X-03 a reference of this entity in the target becomes
+     the real entity; references in other editable areas follow the new source ---- */
   function askMove(id) {
     const e = ent(id); if (!e) return;
+    const opener = document.activeElement;
     const others = Object.entries(getModels()).filter(([k]) => k !== AREA);
-    const st = k => { const L = modelLock(k); if (!liveCanEdit(k)) return '편집 권한 없음'; if (L.state === 'review') return '결재 중 — 회수 필요'; if (L.state === 'confirmed') return '확정본 — 새 작업 버전을 먼저 시작'; return ''; };
-    const cut = R.filter(r => (r.f === id) !== (r.t === id));
-    const selfR = R.filter(r => r.f === id && r.t === id);
+    const why = k => { if (!liveCanEdit(k)) return '편집 권한이 없습니다'; const L = modelLock(k); if (L.state === 'review') return '결재가 진행 중입니다 — 회수한 뒤 옮깁니다'; if (L.state === 'confirmed') return '확정본입니다 — 그 영역에서 새 작업 버전을 먼저 시작합니다'; return ''; };
+    const plan = () => {   // what will change — recomputed at run time
+      const cut = R.filter(r => (r.f === id) !== (r.t === id)), selfR = R.filter(r => r.f === id && r.t === id);
+      const fkCut = []; cut.forEach(r => { const child = ent(r.t), parent = ent(r.f); if (!child || !parent) return; child.a.forEach(a => { if (a.fk && (r.g ? a.fkg === r.g : parent.a.some(p => p.pk && p.p === (a.fkp || a.p)))) fkCut.push([child, a]); }); });
+      return { cut, selfR, fkCut: [...new Map(fkCut.map(x => [x[0].id + '.' + x[1].p, x])).values()] };
+    };
+    const refsElsewhere = () => Object.entries(getAllModels()).filter(([k]) => k !== AREA).map(([k, m]) => { let st = null; try { st = modelOf(k, m.ver); } catch (er) {} const hit = st && (st.E || []).some(x => x.ref && x.refArea === AREA && (x.refId || x.id) === id); return hit ? [k, m] : null; }).filter(Boolean);
     const nm = x => (ent(x) || {}).n || x;
     const ov = document.createElement('div'); ov.className = 'overlay open'; ov.id = 'mo-entmove'; ov.setAttribute('role', 'dialog'); ov.setAttribute('aria-modal', 'true'); ov.setAttribute('aria-labelledby', 'em-t');
+    const P = plan(), RE = refsElsewhere();
     ov.innerHTML = `<div class="modal"><div class="m-head"><h3 id="em-t">‘${e.n}’ 다른 영역으로 옮기기</h3></div><div class="m-body">
-      <div class="field"><label for="em-to">옮길 업무 영역</label><select class="input" id="em-to">${others.map(([k, m]) => `<option value="${k}"${st(k) ? ' disabled' : ''}>${m.name}${st(k) ? ' — ' + st(k) : ''}</option>`).join('') || '<option value="">같은 시스템에 다른 업무 영역이 없습니다</option>'}</select></div>
+      <div class="field"><label for="em-to">옮길 업무 영역</label><select class="input" id="em-to" aria-describedby="em-why">${others.map(([k, m]) => `<option value="${k}"${why(k) ? ' disabled' : ''}>${m.name}${why(k) ? ' (불가)' : ''}</option>`).join('')}</select><div class="caption u-danger" id="em-why" role="status"></div></div>
+      ${others.length ? '' : '<div class="banner info">' + icon('info') + '<div>같은 시스템에 다른 업무 영역이 없습니다 — 시스템 홈에서 영역을 먼저 만듭니다.</div></div>'}
       <ul class="caption" style="margin:8px 0 0;padding-left:16px;line-height:20px">
-        <li>속성 <b>${e.a.length}</b>개${selfR.length ? ` · 자기 참조 관계 ${selfR.length}개` : ''}가 함께 옮겨집니다</li>
-        ${cut.length ? `<li class="u-danger">이 영역에 남는 엔터티와의 관계 <b>${cut.length}</b>개는 끊깁니다: ${cut.map(r => `${nm(r.f)} → ${nm(r.t)}`).join(', ')} — 대상 영역이 확정된 뒤 참조로 다시 잇습니다</li>` : '<li>이 영역에 남는 엔터티와의 관계는 없습니다</li>'}
+        <li>속성 <b>${e.a.length}</b>개${P.selfR.length ? ` · 자기 참조 관계 ${P.selfR.length}개` : ''}가 함께 옮겨집니다</li>
+        ${P.cut.length ? `<li class="u-danger">이 영역에 남는 엔터티와의 관계 <b>${P.cut.length}</b>개는 끊깁니다: ${P.cut.map(r => `${nm(r.f)} → ${nm(r.t)}`).join(', ')}</li>` : '<li>이 영역에 남는 엔터티와의 관계는 없습니다</li>'}
+        ${P.fkCut.length ? `<li>끊기는 관계의 FK 속성 <b>${P.fkCut.length}</b>개는 일반 속성으로 남습니다: ${P.fkCut.map(([c, a]) => `${c.n}.${a.n}`).join(', ')} — 대상 영역이 확정된 뒤 참조로 다시 이으면 FK가 됩니다</li>` : ''}
+        ${RE.length ? `<li>이 엔터티를 참조하는 영역 ${RE.map(([, m]) => m.name).join(', ')} — 옮기는 영역의 참조는 실체로 바뀌고, 다른 작업 중 영역의 참조는 새 원본을 가리킵니다(잠긴 영역은 다음 버전에서)</li>` : ''}
         <li>두 영역의 다음 확정 결재 변경 내역에 <b>이동</b>으로 보이고 DA가 확인합니다 · 감사 로그에 남습니다</li>
         <li>Ctrl+Z로 되돌릴 수 없습니다 — 되돌리려면 대상 영역에서 다시 옮깁니다</li></ul></div>
       <div class="m-foot"><button class="btn" id="em-no">취소</button><button class="btn primary" id="em-go">옮기기</button></div></div>`;
     document.body.appendChild(ov);
-    const first = ov.querySelector('#em-to option:not([disabled])'); if (first) $('em-to').value = first.value;
-    $('em-go').disabled = !first; const close = () => { ov.remove(); cv.focus(); };
-    $('em-no').onclick = close; ov.addEventListener('keydown', ev => { if (ev.key === 'Escape') close(); }); setTimeout(() => (first ? $('em-to') : $('em-no')).focus(), 0);
+    const sync = () => { const t = $('em-to').value, w = t ? why(t) : '같은 시스템에 다른 업무 영역이 없습니다'; $('em-why').textContent = w; $('em-go').disabled = !!w; };
+    const firstOk = others.find(([k]) => !why(k)); if (firstOk) $('em-to').value = firstOk[0];
+    $('em-to').addEventListener('change', sync); sync();
+    const close = () => { ov.remove(); (opener && opener.isConnected ? opener : cv).focus(); };
+    $('em-no').onclick = close; ov.addEventListener('keydown', ev => { if (ev.key === 'Escape') close(); }); setTimeout(() => ($('em-go').disabled ? $('em-no') : $('em-to')).focus(), 0);
     $('em-go').onclick = () => {
-      const t = $('em-to').value; if (!t || st(t)) return;
-      const tv = getModel(t).ver, td = modelOf(t, tv); ['E', 'R', 'M', 'V'].forEach(k => { td[k] = td[k] || []; });
-      let nid = id; while (td.E.some(x => x.id === nid)) nid = id + '_' + Math.random().toString(36).slice(2, 5);
-      const c = JSON.parse(JSON.stringify(e)); c.id = nid; c.movedFrom = AREA; delete c.fresh;
-      td.E.push(c); selfR.forEach(r => td.R.push(Object.assign(JSON.parse(JSON.stringify(r)), { f: nid, t: nid })));
-      if (!setModelData(t, tv, Object.assign(td, { rev: (td.rev || 0) + 1 }))) { toast('대상 영역에 저장하지 못했습니다 — 옮기지 않았습니다', 'danger'); return; }
-      E.splice(E.indexOf(e), 1); for (let i = R.length - 1; i >= 0; i--) if (R[i].f === id || R[i].t === id) R.splice(i, 1);
+      const t = $('em-to').value; const w = !t ? '대상 영역을 고르세요' : guard() ? '이 영역을 지금 편집할 수 없습니다' : why(t); if (w) { $('em-why').textContent = w; $('em-go').disabled = true; return; }
+      const p = plan();   // the model may have changed since the dialog opened
+      const backup = JSON.parse(JSON.stringify({ E, R, V }));
+      const restore = () => { E.splice(0, E.length, ...backup.E); R.splice(0, R.length, ...backup.R); V.splice(0, V.length, ...backup.V); };
+      // 1) source first
+      p.fkCut.forEach(([c, a]) => { delete a.fk; delete a.fkp; delete a.fkg; });
+      const ix = E.findIndex(x => x.id === id); const moved = JSON.parse(JSON.stringify(E[ix])); E.splice(ix, 1);
+      for (let i = R.length - 1; i >= 0; i--) if (R[i].f === id || R[i].t === id) R.splice(i, 1);
       V.forEach(v => { if (v.ents) v.ents = v.ents.filter(x => x !== id); if (v.pos) delete v.pos[id]; });
+      dirty = true; saveData();
+      if (saveFailed || revConflict) { restore(); dirty = false; render(); toast('이 영역을 저장하지 못해 옮기지 않았습니다 — 새로고침한 뒤 다시 하세요', 'danger'); close(); return; }
+      // 2) target
+      const tv = getModel(t).ver, td = modelOf(t, tv); ['E', 'R', 'M', 'V'].forEach(k => { td[k] = td[k] || []; });
+      let nid = id; const refHere = td.E.find(x => x.ref && x.refArea === AREA && (x.refId || x.id) === id);
+      if (refHere) { nid = refHere.id; td.E.splice(td.E.indexOf(refHere), 1); }   // X-03: the reference becomes the real entity; its relations keep pointing at nid
+      else while (td.E.some(x => x.id === nid)) nid = id + '_' + Math.random().toString(36).slice(2, 5);
+      const c = Object.assign(moved, { id: nid, movedFrom: AREA }); delete c.fresh;
+      if (refHere) { c.x = refHere.x != null ? refHere.x : c.x; c.y = refHere.y != null ? refHere.y : c.y; }
+      const used = new Set(td.R.map(r => r.g).filter(Boolean));   // X-02: self relations keep their FK group, renamed if the target already uses it
+      p.selfR.forEach(r => { const nr = Object.assign(JSON.parse(JSON.stringify(r)), { f: nid, t: nid }); if (nr.g && used.has(nr.g)) { const g2 = nr.g + '_' + nid; c.a.forEach(a => { if (a.fkg === nr.g) a.fkg = g2; }); nr.g = g2; } td.R.push(nr); });
+      td.E.push(c);
+      if (!setModelData(t, tv, Object.assign(td, { rev: (td.rev || 0) + 1 }))) { restore(); dirty = true; saveData(); render(); toast('대상 영역에 저장하지 못해 옮기지 않았습니다 — 이 영역은 원래대로 되돌렸습니다', 'danger'); close(); return; }
+      // 3) references in other editable areas follow the new source
+      const followed = [], later = [];
+      Object.entries(getAllModels()).filter(([k]) => k !== AREA && k !== t).forEach(([k, m]) => { let st = null; try { st = modelOf(k, m.ver); } catch (er) {} if (!st) return; const rs = (st.E || []).filter(x => x.ref && x.refArea === AREA && (x.refId || x.id) === id); if (!rs.length) return;
+        if (modelLock(k).state !== 'edit') { later.push(m.name); return; } rs.forEach(x => { x.refArea = t; x.refId = nid; x.refName = getModel(t).name; x.refMoved = 1; }); if (setModelData(k, m.ver, Object.assign(st, { rev: (st.rev || 0) + 1 }))) followed.push(m.name); else later.push(m.name); });
       const tn = getModel(t).name, sn = getModel(AREA).name;
       pushMove({ id, n: e.n, from: AREA, to: t, nid });
-      pushAudit({ act: '엔터티 영역 이동', target: `${e.n} (${e.p})`, why: `${sn} → ${tn}${cut.length ? ` · 끊긴 관계 ${cut.length}` : ''}` });
-      ov.remove(); sel = null; dirty = true; render();
-      toast(`‘${e.n}’을(를) ${tn}(으)로 옮겼습니다${cut.length ? ` · 관계 ${cut.length}개 끊김` : ''}`, 'success', { label: `${tn} 열기`, fn: () => { location.href = `model.html?area=${t}&focus=${nid}`; } });
+      pushAudit({ act: '엔터티 영역 이동', target: `${e.n} (${e.p})`, why: `${sn} → ${tn}${p.cut.length ? ` · 끊긴 관계 ${p.cut.length}` : ''}${p.fkCut.length ? ` · FK → 일반 속성 ${p.fkCut.length}` : ''}${followed.length ? ` · 참조 따라감: ${followed.join(', ')}` : ''}${later.length ? ` · 참조 다음 버전: ${later.join(', ')}` : ''}` });
+      hist.length = 0; histIds.length = 0; redo.length = 0; redoIds.length = 0;   // X-01: the move is an undo boundary
+      ov.remove(); sel = null; render(); cv.focus();
+      toast(`‘${e.n}’을(를) ${tn}(으)로 옮겼습니다${p.cut.length ? ` · 관계 ${p.cut.length}개 끊김` : ''}${later.length ? ` · ${later.join(', ')}의 참조는 다음 버전에서 갱신` : ''}`, 'success', { label: `${tn} 열기`, fn: () => { location.href = `model.html?area=${t}&focus=${nid}`; } });
     };
   }
   // ---- tree menu commands (12 §4.3 · T2): the same functions as the canvas and the attribute grid — same checks, same undo

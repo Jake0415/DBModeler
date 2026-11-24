@@ -53,13 +53,13 @@
     <div class="overlay" id="mo-amove" role="dialog" aria-modal="true" aria-labelledby="am-t"><div class="modal"><div class="m-head"><h3 id="am-t">다른 시스템으로 옮기기</h3></div>
       <div class="m-body"><div id="am-why"></div>
         <div class="field"><label for="am-sys">대상 시스템</label><select class="input" id="am-sys"></select></div>
-        <div class="field" id="am-name-f" hidden><label for="am-name">복제본 이름</label><input class="input" id="am-name"></div>
+        <div class="field" id="am-name-f" hidden><label for="am-name">복제본 이름</label><input class="input" id="am-name" aria-describedby="am-name-e"><div class="caption u-danger" id="am-name-e"></div></div>
         <div id="am-impact" class="caption"></div></div>
-      <div class="m-foot"><button class="btn" data-close="mo-amove">취소</button><button class="btn primary" id="am-go">옮기기</button></div></div></div>
+      <div class="m-foot"><button class="btn" data-close="mo-amove" id="am-cancel">취소</button><button class="btn primary" id="am-go">옮기기</button></div></div></div>
     <div class="overlay" id="mo-aoff" role="dialog" aria-modal="true" aria-labelledby="ao-t"><div class="modal"><div class="m-head"><h3 id="ao-t">사용 중지 · 삭제</h3></div>
       <div class="m-body"><div id="ao-body"></div>
         <div class="field" id="ao-why-f" hidden><label for="ao-why">사유 *</label><textarea class="input" id="ao-why" rows="2" placeholder="예: 중복으로 만듦 — 인사관리 영역으로 합침"></textarea></div></div>
-      <div class="m-foot"><button class="btn" data-close="mo-aoff">취소</button><button class="btn danger" id="ao-go">사용 중지</button></div></div></div>
+      <div class="m-foot"><button class="btn" data-close="mo-aoff" id="ao-cancel">취소</button><button class="btn primary" id="ao-go">사용 중지</button></div></div></div>
   </div></div>
 </div>
 </div>
@@ -97,60 +97,90 @@ window.pageInit = function () {
   /* ---- 25 바로잡기 (§3-1 ~ 3-3): the area row menu ⋯ — info, move/copy to another system, archive/delete ---- */
   const esc = x => String(x == null ? '' : x).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
   const AM = getAllModels();
-  const canInfo = a => can('model.edit', { area: a }) || can('settings');
-  const canAdmin = () => can('settings');
   const ownerOf = a => (AM[a] && AM[a].owner && USERS[AM[a].owner] ? USERS[AM[a].owner].name : null) || (a === 'rq' ? '김모델' : a === 'risk' ? '박설계' : OWN[a] || '—');
-  const amenu = a => { const nm = esc(AM[a].name); const dis = (ok, why) => ok ? '' : ` aria-disabled="true" title="${why}"`;
+  const amenu = a => { const nm = esc(AM[a].name); const dis = w => w ? ` aria-disabled="true" title="${esc(w)}"` : '';
     return `<span class="u-rel"><button class="iconbtn sm" data-menu-btn aria-haspopup="true" aria-expanded="false" aria-label="${nm} 관리">${icon('more', 16)}</button><div class="menu" data-auto role="menu">
-      <button class="mi" role="menuitem" data-aact="edit" data-area="${a}"${dis(canInfo(a), '이 영역을 편집할 권한이 없습니다')}>${icon('edit', 14)}영역 정보 수정</button>
-      <button class="mi" role="menuitem" data-aact="move" data-area="${a}"${dis(canAdmin(), '관리자만 할 수 있습니다')}>${icon('ext', 14)}다른 시스템으로 옮기기 · 복제</button>
+      <button class="mi" role="menuitem" data-aact="edit" data-area="${a}"${dis(areaActWhy(a, 'info'))}>${icon('edit', 14)}영역 정보 수정</button>
+      <button class="mi" role="menuitem" data-aact="move" data-area="${a}"${dis(can('settings') ? '' : '관리자만 할 수 있습니다')}>${icon('ext', 14)}다른 시스템으로 옮기기 · 복제</button>
       <div class="sep"></div>
-      <button class="mi" role="menuitem" data-aact="off" data-area="${a}"${dis(canAdmin(), '관리자만 할 수 있습니다')}>${icon('trash', 14)}사용 중지 · 삭제</button></div></span>`; };
+      <button class="mi" role="menuitem" data-aact="off" data-area="${a}"${dis(can('settings') ? '' : '관리자만 할 수 있습니다')}>${icon('trash', 14)}사용 중지 · 삭제</button></div></span>`; };
   document.querySelectorAll('#areas tr[data-href]').forEach(tr => { const a = tr.id.replace('area-', ''); const td = document.createElement('td'); td.className = 'u-tc'; td.innerHTML = amenu(a); tr.appendChild(td); const ow = tr.children[7]; if (ow) ow.textContent = ownerOf(a); });
-  let cur = null; const open = (id, f) => { $(id).classList.add('open'); setTimeout(() => { const el = $(f); if (el) el.focus(); }, 0); };
+  let cur = null, opener = null;
+  // X-12: a dialog remembers what opened it — Esc / [취소] returns there (app.js data-close uses _opener)
+  const open = (id, f) => { $(id)._opener = opener && opener.isConnected ? opener : document.querySelector(`#area-${cur} [data-menu-btn]`); $(id).classList.add('open'); setTimeout(() => { const el = $(f); if (el) el.focus(); }, 0); };
   const reload = (msg, kind) => { flash(msg, kind || 'success'); location.replace(location.pathname + location.search.replace(/[?&](area|act)=[^&]*/g, '').replace(/^&/, '?')); };
+  const blocked = (box, w) => { $(box).innerHTML = `<div class="banner warning u-mb-8">${icon('warn')}<div>${esc(w)}${/결재/.test(w) ? ' <a href="approvals.html">결재함 열기 ↗</a>' : ''}</div></div>`; };
+  const targetsOf = a => activeSystems().filter(s => s.code !== (AM[a].system || 'RQMS'));
   const actOf = { edit: a => {
       cur = a; const m = AM[a]; $('ae-name').value = m.name; $('ae-desc').value = m.desc || ''; $('ae-name-e').textContent = ''; $('ae-name').removeAttribute('aria-invalid');
       const eds = Object.values(USERS).filter(u => u.status !== 'stopped' && canUser(u, 'model.edit', { system: curSys().name }));
       $('ae-owner').innerHTML = '<option value="">(정하지 않음)</option>' + eds.map(u => `<option value="${u.id}">${esc(u.name)} · ${esc(u.org || '')}</option>`).join('');
       $('ae-owner').value = m.owner || (eds.find(u => u.name === ownerOf(a)) || {}).id || ''; open('mo-aedit', 'ae-name'); },
     move: a => {
-      cur = a; const m = AM[a], u = areaUse(a), copy = u.confirmed || u.docs > 0;
-      const targets = activeSystems().filter(s => s.code !== (m.system || 'RQMS'));
+      cur = a; const m = AM[a], u = areaUse(a), copy = u.confirmed || u.docs > 0, w = areaActWhy(a, 'move');
+      const targets = targetsOf(a);
       $('am-t').textContent = copy ? '다른 시스템으로 복제' : '다른 시스템으로 옮기기'; $('am-go').textContent = copy ? '복제' : '옮기기';
-      $('am-why').innerHTML = u.review ? `<div class="banner warning u-mb-8">${icon('warn')}<div>결재가 진행 중입니다 — 결재함에서 회수한 뒤 다시 하세요.</div></div>` : copy ? `<div class="banner info u-mb-8">${icon('info')}<div><b>확정본 · 결재 이력이 있어 옮길 수 없습니다.</b> 대상 시스템에 <b>새 업무 영역(v1 작업 중)</b>으로 복제하고, 원본은 이력과 함께 남깁니다. 복제 뒤 원본은 [사용 중지]하세요.</div></div>` : `<div class="caption muted u-mb-8">확정본 · 결재 이력이 없어 영역을 그대로 옮깁니다.</div>`;
+      if (w) blocked('am-why', w); else $('am-why').innerHTML = copy ? `<div class="banner info u-mb-8">${icon('info')}<div><b>확정본 · 결재 이력이 있어 옮길 수 없습니다.</b> 대상 시스템에 <b>새 업무 영역(v1 작업 중)</b>으로 복제하고, 원본은 이력과 함께 남깁니다. 복제가 끝나면 원본 [사용 중지] 창이 바로 열립니다.</div></div>` : `<div class="caption muted u-mb-8">확정본 · 결재 이력이 없어 영역을 그대로 옮깁니다.</div>`;
       $('am-sys').innerHTML = targets.map(s => `<option value="${s.code}">${esc(s.name)} · ${esc(s.db)} · ${esc(s.schema)}</option>`).join('') || '<option value="">옮길 수 있는 시스템이 없습니다</option>';
-      $('am-name-f').hidden = !copy; $('am-name').value = m.name;
-      const imp = () => { const s = SYSLIST.find(x => x.code === $('am-sys').value); if (!s) { $('am-impact').innerHTML = '설정 › 시스템에서 시스템을 먼저 등록하세요.'; return; }
-        $('am-impact').innerHTML = `<ul style="margin:8px 0 0;padding-left:16px;line-height:20px"><li>엔터티 <b>${u.ents}</b>개의 물리 모델을 <b>${esc(s.name)}</b>의 DBMS(${esc(s.db)}) · 명명 템플릿 · 타입 매핑으로 다시 만듭니다</li>${!copy && u.refs.length ? `<li class="u-danger">이 영역을 참조하는 영역 ${u.refs.map(esc).join(', ')} — 시스템이 달라져 참조가 끊깁니다</li>` : ''}<li>${copy ? '복제본은 v1 작업 중으로 시작하고 확정 결재를 다시 받습니다' : '버전 · 작업 내용은 그대로입니다'} · 감사 로그에 남습니다</li></ul>`; };
-      $('am-sys').onchange = imp; imp(); $('am-go').disabled = u.review || !targets.length; open('mo-amove', 'am-sys'); },
+      if (targets.length) $('am-sys').value = targets[targets.length - 1].code;   // X-08: the most recently registered system
+      $('am-name-f').hidden = !copy; $('am-name').value = m.name; $('am-name-e').textContent = '';
+      const imp = () => { const s = SYSLIST.find(x => x.code === $('am-sys').value);
+        if (!s) { $('am-impact').innerHTML = `옮길 시스템이 없습니다 — <a href="settings.html#sys">설정 › 시스템</a>에서 먼저 등록하세요.`; $('am-go').disabled = true; return; }
+        const n = areaTypeChanges(a, s.code), rp = copy ? copyRefPlan(a, s.code) : null, nameHit = !copy && areaNameTaken(m.name, s.code, a);
+        const outRefs = u.refsTo.map(x => (AM[x] || {}).name || x);
+        $('am-impact').innerHTML = `<ul style="margin:8px 0 0;padding-left:16px;line-height:20px">
+          <li>${n ? `컬럼 타입 <b>${n}</b>개를 ${esc(s.db.split(' ')[0])}에 맞게 바꿉니다(예: VARCHAR2 → VARCHAR)` : '컬럼 타입은 그대로입니다(같은 DBMS)'} · 이름은 대상 시스템의 명명 템플릿으로 다음 DDL부터 만듭니다</li>
+          ${!copy && u.refs.length ? `<li class="u-danger">이 영역을 참조하는 영역 ${u.refs.map(esc).join(', ')} — 시스템이 달라져 참조가 끊깁니다</li>` : ''}
+          ${!copy && outRefs.length ? `<li class="u-danger">이 영역이 참조하던 ${outRefs.map(esc).join(', ')} — 원래 시스템에 남아 참조가 끊깁니다</li>` : ''}
+          ${rp && (rp.keep || rp.lost) ? `<li${rp.lost ? ' class="u-danger"' : ''}>참조 ${rp.keep ? `<b>${rp.keep}</b>개는 먼저 복제한 영역으로 다시 잇고` : ''}${rp.keep && rp.lost ? ', ' : ''}${rp.lost ? `<b>${rp.lost}</b>개는 빠집니다 — ${rp.lostAreas.map(esc).join(', ')}을(를) 먼저 복제하면 이어집니다` : ''}</li>` : ''}
+          ${nameHit ? `<li class="u-danger">${esc(s.name)}에 같은 이름의 업무 영역이 있어 옮길 수 없습니다 — 먼저 [영역 정보 수정]으로 이름을 바꾸세요</li>` : ''}
+          <li>${copy ? '복제본은 v1 작업 중으로 시작하고 확정 결재를 다시 받습니다' : '버전 · 작업 내용은 그대로입니다'} · 감사 로그에 남습니다</li></ul>`;
+        $('am-go').disabled = !!w || nameHit; };
+      $('am-sys').onchange = imp; imp(); open('mo-amove', w || !targets.length ? 'am-cancel' : 'am-sys'); },
     off: a => {
-      cur = a; const m = AM[a], u = areaUse(a), hist = areaHasHistory(u);
+      cur = a; const m = AM[a], u = areaUse(a), hist = areaHasHistory(u), w = areaActWhy(a, 'off');
       const facts = [u.confirmed ? `확정본 v${m.base}` : '', u.docs ? `결재 문서 ${u.docs}건` : '', u.refs.length ? `참조하는 영역 ${u.refs.join(', ')}` : ''].filter(Boolean);
       $('ao-t').textContent = hist ? `‘${m.name}’ 사용 중지` : `‘${m.name}’ 삭제`;
-      $('ao-body').innerHTML = u.review ? `<div class="banner warning">${icon('warn')}<div>결재가 진행 중입니다 — 결재함에서 회수한 뒤 다시 하세요.</div></div>`
-        : hist ? `<div class="caption u-lh-20">이력이 있어 삭제할 수 없습니다(${esc(facts.join(' · '))}). <b>사용 중지</b>하면 트리 · 시스템 홈에서 숨고, 이력과 결재 기록은 그대로 남습니다. 아래 ‘보관함’에서 언제든 다시 쓸 수 있습니다.${u.refs.length ? `<br>참조하는 영역(${esc(u.refs.join(', '))})의 참조는 마지막 확정본 기준으로 그대로 남습니다.` : ''}</div>`
-        : `<div class="caption u-lh-20">확정본 · 결재 문서 · 참조가 없어 삭제할 수 있습니다. <b>엔터티 ${u.ents}개와 함께 지우며 되돌릴 수 없습니다.</b> 감사 로그에는 남습니다.</div>`;
-      $('ao-why-f').hidden = !hist || u.review; $('ao-why').value = ''; $('ao-go').textContent = hist ? '사용 중지' : '삭제'; $('ao-go').disabled = u.review; open('mo-aoff', hist ? 'ao-why' : 'ao-go'); } };
-  document.addEventListener('click', e => { const b = e.target.closest('[data-aact]'); if (!b) return; e.preventDefault(); const m = b.closest('.menu'); if (m) m.classList.remove('open');
-    if (b.getAttribute('aria-disabled') === 'true') { toast(b.title, 'info'); return; } actOf[b.dataset.aact](b.dataset.area); });
-  $('ae-go').onclick = () => { const nm = $('ae-name').value.trim(); const dup = Object.entries(getModels()).some(([k, m]) => k !== cur && m.name === nm);
-    const err = !nm ? '이름을 입력하세요' : dup ? '이 시스템에 같은 이름의 업무 영역이 있습니다' : ''; $('ae-name-e').textContent = err; if (err) { $('ae-name').setAttribute('aria-invalid', 'true'); $('ae-name').focus(); return; }
-    const n = saveAreaInfo(cur, { name: nm, desc: $('ae-desc').value.trim(), owner: $('ae-owner').value }); $('mo-aedit').classList.remove('open'); if (!n) { toast('바뀐 내용이 없습니다', 'info'); return; } reload(`업무 영역 정보를 바꿨습니다 · ${n}건 · 감사 로그에 기록`); };
-  $('am-go').onclick = () => { const code = $('am-sys').value; if (!code) return; const u = areaUse(cur), s = SYSLIST.find(x => x.code === code);
-    if (u.confirmed || u.docs) { const nm = $('am-name').value.trim() || AM[cur].name; const nid = copyAreaToSystem(cur, code, nm); $('mo-amove').classList.remove('open'); flash(`${s.name}에 ‘${nm}’을(를) 복제했습니다 — v1 작업 중 · 원본은 그대로입니다`, 'success'); location.href = `model.html?area=${nid}`; return; }
-    moveAreaToSystem(cur, code); $('mo-amove').classList.remove('open'); reload(`‘${AM[cur].name}’을(를) ${s.name}(으)로 옮겼습니다 · 감사 로그에 기록`); };
-  $('ao-go').onclick = () => { const u = areaUse(cur), nm = AM[cur].name;
-    if (!areaHasHistory(u)) { deleteArea(cur); $('mo-aoff').classList.remove('open'); reload(`‘${nm}’을(를) 삭제했습니다 · 감사 로그에 기록`, 'info'); return; }
+      const after = (() => { try { return JSON.parse(sessionStorage.getItem('dbm-after-copy') || 'null'); } catch (er) { return null; } })();
+      if (w) blocked('ao-body', w);
+      else $('ao-body').innerHTML = (after && after.area === a ? `<div class="banner info u-mb-8">${icon('check')}<div><b>${esc(after.sysName)}</b>에 복제본 ‘${esc(after.name)}’을(를) 만들었습니다. <a href="model.html?area=${after.nid}">복제본 열기 ↗</a><br>원본을 정리하려면 아래에서 사용 중지합니다.</div></div>` : '') + (hist ? `<div class="caption u-lh-20">이력이 있어 삭제할 수 없습니다(${esc(facts.join(' · '))}). <b>사용 중지</b>하면 트리 · 시스템 홈에서 숨고, 이력과 결재 기록은 그대로 남습니다. 아래 ‘보관함’에서 언제든 다시 쓸 수 있습니다.${u.refs.length ? `<br>참조하는 영역(${esc(u.refs.join(', '))})의 참조는 마지막 확정본 기준으로 그대로 남습니다.` : ''}</div>`
+        : `<div class="banner danger">${icon('err')}<div>확정본 · 결재 문서 · 참조가 없어 삭제할 수 있습니다. <b>엔터티 ${u.ents}개와 함께 지우며 되돌릴 수 없습니다.</b> 감사 로그에는 남습니다.</div></div>`);
+      $('ao-why-f').hidden = !hist || !!w; $('ao-why').value = after && after.area === a ? `‘${after.sysName}’ 시스템으로 복제함 — 복제본 ‘${after.name}’` : ''; $('ao-why').removeAttribute('aria-invalid');
+      $('ao-go').textContent = hist ? '사용 중지' : '삭제'; $('ao-go').className = hist ? 'btn primary' : 'btn danger'; $('ao-go').disabled = !!w;
+      open('mo-aoff', w || !hist ? 'ao-cancel' : 'ao-why'); } };   // X-05: delete / blocked dialogs start on [취소]
+  document.addEventListener('click', e => { const b = e.target.closest('[data-aact]'); if (!b) return; e.preventDefault(); const m = b.closest('.menu'); opener = m ? m.previousElementSibling : null;
+    if (m) { m.classList.remove('open'); if (opener) opener.setAttribute('aria-expanded', 'false'); }   // X-12
+    if (b.getAttribute('aria-disabled') === 'true') { toast(b.title, 'info'); if (opener) opener.focus(); return; } actOf[b.dataset.aact](b.dataset.area); });
+  $('ae-go').onclick = () => { const w = areaActWhy(cur, 'info'); if (w) { toast(w, 'danger'); return; }
+    const nm = $('ae-name').value.trim(); const err = !nm ? '이름을 입력하세요' : areaNameTaken(nm, AM[cur].system || 'RQMS', cur) ? '이 시스템에 같은 이름의 업무 영역이 있습니다(보관함 포함)' : ''; $('ae-name-e').textContent = err; if (err) { $('ae-name').setAttribute('aria-invalid', 'true'); $('ae-name').focus(); return; }
+    const n = saveAreaInfo(cur, { name: nm, desc: $('ae-desc').value.trim(), owner: $('ae-owner').value }); $('mo-aedit').classList.remove('open'); if (!n) { toast('바뀐 내용이 없습니다', 'info'); if (opener) opener.focus(); return; } reload(`업무 영역 정보를 바꿨습니다 · ${n}건 · 감사 로그에 기록`); };
+  $('am-go').onclick = () => { const code = $('am-sys').value; if (!code) return; const w = areaActWhy(cur, 'move'); if (w) { blocked('am-why', w); $('am-go').disabled = true; return; }
+    const u = areaUse(cur), s = SYSLIST.find(x => x.code === code);
+    if (u.confirmed || u.docs) { const nm = $('am-name').value.trim() || AM[cur].name;
+      if (areaNameTaken(nm, code)) { $('am-name-e').textContent = `${s.name}에 같은 이름의 업무 영역이 있습니다`; $('am-name').setAttribute('aria-invalid', 'true'); $('am-name').focus(); return; }
+      const r = copyAreaToSystem(cur, code, nm); if (!r) { toast('복제하지 못했습니다 — 새로고침한 뒤 다시 하세요', 'danger'); return; }
+      // X-08: stay on the original system — the original's [사용 중지] opens next, with the copy linked
+      try { sessionStorage.setItem('dbm-after-copy', JSON.stringify({ area: cur, nid: r.nid, name: nm, sysName: s.name })); } catch (er) {}
+      flash(`${s.name}에 ‘${nm}’을(를) 복제했습니다 — v1 작업 중${r.converted ? ` · 컬럼 타입 ${r.converted}개 변환` : ''}${r.dropped ? ` · 참조 ${r.dropped}개 제외` : ''}`, 'success');
+      location.replace(location.pathname + `?system=${AM[cur].system || 'RQMS'}&area=${cur}&act=off`); return; }
+    const r = moveAreaToSystem(cur, code); if (!r) { toast('옮기지 못했습니다 — 이름이 겹치거나 상태가 바뀌었습니다', 'danger'); return; }
+    $('mo-amove').classList.remove('open'); reload(`‘${AM[cur].name}’을(를) ${s.name}(으)로 옮겼습니다${r.converted ? ` · 컬럼 타입 ${r.converted}개 변환` : ''} · 감사 로그에 기록`); };
+  $('ao-go').onclick = () => { const w = areaActWhy(cur, 'off'); if (w) { blocked('ao-body', w); $('ao-go').disabled = true; return; }
+    const u = areaUse(cur), nm = AM[cur].name;
+    if (!areaHasHistory(u)) { if (!deleteArea(cur)) { toast('삭제하지 못했습니다 — 상태가 바뀌었습니다', 'danger'); return; } $('mo-aoff').classList.remove('open'); reload(`‘${nm}’을(를) 삭제했습니다 · 감사 로그에 기록`, 'info'); return; }
     const why = $('ao-why').value.trim(); if (!why) { $('ao-why').setAttribute('aria-invalid', 'true'); $('ao-why').focus(); toast('사유를 입력하세요', 'danger'); return; }
-    archiveArea(cur, why); $('mo-aoff').classList.remove('open'); reload(`‘${nm}’을(를) 사용 중지했습니다 — 보관함에서 다시 쓸 수 있습니다`, 'info'); };
+    archiveArea(cur, why); try { sessionStorage.removeItem('dbm-after-copy'); sessionStorage.setItem('dbm-open-arch', '1'); } catch (er) {}
+    $('mo-aoff').classList.remove('open'); reload(`‘${nm}’을(를) 사용 중지했습니다 — 아래 보관함에서 다시 쓸 수 있습니다`, 'info'); };
   // 보관함: archived areas of this system, with [다시 사용]
   { const off = Object.entries(AM).filter(([, m]) => m.off && (m.system || 'RQMS') === curSys().code);
     $('arch').hidden = !off.length; $('arch-n').textContent = off.length;
-    $('arch-body').innerHTML = off.map(([id, m]) => `<tr><td><b>${esc(m.name)}</b>${m.desc ? `<div class="caption muted">${esc(m.desc)}</div>` : ''}</td><td class="mono">v${m.ver}${m.base ? ` <span class="faint">(v${m.base} 확정)</span>` : ''}</td><td>${esc(m.offWhy || '')}</td><td class="caption">${esc(m.offBy || '')} · ${esc(m.offAt || '')}</td><td>${canAdmin() ? `<button class="btn sm" data-restore="${id}">다시 사용</button>` : ''}</td></tr>`).join('');
-    $('arch-body').addEventListener('click', e => { const b = e.target.closest('[data-restore]'); if (!b) return; restoreArea(b.dataset.restore); reload(`‘${AM[b.dataset.restore].name}’을(를) 다시 씁니다`); }); }
-  // the model tree's area menu lands here: ?area=…&act=edit|move|off
-  { const a = qs.get('area'), act = qs.get('act'); if (a && actOf[act] && getModels()[a]) setTimeout(() => { const b = document.querySelector(`[data-aact="${act}"][data-area="${a}"]`); if (b && b.getAttribute('aria-disabled') === 'true') toast(b.title, 'info'); else actOf[act](a); }, 0); }
+    try { if (sessionStorage.getItem('dbm-open-arch')) { $('arch').open = true; sessionStorage.removeItem('dbm-open-arch'); } } catch (er) {}   // X-15: open right after archiving
+    $('arch-body').innerHTML = off.map(([id, m]) => `<tr><td><a href="model.html?area=${id}"><b>${esc(m.name)}</b></a>${m.desc ? `<div class="caption muted">${esc(m.desc)}</div>` : ''}</td><td class="mono">v${m.ver}${m.base ? ` <span class="faint">(v${m.base} 확정)</span>` : ''}</td><td>${esc(m.offWhy || '')}</td><td class="caption">${esc(m.offBy || '')} · ${esc(m.offAt || '')}</td><td>${can('settings') ? `<button class="btn sm" data-restore="${id}">다시 사용</button>` : ''}</td></tr>`).join('');
+    $('arch-body').addEventListener('click', e => { const b = e.target.closest('[data-restore]'); if (!b) return; const id = b.dataset.restore;
+      if (!restoreArea(id)) { toast(areaActWhy(id, 'restore') || `같은 이름 ‘${AM[id].name}’의 업무 영역이 있어 다시 쓸 수 없습니다 — 그 영역 이름을 먼저 바꾸세요`, 'danger'); return; }
+      reload(`‘${AM[id].name}’을(를) 다시 씁니다`); }); }
+  // the model tree's area menu (and the copy flow) land here: ?area=…&act=edit|move|off
+  { const a = qs.get('area'), act = qs.get('act'); if (a && actOf[act] && getModels()[a]) setTimeout(() => { const b = document.querySelector(`[data-aact="${act}"][data-area="${a}"]`); opener = document.querySelector(`#area-${a} [data-menu-btn]`); if (b && b.getAttribute('aria-disabled') === 'true') toast(b.title, 'info'); else actOf[act](a); }, 0); }
   $('areas').addEventListener('click', e => { if (e.target.closest('a, button, input, .menu')) return; const tr = e.target.closest('tr[data-href]'); if (tr && !String(window.getSelection())) go(tr.dataset.href); });
 };
 </script>

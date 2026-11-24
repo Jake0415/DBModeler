@@ -110,7 +110,7 @@ window.pageInit = function () {
   const colComment = (e, a) => `<span class="kw">COMMENT ON COLUMN</span> ${SCH}.${esc(e.p)}.${esc(a.p)} <span class="kw">IS</span> <span class="str">'${esc((a.n + (a.desc ? ' — ' + a.desc : '')).replace(/'/g, "''"))}'</span>;`;
   const ascii = s => /^[A-Z][A-Z0-9_]*$/.test(s);
   const nm = x => x.p === '—' ? x.n : x.p;
-  const SCH = curSys().schema;
+  const SCH = snapDoc && snapDoc.sysAt ? snapDoc.sysAt.schema : curSys().schema;   /* 25 X-07: a submitted copy's DDL uses the schema of that moment */
   function draw() {
     chips();
     const target = scope === 'pick' ? ents.filter(e => picked.has(e.id)) : scope === 'sys' ? [] : ents;
