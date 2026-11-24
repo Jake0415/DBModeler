@@ -71,14 +71,14 @@
     { id: 'model.edit', g: '모델', n: '모델 편집 · 표준 맞추기 · DDL 가져오기', roles: ['modeler'], scope: 'sys' },
     { id: 'area.create', g: '모델', n: '업무 영역 만들기', roles: ['modeler', 'admin'], scope: 'sys', adminAll: true },
     { id: 'model.submit', g: '모델', n: '모델 확정 신청 · 회수', roles: ['modeler'], scope: 'sys' },
-    { id: 'dict.view', g: '사전', n: '표준 사전 · 변경 내역 보기', roles: ['*'], scope: 'org' },
-    { id: 'dict.request', g: '사전', n: '사전 신청 · 엑셀 가져오기 · 후보 등록', roles: ['modeler', 'da'], scope: 'org' },
-    { id: 'cand.decide', g: '사전', n: '후보 큐 판단', roles: ['da'], scope: 'org' },
-    { id: 'dict.publish', g: '사전', n: '사전 공표', roles: ['da'], scope: 'org' },
-    { id: 'dict.purge', g: '사전', n: '삭제 보관 항목 영구 삭제', roles: ['da', 'admin'], scope: 'org' },
-    { id: 'dict.group', g: '사전', n: '도메인그룹 직접 관리', roles: ['da', 'admin'], scope: 'org', note: '결재 없이 기록 · 감사 로그. 분류는 품의' },
-    { id: 'dict.common', g: '사전', n: '공통표준 새 판 올리기(품의 작성)', roles: ['da', 'admin'], scope: 'org', note: '반영은 일반 품의(DA → 최종 승인)' },
-    { id: 'excel.viewall', g: '사전', n: '다른 사람의 엑셀 업로드 묶음 보기', roles: ['da'], scope: 'org', note: '나머지는 자기 묶음만' },
+    { id: 'dict.view', g: '표준 사전', n: '표준 사전 · 변경 내역 보기', roles: ['*'], scope: 'org' },
+    { id: 'dict.request', g: '표준 사전', n: '사전 신청 · 엑셀 가져오기 · 후보 등록', roles: ['modeler', 'da'], scope: 'org' },
+    { id: 'cand.decide', g: '표준 사전', n: '후보 큐 판단', roles: ['da'], scope: 'org' },
+    { id: 'dict.publish', g: '표준 사전', n: '사전 공표', roles: ['da'], scope: 'org' },
+    { id: 'dict.purge', g: '표준 사전', n: '삭제 보관 항목 영구 삭제', roles: ['da', 'admin'], scope: 'org' },
+    { id: 'dict.group', g: '표준 사전', n: '도메인그룹 직접 관리', roles: ['da', 'admin'], scope: 'org', note: '결재 없이 기록 · 감사 로그. 분류는 품의' },
+    { id: 'dict.common', g: '표준 사전', n: '공통표준 새 판 올리기(품의 작성)', roles: ['da', 'admin'], scope: 'org', note: '반영은 일반 품의(DA → 최종 승인)' },
+    { id: 'excel.viewall', g: '표준 사전', n: '다른 사람의 엑셀 업로드 묶음 보기', roles: ['da'], scope: 'org', note: '나머지는 자기 묶음만' },
     { id: 'appr.da', g: '결재', n: '1단계(DA) 승인 · 반려', roles: ['da'], scope: 'sys', note: '사전 신청은 기관 전체, 모델 확정은 담당 시스템만' },
     { id: 'appr.final', g: '결재', n: '최종 승인 · 반려', roles: ['owner'], scope: 'sys', note: '사전 신청은 기관 전체, 모델 확정은 담당 시스템만 · 신청자와 1단계 승인자는 최종 승인할 수 없다' },
     { id: 'appr.viewall', g: '결재', n: '모든 결재 문서 보기', roles: ['da', 'owner'], scope: 'org', note: '나머지 사용자는 자기 신청 · 참조 문서만' },
@@ -1266,14 +1266,14 @@
   const DICT_TABS = [['dictionary.html', '통합 검색'], ['excel-import.html', '엑셀 가져오기', ['uploads.html']], 0, ['dict-grid.html', '직접 등록'], 0, ['candidates.html', '후보 큐'], ['dict-history.html', '변경 내역'], 0, ['domain-groups.html', '도메인 그룹 · 분류'], ['std-common.html', '공통표준 · 행정표준코드']];
   const SCREENS = [
     { file: 'home.html', ids: 'SC-55', name: '홈', menu: '홈', docs: [['02 §1 화면 목록', D.flows], ['06 §3 새 화면 명세', D.plan]], states: [['김모델(모델러·DA)', 'home.html?as=kim'], ['박설계(모델러)', 'home.html?as=park'], ['이현업(기관 담당자)', 'home.html?as=hyun']] },
-    { file: 'dictionary.html', ids: 'SC-10 · PN-11 · PN-12', name: '사전 통합 검색 · 상세 · 등록 신청', menu: '사전', docs: [['02 §3.1~3.2', D.flows], ['30 MD-01~12 사전 규칙', D.meta], ['07 E6 검색', D.excel], ['23 §6-1 검색 숫자', D.perf]], states: [['기본(최근 변경)', 'dictionary.html'], ['도메인 신청', 'dictionary.html?req=domain'], ['편집용 내려받기', 'dictionary.html#download'], ['검색: 산출', 'dictionary.html?q=산출']] },
-    { file: 'dict-history.html', ids: 'SC-16', name: '사전 변경 내역 · 공표', menu: '사전', docs: [['07 E5 버전·이력', D.excel], ['30 MD-23', D.meta]], states: [['전체', 'dict-history.html'], ['미공표만', 'dict-history.html?unpub=1']] },
-    { file: 'excel-import.html', ids: 'SC-13', name: '엑셀 가져오기(왕복 편집)', menu: '사전', docs: [['02 §3.3', D.flows], ['07 E1~E4 왕복 편집', D.excel], ['30 MD-08·09', D.meta], ['23 §6-4 행 상한', D.perf]], states: [['1단계부터(실제 작업)', 'excel-import.html'], ['5단계 예시(저장 안 함)', 'excel-import.html?step=5'], ['신청된 묶음 열람', 'excel-import.html?resume=UP-2026-0007'], ['반영본 확인', 'excel-import.html?verify=UP-2026-0007']] },
-    { file: 'dict-grid.html', ids: 'SC-11', name: '직접 등록', menu: '사전', docs: [['30 MD-13~19', D.meta]], states: [['단어 탭', 'dict-grid.html'], ['바구니 고치기', 'dict-grid.html?mode=basket']] },
-    { file: 'domain-groups.html', ids: 'SC-17', name: '도메인 그룹 · 분류', menu: '사전', docs: [['30 MD-02·03', D.meta]], states: [['DA(이데이터)', 'domain-groups.html?as=lee'], ['모델러(조회)', 'domain-groups.html?as=park']] },
-    { file: 'std-common.html', ids: 'SC-18', name: '공통표준 · 행정표준코드', menu: '사전', docs: [['30 v1.5~1.6', D.meta]], states: [['DA(이데이터)', 'std-common.html?as=lee']] },
-    { file: 'uploads.html', ids: 'SC-15', name: '업로드 이력', menu: '사전', docs: [['07 E4', D.excel]], states: [['전체', 'uploads.html'], ['UP-2026-0007', 'uploads.html?b=UP-2026-0007']] },
-    { file: 'candidates.html', ids: 'SC-14', name: '후보 큐', menu: '사전', docs: [['02 §3.4', D.flows], ['30 MD-42·43', D.meta]], states: [['DA로 보기', 'candidates.html?as=lee'], ['모델러로 보기', 'candidates.html?as=park']] },
+    { file: 'dictionary.html', ids: 'SC-10 · PN-11 · PN-12', name: '표준 사전 통합 검색 · 상세 · 등록 신청', menu: '표준 사전', docs: [['02 §3.1~3.2', D.flows], ['30 MD-01~12 사전 규칙', D.meta], ['07 E6 검색', D.excel], ['23 §6-1 검색 숫자', D.perf]], states: [['기본(최근 변경)', 'dictionary.html'], ['도메인 신청', 'dictionary.html?req=domain'], ['편집용 내려받기', 'dictionary.html#download'], ['검색: 산출', 'dictionary.html?q=산출']] },
+    { file: 'dict-history.html', ids: 'SC-16', name: '표준 사전 변경 내역 · 공표', menu: '표준 사전', docs: [['07 E5 버전·이력', D.excel], ['30 MD-23', D.meta]], states: [['전체', 'dict-history.html'], ['미공표만', 'dict-history.html?unpub=1']] },
+    { file: 'excel-import.html', ids: 'SC-13', name: '엑셀 가져오기(왕복 편집)', menu: '표준 사전', docs: [['02 §3.3', D.flows], ['07 E1~E4 왕복 편집', D.excel], ['30 MD-08·09', D.meta], ['23 §6-4 행 상한', D.perf]], states: [['1단계부터(실제 작업)', 'excel-import.html'], ['5단계 예시(저장 안 함)', 'excel-import.html?step=5'], ['신청된 묶음 열람', 'excel-import.html?resume=UP-2026-0007'], ['반영본 확인', 'excel-import.html?verify=UP-2026-0007']] },
+    { file: 'dict-grid.html', ids: 'SC-11', name: '직접 등록', menu: '표준 사전', docs: [['30 MD-13~19', D.meta]], states: [['단어 탭', 'dict-grid.html'], ['바구니 고치기', 'dict-grid.html?mode=basket']] },
+    { file: 'domain-groups.html', ids: 'SC-17', name: '도메인 그룹 · 분류', menu: '표준 사전', docs: [['30 MD-02·03', D.meta]], states: [['DA(이데이터)', 'domain-groups.html?as=lee'], ['모델러(조회)', 'domain-groups.html?as=park']] },
+    { file: 'std-common.html', ids: 'SC-18', name: '공통표준 · 행정표준코드', menu: '표준 사전', docs: [['30 v1.5~1.6', D.meta]], states: [['DA(이데이터)', 'std-common.html?as=lee']] },
+    { file: 'uploads.html', ids: 'SC-15', name: '업로드 이력', menu: '표준 사전', docs: [['07 E4', D.excel]], states: [['전체', 'uploads.html'], ['UP-2026-0007', 'uploads.html?b=UP-2026-0007']] },
+    { file: 'candidates.html', ids: 'SC-14', name: '후보 큐', menu: '표준 사전', docs: [['02 §3.4', D.flows], ['30 MD-42·43', D.meta]], states: [['DA로 보기', 'candidates.html?as=lee'], ['모델러로 보기', 'candidates.html?as=park']] },
     { file: 'approvals.html', ids: 'SC-20 · PN-21 · MO-22 · MO-23', name: '결재함 · 문서 상세 · 자기 승인 · 반려', menu: '결재', docs: [['02 §4 결재 흐름', D.flows], ['30 MD-20~27', D.meta]], states: [['대기함(김모델)', 'approvals.html'], ['엑셀 문서', 'approvals.html?doc=REQ-2026-0016'], ['모델 확정(리스크 v2)', 'approvals.html?doc=REQ-2026-0011'], ['최종 승인 차례(이현업)', 'approvals.html?doc=REQ-2026-0010&as=hyun'], ['완료 문서', 'approvals.html?doc=REQ-2026-0007']] },
     { file: 'system.html', ids: 'SC-30', name: '시스템 홈', menu: '시스템', docs: [['02 §1', D.flows]], states: [['요구사항관리', 'system.html']] },
     { file: 'model.html', ids: 'SC-31 · PN-32 · PN-33 · PN-31G · PN-39 · PN-35 · PN-38', name: '모델(ERD 캔버스 · 사전 패널 · 엔터티 패널 · 표 보기 · 모델 검토 · 게이트 A · 확정 신청)', menu: '시스템', docs: [['03 ERD 편집기', D.erd], ['02 §5.1~5.4·5.7', D.flows], ['22 §6 SWS 비교 결정', D.sws], ['23 §6-2·5·6 캔버스 숫자', D.perf]], states: [['요구사항·프로젝트(편집)', 'model.html'], ['리스크(검토 중)', 'model.html?area=risk'], ['v4 확정본 사본', 'model.html?area=rq&snap=REQ-2026-0003'], ['예시: 미준수 해결 후(조회 전용)', 'model.html?state=resolved']] },
@@ -1937,7 +1937,7 @@
       <a class="brand" href="home.html" aria-label="NeoDB 홈"${page === 'home' ? ' aria-current="page"' : ''}>${MARK(20)}<span class="wm">NeoDB</span></a>
       <span class="org">한국데이터진흥원</span>
       <nav class="tmenu" aria-label="주 메뉴">
-        <span class="tmw"><button class="tm${TAB === 'dict' ? ' on' : ''}" type="button" data-menu-btn aria-expanded="false" aria-controls="mn-dict"${TAB === 'dict' ? ' aria-current="true"' : ''}>사전<i data-ic=down data-s=12></i></button><div class="menu" data-auto id="mn-dict">
+        <span class="tmw"><button class="tm${TAB === 'dict' ? ' on' : ''}" type="button" data-menu-btn aria-expanded="false" aria-controls="mn-dict"${TAB === 'dict' ? ' aria-current="true"' : ''}>표준 사전<i data-ic=down data-s=12></i></button><div class="menu" data-auto id="mn-dict">
           ${DICT_TABS.map(t => !t ? '<div class="sep"></div>' : `<a class="mi${here(t[0])}" href="${t[0]}">${t[1]}${t[0] === 'candidates.html' && cq ? `<span class="mcount">${cq}</span>` : ''}</a>` + (t[2] || []).map(s => `<a class="mi${here(s)}" href="${s}">${s === 'uploads.html' ? '업로드 이력' : s}</a>`).join('')).join('')}</div></span>
         <a class="tm${TAB === 'model' ? ' on' : ''}" href="system.html"${cur(TAB === 'model', 'system.html')}>모델</a>
         <a class="tm${TAB === 'appr' ? ' on' : ''}" href="approvals.html" id="tm-appr"${cur(TAB === 'appr', 'approvals.html')} aria-label="결재함${qn0 ? ` 내 차례 ${qn0}건` : ''}${late ? ', 기한 넘김 있음' : ''}">결재함${qn0 ? `<span class="tcount">${qn0}</span>` : ''}${late ? '<span class="tlate" title="기한을 넘긴 결재가 있습니다"></span>' : ''}</a>
@@ -1947,7 +1947,7 @@
       </nav>
       <div class="spacer"></div>
       <button class="gsearch" id="gsearch" type="button" aria-haspopup="dialog" aria-label="전체 검색 (Ctrl+K)">${ICON.search}<span>검색</span><kbd>Ctrl K</kbd></button>
-      ${can('dict.request') ? (() => { const bn = getBasket().items.length; return `<a class="iconbtn" id="btn-basket" href="dictionary.html?basket=1" aria-label="사전 바구니 ${bn}건 — 열어서 품의 올리기" title="사전 바구니 ${bn}건">${icon('basket', 16)}${bn ? `<span class="dot">${bn}</span>` : ''}</a>`; })() : ''}
+      ${can('dict.request') ? (() => { const bn = getBasket().items.length; return `<a class="iconbtn" id="btn-basket" href="dictionary.html?basket=1" aria-label="표준 사전 바구니 ${bn}건 — 열어서 품의 올리기" title="사전 바구니 ${bn}건">${icon('basket', 16)}${bn ? `<span class="dot">${bn}</span>` : ''}</a>`; })() : ''}
       <button class="iconbtn" id="btn-bell" aria-label="알림 ${nUnread}건" aria-haspopup="true" aria-expanded="false">${ICON.bell}${nUnread ? `<span class="dot">${nUnread}</span>` : ''}</button>
       <button class="avatar btnlike" id="btn-user" aria-label="사용자 메뉴 · ${ME.name}" aria-haspopup="true" aria-expanded="false">${ME.name[0]}${store.get('dbm-seen-ver', '') !== PRODUCT.version ? '<span class="newdot" title="새 기능"></span>' : ''}</button>
       <div class="pop-menu npanel" id="pn-notif" role="dialog" aria-label="알림"></div>
@@ -1968,7 +1968,7 @@
     { const DT = DICT_TABS;
       const here = t => t && (t[0] === curFile() || (t[2] || []).includes(curFile()));
       const ph = DT.some(here) && document.querySelector('#content .page-header');
-      if (ph && !document.querySelector('.dtabs')) ph.insertAdjacentHTML('afterend', `<nav class="tabs dtabs" aria-label="사전 화면">${DT.map(t => !t ? '<span class="dsep" aria-hidden="true"></span>' : `<a href="${t[0]}"${here(t) ? ' class="on" aria-current="page"' : ''}>${t[1]}</a>`).join('')}</nav>`);
+      if (ph && !document.querySelector('.dtabs')) ph.insertAdjacentHTML('afterend', `<nav class="tabs dtabs" aria-label="표준 사전 화면">${DT.map(t => !t ? '<span class="dsep" aria-hidden="true"></span>' : `<a href="${t[0]}"${here(t) ? ' class="on" aria-current="page"' : ''}>${t[1]}</a>`).join('')}</nav>`);
       if (ph) pageGuide(document.querySelector('.dtabs')); }
     drawTree(nav);
     const toasts = document.createElement('div');
