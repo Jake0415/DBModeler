@@ -1937,9 +1937,9 @@
       <a class="brand" href="home.html" aria-label="NeoDB 홈"${page === 'home' ? ' aria-current="page"' : ''}>${MARK(20)}<span class="wm">NeoDB</span></a>
       <span class="org">한국데이터진흥원</span>
       <nav class="tmenu" aria-label="주 메뉴">
-        <a class="tm${TAB === 'model' ? ' on' : ''}" href="system.html"${cur(TAB === 'model', 'system.html')}>모델</a>
         <span class="tmw"><button class="tm${TAB === 'dict' ? ' on' : ''}" type="button" data-menu-btn aria-expanded="false" aria-controls="mn-dict"${TAB === 'dict' ? ' aria-current="true"' : ''}>사전<i data-ic=down data-s=12></i></button><div class="menu" data-auto id="mn-dict">
           ${DICT_TABS.map(t => !t ? '<div class="sep"></div>' : `<a class="mi${here(t[0])}" href="${t[0]}">${t[1]}${t[0] === 'candidates.html' && cq ? `<span class="mcount">${cq}</span>` : ''}</a>` + (t[2] || []).map(s => `<a class="mi${here(s)}" href="${s}">${s === 'uploads.html' ? '업로드 이력' : s}</a>`).join('')).join('')}</div></span>
+        <a class="tm${TAB === 'model' ? ' on' : ''}" href="system.html"${cur(TAB === 'model', 'system.html')}>모델</a>
         <a class="tm${TAB === 'appr' ? ' on' : ''}" href="approvals.html" id="tm-appr"${cur(TAB === 'appr', 'approvals.html')} aria-label="결재함${qn0 ? ` 내 차례 ${qn0}건` : ''}${late ? ', 기한 넘김 있음' : ''}">결재함${qn0 ? `<span class="tcount">${qn0}</span>` : ''}${late ? '<span class="tlate" title="기한을 넘긴 결재가 있습니다"></span>' : ''}</a>
         ${canAdmin ? `<span class="tmw"><button class="tm${TAB === 'admin' ? ' on' : ''}" type="button" data-menu-btn aria-expanded="false" aria-controls="mn-admin"${TAB === 'admin' ? ' aria-current="true"' : ''}>관리<i data-ic=down data-s=12></i></button><div class="menu" data-auto id="mn-admin">
           <a class="mi${here('settings.html')}" href="settings.html">설정</a>
