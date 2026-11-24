@@ -14,6 +14,7 @@
   .set-row .l b { display:block; font-size:14px; } .set-row .l span { font-size:12px; color:var(--fg-3); }
   .tline { display:grid; grid-template-columns:28px 1fr 180px 90px; gap:8px; align-items:center; padding:6px 0; }
   .set-row .l .lastchg { display:block; margin-top:4px; font-size:12px; color:var(--fg-3); }
+  .self-opt { display:grid; gap:8px; } .self-opt label { gap:8px; align-items:flex-start; cursor:pointer; } .self-opt input { margin-top:3px; }
   .set-row .l .lastchg:empty { display:none; }
   .tabs .tdot { display:none; width:6px; height:6px; margin:0 0 0 6px; vertical-align:2px; }
   .tabs button.dirty .tdot { display:inline-block; }
@@ -82,7 +83,11 @@
       </div></div>
     <div class="set-row"><div class="l"><b>도메인그룹 · 분류</b><span>사전 필터·도메인 신청·엑셀 가져오기에 쓰임</span></div>
       <div><a href="domain-groups.html">도메인그룹 · 분류는 사전 › 도메인 그룹 · 분류에서 관리합니다</a> <span class="caption muted">(그룹은 DA 직접 관리 · 분류는 품의)</span></div></div>
-    <div class="set-row"><div class="l"><b>자기 승인</b><span>역할을 겸한 사용자가 자기 신청을 승인할 때</span></div><div>허용 · <b>사유 필수</b> · 감사 로그에 ‘자기 승인’ 표시</div></div>
+    <div class="set-row"><div class="l"><b>자기 승인</b><span>역할을 겸한 사용자(예: 모델러 · DA)가 자기 신청을 직접 승인할 수 있는지</span><span class="lastchg" data-last="자기 승인"></span></div>
+      <div class="self-opt" role="radiogroup" aria-label="자기 승인">
+        <label class="flex"><input type="radio" name="self-appr" id="self-on" value="1"> <span><b>허용</b> — 사유 필수 · 결재 이력과 감사 로그에 ‘자기 승인’ 표시</span></label>
+        <label class="flex"><input type="radio" name="self-appr" id="self-off" value="0"> <span><b>비허용</b> — 자기 신청은 같은 단계의 다른 결재자가 승인(직무 분리)</span></label>
+      </div></div>
     <div class="set-row"><div class="l"><b>메일 알림</b><span>결재선 담당자에게만 발송</span></div>
       <div><div class="field-row"><div class="field"><label for="smtp-host">SMTP 서버</label><input class="input mono" id="smtp-host" value="mail.kda.go.kr:587"></div><div class="field"><label for="smtp-from">발신 주소</label><input class="input mono" id="smtp-from" value="neodb@kda.go.kr"></div></div>
         <div class="caption muted u-mb-8">결재 요청 → 지금 차례 결재자 · 승인·반려·회수 → 신청자와 앞 단계 결재자 · 참조·후보·재검토 → 앱 알림만</div>
@@ -227,6 +232,7 @@ window.pageInit = function () {
   // approval-line settings and the validation policy are saved to the state layer and read by new documents / validations (CX12-34)
   const org = getOrg(); const areas = getAllModels();   // every system's areas — the system picker below shows one system at a time
   $('org-goal').value = org.goal || 90; $('org-sla').value = org.sla || 3;
+  $(org.selfAppr === false ? 'self-off' : 'self-on').checked = true;   // 자기 승인: 허용(기본) / 비허용
   $('fin-dict').checked = org.finalDict; const fdT = () => { $('fin-dict-t').textContent = $('fin-dict').checked ? `사용 · 기관 담당자 역할 ${Object.values(USERS).filter(u => u.roles.includes('owner')).length}명` : '사용 안 함 — DA 승인으로 반영'; }; fdT(); $('fin-dict').onchange = fdT;
   $('fin-model').innerHTML = Object.entries(areas).map(([id, m]) => `<label class="flex u-mb-4" data-fm-sys="${m.system || 'RQMS'}"><input type="checkbox" data-fm="${id}" ${org.finalModel[id] !== false ? 'checked' : ''}> ${m.name}</label>`).join('');
   // SC-41: the system picker drives the system tab (schema · areas · model final approval); it does not change the top-bar system
@@ -254,7 +260,7 @@ window.pageInit = function () {
   // dirty tracking for the tabs saved together (기관·시스템·검수 기준); 사용자·역할 saves per user in its panel
   const DT = { org: '기관 설정', sys: '시스템 설정', rules: '검수 기준' };
   // only fields with a real save path count (결재선 · 운영 목표 · 단어 약어 길이); the rest of the mock form is not stored
-  const SAVED = '#fin-dict, [data-fm], #org-goal, #org-sla, #pol-wd';
+  const SAVED = '#fin-dict, [data-fm], #org-goal, #org-sla, #pol-wd, #self-on';   // the 자기 승인 pair counts as one field (its 허용 radio)
   const fieldsOf = t => [...document.querySelectorAll(`.pane[data-pane="${t}"] input, .pane[data-pane="${t}"] select, .pane[data-pane="${t}"] textarea`)].filter(f => !f.hasAttribute('data-nodirty') && f.matches(SAVED));
   const valOf = f => (f.type === 'checkbox' || f.type === 'radio') ? f.checked : f.value;
   let base = {}, sbTimer = 0;
@@ -282,6 +288,7 @@ window.pageInit = function () {
   }
   $('sb-revert').onclick = () => {
     Object.keys(DT).forEach(t => fieldsOf(t).forEach((f, i) => { if (f.type === 'checkbox' || f.type === 'radio') f.checked = base[t][i]; else f.value = base[t][i]; }));
+    if (!document.getElementById('self-on').checked) document.getElementById('self-off').checked = true;   // the pair: 허용 off means 비허용
     NUM.forEach(([id]) => checkNum(id)); fdT(); refreshBar(); toast('마지막 저장값으로 되돌렸습니다', 'info');
   };
   $('sb-save').onclick = () => saveAll();
@@ -298,8 +305,10 @@ window.pageInit = function () {
     // compare the effective approval line (an area missing from finalModel means 'on'), so a goal-only save never logs a line change
     const effLine = m => JSON.stringify([!!m.finalDict, Object.keys(areas).map(a => (m.finalModel || {})[a] !== false)]);
     const lineChg = effLine(JSON.parse(before)) !== effLine(o);
+    const self0 = JSON.parse(before).selfAppr !== false, self1 = $('self-on').checked; o.selfAppr = self1;
     saveOrg(o);
     const changes = []; if (goalChg) { changes.push(`운영 목표: ${[g0 !== g1 ? `준수율 ${g0}% → ${g1}%` : '', s0 !== s1 ? `결재 기한 ${s0}일 → ${s1}일` : ''].filter(Boolean).join(' · ')}`); pushAudit({ act: '설정 변경 — 운영 목표', target: '기관·시스템 설정', why: changes[changes.length - 1] }); }
+    if (self0 !== self1) { changes.push(`자기 승인: ${self0 ? '허용' : '비허용'} → ${self1 ? '허용' : '비허용'}`); pushAudit({ act: '설정 변경 — 자기 승인', target: '기관·시스템 설정', why: changes[changes.length - 1] }); }
     if (lineChg) { const fmChg = Object.entries(o.finalModel).filter(([a, v]) => ((JSON.parse(before).finalModel || {})[a] !== false) !== v).map(([a, v]) => (areas[a] ? areas[a].name : a) + ' ' + (v ? '켬' : '끔')); changes.push(`결재선: 사전 최종 승인 ${o.finalDict ? '켬' : '끔'}${fmChg.length ? ` · 모델 최종 승인 ${fmChg.join(', ')}` : ''}`); pushAudit({ act: '설정 변경 — 결재선', target: '기관·시스템 설정', why: changes[changes.length - 1] }); }
     const p = getPolicy(); const wd = +$('pol-wd').value;
     if (wd !== (p.wordAbbr || 6)) { const nv = { ver: p.ver + 1, at: today2(), by: ME.name, wordAbbr: wd, hist: [{ ver: p.ver + 1, at: today2(), by: ME.name, what: `단어 영문약어명 ${p.wordAbbr || 6}자 → ${wd}자` }].concat(p.hist) }; savePolicy(nv); pushAudit({ act: `검수 기준 v${nv.ver}`, target: '검수 기준', why: nv.hist[0].what }); changes.push(`검수 기준 v${nv.ver}`); drawPol(); }

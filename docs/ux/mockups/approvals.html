@@ -489,7 +489,7 @@ window.pageInit = function () {
     if (inQueue(d) && blockLv.length) right = `<div class="foot-zone"><span class="caption u-danger">${icon('err', 12)} ${blockLv.join(', ')} 완료 전에는 확정할 수 없습니다</span><button class="btn danger" data-open="mo-reject">반려</button><button class="btn primary" disabled aria-disabled="true" title="연결 용어 신청이 끝나야 확정할 수 있습니다">${mine ? '자기 승인' : '승인'}</button></div>`;
     // DX-12: every item rejected → it is an ordinary whole-document rejection
     else if (inQueue(d) && allRejected(d)) right = `<div class="foot-zone"><span class="caption muted">모든 항목을 반려해 문서 반려로 처리합니다</span><button class="btn danger" data-open="mo-reject" id="btn-rejall">문서 반려 (항목 ${d.items.length}건)</button></div>`;
-    else if (inQueue(d)) right = `<div class="foot-zone"><span class="zl">${stepRole(d.step)}로서</span>${depN ? `<span class="caption u-warning" id="dep-warn">${icon('warn', 12)} 의존 미처리 ${depN}</span>` : ''}<button class="btn danger" data-open="mo-reject">${nm ? '문서 전체 반려' : '반려'}</button><button class="btn primary" id="btn-apr">${nm ? (mine ? `자기 승인 ${okN}건 · ${nm}건 반려` : `${okN}건 승인 · ${nm}건 반려`) : (mine ? '자기 승인' : '승인')}</button></div>`;
+    else if (inQueue(d)) right = `<div class="foot-zone"><span class="zl">${stepRole(d.step)}로서</span>${depN ? `<span class="caption u-warning" id="dep-warn">${icon('warn', 12)} 의존 미처리 ${depN}</span>` : ''}<button class="btn danger" data-open="mo-reject">${nm ? '문서 전체 반려' : '반려'}</button>${mine && !selfOK() ? `<span class="has-tip" data-tip="자기 승인이 비허용으로 설정돼 있습니다 — 같은 단계의 다른 결재자가 승인합니다(설정 › 기관 › 자기 승인)"><button class="btn primary" id="btn-apr" disabled aria-describedby="self-off-t">자기 승인</button></span><span class="sr-only" id="self-off-t">자기 승인 비허용 — 다른 결재자가 승인합니다</span>` : `<button class="btn primary" id="btn-apr">${nm ? (mine ? `자기 승인 ${okN}건 · ${nm}건 반려` : `${okN}건 승인 · ${nm}건 반려`) : (mine ? '자기 승인' : '승인')}</button>`}</div>`;
     else if (ro) right = `<span class="caption muted">읽기 전용 · 지금은 <b>${stepRole(d.step)}</b> 차례입니다</span>`;
     else if (d.step === 'done') right = `<div class="foot-zone"><span class="caption muted">완료${(d.hist || []).length ? ' · ' + d.hist[d.hist.length - 1].at + ' ' + d.hist[d.hist.length - 1].who : ''}</span>${d.type === 'model' ? `<a class="btn primary" href="model.html?area=${d.area}&snap=${d.id}">v${d.ver} 확정본 보기</a>` : ''}</div>`;
     else if (live) right = `<span class="caption muted">지금은 <b>${stepRole(d.step)}</b> 차례입니다${ME.has(d.step === 'da' ? 'da' : 'owner') ? '' : ' · 내 역할로는 조회만 가능'}</span>`;
@@ -644,7 +644,9 @@ window.pageInit = function () {
     if (d.req !== ME.id) pushNotif({ to: [d.req], k: 'res', t: `${d.id} 항목 ${back.length}건이 반려되어 바구니로 돌아갔습니다`, m: back.map(it => `${it.name}: ${it.rejWhy}`).join(' · '), href: 'dictionary.html?basket=1' });   // the notice opens the basket rows
     return n;
   }
+  const selfOK = () => getOrg().selfAppr !== false;   // 설정 › 기관 › 자기 승인 (허용 기본)
   function act(kind, why, self) {
+    if (self && !selfOK()) { toast('자기 승인이 비허용으로 바뀌었습니다 — 승인하지 않았습니다. 같은 단계의 다른 결재자가 승인합니다', 'danger'); pending = null; return; }
     const before = snapStore();
     // the user this page was opened with must still be the selected user (another tab may have switched. CX9-06)
     if (liveRoleChanged()) { staleRoleToast(); pending = null; return; }
