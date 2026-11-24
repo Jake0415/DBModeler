@@ -10,6 +10,8 @@
 <script src="assets/app.js"></script>
 <style>
   .ntbl td, .ntbl th { text-align:center; } .ntbl td:first-child, .ntbl th:first-child { text-align:left; }
+  /* R-08: the check columns sit next to the names — table as wide as its content (≤ 720), not 1200 */
+  .ntbl { width:auto; min-width:560px; max-width:720px; } .ntbl .nt-c { width:120px; }
   /* fixed widths live in the page style, not inline (17 §6.2) */
   #av { width:36px; height:36px; font-size:15px; } #sec-pw { max-width:360px; }
 </style>
@@ -27,7 +29,7 @@
     <button data-tab="work">내 작업</button>
     <button data-tab="notify">알림 설정<span class="tabdot" aria-hidden="true"></span></button>
     <button data-tab="security">보안</button>
-    <button data-tab="env">환경<span class="tabdot" aria-hidden="true"></span></button>
+    <button data-tab="env">환경</button>
   </div>
   <div class="scroll"><div class="pad">
     <div class="pane on set-wrap" data-pane="profile">
@@ -36,7 +38,7 @@
         <div class="field-row"><div class="field"><label for="p-company">회사명</label><input class="input" id="p-company" readonly></div><div class="field"><label for="p-org">부서명</label><input class="input" id="p-org" readonly></div><div class="field"><label for="p-name">이름</label><input class="input" id="p-name" readonly></div><div class="field"><label for="p-id">ID</label><input class="input mono" id="p-id" readonly></div></div><div class="aside"><span>회사 · 부서 · 이름은 관리자가 바꿉니다 — 틀렸으면 Admin에게 알려 주세요</span></div></div>
       <div class="set-row"><div class="l"><b>연락처</b></div>
         <div><div class="field-row"><div class="field"><label for="p-phone">전화번호</label><input class="input mono" id="p-phone" inputmode="tel" placeholder="010-1234-5678"><div class="caption u-danger" id="p-phone-e"></div></div><div class="field"><label for="p-mail">이메일</label><input class="input mono" id="p-mail" type="email"><div class="caption u-danger" id="p-mail-e"></div></div></div></div><div class="aside"><span>결재 알림 메일이 이 주소로 갑니다</span><span>바꾸면 감사 로그에 남습니다</span></div></div>
-      <div class="set-row"><div class="l"><b>표시 이름</b></div><div class="field"><label for="p-disp">표시 이름</label><input class="input" id="p-disp"><div class="caption u-danger" id="p-disp-e"></div></div><div class="aside"><span>결재 문서 · 공동 편집 커서에 보이는 이름입니다</span></div></div>
+      <div class="set-row"><div class="l"><b>표시 이름</b></div><div class="field short"><label for="p-disp">표시 이름</label><input class="input" id="p-disp"><div class="caption u-danger" id="p-disp-e"></div></div><div class="aside"><span>결재 문서 · 공동 편집 커서에 보이는 이름입니다</span></div></div>
       <h3 class="set-sec">역할</h3>
       <div class="set-row"><div class="l"><b>내 역할 · 담당 시스템</b><span>조회 전용</span></div>
         <div><div class="u-mb-8" id="p-roles"></div><div class="caption" id="p-sys"></div><div class="caption u-mt-8" id="rr-state"></div></div>
@@ -57,37 +59,40 @@
 
     <div class="pane set-wrap" data-pane="notify">
       <div class="set-row wide"><div class="l"><b>알림 받기</b><span>종류마다 앱 알림 · 메일</span></div>
-        <div><table class="tbl ntbl set-tbl"><thead><tr><th>종류</th><th>앱 알림</th><th>메일</th></tr></thead><tbody id="nt-body"></tbody></table></div>
-        <div class="aside"><span>메일은 기관 정책상 <b>결재선 담당자</b>에게만 갑니다. ‘필수’는 끌 수 없습니다 · 끈 종류는 알림 목록에 오지 않습니다</span><span class="lastchg" id="nt-state"></span></div></div>
+        <div><table class="tbl ntbl"><colgroup><col><col class="nt-c"><col class="nt-c"></colgroup><thead><tr><th>종류</th><th>앱 알림</th><th>메일</th></tr></thead><tbody id="nt-body"></tbody></table></div>
+        <div class="aside"><span>앱 알림을 끄면 그 종류는 알림 목록에 오지 않습니다.</span><span>메일은 결재선 담당자에게만 보냅니다. ‘필수’는 끌 수 없습니다.</span><span>아래 [저장]을 누르면 바로 적용됩니다.</span><span class="lastchg" id="nt-state"></span></div></div>
     </div>
 
     <div class="pane set-wrap" data-pane="security">
-      <div class="set-row"><div class="l"><b>인증 방식</b></div><div id="sec-auth"></div><div class="aside"><span>로그인 방식은 관리자가 정합니다</span></div></div>
-      <div class="set-row" id="sec-pwrow"><div class="l"><b>비밀번호 변경</b><span id="sec-pwat"></span></div>
+      <h3 class="set-sec first">인증</h3>
+      <div class="set-row"><div class="l"><b>인증 방식</b></div><div id="sec-auth"></div><div class="aside"><span>로그인 방식은 관리자가 정합니다.</span></div></div>
+      <div class="set-row" id="sec-pwrow"><div class="l"><b>비밀번호 변경</b></div>
         <form id="sec-pw" novalidate><div class="field"><label for="s-cur">지금 비밀번호</label><input class="input mono" id="s-cur" type="password" autocomplete="current-password"></div>
           <div class="field"><label for="s-n1">새 비밀번호</label><input class="input mono" id="s-n1" type="password" autocomplete="new-password"></div>
           <div class="field"><label for="s-n2">새 비밀번호 확인</label><input class="input mono" id="s-n2" type="password" autocomplete="new-password"></div>
           <div class="caption muted" id="s-rule"></div><div class="caption" id="s-err" role="alert" style="color:var(--danger-deep);min-height:16px;margin-top:4px"></div>
-          <button class="btn primary u-mt-8" type="submit">비밀번호 변경</button></form>
-        <div class="aside"><span>이 버튼으로 바로 바뀝니다 — 아래 저장 막대와 따로입니다</span><span>바꾸면 다른 기기의 세션은 다시 로그인해야 합니다</span></div></div>
-      <div class="set-row wide"><div class="l"><b>접속 중인 세션</b></div>
+          <div class="flex u-gap-8 u-mt-8"><button class="btn primary" type="submit">비밀번호 변경</button><span class="now-tag">바로 적용</span></div></form>
+        <div class="aside"><span class="lastchg" id="sec-pwat"></span><span>바꾸면 다른 기기의 세션은 다시 로그인해야 합니다.</span></div></div>
+      <h3 class="set-sec">접속 기록</h3>
+      <div class="set-row wide"><div class="l"><b>접속 중인 세션</b><span class="now-tag">로그아웃 바로 적용</span></div>
         <div><table class="tbl set-tbl"><thead><tr><th>기기 · 브라우저</th><th>IP</th><th>마지막 활동</th><th></th></tr></thead><tbody>
           <tr><td>Windows · Chrome <span class="badge b-success">이 기기</span></td><td class="mono">10.12.3.41</td><td class="mono">방금</td><td></td></tr>
-          <tr id="s2"><td>Windows · Edge</td><td class="mono">10.12.7.18</td><td class="mono">11/16 18:40</td><td><button class="btn sm" onclick="document.getElementById('s2').remove();toast('다른 세션을 로그아웃했습니다')">로그아웃</button></td></tr>
-        </tbody></table></div><div class="aside"><span>세션은 30분 동안 입력이 없으면 만료되고, 5분 전에 알립니다</span></div></div>
+          <tr id="s2"><td>Windows · Edge</td><td class="mono">10.12.7.18</td><td class="mono">11/16 18:40</td><td><button class="btn sm" aria-label="Windows · Edge 세션 로그아웃 — 바로 적용" onclick="document.getElementById('s2').remove();toast('Windows · Edge 세션을 로그아웃했습니다 — 그 기기는 다시 로그인해야 합니다')">로그아웃</button></td></tr>
+        </tbody></table></div><div class="aside"><span>[로그아웃]을 누르면 그 기기의 세션이 바로 끝납니다.</span><span>30분 동안 입력이 없으면 세션이 끝나고, 5분 전에 알립니다.</span></div></div>
       <div class="set-row"><div class="l"><b>최근 로그인</b></div><div class="caption mono">11/18 08:52 · 10.12.3.41 · 성공<br>11/17 08:47 · 10.12.3.41 · 성공<br>11/16 18:40 · 10.12.7.18 · 성공</div></div>
     </div>
 
     <div class="pane set-wrap" data-pane="env">
-      <div class="set-row"><div class="l"><b>테마</b></div><div class="seg" id="env-theme"><button data-v="light">라이트</button><button data-v="dark">다크</button><button data-v="system">시스템</button></div><div class="aside"><span>누르면 바로 적용됩니다</span></div></div>
-      <div class="set-row"><div class="l"><b>표 밀도</b><span>목록 · 표의 한 줄 높이</span></div><div class="seg" id="env-density" role="group" aria-label="표 밀도"><button data-v="compact">촘촘 32</button><button data-v="default">기본 36</button><button data-v="comfy">넓게 44</button></div><div class="aside"><span>누르면 바로 적용됩니다 · 행이 많은 표준 사전 · 표준 맞추기는 촘촘을 권합니다</span><span>두 줄 칸은 내용만큼 높아집니다</span></div></div>
-      <div class="set-row"><div class="l"><b>시작 화면</b></div><div class="field"><label for="env-start">로그인 후 첫 화면</label><select class="input u-w-240" id="env-start"><option>홈</option><option>결재함</option><option>최근 업무 영역</option></select></div><div class="aside"><span>아래 [저장] 뒤 다음 로그인부터 적용됩니다</span></div></div>
-      <div class="set-row"><div class="l"><b>단축키</b></div><label class="flex"><input type="checkbox" id="kb-single2"> 한 글자 단축키(V·E·R·M) 사용</label><div class="aside"><span>바로 적용됩니다 · 화면 낭독기 · 음성 입력을 쓰면 끄세요</span></div></div>
+      <div class="caption muted u-mb-8">이 탭의 설정은 고르면 바로 적용됩니다. 저장할 필요가 없습니다.</div>
+      <div class="set-row"><div class="l"><b>테마</b></div><div class="flex u-gap-8"><div class="seg" id="env-theme" role="group" aria-label="테마"><button data-v="light">라이트</button><button data-v="dark">다크</button><button data-v="system">시스템</button></div><span class="now-tag">바로 적용</span></div><div class="aside"><span>‘시스템’은 운영체제의 밝기 설정을 따릅니다.</span></div></div>
+      <div class="set-row"><div class="l"><b>표 밀도</b><span>목록 · 표의 한 줄 높이</span></div><div class="flex u-gap-8"><div class="seg" id="env-density" role="group" aria-label="표 밀도"><button data-v="compact">촘촘 32</button><button data-v="default">기본 36</button><button data-v="comfy">넓게 44</button></div><span class="now-tag">바로 적용</span></div><div class="aside"><span>행이 많은 표준 사전 · 표준 맞추기는 촘촘을 권합니다.</span><span>두 줄 칸은 내용만큼 높아집니다.</span></div></div>
+      <div class="set-row"><div class="l"><b>시작 화면</b></div><div class="flex u-gap-8"><label class="sr-only" for="env-start">로그인 후 첫 화면</label><select class="input u-w-240" id="env-start"><option>홈</option><option>결재함</option><option>최근 업무 영역</option></select><span class="now-tag">바로 적용</span></div><div class="aside"><span>다음 로그인부터 이 화면으로 시작합니다.</span></div></div>
+      <div class="set-row"><div class="l"><b>단축키</b></div><div class="flex u-gap-8"><label class="flex"><input type="checkbox" id="kb-single2"> 한 글자 단축키(V·E·R·M) 사용</label><span class="now-tag">바로 적용</span></div><div class="aside"><span>화면 낭독기 · 음성 입력을 쓰면 끄세요.</span></div></div>
     </div>
   </div></div>
   <!-- 24 guide P3: one save bar for 프로필 · 알림 설정 · 환경 (theme · density · shortcuts · password apply at once) -->
   <div class="setbar" id="setbar" role="region" aria-label="저장하지 않은 변경">
-    <span id="sb-msg" aria-live="polite"></span><span class="u-rel"><button type="button" class="btn ghost sm" id="sb-diff" aria-expanded="false" aria-controls="sb-pop">변경 보기</button><div class="menu sb-pop" id="sb-pop" role="dialog" aria-label="저장하지 않은 변경"></div></span><span class="grow"></span>
+    <span id="sb-msg" aria-live="polite"></span><span class="u-rel"><button type="button" class="btn ghost sm" id="sb-diff" aria-expanded="false" aria-controls="sb-pop">변경 보기</button><div class="menu sb-pop" id="sb-pop" role="dialog" aria-label="저장하지 않은 변경" tabindex="-1"></div></span><span class="grow"></span>
     <button class="btn" id="sb-revert" title="모든 탭의 저장하지 않은 변경을 마지막 저장값으로 되돌립니다">되돌리기</button>
     <button class="btn primary" id="sb-save">저장</button>
   </div>
@@ -176,12 +181,12 @@ window.pageInit = function () {
   document.querySelectorAll('#env-theme button').forEach(b => { b.classList.toggle('on', b.dataset.v === t); b.setAttribute('aria-pressed', b.dataset.v === t); b.onclick = () => { dbmStore.set('dbm-theme', b.dataset.v); applyTheme(b.dataset.v); document.querySelectorAll('#env-theme button').forEach(x => { x.classList.toggle('on', x === b); x.setAttribute('aria-pressed', x === b); }); toast(`테마를 ‘${b.textContent}’로 바꿨습니다`, 'info'); }; });   /* R-02: no reload — unsaved fields stay */
   // 시작 화면: saved and read by login.html after sign-in (theme · density · shortcuts apply at once)
   $('env-start').value = dbmStore.get('dbm-start', '') || '홈';
-  const saveEnv = () => { dbmStore.set('dbm-start', $('env-start').value); return `로그인 후 첫 화면 ‘${$('env-start').value}’`; };
+  $('env-start').onchange = () => { dbmStore.set('dbm-start', $('env-start').value); toast(`시작 화면을 ‘${$('env-start').value}’(으)로 바꿨습니다 — 다음 로그인부터`, 'info'); };   /* R-07: the whole 환경 tab applies at once */
   const k = $('kb-single2'); k.checked = dbmStore.get('dbm-single-keys', '1') === '1'; k.onchange = () => { dbmStore.set('dbm-single-keys', k.checked ? '1' : '0'); toast(k.checked ? '한 글자 단축키를 켰습니다' : '한 글자 단축키를 껐습니다', 'info'); };
-  /* ---- 24 guide P3: one save bar — 프로필(연락처 · 표시 이름) · 알림 설정 · 환경(시작 화면); same behaviour as 설정 ---- */
-  const DT = { profile: '프로필', notify: '알림 설정', env: '환경' };
-  const SAVED = '#p-phone, #p-mail, #p-disp, [data-nk], #env-start';
-  const SAVER = { profile: saveProfile, notify: saveNotify, env: saveEnv };
+  /* ---- one save bar — 프로필(연락처 · 표시 이름) · 알림 설정; 환경 · 보안 apply at once (R-07); same behaviour as 설정 ---- */
+  const DT = { profile: '프로필', notify: '알림 설정' };
+  const SAVED = '#p-phone, #p-mail, #p-disp, [data-nk]';
+  const SAVER = { profile: saveProfile, notify: saveNotify };
   const fieldsOf = t => [...document.querySelectorAll(`.pane[data-pane="${t}"] input, .pane[data-pane="${t}"] select`)].filter(f => f.matches(SAVED));
   const valOf = f => f.type === 'checkbox' ? f.checked : f.value;
   let base = {}, sbTimer = 0;
@@ -189,21 +194,25 @@ window.pageInit = function () {
   const diff = () => { const out = {}; Object.keys(DT).forEach(t => { const n = fieldsOf(t).filter((f, i) => valOf(f) !== base[t][i]).length; if (n) out[t] = n; }); return out; };
   const dirtyN = () => Object.values(diff()).reduce((a, b) => a + b, 0);
   const hhmm = () => { const d = new Date(); return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; };
+  let lastMsg = ''; const setMsg = h => { if (h !== lastMsg) { lastMsg = h; $('sb-msg').innerHTML = h; } };
+  // after save · revert the bar's buttons disappear — focus goes back to the open tab instead of the page top
+  const focusTab = () => { const a = document.activeElement; if (!a || a === document.body || a.closest('#setbar')) { const t = document.querySelector('.tabs button.on'); if (t) t.focus(); } };
   function refreshBar() {
     const d = diff(), n = Object.values(d).reduce((a, b) => a + b, 0), bar = $('setbar');
     $('sb-diff').hidden = !n;
-    document.querySelectorAll('.tabs button[data-tab]').forEach(b => { const on = !!d[b.dataset.tab]; b.classList.toggle('dirty', on); if (on) b.title = `저장하지 않은 변경 ${d[b.dataset.tab]}건`; else b.removeAttribute('title'); });
+    document.querySelectorAll('.tabs button[data-tab]').forEach(b => { const on = !!d[b.dataset.tab]; b.classList.toggle('dirty', on); const nm = b.dataset.nm || (b.dataset.nm = b.textContent.trim()); if (on) { b.title = `저장하지 않은 변경 ${d[b.dataset.tab]}건`; b.setAttribute('aria-label', `${nm} — 저장하지 않은 변경 ${d[b.dataset.tab]}건`); } else { b.removeAttribute('title'); b.removeAttribute('aria-label'); } });
+    if ($('sb-pop').classList.contains('open')) { if (n) drawDiff(); else setPop(false); }
     if (!n) { if (!sbTimer) bar.classList.remove('show'); return; }
     clearTimeout(sbTimer); sbTimer = 0;
-    $('sb-msg').innerHTML = `<span class="savest"><span class="sdot run"></span>저장하지 않은 변경 <b class="mono">${n}</b>건 · ${Object.keys(d).map(t => DT[t]).join(', ')}</span>`;
+    setMsg(`<span class="savest"><span class="sdot run"></span>저장하지 않은 변경 <b class="mono">${n}</b>건 · ${Object.keys(d).map(t => DT[t]).join(', ')}</span>`);
     $('sb-revert').style.display = ''; $('sb-save').style.display = ''; bar.classList.add('show');
   }
   function showSaved() {
-    const bar = $('setbar'); $('sb-msg').innerHTML = `<span class="savest"><span class="sdot ok"></span>저장됨 · ${hhmm()}</span>`;
+    const bar = $('setbar'); setMsg(`<span class="savest"><span class="sdot ok"></span>저장됨 · ${hhmm()}</span>`); focusTab();
     $('sb-revert').style.display = 'none'; $('sb-save').style.display = 'none'; $('sb-diff').hidden = true; bar.classList.add('show');
     clearTimeout(sbTimer); sbTimer = setTimeout(() => { sbTimer = 0; if (!dirtyN()) bar.classList.remove('show'); }, 2500);
   }
-  $('sb-revert').onclick = () => { Object.keys(DT).forEach(t => fieldsOf(t).forEach((f, i) => { if (f.type === 'checkbox') f.checked = base[t][i]; else f.value = base[t][i]; })); PROF_CHECK.forEach(([id]) => markField(id, '')); refreshBar(); toast('마지막 저장값으로 되돌렸습니다', 'info'); };
+  $('sb-revert').onclick = () => { Object.keys(DT).forEach(t => fieldsOf(t).forEach((f, i) => { if (f.type === 'checkbox') f.checked = base[t][i]; else f.value = base[t][i]; })); PROF_CHECK.forEach(([id]) => markField(id, '')); refreshBar(); focusTab(); toast('마지막 저장값으로 되돌렸습니다', 'info'); };
   // [변경 보기] — row · field · before → after
   const esc2 = x => String(x).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
   const fName = f => { const lab = (f.getAttribute('aria-label') || (f.labels && f.labels[0] ? f.labels[0].textContent : '')).replace(/\s+/g, ' ').trim(); const row = f.closest('.set-row'), rn = row && row.querySelector('.l b') ? row.querySelector('.l b').textContent : ''; return [rn, lab && lab !== rn ? lab : ''].filter(Boolean).join(' · ') || f.id; };
@@ -213,7 +222,7 @@ window.pageInit = function () {
     Object.keys(DT).forEach(t => fieldsOf(t).forEach((f, i) => { const v = valOf(f); if (v !== base[t][i]) out.push(`<li><b>${DT[t]}</b> · ${esc2(fName(f))}<span class="muted"> ${esc2(fShow(f, base[t][i]))} → </span><b>${esc2(fShow(f, v))}</b></li>`); }));
     $('sb-pop').innerHTML = out.length ? `<div class="caption muted u-mb-8">저장하지 않은 변경 ${out.length}건</div><ul class="sb-list">${out.join('')}</ul>` : '<div class="caption muted">바뀐 값이 없습니다</div>';
   }
-  const setPop = o => { $('sb-pop').classList.toggle('open', o); $('sb-diff').setAttribute('aria-expanded', o); if (o) drawDiff(); };
+  const setPop = o => { $('sb-pop').classList.toggle('open', o); $('sb-diff').setAttribute('aria-expanded', o); if (o) { drawDiff(); $('sb-pop').focus(); } };
   $('sb-diff').onclick = e => { e.stopPropagation(); setPop(!$('sb-pop').classList.contains('open')); };
   document.addEventListener('click', e => { if (!e.target.closest('#sb-pop, #sb-diff')) setPop(false); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('sb-pop').classList.contains('open')) { setPop(false); $('sb-diff').focus(); } });

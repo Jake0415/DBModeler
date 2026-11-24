@@ -2260,7 +2260,7 @@
       const tb = e.target.closest('.tabs button[data-tab]');
       if (tb) {
         const scope = tb.closest('[data-tabscope]') || document;
-        scope.querySelectorAll('.tabs button[data-tab]').forEach(b => b.classList.toggle('on', b === tb));
+        scope.querySelectorAll('.tabs button[data-tab]').forEach(b => { b.classList.toggle('on', b === tb); if (b === tb) b.setAttribute('aria-current', 'true'); else b.removeAttribute('aria-current'); });   /* R-05: the open tab is read out */
         scope.querySelectorAll('.pane').forEach(p => p.classList.toggle('on', p.dataset.pane === tb.dataset.tab));
       }
       const row = e.target.closest('tr.click');
@@ -2388,6 +2388,7 @@
     }, true);
     if (location.hash) { const b = document.querySelector(`.tabs button[data-tab="${location.hash.slice(1)}"]`); if (b) b.click(); }
     if (window.pageInit) window.pageInit();
+    document.querySelectorAll('.tabs button[data-tab].on').forEach(b => b.setAttribute('aria-current', 'true'));   /* R-05: the tab open at load is read out too */
     updateNeeds();
     // list skeleton (10 #7): a short loading layer over list tables on first entry — purely visual, data is already there
     if (new URLSearchParams(location.search).get('skel') === '1') document.querySelectorAll('.scroll > table.tbl').forEach(tb => { const sc = tb.parentElement; if (!tb.tBodies[0] || !tb.tBodies[0].rows.length) return;

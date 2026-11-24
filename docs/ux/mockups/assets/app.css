@@ -895,3 +895,8 @@ body.scr-on #content { margin-right:380px; }
 .sb-list { margin:0; padding-left:16px; display:grid; gap:6px; font-size:13px; }
 .tabs .tabdot { display:none; width:7px; height:7px; margin:0 0 0 6px; vertical-align:1px; border-radius:50%; background:var(--ds-blue-700); }   /* own class: the tree rule .tdot:not(…) drew it 12px (R-04); blue ≥ 3:1 on white */
 .tabs button.dirty .tabdot { display:inline-block; }
+/* R-07: '바로 적용' sits right next to a control that applies without the save bar (theme · density · shortcuts · password · session logout) */
+.now-tag { display:inline-flex; align-items:center; height:20px; padding:0 6px; border:1px solid var(--ds-gray-400); border-radius:999px; font-size:12px; color:var(--fg-2); white-space:nowrap; flex:none; }
+.set-row .l .now-tag { display:inline-flex; margin-top:4px; }
+/* R-08: short controls keep their own width instead of stretching to 760 */
+.set-row > .field.short { max-width:360px; }

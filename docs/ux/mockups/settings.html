@@ -94,7 +94,7 @@
   <div class="pane set-wrap" data-pane="sys">
     <div class="flex u-mb-12"><select class="input u-w-240" id="sys-pick" data-nodirty aria-label="설정할 시스템 고르기"></select><span class="caption muted" id="sys-desc"></span><span class="grow"></span><button class="btn sm" data-toast="시스템 추가: 이름 · 코드 · DBMS · 기본 스키마를 입력하는 창이 열립니다(목업)" data-toast-type="info"><i data-ic=plus></i>시스템 추가</button></div>
     <h3 class="set-sec first">DBMS · 명명</h3>
-    <div class="set-row"><div class="l"><b>대상 DBMS</b><span>타입 매핑·이름 길이·예약어 정책</span></div><div class="field-row"><div class="field"><label for="sys-dbms">DBMS</label><select class="input" id="sys-dbms"><option>Oracle</option><option>PostgreSQL</option><option>Tibero</option><option>MySQL / MariaDB</option></select></div><div class="field"><label for="sys-ver">버전 · 기본 스키마</label><input class="input mono" id="sys-ver" value="19c · RQMS"></div></div><div class="aside"><span class="warn"><i data-ic=warn data-s=12></i><span>DBMS나 명명 템플릿을 바꾸면 컬럼 <b class="mono">74</b>개의 타입 · 이름을 다시 점검해야 합니다</span></span><button class="btn sm" data-toast="영향 미리보기: 타입·이름이 바뀌는 컬럼 74개를 업무 영역별로 보여 줍니다(목업)" data-toast-type="info">영향 미리보기</button></div></div>
+    <div class="set-row"><div class="l"><b>대상 DBMS</b><span>타입 매핑·이름 길이·예약어 정책</span></div><div class="field-row"><div class="field"><label for="sys-dbms">DBMS</label><select class="input" id="sys-dbms" disabled aria-describedby="sys-ro"><option>Oracle</option><option>PostgreSQL</option><option>Tibero</option><option>MySQL / MariaDB</option></select></div><div class="field"><label for="sys-ver">버전 · 기본 스키마</label><input class="input mono" id="sys-ver" value="19c · RQMS" readonly aria-describedby="sys-ro"></div></div><div class="aside"><span id="sys-ro">DBMS · 버전은 시스템을 등록할 때 정합니다(조회 전용)</span><span class="warn"><i data-ic=warn data-s=12></i><span>DBMS나 명명 템플릿을 바꾸면 컬럼 <b class="mono">74</b>개의 타입 · 이름을 다시 점검해야 합니다</span></span><button class="btn sm" data-toast="영향 미리보기: 타입·이름이 바뀌는 컬럼 74개를 업무 영역별로 보여 줍니다(목업)" data-toast-type="info">영향 미리보기</button></div></div>
     <div class="set-row"><div class="l"><b>명명 템플릿</b><span>표준 물리명과 분류어 접미로 이름 생성</span></div>
       <div>
         <div class="field"><label>테이블</label><input class="input mono" value="%(EntityStdName)%(ClassSuffix)"></div>
@@ -210,7 +210,7 @@
     <div class="m-body"><div id="imp-body"></div></div>
     <div class="m-foot"><button class="btn" data-close="mo-impact">취소</button><button class="btn primary" id="imp-go">확인하고 저장</button></div></div></div>
   <div class="setbar" id="setbar" role="region" aria-label="저장하지 않은 변경">
-    <span id="sb-msg" aria-live="polite"></span><span class="u-rel"><button type="button" class="btn ghost sm" id="sb-diff" aria-expanded="false" aria-controls="sb-pop">변경 보기</button><div class="menu sb-pop" id="sb-pop" role="dialog" aria-label="저장하지 않은 변경"></div></span><span class="grow"></span>
+    <span id="sb-msg" aria-live="polite"></span><span class="u-rel"><button type="button" class="btn ghost sm" id="sb-diff" aria-expanded="false" aria-controls="sb-pop">변경 보기</button><div class="menu sb-pop" id="sb-pop" role="dialog" aria-label="저장하지 않은 변경" tabindex="-1"></div></span><span class="grow"></span>
     <button class="btn" id="sb-revert" title="모든 탭의 저장하지 않은 변경을 마지막 저장값으로 되돌립니다">되돌리기</button>
     <button class="btn primary" id="sb-save">저장</button>
   </div>
@@ -261,26 +261,34 @@ window.pageInit = function () {
   $('rk-chips').addEventListener('keydown', e => { const c = e.target.closest('[data-rk]'); if (c && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); c.click(); } });
   // dirty tracking for the tabs saved together (기관·시스템·검수 기준); 사용자·역할 saves per user in its panel
   const DT = { org: '기관 설정', sys: '시스템 설정', rules: '검수 기준' };
-  // only fields with a real save path count (결재선 · 운영 목표 · 단어 약어 길이); the rest of the mock form is not stored
+  // R-03: what can be edited is what is saved — fields with their own store (결재선 · 운영 목표 · 자기 승인 · 단어 약어 길이) plus every other editable field, kept in dbm-set-extra
   const SAVED = '#fin-dict, [data-fm], #org-goal, #org-sla, #pol-wd, #self-on';   // the 자기 승인 pair counts as one field (its 허용 radio)
-  const fieldsOf = t => [...document.querySelectorAll(`.pane[data-pane="${t}"] input, .pane[data-pane="${t}"] select, .pane[data-pane="${t}"] textarea`)].filter(f => !f.hasAttribute('data-nodirty') && f.matches(SAVED));
+  const isExtra = f => !f.matches(SAVED) && f.type !== 'radio' && f.id !== 'sys-pick' && !f.readOnly && !f.disabled && !f.hasAttribute('data-nodirty');
+  const fieldsOf = t => [...document.querySelectorAll(`.pane[data-pane="${t}"] input, .pane[data-pane="${t}"] select, .pane[data-pane="${t}"] textarea`)].filter(f => !f.hasAttribute('data-nodirty') && (f.matches(SAVED) || isExtra(f)));
+  const extraKey = f => { if (f.id) return f.id; const row = f.closest('.set-row'), all = row ? [...row.querySelectorAll('input, select, textarea')] : []; return `${f.closest('.pane').dataset.pane}:${row && row.querySelector('.l b') ? row.querySelector('.l b').textContent : ''}:${all.indexOf(f)}`; };
+  const extraFields = () => Object.keys(DT).flatMap(t => fieldsOf(t).filter(isExtra));
+  { const ex = JSON.parse(dbmStore.get('dbm-set-extra', '{}')); extraFields().forEach(f => { const k = extraKey(f); if (k in ex) { if (f.type === 'checkbox') f.checked = ex[k]; else f.value = ex[k]; } }); }
   const valOf = f => (f.type === 'checkbox' || f.type === 'radio') ? f.checked : f.value;
   let base = {}, sbTimer = 0;
   const snap = () => { base = {}; Object.keys(DT).forEach(t => { base[t] = fieldsOf(t).map(valOf); }); };
   const diff = () => { const out = {}; Object.keys(DT).forEach(t => { const n = fieldsOf(t).filter((f, i) => valOf(f) !== base[t][i]).length; if (n) out[t] = n; }); return out; };
   const dirtyN = () => Object.values(diff()).reduce((a, b) => a + b, 0);
   const hhmm = () => { const d = new Date(); return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; };
+  let lastMsg = ''; const setMsg = h => { if (h !== lastMsg) { lastMsg = h; $('sb-msg').innerHTML = h; } };
+  // after save · revert the bar's buttons disappear — focus goes back to the open tab instead of the page top
+  const focusTab = () => { const a = document.activeElement; if (!a || a === document.body || a.closest('#setbar')) { const t = document.querySelector('.tabs button.on'); if (t) t.focus(); } };
   function refreshBar() {
     const d = diff(), n = Object.values(d).reduce((a, b) => a + b, 0), bar = $('setbar');
     if ($('sb-diff')) $('sb-diff').hidden = !n;   // nothing unsaved (e.g. the '저장됨' moment) → no [변경 보기]
-    document.querySelectorAll('.tabs button[data-tab]').forEach(b => { const on = !!d[b.dataset.tab]; b.classList.toggle('dirty', on); if (on) b.title = `저장하지 않은 변경 ${d[b.dataset.tab]}건`; else b.removeAttribute('title'); });
+    document.querySelectorAll('.tabs button[data-tab]').forEach(b => { const on = !!d[b.dataset.tab]; b.classList.toggle('dirty', on); const nm = b.dataset.nm || (b.dataset.nm = b.textContent.trim()); if (on) { b.title = `저장하지 않은 변경 ${d[b.dataset.tab]}건`; b.setAttribute('aria-label', `${nm} — 저장하지 않은 변경 ${d[b.dataset.tab]}건`); } else { b.removeAttribute('title'); b.removeAttribute('aria-label'); } });
+    if ($('sb-pop').classList.contains('open')) { if (n) drawDiff(); else setPop(false); }
     if (!n) { if (!sbTimer) bar.classList.remove('show'); return; }
     clearTimeout(sbTimer); sbTimer = 0;
-    $('sb-msg').innerHTML = `<span class="savest"><span class="sdot run"></span>저장하지 않은 변경 <b class="mono">${n}</b>건 · ${Object.keys(d).map(t => DT[t]).join(', ')}</span>`;
+    setMsg(`<span class="savest"><span class="sdot run"></span>저장하지 않은 변경 <b class="mono">${n}</b>건 · ${Object.keys(d).map(t => DT[t]).join(', ')}</span>`);
     $('sb-revert').style.display = ''; $('sb-save').style.display = ''; bar.classList.add('show');
   }
   function showSaved() {
-    const bar = $('setbar'); $('sb-msg').innerHTML = `<span class="savest"><span class="sdot ok"></span>저장됨 · ${hhmm()}</span>`;
+    const bar = $('setbar'); setMsg(`<span class="savest"><span class="sdot ok"></span>저장됨 · ${hhmm()}</span>`); focusTab();
     $('sb-revert').style.display = 'none'; $('sb-save').style.display = 'none'; bar.classList.add('show');
     clearTimeout(sbTimer); sbTimer = setTimeout(() => { sbTimer = 0; if (!dirtyN()) bar.classList.remove('show'); }, 2500);
   }
@@ -292,7 +300,7 @@ window.pageInit = function () {
   $('sb-revert').onclick = () => {
     Object.keys(DT).forEach(t => fieldsOf(t).forEach((f, i) => { if (f.type === 'checkbox' || f.type === 'radio') f.checked = base[t][i]; else f.value = base[t][i]; }));
     if (!document.getElementById('self-on').checked) document.getElementById('self-off').checked = true;   // the pair: 허용 off means 비허용
-    NUM.forEach(([id]) => checkNum(id)); fdT(); refreshBar(); toast('마지막 저장값으로 되돌렸습니다', 'info');
+    NUM.forEach(([id]) => checkNum(id)); fdT(); refreshBar(); focusTab(); toast('마지막 저장값으로 되돌렸습니다', 'info');
   };
   // [변경 보기] — every unsaved field: row name · field · before → after (24 guide: the bar says what changed)
   const esc2 = x => String(x).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
@@ -303,7 +311,7 @@ window.pageInit = function () {
     Object.keys(DT).forEach(t => fieldsOf(t).forEach((f, i) => { const v = valOf(f); if (v !== base[t][i]) out.push(`<li><b>${DT[t]}</b> · ${esc2(fName(f))}<span class="muted"> ${esc2(fShow(f, base[t][i]))} → </span><b>${esc2(fShow(f, v))}</b></li>`); }));
     $('sb-pop').innerHTML = out.length ? `<div class="caption muted u-mb-8">저장하지 않은 변경 ${out.length}건</div><ul class="sb-list">${out.join('')}</ul>` : '<div class="caption muted">바뀐 값이 없습니다</div>';
   }
-  const setPop = o => { $('sb-pop').classList.toggle('open', o); $('sb-diff').setAttribute('aria-expanded', o); if (o) drawDiff(); };
+  const setPop = o => { $('sb-pop').classList.toggle('open', o); $('sb-diff').setAttribute('aria-expanded', o); if (o) { drawDiff(); $('sb-pop').focus(); } };
   $('sb-diff').onclick = e => { e.stopPropagation(); setPop(!$('sb-pop').classList.contains('open')); };
   document.addEventListener('click', e => { if (!e.target.closest('#sb-pop, #sb-diff')) setPop(false); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('sb-pop').classList.contains('open')) { setPop(false); $('sb-diff').focus(); } });
@@ -335,6 +343,8 @@ window.pageInit = function () {
     const changes = []; if (goalChg) { changes.push(`운영 목표: ${[g0 !== g1 ? `준수율 ${g0}% → ${g1}%` : '', s0 !== s1 ? `결재 기한 ${s0}일 → ${s1}일` : ''].filter(Boolean).join(' · ')}`); pushAudit({ act: '설정 변경 — 운영 목표', target: '기관·시스템 설정', why: changes[changes.length - 1] }); }
     if (self0 !== self1) { changes.push(`자기 승인: ${self0 ? '허용' : '비허용'} → ${self1 ? '허용' : '비허용'}`); pushAudit({ act: '설정 변경 — 자기 승인', target: '기관·시스템 설정', why: changes[changes.length - 1] }); }
     if (lineChg) { const fmChg = Object.entries(o.finalModel).filter(([a, v]) => ((JSON.parse(before).finalModel || {})[a] !== false) !== v).map(([a, v]) => (areas[a] ? areas[a].name : a) + ' ' + (v ? '켬' : '끔')); changes.push(`결재선: 사전 최종 승인 ${o.finalDict ? '켬' : '끔'}${fmChg.length ? ` · 모델 최종 승인 ${fmChg.join(', ')}` : ''}`); pushAudit({ act: '설정 변경 — 결재선', target: '기관·시스템 설정', why: changes[changes.length - 1] }); }
+    { const ex = {}, rows = new Set(); Object.keys(DT).forEach(t => fieldsOf(t).forEach((f, i) => { if (!isExtra(f)) return; ex[extraKey(f)] = valOf(f); if (valOf(f) !== base[t][i]) rows.add(fName(f).split(' · ')[0]); }));
+      if (rows.size) { dbmStore.set('dbm-set-extra', JSON.stringify(ex)); changes.push([...rows].join(' · ')); pushAudit({ act: '설정 변경 — ' + [...rows].join(' · '), target: '기관·시스템 설정', why: '기관 · 시스템 · 검수 기준 항목' }); } }
     const p = getPolicy(); const wd = +$('pol-wd').value;
     if (wd !== (p.wordAbbr || 6)) { const nv = { ver: p.ver + 1, at: today2(), by: ME.name, wordAbbr: wd, hist: [{ ver: p.ver + 1, at: today2(), by: ME.name, what: `단어 영문약어명 ${p.wordAbbr || 6}자 → ${wd}자` }].concat(p.hist) }; savePolicy(nv); pushAudit({ act: `검수 기준 v${nv.ver}`, target: '검수 기준', why: nv.hist[0].what }); changes.push(`검수 기준 v${nv.ver}`); drawPol(); }
     toast(changes.length ? `저장했습니다 — ${changes.join(' · ')}. 다음 신청부터 적용되고 감사 로그에 남았습니다` : names.length ? `저장했습니다 — ${names.join(', ')}` : '바뀐 설정이 없습니다', changes.length || names.length ? 'success' : 'info');
