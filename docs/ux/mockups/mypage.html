@@ -22,12 +22,12 @@
     <h1 id="nm">마이페이지</h1><span class="role-tag" id="rb"></span>
   </div>
   <div class="tabs" style="margin:0;padding:0 20px;background:var(--surface)">
-    <button class="on" data-tab="profile">프로필<span class="sdot run tdot" aria-hidden="true"></span></button>
+    <button class="on" data-tab="profile">프로필<span class="tabdot" aria-hidden="true"></span></button>
     <button data-tab="mine">내 신청</button>
     <button data-tab="work">내 작업</button>
-    <button data-tab="notify">알림 설정<span class="sdot run tdot" aria-hidden="true"></span></button>
+    <button data-tab="notify">알림 설정<span class="tabdot" aria-hidden="true"></span></button>
     <button data-tab="security">보안</button>
-    <button data-tab="env">환경<span class="sdot run tdot" aria-hidden="true"></span></button>
+    <button data-tab="env">환경<span class="tabdot" aria-hidden="true"></span></button>
   </div>
   <div class="scroll"><div class="pad">
     <div class="pane on set-wrap" data-pane="profile">
@@ -35,8 +35,8 @@
       <div class="set-row"><div class="l"><b>기본 정보</b><span>조회 전용</span></div>
         <div class="field-row"><div class="field"><label for="p-company">회사명</label><input class="input" id="p-company" readonly></div><div class="field"><label for="p-org">부서명</label><input class="input" id="p-org" readonly></div><div class="field"><label for="p-name">이름</label><input class="input" id="p-name" readonly></div><div class="field"><label for="p-id">ID</label><input class="input mono" id="p-id" readonly></div></div><div class="aside"><span>회사 · 부서 · 이름은 관리자가 바꿉니다 — 틀렸으면 Admin에게 알려 주세요</span></div></div>
       <div class="set-row"><div class="l"><b>연락처</b></div>
-        <div><div class="field-row"><div class="field"><label for="p-phone">전화번호</label><input class="input mono" id="p-phone" inputmode="tel" placeholder="010-1234-5678"></div><div class="field"><label for="p-mail">이메일</label><input class="input mono" id="p-mail" type="email"></div></div><div class="caption u-danger" id="p-cerr" role="alert"></div></div><div class="aside"><span>결재 알림 메일이 이 주소로 갑니다</span><span>바꾸면 감사 로그에 남습니다</span></div></div>
-      <div class="set-row"><div class="l"><b>표시 이름</b></div><div class="field"><label for="p-disp">표시 이름</label><input class="input" id="p-disp"></div><div class="aside"><span>결재 문서 · 공동 편집 커서에 보이는 이름입니다</span></div></div>
+        <div><div class="field-row"><div class="field"><label for="p-phone">전화번호</label><input class="input mono" id="p-phone" inputmode="tel" placeholder="010-1234-5678"><div class="caption u-danger" id="p-phone-e"></div></div><div class="field"><label for="p-mail">이메일</label><input class="input mono" id="p-mail" type="email"><div class="caption u-danger" id="p-mail-e"></div></div></div></div><div class="aside"><span>결재 알림 메일이 이 주소로 갑니다</span><span>바꾸면 감사 로그에 남습니다</span></div></div>
+      <div class="set-row"><div class="l"><b>표시 이름</b></div><div class="field"><label for="p-disp">표시 이름</label><input class="input" id="p-disp"><div class="caption u-danger" id="p-disp-e"></div></div><div class="aside"><span>결재 문서 · 공동 편집 커서에 보이는 이름입니다</span></div></div>
       <h3 class="set-sec">역할</h3>
       <div class="set-row"><div class="l"><b>내 역할 · 담당 시스템</b><span>조회 전용</span></div>
         <div><div class="u-mb-8" id="p-roles"></div><div class="caption" id="p-sys"></div><div class="caption u-mt-8" id="rr-state"></div></div>
@@ -88,7 +88,7 @@
   <!-- 24 guide P3: one save bar for 프로필 · 알림 설정 · 환경 (theme · density · shortcuts · password apply at once) -->
   <div class="setbar" id="setbar" role="region" aria-label="저장하지 않은 변경">
     <span id="sb-msg" aria-live="polite"></span><span class="u-rel"><button type="button" class="btn ghost sm" id="sb-diff" aria-expanded="false" aria-controls="sb-pop">변경 보기</button><div class="menu sb-pop" id="sb-pop" role="dialog" aria-label="저장하지 않은 변경"></div></span><span class="grow"></span>
-    <button class="btn" id="sb-revert" title="화면 값을 마지막 저장값으로 되돌립니다">되돌리기</button>
+    <button class="btn" id="sb-revert" title="모든 탭의 저장하지 않은 변경을 마지막 저장값으로 되돌립니다">되돌리기</button>
     <button class="btn primary" id="sb-save">저장</button>
   </div>
 
@@ -146,12 +146,17 @@ window.pageInit = function () {
   { const off = NOTIFY_KINDS.filter(([k]) => pref[k] && pref[k].app === false).map(x => x[1].split(' (')[0]); $('nt-state').textContent = off.length ? `앱 알림 끔: ${off.join(', ')}` : ''; }
   // 표시 이름
   const dn = dbmStore.get('dbm-disp-' + ME.id, ''); if (dn) $('p-disp').value = dn;
+  // R-01: every profile field is checked before anything is saved; each error sits under its own field (aria-invalid + describedby)
+  const PROF_CHECK = [
+    ['p-disp', v => v ? '' : '표시 이름을 입력하세요'],
+    ['p-phone', v => /^(02-\d{3,4}|0\d{2}-\d{3,4})-\d{4}$/.test(v) ? '' : '전화번호 형식이 맞지 않습니다 (예: 010-1234-5678, 02-123-4567)'],
+    ['p-mail', v => !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) ? '이메일 형식이 맞지 않습니다' : Object.values(USERS).some(x => x.id !== ME.id && (x.mail || '').toLowerCase() === v.toLowerCase()) ? '다른 사용자가 쓰는 이메일입니다' : '']];
+  const markField = (id, m) => { $(id + '-e').textContent = m; if (m) { $(id).setAttribute('aria-invalid', 'true'); $(id).setAttribute('aria-describedby', id + '-e'); } else { $(id).removeAttribute('aria-invalid'); $(id).removeAttribute('aria-describedby'); } };
+  const checkProfile = () => PROF_CHECK.map(([id, f]) => { const m = f($(id).value.trim()); markField(id, m); return m ? id : null; }).filter(Boolean);
+  PROF_CHECK.forEach(([id]) => $(id).addEventListener('input', () => { if ($(id).getAttribute('aria-invalid')) checkProfile(); }));   // a shown error clears as soon as it is fixed
   const saveProfile = () => {
-    const v = $('p-disp').value.trim(); if (!v) { toast('표시 이름을 입력하세요', 'danger'); $('p-disp').focus(); return false; }
-    const ph = $('p-phone').value.trim(), ml = $('p-mail').value.trim().toLowerCase(); $('p-cerr').textContent = '';
-    if (!/^(02-\d{3,4}|0\d{2}-\d{3,4})-\d{4}$/.test(ph)) { $('p-cerr').textContent = '전화번호 형식이 맞지 않습니다 (예: 010-1234-5678, 02-123-4567)'; $('p-phone').setAttribute('aria-describedby', 'p-cerr'); $('p-phone').focus(); return false; }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(ml)) { $('p-cerr').textContent = '이메일 형식이 맞지 않습니다'; $('p-mail').focus(); return false; }
-    if (Object.values(USERS).some(x => x.id !== ME.id && (x.mail || '').toLowerCase() === ml.toLowerCase())) { $('p-cerr').textContent = '다른 사용자가 쓰는 이메일입니다'; $('p-mail').focus(); return false; }
+    const v = $('p-disp').value.trim(), ph = $('p-phone').value.trim(), ml = $('p-mail').value.trim().toLowerCase();
+    $('p-disp').value = v; $('p-phone').value = ph; $('p-mail').value = ml;   // R-06: the screen shows exactly what was stored
     dbmStore.set('dbm-disp-' + ME.id, v);
     const U2 = USERS[ME.id]; if (U2 && (U2.phone !== ph || U2.mail !== ml)) { U2.phone = ph; U2.mail = ml; saveUsers(); pushAudit({ act: '내 연락처 수정', target: `${U2.name} (${U2.id})` }); }
     return `표시 이름 ‘${v}’ · 연락처`; };
@@ -168,7 +173,7 @@ window.pageInit = function () {
   const t = dbmStore.get('dbm-theme', 'light');
   { const syncD = () => { const v = document.documentElement.dataset.density || 'default'; document.querySelectorAll('#env-density button').forEach(b => { b.classList.toggle('on', b.dataset.v === v); b.setAttribute('aria-pressed', b.dataset.v === v); }); };
     document.querySelectorAll('#env-density button').forEach(b => { b.onclick = () => { setDensity(b.dataset.v); syncD(); toast(`표 밀도를 ‘${DENSITY[b.dataset.v]}’ 높이로 바꿨습니다 — 목록 · 표(모델 표 보기 · 속성 그리드 포함)에 바로 적용됩니다`, 'info'); }; }); syncD(); }
-  document.querySelectorAll('#env-theme button').forEach(b => { b.classList.toggle('on', b.dataset.v === t); b.setAttribute('aria-pressed', b.dataset.v === t); b.onclick = () => { dbmStore.set('dbm-theme', b.dataset.v); location.reload(); }; });
+  document.querySelectorAll('#env-theme button').forEach(b => { b.classList.toggle('on', b.dataset.v === t); b.setAttribute('aria-pressed', b.dataset.v === t); b.onclick = () => { dbmStore.set('dbm-theme', b.dataset.v); applyTheme(b.dataset.v); document.querySelectorAll('#env-theme button').forEach(x => { x.classList.toggle('on', x === b); x.setAttribute('aria-pressed', x === b); }); toast(`테마를 ‘${b.textContent}’로 바꿨습니다`, 'info'); }; });   /* R-02: no reload — unsaved fields stay */
   // 시작 화면: saved and read by login.html after sign-in (theme · density · shortcuts apply at once)
   $('env-start').value = dbmStore.get('dbm-start', '') || '홈';
   const saveEnv = () => { dbmStore.set('dbm-start', $('env-start').value); return `로그인 후 첫 화면 ‘${$('env-start').value}’`; };
@@ -198,7 +203,7 @@ window.pageInit = function () {
     $('sb-revert').style.display = 'none'; $('sb-save').style.display = 'none'; $('sb-diff').hidden = true; bar.classList.add('show');
     clearTimeout(sbTimer); sbTimer = setTimeout(() => { sbTimer = 0; if (!dirtyN()) bar.classList.remove('show'); }, 2500);
   }
-  $('sb-revert').onclick = () => { Object.keys(DT).forEach(t => fieldsOf(t).forEach((f, i) => { if (f.type === 'checkbox') f.checked = base[t][i]; else f.value = base[t][i]; })); $('p-cerr').textContent = ''; refreshBar(); toast('마지막 저장값으로 되돌렸습니다', 'info'); };
+  $('sb-revert').onclick = () => { Object.keys(DT).forEach(t => fieldsOf(t).forEach((f, i) => { if (f.type === 'checkbox') f.checked = base[t][i]; else f.value = base[t][i]; })); PROF_CHECK.forEach(([id]) => markField(id, '')); refreshBar(); toast('마지막 저장값으로 되돌렸습니다', 'info'); };
   // [변경 보기] — row · field · before → after
   const esc2 = x => String(x).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
   const fName = f => { const lab = (f.getAttribute('aria-label') || (f.labels && f.labels[0] ? f.labels[0].textContent : '')).replace(/\s+/g, ' ').trim(); const row = f.closest('.set-row'), rn = row && row.querySelector('.l b') ? row.querySelector('.l b').textContent : ''; return [rn, lab && lab !== rn ? lab : ''].filter(Boolean).join(' · ') || f.id; };
@@ -212,16 +217,15 @@ window.pageInit = function () {
   $('sb-diff').onclick = e => { e.stopPropagation(); setPop(!$('sb-pop').classList.contains('open')); };
   document.addEventListener('click', e => { if (!e.target.closest('#sb-pop, #sb-diff')) setPop(false); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('sb-pop').classList.contains('open')) { setPop(false); $('sb-diff').focus(); } });
-  // save only the changed tabs; a tab that fails its check stays unsaved and is opened so the error is visible
+  // R-01 (same rule as 설정): check every changed tab first → any error holds the whole save, opens the first error's tab and focuses that field → else save all
   $('sb-save').onclick = () => {
-    const done = [], savedT = [];
-    const rebase = () => savedT.forEach(t => { base[t] = fieldsOf(t).map(valOf); });   // only the tabs that were really saved
-    for (const t of Object.keys(diff())) {
-      const r = SAVER[t]();
-      if (r === false) { const b = document.querySelector(`.tabs button[data-tab="${t}"]`); if (b && !b.classList.contains('on')) b.click(); if (done.length) toast(`${done.join(' · ')}만 저장했습니다 — ${DT[t]}의 오류를 고친 뒤 다시 저장하세요`, 'danger'); rebase(); refreshBar(); return; }
-      done.push(r); savedT.push(t);
+    const d = diff(), bad = d.profile ? checkProfile() : [];
+    if (bad.length) {
+      const b = document.querySelector('.tabs button[data-tab="profile"]'); if (b && !b.classList.contains('on')) b.click();
+      $(bad[0]).focus(); toast(`저장하지 않았습니다 — 프로필의 오류 ${bad.length}건을 고쳐 주세요`, 'danger'); return;
     }
-    rebase(); refreshBar();
+    const done = Object.keys(d).map(t => SAVER[t]());
+    snap(); refreshBar();
     if (done.length) { toast(`저장했습니다 — ${done.join(' · ')}`, 'success'); showSaved(); }
   };
   $('content').addEventListener('input', refreshBar); $('content').addEventListener('change', refreshBar);

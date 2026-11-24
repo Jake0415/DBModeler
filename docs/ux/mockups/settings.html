@@ -44,11 +44,11 @@
     <h1>설정</h1>
   </div>
   <div class="tabs" style="margin:0;padding:0 20px;background:var(--surface)">
-    <button class="on" data-tab="org">기관<span class="sdot run tdot" aria-hidden="true"></span></button>
-    <button data-tab="sys">시스템<span class="sdot run tdot" aria-hidden="true"></span></button>
+    <button class="on" data-tab="org">기관<span class="tabdot" aria-hidden="true"></span></button>
+    <button data-tab="sys">시스템<span class="tabdot" aria-hidden="true"></span></button>
     <button data-tab="users">사용자 · 역할</button>
     <button data-tab="perms">권한표</button>
-    <button data-tab="rules">검수 기준<span class="sdot run tdot" aria-hidden="true"></span></button>
+    <button data-tab="rules">검수 기준<span class="tabdot" aria-hidden="true"></span></button>
   </div>
   <div class="scroll"><div class="pad">
 
@@ -211,7 +211,7 @@
     <div class="m-foot"><button class="btn" data-close="mo-impact">취소</button><button class="btn primary" id="imp-go">확인하고 저장</button></div></div></div>
   <div class="setbar" id="setbar" role="region" aria-label="저장하지 않은 변경">
     <span id="sb-msg" aria-live="polite"></span><span class="u-rel"><button type="button" class="btn ghost sm" id="sb-diff" aria-expanded="false" aria-controls="sb-pop">변경 보기</button><div class="menu sb-pop" id="sb-pop" role="dialog" aria-label="저장하지 않은 변경"></div></span><span class="grow"></span>
-    <button class="btn" id="sb-revert" title="화면 값을 마지막 저장값으로 되돌립니다">되돌리기</button>
+    <button class="btn" id="sb-revert" title="모든 탭의 저장하지 않은 변경을 마지막 저장값으로 되돌립니다">되돌리기</button>
     <button class="btn primary" id="sb-save">저장</button>
   </div>
 </div>
@@ -315,13 +315,14 @@ window.pageInit = function () {
   $('imp-go').onclick = () => { $('mo-impact').classList.remove('open'); impactOk = true; saveAll(); impactOk = false; };
   function saveAll() {
     if (liveRoleChanged()) { staleRoleToast(); return; }
+    // R-01: check every value first — an error holds the whole save before any impact dialog
+    const bad = NUM.filter(([id]) => checkNum(id));
+    if (bad.length) { const [id, , , , tab] = bad[0]; const b = document.querySelector(`.tabs button[data-tab="${tab}"]`); if (b && !b.classList.contains('on')) b.click(); $(id).focus(); toast(`저장하지 않았습니다 — 허용 범위를 벗어난 값 ${bad.length}건을 고쳐 주세요`, 'danger'); return; }
     const pw = $('pol-wd'), p0 = getPolicy();
     if (!impactOk && pw && +pw.value !== (p0.wordAbbr || 6) && !checkNum('pol-wd')) {
       $('imp-body').innerHTML = `<p class="u-mt-0"><b>검수 기준</b> · 단어 영문약어명 최대 길이 ${p0.wordAbbr || 6}자 → <b>${pw.value}자</b></p><ul class="caption u-mt-8" style="padding-left:16px;margin:0"><li>정책 버전이 v${p0.ver} → <b>v${p0.ver + 1}</b>로 올라가고 <b>다음 신청부터</b> 적용됩니다</li><li>이전 기준으로 검사한 엑셀 묶음은 업로드 이력에 <b>‘재검증 필요’</b>로 표시됩니다</li><li>진행 중인 신청은 승인할 때 새 기준으로 다시 검사합니다</li></ul>`;
       $('mo-impact').classList.add('open'); $('imp-go').focus(); return;
     }
-    const bad = NUM.filter(([id]) => checkNum(id));
-    if (bad.length) { const [id, , , , tab] = bad[0]; const b = document.querySelector(`.tabs button[data-tab="${tab}"]`); if (b && !b.classList.contains('on')) b.click(); $(id).focus(); toast(`저장하지 않았습니다 — 허용 범위를 벗어난 값 ${bad.length}건을 고쳐 주세요`, 'danger'); return; }
     const names = Object.keys(diff()).map(t => DT[t]);
     const o = getOrg(); const before = JSON.stringify(o); o.finalDict = $('fin-dict').checked; document.querySelectorAll('[data-fm]').forEach(c => { o.finalModel[c.dataset.fm] = c.checked; });
     const g0 = o.goal || 90, s0 = o.sla || 3, g1 = +$('org-goal').value, s1 = +$('org-sla').value;   // already validated above — never auto-corrected

@@ -893,5 +893,5 @@ body.scr-on #content { margin-right:380px; }
 .menu.sb-pop { position:absolute; bottom:40px; left:0; width:440px; max-height:320px; overflow:auto; padding:12px; background:var(--surface); border-radius:var(--r-xl); box-shadow:var(--menu-shadow); display:none; z-index:40; }
 .menu.sb-pop.open { display:block; }
 .sb-list { margin:0; padding-left:16px; display:grid; gap:6px; font-size:13px; }
-.tabs .tdot { display:none; width:6px; height:6px; margin:0 0 0 6px; vertical-align:2px; }
-.tabs button.dirty .tdot { display:inline-block; }
+.tabs .tabdot { display:none; width:7px; height:7px; margin:0 0 0 6px; vertical-align:1px; border-radius:50%; background:var(--ds-blue-700); }   /* own class: the tree rule .tdot:not(…) drew it 12px (R-04); blue ≥ 3:1 on white */
+.tabs button.dirty .tabdot { display:inline-block; }

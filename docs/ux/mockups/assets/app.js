@@ -17,7 +17,7 @@
   if (!store.get('dbm-frame-v2', '')) { store.set('dbm-frame', 'fit'); store.set('dbm-frame-v2', '1'); }   // one-time move to the product default
   const frame = qs.get('w') || store.get('dbm-frame', 'fit');
   const themePref = qs.get('theme') || store.get('dbm-theme', 'light');
-  const applyTheme = t => root.setAttribute('data-theme', t === 'system' ? (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : t);
+  const applyTheme = t => root.setAttribute('data-theme', t === 'system' ? (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : t); window.applyTheme = applyTheme;   /* mypage applies the theme without a reload (R-02) */
   if (frame === '1600') root.classList.add('frame-1600');
   if (frame === 'fit') root.classList.add('frame-fit');
   applyTheme(themePref);
