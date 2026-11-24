@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>표준 사전 통합 검색 · NeoDB 목업</title>
+<title>통합 검색 · 표준 사전 · NeoDB 목업</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&display=swap">
 <link rel="stylesheet" href="assets/app.css">
@@ -50,11 +50,11 @@
           <button class="mi" role="menuitem" data-dl="filter"><b>편집용 엑셀 — 현재 검색 결과</b><div class="caption muted" id="dl-n"></div></button>
           <button class="mi" role="menuitem" data-dl="all"><b>편집용 엑셀 — 기관 사전 전체</b><div class="caption muted">종류별 시트 · 숨김 열(항목 ID·버전·기준본) · 계산 칸 잠금</div></button>
           <button class="mi" role="menuitem" data-dl="blank"><b>빈 양식</b><div class="caption muted">새 항목 등록·초기 적재용 · 안내·목록 시트</div></button>
-          <div class="caption muted" style="padding:6px 10px">공통 항목은 ‘참고’ 시트(읽기 전용)로만 들어갑니다. 신청 중 항목은 승인된 값 + ‘진행 중 신청’ 표시.</div>
+          <div class="caption muted" style="padding:6px 10px">공통 항목은 ‘참고’ 시트(조회 전용)로만 들어갑니다. 신청 중 항목은 승인된 값 + ‘진행 중 신청’ 표시.</div>
         </div></span>
       <span class="u-rel"><button class="btn u-w-32 u-p-0 u-jc-c" data-menu-btn aria-haspopup="true" aria-expanded="false" aria-label="더 보기"><i data-ic=more></i></button>
         <div class="menu u-w-200" data-auto role="menu"><a class="mi" role="menuitem" href="excel-import.html"><i data-ic=upload></i>엑셀 가져오기</a><a class="mi" role="menuitem" href="dict-history.html"><i data-ic=history></i>변경 내역</a><a class="mi" role="menuitem" href="uploads.html"><i data-ic=upload></i>업로드 이력</a></div></span>
-      <button class="btn primary" data-open="pn-request" data-close-others="pn-detail" id="b-req"><i data-ic=basket></i>바구니 · 품의<span class="fcount" id="bk-n" hidden></span></button>
+      <button class="btn primary" data-open="pn-request" data-close-others="pn-detail" id="b-req"><i data-ic=basket></i>바구니 · 신청<span class="fcount" id="bk-n" hidden></span></button>
     </div>
   </div>
 
@@ -73,7 +73,7 @@
           <div class="menu fpop" id="f-pop" role="dialog" aria-label="상세 필터">
             <div class="frow"><span class="fl">출처</span><span class="fv"><button class="chip on" data-src="공통">공통</button><button class="chip on" data-src="기관">기관</button></span></div>
             <div class="frow"><span class="fl">상태</span><span class="fv"><button class="chip" data-st="신청 중">신청 중</button><button class="chip" data-st="내 신청 중">내 신청 중</button><button class="chip" data-st="보완 필요">보완 필요</button><button class="chip" data-st="미사용">미사용</button></span></div>
-            <div class="frow"><label class="fl" for="dg">도메인그룹</label><select class="input" id="dg"><option value="">전체</option></select></div>
+            <div class="frow"><label class="fl" for="dg">도메인 그룹</label><select class="input" id="dg"><option value="">전체</option></select></div>
             <div class="frow"><label class="fl" for="fscope">적용 범위</label><select class="input" id="fscope"><option value="">전체</option></select></div>
             <div class="frow"><label class="fl" for="since">변경일</label><select class="input" id="since"><option value="">전체</option><option value="7">최근 7일</option><option value="30">최근 30일</option></select></div>
             <div class="frow"><label class="fl" for="flen">길이</label><select class="input" id="flen"><option value="">전체</option><option value="0-10">10 이하</option><option value="11-100">11~100</option><option value="101-99999">101 이상</option></select></div>
@@ -102,7 +102,7 @@
     <!-- PN-12 request -->
     <aside class="rpanel wide" id="pn-request">
       <div class="rp-head">
-        <div class="t"><h2>바구니 · 품의 올리기</h2><button class="iconbtn close u-w-28 u-h-28" data-close="pn-request" aria-label="바구니 닫기 — 담은 항목은 그대로" title="바구니 닫기 — 담은 항목은 그대로"><i data-ic=x></i></button></div>
+        <div class="t"><h2>바구니 · 신청하기</h2><button class="iconbtn close u-w-28 u-h-28" data-close="pn-request" aria-label="바구니 닫기 — 담은 항목은 그대로" title="바구니 닫기 — 담은 항목은 그대로"><i data-ic=x></i></button></div>
         <div class="u-mt-4 u-flex u-gap-8 u-ai-c"><span class="caption muted" id="bk-saved"></span><span class="grow"></span>
           <button class="btn ghost sm" id="dr-save">초안으로 보관</button>
           <span class="u-rel"><button class="btn ghost sm" id="dr-open" aria-haspopup="true" aria-expanded="false">초안 <span class="num" id="dr-n"></span></button><div class="menu" id="dr-menu" role="menu"></div></span></div>
@@ -133,7 +133,7 @@
         </div>
         <div class="rq-form" data-rq="domain" hidden>
           <div class="field-row">
-            <div class="field"><label for="dm-grp">도메인그룹 *</label><select class="input" id="dm-grp"></select></div>
+            <div class="field"><label for="dm-grp">도메인 그룹 *</label><select class="input" id="dm-grp"></select></div>
             <div class="field"><label for="dm-fw">도메인분류 * <span class="faint">도메인 이름의 앞부분 · 연결 형식단어</span></label><select class="input" id="dm-fw"></select><span class="help">분류가 없으면 <a href="domain-groups.html">도메인 그룹 · 분류</a>에서 신청</span></div>
           </div>
           <div class="field-row">
@@ -156,7 +156,7 @@
         <div class="rq-form" data-rq="word" hidden>
           <div class="field-row"><div class="field"><label for="wd-name">단어명 *</label><input class="input" id="wd-name" value=""></div><div class="field"><label for="wd-abbr">영문약어명 * <span class="faint" id="wd-lim">6자 이내</span></label><input class="input mono" id="wd-abbr" value=""></div></div>
           <div class="field-row"><div class="field"><label for="wd-eng">영문명</label><input class="input" id="wd-eng" value=""></div><div class="field"><label for="wd-fmt">형식단어</label><select class="input" id="wd-fmt"><option value="N">아니오</option><option value="Y">예 — 용어의 끝에 오는 분류어</option></select></div></div>
-          <div class="caption muted" id="wd-cls-f" hidden>형식단어를 도메인분류에 잇는 일은 <a href="domain-groups.html">도메인 그룹 · 분류</a>에서 분류의 ‘연결 형식단어’로 합니다(같은 품의에 함께 담으면 순서대로 반영) <select class="u-op-50" id="wd-cls" hidden aria-hidden="true"></select></div>
+          <div class="caption muted" id="wd-cls-f" hidden>형식단어를 도메인분류에 잇는 일은 <a href="domain-groups.html">도메인 그룹 · 분류</a>에서 분류의 ‘연결 형식단어’로 합니다(같은 신청에 함께 담으면 순서대로 반영) <select class="u-op-50" id="wd-cls" hidden aria-hidden="true"></select></div>
           <div class="field-row"><div class="field"><label for="wd-syn">이음동의어 <span class="faint">쉼표로 구분 · 검색하면 이 단어로 안내</span></label><input class="input" id="wd-syn" value=""></div><div class="field"><label for="wd-forbid">금칙어 <span class="faint">쓰면 안 되는 표기</span></label><input class="input" id="wd-forbid" value=""></div></div>
           <div class="field"><label for="wd-desc">설명</label><input class="input" id="wd-desc" value=""></div>
           <div class="caption u-danger u-mb-8" id="wd-err"></div>
@@ -179,7 +179,7 @@
         <div class="section-t">바구니 <span class="badge" id="q-n">0</span> <span class="caption muted">자동 저장 · 신청하면 이 목록 그대로 결재 문서가 됩니다 · 단어 → 도메인 → 용어 순으로 정렬</span></div>
         <table class="tbl qtbl"><thead><tr><th>항목</th><th class="qst">상태</th><th class="qact"><span class="sr-only">작업</span></th></tr></thead><tbody id="q-body"></tbody></table>
         <div class="banner warning u-mt-8" id="rq-warn" hidden><i data-ic=warn></i><div class="grow" id="rq-warn-t"></div></div>
-        <div class="field u-mt-12"><label for="rq-why">품의 사유 * <span class="faint">1~1,000자</span></label><textarea class="input" id="rq-why" rows="2" placeholder="예: 요구사항관리 산출물 제출 관리 기능 추가"></textarea></div>
+        <div class="field u-mt-12"><label for="rq-why">신청 사유 * <span class="faint">1~1,000자</span></label><textarea class="input" id="rq-why" rows="2" placeholder="예: 요구사항관리 산출물 제출 관리 기능 추가"></textarea></div>
         <div class="section-t">결재선</div>
         <div class="approval-line">
           <div class="al-step"><span class="pt"></span><div><b>DA 승인</b> <span class="caption faint">필수 · 템플릿</span><div class="caption muted" id="da-cnt"></div></div></div>
@@ -189,7 +189,7 @@
       <div class="rp-foot">
         <span class="grow"></span>
         <button class="btn" data-close="pn-request">취소</button>
-        <button class="btn primary" id="rq-go" data-needs="rq-why" data-needs-msg="품의 사유·중복 사유를 입력해야 올릴 수 있습니다">품의 올리기</button>
+        <button class="btn primary" id="rq-go" data-needs="rq-why" data-needs-msg="신청 사유·중복 사유를 입력해야 올릴 수 있습니다">신청하기</button>
       </div>
     </aside>
   </div>
@@ -373,10 +373,10 @@ window.pageInit = function () {
     p.innerHTML = `<div class="rp-head"><div class="t"><span class="badge ${common ? 'b-common' : 'b-org'}">${it.src}</span><span class="badge">${it.kn}</span><span class="badge ${it.st === '사용' ? 'b-success' : it.st === '신청 중' ? 'b-info' : ''}">${it.st}</span><button class="iconbtn close u-w-28 u-h-28" data-close="pn-detail" aria-label="상세 닫기 — 항목은 그대로" title="상세 닫기 — 항목은 그대로"><i data-ic=x></i></button></div>
         <h2 class="u-mt-8">${it.name}</h2><div class="rp-sub">${[it.abbr, it.eng].filter(x => x && x !== '—').join(' · ')} · <span class="mono">${it.id}</span></div></div>
       <div class="rp-body">
-        ${common ? '<div class="banner u-mb-12"><i data-ic=info></i><div><b>공통 표준</b> — 읽기 전용입니다. 기관에서 바꿀 수 없습니다.</div></div>' : ''}
+        ${common ? '<div class="banner u-mb-12"><i data-ic=info></i><div><b>공통 표준</b> — 조회 전용입니다. 기관에서 바꿀 수 없습니다.</div></div>' : ''}
         <dl class="kv"><dt>영문약어명</dt><dd class="mono">${it.abbr}</dd><dt>도메인 / 형식</dt><dd class="mono">${it.dom}</dd>${it.allow ? `<dt>허용 값</dt><dd class="mono">${it.allow}</dd>` : ''}<dt>이음동의어</dt><dd>${it.syn.join(', ') || '—'}</dd><dt>금칙어</dt><dd>${it.forbid.join(', ') || '—'}</dd>${it.old.length ? `<dt>과거 이름</dt><dd>${it.old.join(', ')}</dd>` : ''}<dt>설명</dt><dd>${it.desc || it.eng || '—'}</dd>
           <dt>항목 버전</dt><dd class="mono">${it.ver ? 'V' + it.ver : '— (미승인)'}</dd><dt>제정차수</dt><dd class="mono">${it.cha ? String(it.cha) + (/차/.test(String(it.cha)) ? '' : '차') + (common ? ' (공통 원문)' : '') : '—'}</dd><dt>변경일</dt><dd class="mono">${it.dt}</dd></dl>
-        ${it.k === 'code' && it.ctype === '행정표준' ? `<div class="banner${it.partial ? ' warning' : ''} u-mb-8"><i data-ic=${it.partial ? 'warn' : 'info'}></i><div class="grow"><b>행정표준코드</b> · 소관기관 ${it.org || '—'} · 제정 ${it.cha || '—'}${it.partial ? '<div class="caption">원문 일부 — 공통표준 원문(허용값)이 코드값을 일부만 싣습니다. 소관기관 원본으로 보완하려면 공통표준 · 행정표준코드 화면에서 새 판 품의로 올립니다.</div>' : ''}<div class="caption muted">연결 용어 ${(it.terms || []).map(t => `<a href="dictionary.html?q=${encodeURIComponent(t.name)}">${t.name}</a>`).join(', ') || '—'}</div></div><a class="btn sm" href="std-common.html?code=${it.id}">원문 보기</a></div>` : ''}${it.k === 'code' ? `<div class="section-t">코드값 <span class="badge">${(it.vals || []).length}</span>${it.partial ? ' <span class="badge b-warning">원문 일부</span>' : ''} <span class="caption muted">${it.scope || '공통'}${it.sys ? ' · ' + it.sys : ''} · ${it.ctype || '자체'} 코드</span></div><table class="tbl box u-mb-12"><thead><tr><th>값</th><th>이름</th><th class="num">순서</th><th>상태</th></tr></thead><tbody>${(it.vals || []).map(v => `<tr><td class="mono">${v.v}</td><td>${v.nm}</td><td class="num">${v.ord || ''}</td><td>${v.st === '미사용' ? '<span class="badge">미사용</span>' : '<span class="badge b-success">사용</span>'}</td></tr>`).join('') || '<tr class="er"><td colspan="4" class="caption muted">코드값이 없습니다</td></tr>'}</tbody></table>` : ''}
+        ${it.k === 'code' && it.ctype === '행정표준' ? `<div class="banner${it.partial ? ' warning' : ''} u-mb-8"><i data-ic=${it.partial ? 'warn' : 'info'}></i><div class="grow"><b>행정표준코드</b> · 소관기관 ${it.org || '—'} · 제정 ${it.cha || '—'}${it.partial ? '<div class="caption">원문 일부 — 공통표준 원문(허용값)이 코드값을 일부만 싣습니다. 소관기관 원본으로 보완하려면 공통표준 · 행정표준코드 화면에서 새 판 신청으로 올립니다.</div>' : ''}<div class="caption muted">연결 용어 ${(it.terms || []).map(t => `<a href="dictionary.html?q=${encodeURIComponent(t.name)}">${t.name}</a>`).join(', ') || '—'}</div></div><a class="btn sm" href="std-common.html?code=${it.id}">원문 보기</a></div>` : ''}${it.k === 'code' ? `<div class="section-t">코드값 <span class="badge">${(it.vals || []).length}</span>${it.partial ? ' <span class="badge b-warning">원문 일부</span>' : ''} <span class="caption muted">${it.scope || '공통'}${it.sys ? ' · ' + it.sys : ''} · ${it.ctype || '자체'} 코드</span></div><table class="tbl box u-mb-12"><thead><tr><th>값</th><th>이름</th><th class="num">순서</th><th>상태</th></tr></thead><tbody>${(it.vals || []).map(v => `<tr><td class="mono">${v.v}</td><td>${v.nm}</td><td class="num">${v.ord || ''}</td><td>${v.st === '미사용' ? '<span class="badge">미사용</span>' : '<span class="badge b-success">사용</span>'}</td></tr>`).join('') || '<tr class="er"><td colspan="4" class="caption muted">코드값이 없습니다</td></tr>'}</tbody></table>` : ''}
         <div class="tabs"><button class="on" data-tab="hist">이력 <span class="n">${it.hist.length}</span></button><button data-tab="rel">연관 <span class="n">${REL.length}</span></button><button data-tab="use">사용처 <span class="n">${it.use}</span></button><button data-tab="req">진행 중 신청 <span class="n">${it.pending ? 1 : 0}</span></button></div>
         <div class="pane on" data-pane="hist">${hist}</div>
         <div class="pane" data-pane="rel">${relHtml(it, REL)}</div>
@@ -385,7 +385,7 @@ window.pageInit = function () {
       </div>
       <div class="rp-foot">${!can('dict.request') && it.st !== '삭제 보관' ? '<span class="caption muted">조회 전용 — 사전 품의(변경 · 미사용 · 삭제 · 복사해서 신규)는 모델러 · DA만 올릴 수 있습니다</span>'   // review: the footer actions used to stay live for read-only roles
         : common ? `<span class="caption muted">공통 표준은 신청할 수 없습니다</span><span class="grow"></span><button class="btn sm" id="copy-new" title="이 항목 값으로 새 기관 항목 신청을 시작합니다"><i data-ic=copy data-s=12></i>복사해서 신규</button>`
-        : it.st === '삭제 보관' ? (can('dict.purge') ? `<span class="caption muted">V0 삭제 보관 — 복원 없음</span><span class="grow"></span><button class="btn sm danger" id="purge">영구 삭제</button>` : '<span class="caption muted">V0 삭제 보관 — 영구 삭제는 DA·Admin</span>')
+        : it.st === '삭제 보관' ? (can('dict.purge') ? `<span class="caption muted">V0 삭제 보관 — 복원 없음</span><span class="grow"></span><button class="btn sm danger" id="purge">영구 삭제</button>` : '<span class="caption muted">V0 삭제 보관 — 영구 삭제는 DA · Admin</span>')
         : it.pending ? `<span class="caption muted">${it.pending} 진행 중이라 새 신청 불가</span><span class="grow"></span><button class="btn sm" id="copy-new"><i data-ic=copy data-s=12></i>복사해서 신규</button>`
         : `<button class="btn sm" id="del-req"${usageOf(it).n > 0 ? ` disabled title="모델 ${usageOf(it).n}곳에서 쓰는 중 — 삭제할 수 없습니다(미사용을 쓰세요)"` : ''}>삭제 담기</button><button class="btn sm" id="copy-new"><i data-ic=copy data-s=12></i>복사해서 신규</button><span class="grow"></span>${it.st === '사용' ? '<button class="btn sm" id="unuse-req">미사용 담기</button>' : ''}<button class="btn primary sm" id="chg-req">변경 담기</button>`}</div>`;
     const ur = $('unuse-req'); if (ur) ur.onclick = () => basketAct([it], '미사용');
@@ -504,7 +504,7 @@ window.pageInit = function () {
     }).join('');
     $('q-body').innerHTML = queue.length ? rows + (needDup ? `<tr><td colspan="3"><label for="dup-why" class="caption">약어 중복 허용 사유 * <span class="faint">비슷한 기존 약어가 있습니다</span></label><textarea class="input" id="dup-why" rows="2">${hx(dupWhy)}</textarea></td></tr>` : '')
       : '<tr class="er"><td colspan="3" class="caption muted u-tc u-p-16">위에서 입력하고 [바구니에 담기]를 누르거나, 목록에서 항목을 골라 담으세요</td></tr>';
-    const go = $('rq-go'); go.textContent = queue.length ? `${queue.length}건 품의 올리기` : '품의 올리기';
+    const go = $('rq-go'); go.textContent = queue.length ? `${queue.length}건 신청하기` : '신청하기';
     go.dataset.needs = 'rq-why' + (needDup ? ' dup-why' : '');
     setBlock(go, queueBlock()); $('rq-warn').hidden = true; warnSeen = '';
     persist(); const b = getBasket(); $('bk-saved').textContent = queue.length ? `자동 저장됨 · ${(b.at || '').slice(5)} · 다른 화면에서 담은 항목도 여기 모입니다` : '바구니가 비어 있습니다';
@@ -539,8 +539,8 @@ window.pageInit = function () {
     // G5: renames and domain type changes say what they touch
     const note = (l, v) => { if (FIELD_KEY[l] === 'name') { const clash = getDict().some(x => x.id !== d.id && x.k === d.k && x.name === v && x.ver > 0); const rule = d.k === 'domain' ? checkItem({ k: 'domain', name: v, dg: d.dg }).filter(p => p.lvl === 'block' && !/사전에 있음|신청 중/.test(p.msg)).map(p => p.msg) : [];
         const casc = d.k === 'word' ? wordCascade(d, { 단어명: [d.name, v] }) : [];
-        return clash ? `'${v}'은 이미 있습니다` : rule.length ? rule.join(' · ') : `‘${d.name}’${jo(d.name, '은/는')} 과거 이름으로 남아 검색됩니다${usageOf(d).n ? ` · 사용처 ${usageOf(d).n}곳은 재검토 대상(모델은 자동으로 바뀌지 않음)` : ''}${casc.length ? ` · 이 단어를 쓰는 용어 ${casc.length}건(${casc.slice(0, 3).map(c => c.name).join(', ')}${casc.length > 3 ? ' …' : ''})의 이름도 같은 품의에 함께 담깁니다` : ''}`; }
-      if (l === '영문약어명' && d.k === 'word') { const casc = wordCascade(d, { 영문약어명: [d.abbr, v] }); return casc.length ? `이 단어를 쓰는 용어 ${casc.length}건의 영문약어명도 같은 품의에 함께 담깁니다 — 예: ${casc.slice(0, 2).map(c => `${c.chg['영문약어명'] ? c.chg['영문약어명'][0] + ' → ' + c.chg['영문약어명'][1] : c.name}`).join(', ')}` : ''; }
+        return clash ? `'${v}'은 이미 있습니다` : rule.length ? rule.join(' · ') : `‘${d.name}’${jo(d.name, '은/는')} 과거 이름으로 남아 검색됩니다${usageOf(d).n ? ` · 사용처 ${usageOf(d).n}곳은 재검토 대상(모델은 자동으로 바뀌지 않음)` : ''}${casc.length ? ` · 이 단어를 쓰는 용어 ${casc.length}건(${casc.slice(0, 3).map(c => c.name).join(', ')}${casc.length > 3 ? ' …' : ''})의 이름도 같은 신청에 함께 담깁니다` : ''}`; }
+      if (l === '영문약어명' && d.k === 'word') { const casc = wordCascade(d, { 영문약어명: [d.abbr, v] }); return casc.length ? `이 단어를 쓰는 용어 ${casc.length}건의 영문약어명도 같은 신청에 함께 담깁니다 — 예: ${casc.slice(0, 2).map(c => `${c.chg['영문약어명'] ? c.chg['영문약어명'][0] + ' → ' + c.chg['영문약어명'][1] : c.name}`).join(', ')}` : ''; }
       if (l === '물리 타입' || l === '도메인') return d.use ? `사용처 ${d.use}곳의 타입이 바뀝니다 — 승인 뒤 모델에서 재검토` : '';
       if (l === '형식단어') return v === 'Y' ? '형식단어가 되면 도메인분류와 연결할 수 있습니다(도메인 그룹 · 분류 화면)' : '형식단어를 해제하면 이 단어로 끝나는 용어는 ‘형식단어로 끝나지 않음’ 경고를 받습니다';
       return ''; };
@@ -583,7 +583,7 @@ window.pageInit = function () {
     const ex = getDict().find(x => x.name === it.name && (x.k === it.k || (it.k === 'entity' && x.k === 'term')) && x.ver > 0);
     if (ex) return fail(`‘${it.name}’${jo(it.name, '은/는')} 이미 ${ex.src} 사전에 있습니다(${ex.id}) — ${ex.src === '기관' ? '[변경 담기]를 쓰세요' : '공통 표준을 쓰세요'}`);
     const op = openItems().find(x => x.it.name === it.name && opOf(x.it) === '추가');
-    if (op) return fail(`‘${it.name}’${jo(it.name, '은/는')} ${op.doc}에서 신청 중입니다 — 그 신청 내용을 열어 보세요(읽기 전용)`);
+    if (op) return fail(`‘${it.name}’${jo(it.name, '은/는')} ${op.doc}에서 신청 중입니다 — 그 신청 내용을 열어 보세요(조회 전용)`);
     ['tm-name', 'wd-name', 'wd-abbr', 'dm-len', 'en-name', 'cd-name', 'cd-vals'].forEach(id => $(id) && $(id).setAttribute('aria-invalid', 'false'));
     if (['word', 'term', 'entity', 'domain'].includes(it.k) && !it.scope) it.scope = $('rq-scope').value || '공통';   // decision Q3
     queue.push(Object.assign({ key: 'b' + Date.now().toString(36) + Math.random().toString(36).slice(2, 4), act: '추가' }, it)); formDirty = false; resetForm(it.k); drawQueue(); toast(`‘${it.name}’${jo(it.name, '을/를')} 바구니에 담았습니다${it.scope && it.scope !== '공통' ? ` · 적용 범위 ${scopeName(it.scope)}` : ''}`);
@@ -677,7 +677,7 @@ window.pageInit = function () {
   $('rq-go').onclick = () => {
     if ($('rq-go').disabled) return;
     if (liveRoleChanged()) { staleRoleToast(); return; }
-    if (!can('dict.request')) { toast('사전 품의 권한이 없습니다 — 모델러 · DA만 올릴 수 있습니다', 'danger'); return; }
+    if (!can('dict.request')) { toast('사전 신청 권한이 없습니다 — 모델러 · DA만 올릴 수 있습니다', 'danger'); return; }
     const items = itemsOut();
     // review fix: submit check = approval re-check. Blocking problems can NOT be submitted (they would fail at the DA); only warnings take a second press (DX-15)
     const probs = checkDictDoc({ id: '(작성 중)', items }).filter(r => r.problems.length);
@@ -685,7 +685,7 @@ window.pageInit = function () {
     if (probs.length) { $('rq-warn').hidden = false; $('rq-warn').className = 'banner danger u-mt-8'; $('rq-warn-t').innerHTML = `<b>고쳐야 올릴 수 있습니다 — ${probs.length}건</b> (결재 단계에서도 같은 검사로 막힙니다)<ul class="ag-imp">${probs.map(r => `<li>${goRow(r.name)}: ${hx(r.problems.join(' · '))}</li>`).join('')}</ul>`; $('rq-warn').scrollIntoView({ block: 'nearest' }); return; }
     const warns = items.filter(it => opOf(it) === '추가').map(it => [it.name, checkItem(it, { batch: items }).filter(p => p.lvl === 'warn' && !(dupWhy.trim() && p.f === 'abbr' && /비슷한 약어/.test(p.msg))).map(p => p.msg)]).filter(x => x[1].length);   // usability B3: a warning answered by the duplicate reason is settled
     const sig = JSON.stringify(warns);
-    if (warns.length && warnSeen !== sig) { warnSeen = sig; $('rq-warn').hidden = false; $('rq-warn').className = 'banner warning u-mt-8'; $('rq-warn-t').innerHTML = `<b>경고 ${warns.length}건 — 확인했으면 한 번 더 누르세요</b> (결재 문서에 ‘올릴 때 경고’로 남습니다)<ul class="ag-imp">${warns.map(([n, m]) => `<li>${goRow(n)}: ${hx(m.join(' · '))}</li>`).join('')}</ul>`; $('rq-go').textContent = '경고 확인 후 품의 올리기'; $('rq-warn').scrollIntoView({ block: 'nearest' }); return; }
+    if (warns.length && warnSeen !== sig) { warnSeen = sig; $('rq-warn').hidden = false; $('rq-warn').className = 'banner warning u-mt-8'; $('rq-warn-t').innerHTML = `<b>경고 ${warns.length}건 — 확인했으면 한 번 더 누르세요</b> (결재 문서에 ‘올릴 때 경고’로 남습니다)<ul class="ag-imp">${warns.map(([n, m]) => `<li>${goRow(n)}: ${hx(m.join(' · '))}</li>`).join('')}</ul>`; $('rq-go').textContent = '경고 확인 후 신청하기'; $('rq-warn').scrollIntoView({ block: 'nearest' }); return; }
     const kinds = [...new Set(items.map(q => ({ word: '단어', term: '용어', domain: '도메인', code: '코드', entity: '엔터티 용어', class: '분류' })[q.k] || '항목'))].join('·');
     const title = `${kinds} ${items[0].name}${items.length > 1 ? ` 외 ${items.length - 1}건` : ''} ${items.every(q => opOf(q) === '변경') ? '변경' : items.every(q => opOf(q) === '추가') ? '등록' : '등록 · 변경'}`;   // usability B6: kinds first (단어·분류 연월 외 1건 등록)
     const r = createDoc({ type: 'dict', title, n: items.length, reason: $('rq-why').value.trim(), cc: [], items, warnAtSubmit: warns.length ? warns.map(([name, m]) => ({ name, problems: m })) : undefined });
@@ -765,9 +765,9 @@ window.pageInit = function () {
   document.addEventListener('basket', () => { if (getBasket().items.length !== queue.length) { queue.splice(0, queue.length, ...getBasket().items); } });
   drawQueue();
   // review fix: without request rights the basket is read-only (the reason is on the panel and the header button)
-  if (!can('dict.request')) { panel.querySelector('.rp-body').insertAdjacentHTML('afterbegin', '<div class="banner u-mb-12"><i data-ic=info></i><div>조회 전용 — 사전 품의는 모델러 · DA만 올릴 수 있습니다.</div></div>');
-    panel.querySelectorAll('.rp-body button, .rp-foot button:not([data-close]), #dr-save, #dr-open').forEach(b => { b.disabled = true; b.title = '사전 품의 권한이 없습니다'; });
-    ['bk-grid', 'bk-chg', 'bk-same', 'bk-unuse', 'bk-del'].forEach(id => { $(id).disabled = true; $(id).title = '사전 품의 권한이 없습니다'; }); }
+  if (!can('dict.request')) { panel.querySelector('.rp-body').insertAdjacentHTML('afterbegin', '<div class="banner u-mb-12"><i data-ic=info></i><div>조회 전용 — 사전 신청은 모델러 · DA만 올릴 수 있습니다.</div></div>');
+    panel.querySelectorAll('.rp-body button, .rp-foot button:not([data-close]), #dr-save, #dr-open').forEach(b => { b.disabled = true; b.title = '사전 신청 권한이 없습니다'; });
+    ['bk-grid', 'bk-chg', 'bk-same', 'bk-unuse', 'bk-del'].forEach(id => { $(id).disabled = true; $(id).title = '사전 신청 권한이 없습니다'; }); }
   /* 27: logical types come from 표준 사전 › 데이터 타입 · 축약명 — common types plus the current system's own (그 시스템 전용 도메인이 됨) */
   const DSYS = curSys().code, DTYPES = typesFor(DSYS);
   $('dm-type').innerHTML = DTYPES.map(t => `<option value="${t.ab}">${t.n} · ${t.ab}${t.kind !== 'std' ? ` (${TYPE_KIND[t.kind]}${t.scope !== '공통' ? ' · ' + sysNameOf(t.scope) + ' 전용' : ''})` : ''}</option>`).join('');
@@ -835,7 +835,7 @@ window.pageInit = function () {
   let candId = null;
   if (q0.get('cand')) { const c = getCands().find(x => x.id === q0.get('cand')); if (c) { candId = c.id; $('pn-detail').classList.remove('open'); panel.classList.add('open'); if (c.t === '단어') { panel.querySelector('[data-rq="word"].chip').click(); $('wd-name').value = c.name; $('wd-abbr').value = c.abbr || ''; } else { $('tm-name').value = c.name; analyse(); }
     panel.querySelector('.rp-body').insertAdjacentHTML('afterbegin', `<div class="banner info u-mb-12"><i data-ic=flag></i><div><b>후보 ‘${c.name}’${jo(c.name, '을/를')} ${c.t} 신청으로 전환</b> — 발생 위치 ${c.loc.length}곳. 값을 확인하고 [바구니에 담기] 후 신청하면 후보가 이 신청에 연결됩니다.</div></div>`); $('rq-why').value = `후보 큐 ${c.loc.length}곳 발생 — ${c.name}`; } }
-  // V0 permanent delete (30 v1.2 ⑦): DA·Admin, references block it, the exact name and a reason confirm it, a separate log records it
+  // V0 permanent delete (30 v1.2 ⑦): DA · Admin, references block it, the exact name and a reason confirm it, a separate log records it
   function purge(it) {
     if (liveRoleChanged()) { staleRoleToast(); return; }
     if (it.use > 0) { toast(`‘${it.name}’${jo(it.name, '은/는')} 아직 ${it.use}곳에서 참조 중이라 영구 삭제할 수 없습니다 — 참조를 먼저 정리하세요`, 'danger'); return; }

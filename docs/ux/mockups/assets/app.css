@@ -900,3 +900,24 @@ body.scr-on #content { margin-right:380px; }
 .set-row .l .now-tag { display:inline-flex; margin-top:4px; }
 /* R-08: short controls keep their own width instead of stretching to 760 */
 .set-row > .field.short { max-width:360px; }
+/* ===== 2026-11-25 퍼블리싱 2차 — 공통 부품 ===== */
+/* 단계 막대 (단계형 가져오기 공통 — 사전 엑셀 · 엑셀 정의서). 끝난 단계는 회색, 지금 단계만 잉크 */
+.stepbar { display:flex; align-items:center; gap:12px; padding:0 20px; height:48px; border-bottom:1px solid var(--ds-gray-400); background:var(--surface); flex:0 0 auto; }
+.stepbar .steps { display:flex; align-items:center; gap:6px; }
+.stepbar .step { display:inline-flex; align-items:center; gap:6px; height:32px; padding:0 10px 0 6px; border-radius:var(--r-md); border:0; background:none; font:400 14px var(--font-sans); color:var(--fg-2); }
+.stepbar button.step { cursor:pointer; } .stepbar button.step:hover { background:var(--ds-gray-100); color:var(--fg); }
+.stepbar .step.cur { background:var(--ds-gray-100); color:var(--fg); font-weight:500; }
+.stepbar .step .n { width:20px; height:20px; display:inline-flex; align-items:center; justify-content:center; border-radius:9999px; border:1px solid var(--ds-gray-500); font:500 12px var(--font-sans); background:var(--surface); color:var(--fg-2); }
+.stepbar .step.done .n { background:var(--surface); border-color:var(--fg-3); color:var(--fg-2); }
+.stepbar .step.cur .n { background:var(--ds-gray-1000); border-color:var(--ds-gray-1000); color:var(--on-ink); }
+.stepbar .step-sep { width:16px; height:1px; background:var(--ds-gray-400); }
+/* 헤더 바로 아래 탭 줄 (설정 · 마이페이지 · 데이터 타입) */
+.tabs.page-tabs { margin:0; padding:0 20px; background:var(--surface); }
+/* 넓은 모달 두 단계 */
+.modal.wide { width:640px; max-width:calc(100vw - 32px); }
+.modal.xwide { width:760px; max-width:calc(100vw - 32px); }
+/* 카드 · 묶음 제목 14/600 */
+.card-t { font:600 14px/20px var(--font-sans); margin:0 0 8px; }
+/* 필수 표시 */
+.req { color:var(--danger-deep); margin-left:2px; }
+.u-items-end { align-items:flex-end; }

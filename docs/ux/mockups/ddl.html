@@ -97,7 +97,7 @@ window.pageInit = function () {
     else { const ab = cmp.querySelector('.rp-foot .btn.primary'); ab.removeAttribute('data-toast');
       ab.onclick = () => { $('preset').value = 'alter'; draw(); $('pn-cmp').classList.remove('open'); $('pn-gateb').classList.add('open'); toast('변경분(ALTER) 프리셋으로 바꿨습니다 — 미리보기에서 확인하고 내려받으세요', 'info'); }; } }
   const ents = src.E.filter(e => !e.ref);
-  if (snapHidden || (!snapDoc && view.hidden)) setTimeout(() => toast(snapHidden ? '결재 중인 제출본은 품의자와 결재 담당자만 볼 수 있습니다' : `${josa('v' + L.model.ver, '은/는')} 결재 중이라 확정본 v${L.model.base}의 DDL을 보여 줍니다`, 'info'), 300);
+  if (snapHidden || (!snapDoc && view.hidden)) setTimeout(() => toast(snapHidden ? '결재 중인 제출본은 신청자와 결재 담당자만 볼 수 있습니다' : `${josa('v' + L.model.ver, '은/는')} 결재 중이라 확정본 v${L.model.base}의 DDL을 보여 줍니다`, 'info'), 300);
   window.treeData = () => ({ area: AREA, E: src.E, R: src.R, mode: 'P', ver: snapDoc ? 'snap:' + snapDoc.id : 'v' + view.ver, label, ro: true, snap: snapDoc ? snapDoc.id : null });
   setTimeout(() => window.dispatchEvent(new Event('dbm-tree-refresh')), 0); let scope = 'all', picked = new Set();
   const sysCount = Object.keys(getModels()).reduce((n, a) => n + modelOf(a, getModel(a).ver).E.filter(e => !e.ref).length, 0);

@@ -21,7 +21,7 @@
       <!-- ERD P2-11: the head = path · area screens · state · ⋯ · the one goal action; everything that changes the canvas lives in the canvas toolbar -->
       <span class="u-rel"><button class="btn u-w-32 u-p-0 u-jc-c" id="b-more" aria-haspopup="true" aria-expanded="false" aria-label="더 보기"><i data-ic=more></i></button>
         <div class="menu" id="moremenu" role="menu">
-          <a class="mi" role="menuitem" href="import-excel.html"><i data-ic=upload></i>엑셀로 가져오기</a>
+          <a class="mi" role="menuitem" href="import-excel.html"><i data-ic=upload></i>엑셀 정의서 가져오기</a>
           <a class="mi" role="menuitem" href="import.html"><i data-ic=upload></i>DDL 가져오기</a>
           <button class="mi" role="menuitem" id="mi-export"><i data-ic=download></i>이미지로 내보내기</button>
           <div class="msep"></div>
@@ -79,7 +79,7 @@
         <button class="tb" data-tool="memo" data-edit title="메모 (M)"><i data-ic=pen></i>메모 <kbd>M</kbd></button>
         <span class="sep"></span>
         <span class="seg tseg" id="vw" role="group" aria-label="보기"><button class="on" data-v="erd" aria-pressed="true">다이어그램</button><button data-v="grid" aria-pressed="false" id="b-grid" title="표 보기 · 일괄편집 · 찾기/바꾸기 (Ctrl+F)">표</button></span>
-        <span class="seg tseg" id="lp" role="group" aria-label="논리 · 물리 · 통합"><button class="on" data-v="L" aria-pressed="true" title="논리 (Alt+1)">논리</button><button data-v="P" aria-pressed="false" title="물리 (Alt+2)">물리</button><button data-v="A" aria-pressed="false" title="통합 — 논리 + 물리 (Alt+3)">통합</button></span>
+        <span class="seg tseg" id="lp" role="group" aria-label="논리 · 물리 · 통합"><button class="on" data-v="L" aria-pressed="true" title="논리 (Alt+1)">논리</button><button data-v="P" aria-pressed="false" title="물리 (Alt+2)">물리</button><button data-v="A" aria-pressed="false" title="논리 · 물리 통합 (Alt+3)">통합</button></span>
         <span class="sep"></span>
         <button class="tb" id="b-layout" data-edit>자동 배치</button>
         <button class="tb" id="b-sys">시스템 전체</button>
@@ -457,7 +457,7 @@ window.pageInit = function () {
     const b = bad(e);
     const title = renaming === e.id ? `<input class="ren-in" data-e="${e.id}" value="${e.fresh ? '' : e.n}" list="ent-terms" autocomplete="off" aria-label="엔터티 이름" placeholder="엔터티 이름 · 예: 산출물검수기본">${mode === 'A' ? `<span class="pv mono" aria-live="polite">${e.fresh || !e.n ? '물리명은 이름에서 만듭니다' : '물리 → ' + hx(decompose(e.n).abbr)}</span>` : ''}` : `<span class="title" data-e="${e.id}">${mode !== 'P' ? e.n : e.p}</span>`;
     const stl = refStale(e);
-    const tag = e.ref ? `<span class="rtag reft" title="${hx(e.refName || '다른 영역')} v${e.refVer || '?'} 확정본을 읽기 전용으로 가져온 참조">${hx(e.refName || '공통')} v${e.refVer || '?'} · 참조${stl ? ` · 원본 v${stl} 확정 — 갱신` : ''}</span>` : remoteSel === e.id && !offline ? '<span class="rtag">홍설계 편집 중</span>' : '';
+    const tag = e.ref ? `<span class="rtag reft" title="${hx(e.refName || '다른 영역')} v${e.refVer || '?'} 확정본을 조회 전용으로 가져온 참조">${hx(e.refName || '공통')} v${e.refVer || '?'} · 참조${stl ? ` · 원본 v${stl} 확정 — 갱신` : ''}</span>` : remoteSel === e.id && !offline ? '<span class="rtag">홍설계 편집 중</span>' : '';
     const subL = e.sub ? `<div class="subt"><div class="cap"><b>${e.sub.kind === '배타' ? 'X' : 'O'}</b>서브타입 · ${e.sub.kind} · 구분 ${e.sub.disc}</div><div class="kids">${e.sub.kids.map(k => `<span>${k}</span>`).join('')}</div></div>` : '';
     const subP = e.sub ? `<div class="subt"><div class="cap">${mode === 'A' ? '물리: ' : '서브타입 → '}한 테이블로 합침 · 구분 컬럼 <span class="mono">DLVRBL_TYPE_CD</span></div></div>` : '';   /* 28 §7-4: '합침', so it never reads like the 통합 view */
     const subt = mode === 'L' ? subL : mode === 'P' ? subP : subL + subP;
@@ -752,7 +752,7 @@ window.pageInit = function () {
       ${ro ? '' : (() => { const ld = lockWhy(a, 'dom'), ln = lockWhy(a, 'nn'), d = domOf(a);   // the row's 필수 · 도메인 again, reachable with Tab (the row cells are mouse shortcuts)
         return `<div class="ag-two"><div class="field"><label for="ag-dom">도메인</label>${ld ? `<div class="ag-fix" id="ag-dom-why">${hx(d || '—')} ${icon('lock', 12)} <span class="caption muted">${hx(ld)}</span></div>` : `<select class="input mono" id="ag-dom" data-f="dom"><option value="">${d || a.xt ? '(없음)' : '선택'}</option><optgroup label="표준 도메인">${domList().map(x => `<option${x === d ? ' selected' : ''}>${hx(x)}</option>`).join('')}</optgroup>${XTYPES.length ? `<optgroup label="추가 · DBMS 전용 타입 — 표준 외">${XTYPES.map(t => `<option value="@${t.ab}"${a.xt === t.ab ? ' selected' : ''}>${t.ab} · ${hx(t.n)}${t.kind === 'dbms' ? ' (' + dbmsKey(t.dbms) + ' 전용)' : t.scope !== '공통' ? ' (시스템 전용)' : ''}</option>`).join('')}</optgroup>` : ''}</select>
           ${a.xt && (typeOf(a.xt) || {}).arg ? `<div class="flex u-gap-8 u-mt-4"><label class="caption" for="ag-xlen">${(typeOf(a.xt) || {}).arg === 'f' ? '초 아래 자릿수' : '길이'}</label><input class="input mono u-w-130" id="ag-xlen" data-f="xlen" value="${hx(a.xlen || '')}"></div>` : ''}
-          <div class="caption muted u-mt-4">맞는 타입이 없으면 ${can('type.add') ? `<a href="${typeHref('add', e, a)}">타입 등록 ↗</a>` : can('type.request', { system: MSYS }) ? `<a href="${typeHref('req', e, a)}">타입 추가 요청 ↗</a> · 그동안 예외(사유)로 둘 수 있습니다` : 'DA에게 타입 추가를 요청하세요'}</div>`}</div>
+          <div class="caption muted u-mt-4">맞는 타입이 없으면 ${can('type.add') ? `<a href="${typeHref('add', e, a)}">타입 등록<i data-ic=ext data-s=12 aria-hidden="true"></i></a>` : can('type.request', { system: MSYS }) ? `<a href="${typeHref('req', e, a)}">타입 추가 요청<i data-ic=ext data-s=12 aria-hidden="true"></i></a> · 그동안 예외(사유)로 둘 수 있습니다` : 'DA에게 타입 추가를 요청하세요'}</div>`}</div>
           <label class="ag-nn"><input type="checkbox" id="ag-nn" data-f="nn"${a.nn || a.pk ? ' checked' : ''}${ln ? ` disabled aria-describedby="ag-nn-why"` : ''}> 필수${ln ? `<span class="caption muted" id="ag-nn-why"> — ${hx(ln)}</span>` : ''}</label></div>`; })()}
       ${ro ? '' : field('ag-desc', 'desc', '정의 <span class="faint">— 테이블 정의서와 컬럼 주석(COMMENT)에 들어갑니다</span>', '예: 이 자금이 들어오거나 나간 날짜', 'ta') + field('ag-def', 'def', '기본값 <span class="faint">— DDL DEFAULT</span>', "예: 'N' · SYSDATE · 0")}
       ${ro ? '' : keys.replace('행을 고르면 순서 · 이름 · 정의를 고칠 수 있습니다. ', '')}</div>`;
@@ -1611,8 +1611,8 @@ window.pageInit = function () {
       selRel = null; sel = id; render(); showRP(); toast(`M:N을 해소했습니다 — 교차 엔터티 ‘${hx(pl.n)}’ · 식별 관계 2개 · PK ${x.a.length}개`, 'success', undoAction()); agLive('M:N 해소');
     };
   }
-  $('b-layout').onclick = () => {
-    if (guard() || !confirm('계층 자동 배치를 적용합니다.\n접속 중인 2명(홍설계·박설계)의 화면도 같이 바뀝니다. 계속할까요?')) return;
+  $('b-layout').onclick = async () => {
+    if (guard()) return; if (!(await askConfirm('계층 자동 배치', '엔터티 위치를 계층에 맞춰 다시 놓습니다. 접속 중인 2명(홍설계 · 박설계)의 화면도 같이 바뀝니다. 적용 뒤 Ctrl+Z로 되돌릴 수 있습니다.', '자동 배치 적용'))) return;
     let cancelled = false; const m0 = mode, v0 = curView; $('b-layout').disabled = true; $('b-layout').textContent = '배치 계산 중…';
     toast(`자동 배치 계산 중 — 엔터티 ${E.length}개 · 별도 작업자에서 계산해 편집은 막지 않습니다`, 'info', { label: '취소', fn: () => { cancelled = true; } });
     setTimeout(() => {
@@ -1642,7 +1642,7 @@ window.pageInit = function () {
     if (keep && b0 && $('n-' + keep)) { const b1 = $('n-' + keep).getBoundingClientRect(); panX += b0.left + b0.width / 2 - b1.left - b1.width / 2; panY += b0.top + b0.height / 2 - b1.top - b1.height / 2; applyView(); setTimeout(() => { const d = $('n-' + keep); if (!d) return; const b2 = d.getBoundingClientRect(); panX += b0.left + b0.width / 2 - b2.left - b2.width / 2; panY += b0.top + b0.height / 2 - b2.top - b2.height / 2; applyView(); }, 30); }   /* screen centre — the banner stack differs per view and settles a moment later */
     else if (was !== 'P' && v !== 'P') { const k1x = v === 'A' ? SX : 1, k1y = v === 'A' ? SY : 1; panX = scx - lc.x * k1x * zoom; panY = (vr.top + vr.bottom) / 2 - world.offsetTop - lc.y * k1y * zoom; applyView(); }
     exTitle(); pmemoChip();
-    if (!quietMode) toast(v === 'P' ? '물리 캔버스 — 배치는 논리와 따로 저장됩니다 · 시스템 컬럼 4개 포함' : v === 'A' ? '통합 — 논리 + 물리를 함께 봅니다 · 배치는 논리 배치를 펼쳐 보여 줍니다' : '논리 캔버스', 'info');
+    if (!quietMode) toast(v === 'P' ? '물리 캔버스 — 배치는 논리와 따로 저장됩니다 · 시스템 컬럼 4개 포함' : v === 'A' ? '논리 · 물리 통합를 함께 봅니다 · 배치는 논리 배치를 펼쳐 보여 줍니다' : '논리 캔버스', 'info');
   }
   // 28 §7-5: Alt+1 · 2 · 3 = 논리 · 물리 · 통합 (Shift+1 · 2 are fit-all / fit-selection)
   document.addEventListener('keydown', ev => { const dk = ({ Digit1: '1', Digit2: '2', Digit3: '3' })[ev.code]; if (!ev.altKey || ev.ctrlKey || ev.metaKey || !dk || cv.dataset.sys === '1') return; const t = ev.target; if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return; const b = document.querySelector(`#lp button[data-v="${({ 1: 'L', 2: 'P', 3: 'A' })[dk]}"]`); if (b) { ev.preventDefault(); b.click(); } });
@@ -1840,7 +1840,7 @@ window.pageInit = function () {
       b.style.display = 'none';
       $('ver').textContent = REVIEW_HIDDEN && LOCK.model.base ? `v${LOCK.model.base} 확정본` : '열람 제한';
       $('ban-lock').className = 'banner info';
-      $('ban-lock-t').innerHTML = SNAP_HIDDEN ? `<b>${SNAP}</b>는 결재 중입니다 — 결재 중인 제출본은 품의자와 결재 담당자만 볼 수 있습니다.` : `<b>${josa('v' + VER, '은/는')} 결재 중</b>이라 품의자와 결재 담당자만 볼 수 있습니다. ${LOCK.model.base ? `마지막 확정본 <b>v${LOCK.model.base}</b>을 조회 전용으로 보여 줍니다.` : '아직 확정본이 없어 보여 줄 내용이 없습니다.'}`;
+      $('ban-lock-t').innerHTML = SNAP_HIDDEN ? `<b>${SNAP}</b>는 결재 중입니다 — 결재 중인 제출본은 신청자와 결재 담당자만 볼 수 있습니다.` : `<b>${josa('v' + VER, '은/는')} 결재 중</b>이라 신청자와 결재 담당자만 볼 수 있습니다. ${LOCK.model.base ? `마지막 확정본 <b>v${LOCK.model.base}</b>을 조회 전용으로 보여 줍니다.` : '아직 확정본이 없어 보여 줄 내용이 없습니다.'}`;
       $('ban-lock-a').style.display = 'none';
     } else if (SNAP_BAD) {
       $('ver').textContent = '열 수 없음'; b.style.display = 'none';

@@ -36,15 +36,7 @@
   .lg i { width:10px; height:10px; border-radius:2px; display:inline-block; }
   .three td:first-child { color:var(--fg-2); }
   .saved { font-size:14px; color:var(--fg-2); display:inline-flex; align-items:center; gap:6px; }
-  .stepbar { display:flex; align-items:center; gap:12px; padding:0 20px; height:48px; border-bottom:1px solid var(--ds-gray-400); background:var(--surface); flex:0 0 auto; }
-  .stepbar .steps { gap:6px; }
-  .stepbar .step { height:32px; padding:0 10px 0 6px; border-radius:var(--r-md); border:0; background:none; font:400 14px var(--font-sans); }
-  .stepbar button.step { cursor:pointer; color:var(--fg-2); } .stepbar button.step:hover { background:var(--ds-gray-100); color:var(--fg); }
-  .stepbar .step.cur { background:var(--ds-gray-100); color:var(--fg); font-weight:500; }
-  .stepbar .step .n { width:20px; height:20px; font:500 12px var(--font-sans); }
-  .stepbar .step.done .n { background:var(--surface); border-color:var(--fg-3); color:var(--fg-2); }
-  .stepbar .step.cur .n { background:var(--ds-gray-1000); border-color:var(--ds-gray-1000); color:var(--on-ink); }
-  .stepbar .step-sep { width:16px; height:1px; background:var(--ds-gray-400); }
+  /* 단계 막대는 app.css 공통 부품 (퍼블리싱 2차) */
   .stepview > .pad { max-width:960px !important; width:100%; }
   .mapsum { display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-bottom:12px; font-size:14px; color:var(--fg-2); }
   .mapsum b { color:var(--fg); }
@@ -306,7 +298,7 @@ window.pageInit = function () {
     'CV-LEN': '코드값 길이를 코드 도메인 길이에 맞추세요(코드C1 → 1자리)',
     'T-UNKWORD': '사전에 없는 단어가 들어 있습니다 — 표준단어 양식으로 단어부터 신청하거나 있는 단어로 이름을 고치세요', 'T-ABBR': '용어 영문약어명은 구성 단어 약어를 이어 계산합니다 — 용어명을 고치면 다시 계산합니다',
     'T-ABBRLEN': '용어 영문약어명이 30자를 넘습니다 — 더 짧은 단어로 이름을 구성하세요', 'W-ABBRFMT': '영문약어명은 대문자·숫자만, 숫자로 시작할 수 없습니다', 'X-EMPTY': '이름 칸을 채우세요',
-    'X-COMMON': '공통 표준 항목은 기관에서 바꿀 수 없습니다 — 공통표준 관리의 새 판 품의로 요청하세요', 'X-FORBID': '금칙어 대신 안내된 표준 단어를 쓰세요',
+    'X-COMMON': '공통 표준 항목은 기관에서 바꿀 수 없습니다 — 공통표준 관리의 새 판 신청으로 요청하세요', 'X-FORBID': '금칙어 대신 안내된 표준 단어를 쓰세요',
     'X-OPEN': '같은 항목을 다른 신청이 처리 중입니다 — 그 신청이 끝난 뒤 다시 검증하세요', 'X-CHECK': '결재 재검사 문구를 확인하고 해당 칸을 고치세요' };
   /* ---- E-01 · ONE re-judge for every edit path (seed · cell edit · 제안 적용 · 자동 수정 · 찾아 바꾸기 · 다시 검증):
      the approval re-check itself (checkDictDoc on the row's request item) + the shared item check (checkItem: which field, warnings, rows of this file)
@@ -434,7 +426,7 @@ window.pageInit = function () {
     cv(5, 'err', 'S', '보완', 4, { grp: '산출물상태', rule: 'CV-DUP', bad: 'v', why: "코드값 'S'가 3행(제출)에도 있음 — 한 코드 안에서 한 번만", fix: { v: 'R' } })
   ];
   const MR = (h, ex, to, b) => `<tr><td>${h}</td><td>${ex}</td><td>${to}</td><td>${b}</td></tr>`;
-  const AUTO = '<span class="badge b-success">자동</span>', RO = '<span class="badge">읽기 전용</span>';
+  const AUTO = '<span class="badge b-success">자동</span>', RO = '<span class="badge">조회 전용</span>';
   const IDROW = (ex, n) => `<tr><td class="mono caption">(숨김) 항목ID · 버전 · 기준본</td><td class="mono">${ex}</td><td>왕복 식별</td><td><span class="badge b-success">${n}</span></td></tr>`;
   const KC = {
     용어: { k: 'term', sheet: '표준용어', file: m => m === 'init' ? '기관용어_초기적재.xlsx' : '요구사항관리_용어_2차.xlsx', rows: ROWS0, init: INIT_ROWS,
@@ -450,7 +442,7 @@ window.pageInit = function () {
       cols: [['name', '도메인명', 'cm'], ['dg', '분류(그룹)'], ['type', '타입', 'm'], ['len', '길이', 'm'], ['desc', '설명']], cmp: ['name', 'dg', 'type', 'len', 'desc'], lbl: { name: '도메인명', abbr: '영문약어명', dg: '도메인그룹', type: '데이터 타입', len: '길이', desc: '설명' },
       req: '3/3', note: '<span class="badge b-info">계산 열 1</span> 파일의 도메인명은 <b>분류+타입+길이</b>와 맞는지만 확인합니다', ok: '필수 항목(분류·데이터 타입·길이)이 모두 연결됐습니다. 도메인명은 세 칸으로 계산하고, 파일 값이 다르면 <span class="rule">D-NAMERULE</span>로 알립니다.',
       note2: '도메인 양식은 <b>데이터 타입(D-BADTYPE: N·C·V·D·T)</b>과 <b>도메인명 규칙(D-NAMERULE: 분류+타입+길이)</b>을 추가로 검사합니다.',
-      map: () => MR('도메인분류명', '금액', '도메인그룹 *', AUTO) + MR('데이터타입', '<span class="mono">N</span>', '데이터 타입 *', AUTO) + MR('데이터길이 · 소수점길이', '<span class="mono">18 · 2</span>', '길이 * <span class="caption faint">(두 열을 18,2로 합침)</span>', '<span class="badge b-info">합침</span>') + MR('도메인설명', '소수 둘째 자리까지의 금액(원)', '설명', AUTO) + MR('도메인명', '<span class="mono">금액N18,2</span>', '도메인명 <span class="caption faint">계산 값 — 규칙 대조만</span>', RO) + IDROW('D-0002 · V1 · BL-20261116-0905', '2/6행') },
+      map: () => MR('도메인분류명', '금액', '도메인 그룹 *', AUTO) + MR('데이터타입', '<span class="mono">N</span>', '데이터 타입 *', AUTO) + MR('데이터길이 · 소수점길이', '<span class="mono">18 · 2</span>', '길이 * <span class="caption faint">(두 열을 18,2로 합침)</span>', '<span class="badge b-info">합침</span>') + MR('도메인설명', '소수 둘째 자리까지의 금액(원)', '설명', AUTO) + MR('도메인명', '<span class="mono">금액N18,2</span>', '도메인명 <span class="caption faint">계산 값 — 규칙 대조만</span>', RO) + IDROW('D-0002 · V1 · BL-20261116-0905', '2/6행') },
     코드: { k: 'code', sheet: '코드값', file: m => m === 'init' ? '산출물상태_코드값_초기.xlsx' : '요구사항상태_코드값.xlsx', rows: C_ROWS, init: C_INIT,
       cols: [['grp', '코드'], ['v', '코드값', 'm'], ['nm', '코드값명'], ['ord', '순서', 'm']], cmp: ['grp', 'v', 'nm', 'ord'], lbl: { grp: '코드', v: '코드값', nm: '코드값명', ord: '순서' },
       req: '3/3', note: '<span class="badge b-info">묶음 1</span> 코드 그룹 하나가 결재 항목 하나가 됩니다', ok: '필수 항목(코드·코드값·코드값명)이 모두 연결됐습니다. 코드값은 <b>코드+코드값</b>으로 현재 사전과 짝을 찾습니다.',
@@ -516,7 +508,7 @@ window.pageInit = function () {
   const notMine = B && B.by !== ME.id;
   const canWrite = !demo && !frozen && !notMine && !missingB && can('dict.request');   // RBAC (15): 사전 신청 권한
   // E-09: why this screen is read-only — said from step 1, and on every disabled correction tool
-  const roReason = canWrite ? '' : missingB ? '찾을 수 없는 업로드' : demo ? '예시 화면이라 저장하지 않습니다' : frozen ? '신청된 묶음은 열람 전용입니다' : notMine ? '다른 사람이 올린 묶음이라 열람만 할 수 있습니다' : '사전 신청 권한이 없어 검증 결과 보기까지만 할 수 있습니다';
+  const roReason = canWrite ? '' : missingB ? '찾을 수 없는 업로드' : demo ? '예시 화면이라 저장하지 않습니다' : frozen ? '신청된 묶음은 조회 전용입니다' : notMine ? '다른 사람이 올린 묶음이라 열람만 할 수 있습니다' : '사전 신청 권한이 없어 검증 결과 보기까지만 할 수 있습니다';
   let err0 = B && B.err0 != null ? B.err0 : null;   // E-07: errors found by validation → progress "처음 n → 남은 m"
   const tokenNow = () => ({ policy: getPolicy().ver, dict: dictRev() });
   let stale = !!(B && B.token && canWrite && (B.token.policy !== getPolicy().ver || B.token.dict !== dictRev()));
@@ -525,18 +517,18 @@ window.pageInit = function () {
     $('resume-banner').hidden = false;
     const msg = verifyId ? (verifyOk ? `<b>반영본 재업로드 확인</b> — ${verifyId}의 반영본(${vDoc.id} 반영 ${ROWS.length}행)을 현재 사전과 칸 단위로 비교했습니다. ${verifySame ? `<b>${ROWS.length}행 모두 동일 → 왕복 완료.</b>` : `<b>${ROWS.filter(r => r.st !== 'same').length}행이 현재 사전과 다릅니다</b> — 반영 뒤 사전이 다시 바뀌었습니다. 왕복 완료로 기록하지 않습니다. 최신 편집용 엑셀을 다시 내려받으세요.`}${B.sample ? ' (목업 시드는 대표 행만)' : ''}` : vDoc && vDoc.step === 'done' ? `<b>${verifyId}</b> — 연결 신청 ${vDoc.id}에 제출 행 상세가 없어(목업 시드) 행 단위로 비교할 수 없습니다. 왕복 완료로 기록하지 않습니다.` : `<b>${verifyId}</b>는 아직 반영 완료된 묶음이 아닙니다(${vDoc ? STEP_NAME[vDoc.step] : '신청 없음'}) — 반영본 확인은 최종 승인 뒤에 할 수 있습니다.`)
       : demo ? '<b>예시 화면</b> — 주소로 바로 연 결과 화면이라 저장하지 않습니다. 실제 작업은 1단계부터 하세요.'
-      : frozen ? `<b>${B.id} · ${B.file}</b> — ${lastDoc.id} ${STEP_NAME[lastDoc.step]}. <b>신청된 묶음은 열람 전용</b>입니다(결재 문서 내용을 바꾸지 않음). 보완하려면 반려·회수 뒤에 다시 여세요.`
+      : frozen ? `<b>${B.id} · ${B.file}</b> — ${lastDoc.id} ${STEP_NAME[lastDoc.step]}. <b>신청된 묶음은 조회 전용</b>입니다(결재 문서 내용을 바꾸지 않음). 보완하려면 반려·회수 뒤에 다시 여세요.`
       : notMine ? `<b>${B.id}</b> — ${USERS[B.by] ? USERS[B.by].name : B.by}이 올린 묶음이라 열람만 할 수 있습니다.`
       : `<b>${B.id} · ${B.file}</b> 이어서 작업${lastDoc ? ` — ${lastDoc.id} ${STEP_NAME[lastDoc.step]}: 보완해서 다시 신청하면 <b>새 신청번호</b>가 만들어집니다` : ''}`;
     $('resume-banner').innerHTML = `<div class="banner ${verifyId ? (verifyOk && verifySame ? 'success' : verifyOk ? 'warning' : 'danger') : frozen || notMine || demo ? 'info' : lastDoc ? 'warning' : 'info'}"><i data-ic=info></i><div class="grow">${msg}</div></div>`;
     if (verifyId && verifyOk && verifySame && B) { const bs = getBatches(); const bb = bs.find(x => x.id === B.id); if (bb && !bb.roundTrip) { bb.roundTrip = { at: nowStr(), by: ME.id, rows: ROWS.length }; saveBatches(bs); } }   // round-trip completion is recorded
   }
-  if (!canWrite && !B && !demo && !missingB && !window.__pgRo) { $('resume-banner').hidden = false; $('resume-banner').innerHTML = `<div class="banner info"><i data-ic=info></i><div class="grow"><b>열람 전용</b> — ${ME.name}님 역할은 ${roReason}. 파일을 올려 오류를 확인하고 가이드를 내려받을 수는 있지만, 고치기와 신청은 할 수 없습니다. 신청은 DA·모델러에게 요청하세요.</div><a class="btn sm" href="uploads.html">업로드 이력</a></div>`; }
+  if (!canWrite && !B && !demo && !missingB && !window.__pgRo) { $('resume-banner').hidden = false; $('resume-banner').innerHTML = `<div class="banner info"><i data-ic=info></i><div class="grow"><b>조회 전용</b> — ${ME.name}님 역할은 ${roReason}. 파일을 올려 오류를 확인하고 가이드를 내려받을 수는 있지만, 고치기와 신청은 할 수 없습니다. 신청은 DA·모델러에게 요청하세요.</div><a class="btn sm" href="uploads.html">업로드 이력</a></div>`; }
   if (stale) { $('resume-banner').hidden = false; $('resume-banner').insertAdjacentHTML('beforeend', `<div class="banner warning u-mt-8"><i data-ic=warn></i><div class="grow"><b>다시 검증해야 합니다</b> — 이 묶음을 검증한 뒤 ${B.token.policy !== getPolicy().ver ? `검수 기준이 v${B.token.policy} → v${getPolicy().ver}로` : '사전이'} 바뀌었습니다. 화면에서 고친 값은 그대로 두고 현재 기준으로 다시 검증합니다.</div><button class="btn sm primary" id="revalidate">다시 검증</button></div>`);
     setTimeout(() => { const b = $('revalidate'); if (b) b.onclick = () => { ROWS.forEach(r => { if (['new', 'chg', 'pre'].includes(r.st)) rejudge(r, '다시 검증 통과(현재 기준)'); }); /* E-01: the same re-judge */ stale = false; if (B) B.token = tokenNow(); persist(); toast('현재 기준으로 다시 검증했습니다 — 고친 값은 유지', 'success'); $('resume-banner').querySelectorAll('.banner.warning').forEach(x => { if (x.querySelector('#revalidate')) x.remove(); }); render(); }; }, 0); }
   const counts = () => { const c = { new: 0, chg: 0, same: 0, waitSame: 0, waitDiff: 0, conflict: 0, dup: 0, pre: 0, err: 0, missing: 0, pick: 0 }; ROWS.forEach(r => { c[r.st === 'pick' ? 'pick' : r.st]++; }); return c; };
   function persist() {
-    if (!canWrite) { $('saved').innerHTML = `<span class="sdot"></span>${demo ? '예시 · 저장 안 함' : '열람 전용'}`; return; }
+    if (!canWrite) { $('saved').innerHTML = `<span class="sdot"></span>${demo ? '예시 · 저장 안 함' : '조회 전용'}`; return; }
     batches = getBatches();
     // another tab may have submitted this batch meanwhile — never overwrite its links/status with this tab's older copy (CX9-08)
     // the user who opened this tab must still be the selected user, and the batch revision must be the one this tab loaded (CX11-04)
@@ -628,7 +620,7 @@ window.pageInit = function () {
   const esc5 = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
   // one visibility rule for the grid, the panel, F8, auto-fix and find & replace: status chip × error rule × "방금 바꾼 행만" (E-03)
   const rowVis = r => (!filt || r.st === filt) && (!ruleF || r.rule === ruleF) && (!recentF || !lastRows || lastRows.has(r.r));
-  const roAttr = () => canWrite ? '' : ` aria-disabled="true" title="열람 전용 — ${roReason}"`;
+  const roAttr = () => canWrite ? '' : ` aria-disabled="true" title="조회 전용 — ${roReason}"`;
   // what still needs a look once the errors are gone (E-07) — real counts, not a fixed sentence
   const leftText = () => { const p = plan(), c = counts(), w = p.sub.filter(r => r.warn).length;
     const parts = [[w, '경고 확인'], [p.pickLeft, '후보 미선택'], [c.conflict, '충돌'], [p.hold.length, '보류'], [c.missing, '빠짐']].filter(([n]) => n).map(([n, l]) => `${l} ${n}`);
@@ -687,7 +679,7 @@ window.pageInit = function () {
     }
     if (r.st === 'missing') body += `<div class="section-t">처리</div><label class="flex"><input type="radio" name="ms" value="ignore" ${r.choice !== 'unuse' ? 'checked' : ''}> 무시 <span class="caption faint">(기본 · 사전 그대로)</span></label><label class="flex"><input type="radio" name="ms" value="unuse" ${r.choice === 'unuse' ? 'checked' : ''}> 미사용 신청 — 사용처 모델 컬럼 2개 영향</label>${r.choice === 'unuse' ? `<div class="field u-mt-8"><label for="ms-why">미사용 사유 *</label><input class="input" id="ms-why" value="${esc5(r.why2 || '')}"></div>` : ''}<div class="caption muted">삭제(V0)는 W2 — 여기서는 하지 않습니다.</div>`;
     if (r.warn) body += `<div class="banner warning u-mt-12"><span><i data-ic=warn data-s=12></i></span><div>${esc5(r.warn)}${r.rule && GUIDE[r.rule] && r.st !== 'err' ? `<br>${GUIDE[r.rule]}` : ''}</div></div>`;
-    if (!canWrite) body += `<div class="banner info u-mt-12"><i data-ic=info></i><div>열람 전용 — ${roReason}. 고치기·선택은 할 수 없습니다.</div></div>`;
+    if (!canWrite) body += `<div class="banner info u-mt-12"><i data-ic=info></i><div>조회 전용 — ${roReason}. 고치기·선택은 할 수 없습니다.</div></div>`;
     $('pn-row').innerHTML = `<div class="rp-head"><div class="t"><h2>${r.r}행 · ${esc5(r.name)}</h2></div><div class="rp-sub"><span class="badge ${s[1]}">${s[0]}</span> · 처리: ${s[3]}</div></div><div class="rp-body">${body}</div>`;
     if (!canWrite) { $('pn-row').querySelectorAll('input, button').forEach(x => x.disabled = true); return; }
     const af = $('apply-fix'); if (af) af.onclick = () => fixRow(r);
@@ -708,7 +700,7 @@ window.pageInit = function () {
   // ---- E-03: labelled undo history
   function pushUndo(label, rows) { undoStack.push({ id: ++undoSeq, label, at: nowStr().split(' ')[1], snap: JSON.stringify(ROWS), rows: (rows || []).map(x => x.r) }); lastRows = new Set((rows || []).map(x => x.r)); if (undoStack.length > 50) undoStack.shift(); return undoSeq; }
   function undo() {
-    if (!canWrite) { toast(`열람 전용 — ${roReason}`, 'info'); return; }
+    if (!canWrite) { toast(`조회 전용 — ${roReason}`, 'info'); return; }
     const op = undoStack.pop(); if (!op) { toast('되돌릴 작업이 없습니다', 'info'); return; }
     // undo restores the fix only — reasons typed afterwards (unuse reason) are kept (CX9-19)
     const keep = Object.fromEntries(ROWS.filter(r => r.why2).map(r => [r.r, r.why2]));
@@ -782,7 +774,7 @@ window.pageInit = function () {
     if (e.target.closest('#undo-btn')) { if (canWrite && !undoStack.length) { toast('되돌릴 작업이 없습니다', 'info'); return; } undo(); refocus('#undo-btn'); return; }
     const rb = e.target.closest('#errbar [data-rule]'); if (rb) { ruleF = ruleF === rb.dataset.rule ? '' : rb.dataset.rule; filt = ''; recentF = false; drawGrid(); refocus(`#errbar [data-rule="${rb.dataset.rule}"]`); return; }
     if (e.target.closest('#next-err')) { nextErr(); return; }
-    if (e.target.closest('#auto-all') && !canWrite) { toast(`열람 전용 — ${roReason}`, 'info'); return; }
+    if (e.target.closest('#auto-all') && !canWrite) { toast(`조회 전용 — ${roReason}`, 'info'); return; }
     // "visible targets only" means exactly that: the same filter as the grid (CL9-15)
     if (e.target.closest('#auto-all')) { const autos = ROWS.filter(r => r.st === 'err' && r.auto && rowVis(r)); if (!autos.length) { toast('지금 보이는 행에는 자동 수정 대상이 없습니다 — 필터를 바꿔 보세요', 'info'); return; } openAuto(autos, e.target.closest('#auto-all')); return; }
     if (e.target.closest('#fr-open')) { openFr(e.target.closest('#fr-open')); return; }
@@ -794,14 +786,14 @@ window.pageInit = function () {
       const rows = errs.map(r => ['오류', r.r, ST[r.st][0], ...K.cols.map(c => r.shown && c[0] === 'desc' ? r.shown : r[c[0]]), r.rule, lbl(r.bad), r.why, GUIDE[r.rule] || '', r.fix ? Object.entries(effFix(r)).map(([k, v]) => `${lbl(k)}: ${v}`).join(' / ') : ''])
         .concat(look.map(r => ['확인 필요', r.r, ST[r.st][0], ...K.cols.map(c => r[c[0]]), r.rule || '', r.warnF ? lbl(r.warnF) : '', ['new', 'chg'].includes(r.st) && r.warn ? r.warn : r.why, r.rule && GUIDE[r.rule] ? GUIDE[r.rule] : r.st === 'pick' ? '결과 검토에서 분해 후보를 고르세요' : r.st === 'conflict' ? '현재 값 유지 또는 파일 값으로 변경을 고르세요' : '진행 중인 신청이 끝난 뒤 다시 검증합니다', '']));
       const fn = downloadCsv('오류가이드', ['구분', '원본 행', '상태', ...K.cols.map(c => c[1]), '규칙', '오류 칸', '사유', '수정 방법', '수정 제안'], rows);
-      toast(`${fn} 내려받음 — 화면 필터와 관계없이 전체 오류 ${errs.length}행 + 확인 필요 ${look.length}행 · CSV(목업 — 실제는 XLSX: 가이드 시트 · 셀 메모)`, 'success'); return; }
+      toast(`${fn} 내려받았습니다 — 화면 필터와 관계없이 전체 오류 ${errs.length}행 + 확인 필요 ${look.length}행 · CSV(목업 — 실제는 XLSX: 가이드 시트 · 셀 메모)`, 'success'); return; }
     if (e.target.closest('#dl-fix')) { const K = KC[kind], dict = getDict(), bl = mode === 'init' ? '—(초기 적재)' : B ? B.baseline : BL.id;
       // E-05: a file that can REPLACE the original — every row of the file (out of scope · missing included, told apart by the status column), the hidden columns, the change column
       const all = ROWS.map(r => [r, ST[r.st][0]]).concat(outRows.map(r => [r, '기준본 범위 밖 — 비교·신청 안 함'])).sort((a, b) => (+a[0].r || 1e9) - (+b[0].r || 1e9));
       const rows = all.map(([r, st]) => { const d = r.id ? dict.find(x => x.id === r.id) : null;
         return [r.r, ...K.cols.map(c => r.shown && c[0] === 'desc' ? r.shown : r[c[0]]), r.id || '', d ? 'V' + d.ver : '', r.id ? bl : '', r.st === 'missing' ? '파일에서 빠짐 — 원본에 없던 행(참고)' : st, r.fixed ? Object.entries(r.fixed).filter(([k, v]) => String(v) !== String(r[k])).map(([k, v]) => `${K.lbl[k] || k}: ${v} → ${r[k]}`).join(' / ') : '']; });
       const fn = downloadCsv('보정본', ['원본 행', ...K.cols.map(c => c[1]), '(숨김) 항목 ID', '(숨김) 버전', '(숨김) 기준본', '상태(참고)', '변경점(파일 값 → 보정 값)'], rows);
-      toast(`${fn} 내려받음 — 파일의 모든 ${all.length}행(범위 밖 ${outRows.length} · 빠짐 ${ROWS.filter(r => r.st === 'missing').length} 포함, 상태 열로 구분) · 숨김 열 · 고친 ${ROWS.filter(r => r.fixed).length}행. CSV · 목업 — 실제는 XLSX(본문 + 변경점 시트, 모든 칸 텍스트 서식)`, 'success'); return; }
+      toast(`${fn} 내려받았습니다 — 파일의 모든 ${all.length}행(범위 밖 ${outRows.length} · 빠짐 ${ROWS.filter(r => r.st === 'missing').length} 포함, 상태 열로 구분) · 숨김 열 · 고친 ${ROWS.filter(r => r.fixed).length}행. CSV · 목업 — 실제는 XLSX(본문 + 변경점 시트, 모든 칸 텍스트 서식)`, 'success'); return; }
   });
   // DX-08: a real file built in the browser — CSV, UTF-8 with BOM so Excel opens Korean correctly
   function downloadCsv(suffix, head, rows) {
@@ -889,7 +881,7 @@ window.pageInit = function () {
     $('fr-go').disabled = !ok.length; $('fr-go').textContent = ok.length ? `${ok.length}칸 바꾸기` : '바꾸기';
   }
   function openFr(opener) {
-    if (!canWrite) { toast(`열람 전용 — ${roReason}`, 'info'); return; }
+    if (!canWrite) { toast(`조회 전용 — ${roReason}`, 'info'); return; }
     const K = KC[kind], n = frRows().length, skipped = ROWS.filter(r => rowVis(r) && FR_SKIP.includes(r.st)).length;
     $('fr-col').innerHTML = '<option value="">바꿀 수 있는 칸 전체</option>' + frCols().map(c => `<option value="${c[0]}">${c[1]}</option>`).join('');
     $('fr-col').value = frCols().some(c => c[0] === frColLast) ? frColLast : '';
@@ -974,7 +966,7 @@ window.pageInit = function () {
   }
   // E-07: the foot line follows every edit, not only a step change
   function drawHint() { const p = plan();
-    $('hint').textContent = cur === 2 && !file ? '파일을 선택하세요' : cur === 4 ? '검증이 끝나면 결과 검토로 넘어갑니다' : cur === 5 ? (!canWrite ? `열람 전용 — ${roReason}` : p.err ? `오류 ${p.err}행은 신청에서 빠집니다 · F8 다음 오류` : `오류 없음 · ${leftText()}`) : ''; }
+    $('hint').textContent = cur === 2 && !file ? '파일을 선택하세요' : cur === 4 ? '검증이 끝나면 결과 검토로 넘어갑니다' : cur === 5 ? (!canWrite ? `조회 전용 — ${roReason}` : p.err ? `오류 ${p.err}행은 신청에서 빠집니다 · F8 다음 오류` : `오류 없음 · ${leftText()}`) : ''; }
   // ---- wizard
   const names =['방식·종류', '업로드', '열 매핑', '검증·비교', '결과 검토·보정', '신청'];
   const steps = $('steps');

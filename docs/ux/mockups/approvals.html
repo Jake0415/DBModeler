@@ -179,7 +179,7 @@ window.pageInit = function () {
   // DX-21: the stats view is for the people who oversee approvals (DA · 기관 담당자 · Admin)
   const canStats = ME.has('da') || ME.has('owner') || can('settings');   /* 집계는 결재를 맡은 사람 · Admin — 감리는 문서만 */
   // DX-11: anyone who can read the dictionary may open an in-progress dictionary request read-only (model documents keep their rule)
-  const roView = d => false;   /* R-07: 결재 중 문서는 품의자 · 결재선만 — 목록과 상세가 같은 판정(canSeeDoc) */
+  const roView = d => false;   /* R-07: 결재 중 문서는 신청자 · 결재선만 — 목록과 상세가 같은 판정(canSeeDoc) */
   const canView = d => canSeeDoc(d) || roView(d);
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
   // 'M/D HH:mm' (seed · nowStr) or 'YYYY-MM-DD HH:mm' (submittedAt) → ms. a M/D date in the future means last year
@@ -209,25 +209,25 @@ window.pageInit = function () {
     const box0 = $('arview'); const L = getAdminReqs().filter(r => arMine(r) || r.req === ME.id || r.target === ME.id || (can('admin.confirm') && r.status !== 'wait')).sort((a, b) => (b.status === 'wait') - (a.status === 'wait'));
     if (!arSel || !L.some(r => r.id === arSel)) arSel = (L[0] || {}).id || null;
     const r = L.find(x => x.id === arSel);
-    const ST = { wait: '확인 대기', ok: '확인됨 · 적용', no: '거절', withdrawn: '철회', expired: '7일 지나 자동 취소', stale: '값이 바뀌어 적용 안 함' };
+    const ST = { wait: '확인 대기', ok: '확인됨 · 적용', no: '거절', withdrawn: '요청 취소', expired: '7일 지나 자동 취소', stale: '값이 바뀌어 적용 안 함' };
     const val = (k, v) => k === 'roles' ? ((v || []).map(x => ROLE_NAME[x]).join(' · ') || '조회만') : k === 'systems' ? (sysNames((v || []).map(sysCodeOf)) || '—') : k === 'finalDict' ? (v ? '사전 최종 승인 켬' : '사전 최종 승인 끔') : k === 'selfAppr' ? (v ? '자기 승인 허용' : '자기 승인 비허용') : k === 'finalModel' ? Object.entries(v || {}).map(([a, x]) => `${(getAllModels()[a] || {}).name || a} ${x === false ? '끔' : '켬'}`).join(' · ') : String(v);
     box0.innerHTML = `<div class="ar-wrap"><div class="ar-list"><div class="caption muted u-mb-8">관리 변경은 결재 문서와 따로 셉니다 — 결재 기한 · 준수율 집계에 들어가지 않습니다. 신청자와 역할을 받는 사람은 확인할 수 없습니다.</div>
-      <table class="tbl flat"><thead><tr><th>번호</th><th>내용</th><th>신청</th><th>상태</th></tr></thead><tbody>${L.map(x => `<tr class="click ${x.id === arSel ? 'sel' : ''}" data-ar="${x.id}" tabindex="0"><td class="mono">${x.id}</td><td>${esc(x.title)}</td><td>${esc(nameOf(x.req))} · ${esc(x.at)}</td><td>${x.status === 'wait' ? `<span class="badge b-warning">${ST.wait}</span>` : `<span class="badge">${ST[x.status] || x.status}</span>`}</td></tr>`).join('') || '<tr class="none"><td colspan="4" class="caption muted">확인할 관리 변경이 없습니다</td></tr>'}</tbody></table></div>
+      <table class="tbl flat"><thead><tr><th>번호</th><th>내용</th><th>신청</th><th>상태</th></tr></thead><tbody>${L.map(x => `<tr class="click ${x.id === arSel ? 'sel' : ''}" data-ar="${x.id}" tabindex="0"><td class="mono">${x.id}</td><td>${esc(x.title)}</td><td>${esc(nameOf(x.req))} · ${esc(x.at)}</td><td>${x.status === 'wait' ? `<span class="badge b-warning">${ST.wait}</span>` : `<span class="badge">${ST[x.status] || x.status}</span>`}</td></tr>`).join('') || '<tr class="er none"><td colspan="4">확인할 관리 변경이 없습니다 — 새 요청이 오면 홈과 알림에 보입니다</td></tr>'}</tbody></table></div>
       ${r ? `<div class="ar-detail"><h3 class="u-mt-0">${r.id} · ${esc(r.title)}</h3>
         <dl class="kv"><dt>신청</dt><dd>${esc(nameOf(r.req))} · ${esc(r.at)}</dd>${r.target ? `<dt>받는 사람</dt><dd>${esc(nameOf(r.target))} <span class="mono faint">${r.target}</span>${USERS[r.target] && USERS[r.target].kind ? ` · ${ACCT_KIND[USERS[r.target].kind]}${USERS[r.target].until ? ' · 기한 ' + USERS[r.target].until : ''}` : ''}</dd>` : ''}<dt>사유</dt><dd>${esc(r.why)}</dd><dt>영향</dt><dd>${esc(r.impact || '—')}</dd>${r.decidedAt ? `<dt>처리</dt><dd>${esc(r.decidedAt)} ${esc(nameOf(r.by || ''))}${r.no ? ' · ' + esc(r.no) : ''}</dd>` : ''}</dl>
         <table class="tbl set-tbl u-mt-8"><thead><tr><th>항목</th><th>지금</th><th>바뀐 뒤</th></tr></thead><tbody>${Object.keys(r.after).map(k => `<tr><td>${({ roles: '역할', systems: '담당 시스템', finalDict: '사전 최종 승인', finalModel: '모델 확정 최종 승인', selfAppr: '자기 승인' })[k] || k}</td><td>${esc(val(k, r.before[k]))}</td><td><b>${esc(val(k, r.after[k]))}</b></td></tr>`).join('')}</tbody></table>
         ${r.status === 'wait' ? `<div class="caption muted u-mt-8">${Math.max(0, Math.ceil((r.untilMs - Date.now()) / 86400000))}일 안에 확인하지 않으면 자동 취소됩니다.</div>` : ''}
-        <div class="flex u-mt-12 u-gap-8">${r.status === 'wait' && r.req === ME.id ? '<button class="btn" id="ar-wd">철회</button>' : ''}<span class="grow"></span>${r.status === 'wait' && arMine(r) ? '<button class="btn danger" id="ar-no">거절</button><button class="btn primary" id="ar-ok">확인 — 적용</button>' : r.status === 'wait' ? `<span class="caption muted">${r.req === ME.id ? '내가 신청한 변경은 확인할 수 없습니다' : r.target === ME.id ? '나에게 주는 역할은 내가 확인할 수 없습니다' : '기관 담당자가 확인합니다'}</span>` : ''}</div></div>` : ''}</div>`;
+        <div class="flex u-mt-12 u-gap-8">${r.status === 'wait' && r.req === ME.id ? '<button class="btn" id="ar-wd">확인 요청 취소</button>' : ''}<span class="grow"></span>${r.status === 'wait' && arMine(r) ? '<button class="btn danger" id="ar-no">관리 변경 거절</button><button class="btn primary" id="ar-ok">확인하고 적용</button>' : r.status === 'wait' ? `<span class="caption muted">${r.req === ME.id ? '내가 신청한 변경은 확인할 수 없습니다' : r.target === ME.id ? '나에게 주는 역할은 내가 확인할 수 없습니다' : '기관 담당자가 확인합니다'}</span>` : ''}</div></div>` : ''}</div>`;
     box0.querySelectorAll('[data-ar]').forEach(t => { t.onclick = () => { arSel = t.dataset.ar; drawAR(); }; t.onkeydown = e => { if (e.key === 'Enter') t.click(); }; });
     const decide = async kind => { reloadUsers(); const A = getAdminReqs(), x = A.find(y => y.id === arSel); if (!x || x.status !== 'wait') { toast('이미 처리된 요청입니다', 'info'); drawAR(); return; }
-      if (kind !== 'wd' && !arMine(x)) { toast('지금 계정으로는 확인할 수 없습니다', 'danger'); return; } if (kind === 'wd' && x.req !== ME.id) { toast('신청한 사람만 철회할 수 있습니다', 'danger'); return; }
+      if (kind !== 'wd' && !arMine(x)) { toast('지금 계정으로는 확인할 수 없습니다', 'danger'); return; } if (kind === 'wd' && x.req !== ME.id) { toast('신청한 사람만 요청을 취소할 수 있습니다', 'danger'); return; }
       if (kind === 'ok' && arStale(x)) { x.status = 'stale'; x.decidedAt = nowStr(); x.by = ME.id; saveAdminReqs(A); pushAudit({ act: '관리 변경 적용 안 함 — 값이 바뀜', target: x.title, why: x.id }); toast('신청 뒤 값이 바뀌어 적용하지 않았습니다 — 신청자에게 다시 신청하도록 알렸습니다', 'danger'); pushNotif({ to: [x.req], k: 'res', t: `${x.id} 적용 안 함 — 값이 바뀜`, m: x.title, href: 'settings.html' }); drawAR(); drawBoxes(); return; }
       let why = ''; if (kind === 'no') { why = await askReason(`${x.id} 거절`, '거절 사유', x.title) || ''; if (!why) return; const A2 = getAdminReqs(), x2 = A2.find(y => y.id === x.id); if (!x2 || x2.status !== 'wait') { toast('그 사이 처리된 요청입니다', 'info'); drawAR(); return; } }
       if (kind === 'ok') applyAdminReq(x);
       x.status = kind === 'ok' ? 'ok' : kind === 'no' ? 'no' : 'withdrawn'; x.decidedAt = nowStr(); x.by = ME.id; if (why) x.no = why; saveAdminReqs(A);
-      pushAudit({ act: kind === 'ok' ? '관리 변경 확인 — 적용' : kind === 'no' ? '관리 변경 거절' : '관리 변경 확인 요청 철회', target: x.title, why: [x.id, why].filter(Boolean).join(' · ') });
+      pushAudit({ act: kind === 'ok' ? '관리 변경 확인 — 적용' : kind === 'no' ? '관리 변경 거절' : '관리 변경 확인 요청 취소', target: x.title, why: [x.id, why].filter(Boolean).join(' · ') });
       if (kind !== 'wd') pushNotif({ to: [x.req].concat(x.target ? [x.target] : []), k: 'res', t: `${x.id} ${kind === 'ok' ? '확인됨 · 적용' : '거절됨'}`, m: x.title + (why ? ' · ' + why : ''), href: 'approvals.html?box=confirm&ar=' + x.id });
-      toast(kind === 'ok' ? `${x.id} 확인 — 적용했습니다 · 감사 로그에 기록` : kind === 'no' ? `${x.id}를 거절했습니다` : `${x.id}를 철회했습니다`, kind === 'ok' ? 'success' : 'info'); drawAR(); drawBoxes(); };
+      toast(kind === 'ok' ? `${x.id}를 확인하고 적용했습니다 · 감사 로그에 남았습니다` : kind === 'no' ? `${x.id}를 거절했습니다` : `${x.id} 확인 요청을 취소했습니다`, kind === 'ok' ? 'success' : 'info'); drawAR(); drawBoxes(); };
     const ok = $('ar-ok'), no = $('ar-no'), wd = $('ar-wd'); if (ok) ok.onclick = () => decide('ok'); if (no) no.onclick = () => decide('no'); if (wd) wd.onclick = () => decide('wd');
   }
   function drawBoxes() {
@@ -246,7 +246,7 @@ window.pageInit = function () {
   function drawRows() {
     const st = box === 'stats';
     const arv = box === 'confirm'; $('tb').hidden = st || arv; $('listwrap').hidden = st || arv; $('stats').hidden = !st; $('arview').hidden = !arv;
-    if (arv) { drawAR(); return; }
+    if (arv) { const lh = document.querySelector('#listhead, .listhead'); if (lh) lh.textContent = ''; drawAR(); return; }
     if (st) { drawStats(); return; }
     const L = list();
     // L-5 count line: total in the box → after filters, the default order, applied filter chips + 모두 지우기
@@ -573,7 +573,7 @@ window.pageInit = function () {
     p.classList.add('open');
     if (markable(d) && !MARKS[d.id] && ASK[d.id] === undefined && storedMarks(d)) ASK[d.id] = true;   // A3
     // deep links follow the same visibility rule as the lists (CL9-22)
-    if (!canView(d)) { deadEnd(p, d.id, '열람 권한이 없습니다', inReview(d) ? '결재 중인 문서는 품의자와 이 문서의 결재 담당자만 볼 수 있습니다. 결재가 끝나면 참조자 · 결재 역할도 볼 수 있습니다.' : `이 결재 문서는 신청자 · 참조자 · 결재 역할(DA · 기관 담당자)만 볼 수 있습니다. 지금 역할: ${ME.roles.map(r => ROLE_NAME[r]).join('·') || '조회만'}`); return; }
+    if (!canView(d)) { deadEnd(p, d.id, '열람 권한이 없습니다', inReview(d) ? '결재 중인 문서는 신청자와 이 문서의 결재 담당자만 볼 수 있습니다. 결재가 끝나면 참조자 · 결재 역할도 볼 수 있습니다.' : `이 결재 문서는 신청자 · 참조자 · 결재 역할(DA · 기관 담당자)만 볼 수 있습니다. 지금 역할: ${ME.roles.map(r => ROLE_NAME[r]).join('·') || '조회만'}`); return; }
     const mine = d.req === ME.id, live = ['da', 'final'].includes(d.step);
     const ro = roView(d);   // DX-11: someone else's request — read-only, no decisions
     // comments (DX-11) sit in the history in time order; they have no approval effect
@@ -587,7 +587,7 @@ window.pageInit = function () {
     // DX-12: every item rejected → it is an ordinary whole-document rejection
     else if (inQueue(d) && allRejected(d)) right = `<div class="foot-zone"><span class="caption muted">모든 항목을 반려해 문서 반려로 처리합니다</span><button class="btn danger" data-open="mo-reject" id="btn-rejall">문서 반려 (항목 ${d.items.length}건)</button></div>`;
     else if (inQueue(d)) right = `<div class="foot-zone"><span class="zl">${stepRole(d.step)}로서</span>${depN ? `<span class="caption u-warning" id="dep-warn">${icon('warn', 12)} 의존 미처리 ${depN}</span>` : ''}<button class="btn danger" data-open="mo-reject">${nm ? '문서 전체 반려' : '반려'}</button>${mine && !selfOK() ? `<span class="has-tip" data-tip="자기 승인이 비허용으로 설정돼 있습니다 — 같은 단계의 다른 결재자가 승인합니다(설정 › 기관 › 자기 승인)"><button class="btn primary" id="btn-apr" disabled aria-describedby="self-off-t">자기 승인</button></span><span class="sr-only" id="self-off-t">자기 승인 비허용 — 다른 결재자가 승인합니다</span>` : `<button class="btn primary" id="btn-apr">${nm ? (mine ? `자기 승인 ${okN}건 · ${nm}건 반려` : `${okN}건 승인 · ${nm}건 반려`) : (mine ? '자기 승인' : '승인')}</button>`}</div>`;
-    else if (ro) right = `<span class="caption muted">읽기 전용 · 지금은 <b>${stepRole(d.step)}</b> 차례입니다</span>`;
+    else if (ro) right = `<span class="caption muted">조회 전용 · 지금은 <b>${stepRole(d.step)}</b> 차례입니다</span>`;
     else if (d.step === 'done') right = `<div class="foot-zone"><span class="caption muted">완료${(d.hist || []).length ? ' · ' + d.hist[d.hist.length - 1].at + ' ' + d.hist[d.hist.length - 1].who : ''}</span>${d.type === 'model' ? `<a class="btn primary" href="model.html?area=${d.area}&snap=${d.id}">v${d.ver} 확정본 보기</a>` : ''}</div>`;
     else if (live) right = `<span class="caption muted">지금은 <b>${stepRole(d.step)}</b> 차례입니다${ME.has(d.step === 'da' ? 'da' : 'owner') ? '' : ' · 내 역할로는 조회만 가능'}</span>`;
     else right = `<span class="caption muted">${STEP_NAME[d.step]}. 더 처리할 일이 없습니다</span>`;
@@ -601,7 +601,7 @@ window.pageInit = function () {
         ${d.type === 'model' ? `<div class="linkrow"><a href="model.html?area=${d.area}&snap=${d.id}">${icon('ext')}v${d.ver} 모델 보기</a><button data-open="mo-diff">${icon('compare')}v${d.ver - 1} 대비 변경</button><a href="outputs.html?k=tbl&area=${d.area}${d.step === 'done' ? '&snap=' + d.id : ''}">${icon('file')}산출물</a></div>` : d.batch ? `<div class="linkrow">${canSeeBatch(batchOf(d.batch)) ? `<a href="uploads.html?b=${d.batch}">${icon('upload')}업로드 ${d.batch}</a>` : `<span class="caption muted">업로드 ${d.batch}: 원본 파일은 올린 사람과 DA만 볼 수 있습니다</span>`}</div>` : ''}
       </div>
       <div class="rp-body">
-        ${ro ? `<div class="banner info u-mb-12">${icon('info')}<div><b>다른 사람의 신청 — 읽기 전용</b> · 같은 항목은 이 결재가 끝난 뒤 신청할 수 있습니다. 의견은 [처리 이력]에서 남길 수 있습니다.</div></div>` : ''}
+        ${ro ? `<div class="banner info u-mb-12">${icon('info')}<div><b>다른 사람의 신청 — 조회 전용</b> · 같은 항목은 이 결재가 끝난 뒤 신청할 수 있습니다. 의견은 [처리 이력]에서 남길 수 있습니다.</div></div>` : ''}
         ${line(d)}
         <div class="section-t">신청 사유</div><div>${d.reason}</div>
         <div class="tabs u-mt-12"><button class="on" data-tab="items">항목 <span class="n">${d.n}</span></button><button data-tab="check">검사 결과</button>${d.type === 'dict' && (d.items || []).length ? '<button data-tab="impact">영향</button>' : ''}<button data-tab="hist">처리 이력 <span class="n">${hist.length}</span></button></div>
@@ -821,7 +821,7 @@ window.pageInit = function () {
       sel = next ? next.id : null;
       const tail = next ? `다음 문서(${next.id})를 열었습니다` : left ? `필터에 맞는 대기 문서가 없습니다 · 남은 대기 ${left}건` : '대기함을 모두 처리했습니다';
       const tok = ++undoTok; const after = snapStore();
-      toast(`${captured ? captured[0].replace(/[.。]?$/, '') : did + ' 처리'} · ${tail}`, captured && captured[1] === 'danger' ? 'danger' : 'info', { label: '되돌리기', fn: undoFn(before, after, tok, did) });
+      toast(`${captured ? captured[0].replace(/[.。]?$/, '') : did + ' 처리'} · ${tail}`, captured && captured[1] === 'danger' ? 'danger' : 'info', { label: '실행 취소', fn: undoFn(before, after, tok, did) });
       captured = null;
     }
     pending = null; drawBoxes(); drawRows(); panel();

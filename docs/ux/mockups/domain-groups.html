@@ -84,7 +84,7 @@
 
   <!-- group add / edit (DA, direct, recorded) -->
   <div class="overlay" id="mo-group" role="dialog" aria-modal="true" aria-labelledby="mg-t"><div class="modal u-w-560">
-    <div class="m-head"><h3 id="mg-t">도메인그룹 추가</h3></div>
+    <div class="m-head"><h3 id="mg-t">도메인 그룹 추가</h3></div>
     <div class="m-body">
       <div class="caption muted u-mb-12">결재 없이 바로 반영됩니다. 변경 사유는 그룹 변경 기록과 감사 로그에 남습니다.</div>
       <div class="field"><label for="g-name">그룹명 *</label><input class="input" id="g-name" maxlength="40"><span class="help" id="g-name-h">기관 안에서 겹치지 않는 이름 — 예: 날짜/시간, 번호, 금액</span></div>
@@ -110,7 +110,7 @@
       <div class="caption muted u-mb-12">분류는 도메인과 같은 결재로 등록됩니다. 바구니에 담아 도메인 신청과 함께 올리면 분류 → 도메인 순서로 반영됩니다.</div>
       <div class="field-row">
         <div class="field"><label for="c-name">분류명 *</label><input class="input" id="c-name" maxlength="20" placeholder="예: 연월"><span class="help" id="c-name-h">도메인명 = 분류명 + 타입 + 길이 — 예: 연월C6</span></div>
-        <div class="field"><label for="c-group">도메인그룹 *</label><select class="input" id="c-group"></select><span class="help">공통 그룹 아래에도 기관 분류를 만들 수 있습니다(정책 — 그룹은 공통 그대로, 분류만 기관)</span></div>
+        <div class="field"><label for="c-group">도메인 그룹 *</label><select class="input" id="c-group"></select><span class="help">공통 그룹 아래에도 기관 분류를 만들 수 있습니다(정책 — 그룹은 공통 그대로, 분류만 기관)</span></div>
       </div>
       <div class="field"><label for="c-fw">연결 형식단어 *</label><select class="input" id="c-fw"></select>
         <span class="help" id="c-fw-h"></span></div>
@@ -127,9 +127,9 @@ window.pageInit = function () {
   const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   const CAN_GROUP = can('dict.group');   // decision Q7: group management stays direct, by permission (DA · Admin)
   const CAN_REQ = can('dict.request');
-  const NOT_DA = '도메인그룹 직접 관리 권한(DA · Admin)이 필요합니다';
-  const COMMON_RO = '공통(행안부) 표준은 읽기 전용입니다';
-  const COMMON_CLS = '공통표준 원문 — 공통표준 관리에서 새 판 품의';
+  const NOT_DA = '도메인 그룹 직접 관리 권한(DA · Admin)이 필요합니다';
+  const COMMON_RO = '공통(행안부) 표준은 조회 전용입니다';
+  const COMMON_CLS = '공통표준 원문 — 공통표준 관리에서 새 판 신청';
   const NO_REQ = '사전 신청 권한이 없습니다 — 모델러 · DA만 신청할 수 있습니다';
   let q = '', fSrc = '', fSt = '', sel = null, open = null;   // sel = {t:'g'|'c'|'p', id}
   let cMode = null;   // class panel inline form: null | 'chg' | 'unuse' (for sel.id)
@@ -219,7 +219,7 @@ window.pageInit = function () {
     const r = { edit: null, unuse: null, name: null };
     if (!CAN_GROUP) { r.edit = r.unuse = NOT_DA; }
     else if (gr.src === '공통') { r.edit = r.unuse = COMMON_RO; }
-    if (B.classes.length || B.doms.length) r.name = `분류 ${B.classes.length}개 · 도메인 ${B.doms.length}개가 이 그룹 이름으로 묶여 있어 이름은 바꿀 수 없습니다(도메인의 도메인그룹 값이 이름으로 저장됨) — 설명만 고칠 수 있습니다`;
+    if (B.classes.length || B.doms.length) r.name = `분류 ${B.classes.length}개 · 도메인 ${B.doms.length}개가 이 그룹 이름으로 묶여 있어 이름은 바꿀 수 없습니다(도메인의 도메인 그룹 값이 이름으로 저장됨) — 설명만 고칠 수 있습니다`;
     if (!r.unuse && gr.st === '사용') {
       if (B.live.length) r.unuse = `사용 중인 분류 ${B.live.length}개(${B.live.map(c => c.name).join(', ')})가 있어 미사용으로 바꿀 수 없습니다 — 분류를 먼저 정리하세요`;
       else if (B.pend.length) r.unuse = `신청 중 · 바구니 분류 ${B.pend.length}개(${B.pend.map(p => p.it.name).join(', ')})가 이 그룹을 가리킵니다`;
@@ -232,8 +232,8 @@ window.pageInit = function () {
       const gr = M.g.groups.find(x => x.id === sel.id); if (!gr) { sel = null; p.classList.remove('open'); return; }
       const B = M.byGroup[gr.id], blk = groupBlock(gr, B);
       const log = (M.g.log || []).filter(e => e.gid === gr.id || e.target === gr.name || String(e.target).split(' → ').includes(gr.name));
-      p.innerHTML = head(`${srcTag(gr.src)}<span class="badge">도메인그룹</span>${stTag(gr.st)}`, gr.name, gr.id) + `<div class="rp-body">
-        ${gr.src === '공통' ? `<div class="banner u-mb-12"><i data-ic=info></i><div><b>공통 표준(행안부)</b> — 그룹 자체는 읽기 전용입니다. 이 그룹 아래에 기관 분류는 신청할 수 있습니다(정책).</div></div>` : ''}
+      p.innerHTML = head(`${srcTag(gr.src)}<span class="badge">도메인 그룹</span>${stTag(gr.st)}`, gr.name, gr.id) + `<div class="rp-body">
+        ${gr.src === '공통' ? `<div class="banner u-mb-12"><i data-ic=info></i><div><b>공통 표준(행안부)</b> — 그룹 자체는 조회 전용입니다. 이 그룹 아래에 기관 분류는 신청할 수 있습니다(정책).</div></div>` : ''}
         <dl class="kv"><dt>설명</dt><dd>${esc(gr.desc)}</dd><dt>분류</dt><dd>${B.classes.length}개 (사용 ${B.live.length})</dd><dt>도메인</dt><dd>${B.doms.length}개</dd><dt>용어</dt><dd>${B.terms.length}개</dd></dl>
         <div class="section-t">분류 <span class="badge">${B.classes.length + B.pend.length}</span></div>
         ${B.classes.length || B.pend.length ? `<ul class="logl">${B.classes.map(c => `<li><b>${esc(c.name)}</b> <span class="caption muted">↔ 형식단어</span> <span class="mono">${esc(c.fw)}</span> ${srcTag(c.src)} ${c.st !== '사용' ? stTag(c.st) : ''}${chgTag(M.chgOf[c.id])}</li>`).join('')}${B.pend.map(x => `<li><b>${esc(x.it.name)}</b> <span class="caption muted">↔ 형식단어</span> <span class="mono">${esc(x.it.fw)}</span> ${pendTag(x)}</li>`).join('')}</ul>` : '<div class="caption muted">분류가 없습니다.</div>'}
@@ -252,7 +252,7 @@ window.pageInit = function () {
       const x = M.pend.find(y => y.key === sel.id); if (!x) { sel = null; p.classList.remove('open'); return; }
       const gr = M.g.groups.find(g => g.id === x.it.group) || { name: x.it.group };
       p.innerHTML = head(`${srcTag('기관')}<span class="badge">도메인분류</span>${pendTag(x)}`, x.it.name, x.src === 'basket' ? '내 바구니에 담김 — 아직 신청 전' : `${esc(x.doc)} 결재 중`) + `<div class="rp-body">
-        <dl class="kv"><dt>도메인그룹</dt><dd>${esc(gr.name)}</dd><dt>연결 형식단어</dt><dd class="mono">${esc(x.it.fw || '—')}</dd><dt>설명</dt><dd>${esc(x.it.desc || '—')}</dd><dt>작업</dt><dd>${esc(x.it.act || '추가')}</dd></dl>
+        <dl class="kv"><dt>도메인 그룹</dt><dd>${esc(gr.name)}</dd><dt>연결 형식단어</dt><dd class="mono">${esc(x.it.fw || '—')}</dd><dt>설명</dt><dd>${esc(x.it.desc || '—')}</dd><dt>작업</dt><dd>${esc(x.it.act || '추가')}</dd></dl>
         <div class="banner info"><i data-ic=info></i><div>${x.src === 'basket' ? '도메인 신청과 함께 결재하면 분류 → 도메인 순서대로 반영됩니다. 같은 이름의 분류는 다시 담을 수 없습니다.' : '최종 승인되면 분류가 등록되고 이 그룹 아래 ‘사용’으로 바뀝니다. 진행 중에는 같은 이름의 새 신청이 막힙니다.'}</div></div>
       </div>
       <div class="rp-foot"><span class="grow"></span>${x.src === 'basket' ? '<a class="btn sm" href="dictionary.html?basket=1"><i data-ic=basket data-s=12></i>바구니 열기</a>' : `<a class="btn sm" href="approvals.html?doc=${esc(x.doc)}">신청 내용 보기</a>`}</div>`;
@@ -270,7 +270,7 @@ window.pageInit = function () {
     const chg = base || (X && X.bk && opOf(X.bk) === '미사용' ? '바구니에 미사용으로 담겨 있습니다 — 바구니에서 빼야 변경을 담을 수 있습니다' : '');
     const unuse = base || (C.doms.length ? `${domsTxt}가 이 분류를 써서 미사용으로 바꿀 수 없습니다`
       : X && X.bk ? (opOf(X.bk) === '미사용' ? '이미 바구니에 미사용으로 담겨 있습니다' : '바구니에 변경으로 담겨 있습니다 — 바구니에서 빼야 미사용을 담을 수 있습니다') : '');
-    const nameLock = C.doms.length ? `${domsTxt}의 이름이 분류명으로 시작해 분류명은 바꿀 수 없습니다(연결 형식단어 · 도메인그룹 · 설명만)` : '';
+    const nameLock = C.doms.length ? `${domsTxt}의 이름이 분류명으로 시작해 분류명은 바꿀 수 없습니다(연결 형식단어 · 도메인 그룹 · 설명만)` : '';
     return { C, X, chg, unuse, nameLock };
   }
   const CF_LABELS = ['분류명', '연결 형식단어', '도메인그룹', '설명'];
@@ -302,7 +302,7 @@ window.pageInit = function () {
         <div class="field" data-f="분류명"><label for="cf-name">분류명 *<span class="chg-mark">바뀜</span></label><input class="input" id="cf-name" maxlength="20" value="${esc(cur['분류명'])}"${S.nameLock ? ' disabled' : ''}>
           <span class="help${S.nameLock ? ' lock' : ''}" id="cf-name-h">${esc(S.nameLock || '도메인명 = 분류명 + 타입 + 길이')}</span></div>
         <div class="field" data-f="연결 형식단어"><label for="cf-fw">연결 형식단어 *<span class="chg-mark">바뀜</span></label><select class="input" id="cf-fw"></select><span class="help" id="cf-fw-h"></span></div>
-        <div class="field" data-f="도메인그룹"><label for="cf-group">도메인그룹 *<span class="chg-mark">바뀜</span></label><select class="input" id="cf-group">${live.map(x => `<option value="${esc(x.id)}"${x.id === cur['도메인그룹'] ? ' selected' : ''}>${esc(x.name)}${x.src === '공통' ? ' (공통)' : ''}${x.st !== '사용' ? ' (미사용)' : ''}</option>`).join('')}</select><span class="help">공통 그룹으로도 옮길 수 있습니다(정책)</span></div>
+        <div class="field" data-f="도메인그룹"><label for="cf-group">도메인 그룹 *<span class="chg-mark">바뀜</span></label><select class="input" id="cf-group">${live.map(x => `<option value="${esc(x.id)}"${x.id === cur['도메인그룹'] ? ' selected' : ''}>${esc(x.name)}${x.src === '공통' ? ' (공통)' : ''}${x.st !== '사용' ? ' (미사용)' : ''}</option>`).join('')}</select><span class="help">공통 그룹으로도 옮길 수 있습니다(정책)</span></div>
         <div class="field" data-f="설명"><label for="cf-desc">설명<span class="chg-mark">바뀜</span></label><textarea class="input" id="cf-desc" rows="2">${esc(cur['설명'])}</textarea></div>
         <ul class="probs" id="cf-probs" aria-live="polite"></ul></div>`;
       foot = `<span class="grow"></span><button class="btn sm" id="cf-x">취소</button><button class="btn sm primary" id="cf-go"><i data-ic=basket data-s=12></i>바구니에 담기</button>`;
@@ -322,9 +322,9 @@ window.pageInit = function () {
         <span title="${esc(S.unuse)}"><button class="btn sm danger" id="c-unuse"${S.unuse ? ' disabled' : ''}>미사용 담기</button></span>`;
     }
     p.innerHTML = head(`${srcTag(c.src)}<span class="badge">도메인분류</span>${stTag(c.st)}${chgTag(X)}`, c.name, `${esc(gr.name)} 그룹 · ${c.id} · V${c.ver || 1}`) + `<div class="rp-body">
-      ${c.src === '공통' ? `<div class="banner u-mb-12"><i data-ic=info></i><div><b>공통표준 원문(행안부)</b> — 기관에서 바꾸거나 미사용으로 돌릴 수 없습니다. 바꾸려면 공통표준 관리에서 새 판으로 품의합니다.</div></div>` : ''}
+      ${c.src === '공통' ? `<div class="banner u-mb-12"><i data-ic=info></i><div><b>공통표준 원문(행안부)</b> — 기관에서 바꾸거나 미사용으로 돌릴 수 없습니다. 바꾸려면 공통표준 관리에서 새 판으로 신청합니다.</div></div>` : ''}
       ${pendBanner}
-      <dl class="kv"><dt>도메인그룹</dt><dd>${esc(gr.name)}${gr.src === '공통' && c.src === '기관' ? ' <span class="caption muted">(공통 그룹 아래 기관 분류)</span>' : ''}</dd><dt>연결 형식단어</dt><dd class="mono">${esc(c.fw)}</dd><dt>도메인명 규칙</dt><dd>분류명 + 타입 + 길이 <span class="caption muted mono">예: ${esc(c.name)}C8 · ${esc(c.name)}V100</span></dd><dt>설명</dt><dd>${esc(c.desc || '—')}</dd><dt>버전</dt><dd>V${c.ver || 1}</dd>${c.doc ? `<dt>최근 문서</dt><dd><a href="approvals.html?doc=${esc(c.doc)}">${esc(c.doc)}</a></dd>` : ''}</dl>
+      <dl class="kv"><dt>도메인 그룹</dt><dd>${esc(gr.name)}${gr.src === '공통' && c.src === '기관' ? ' <span class="caption muted">(공통 그룹 아래 기관 분류)</span>' : ''}</dd><dt>연결 형식단어</dt><dd class="mono">${esc(c.fw)}</dd><dt>도메인명 규칙</dt><dd>분류명 + 타입 + 길이 <span class="caption muted mono">예: ${esc(c.name)}C8 · ${esc(c.name)}V100</span></dd><dt>설명</dt><dd>${esc(c.desc || '—')}</dd><dt>버전</dt><dd>V${c.ver || 1}</dd>${c.doc ? `<dt>최근 문서</dt><dd><a href="approvals.html?doc=${esc(c.doc)}">${esc(c.doc)}</a></dd>` : ''}</dl>
       ${form}
       <div class="caption muted u-mb-12 u-mt-12">용어의 끝 단어가 <b>${esc(c.fw)}</b>이면 이 분류의 도메인(${esc(c.name)}…)을 써야 합니다.</div>
       <div class="section-t">도메인 <span class="badge">${C.doms.length}</span></div>${domList(C.doms, C.items, '이 분류로 만든 도메인이 아직 없습니다.')}
@@ -424,13 +424,13 @@ window.pageInit = function () {
   /* ---- group save (DA direct; every change logged with a reason) ---- */
   function record(g, act, target, why, gid) {
     g.log = g.log || []; g.log.unshift({ at: nowStr(), who: ME.name, act, target, why, gid });
-    saveGroups(g); pushAudit({ act: '도메인그룹 ' + act.replace(/^그룹 /, ''), target, why });
+    saveGroups(g); pushAudit({ act: '도메인 그룹 ' + act.replace(/^그룹 /, ''), target, why });
   }
   const guardDA = () => { if (liveRoleChanged()) { staleRoleToast(); return false; } if (!can('dict.group')) { toast(NOT_DA, 'danger'); return false; } return true; };
   let gEdit = null;
   function openGroup(gr) {
     gEdit = gr ? gr.id : null;
-    $('mg-t').textContent = gr ? `도메인그룹 수정 — ${gr.name}` : '도메인그룹 추가';
+    $('mg-t').textContent = gr ? `도메인 그룹 수정 — ${gr.name}` : '도메인 그룹 추가';
     $('g-name').value = gr ? gr.name : ''; $('g-desc').value = gr ? gr.desc : ''; $('g-why').value = '';
     const M = model(), blk = gr ? groupBlock(gr, M.byGroup[gr.id]) : {};
     $('g-name').disabled = !!(gr && blk.name);
@@ -458,7 +458,7 @@ window.pageInit = function () {
     if (!gEdit) {
       const id = 'G' + (Math.max(0, ...g.groups.map(x => +String(x.id).replace(/\D/g, '') || 0)) + 1);
       g.groups.push({ id, name, desc, st: '사용', src: '기관' }); record(g, '그룹 추가', name, why, id); sel = { t: 'g', id }; open.add(id);
-      toast(`도메인그룹 ${jo(name, '을/를')} 추가했습니다 — 변경 기록에 남겼습니다`);
+      toast(`도메인 그룹 ${jo(name, '을/를')} 추가했습니다 — 변경 기록에 남겼습니다`);
     } else {
       const gr = g.groups.find(x => x.id === gEdit); if (!gr) return;
       const M = model(); if (gr.name !== name && groupBlock(gr, M.byGroup[gr.id]).name) { toast('사용 중인 그룹은 이름을 바꿀 수 없습니다', 'danger'); return; }
@@ -466,7 +466,7 @@ window.pageInit = function () {
       const parts = []; if (gr.name !== name) parts.push(`이름 ${gr.name} → ${name}`); if (gr.desc !== desc) parts.push('설명');
       const target = gr.name !== name ? `${gr.name} → ${name}` : gr.name;
       gr.name = name; gr.desc = desc; record(g, '그룹 수정(' + parts.join(' · ') + ')', target, why, gr.id);
-      toast(`도메인그룹 ${jo(name, '을/를')} 수정했습니다`);
+      toast(`도메인 그룹 ${jo(name, '을/를')} 수정했습니다`);
     }
     $('mo-group').classList.remove('open'); draw();
   };
@@ -483,7 +483,7 @@ window.pageInit = function () {
     const g = getGroups(), gr = g.groups.find(x => x.id === gSt.id), why = $('s-why').value.trim(); if (!gr || !why) return;
     if (gSt.to === '미사용') { const blk = groupBlock(gr, model().byGroup[gr.id]).unuse; if (blk) { toast(esc(blk), 'danger'); $('mo-gst').classList.remove('open'); draw(); return; } }   // re-check at execution time
     gr.st = gSt.to; record(g, gSt.to === '미사용' ? '그룹 미사용' : '그룹 다시 사용', gr.name, why, gr.id);
-    toast(`도메인그룹 ‘${esc(gr.name)}’ → ${gSt.to}`); $('mo-gst').classList.remove('open'); draw();
+    toast(`도메인 그룹 ‘${esc(gr.name)}’ → ${gSt.to}`); $('mo-gst').classList.remove('open'); draw();
   };
 
   /* ---- class request → basket ---- */

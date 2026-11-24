@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>엑셀로 가져오기 · NeoDB 목업</title>
+<title>엑셀 정의서 가져오기 · NeoDB 목업</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&display=swap">
 <link rel="stylesheet" href="assets/app.css">
@@ -41,7 +41,7 @@
       <span class="seg" role="group" aria-label="가져올 형식"><button class="on" aria-pressed="true">엑셀 정의서</button><button id="to-ddl" aria-pressed="false">DDL</button></span>
     </div>
   </div>
-  <nav class="stepbar" aria-label="가져오기 단계" style="padding:12px 20px;border-bottom:1px solid var(--ds-gray-400)"><div class="steps" id="steps"></div></nav>
+  <nav class="stepbar" aria-label="가져오기 단계"><div class="steps" id="steps"></div></nav>
   <div class="scroll"><div class="pad xi-wrap">
 
     <!-- ① 파일 -->
@@ -50,13 +50,13 @@
       <div class="banner danger u-mb-12" id="xi-ferr" role="alert" hidden><i data-ic=err></i><div id="xi-ferr-t"></div></div>
       <div class="xi-grid">
         <div class="xi-card">
-          <h3 class="u-fs-15 u-mt-0">1. 양식 받기</h3>
+          <h3 class="card-t">1. 양식 내려받기</h3>
           <p class="caption muted u-lh-20">시트 <b>‘테이블 설계’</b> 한 장에 <b>한 행 = 한 컬럼</b>으로 씁니다. 테이블 물리명 · 논리명 · 설명은 모든 행에 반복합니다. 필수 열: 테이블 물리명 · 컬럼 물리명 · 컬럼 논리명 · 컬럼 타입.</p>
           <p class="caption muted u-lh-20">관계는 <b>참조 테이블 · 참조 컬럼</b>으로 적습니다(부모 PK 전체). 관계명은 가져온 뒤 ERD에서 입력합니다. 인덱스는 엑셀로 받지 않습니다.</p>
           <div class="flex u-gap-8 u-mt-8"><button class="btn" id="xi-tpl"><i data-ic=download></i>양식 내려받기 (.xlsx)</button><span class="caption muted" id="xi-tpl-note"></span></div>
         </div>
         <div class="xi-card">
-          <h3 class="u-fs-15 u-mt-0">2. 파일 올리기</h3>
+          <h3 class="card-t">2. 파일 올리기</h3>
           <div class="drop" id="xi-drop" tabindex="0" role="button" aria-label="엑셀 파일 끌어 놓기 또는 고르기" aria-describedby="xi-reading">
             <i data-ic=upload data-s=24></i><b>.xlsx 파일을 끌어 놓거나 눌러서 고르세요</b>
             <span class="caption">SWS 테이블 설계 양식 · 예전 18열 양식도 읽습니다 · 10MB까지</span>
@@ -84,7 +84,7 @@
 
     <!-- ③ 검사 · 미리보기 -->
     <section data-step="3" hidden>
-      <div class="flex u-gap-8 u-mb-12"><h2 class="xi-h u-fs-16 u-m-0" tabindex="-1" id="xi-h3">검사 · 미리보기</h2><span id="xi-state"></span><span class="grow"></span><button class="btn sm" id="xi-errx"><i data-ic=download></i>검사 결과 표시된 엑셀 받기</button><button class="btn sm" id="xi-again">다른 파일 올리기</button></div>
+      <div class="flex u-gap-8 u-mb-12"><h2 class="xi-h u-fs-16 u-m-0" tabindex="-1" id="xi-h3">검사 · 미리보기</h2><span id="xi-state"></span><span class="grow"></span><button class="btn sm" id="xi-errx"><i data-ic=download></i>검사 결과 표시된 엑셀 내려받기</button><button class="btn sm" id="xi-again">다른 파일 올리기</button></div>
       <div class="caption muted u-mb-8" id="xi-dst-line"></div>
       <div class="xi-card xi-sum" id="xi-sum" aria-live="polite"></div>
       <div class="tabs" style="margin:16px 0 12px;padding:0" role="tablist" aria-label="미리보기" id="xi-tabs"></div>
@@ -284,7 +284,7 @@ window.pageInit = function () {
     $('xi-next').textContent = n === 2 ? '다음: 검사 · 미리보기' : '가져오기'; document.querySelector('.scroll').scrollTop = 0; foot();
     if (!noFocus) setTimeout(() => { const h = document.querySelector(`section[data-step="${n}"] .xi-h`); if (h) h.focus(); }, 0); };   // Z-15
   const foot = () => { const f = $('xi-foot'); f.className = 'caption';
-    if (step === 3 && PRE) { const e = PRE.iss.filter(x => x.lv === 'err').length; const why = !canImport ? '모델러가 담당 시스템에서만 가져올 수 있습니다' : e ? `오류 ${e}건을 엑셀에서 고친 뒤 다시 올리세요 — [검사 결과 표시된 엑셀 받기]로 위치를 확인할 수 있습니다` : PRE.dst.kind === 'new' && !can('area.create', { system: SYS.code }) ? '업무 영역을 만들 권한이 없습니다' : '';
+    if (step === 3 && PRE) { const e = PRE.iss.filter(x => x.lv === 'err').length; const why = !canImport ? '모델러가 담당 시스템에서만 가져올 수 있습니다' : e ? `오류 ${e}건을 엑셀에서 고친 뒤 다시 올리세요 — [검사 결과 표시된 엑셀 내려받기]로 위치를 확인할 수 있습니다` : PRE.dst.kind === 'new' && !can('area.create', { system: SYS.code }) ? '업무 영역을 만들 권한이 없습니다' : '';
       $('xi-next').disabled = !!why; f.textContent = why || (PRE.iss.length ? `경고 ${PRE.iss.length}건은 표시만 하고 가져옵니다` : ''); if (why) f.classList.add('u-danger'); }
     else { f.textContent = ''; $('xi-next').disabled = false; } };
 
@@ -343,7 +343,7 @@ window.pageInit = function () {
       box.innerHTML = `<div class="xi-card"><b>병합 계획 — ${esc(getModel(PRE.dst.area).name)} v${getModel(PRE.dst.area).ver}</b><ul class="caption" style="margin:8px 0 0;padding-left:16px;line-height:22px">
           <li>테이블: 새로 <b>${add.length}</b>${add.length ? ` (${add.map(t => esc(t.p)).join(', ')})` : ''} · 갱신 <b>${upd.length}</b>(컬럼 추가 ${nc} · 값 다름 ${PRE.CF.length}) · 그대로 <b>${keep.length}</b></li>
           <li>관계: 새로 <b>${rN('new')}</b> · 이미 있음 <b>${rN('dup')}</b> · FK 충돌 <b>${rN('clash')}</b> · 엑셀에 없는 기존 관계는 그대로</li></ul></div>
-        ${PRE.CF.length ? `<div class="flex u-gap-8 u-mt-16 u-mb-8"><h3 class="u-fs-15 u-m-0">값이 다른 항목 ${PRE.CF.length}개 — 남길 값을 고르세요</h3><span class="grow"></span><button class="btn sm" data-allpick="xl">모두 엑셀 값</button><button class="btn sm" data-allpick="cur">모두 지금 값</button></div>
+        ${PRE.CF.length ? `<div class="flex u-gap-8 u-mt-16 u-mb-8"><h3 class="card-t u-m-0">값이 다른 항목 ${PRE.CF.length}개 — 남길 값을 고르세요</h3><span class="grow"></span><button class="btn sm" data-allpick="xl">모두 엑셀 값</button><button class="btn sm" data-allpick="cur">모두 지금 값</button></div>
           <table class="tbl"><thead><tr><th>테이블.컬럼</th><th>항목</th><th>지금 값</th><th>엑셀 값</th><th>남길 값</th></tr></thead><tbody>${PRE.CF.map((x, i) => `<tr><td class="mono">${esc(x.t)}${x.c ? '.' + esc(x.c) : ''}</td><td>${x.l}</td><td class="mono">${shw(x.cur)}</td><td class="mono">${shw(x.xl)}</td><td><select class="input" data-cf="${i}" aria-label="${esc(x.t)}${x.c ? '.' + esc(x.c) : ''} ${x.l} 남길 값"><option value="xl"${x.pick === 'xl' ? ' selected' : ''}>엑셀 값</option><option value="cur"${x.pick === 'cur' ? ' selected' : ''}>지금 값</option></select></td></tr>`).join('')}</tbody></table>` : ''}`;
       box.querySelectorAll('[data-cf]').forEach(s => s.onchange = () => { PICK.set(PRE.CF[+s.dataset.cf].key, s.value); PRE.CF[+s.dataset.cf].pick = s.value; delete $('xi-next').dataset.armed; });
       box.querySelectorAll('[data-allpick]').forEach(b => b.onclick = () => { PRE.CF.forEach(x => { x.pick = b.dataset.allpick; PICK.set(x.key, x.pick); }); drawPlan(); });
@@ -473,5 +473,6 @@ window.pageInit = function () {
   show(1, true);
 };
 </script>
+<script>setTimeout(() => { if (window.pageGuide) { const t = document.querySelector('.stepbar'); if (t) pageGuide(t); } }, 0);</script>
 </body>
 </html>

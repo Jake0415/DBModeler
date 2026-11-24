@@ -37,7 +37,7 @@
   window.pwHash = (id, pw) => { let h = 2166136261; const s = String(id).toLowerCase() + ':' + pw + ':neodb-mock-salt'; for (let i = 0; i < s.length; i++) h = Math.imul(h ^ s.charCodeAt(i), 16777619); return 'm1$' + (h >>> 0).toString(16); };
   const SEED_PW = 'Neodb!2026';   // mock only — every seeded account uses it; new accounts get the password the admin types
   Object.values(USERS).forEach(u => Object.assign(u, { status: 'active', auth: 'local', pwHash: pwHash(u.id, SEED_PW), pwAt: '2026-10-01', pwTemp: false, fails: 0, created: '2026-09-01', last: '' }));
-  const ROLE_NAME = { modeler: '모델러', da: 'DA', owner: '기관 담당자', admin: 'Admin', auditor: '감리' };   /* R-12: 감리 = 읽기 전용 + 끝난 결재 · 감사 로그 · 산출물 */
+  const ROLE_NAME = { modeler: '모델러', da: 'DA', owner: '기관 담당자', admin: 'Admin', auditor: '감리' };   /* R-12: 감리 = 조회 전용 + 끝난 결재 · 감사 로그 · 산출물 */
   window.HIGH_ROLES = ['da', 'owner', 'admin', 'auditor'];   /* R-03: giving these needs 기관 담당자 확인 */
   window.USERS = USERS; window.ROLE_NAME = ROLE_NAME;
   // roles changed in settings (SC-42) apply to everyone — the mock "server" copy of user roles
@@ -80,8 +80,8 @@
     { id: 'cand.decide', g: '표준 사전', n: '후보 큐 판단', roles: ['da'], scope: 'org' },
     { id: 'dict.publish', g: '표준 사전', n: '사전 공표', roles: ['da'], scope: 'org' },
     { id: 'dict.purge', g: '표준 사전', n: '삭제 보관 항목 영구 삭제', roles: ['da'], scope: 'org', note: 'Admin은 표준 내용을 바꾸지 않는다 (R-04)' },
-    { id: 'dict.group', g: '표준 사전', n: '도메인그룹 직접 관리', roles: ['da'], scope: 'org', note: '결재 없이 기록 · 감사 로그. 분류는 품의' },
-    { id: 'dict.common', g: '표준 사전', n: '공통표준 새 판 올리기(품의 작성)', roles: ['da', 'admin'], scope: 'org', note: '반영은 일반 품의(DA → 최종 승인)' },
+    { id: 'dict.group', g: '표준 사전', n: '도메인 그룹 직접 관리', roles: ['da'], scope: 'org', note: '결재 없이 기록 · 감사 로그. 분류는 신청' },
+    { id: 'dict.common', g: '표준 사전', n: '공통표준 새 판 올리기(신청)', roles: ['da', 'admin'], scope: 'org', note: '반영은 일반 품의(DA → 최종 승인)' },
     { id: 'excel.viewall', g: '표준 사전', n: '다른 사람의 엑셀 업로드 묶음 보기', roles: ['da'], scope: 'org', note: '나머지는 자기 묶음만' },
     { id: 'type.std', g: '표준 사전', n: '표준 논리 타입 추가 · 수정 · 사용 중지', roles: ['da'], scope: 'org', note: '결재 없이 바로 — 영향 확인 · 감사 로그 · 되돌리기 (27)' },
     { id: 'type.add', g: '표준 사전', n: '추가 · DBMS 전용 타입과 축약명 등록', roles: ['da'], scope: 'org', note: '공통 또는 시스템 전용 · 축약명 2~3자' },
@@ -89,7 +89,7 @@
     { id: 'type.request', g: '표준 사전', n: '타입 추가 요청', roles: ['modeler'], scope: 'sys', note: '등록은 DA' },
     { id: 'appr.da', g: '결재', n: '1단계(DA) 승인 · 반려', roles: ['da'], scope: 'sys', note: '사전 신청은 기관 전체, 모델 확정은 담당 시스템만' },
     { id: 'appr.final', g: '결재', n: '최종 승인 · 반려', roles: ['owner'], scope: 'sys', note: '사전 신청은 기관 전체, 모델 확정은 담당 시스템만 · 신청자와 1단계 승인자는 최종 승인할 수 없다' },
-    { id: 'appr.viewall', g: '결재', n: '끝난 결재 문서 보기', roles: ['da', 'owner', 'auditor'], scope: 'view', note: '결재 중 문서는 품의자 · 결재선만 · 감리는 조회 범위 안 · 나머지는 자기 신청 · 참조 문서만' },
+    { id: 'appr.viewall', g: '결재', n: '끝난 결재 문서 보기', roles: ['da', 'owner', 'auditor'], scope: 'view', note: '결재 중 문서는 신청자 · 결재선만 · 감리는 조회 범위 안 · 나머지는 자기 신청 · 참조 문서만' },
     { id: 'admin.confirm', g: '결재', n: '관리 변경 확인 — 느슨해지는 결재 정책 · 높은 역할 부여', roles: ['owner'], scope: 'org', note: '신청자 · 역할을 받는 사람은 확인할 수 없다 · 7일 지나면 자동 취소 (R-01 · R-03)' },
     { id: 'audit.view', g: '관리', n: '감사 로그 보기', roles: ['da', 'admin', 'owner', 'auditor'], scope: 'org', note: '감리는 기관 관리 기록(설정 · 계정) 빼고 조회 범위 안 (R-12 · R-15)' },
     { id: 'settings', g: '관리', n: '기관 · 시스템 · 사업 설정', roles: ['admin'], scope: 'org', note: '느슨해지는 결재 정책은 기관 담당자 확인 뒤 적용 (R-01)' },
@@ -809,7 +809,7 @@
   window.getBasket = () => J(bKey(), { items: [], reason: '', at: '' });
   window.saveBasket = b => { b.at = today() + ' ' + now().split(' ')[1]; S(bKey(), b); if (window.refreshTop) window.refreshTop(); basketBadge(); document.dispatchEvent(new CustomEvent('basket')); };
   // the top-bar basket badge follows every save (no reload needed)
-  const basketBadge = () => { const a = document.getElementById('btn-basket'); if (!a) return; const n = getBasket().items.length; a.setAttribute('aria-label', `사전 바구니 ${n}건 — 열어서 품의 올리기`); a.title = `사전 바구니 ${n}건`; let d = a.querySelector('.dot'); if (!n) { if (d) d.remove(); return; } if (!d) { d = document.createElement('span'); d.className = 'dot'; a.appendChild(d); } d.textContent = n; };
+  const basketBadge = () => { const a = document.getElementById('btn-basket'); if (!a) return; const n = getBasket().items.length; a.setAttribute('aria-label', `사전 바구니 ${n}건 — 열어서 신청하기`); a.title = `사전 바구니 ${n}건`; let d = a.querySelector('.dot'); if (!n) { if (d) d.remove(); return; } if (!d) { d = document.createElement('span'); d.className = 'dot'; a.appendChild(d); } d.textContent = n; };
   window.addEventListener('storage', e => { if (e.key === bKey()) basketBadge(); });   // another tab changed the basket
   // add items; an item already in the basket (same id, or same kind + name for new ones) is skipped — returns [added, skipped]
   // two changes of the same item merge field by field (the later value wins); a different action on the same item is skipped and reported
@@ -914,7 +914,7 @@
     if (k === 'class') {
       if (getGroups().classes.some(x => x.name === name && x.st === '사용')) B('name', '같은 이름의 분류가 있음');
       if (!it.fw) B('fw', '연결 형식단어가 비어 있음'); else if (!formatWords().includes(it.fw) && !batch.some(b => b.k === 'word' && b.name === it.fw && b.fmt === 'Y')) B('fw', `'${it.fw}'은 형식단어가 아님`);
-      if (!it.group || !getGroups().groups.some(g => g.id === it.group && g.st === '사용')) B('group', '도메인그룹을 고르세요');
+      if (!it.group || !getGroups().groups.some(g => g.id === it.group && g.st === '사용')) B('group', '도메인 그룹을 고르세요');
     }
     if (k === 'code') {
       const vals = it.vals || [], len = +(String(it.dom || '').match(/\d+$/) || [0])[0];
@@ -990,12 +990,12 @@
           if (op === '미사용' && doms.length) res.problems.push(`도메인 ${doms.length}개(${doms.slice(0, 3).join(', ')})가 쓰는 분류 — 미사용으로 바꿀 수 없음`);
           const nn = it.chg && it.chg['분류명']; if (nn && doms.length) res.problems.push('도메인이 쓰는 분류는 이름을 바꿀 수 없음(도메인명이 분류명으로 시작)');
           const fw = it.chg && it.chg['연결 형식단어']; if (fw && !formatWords().includes(String(fw[1])) && !(doc.items || []).some(o => o.k === 'word' && o.name === fw[1] && o.fmt === 'Y')) res.problems.push(`'${fw[1]}'은 형식단어가 아님`);
-          const gr = it.chg && it.chg['도메인그룹']; if (gr && !g.groups.some(x => x.id === gr[1] && x.st === '사용')) res.problems.push('사용 중인 도메인그룹을 고르세요'); }
+          const gr = it.chg && it.chg['도메인그룹']; if (gr && !g.groups.some(x => x.id === gr[1] && x.st === '사용')) res.problems.push('사용 중인 도메인 그룹을 고르세요'); }
       } else {
         const d = dict.find(x => x.id === it.id);
         if (!d) res.problems.push(`대상 항목 ${it.id}가 사전에 없음`);
         else {
-          if (d.src === '공통' && doc.kind !== 'common') res.problems.push('공통 표준은 기관에서 바꿀 수 없음(공통표준 새 판은 공통표준 관리에서 품의)');
+          if (d.src === '공통' && doc.kind !== 'common') res.problems.push('공통 표준은 기관에서 바꿀 수 없음(공통표준 새 판은 공통표준 관리에서 신청)');
           if (d.pending && d.pending !== doc.id && getDocs().some(x => x.id === d.pending && ['da', 'final'].includes(x.step))) res.problems.push(`${d.pending}에서 같은 항목을 신청 중`);
           if (op === '변경' && !Object.keys(it.chg || {}).length && !Object.keys(it.set || {}).length) res.problems.push('바뀌는 칸이 없음');
           if (op === '미사용' && d.st === '미사용') res.problems.push('이미 미사용');
@@ -1030,7 +1030,7 @@
         ch.unshift({ at, item: it.name, kind: '도메인분류', act: '추가', ver: 'V1', doc: doc.id, by: ME.name, diff: `그룹 ${(g.groups.find(x => x.id === it.group) || {}).name || it.group} · 형식단어 ${it.fw}`, itemId: id, firstVer: true });
         applied.push(id); return;
       }
-      if (k0 === 'class') {   // decision Q7: class change (분류명 · 연결 형식단어 · 도메인그룹 · 설명) / unuse through the request
+      if (k0 === 'class') {   // decision Q7: class change (분류명 · 연결 형식단어 · 도메인 그룹 · 설명) / unuse through the request
         const g = getGroups(), c = g.classes.find(x => x.id === it.id); if (!c) { failed.push([it.name, `대상 분류 ${it.id} 없음`]); return; }
         const CF = { 분류명: 'name', '연결 형식단어': 'fw', 도메인그룹: 'group', 설명: 'desc' }, diff = [];
         if (op === '미사용') { diff.push(['사용상태', c.st, '미사용']); c.st = '미사용'; }
@@ -1137,10 +1137,13 @@
   // re-checked just before it applies: the value it starts from must still be the current one (Codex R-01)
   window.arStale = r => { reloadUsers(); if (r.kind === 'policy') { const o = getOrg(); return Object.keys(r.after).some(k => k === 'finalModel' ? Object.keys(r.after.finalModel).filter(a => r.after.finalModel[a] === false).some(a => (o.finalModel || {})[a] === false) : k === 'selfAppr' ? (o.selfAppr !== false) !== (r.before.selfAppr !== false) : JSON.stringify(o[k]) !== JSON.stringify(r.before[k])); }
     const u = USERS[r.target], N = L => JSON.stringify((L || []).map(x => sysCodeOf(x)).sort()); return !u || u.status === 'stopped' || expiredUser(u) || JSON.stringify((u.roles || []).slice().sort()) !== JSON.stringify((r.before.roles || []).slice().sort()) || N(u.systems) !== N(r.before.systems); };
-  window.askReason = (title, label, hint) => new Promise(res => { const ov = document.createElement('div'); ov.className = 'overlay open'; ov.setAttribute('role', 'dialog'); ov.setAttribute('aria-modal', 'true');
+  window.askConfirm = (title, body, okLabel, danger) => new Promise(res => { const back = document.activeElement; const ov = document.createElement('div'); ov.className = 'overlay open'; ov.setAttribute('role', 'dialog'); ov.setAttribute('aria-modal', 'true'); ov.setAttribute('aria-labelledby', 'ac-t');
+    ov.innerHTML = `<div class="modal"><div class="m-head"><h3 id="ac-t">${title}</h3></div><div class="m-body"><p class="u-mt-0">${body}</p></div><div class="m-foot"><button class="btn" id="ac-no">취소</button><span class="grow"></span><button class="btn ${danger ? 'danger' : 'primary'}" id="ac-ok">${okLabel}</button></div></div>`;
+    document.body.appendChild(ov); const done = v => { ov.remove(); res(v); if (back && back.isConnected) back.focus(); }; ov.querySelector('#ac-no').onclick = () => done(false); ov.querySelector('#ac-ok').onclick = () => done(true); ov.addEventListener('keydown', e => { if (e.key === 'Escape') done(false); }); setTimeout(() => ov.querySelector('#ac-ok').focus(), 0); });   /* PC-10 · UX-28 */
+  window.askReason = (title, label, hint) => new Promise(res => { const back = document.activeElement; const ov = document.createElement('div'); ov.className = 'overlay open'; ov.setAttribute('role', 'dialog'); ov.setAttribute('aria-modal', 'true');
     ov.innerHTML = `<div class="modal"><div class="m-head"><h3 id="ar-q-t">${title}</h3></div><div class="m-body">${hint ? `<p class="caption muted u-mt-0">${hint}</p>` : ''}<label for="ar-q-in">${label} <b>*</b></label><textarea class="input" id="ar-q-in" rows="3" aria-required="true"></textarea><div class="err" id="ar-q-e"></div></div><div class="m-foot"><button class="btn" id="ar-q-no">취소</button><span class="grow"></span><button class="btn primary" id="ar-q-ok">확인</button></div></div>`;
     ov.setAttribute('aria-labelledby', 'ar-q-t'); document.body.appendChild(ov); const inp = ov.querySelector('#ar-q-in'); setTimeout(() => inp.focus(), 0);
-    const done = v => { ov.remove(); res(v); }; ov.querySelector('#ar-q-no').onclick = () => done(null); ov.addEventListener('keydown', e => { if (e.key === 'Escape') done(null); });
+    const done = v => { ov.remove(); res(v); if (back && back.isConnected) back.focus(); };   /* PC-05 */ ov.querySelector('#ar-q-no').onclick = () => done(null); ov.addEventListener('keydown', e => { if (e.key === 'Escape') done(null); });
     ov.querySelector('#ar-q-ok').onclick = () => { const v = inp.value.trim(); if (!v) { ov.querySelector('#ar-q-e').textContent = label + '을(를) 적어 주세요'; inp.setAttribute('aria-invalid', 'true'); inp.focus(); return; } done(v); }; });
   window.reloadUsers = () => { try { const db = JSON.parse(store.get('dbm-users', 'null')); if (db) Object.entries(db).forEach(([k, u]) => { USERS[k] = Object.assign(USERS[k] || {}, u); }); } catch (e) {} };
   window.applyAdminReq = r => { if (r.kind === 'policy') { const o = getOrg(); Object.entries(r.after).forEach(([k, v]) => { if (k === 'finalModel') { o.finalModel = Object.assign({}, o.finalModel); Object.keys(v).filter(a => v[a] === false).forEach(a => { o.finalModel[a] = false; }); } else o[k] = v; }); saveOrg(o); return; } reloadUsers(); const u = USERS[r.target]; if (!u) return; u.roles = r.after.roles.slice(); if (r.after.systems) u.systems = r.after.systems.slice(); saveUsers(); };
@@ -1489,7 +1492,7 @@
      Folded by default (space is short): the [ⓘ 화면 안내] button on the tab bar opens it; x = extra sections (용어 · 처리 방법 · 상태 뜻). */
   const PAGE_GUIDE = {
     'dictionary.html': { n: '통합 검색', d: '표준 단어 · 용어 · 도메인 · 코드를 찾아보고, 고칠 항목을 바구니에 모아 신청합니다.',
-      s: ['이름 · 영문약어 · 동의어 · 금칙어 · 초성으로 찾습니다', '행을 열어 정의 · 사용처 · 변경 이력을 봅니다', '[바구니에 담기] 후 [바구니 · 품의]에서 한 번에 신청합니다'],
+      s: ['이름 · 영문약어 · 동의어 · 금칙어 · 초성으로 찾습니다', '행을 열어 정의 · 사용처 · 변경 이력을 봅니다', '[바구니에 담기] 후 [바구니 · 신청]에서 한 번에 신청합니다'],
       when: '새 항목을 만들기 전, 이미 표준에 있는지 확인할 때', l: [['dict-grid.html', '몇 건 새로 → 직접 등록'], ['excel-import.html', '많은 건 → 엑셀 가져오기']],
       v: [{ if: () => !can('dict.request'), s: ['이름 · 영문약어 · 동의어 · 금칙어 · 초성으로 찾습니다', '행을 열어 정의 · 사용처 · 변경 이력을 봅니다', '필요하면 엑셀로 내려받습니다'], who: '찾기 · 내려받기만 가능 — 신청은 모델러 · DA', l: [] }] },
     'excel-import.html': { n: '엑셀 가져오기', d: '종류 하나를 골라 엑셀 파일로 여러 건을 한꺼번에 추가 · 변경 신청합니다.',
@@ -1514,36 +1517,39 @@
     'dict-history.html': { n: '변경 내역', d: '결재로 사전에 반영된 변경 기록입니다. 누가 · 언제 · 무엇을 바꿨는지 봅니다.',
       s: ['작업(추가 · 변경 · 미사용 · 공표)과 기간으로 거르거나 신청번호로 찾습니다', '행을 열어 바뀌기 전 · 후를 비교하고 신청 문서로 갑니다', '기간을 \'직전 공표 이후\'로 두면 다음 공표에 묶일 변경이 보입니다'],
       when: '변경 이유를 추적하거나 공표를 준비할 때', who: '[공표]는 DA만 — 기관 사전의 제정 차수를 올립니다', l: [['approvals.html', '진행 중인 신청 → 결재함']] },
-    'domain-groups.html': { n: '도메인 그룹 · 분류', d: '도메인을 묶는 상위 체계(도메인그룹 → 도메인분류)를 관리합니다. 사전을 만들 때 가장 먼저 정합니다.',
-      s: ['[그룹 추가]로 도메인그룹을 만듭니다 — 결재 없이 사유만 남깁니다', '그룹 아래 [분류 추가 신청]으로 도메인분류를 신청합니다', '이어서 직접 등록에서 단어 → 도메인 → 용어 순서로 씁니다'],
-      when: '사전을 처음 만들거나 새 업무 분야가 생길 때', who: '그룹 추가는 DA · 관리자, 분류 신청은 모델러 · DA', note: '공통(행안부) 그룹 · 분류는 읽기 전용 — 그 아래 기관 분류는 신청 가능', l: [['dict-grid.html', '단어 · 도메인 · 용어 쓰기 → 직접 등록']],
-      v: [{ if: () => !can('dict.request') && !can('dict.group'), s: ['도메인그룹과 그 아래 도메인분류를 봅니다', '분류를 눌러 연결된 형식단어와 도메인을 봅니다', '추가 · 변경이 필요하면 DA에게 요청합니다'], who: '보기만 가능 — 그룹은 DA · 관리자, 분류 신청은 모델러 · DA', l: [] }] },
+    'domain-groups.html': { n: '도메인 그룹 · 분류', d: '도메인을 묶는 상위 체계(도메인 그룹 → 도메인분류)를 관리합니다. 사전을 만들 때 가장 먼저 정합니다.',
+      s: ['[그룹 추가]로 도메인 그룹을 만듭니다 — 결재 없이 사유만 남깁니다', '그룹 아래 [분류 추가 신청]으로 도메인분류를 신청합니다', '이어서 직접 등록에서 단어 → 도메인 → 용어 순서로 씁니다'],
+      when: '사전을 처음 만들거나 새 업무 분야가 생길 때', who: '그룹 추가는 DA · Admin, 분류 신청은 모델러 · DA', note: '공통(행안부) 그룹 · 분류는 조회 전용 — 그 아래 기관 분류는 신청 가능', l: [['dict-grid.html', '단어 · 도메인 · 용어 쓰기 → 직접 등록']],
+      v: [{ if: () => !can('dict.request') && !can('dict.group'), s: ['도메인그룹과 그 아래 도메인분류를 봅니다', '분류를 눌러 연결된 형식단어와 도메인을 봅니다', '추가 · 변경이 필요하면 DA에게 요청합니다'], who: '보기만 가능 — 그룹은 DA · Admin, 분류 신청은 모델러 · DA', l: [] }] },
     'rules.html': { n: '검수 기준', d: '단어 · 도메인 · 용어 · 코드의 필수 항목 · 길이 · 허용 문자와 표준 제외 규칙입니다. 신청 · 표준 맞추기 · 엑셀 검사가 이 기준으로 막거나 경고합니다.',
       s: ['항목 칩으로 단어 · 도메인 · 용어 · 코드 규칙을 봅니다', 'DA · Admin은 길이 같은 값을 고치고 [저장]하면 정책 버전이 하나 오릅니다', '이전 기준으로 검사한 엑셀 묶음은 다시 검증하라고 안내됩니다'],
       when: '신청이 막힌 이유를 확인하거나 기관 기준을 바꿀 때', who: 'DA · Admin 고침 · 모두 읽기', note: '설정에 있던 검수 기준을 표준 사전으로 옮겼습니다 — 설정은 Admin 화면' },
+    'import-excel.html': { n: '엑셀 정의서 가져오기', d: 'SWS 테이블 설계 양식(.xlsx)을 읽어 업무 영역의 엔터티 · 속성 · 관계를 만듭니다. 사전 엑셀 가져오기(표준 사전 신청)와는 다른 화면입니다.',
+      s: ['[양식 내려받기]로 양식을 받아 채우고 파일을 올립니다', '가져올 위치(새 업무 영역 · 기존 영역 병합 · 덮어쓰기)를 고릅니다', '검사 · 미리보기에서 오류를 고치고 [가져오기] — 직후에는 [가져오기 취소]로 되돌릴 수 있습니다'],
+      when: '기존 테이블 설계서로 ERD를 시작할 때', who: '모델러(담당 시스템)', note: '원본 이름 · 타입은 고치지 않고 가져옵니다 — 표준 판정은 가져온 뒤 표준 맞추기에서', l: [['import.html', 'DDL로 가져오기 → DDL 가져오기']] },
     'datatypes.html': { n: '데이터 타입 · 축약명', d: '도메인 이름에 들어가는 논리 타입과 축약명, 시스템마다 다른 물리 타입 규칙을 한곳에서 관리합니다.',
-      s: ['[논리 타입] 탭에서 표준(1자) · 추가(2~3자) · DBMS 전용 타입과 사용처를 봅니다', '필요한 타입이 없으면 [타입 등록]으로 바로 추가합니다 — 결재 없이 사유와 감사 로그가 남습니다', '[시스템별 매핑] 탭에서 시스템을 고르고 길이 범위별 물리 타입을 정해 저장합니다'],
+      s: ['[논리 타입 · 축약명] 탭에서 표준(1자) · 추가(2~3자) · DBMS 전용 타입과 사용처를 봅니다', '필요한 타입이 없으면 [타입 등록]으로 바로 추가합니다 — 결재 없이 사유와 감사 로그가 남습니다', '[시스템별 매핑] 탭에서 시스템을 고르고 길이 범위별 물리 타입을 정해 저장합니다'],
       when: '도메인을 만들기 전 · 새 DBMS 시스템을 등록한 뒤 · 모델러가 타입을 요청했을 때', who: '등록 · 매핑은 DA(매핑은 담당 시스템), 모델러는 [타입 추가 요청]', note: '사용 중인 축약명은 바꾸지 않습니다 — [새 축약명으로 옮기기]로 도메인 이름까지 함께 바꿉니다', l: [['dictionary.html?req=domain', '이 타입으로 도메인 만들기 → 도메인 신청'], ['settings.html#sys', '시스템 등록 → 설정 › 시스템']],
       v: [{ if: () => !can('type.add'), s: ['쓸 수 있는 논리 타입과 시스템별 물리 타입을 봅니다', '맞는 타입이 없으면 [타입 추가 요청]을 보냅니다', '등록되면 알림이 오고, 모델의 도메인 칸 목록에 나타납니다'], who: '보기 · 요청만 — 등록은 DA · Admin', l: [] }] },
-    'std-common.html': { n: '공통표준 · 행정표준코드', d: '행안부 공통표준 판과 행정표준코드를 봅니다. 원문은 못 고치고, 새 판은 품의로 반영합니다.',
-      s: ['[행정표준코드] 탭에서 코드와 코드값을 찾아봅니다', '새 판이 나오면 [새 판 반영]에서 원본을 올려 지금 판과 비교합니다', '반영할 차이를 골라 품의를 올립니다 — 최종 승인 뒤 반영됩니다'],
-      when: '행안부가 새 판을 배포했을 때 · 공통 코드값을 확인할 때', who: '새 판 품의는 DA · 관리자만', note: '기관 항목과 충돌하면 DA가 따로 정리 · 폐기 항목은 지우지 않고 미사용으로', l: [['dict-history.html', '반영 결과 → 변경 내역']] },
+    'std-common.html': { n: '공통표준 · 행정표준코드', d: '행안부 공통표준 판과 행정표준코드를 봅니다. 원문은 못 고치고, 새 판은 신청으로 반영합니다.',
+      s: ['[행정표준코드] 탭에서 코드와 코드값을 찾아봅니다', '새 판이 나오면 [새 판 반영]에서 원본을 올려 지금 판과 비교합니다', '반영할 차이를 골라 신청을 올립니다 — 최종 승인 뒤 반영됩니다'],
+      when: '행안부가 새 판을 배포했을 때 · 공통 코드값을 확인할 때', who: '새 판 신청은 DA · Admin만', note: '기관 항목과 충돌하면 DA가 따로 정리 · 폐기 항목은 지우지 않고 미사용으로', l: [['dict-history.html', '반영 결과 → 변경 내역']] },
     'approvals.html': { n: '결재함', d: '표준 사전 신청 · 모델 확정 같은 결재 문서를 처리하고, 내가 올린 신청이 어디까지 갔는지 봅니다.',
       s: ['[대기함]에서 지금 내 차례인 문서를 엽니다(기한을 넘기면 일수가 빨갛게)', '내용 · 비교를 확인하고 [승인]하거나 의견을 남겨 [반려]합니다', '내가 올린 문서는 [내 신청]에서 보고, 결재가 끝나기 전이면 [회수]합니다'],
       x: [{ h: '함 구분', items: [['대기함', 'DA · 기관 담당자의 지금 차례 문서'], ['내 신청', '내가 올린 문서 — 단계 · 결과 확인, 회수'], ['참조함', '참조자로 지정된 문서 — 읽기만'], ['집계', '처리 건수 · 기간(권한 있는 사람만)']] },
         { h: '결재 흐름', items: [['DA 승인', '표준 검토 — 모든 문서에 필수'], ['최종 승인', '기관 담당자 — 설정에서 켠 문서만'], ['승인할 때 재검사', '미준수가 다시 생겼으면 승인되지 않고 이력에 남습니다'], ['반려 · 회수', '반려는 의견 필수, 회수는 사유 필수'], ['목록의 단계 점', '신청 → DA 승인 → 최종 승인 — 채운 점 완료 · 파란 고리 지금 · 빈 고리 대기 · ✕ 반려 · 짧은 막대 진행 안 함 · 회색 굵은 고리 회수로 멈춤']] }],
       when: '결재 알림을 받았거나 내 신청이 어디까지 갔는지 볼 때', who: '승인 · 반려는 그 단계 결재자, 회수는 신청자', l: [['dict-history.html', '반영된 결과 → 표준 사전 변경 내역']],
       v: [{ if: () => !(ME.has('da') || ME.has('owner')), s: ['[내 신청]에서 올린 문서의 단계를 봅니다', '반려되면 의견을 보고 고쳐서 다시 신청합니다', '결재가 끝나기 전이면 [회수]로 거둘 수 있습니다'], who: '결재 역할이 없어 [내 신청] · [참조함]만 봅니다' }] },
-    'settings.html': { n: '설정', d: '기관 · 시스템 · 사용자 역할 · 권한 · 검수 기준을 정합니다. 바꾼 내용은 감사 로그에 남습니다.',
+    'settings.html': { n: '설정', d: '기관 · 사업 · 시스템 · 사용자 역할 · 권한을 정합니다. 검수 기준 · 데이터 타입은 표준 사전에서 관리합니다. 바꾼 내용은 감사 로그에 남습니다.',
       s: ['위 탭에서 고칠 곳을 고릅니다', '값을 바꾸면 탭에 점이 붙고 아래 [저장] 막대가 나타납니다 — [변경 보기]로 무엇이 바뀌었는지 봅니다', '[저장](Ctrl+S)으로 반영하거나 [되돌리기]로 마지막 저장값으로 돌립니다'],
-      when: '처음 도입할 때 · 사람이나 결재선이 바뀔 때', who: '관리자만 — 다른 역할은 이 화면을 열 수 없습니다', l: [['audit.html', '바꾼 기록 → 감사 로그']],
+      when: '처음 도입할 때 · 사람이나 결재선이 바뀔 때', who: 'Admin만 — 다른 역할은 이 화면을 열 수 없습니다', l: [['audit.html', '바꾼 기록 → 감사 로그']],
       // the panel follows the open tab — what this tab decides, in its own words
       tabSel: '.tabs button[data-tab]',
       t: {
         org: { n: '설정 · 기관', d: '기관 전체에 같이 적용되는 결재 · 운영 규칙을 정합니다.',
           s: ['결재선(사전 신청 최종 승인 · 결재선 템플릿 · 자기 승인)을 정합니다', '운영 목표(준수율 목표 · 결재 기한)와 메일 알림을 정합니다', '아래 [저장] — 다음 신청부터 적용되고 감사 로그에 남습니다'],
-          x: [{ h: '이 탭의 항목', items: [['기관', '기관명 · 로고 — 상단 바와 산출물에 표시'], ['사전 신청 최종 승인', '켜면 DA 승인 뒤 기관 담당자가 한 번 더 승인'], ['운영 목표', '홈 · 통계의 준수율 목표선과 ‘기한 넘김’ 기준 일수'], ['결재선 템플릿', '문서 종류별 결재 단계 — 신청자는 단계를 지울 수 없고 참조자만 추가']] },
-            { h: ' ', items: [['도메인그룹 · 분류', '표준 사전 필터 · 도메인 신청 · 엑셀 가져오기에 쓰는 분류 체계'], ['자기 승인', '허용(사유 필수 · 감사 로그 표시) / 비허용(다른 결재자가 승인)'], ['메일 알림', '결재선 담당자에게만 — 나머지는 앱 알림']] }],
+          x: [{ h: '이 탭의 항목', items: [['기관', '기관명 · 로고 — 상단 바와 산출물에 표시'], ['사전 신청 최종 승인', '켜면 DA 승인 뒤 기관 담당자가 한 번 더 승인'], ['운영 목표', '홈 · 통계의 준수율 목표선과 ‘기한 넘김’ 기준 일수'], ['결재선 템플릿', '문서 종류별 결재 단계 — 신청자는 단계를 지울 수 없고 참조자만 추가'], ['사업 · 외부 계정', '외주 · 감리 계정이 속하는 사업 · 기간 — [사업 종료]로 인계 뒤 일괄 중지']] },
+            { h: ' ', items: [['도메인 그룹 · 분류', '표준 사전 › 도메인 그룹 · 분류에서 관리 — 여기서는 현황만'], ['자기 승인', '허용(사유 필수 · 감사 로그 표시) / 비허용(다른 결재자가 승인)'], ['메일 알림', '결재선 담당자에게만 — 나머지는 앱 알림']] }],
           when: '기관 결재 규칙이나 목표가 바뀔 때', note: '오른쪽 칸의 ‘마지막 변경’에 누가 · 언제 바꿨는지 보입니다' },
         sys: { n: '설정 · 시스템', d: '시스템(DB)마다 다른 물리 설계 규칙을 정합니다. 위쪽에서 시스템을 골라 하나씩 정합니다.',
           s: ['정할 시스템을 고릅니다', '대상 DBMS · 명명 템플릿 · 데이터타입 매핑 · 시스템 컬럼을 정합니다', '모델 확정 최종 승인을 업무 영역별로 켜고 끕니다'],
@@ -1555,7 +1561,7 @@
           x: [{ h: '역할', items: [['모델러', '모델 편집 · 표준 사전 신청 · 후보 등록'], ['DA', '표준 검토 · 결재(DA 승인) · 후보 처리'], ['기관 담당자', '최종 승인 · 조회'], ['관리자', '설정 · 사용자 관리 · 감사 로그']] },
             { h: '지키는 규칙', items: [['역할 겹침', '여러 역할을 가지면 할 수 있는 일을 합칩니다'], ['담당 시스템', '시스템 범위인 일은 담당 시스템에서만(전체 = 모든 시스템)'], ['스스로 바꾸기', '자기 역할 · 계정 상태는 스스로 못 바꿈, 마지막 관리자는 뺄 수 없음'], ['임시 비밀번호', '한 번만 보입니다 — 24시간 안에 첫 로그인해서 바꿔야 함']] }],
           when: '사람이 오거나 떠날 때 · 담당 업무가 바뀔 때', note: '권한을 빼면 그 사람의 열린 세션이 끝납니다 · 바꾼 기록은 감사 로그 ‘역할 · 권한’에' },
-        perms: { n: '설정 · 권한표', d: '역할마다 할 수 있는 일을 한눈에 보는 읽기 전용 표입니다. 바꾸려면 [사용자 · 역할]에서 사람의 역할을 바꿉니다.',
+        perms: { n: '설정 · 권한표', d: '역할마다 할 수 있는 일을 한눈에 보는 조회 전용 표입니다. 바꾸려면 [사용자 · 역할]에서 사람의 역할을 바꿉니다.',
           s: ['행(할 수 있는 일)과 열(역할)이 만나는 칸에서 허용 여부를 봅니다', '‘담당 시스템’ 표시가 있는 일은 그 사람의 담당 시스템에서만 됩니다', '아래 ‘함께 지키는 규칙’에서 역할 겸임 · 자기 승인 규칙을 확인합니다'],
           when: '누가 무엇을 할 수 있는지 설명하거나 점검할 때', note: '자기 승인 허용 여부는 [기관] 탭에서 정합니다', l: [['audit.html', '역할 변경 기록 → 감사 로그']] },
         rules: { n: '설정 · 검수 기준', d: '표준 사전 신청을 검사하는 규칙(이름 길이 · 글자 종류)과 준수율 계산에서 빼는 대상을 정합니다.',
@@ -1589,7 +1595,7 @@
     'audit.html': { n: '감사 로그', d: '누가 · 언제 · 무엇을 했는지 남는 기록입니다. 고치거나 지울 수 없고 5년 동안 보관합니다.',
       s: ['검색창과 종류 칩으로 찾을 기록을 좁힙니다', '기간(최근 30일 · 1년 · 전체)을 고릅니다', '점검 자료가 필요하면 [엑셀]로 내려받습니다'],
       x: [{ h: '종류 칩', items: [['자기 승인', '신청자가 자기 문서를 직접 승인한 경우(설정에서 허용했을 때)'], ['영구 삭제', '사전 항목을 지운 기록 — 사유와 함께'], ['결재', '승인 · 반려 · 회수'], ['역할 · 권한', '역할 부여 · 회수, 담당 시스템 변경'], ['설정', '설정 화면에서 바꾼 값'], ['더보기', '표준 사전 반영 · 모델 확정']] }],
-      when: '변경의 책임자를 확인하거나 감사 · 점검 자료를 낼 때', who: 'DA · 관리자 등 감사 권한이 있는 사람', l: [['dict-history.html', '사전 내용 변화 → 표준 사전 변경 내역'], ['approvals.html', '결재 문서 → 결재함']] }
+      when: '변경의 책임자를 확인하거나 감사 · 점검 자료를 낼 때', who: 'DA · Admin 등 감사 권한이 있는 사람', l: [['dict-history.html', '사전 내용 변화 → 표준 사전 변경 내역'], ['approvals.html', '결재 문서 → 결재함']] }
   };
   // folded by default and costs no height: a [ⓘ 화면 안내] button at the right end of the 사전 tab bar opens the panel under it.
   // the panel stays open only where the user opened it (dbm-guide-<id>[file] = 1) · ? key toggles (outside text fields)
@@ -1624,7 +1630,7 @@
   }
   const DICT_TABS = [['dictionary.html', '통합 검색'], ['excel-import.html', '엑셀 가져오기', ['uploads.html']], 0, ['dict-grid.html', '직접 등록'], 0, ['candidates.html', '후보 큐'], ['dict-history.html', '변경 내역'], 0, ['domain-groups.html', '도메인 그룹 · 분류'], ['datatypes.html', '데이터 타입 · 축약명'], ['rules.html', '검수 기준'], ['std-common.html', '공통표준 · 행정표준코드']];
   const SCREENS = [
-    { file: 'home.html', ids: 'SC-55', name: '홈', menu: '홈', docs: [['02 §1 화면 목록', D.flows], ['06 §3 새 화면 명세', D.plan]], states: [['김모델(모델러·DA)', 'home.html?as=kim'], ['박설계(모델러)', 'home.html?as=park'], ['이현업(기관 담당자)', 'home.html?as=hyun']] },
+    { file: 'home.html', ids: 'SC-55', name: '홈', menu: '홈', docs: [['02 §1 화면 목록', D.flows], ['06 §3 새 화면 명세', D.plan]], states: [['김모델(모델러 · DA)', 'home.html?as=kim'], ['박설계(모델러)', 'home.html?as=park'], ['이현업(기관 담당자)', 'home.html?as=hyun']] },
     { file: 'dictionary.html', ids: 'SC-10 · PN-11 · PN-12', name: '표준 사전 통합 검색 · 상세 · 등록 신청', menu: '표준 사전', docs: [['02 §3.1~3.2', D.flows], ['30 MD-01~12 사전 규칙', D.meta], ['07 E6 검색', D.excel], ['23 §6-1 검색 숫자', D.perf]], states: [['기본(최근 변경)', 'dictionary.html'], ['도메인 신청', 'dictionary.html?req=domain'], ['편집용 내려받기', 'dictionary.html#download'], ['검색: 산출', 'dictionary.html?q=산출']] },
     { file: 'dict-history.html', ids: 'SC-16', name: '표준 사전 변경 내역 · 공표', menu: '표준 사전', docs: [['07 E5 버전·이력', D.excel], ['30 MD-23', D.meta]], states: [['전체', 'dict-history.html'], ['미공표만', 'dict-history.html?unpub=1']] },
     { file: 'excel-import.html', ids: 'SC-13', name: '엑셀 가져오기(왕복 편집)', menu: '표준 사전', docs: [['02 §3.3', D.flows], ['07 E1~E4 왕복 편집', D.excel], ['30 MD-08·09', D.meta], ['23 §6-4 행 상한', D.perf]], states: [['1단계부터(실제 작업)', 'excel-import.html'], ['5단계 예시(저장 안 함)', 'excel-import.html?step=5'], ['신청된 묶음 열람', 'excel-import.html?resume=UP-2026-0007'], ['반영본 확인', 'excel-import.html?verify=UP-2026-0007']] },
@@ -1640,11 +1646,11 @@
     { file: 'model.html', ids: 'SC-31 · PN-32 · PN-33 · PN-31G · PN-39 · PN-35 · PN-38', name: '모델(ERD 캔버스 · 사전 패널 · 엔터티 패널 · 표 보기 · 모델 검토 · 게이트 A · 확정 신청)', menu: '시스템', docs: [['03 ERD 편집기', D.erd], ['02 §5.1~5.4·5.7', D.flows], ['22 §6 SWS 비교 결정', D.sws], ['23 §6-2·5·6 캔버스 숫자', D.perf]], states: [['요구사항·프로젝트(편집)', 'model.html'], ['리스크(검토 중)', 'model.html?area=risk'], ['v4 확정본 사본', 'model.html?area=rq&snap=REQ-2026-0003'], ['예시: 미준수 해결 후(조회 전용)', 'model.html?state=resolved']] },
     { file: 'standardize.html', ids: 'SC-34', name: '표준 맞추기', menu: '시스템', docs: [['02 §5.3', D.flows], ['30 MD-42·50~55', D.meta]], states: [['요구사항·프로젝트', 'standardize.html'], ['예외만', 'standardize.html?f=ex'], ['DDL 가져오기 직후', 'standardize.html?from=import'], ['리스크(대상 없음)', 'standardize.html?area=risk']] },
     { file: 'term-wizard.html', ids: 'SC-35', name: '용어 자동분석(모델 → 용어 → 모델)', menu: '시스템', docs: [['30 MD-56', D.meta]], states: [['요구사항·프로젝트', 'term-wizard.html?area=rq'], ['인사관리', 'term-wizard.html?area=e_hr']] },
-    { file: 'import-excel.html', ids: 'SC-36a', name: '엑셀로 가져오기(테이블 설계 → 모델)', menu: '시스템', docs: [['26 엑셀로 ERD 시작하기', '../26-erd-excel-import.md']], states: [['기본', 'import-excel.html'], ['오류 예시', 'import-excel.html']] },
+    { file: 'import-excel.html', ids: 'SC-36a', name: '엑셀 정의서 가져오기(테이블 설계 → 모델)', menu: '시스템', docs: [['26 엑셀로 ERD 시작하기', '../26-erd-excel-import.md']], states: [['기본', 'import-excel.html'], ['오류 예시', 'import-excel.html']] },
     { file: 'import.html', ids: 'SC-36', name: '가져오기(DDL → 모델)', menu: '시스템', docs: [['02 §5.6', D.flows]], states: [['기본', 'import.html']] },
     { file: 'ddl.html', ids: 'SC-37 · PN-37', name: 'DDL 출력 · 게이트 B · DBMS 비교', menu: '시스템', docs: [['02 §5.5', D.flows]], states: [['기본', 'ddl.html']] },
     { file: 'outputs.html', ids: 'SC-38', name: '산출물', menu: '시스템', docs: [['05 §8 DA# 비교', D.da]], states: [['테이블 정의서', 'outputs.html?k=tbl']] },
-    { file: 'settings.html', ids: 'SC-40 · SC-41 · SC-42 · SC-43', name: '설정(기관 · 시스템 · 사용자·역할 · 검수 기준)', menu: '관리', docs: [['02 §6 설정 흐름', D.flows], ['30 §4 검수 기준', D.meta]], states: [['기관(이데이터 Admin)', 'settings.html?as=lee'], ['시스템', 'settings.html?as=lee#sys'], ['검수 기준', 'settings.html?as=lee#rules'], ['Admin 아님 → 403', 'settings.html?as=kim']] },
+    { file: 'settings.html', ids: 'SC-40 · SC-41 · SC-42', name: '설정(기관 · 사업 · 시스템 · 사용자 · 역할)', menu: '관리', docs: [['02 §6 설정 흐름', D.flows], ['30 §4 검수 기준', D.meta]], states: [['기관(이데이터 Admin)', 'settings.html?as=lee'], ['시스템', 'settings.html?as=lee#sys'], ['검수 기준', 'settings.html?as=lee#rules'], ['Admin 아님 → 403', 'settings.html?as=kim']] },
     { file: 'audit.html', ids: 'SC-58', name: '감사 로그', menu: '관리', docs: [['06 §3', D.plan]], states: [['DA로 보기', 'audit.html?as=lee']] },
     { file: 'mypage.html', ids: 'SC-51 · PN-50', name: '마이페이지 · 사용자 메뉴', menu: '사용자', docs: [['06 §3', D.plan]], states: [['프로필', 'mypage.html'], ['내 신청', 'mypage.html#mine'], ['알림 설정', 'mypage.html#notify']] },
     { file: 'login.html', ids: 'SC-56', name: '로그인', menu: '공통', docs: [['06 §3', D.plan]], states: [['처음 로그인', 'login.html'], ['세션 만료 후 복귀', 'login.html?from=model.html%3Farea%3Drq&expired=1'], ['SSO 실패', 'login.html?fail=1']] },
@@ -1676,7 +1682,7 @@
       <div class="scr-b">
         <div class="scr-name">${s.name}</div>
         <div class="scr-sec">상태별 바로가기</div><div class="scr-links">${s.states.map(([l, u]) => `<a href="${u}">${l}</a>`).join('')}</div>
-        <div class="scr-sec">관련 설계 문서</div><div class="scr-links">${s.docs.map(([l, u]) => `<a href="${u}" target="_blank" rel="noopener">${l} ↗</a>`).join('')}</div>
+        <div class="scr-sec">관련 설계 문서</div><div class="scr-links">${s.docs.map(([l, u]) => `<a href="${u}" target="_blank" rel="noopener">${l}<i data-ic=ext data-s=12 aria-hidden="true"></i></a>`).join('')}</div>
         <div class="scr-sec">설계 결정 반영 대기 <span class="badge">${s.todo.length}</span> <span class="caption muted">목업 동결 뒤 결정 — 아직 화면에 없음</span></div>
         ${s.todo.length ? `<ul class="scr-todo">${s.todo.map(([t, r]) => `<li>${t} <span class="caption faint">${r}</span></li>`).join('')}</ul>` : '<div class="caption muted">없음</div>'}
         <div class="scr-sec">검토 메모 <span class="caption muted">${notes.filter(x => !x.done).length}건 남음 · 이 브라우저에 저장(↺ 초기화에도 유지)</span></div>
@@ -1833,7 +1839,7 @@
             open: e.a.length && !e.ref ? eOpen : null, kids: e.ref ? null : kids });
         }).filter(Boolean);
         const kidsOf = [];
-        const FHELP = { 'f:views': '같은 영역의 테이블을 목적별로 나눠 그린 ERD 그림', 'f:ents': '데이터를 담는 표(테이블). 펼치면 컬럼(칸)이 보입니다', 'f:tbls': '실제 DB에 만들어질 테이블. 펼치면 컬럼과 타입이 보입니다', 'f:rels': '두 테이블이 어떻게 이어지는지(예: 부서 → 사원 소속된다)', 'f:prels': '관계마다 FK(다른 테이블을 가리키는 키)가 만들어졌는지', 'f:subs': '하나의 테이블을 종류별로 나눈 구조(예: 정규직 · 계약직)', 'f:std': '이 영역이 쓰는 표준 사전의 용어와 데이터 형식(도메인)', 'f:terms': '표준 사전에 등록된 이름과 영문 약어', 'f:doms': '데이터 형식 묶음(예: 금액N18 = 숫자 18자리)', 'f:cons': 'PK(기본키) · FK(참조키) · UK(중복 금지) 규칙', 'f:ix': '검색을 빠르게 하는 색인', 'f:refs': '다른 업무 영역의 테이블을 읽기 전용으로 가져와 관계만 맺은 것' };
+        const FHELP = { 'f:views': '같은 영역의 테이블을 목적별로 나눠 그린 ERD 그림', 'f:ents': '데이터를 담는 표(테이블). 펼치면 컬럼(칸)이 보입니다', 'f:tbls': '실제 DB에 만들어질 테이블. 펼치면 컬럼과 타입이 보입니다', 'f:rels': '두 테이블이 어떻게 이어지는지(예: 부서 → 사원 소속된다)', 'f:prels': '관계마다 FK(다른 테이블을 가리키는 키)가 만들어졌는지', 'f:subs': '하나의 테이블을 종류별로 나눈 구조(예: 정규직 · 계약직)', 'f:std': '이 영역이 쓰는 표준 사전의 용어와 데이터 형식(도메인)', 'f:terms': '표준 사전에 등록된 이름과 영문 약어', 'f:doms': '데이터 형식 묶음(예: 금액N18 = 숫자 18자리)', 'f:cons': 'PK(기본키) · FK(참조키) · UK(중복 금지) 규칙', 'f:ix': '검색을 빠르게 하는 색인', 'f:refs': '다른 업무 영역의 테이블을 조회 전용으로 가져와 관계만 맺은 것' };
         const folder = (nid, label, kids, o = {}) => N(nid, 'folder', Object.assign({ title: o.title || FHELP[nid] || '', html: `<span class="tn1">${label}</span><span class="tct">${o.count != null ? o.count : kids.length}</span>${o.warn ? '<span class="twarn" aria-hidden="true"></span>' : ''}`, aria: `${label} ${o.count != null ? o.count : kids.length}${o.warn ? ', 경고 있음' : ''}`, open: kids.length ? (qq ? true : isOp(nid, o.def || false)) : null, kids }, o));
         // the tree holds OBJECTS only (resolution-tree-menu): screen moves (모델 · 표준 맞추기 · DDL · 산출물) live in the page head's
         // '영역 화면' menu and in the area ⋯ menu; every open area has the same children (the diagram folder was hidden for other areas)
@@ -1845,7 +1851,7 @@
         if (!P) {
           if (entNodes.length || !qq) kidsOf.push(folder('f:ents', '엔터티', groupEnts(entNodes, area, isOp, byId), { def: area === cur, count: qq ? entNodes.filter(n => !byId.get(n.ent).ref).length : ents.filter(e => !e.ref).length }));
           const refNodes = entNodes.filter(n => byId.get(n.ent).ref);
-          if (refNodes.length) kidsOf.push(folder('f:refs', '다른 영역에서 참조', refNodes, { def: false, title: '다른 업무 영역의 엔터티를 읽기 전용으로 가져와 관계만 맺습니다' }));
+          if (refNodes.length) kidsOf.push(folder('f:refs', '다른 영역에서 참조', refNodes, { def: false, title: '다른 업무 영역의 엔터티를 조회 전용으로 가져와 관계만 맺습니다' }));
           const rels = s.R.map((r, i) => ({ r, i })).filter(({ r }) => entSet.has(r.f) && entSet.has(r.t)).filter(({ r }) => { const a = byId.get(r.f), b = byId.get(r.t); return !qq || areaHit || hitFn(a.n) || hitFn(b.n) || hitFn(r.name); });
           if (rels.length || !qq) kidsOf.push(folder('f:rels', '관계', rels.map(({ r, i }) => { const a = byId.get(r.f), b = byId.get(r.t); return N('r:' + i, 'rel', { rel: i, ent: r.t, selectable: true, html: `<span class="tn1">${esc(a.n)} → ${esc(b.n)}</span><span class="tmeta">${esc(r.name || '')}${curV && (curV.hide || []).includes(relKey(r)) ? ' · 선 숨김' : ''}</span>`, aria: `${a.n}에서 ${b.n}, ${({ nonid: '비식별', id: '식별', one: '1:1', mn: 'M:N' })[r.k] || ''}`, title: ({ nonid: '1:N 비식별', id: '1:N 식별', one: '1:1', mn: 'M:N' })[r.k] }); })));
           const subs = ents.filter(e => e.sub && (!qq || areaHit || hitFn(e.n)));
@@ -1932,14 +1938,14 @@
           <div class="tro" id="tr-ro" hidden></div>
           <div class="tsec"><span>업무 영역</span><span class="tsec-r"><span class="tmw"><button class="tadd" type="button" data-menu-btn aria-expanded="false" aria-controls="mn-thelp" aria-label="트리 보는 법" title="트리 보는 법"><i data-ic=help data-s=14></i></button><div class="menu thelp" data-auto id="mn-thelp">
             <div class="thelp-h">트리 보는 법 <span class="caption muted">예: 통합ERP · 인사관리</span></div>
-            ${[['db', '업무 영역', '시스템 안의 업무 묶음. 버전과 결재(확정)의 단위입니다', '인사관리 · 재무관리 · 회계관리'], ['flow', '다이어그램', '같은 영역의 테이블을 목적별로 나눠 그린 ERD', '급여 · 근태 · 휴가'], ['table', '테이블(엔터티)', '데이터를 담는 표. 오른쪽 회색 글자가 DB 이름입니다', '사원기본 = EMP_M'], ['col', '컬럼(속성)', '테이블의 칸', '사원명 · 입사일자'], ['key', '기본키(PK)', '행 하나를 구별하는 값', '사원번호'], ['link', 'FK · 관계', '다른 테이블을 가리키는 칸, 테이블 사이의 연결', '부서 → 사원 (소속된다)'], ['layers', '서브타입', '한 테이블을 종류별로 나눈 구조', '정규직 · 계약직'], ['term', '표준 용어', '표준 사전에 등록된 이름과 영문 약어', '사원번호 = EMP_NO'], ['tag', '도메인', '데이터 형식 묶음', '금액N18 · 연월일C8'], ['shield', '제약조건', '물리 모드: PK · FK · UK 규칙', 'EMP_M_PK'], ['list', '인덱스', '물리 모드: 검색을 빠르게 하는 색인', 'EMP_M_IX01'], ['ext', '참조', '다른 영역의 테이블을 읽기 전용으로 가져온 것', '회계관리의 은행계좌']].map(([ic, n, d, ex]) => `<div class="thelp-r"><span class="tico"><i data-ic=${ic} data-s=14></i></span><div><b>${n}</b><div class="caption">${d}</div><div class="caption faint">예: ${ex}</div></div></div>`).join('')}
+            ${[['db', '업무 영역', '시스템 안의 업무 묶음. 버전과 결재(확정)의 단위입니다', '인사관리 · 재무관리 · 회계관리'], ['flow', '다이어그램', '같은 영역의 테이블을 목적별로 나눠 그린 ERD', '급여 · 근태 · 휴가'], ['table', '테이블(엔터티)', '데이터를 담는 표. 오른쪽 회색 글자가 DB 이름입니다', '사원기본 = EMP_M'], ['col', '컬럼(속성)', '테이블의 칸', '사원명 · 입사일자'], ['key', '기본키(PK)', '행 하나를 구별하는 값', '사원번호'], ['link', 'FK · 관계', '다른 테이블을 가리키는 칸, 테이블 사이의 연결', '부서 → 사원 (소속된다)'], ['layers', '서브타입', '한 테이블을 종류별로 나눈 구조', '정규직 · 계약직'], ['term', '표준 용어', '표준 사전에 등록된 이름과 영문 약어', '사원번호 = EMP_NO'], ['tag', '도메인', '데이터 형식 묶음', '금액N18 · 연월일C8'], ['shield', '제약조건', '물리 모드: PK · FK · UK 규칙', 'EMP_M_PK'], ['list', '인덱스', '물리 모드: 검색을 빠르게 하는 색인', 'EMP_M_IX01'], ['ext', '참조', '다른 영역의 테이블을 조회 전용으로 가져온 것', '회계관리의 은행계좌']].map(([ic, n, d, ex]) => `<div class="thelp-r"><span class="tico"><i data-ic=${ic} data-s=14></i></span><div><b>${n}</b><div class="caption">${d}</div><div class="caption faint">예: ${ex}</div></div></div>`).join('')}
             <div class="thelp-st"><span class="tico ti-ok"><i data-ic=table data-s=14></i></span>표준 준수 <span class="tico ti-bad"><i data-ic=table data-s=14></i></span>미준수 있음(숫자 = 개수) <span class="tico ti-ex"><i data-ic=table data-s=14></i></span>예외 있음</div>
           </div></span>${canNew ? '<a class="tadd" href="system.html#new" aria-label="새 업무 영역" title="새 업무 영역"><i data-ic=plus data-s=14></i></a>' : ''}</span></div>
           </div>
           <div role="tree" id="tr-tree" class="otree"></div>
           <div class="tsep"></div>
           <a class="tl${file === 'model.html' && qp.get('sys') ? ' on" aria-current="page' : ''}" href="model.html?sys=1"><i data-ic=compare></i>시스템 전체 ERD</a>
-          <a class="tl${file === 'import-excel.html' ? ' on" aria-current="page' : ''}" href="import-excel.html${qp.get('area') ? '?area=' + encodeURIComponent(qp.get('area')) : ''}"><i data-ic=upload></i>엑셀로 가져오기</a>
+          <a class="tl${file === 'import-excel.html' ? ' on" aria-current="page' : ''}" href="import-excel.html${qp.get('area') ? '?area=' + encodeURIComponent(qp.get('area')) : ''}"><i data-ic=upload></i>엑셀 정의서 가져오기</a>
           <a class="tl${file === 'import.html' ? ' on" aria-current="page' : ''}" href="import.html${qp.get('area') ? '?area=' + encodeURIComponent(qp.get('area')) : ''}"><i data-ic=upload></i>DDL 가져오기</a>
           <div class="tsec"><span>최근 연 엔터티</span></div>
           <div id="tr-rec"></div>
@@ -2079,7 +2085,7 @@
         const sm = getModels()[r.area]; if (!sm || !sm.base) return `${(sm || {}).name || '원본'}에는 아직 확정본이 없어 참조할 수 없습니다 — 원본이 확정된 뒤 참조합니다`;
         if (lv.E.some(x => x.ref && x.refArea === r.area && (x.refId || x.id) === r.ent)) return '이미 지금 영역에서 참조하고 있습니다';
         return null; };
-      if (r.kind === 'area') return [I('open', '모델 열기'), I('std', '표준 맞추기'), I('ddl', 'DDL 만들기'), I('outputs', '산출물'), SEP, I('hist', '결재함 열기'), ed('vnew', '보기 추가', { ent: null }), SEP, I('areaedit', '영역 정보 수정…', { why: areaActWhy(r.area, 'info') || null }), I('areamove', '다른 시스템으로 옮기기 · 복제…', { why: can('settings') ? null : '관리자만 할 수 있습니다' }), I('areaoff', '사용 중지 · 삭제…', { why: can('settings') ? null : '관리자만 할 수 있습니다' }), SEP, ...fold];
+      if (r.kind === 'area') return [I('open', '모델 열기'), I('std', '표준 맞추기'), I('ddl', 'DDL 만들기'), I('outputs', '산출물'), SEP, I('hist', '결재함 열기'), ed('vnew', '보기 추가', { ent: null }), SEP, I('areaedit', '영역 정보 수정…', { why: areaActWhy(r.area, 'info') || null }), I('areamove', '다른 시스템으로 옮기기 · 복제…', { why: can('settings') ? null : 'Admin만 할 수 있습니다' }), I('areaoff', '사용 중지 · 삭제…', { why: can('settings') ? null : 'Admin만 할 수 있습니다' }), SEP, ...fold];
       if (r.kind === 'folder') {
         if (r.nid === 'f:ents' || r.nid === 'f:tbls') return [ed('newent', P ? '새 테이블' : '새 엔터티', { ent: null, key: 'E' }), I('grid', '표 보기 · 일괄 편집'), SEP, ...fold];
         if (r.nid === 'f:views') return [ed('vnew', '새 보기', { ent: null }), SEP, ...fold];
@@ -2310,7 +2316,7 @@
       </nav>
       <div class="spacer"></div>
       <button class="gsearch" id="gsearch" type="button" aria-haspopup="dialog" aria-label="전체 검색 (Ctrl+K)">${ICON.search}<span>검색</span><kbd>Ctrl K</kbd></button>
-      ${can('dict.request') ? (() => { const bn = getBasket().items.length; return `<a class="iconbtn" id="btn-basket" href="dictionary.html?basket=1" aria-label="표준 사전 바구니 ${bn}건 — 열어서 품의 올리기" title="사전 바구니 ${bn}건">${icon('basket', 16)}${bn ? `<span class="dot">${bn}</span>` : ''}</a>`; })() : ''}
+      ${can('dict.request') ? (() => { const bn = getBasket().items.length; return `<a class="iconbtn" id="btn-basket" href="dictionary.html?basket=1" aria-label="표준 사전 바구니 ${bn}건 — 열어서 신청하기" title="사전 바구니 ${bn}건">${icon('basket', 16)}${bn ? `<span class="dot">${bn}</span>` : ''}</a>`; })() : ''}
       <button class="iconbtn" id="btn-bell" aria-label="알림 ${nUnread}건" aria-haspopup="true" aria-expanded="false">${ICON.bell}${nUnread ? `<span class="dot">${nUnread}</span>` : ''}</button>
       <button class="avatar btnlike" id="btn-user" aria-label="사용자 메뉴 · ${ME.name}" aria-haspopup="true" aria-expanded="false">${ME.name[0]}${store.get('dbm-seen-ver', '') !== PRODUCT.version ? '<span class="newdot" title="새 기능"></span>' : ''}</button>
       <div class="pop-menu npanel" id="pn-notif" role="dialog" aria-label="알림"></div>
@@ -2574,7 +2580,7 @@
       }
       // keyboard activation for non-button widgets (chips, clickable rows, cards)
       if ((e.key === 'Enter' || e.key === ' ') && e.target.matches && e.target.matches('.chip:not(button), .kindcard, .ocard, tr.click, .cand, .dict-item')) { e.preventDefault(); e.target.click(); }
-      if (e.key === '?' && !(e.target.closest && e.target.closest('input,textarea,select,[contenteditable="true"]'))) { e.preventDefault(); openKeys(); }
+      if (e.key === '?' && !e.defaultPrevented && !(e.target.closest && e.target.closest('input,textarea,select,[contenteditable="true"]'))) { e.preventDefault(); openKeys(); }   /* PC-03: the page guide handles ? first */
     });
     // make those widgets focusable and announce pressed state
     // list standard L-11: rows use a roving tabindex — only the selected (else the first visible) row of a body is a Tab stop, so Tab leaves the table in one press
@@ -2674,4 +2680,13 @@
       sc.style.position = sc.style.position || 'relative'; sc.appendChild(ov); setTimeout(() => { ov.classList.add('out'); setTimeout(() => ov.remove(), 200); }, 320); });
     try { const f = JSON.parse(sessionStorage.getItem('dbm-flash') || 'null'); if (f) { sessionStorage.removeItem('dbm-flash'); setTimeout(() => toast(f[0], f[1]), 100); } } catch (e) {}
   });
+})();
+/* UX-33 · 퍼블리싱 2차: 버튼으로 만든 밑줄 탭에 탭 역할을 붙인다 (role · aria-selected · 좌우 화살표) */
+(function () {
+  const sync = () => document.querySelectorAll('.tabs').forEach(t => { const bs = [...t.querySelectorAll(':scope > button[data-tab]')]; if (!bs.length) return; if (!t.getAttribute('role')) t.setAttribute('role', 'tablist');
+    bs.forEach(b => { b.setAttribute('role', 'tab'); const on = b.classList.contains('on'); b.setAttribute('aria-selected', String(on)); b.tabIndex = on ? 0 : -1; }); });
+  document.addEventListener('click', e => { if (e.target.closest && e.target.closest('.tabs > button[data-tab]')) setTimeout(sync, 0); });
+  document.addEventListener('keydown', e => { const b = e.target.closest && e.target.closest('.tabs > button[data-tab]'); if (!b || !['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key)) return; const bs = [...b.parentElement.querySelectorAll(':scope > button[data-tab]')].filter(x => !x.hidden); let i = bs.indexOf(b);
+    i = e.key === 'Home' ? 0 : e.key === 'End' ? bs.length - 1 : (i + (e.key === 'ArrowRight' ? 1 : -1) + bs.length) % bs.length; e.preventDefault(); bs[i].focus(); bs[i].click(); });
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => setTimeout(sync, 0)); else setTimeout(sync, 0);
 })();

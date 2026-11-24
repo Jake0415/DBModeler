@@ -26,12 +26,12 @@
   </div>
   <div class="page-body">
     <div class="main" style="flex:0 0 46%;border-right:1px solid var(--border)">
-      <div class="toolbar"><b class="u-fs-14">DDL 붙여넣기 또는 파일</b><span class="grow"></span><button class="btn sm" id="ex-file">예시 .sql 파일 불러오기</button><button class="btn sm" id="ex-bad">잘못된 예시</button><button class="btn sm primary" id="parse" data-busy>파싱</button></div>
+      <div class="toolbar"><b class="u-fs-14">DDL 붙여넣기 또는 파일</b><span class="grow"></span><button class="btn sm" id="ex-file">예시 .sql 파일 불러오기</button><button class="btn sm" id="ex-bad">잘못된 예시</button><button class="btn sm primary" id="parse" data-busy>읽기</button></div>
       <div class="pad u-flex-1 u-flex u-col"><textarea class="input mono" id="ddl" style="flex:1;min-height:420px;font-size:12px;line-height:18px" placeholder="CREATE TABLE … 를 붙여넣으세요. 컬럼 뒤 주석(-- 한글명)을 논리명으로 씁니다." aria-label="DDL"></textarea>
         <div class="caption muted u-mt-8">컬럼 뒤 <span class="mono">-- 한글명</span> 주석을 논리명으로 읽습니다(없으면 물리명 그대로). PK·FK 제약을 함께 읽습니다.</div></div>
     </div>
     <div class="main">
-      <div class="toolbar"><b class="u-fs-14">파싱 미리보기</b><span id="pstate"></span><span class="grow"></span><span class="caption muted" id="psum"></span></div>
+      <div class="toolbar"><b class="u-fs-14">읽기 미리보기</b><span id="pstate"></span><span class="grow"></span><span class="caption muted" id="psum"></span></div>
       <div class="scroll">
         <table class="tbl"><thead><tr><th>테이블</th><th>논리명</th><th class="num">컬럼</th><th>PK</th><th class="num">FK</th><th>점검</th></tr></thead><tbody id="prev"><tr class="er first"><td colspan="6" class="caption muted u-tc u-p-32">왼쪽에 DDL을 넣고 [파싱]을 누르세요</td></tr></tbody></table>
         <div class="pad">
@@ -103,7 +103,7 @@ ALTER TABLE RQMS.RQRM_D ADD CONSTRAINT RQRM_D_FK1 FOREIGN KEY (PRJ_ID) REFERENCE
   function preview() {
     parsed = parse($('ddl').value);
     const { tables, fks, errs } = parsed;
-    $('pstate').innerHTML = errs.length && !tables.length ? '<span class="badge b-danger">파싱 실패</span>' : errs.length ? '<span class="badge b-warning">일부 경고</span>' : '<span class="badge b-success">파싱 완료</span>';
+    $('pstate').innerHTML = errs.length && !tables.length ? '<span class="badge b-danger">읽기 실패</span>' : errs.length ? '<span class="badge b-warning">일부 경고</span>' : '<span class="badge b-success">읽음</span>';
     const cols = tables.reduce((n, x) => n + x.cols.length, 0);
     $('psum').textContent = tables.length ? `테이블 ${tables.length} · 컬럼 ${cols} · PK ${tables.filter(x => x.pk.length).length} · FK ${fks.length}` : '';
     $('prev').innerHTML = tables.map(tb => `<tr class="${tb.pk.length ? '' : 'row-warning'}"><td class="mono">${tb.phys}</td><td>${tb.name}</td><td class="num">${tb.cols.length}</td><td>${tb.pk.length ? '<i data-ic=check></i><span class="sr-only">있음</span>' : '—'}</td><td class="num">${fks.filter(f => f.child === tb.phys).length}</td><td>${tb.pk.length ? '<span class="badge b-success">정상</span>' : '<span class="badge b-warning">PK 없음</span>'}</td></tr>`).join('') + errs.map(x => `<tr class="row-danger"><td colspan="6" class="caption">${x}</td></tr>`).join('') || '<tr class="er first"><td colspan="6" class="caption muted u-tc u-p-32">결과 없음</td></tr>';

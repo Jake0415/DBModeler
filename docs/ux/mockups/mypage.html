@@ -23,7 +23,7 @@
     <span class="avatar" id="av"></span>
     <h1 id="nm">마이페이지</h1><span class="role-tag" id="rb"></span>
   </div>
-  <div class="tabs" style="margin:0;padding:0 20px;background:var(--surface)">
+  <div class="tabs page-tabs">
     <button class="on" data-tab="profile">프로필<span class="tabdot" aria-hidden="true"></span></button>
     <button data-tab="mine">내 신청</button>
     <button data-tab="work">내 작업</button>
@@ -262,11 +262,11 @@ window.pageInit = function () {
   if (!approver) { dbox.closest('.set-row').hidden = true; return; }
   const cand = delegCandidates(me);   /* R-08: same approval role, internal, active */
   const draw = () => { const d = me.deleg || {}; const active = delegActive(me);
-    dbox.innerHTML = `${d.to ? `<div class="u-mb-8">${active ? '<span class="badge b-info">위임 중</span>' : '<span class="badge">예약</span>'} ${esc((USERS[d.to] || {}).name || d.to)} · <span class="mono">${d.from} ~ ${d.until}</span> <button class="btn sm ghost" id="dg-end">위임 끝내기</button></div>` : ''}
+    dbox.innerHTML = `${d.to ? `<div class="u-mb-8">${active ? '<span class="badge">위임 중</span>' : '<span class="badge">예약</span>'} ${esc((USERS[d.to] || {}).name || d.to)} · <span class="mono">${d.from} ~ ${d.until}</span> <button class="btn sm ghost" id="dg-end">위임 종료</button></div>` : ''}
       ${cand.length ? '' : '<div class="caption u-warning u-mb-8">같은 결재 역할을 가진 다른 사용자가 없습니다 — Admin에게 역할 부여를 요청하세요.</div>'}<div class="field-row"><div class="field"><label for="dg-to">대리인</label><select class="input" id="dg-to">${cand.map(u => `<option value="${u.id}" ${d.to === u.id ? 'selected' : ''}>${esc(u.name)} · ${(u.roles || []).map(r => ROLE_NAME[r]).join('·') || '조회만'}</option>`).join('')}</select></div>
-      <div class="field"><label for="dg-from">시작</label><input class="input mono" type="date" id="dg-from" value="${d.from || isoToday()}"></div><div class="field"><label for="dg-until">끝</label><input class="input mono" type="date" id="dg-until" value="${d.until || ''}"></div></div>
-      <div class="flex u-mt-8"><button class="btn sm primary" id="dg-save">위임 저장</button></div>`;
-    $('dg-save').onclick = () => { const to = $('dg-to').value, f = $('dg-from').value, u = $('dg-until').value; if (!to || !f || !u || u < f) { toast('대리인 · 시작 · 끝(시작 뒤)을 정하세요', 'danger'); return; } reloadUsers(); if (!delegCandidates(me).some(x => x.id === to)) { toast('그 사람은 지금 대리인이 될 수 없습니다(역할 · 상태가 바뀜)', 'danger'); draw(); return; }
+      <div class="field"><label for="dg-from">시작일</label><input class="input mono" type="date" id="dg-from" value="${d.from || isoToday()}"></div><div class="field"><label for="dg-until">종료일</label><input class="input mono" type="date" id="dg-until" value="${d.until || ''}"></div></div>
+      <div class="flex u-mt-8"><button class="btn sm primary" id="dg-save">위임 저장</button> <span class="now-tag">바로 적용</span><span class="caption muted u-ml-8">저장하면 시작일부터 위임됩니다 — 아래 저장 막대와 상관없습니다</span></div>`;
+    $('dg-save').onclick = () => { const to = $('dg-to').value, f = $('dg-from').value, u = $('dg-until').value; if (!to || !f || !u || u < f) { toast('대리인 · 시작일 · 종료일(시작일 뒤)을 고르세요', 'danger'); return; } reloadUsers(); if (!delegCandidates(me).some(x => x.id === to)) { toast('그 사람은 지금 대리인이 될 수 없습니다(역할 · 상태가 바뀜)', 'danger'); draw(); return; }
       if (USERS[to].deleg && delegActive(USERS[to]) && USERS[to].deleg.to === me.id) { toast('그 사람이 이미 나에게 위임 중입니다 — 서로 위임할 수 없습니다', 'danger'); return; }
       me.deleg = { to, from: f, until: u }; saveUsers(); pushAudit({ act: '결재 위임', target: `${me.name} → ${USERS[to].name}`, why: `${f} ~ ${u}` }); pushNotif({ to: [to], k: 'sys', t: `결재 위임 — ${me.name}`, m: `${f} ~ ${u} · 이 기간에 ${me.name}님 차례의 결재를 대신 처리합니다(본인 신청은 제외)`, href: 'approvals.html?box=queue' }); draw(); toast(`${USERS[to].name}님에게 ${f} ~ ${u} 결재를 위임했습니다 · 이력에 ‘대리’로 남습니다`, 'success'); };
     const e = $('dg-end'); if (e) e.onclick = () => { pushAudit({ act: '결재 위임 끝', target: `${me.name} → ${(USERS[me.deleg.to] || {}).name || ''}`, why: '' }); delete me.deleg; saveUsers(); draw(); toast('위임을 끝냈습니다', 'info'); }; };
