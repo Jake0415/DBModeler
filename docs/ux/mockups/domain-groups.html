@@ -213,7 +213,7 @@ window.pageInit = function () {
   /* ---- detail panel ---- */
   const domList = (names, items, none) => names.length ? `<div class="dlist">${names.map(n => { const it = items.find(d => d.name === n); return it ? `<a href="dictionary.html?sel=${it.id}" title="사전에서 ${esc(n)} 열기">${esc(n)}</a>` : `<span class="d" title="목업 시드 이름 — 사전 항목으로 연결되어 있지 않습니다">${esc(n)}</span>`; }).join('')}</div>${names.some(n => !items.find(d => d.name === n)) ? '<div class="caption faint u-mt-4">흐린 이름은 목업 시드의 도메인 이름 목록에만 있는 항목입니다(사전 상세 없음).</div>' : ''}` : `<div class="caption muted">${none}</div>`;
   const logList = list => list.length ? `<ul class="logl">${list.map(e => `<li><b>${esc(e.act)}</b> · ${esc(e.target)}<div>${esc(e.why || '—')}</div><div class="meta">${esc(e.at)} · ${esc(e.who)}</div></li>`).join('')}</ul>` : '<div class="caption muted">변경 기록이 없습니다.</div>';
-  const head = (badges, title, sub) => `<div class="rp-head"><div class="t">${badges}<button class="iconbtn close u-w-28 u-h-28" data-close="pn-detail" aria-label="닫기"><i data-ic=x></i></button></div><h2 class="u-mt-8">${esc(title)}</h2>${sub ? `<div class="caption muted">${sub}</div>` : ''}</div>`;
+  const head = (badges, title, sub) => `<div class="rp-head"><div class="t">${badges}<button class="iconbtn close u-w-28 u-h-28" data-close="pn-detail" aria-label="상세 닫기 — 그룹 · 분류는 그대로" title="상세 닫기 — 그룹 · 분류는 그대로"><i data-ic=x></i></button></div><h2 class="u-mt-8">${esc(title)}</h2>${sub ? `<div class="caption muted">${sub}</div>` : ''}</div>`;
 
   function groupBlock(gr, B) {   // why a group action is not possible (null = allowed)
     const r = { edit: null, unuse: null, name: null };

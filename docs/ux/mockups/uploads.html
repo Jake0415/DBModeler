@@ -64,7 +64,7 @@ window.pageInit = function () {
     const st = stateOf(b), c = b.counts || {}, s = b.sub;
     const ds = (b.docs || []).map(docOf).filter(Boolean);
     const canResume = b.by === ME.id && ['임시 저장', '보완'].includes(st);
-    p.innerHTML = `<div class="rp-head"><div class="t"><span class="mono">${b.id}</span><span class="badge">${b.kind}</span><button class="iconbtn close u-w-28 u-h-28" id="up-close" aria-label="닫기"><i data-ic=x></i></button></div><h2 class="u-mt-8">${b.file}</h2><div class="rp-sub">${USERS[b.by] ? USERS[b.by].name : ''} · ${b.at} · 기준본 ${b.baseline}</div></div>
+    p.innerHTML = `<div class="rp-head"><div class="t"><span class="mono">${b.id}</span><span class="badge">${b.kind}</span><button class="iconbtn close u-w-28 u-h-28" id="up-close" aria-label="상세 닫기 — 묶음은 그대로" title="상세 닫기 — 묶음은 그대로"><i data-ic=x></i></button></div><h2 class="u-mt-8">${b.file}</h2><div class="rp-sub">${USERS[b.by] ? USERS[b.by].name : ''} · ${b.at} · 기준본 ${b.baseline}</div></div>
       <div class="rp-body">
         ${b.counts ? `<div class="section-t u-mt-0">검증·비교 결과</div><dl class="kv" style="grid-template-columns:1fr auto">${[['신규', c.new], ['변경', c.chg], ['동일', c.same], ['동일 내용 대기', c.waitSame], ['다른 내용 대기(보류)', c.waitDiff], ['버전 충돌', c.conflict], ['후보 선택', c.pick], ['선행 승인(보류)', c.pre], ['오류', c.err], ['파일에서 빠짐', c.missing]].map(([l, n]) => `<dt>${l}</dt><dd class="num u-tr">${n || 0}</dd>`).join('')}</dl>` : `<div class="banner warning"><i data-ic=warn></i><div>${b.note || '검증 결과 없음'}</div></div>`}
         ${s ? `<div class="section-t">신청한 내용</div><div class="caption">신규 ${s.new} · 변경 ${s.chg + s.conflict} · 후보 ${s.pick} · 미사용 ${s.unuse} — 보류 ${s.hold} · 제외 ${s.ex}</div>` : ''}

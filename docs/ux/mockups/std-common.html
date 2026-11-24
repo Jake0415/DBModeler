@@ -238,7 +238,7 @@ window.pageInit = function () {
     const c = codes().find(x => x.id === sel), p = $('pn-code'); if (!c) { sel = null; p.classList.remove('open'); return; }
     const sv = supp[c.id], org = c.org && c.org !== '-' ? c.org : '소관기관';
     const btnWhy = !CAN_COMMON ? RO_WHY : openCommon().length ? `공통표준 품의 ${openCommon()[0].id}가 결재 중이라 새로 담을 수 없습니다` : '';
-    p.innerHTML = `<div class="rp-head"><div class="t"><span class="badge b-common">공통</span><span class="badge">행정표준코드</span>${c.partial ? '<span class="badge b-warning">원문 일부</span>' : ''}<button class="iconbtn close u-w-28 u-h-28" data-close="pn-code" aria-label="닫기"><i data-ic=x></i></button></div>
+    p.innerHTML = `<div class="rp-head"><div class="t"><span class="badge b-common">공통</span><span class="badge">행정표준코드</span>${c.partial ? '<span class="badge b-warning">원문 일부</span>' : ''}<button class="iconbtn close u-w-28 u-h-28" data-close="pn-code" aria-label="상세 닫기 — 코드는 그대로" title="상세 닫기 — 코드는 그대로"><i data-ic=x></i></button></div>
         <h2 class="u-mt-8">${esc(c.name)}</h2><div class="rp-sub">${esc(c.abbr)} · ${esc(c.id)}</div></div>
       <div class="rp-body">
         <dl class="kv"><dt>도메인</dt><dd class="mono">${esc(c.dom)}</dd><dt>소관기관</dt><dd>${esc(c.org && c.org !== '-' ? c.org : '—')}</dd><dt>제정차수</dt><dd>${esc(c.cha || '—')}</dd><dt>설명</dt><dd class="u-fw-400">${esc(c.desc || '—')}</dd></dl>

@@ -102,7 +102,7 @@
     <!-- PN-12 request -->
     <aside class="rpanel wide" id="pn-request">
       <div class="rp-head">
-        <div class="t"><h2>바구니 · 품의 올리기</h2><button class="iconbtn close u-w-28 u-h-28" data-close="pn-request" aria-label="닫기"><i data-ic=x></i></button></div>
+        <div class="t"><h2>바구니 · 품의 올리기</h2><button class="iconbtn close u-w-28 u-h-28" data-close="pn-request" aria-label="바구니 닫기 — 담은 항목은 그대로" title="바구니 닫기 — 담은 항목은 그대로"><i data-ic=x></i></button></div>
         <div class="u-mt-4 u-flex u-gap-8 u-ai-c"><span class="caption muted" id="bk-saved"></span><span class="grow"></span>
           <button class="btn ghost sm" id="dr-save">초안으로 보관</button>
           <span class="u-rel"><button class="btn ghost sm" id="dr-open" aria-haspopup="true" aria-expanded="false">초안 <span class="num" id="dr-n"></span></button><div class="menu" id="dr-menu" role="menu"></div></span></div>
@@ -370,7 +370,7 @@ window.pageInit = function () {
     const it = I.find(x => x.id === sel); const p = $('pn-detail'); if (!it) { p.innerHTML = ''; p.classList.remove('open'); return; }
     const common = it.src === '공통', REL = related(it);   // computed once per draw (count + table)
     const hist = it.hist.length ? `<div class="tl">${it.hist.map(h => `<div class="ev"><div class="flex"><b>${h.v}</b><span class="badge">${h.act}</span><span class="grow"></span><span class="caption mono">${h.at}</span></div><div class="caption muted">${h.by}${h.doc !== '—' ? ` · <a href="approvals.html?doc=${h.doc}">${h.doc}</a>` : ''}${h.why ? ' · 사유: ' + h.why : ''}</div>${h.diff.length ? `<table class="tbl u-mt-4"><thead><tr><th>칸</th><th>이전</th><th>이후</th></tr></thead><tbody>${h.diff.map(d => `<tr><td>${d[0]}</td><td><span class="old-v">${d[1] === '' ? '(빈 문자열)' : d[1] == null ? '(NULL)' : d[1]}</span></td><td>${d[2]}</td></tr>`).join('')}</tbody></table>` : ''}<button class="btn ghost sm" data-toast="${it.name}_${h.v}.xlsx — 그 버전의 값" data-toast-type="info">이 버전 엑셀</button></div>`).join('')}</div>` : '<div class="caption muted">이력이 없습니다.</div>';
-    p.innerHTML = `<div class="rp-head"><div class="t"><span class="badge ${common ? 'b-common' : 'b-org'}">${it.src}</span><span class="badge">${it.kn}</span><span class="badge ${it.st === '사용' ? 'b-success' : it.st === '신청 중' ? 'b-info' : ''}">${it.st}</span><button class="iconbtn close u-w-28 u-h-28" data-close="pn-detail" aria-label="닫기"><i data-ic=x></i></button></div>
+    p.innerHTML = `<div class="rp-head"><div class="t"><span class="badge ${common ? 'b-common' : 'b-org'}">${it.src}</span><span class="badge">${it.kn}</span><span class="badge ${it.st === '사용' ? 'b-success' : it.st === '신청 중' ? 'b-info' : ''}">${it.st}</span><button class="iconbtn close u-w-28 u-h-28" data-close="pn-detail" aria-label="상세 닫기 — 항목은 그대로" title="상세 닫기 — 항목은 그대로"><i data-ic=x></i></button></div>
         <h2 class="u-mt-8">${it.name}</h2><div class="rp-sub">${[it.abbr, it.eng].filter(x => x && x !== '—').join(' · ')} · <span class="mono">${it.id}</span></div></div>
       <div class="rp-body">
         ${common ? '<div class="banner u-mb-12"><i data-ic=info></i><div><b>공통 표준</b> — 읽기 전용입니다. 기관에서 바꿀 수 없습니다.</div></div>' : ''}
