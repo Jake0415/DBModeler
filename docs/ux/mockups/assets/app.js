@@ -2036,7 +2036,7 @@
       if (ph) pageGuide(document.querySelector('.dtabs'));
       // 결재함 · 설정 · 감사 로그: same guide — button at the end of the page head, panel under the head (설정: under its tab row)
       const ph2 = document.querySelector('#content .page-header'), f2 = curFile();
-      if (ph2 && ['approvals.html', 'audit.html', 'settings.html'].includes(f2)) { const nx = ph2.nextElementSibling; pageGuide(ph2, f2 === 'settings.html' && nx && nx.matches('.tabs') ? nx : ph2); } }
+      if (ph2 && ['approvals.html', 'audit.html', 'settings.html'].includes(f2)) { const nx = ph2.nextElementSibling; const tabRow = nx && nx.matches('.tabs') ? nx : null; pageGuide(tabRow || ph2, tabRow || ph2); /* a tab row gets the button at its right end (24 guide) */ } }
     drawTree(nav);
     const toasts = document.createElement('div');
     toasts.className = 'toasts'; toasts.id = 'toasts';
