@@ -1979,7 +1979,8 @@ window.pageInit = function () {
   function relPanel(r) {
     const p = ent(r.f), c = ent(r.t); if (!p || !c) return;
     const ro = !canEdit() || !!c.ref, st = relOf(r), cols = relCols(r), f = fkOf(r, E), self = r.f === r.t, ident = r.k === 'id', D = ro ? ' disabled' : '';
-    $('rp-title').textContent = '관계'; $('rp-sub').textContent = `${p.n} → ${c.n}`;
+    const pN = self ? `상위 ${p.n}` : p.n, cN = self ? `하위 ${c.n}` : c.n;   /* a recursive relation reads by role, not '부서기본 1개는 부서기본을' */
+    $('rp-title').textContent = self ? '관계 · 재귀' : '관계'; $('rp-sub').textContent = self ? `${p.n} — 상위 → 하위` : `${p.n} → ${c.n}`;
     const pkList = p.a.filter(a => a.pk);
     const pairRows = pkList.map((k, i) => { const x = cols.find(a => a.fkp === k.p) || cols.find(a => !a.fkp && fkMatch(r, k)(a)) || (cols.length === pkList.length && !cols[i].fkp ? cols[i] : null);   // a grouped column without fkp pairs by position
       return `<tr><td><span class="mono">${hx(k.p)}</span><span class="sub2">${hx(k.n)}</span></td><td class="faint">→</td><td>${ro ? (x ? `<span class="mono">${hx(x.p)}</span><span class="sub2">${hx(x.n)}</span>` : '<span class="u-warning">없음 · FK 누락</span>') :
@@ -1994,8 +1995,8 @@ window.pageInit = function () {
       <div class="field"><label for="rel-name">관계명</label><input class="input" id="rel-name" value="${hx(r.name || '')}" placeholder="예: 소속 · 담당 · 포함 · 주문" aria-describedby="rel-name-h"${D}><span class="help" id="rel-name-h">명사로 짧게 — 두 엔터티가 어떤 관계인지(소속 · 담당 · 포함). 같은 두 엔터티 사이 관계가 둘 이상이면 역할로 구분(출발 · 도착)</span></div>
       ${r.k === 'mn' ? '' : `<div class="field"><label id="rel-k-l">유형</label><div class="seg" role="group" aria-labelledby="rel-k-l"><button type="button" data-rk="nonid" aria-pressed="${!ident}"${!ident ? ' class="on"' : ''}${D || (self ? ' disabled title="재귀 관계는 비식별입니다"' : '')}>비식별</button><button type="button" data-rk="id" aria-pressed="${ident}"${ident ? ' class="on"' : ''}${D || (self ? ' disabled title="재귀 관계는 비식별입니다"' : '')}>식별</button></div><span class="help">식별: FK가 ${hx(c.n)}의 식별자(PK)에 들어가고 손자까지 이어집니다</span></div>
       <div class="field"><label id="rel-cs-l">카디널리티 · 선택성</label>
-        <div class="relsent" aria-labelledby="rel-cs-l">${hx(p.n)} 1개는 ${hx(c.n)}을(를) <select class="input" data-rcard aria-label="자식 쪽 개수"${D}>${Object.entries(KCARD).map(([v, l]) => `<option value="${v}"${st.card === v ? ' selected' : ''}>${l}</option>`).join('')}</select> 가진다</div>
-        <div class="relsent">${hx(c.n)} 1개는 ${hx(p.n)}이(가) <select class="input" data-ropt aria-label="부모 쪽 필수 여부"${D || (ident ? ' disabled title="식별 관계는 부모가 반드시 있습니다"' : '')}>${Object.entries(KOPT).map(([v, l]) => `<option value="${v}"${st.opt === v ? ' selected' : ''}>${l}</option>`).join('')}</select></div>
+        <div class="relsent" aria-labelledby="rel-cs-l">${hx(pN)} 1개는 ${hx(cN)}을(를) <select class="input" data-rcard aria-label="자식 쪽 개수"${D}>${Object.entries(KCARD).map(([v, l]) => `<option value="${v}"${st.card === v ? ' selected' : ''}>${l}</option>`).join('')}</select> 가진다</div>
+        <div class="relsent">${hx(cN)} 1개는 ${hx(pN)}이(가) <select class="input" data-ropt aria-label="부모 쪽 필수 여부"${D || (ident ? ' disabled title="식별 관계는 부모가 반드시 있습니다"' : '')}>${Object.entries(KOPT).map(([v, l]) => `<option value="${v}"${st.opt === v ? ' selected' : ''}>${l}</option>`).join('')}</select></div>
         <span class="help">부모 쪽 값이 FK 컬럼의 필수 여부를 정합니다${ident ? ' · 식별 관계는 반드시 있음으로 고정' : ''}${r.uk ? ' · 자식 쪽 최대 1개는 FK에 UK를 붙여 보장합니다' : ''}${['1', '1n'].includes(st.card) ? ' · 자식 쪽 ‘최소 1개’는 FK로 강제할 수 없는 업무 규칙입니다' : ''}</span></div>
       <div class="field"><label>FK 짝 <span class="faint">— 부모 식별자 → ${hx(c.n)} 컬럼</span></label>${pkList.length ? `<table class="tbl box"><tbody>${pairRows}</tbody></table>` : `<div class="banner warning"><i data-ic=warn></i><div class="grow"><b>FK 대기</b> — ${hx(p.n)}에 식별자가 없습니다. 식별자를 정하면 FK가 채워집니다.${ro ? '' : ' <a href="#" id="rel-gopk">식별자 지정</a>'}</div></div>`}
         <span class="help">${!pkList.length ? '' : f.st === 'ok' ? `FK 반영 · <span class="mono">${hx(f.name)}</span>` : f.st === 'ex' ? 'FK 제외 · ' + hx(f.why) : f.st === 'miss' ? `<span class="u-warning">FK 누락 · ${hx(f.why)}</span>` : ''}</span></div>`}
@@ -2049,13 +2050,13 @@ window.pageInit = function () {
   }
   function relSetCard(r, v) {
     if (guard()) return; snap(); r.card = v; if (v === '1') { if (r.k !== 'id') r.k = 'one'; } else if (r.k === 'one') r.k = 'nonid';
-    const u = syncUk(r); relAfter(r, `${ent(r.f).n} 1개는 ${ent(r.t).n}을(를) ${KCARD[v]} 가집니다${u === 1 ? ' · 1:1 보장 UK를 붙였습니다' : u === -1 ? ' · 1:1 보장 UK를 지웠습니다' : ''}`);
+    const u = syncUk(r); relAfter(r, `${r.f === r.t ? '상위 ' : ''}${ent(r.f).n} 1개는 ${r.f === r.t ? '하위 ' : ''}${ent(r.t).n}을(를) ${KCARD[v]} 가집니다${u === 1 ? ' · 1:1 보장 UK를 붙였습니다' : u === -1 ? ' · 1:1 보장 UK를 지웠습니다' : ''}`);
   }
   function relSetOpt(r, v) {
     if (guard()) return; if (r.k === 'id') { toast('식별 관계는 부모가 반드시 있습니다', 'info'); return; }
     snap(); r.opt = v; relCols(r).forEach(a => { if (!a.pk) a.nn = v === 'must' ? 1 : 0; });
     let note = ''; if (v === 'must' && r.del === 'setnull') { r.del = 'none'; note = ' · FK가 필수라 ON DELETE를 ‘막기’로 바꿨습니다'; }
-    relAfter(r, `${ent(r.t).n}에는 ${ent(r.f).n}이(가) ${KOPT[v]} — FK ${v === 'must' ? '필수' : '비워 둘 수 있음'}${note}`);
+    relAfter(r, `${r.f === r.t ? '하위 ' : ''}${ent(r.t).n}에는 ${r.f === r.t ? '상위 ' : ''}${ent(r.f).n}이(가) ${KOPT[v]} — FK ${v === 'must' ? '필수' : '비워 둘 수 있음'}${note}`);
   }
   function relSetDel(r, v) {
     if (guard()) return; if (v === 'setnull' && !nullable(r)) { toast('FK가 필수라 비울 수 없습니다 — 선택성을 ‘없어도 된다’로 바꾸세요', 'info'); render(); return; }
