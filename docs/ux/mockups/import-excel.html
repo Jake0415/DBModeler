@@ -120,8 +120,10 @@ window.pageInit = function () {
   const REQ = ['table_name', 'column_name', 'column_logical_name', 'data_type'];
   const ALIAS = Object.assign({}, ...Object.entries(LABEL).map(([k, l]) => ({ [l]: k, [k]: k })), { 'NOT NULL': 'required', 'Not NULL': 'required', 'not null': 'required', not_null: 'required', 'NULL 허용 여부': 'nullable', nullable: 'nullable', '표준용어명': 'std_term', '표준용어 영문약어명': 'std_abbr', '원천 테이블': 'src_table', '원천 컬럼': 'src_col' });
   const SKIP_SHEETS = ['ERD', '작성가이드', '검사 요약'];
-  const TM = typeMapOf(SYS.code), base = t => String(t || '').replace(/\(.*$/, '').trim().toUpperCase();
-  const tV = base(TM[1]), tN = base(TM[2]), tT = base(TM[3]), tC = base(TM[0]);
+  /* 27: the system map is {abbr: [range rules]} — every physical type in it counts as mapped; examples take each type's first rule */
+  const TMAP = typeMapOf(SYS.code), TM = Object.values(TMAP).flat().map(r => r.t), base = t => String(t || '').replace(/\(.*$/, '').trim().toUpperCase();
+  const first = ab => ((TMAP[ab] || [])[0] || {}).t;
+  const tV = base(first('V')), tN = base(first('N')), tT = base(first('T')), tC = base(first('C'));
   const row = (...a) => a;
   const SAMPLE_OK = () => [
     row('DEPT_M', '부서기본', '조직 부서', 'DEPT_CD', '부서코드', tV, 10, '', 'Y', 'Y', '', '부서 식별 코드', '', ''),
