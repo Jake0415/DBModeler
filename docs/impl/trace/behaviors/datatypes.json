@@ -1,0 +1,888 @@
+{
+  "screen": "datatypes.html",
+  "ids": "SC-19",
+  "source": "docs/ux/mockups/datatypes.html",
+  "behaviors": [
+    {
+      "id": "BH-datatypes-001",
+      "where": "머리",
+      "trigger": "화면 열기 · 변경 뒤(자동)",
+      "expected": "요약 배지 ‘타입 규칙 v{n} · 표준 {사용 중 표준 수} · 추가 {사용 중 추가 수}’",
+      "roles": "전체",
+      "refs": [],
+      "states": ["datatypes.html?as=lee"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-datatypes-002",
+      "where": "머리 · 버튼",
+      "trigger": "type.add 가진 사용자가 열기",
+      "expected": "[타입 등록] 보임, [타입 추가 요청] 숨김",
+      "roles": "type.add (DA)",
+      "refs": ["type.add"],
+      "states": ["datatypes.html?as=lee"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-datatypes-003",
+      "where": "머리 · 버튼",
+      "trigger": "type.request만 가진 사용자가 열기",
+      "expected": "[타입 추가 요청] 보임, [타입 등록] 숨김",
+      "roles": "type.request (모델러)",
+      "refs": ["type.request"],
+      "states": ["datatypes.html?as=park"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-datatypes-004",
+      "where": "머리 · 탭",
+      "trigger": "type.request · type.add 둘 다 없는 사용자가 열기",
+      "expected": "[타입 추가 요청] 버튼과 ‘타입 추가 요청’ 탭이 숨겨짐(먼저 흐리게 + 툴팁 ‘타입 추가 요청은 담당 시스템의 모델러, 등록은 DA’로 그린 뒤 숨김 — 최종 동작은 목업에서 확인 필요)",
+      "roles": "owner · auditor · admin 등",
+      "refs": ["type.request", "type.add"],
+      "states": ["datatypes.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-datatypes-005",
+      "where": "탭",
+      "trigger": "탭(논리 타입 · 축약명 · 시스템별 매핑 · 타입 추가 요청 · 변경 이력) 클릭 또는 주소 #types · #map · #reqs · #log",
+      "expected": "그 탭의 내용으로 바뀜. 주소 해시가 바뀌어도 따라감",
+      "roles": "전체",
+      "refs": [],
+      "states": ["datatypes.html?as=lee", "datatypes.html?as=lee#reqs"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-datatypes-006",
+      "where": "논리 타입 · 도구 줄",
+      "trigger": "검색창 입력(축약명 · 이름 · 물리 타입)",
+      "expected": "즉시 걸러짐",
+      "roles": "전체",
+      "refs": ["ST-R03"],
+      "states": ["datatypes.html?as=lee"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-datatypes-007",
+      "where": "논리 타입 · 도구 줄",
+      "trigger": "종류 칩(전체 · 표준 · 추가 · DBMS 전용) 클릭",
+      "expected": "그 종류만 표시",
+      "roles": "전체",
+      "refs": [],
+      "states": ["datatypes.html?as=lee"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-datatypes-008",
+      "where": "논리 타입 · 도구 줄",
+      "trigger": "상태 칩(사용 · 사용 중지 포함) 클릭",
+      "expected": "기본은 사용 중만, ‘사용 중지 포함’이면 사용 중지 타입도 흐리게 표시",
+      "roles": "전체",
+      "refs": [],
+      "states": ["datatypes.html?as=lee"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-datatypes-009",
+      "where": "논리 타입 · 목록",
+      "trigger": "목록 표시(자동)",
+      "expected": "머리 ‘n개 (전체 m) · 표준 1자 · 추가 2~3자’. 행마다 축약명 · 이름(설명) · 인자 · 종류 배지 · 적용 범위(기관 공통 / {시스템} 전용) · 예(현재 시스템 물리 타입, ‘이 시스템 대상 아님’, ‘매핑 없음’) · 도메인 수 · 속성 수 · 상태",
+      "roles": "전체",
+      "refs": [],
+      "states": ["datatypes.html?as=lee"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-datatypes-010",
+      "where": "논리 타입 · 목록",
+      "trigger": "조건에 맞는 타입이 없을 때",
+      "expected": "‘조건에 맞는 타입이 없습니다’",
+      "roles": "전체",
+      "refs": [],
+      "states": ["datatypes.html?as=lee"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-datatypes-011",
+      "where": "논리 타입 · 목록",
+      "trigger": "행 클릭 · Enter 또는 주소 ?sel={축약명}",
+      "expected": "그 타입이 선택되고 오른쪽 상세 패널이 열림",
+      "roles": "전체",
+      "refs": [],
+      "states": ["datatypes.html?as=lee"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-datatypes-012",
+      "where": "상세 패널",
+      "trigger": "타입 선택",
+      "expected": "종류 · 상태 배지, ‘{축약명} · {이름}’, 범위 · 등록자 · 날짜, 인자 · 설명 · 등록 사유 · 도메인 예, 시스템별 물리 타입(대상 아님 / 범위 → 물리 타입 / ‘매핑 없음’), 쓰는 도메인, 직접 고른 속성(최대 10), 변경 기록(최대 8, 없으면 ‘기록 없음’)",
+      "roles": "전체",
+      "refs": [],
+      "states": ["datatypes.html?as=lee&sel=V"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-datatypes-013",
+      "where": "상세 패널",
+      "trigger": "새 축약명으로 옮긴 옛 타입 선택",
+      "expected": "배너 ‘새 축약명 {축약명}(으)로 옮겼습니다 — 이 축약명은 다시 쓰지 않습니다.’",
+      "roles": "전체",
+      "refs": [],
+      "states": ["datatypes.html?as=lee"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-datatypes-014",
+      "where": "상세 패널",
+      "trigger": "닫기(×) 클릭",
+      "expected": "패널이 닫힘",
+      "roles": "전체",
+      "refs": [],
+      "states": ["datatypes.html?as=lee"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-datatypes-015",
+      "where": "상세 패널 · 하단",
+      "trigger": "고칠 권한이 없는 타입 보기",
+      "expected": "[수정] · [새 축약명으로 옮기기] · [사용 중지]/[다시 사용] 흐리게 + 툴팁 ‘표준 타입은 DA만 고칩니다’ 또는 ‘타입 등록 권한(DA)이 필요합니다’",
+      "roles": "표준: type.std 없음 · 추가: type.add 없음",
+      "refs": ["type.std", "type.add", "RP-R04"],
+      "states": ["datatypes.html?as=park&sel=V"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-datatypes-016",
+      "where": "상세 패널 · 하단",
+      "trigger": "[수정] 클릭(사용 중 타입)",
+      "expected": "수정 창 ‘타입 수정 — {축약명}’이 기존 값으로 열리고 이름 칸에 포커스. 사용 중지 타입은 흐리게",
+      "roles": "표준: type.std · 추가: type.add",
+      "refs": ["type.std", "type.add"],
+      "states": ["datatypes.html?as=lee"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-datatypes-017",
+      "where": "상세 패널 · 하단",
+      "trigger": "쓰는 곳이 없는 타입의 [새 축약명으로 옮기기]",
+      "expected": "흐리게 + 툴팁 ‘쓰는 곳이 없어 [수정]에서 바로 바꿀 수 있습니다’",
+      "roles": "type.std · type.add",
+      "refs": [],
+      "states": ["datatypes.html?as=lee"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-datatypes-018",
+      "where": "상세 패널 · 하단",
+      "trigger": "표준 아닌 타입의 [표준으로 올리기] 보기",
+      "expected": "type.std 없으면 흐리게 + ‘표준으로 올리기는 DA’, DBMS 전용 타입은 흐리게 + ‘DBMS 전용 타입은 표준으로 올릴 수 없습니다 — 모든 DBMS의 물리 타입이 필요’. 표준 타입에는 버튼 없음",
+      "roles": "type.std",
+      "refs": ["type.std"],
+      "states": ["datatypes.html?as=lee"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-datatypes-019",
+      "where": "상세 패널 · 하단",
+      "trigger": "쓰는 곳이 있는 타입의 [사용 중지]",
+      "expected": "흐리게 + 툴팁 ‘쓰는 곳(도메인 n · 속성 m)이 있어 사용 중지할 수 없습니다’",
+      "roles": "type.std · type.add",
+      "refs": [],
+      "states": ["datatypes.html?as=lee&sel=V"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-datatypes-020",
+      "where": "상세 패널 · 하단",
+      "trigger": "사용 중지 타입의 [다시 사용]",
+      "expected": "사용 중지 타입에 [사용 중지] 대신 보임. 옮긴 축약명이면 흐리게 + ‘옮긴 축약명은 다시 쓰지 않습니다’",
+      "roles": "type.std · type.add",
+      "refs": [],
+      "states": ["datatypes.html?as=lee"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-datatypes-021",
+      "where": "타입 등록 창",
+      "trigger": "[타입 등록] 클릭 또는 주소 ?add=1(&sys=&phys=&where=)",
+      "expected": "창 ‘타입 등록’ · ‘결재 없이 바로 반영됩니다. 사유는 변경 이력과 감사 로그에 남습니다.’, 축약명 칸에 포커스. 종류 목록은 추가 · DBMS 전용(+ type.std면 표준). 주소 값으로 범위 · 물리 타입 · 설명을 미리 채움",
+      "roles": "type.add",
+      "refs": ["type.add", "type.std"],
+      "states": ["datatypes.html?as=lee&add=1"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-datatypes-022",
+      "where": "타입 등록 · 수정 창",
+      "trigger": "수정으로 열기",
+      "expected": "종류 · 적용 범위는 바꿀 수 없음(흐리게), 물리 타입은 저장값 또는 기본 규칙으로 채움",
+      "roles": "type.std · type.add",
+      "refs": [],
+      "states": ["datatypes.html?as=lee"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-datatypes-023",
+      "where": "타입 등록 창",
+      "trigger": "종류 변경",
+      "expected": "DBMS 전용이면 ‘대상 DBMS *’ 칸이 나타나고 범위는 기관 공통. 축약명 최대 길이(표준 1 · 그 밖 3)와 도움말 ‘표준은 영문 대문자 1자’ / ‘추가 · DBMS 전용은 영문 대문자 2~3자 (1자는 표준 전용)’, 범위 목록(표준은 기관 공통만), 물리 타입 칸이 바뀜",
+      "roles": "type.add",
+      "refs": [],
+      "states": ["datatypes.html?as=lee"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-datatypes-024",
+      "where": "타입 등록 창 · 물리 타입",
+      "trigger": "종류 · 대상 DBMS · 범위 · 인자 변경",
+      "expected": "물리 타입 칸이 필요한 DBMS로 바뀜 — DBMS 전용: 그 DBMS, 시스템 전용: 그 시스템의 DBMS, 공통 추가: 사용 중인 DBMS 전부, 표준: 4개 DBMS 전부. 입력값은 유지, 예시는 인자에 따라 ‘예: JSONB’ · ‘예: NUMBER(p,s)’ · ‘예: VARCHAR2(n)’",
+      "roles": "type.add",
+      "refs": [],
+      "states": ["datatypes.html?as=lee"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-datatypes-025",
+      "where": "타입 등록 창 · 축약명",
+      "trigger": "축약명 입력",
+      "expected": "영문 대문자 · 숫자 밖의 글자는 지워지고 소문자는 대문자로 바뀜",
+      "roles": "type.add",
+      "refs": [],
+      "states": ["datatypes.html?as=lee"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-datatypes-026",
+      "where": "타입 등록 · 옮기기 창 · 축약명 검사",
+      "trigger": "축약명이 비었음",
+      "expected": "⛔ ‘축약명을 입력하세요’",
+      "roles": "type.add · type.std",
+      "refs": [],
+      "states": ["datatypes.html?as=lee"],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-datatypes-027",
+      "where": "타입 등록 · 옮기기 창 · 축약명 검사",
+      "trigger": "축약명에 숫자",
+      "expected": "⛔ ‘숫자는 쓸 수 없습니다 — 도메인 이름의 길이 숫자와 섞입니다’",
+      "roles": "type.add · type.std",
+      "refs": [],
+      "states": ["datatypes.html?as=lee"],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-datatypes-028",
+      "where": "타입 등록 · 옮기기 창 · 축약명 검사",
+      "trigger": "축약명에 영문 대문자 밖의 글자",
+      "expected": "⛔ ‘영문 대문자만 씁니다’",
+      "roles": "type.add · type.std",
+      "refs": [],
+      "states": ["datatypes.html?as=lee"],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-datatypes-029",
+      "where": "타입 등록 · 옮기기 창 · 축약명 검사",
+      "trigger": "표준 축약명이 1자가 아님",
+      "expected": "⛔ ‘표준 축약명은 영문 대문자 1자입니다’",
+      "roles": "type.std",
+      "refs": ["type.std"],
+      "states": ["datatypes.html?as=lee"],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-datatypes-030",
+      "where": "타입 등록 · 옮기기 창 · 축약명 검사",
+      "trigger": "추가 · DBMS 전용 축약명이 2~3자가 아님",
+      "expected": "⛔ ‘추가 · DBMS 전용 축약명은 영문 대문자 2~3자입니다(1자는 표준 전용)’",
+      "roles": "type.add",
+      "refs": [],
+      "states": ["datatypes.html?as=lee"],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-datatypes-031",
+      "where": "타입 등록 · 옮기기 창 · 축약명 검사",
+      "trigger": "이미 있는 축약명(사용 중지 포함)",
+      "expected": "⛔ ‘‘{축약명}’는 이미 있습니다 — {이름}(사용 중지) · {시스템} 전용’",
+      "roles": "type.add · type.std",
+      "refs": [],
+      "states": ["datatypes.html?as=lee"],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-datatypes-032",
+      "where": "타입 수정 창 · 검사",
+      "trigger": "쓰는 곳이 있는 타입의 축약명을 바꿈",
+      "expected": "⛔ ‘쓰는 곳이 있는 축약명은 바꾸지 않습니다 — [새 축약명으로 옮기기]를 쓰세요’",
+      "roles": "type.add · type.std",
+      "refs": [],
+      "states": ["datatypes.html?as=lee"],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-datatypes-033",
+      "where": "타입 수정 창 · 검사",
+      "trigger": "쓰는 곳이 있는 타입의 인자를 바꿈",
+      "expected": "⛔ ‘쓰는 곳이 있으면 인자를 바꿀 수 없습니다 — 도메인 이름의 길이 해석이 달라집니다’",
+      "roles": "type.add · type.std",
+      "refs": ["MD-11"],
+      "states": ["datatypes.html?as=lee"],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-datatypes-034",
+      "where": "타입 등록 창 · 검사",
+      "trigger": "논리 타입 이름이 비었음",
+      "expected": "⛔ ‘논리 타입 이름을 입력하세요’",
+      "roles": "type.add",
+      "refs": [],
+      "states": ["datatypes.html?as=lee"],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-datatypes-035",
+      "where": "타입 등록 창 · 검사",
+      "trigger": "사용 중인 다른 타입과 같은 이름",
+      "expected": "⛔ ‘같은 이름의 타입이 있습니다’",
+      "roles": "type.add",
+      "refs": [],
+      "states": ["datatypes.html?as=lee"],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-datatypes-036",
+      "where": "타입 등록 창 · 검사",
+      "trigger": "변경 사유가 비었음",
+      "expected": "⛔ ‘변경 사유를 입력하세요’",
+      "roles": "type.add",
+      "refs": [],
+      "states": ["datatypes.html?as=lee"],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-datatypes-037",
+      "where": "타입 등록 창 · 검사",
+      "trigger": "물리 타입 형식이 틀림",
+      "expected": "⛔ ‘{DBMS}: 형식: 영문 타입 + (n) · (p,s) — 예: VARCHAR2(n)’, 길이 없는 인자에 괄호를 쓰면 ‘{DBMS}: 이 논리 타입은 길이를 쓰지 않습니다 — 괄호를 빼세요’",
+      "roles": "type.add",
+      "refs": [],
+      "states": ["datatypes.html?as=lee"],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-datatypes-038",
+      "where": "타입 등록 창 · 검사",
+      "trigger": "같은 물리 타입을 다른 사용 중 타입이 이미 씀",
+      "expected": "⚠ ‘{DBMS} {타입}는 이미 {축약명}({이름})가 씁니다 — 기존 타입을 쓰는 것이 맞는지 확인하세요’(저장은 가능)",
+      "roles": "type.add",
+      "refs": [],
+      "states": ["datatypes.html?as=lee"],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-datatypes-039",
+      "where": "타입 등록 창 · 검사",
+      "trigger": "필요한 DBMS 물리 타입 칸이 비었음",
+      "expected": "⚠ ‘{DBMS · DBMS} 물리 타입이 비어 ‘매핑 없음’으로 남습니다’(저장은 가능, 그 시스템 DDL 전 점검에서 막음)",
+      "roles": "type.add",
+      "refs": ["OUT-R02"],
+      "states": ["datatypes.html?as=lee"],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-datatypes-040",
+      "where": "타입 등록 창 · 검사",
+      "trigger": "문제가 없을 때",
+      "expected": "‘✓ 저장할 수 있습니다’",
+      "roles": "type.add",
+      "refs": [],
+      "states": ["datatypes.html?as=lee"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-datatypes-041",
+      "where": "타입 등록 창",
+      "trigger": "차단 문제가 있는 채 [저장]",
+      "expected": "저장하지 않고 토스트 ‘저장하지 않았습니다 — {첫 문제}’",
+      "roles": "type.add",
+      "refs": [],
+      "states": ["datatypes.html?as=lee"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-datatypes-042",
+      "where": "타입 등록 창",
+      "trigger": "[저장] 첫 클릭(문제 없음)",
+      "expected": "영향 배너 ‘저장하면(고치면) 바로 반영됩니다 — 타입 규칙 버전 v{n} → v{n+1} · 시스템 매핑 n개에 행 추가 · 빈 칸 m개({시스템} — 매핑 없음) · 이 타입을 쓰는 도메인 · 속성 · 진행 중인 도메인 신청은 승인 때 다시 검사합니다.’, 버튼이 ‘확인하고 저장’으로. 입력을 고치면 다시 ‘저장’",
+      "roles": "type.add",
+      "refs": [],
+      "states": ["datatypes.html?as=lee"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-datatypes-043",
+      "where": "타입 등록 창",
+      "trigger": "버튼 ‘확인하고 저장’ 클릭",
+      "expected": "타입이 바로 반영되고 규칙 버전 +1, 감사 로그 기록, 창 닫힘 · 새 타입 선택, 토스트 ‘{축약명} {이름} 등록 ({종류} · {범위}) — 타입 규칙 v{n} · 매핑 없음 m곳은 [시스템별 매핑]에서 채우세요’. 주소 ?back= 이 있으면 [모델로 돌아가기]",
+      "roles": "type.add (표준은 type.std)",
+      "refs": ["type.add", "type.std", "audit.view"],
+      "states": ["datatypes.html?as=lee"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-datatypes-044",
+      "where": "타입 수정 창",
+      "trigger": "공통 · 표준 타입의 물리 타입을 바꿔 저장",
+      "expected": "아직 기본값인 시스템 매핑의 첫 규칙도 새 물리 타입으로 바뀜(시스템별 매핑 탭에 보임)",
+      "roles": "type.std · type.add",
+      "refs": [],
+      "states": ["datatypes.html?as=lee"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-datatypes-045",
+      "where": "타입 등록 창 · 요청에서",
+      "trigger": "요청을 [등록하기]로 연 창에서 저장",
+      "expected": "요청 상태가 ‘등록 · {축약명}’으로 바뀌고 처리자 기록, 요청자에게 알림 ‘타입 추가 요청 {ID} 등록됨 — {축약명} {이름}’",
+      "roles": "type.add",
+      "refs": ["type.add", "MD-27"],
+      "states": ["datatypes.html?as=lee#reqs"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-datatypes-046",
+      "where": "모든 창",
+      "trigger": "버튼 ‘취소’ 또는 Esc",
+      "expected": "저장하지 않고 창이 닫히며 연 버튼으로 포커스",
+      "roles": "전체",
+      "refs": [],
+      "states": ["datatypes.html?as=lee"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-datatypes-047",
+      "where": "새 축약명으로 옮기기 · 표준으로 올리기 창",
+      "trigger": "[새 축약명으로 옮기기] · [표준으로 올리기] 클릭",
+      "expected": "창 제목 ‘새 축약명으로 옮기기 — {축약명}’ / ‘표준으로 올리기 — {축약명}’과 안내 문구, 새 축약명 길이(표준 · 올리기 1자, 그 밖 2~3자)와 도움말, 버튼 ‘옮기기’ / ‘표준으로 올리기’, 축약명 칸에 포커스",
+      "roles": "type.add · type.std (올리기는 type.std)",
+      "refs": ["type.std", "type.add"],
+      "states": ["datatypes.html?as=lee&sel=V"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-datatypes-048",
+      "where": "새 축약명으로 옮기기 창",
+      "trigger": "새 축약명 · 사유 입력",
+      "expected": "축약명 대문자 정리, ‘바뀌는 도메인 이름 n’ 목록(옛 이름 → 새 이름, 없으면 ‘바뀌는 도메인이 없습니다’), 검사: 축약명 규칙 · ⛔ ‘변경 사유를 입력하세요’ · ⚠ ‘속성 n개가 따라 바뀝니다(직접 고른 속성 m개 포함) · 도메인 이름 변경은 사전 변경 이력에 남습니다’",
+      "roles": "type.add · type.std",
+      "refs": ["MD-11"],
+      "states": ["datatypes.html?as=lee"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-datatypes-049",
+      "where": "새 축약명으로 옮기기 창 · 검사",
+      "trigger": "새 이름이 이미 있는 도메인과 같음",
+      "expected": "⛔ ‘도메인 {이름}이 이미 있습니다 — 다른 축약명을 고르세요’",
+      "roles": "type.add · type.std",
+      "refs": [],
+      "states": ["datatypes.html?as=lee"],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-datatypes-050",
+      "where": "새 축약명으로 옮기기 창",
+      "trigger": "차단 문제가 있는 채 실행",
+      "expected": "진행하지 않고 토스트 ‘진행하지 않았습니다 — {첫 문제}’",
+      "roles": "type.add · type.std",
+      "refs": [],
+      "states": ["datatypes.html?as=lee"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-datatypes-051",
+      "where": "새 축약명으로 옮기기 창",
+      "trigger": "[옮기기] · [표준으로 올리기] 실행",
+      "expected": "새 축약명 타입을 만들고(정의 · 시스템 매핑 복사, 올리기면 표준 · 기관 공통) 옛 타입은 사용 중지 + 옮김 표시. 사전 도메인 이름 · 그 도메인을 쓰는 용어 · 모든 모델 버전의 속성이 함께 바뀌고 감사 로그 2건(타입 · 사전 도메인 이름 변경), 토스트 ‘{옛} → {새} 옮겼습니다(표준으로 올렸습니다) — 도메인 n개 · 용어 n개 · 속성 n개를 함께 바꿨고, {옛}는 사용 중지했습니다’",
+      "roles": "type.add · type.std (올리기는 type.std)",
+      "refs": ["type.std", "type.add", "MD-11", "MD-23"],
+      "states": ["datatypes.html?as=lee"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-datatypes-052",
+      "where": "사용 중지 · 다시 사용 창",
+      "trigger": "[사용 중지] · [다시 사용] 클릭",
+      "expected": "창 ‘사용 중지 — {축약명}’ · ‘… 쓰는 곳이 없습니다. 사용 중지하면 도메인 신청 · 모델 목록에서 빠지고, 지우지는 않습니다(축약명은 다시 쓸 수 없음).’ 또는 ‘다시 사용 — {축약명}’ · ‘… 다시 씁니다. 해당 시스템의 매핑 표와 도메인 신청 목록에 다시 나타납니다.’, 사유 칸에 포커스",
+      "roles": "type.add · type.std",
+      "refs": [],
+      "states": ["datatypes.html?as=lee"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-datatypes-053",
+      "where": "사용 중지 · 다시 사용 창",
+      "trigger": "사유 없이 [저장]",
+      "expected": "저장하지 않고 사유 칸 aria-invalid, 토스트 ‘변경 사유를 입력하세요’",
+      "roles": "type.add · type.std",
+      "refs": [],
+      "states": ["datatypes.html?as=lee"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-datatypes-054",
+      "where": "사용 중지 창",
+      "trigger": "창을 연 사이 쓰는 곳이 생긴 뒤 [저장]",
+      "expected": "사용 중지하지 않고 창 닫힘, 토스트 ‘그사이 쓰는 곳이 생겨 사용 중지하지 않았습니다’",
+      "roles": "type.add · type.std",
+      "refs": [],
+      "states": ["datatypes.html?as=lee"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-datatypes-055",
+      "where": "사용 중지 · 다시 사용 창",
+      "trigger": "사유 입력 후 [저장]",
+      "expected": "상태가 바뀌고 규칙 버전 +1 · 감사 로그, 토스트 ‘{축약명} 사용 중지했습니다’ / ‘{축약명} 다시 사용합니다’",
+      "roles": "type.add · type.std",
+      "refs": ["audit.view"],
+      "states": ["datatypes.html?as=lee"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-datatypes-056",
+      "where": "시스템별 매핑 · 도구 줄",
+      "trigger": "시스템 선택 변경 또는 주소 ?sys={시스템}",
+      "expected": "그 시스템의 매핑 표와 ‘{DB} · {DBMS} 기본 규칙에서 시작’ 문구로 바뀜",
+      "roles": "전체",
+      "refs": ["MD-40"],
+      "states": ["datatypes.html?as=lee#map"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-datatypes-057",
+      "where": "시스템별 매핑 · 도구 줄",
+      "trigger": "저장하지 않은 변경이 있는 채 다른 시스템 선택",
+      "expected": "확인 창 ‘저장하지 않은 매핑’ · ‘이 시스템에 저장하지 않은 매핑 변경이 있습니다. 버리면 되돌릴 수 없습니다.’ — [버리고 이동]이면 이동, 취소면 원래 시스템 유지",
+      "roles": "type.map",
+      "refs": ["type.map"],
+      "states": ["datatypes.html?as=lee#map"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-datatypes-058",
+      "where": "시스템별 매핑",
+      "trigger": "그 시스템의 type.map이 없는 사용자가 보기",
+      "expected": "배너 ‘보기만 할 수 있습니다 — 매핑 수정은 {시스템}을(를) 맡은 DA 또는 Admin · 필요한 타입이 없으면 [타입 추가 요청]’(요청 가능할 때만 뒷부분), 입력 · 추가 · 빼기 · 기본값 버튼 흐리게",
+      "roles": "type.map 없음 · 담당 밖 시스템의 DA",
+      "refs": ["type.map", "RP-R04"],
+      "states": ["datatypes.html?as=park#map"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-datatypes-059",
+      "where": "시스템별 매핑 · 표",
+      "trigger": "화면 표시(자동)",
+      "expected": "그 시스템이 대상인 타입마다 축약명 · 이름(인자) · 종류 · ‘길이 범위 → 물리 타입’ 규칙(길이 없는 타입은 물리 타입만) · 점검",
+      "roles": "전체",
+      "refs": [],
+      "states": ["datatypes.html?as=lee#map"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-datatypes-060",
+      "where": "시스템별 매핑 · 표",
+      "trigger": "범위 시작 · 끝 · 물리 타입 칸 변경",
+      "expected": "작업본에 반영되고 바뀐 행 왼쪽 표시 + 점검 칸에 ‘· 저장 안 함’, 저장 버튼 ‘저장 (n)’. 끝을 비우면 ‘끝없음’",
+      "roles": "type.map",
+      "refs": ["type.map"],
+      "states": ["datatypes.html?as=lee#map"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-datatypes-061",
+      "where": "시스템별 매핑 · 표",
+      "trigger": "버튼 ‘범위 추가’ · ‘물리 타입 넣기’ · 범위 빼기(×) 클릭",
+      "expected": "이전 범위 다음 구간으로 새 행이 추가되어 물리 타입 칸에 포커스(길이 없는 타입은 규칙이 없을 때만 ‘물리 타입 넣기’) / 그 범위 삭제(범위가 2개 이상일 때만 ×)",
+      "roles": "type.map",
+      "refs": ["type.map"],
+      "states": ["datatypes.html?as=lee#map"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-datatypes-062",
+      "where": "시스템별 매핑 · 점검",
+      "trigger": "물리 타입 칸이 비었음",
+      "expected": "⛔ ‘물리 타입을 입력하세요’",
+      "roles": "type.map",
+      "refs": [],
+      "states": ["datatypes.html?as=lee#map"],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-datatypes-063",
+      "where": "시스템별 매핑 · 점검",
+      "trigger": "물리 타입 형식이 틀림 · 길이 없는 타입에 괄호",
+      "expected": "⛔ ‘형식: 영문 타입 + (n) · (p,s) — 예: VARCHAR2(n)’ / ‘이 논리 타입은 길이를 쓰지 않습니다 — 괄호를 빼세요’",
+      "roles": "type.map",
+      "refs": [],
+      "states": ["datatypes.html?as=lee#map"],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-datatypes-064",
+      "where": "시스템별 매핑 · 점검",
+      "trigger": "길이 없는 타입에 규칙이 2개 이상",
+      "expected": "⛔ ‘길이가 없는 타입은 규칙을 하나만 둡니다’",
+      "roles": "type.map",
+      "refs": [],
+      "states": ["datatypes.html?as=lee#map"],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-datatypes-065",
+      "where": "시스템별 매핑 · 점검",
+      "trigger": "시작 값이 0 이상 정수가 아님 · 끝 값이 시작보다 작거나 정수가 아님",
+      "expected": "⛔ ‘{i}번째 범위: 시작 값을 0 이상 정수로 입력하세요’ / ‘{i}번째 범위: 끝 값은 시작 값 이상 정수(비우면 끝없음)’",
+      "roles": "type.map",
+      "refs": [],
+      "states": ["datatypes.html?as=lee#map"],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-datatypes-066",
+      "where": "시스템별 매핑 · 점검",
+      "trigger": "범위가 겹치거나 빈 구간이 있음",
+      "expected": "⛔ ‘{i}번째 범위가 끝없음이라 뒤 범위와 겹칩니다’ / ‘{i}~{i+1}번째 범위가 겹칩니다(a · b)’ / ‘{a}~{b} 구간에 규칙이 없습니다’",
+      "roles": "type.map",
+      "refs": [],
+      "states": ["datatypes.html?as=lee#map"],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-datatypes-067",
+      "where": "시스템별 매핑 · 점검",
+      "trigger": "규칙이 없음 · 초 아래 자릿수 상한이 9 미만",
+      "expected": "⚠ ‘매핑 없음 — DDL 전 점검에서 막음’ / ‘⚠ {n}자리 넘으면 상한으로 줄임’, 문제없으면 ✓",
+      "roles": "전체",
+      "refs": ["OUT-R02"],
+      "states": ["datatypes.html?as=lee#map"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-datatypes-068",
+      "where": "시스템별 매핑",
+      "trigger": "오류가 있는 규칙이 있을 때(자동)",
+      "expected": "표 아래 알림 ‘{축약명} {이름}: {오류} — 고쳐야 저장됩니다’, [저장] 흐리게",
+      "roles": "type.map",
+      "refs": [],
+      "states": ["datatypes.html?as=lee#map"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-datatypes-069",
+      "where": "시스템별 매핑 · 도구 줄",
+      "trigger": "버튼 ‘되돌리기’ 클릭(변경이 있을 때만 사용 가능)",
+      "expected": "저장값으로 돌아가고 토스트 ‘저장하기 전 매핑으로 되돌렸습니다’",
+      "roles": "type.map",
+      "refs": [],
+      "states": ["datatypes.html?as=lee#map"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-datatypes-070",
+      "where": "시스템별 매핑 · 도구 줄",
+      "trigger": "버튼 ‘이 DBMS 기본값으로’ 클릭",
+      "expected": "작업본이 그 DBMS 기본 규칙으로 바뀌고 토스트 ‘{DBMS} 기본 규칙을 불러왔습니다 — 저장해야 반영됩니다’",
+      "roles": "type.map",
+      "refs": ["type.map"],
+      "states": ["datatypes.html?as=lee#map"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-datatypes-071",
+      "where": "시스템별 매핑 · 도구 줄",
+      "trigger": "버튼 ‘저장 (n)’ 클릭",
+      "expected": "그 시스템 매핑이 저장되고 감사 로그(‘{축약명} 전 → 후’), 토스트 ‘{시스템} 매핑 n건을 저장했습니다 — 다음 DDL 만들기 · 옮기기부터 적용됩니다’. 논리 타입 표의 예 열 갱신",
+      "roles": "type.map (담당 시스템)",
+      "refs": ["type.map", "OUT-R01"],
+      "states": ["datatypes.html?as=lee#map"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-datatypes-072",
+      "where": "시스템별 매핑",
+      "trigger": "저장하지 않은 변경이 있는 채 페이지 떠나기",
+      "expected": "브라우저의 떠나기 확인이 뜸",
+      "roles": "type.map",
+      "refs": [],
+      "states": ["datatypes.html?as=lee#map"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-datatypes-073",
+      "where": "타입 추가 요청 탭",
+      "trigger": "DA가 열기",
+      "expected": "탭 배지에 대기 수, 목록 머리 ‘대기 n건 · 전체 m건 — [등록하기]를 누르면 요청 내용으로 채운 등록 창이 열립니다’, 모든 요청 표시",
+      "roles": "type.add",
+      "refs": ["type.add"],
+      "states": ["datatypes.html?as=lee#reqs"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-datatypes-074",
+      "where": "타입 추가 요청 탭",
+      "trigger": "모델러가 열기",
+      "expected": "내 요청만, 머리 ‘내 요청 n건 — 처리는 DA’, 탭 배지 없음, 처리 버튼 없음",
+      "roles": "type.request",
+      "refs": ["type.request"],
+      "states": ["datatypes.html?as=park#reqs"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-datatypes-075",
+      "where": "타입 추가 요청 탭 · 목록",
+      "trigger": "목록 표시(자동)",
+      "expected": "요청 · 시각 · 요청자 · 시스템 · 필요한 물리 타입 · 쓰려는 곳 · 이유 · 상태(대기: DA에게 ‘내 차례’ · 모델러에게 ‘대기’ / ‘등록 · {축약명}’ / ‘거절’ + 사유 또는 처리자). 없으면 ‘요청이 없습니다’ / ‘보낸 요청이 없습니다’",
+      "roles": "전체(요청 탭이 보이는 사용자)",
+      "refs": [],
+      "states": ["datatypes.html?as=lee#reqs"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-datatypes-076",
+      "where": "타입 추가 요청 탭 · 목록",
+      "trigger": "대기 요청의 [등록하기] 클릭",
+      "expected": "등록 창이 요청 내용(추가 타입 · 그 시스템 전용 · 그 DBMS 물리 타입 대문자 · ‘{쓰려는 곳}에서 사용’ · ‘{ID} 요청 — {이유}’)으로 채워져 열림",
+      "roles": "type.add",
+      "refs": ["type.add"],
+      "states": ["datatypes.html?as=lee#reqs"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-datatypes-077",
+      "where": "요청 거절 창",
+      "trigger": "대기 요청의 [거절] 클릭",
+      "expected": "창 ‘요청 거절’에 ‘{ID} · {요청자} · {물리 타입} — {이유}’ 요약과 ‘거절 사유 *’, 사유 칸에 포커스",
+      "roles": "type.add",
+      "refs": ["type.add"],
+      "states": ["datatypes.html?as=lee#reqs"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-datatypes-078",
+      "where": "요청 거절 창",
+      "trigger": "사유 없이 [요청 거절]",
+      "expected": "거절하지 않고 사유 칸 aria-invalid, 토스트 ‘거절 사유를 입력하세요’",
+      "roles": "type.add",
+      "refs": [],
+      "states": ["datatypes.html?as=lee#reqs"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-datatypes-079",
+      "where": "요청 거절 창",
+      "trigger": "사유 입력 후 [요청 거절]",
+      "expected": "요청이 ‘거절’(사유 · 처리자 기록)로 바뀌고 요청자 알림 · 감사 로그, 토스트 ‘{ID}를 거절했습니다 — 요청자에게 알렸습니다’",
+      "roles": "type.add",
+      "refs": ["type.add", "MD-27"],
+      "states": ["datatypes.html?as=lee#reqs"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-datatypes-080",
+      "where": "타입 추가 요청 창",
+      "trigger": "[타입 추가 요청] 클릭 또는 주소 ?req=1(&sys=&where=&phys=)",
+      "expected": "창 ‘타입 추가 요청’과 안내(‘DA에게 알림이 갑니다…직접 입력 + 예외(사유)로 둘 수 있습니다.’), 주소 값으로 시스템 · 쓰려는 곳 · 물리 타입을 미리 채움, 물리 타입(채워졌으면 이유) 칸에 포커스",
+      "roles": "type.request",
+      "refs": ["type.request"],
+      "states": ["datatypes.html?as=park&req=1"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-datatypes-081",
+      "where": "타입 추가 요청 창 · 검사",
+      "trigger": "요청할 수 있는 담당 시스템이 없음",
+      "expected": "시스템 목록 ‘(담당 시스템 없음)’, ⛔ ‘담당 시스템이 없어 요청할 수 없습니다’",
+      "roles": "type.request",
+      "refs": ["type.request"],
+      "states": ["datatypes.html?as=park&req=1"],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-datatypes-082",
+      "where": "타입 추가 요청 창 · 검사",
+      "trigger": "필요한 물리 타입이 비었음",
+      "expected": "⛔ ‘필요한 물리 타입을 입력하세요’",
+      "roles": "type.request",
+      "refs": [],
+      "states": ["datatypes.html?as=park&req=1"],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-datatypes-083",
+      "where": "타입 추가 요청 창 · 검사",
+      "trigger": "이유가 비었음",
+      "expected": "⛔ ‘이유를 입력하세요’",
+      "roles": "type.request",
+      "refs": [],
+      "states": ["datatypes.html?as=park&req=1"],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-datatypes-084",
+      "where": "타입 추가 요청 창 · 검사",
+      "trigger": "그 시스템에 이미 매핑된 물리 타입 입력",
+      "expected": "⚠ ‘{시스템}에는 이미 {축약명}({이름})가 {타입}로 매핑돼 있습니다 — 그 타입의 도메인을 쓰면 됩니다’(보내기는 가능)",
+      "roles": "type.request",
+      "refs": [],
+      "states": ["datatypes.html?as=park&req=1"],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-datatypes-085",
+      "where": "타입 추가 요청 창",
+      "trigger": "차단 문제가 있는 채 [요청 보내기]",
+      "expected": "보내지 않고 토스트 ‘보내지 않았습니다 — {첫 문제}’",
+      "roles": "type.request",
+      "refs": [],
+      "states": ["datatypes.html?as=park&req=1"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-datatypes-086",
+      "where": "타입 추가 요청 창",
+      "trigger": "[요청 보내기] 클릭(문제 없음)",
+      "expected": "요청 TR-2026-nnnn(대기)이 만들어지고 type.add 가진 사용자에게 알림, 창이 닫히며 ‘타입 추가 요청’ 탭으로 이동, 토스트 ‘{ID} 요청을 보냈습니다 — 등록되면 알림으로 알려 드립니다’. 주소 ?back= 이 있으면 [모델로 돌아가기]",
+      "roles": "type.request",
+      "refs": ["type.request", "MD-27"],
+      "states": ["datatypes.html?as=park"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-datatypes-087",
+      "where": "변경 이력 탭",
+      "trigger": "탭 열기",
+      "expected": "‘결재 없이 반영된 변경입니다. 감사 로그에도 같은 내용이 남습니다. 타입 규칙 버전 v{n}’과 변경 목록(작업 · 대상 · 사유 · 시각 · 사람, 축약명 옮김으로 바뀐 도메인 이름 포함). 없으면 ‘아직 변경이 없습니다’",
+      "roles": "전체",
+      "refs": ["audit.view"],
+      "states": ["datatypes.html?as=lee#log"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-datatypes-088",
+      "where": "주소",
+      "trigger": "주소 ?as=lee / ?as=park",
+      "expected": "DA · 모델러로 보기 전환",
+      "roles": "전체",
+      "refs": [],
+      "states": ["datatypes.html?as=lee", "datatypes.html?as=park"],
+      "verify": "exempt",
+      "exemptReason": "목업 전용 데모 기능(?as= 역할 바꾸기)"
+    }
+  ]
+}

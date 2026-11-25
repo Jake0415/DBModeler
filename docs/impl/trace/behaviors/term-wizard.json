@@ -1,0 +1,767 @@
+{
+  "screen": "term-wizard.html",
+  "ids": "SC-35",
+  "source": "docs/ux/mockups/term-wizard.html",
+  "behaviors": [
+    {
+      "id": "BH-term-wizard-001",
+      "where": "머리",
+      "trigger": "주소 열기(?area=)",
+      "expected": "경로에 현재 시스템 이름 · ‘영역 이름 · v버전’, 범위 배지 ‘테이블 N개 · 속성 M개’(참조 엔터티 제외). area가 없거나 잘못되면 기본 영역",
+      "roles": "전체",
+      "refs": ["model.view", "SC-35"],
+      "states": ["term-wizard.html?area=rq", "term-wizard.html?area=e_hr"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-term-wizard-002",
+      "where": "머리 · 동작",
+      "trigger": "‘표준 맞추기로 돌아가기’ 클릭",
+      "expected": "standardize.html?area=<영역>&f=todo(모델 맥락이 있으면 &e= · &a=)로 이동. from=standardize로 오지 않았으면 버튼 이름이 ‘표준 맞추기 열기’",
+      "roles": "전체",
+      "refs": ["SC-34"],
+      "states": ["term-wizard.html?area=rq"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-term-wizard-003",
+      "where": "모델 맥락 배너",
+      "trigger": "주소 열기(?e=<엔터티>&a=<속성>)",
+      "expected": "배너 ‘모델의 <엔터티.속성>에서 왔습니다 — ② 분석 결과에서 이 행을 표시합니다.’ + [모델에서 보기](model.html?area=&focus=). ②를 처음 열 때 그 행이 강조되고 가운데로 스크롤",
+      "roles": "전체",
+      "refs": ["SC-31"],
+      "states": ["term-wizard.html?area=rq"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-term-wizard-004",
+      "where": "머리 아래 배너",
+      "trigger": "모델러가 아니거나 담당 시스템 밖일 때",
+      "expected": "‘분석만 가능 — 용어 등록·모델 반영은 모델러 역할만 할 수 있습니다’(담당 밖 모델러는 ‘내 담당 시스템에 <시스템>이/가 없어 등록·반영은 할 수 없습니다’ + ‘담당 시스템 추가 요청’ 링크). ‘①~③(분석·단어 구성)은 볼 수 있고 ④ 용어 등록·⑤ 모델 반영은 막혀 있습니다.’ + [모델로]",
+      "roles": "모델러가 아닌 역할 · 담당 밖 모델러",
+      "refs": ["model.edit"],
+      "states": ["term-wizard.html?area=rq"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-term-wizard-005",
+      "where": "머리 아래 배너",
+      "trigger": "작업 버전이 확정 결재 중이거나 확정본일 때",
+      "expected": "‘분석만 가능 — <문서> 확정 결재 중(또는 확정본)이라 모델을 고칠 수 없습니다. …’ ④ · ⑤ 처리 버튼은 흐리게 + 같은 이유",
+      "roles": "전체",
+      "refs": ["model.edit"],
+      "states": ["term-wizard.html?area=rq"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-term-wizard-006",
+      "where": "단계 표시줄",
+      "trigger": "단계 버튼 클릭",
+      "expected": "5단계(대상 선택 · 분석 결과 · 단어 구성 · 용어 등록 · 모델 반영) 중 현재 단계 강조(aria-current=step), 이미 지나간(방문한) 단계는 눌러서 이동, 아직 안 간 단계는 흐리게. 분석 전에는 ① 밖으로 못 간다",
+      "roles": "전체",
+      "refs": ["SC-35"],
+      "states": ["term-wizard.html?area=rq"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-term-wizard-007",
+      "where": "아래 고정 줄",
+      "trigger": "단계가 바뀔 때",
+      "expected": "[이전]은 ①에서 흐리게, [다음]은 ①에서 이름이 ‘분석’, ②~④에서 ‘다음’, ⑤에서 숨김. 이동하면 그 단계 제목으로 초점",
+      "roles": "전체",
+      "refs": ["SC-35"],
+      "states": ["term-wizard.html?area=rq"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-term-wizard-008",
+      "where": "아래 고정 줄 · 안내",
+      "trigger": "단계 · 선택이 바뀔 때",
+      "expected": "①에서는 ‘테이블 N개 선택 · [분석]을 누르면 결과를 계산합니다’, 그 뒤에는 ‘분석 N건 · 포함 M건 · 논리명(또는 물리명) 기준’",
+      "roles": "전체",
+      "refs": ["SC-35"],
+      "states": ["term-wizard.html?area=rq"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-term-wizard-009",
+      "where": "전체",
+      "trigger": "단축키 Ctrl+Enter(맥 Cmd+Enter)",
+      "expected": "다음 단계로 이동(①에서는 분석 실행). ⑤에서는 아무 일 없음, 창이 열려 있으면 무시",
+      "roles": "전체",
+      "refs": ["SC-35"],
+      "states": ["term-wizard.html?area=rq"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-term-wizard-010",
+      "where": "① 대상 선택 · 업무 영역",
+      "trigger": "업무 영역 선택 변경",
+      "expected": "term-wizard.html?area=<고른 영역>(from 유지)으로 다시 연다. 목록은 ‘영역 이름 · v버전’",
+      "roles": "전체",
+      "refs": ["SC-35"],
+      "states": ["term-wizard.html?area=rq"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-term-wizard-011",
+      "where": "① 대상 선택 · 테이블 목록",
+      "trigger": "화면 열기",
+      "expected": "참조가 아닌 테이블마다 체크 · 이름 · 물리명 · ‘속성 N · 미준수 M’. 기본 모두 체크, ?ents=<id,…>가 있으면 그 테이블만 체크. 테이블이 없으면 ‘이 업무 영역에 테이블이 없습니다’. 위에 선택 수 ‘n/N’",
+      "roles": "전체",
+      "refs": ["SC-35"],
+      "states": ["term-wizard.html?area=rq"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-term-wizard-012",
+      "where": "① 대상 선택 · 테이블 목록",
+      "trigger": "‘모두 선택’ / ‘모두 해제’ 클릭",
+      "expected": "모든 테이블 체크 / 해제, 선택 수와 아래 안내 갱신",
+      "roles": "전체",
+      "refs": ["SC-35"],
+      "states": ["term-wizard.html?area=rq"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-term-wizard-013",
+      "where": "① 대상 선택 · 옵션",
+      "trigger": "‘테이블명(엔터티 용어)도 분석’ 체크 해제 후 분석",
+      "expected": "테이블명 행이 결과에서 빠진다(기본 체크). 테이블명 행은 엔터티 용어로 다루고 도메인은 ‘엔터티 용어’",
+      "roles": "전체",
+      "refs": ["ST-R06"],
+      "states": ["term-wizard.html?area=rq"],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-term-wizard-014",
+      "where": "① 대상 선택 · 분석 기준",
+      "trigger": "‘물리명’ 선택 후 분석(?basis=p로도 미리 선택)",
+      "expected": "현재 물리명을 단어 연결자로 나눠 약어 → 단어 역색인(사전 · 모델 · 후보)으로 대안을 만든다. 모르는 약어는 미등록 조각. 물리명이 없으면 대안 없음 · 근거 ‘분해 후보 없음 — 물리명 없음’",
+      "roles": "전체",
+      "refs": ["ST-R05"],
+      "states": ["term-wizard.html?area=rq"],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-term-wizard-015",
+      "where": "① 대상 선택 · 대상 범위",
+      "trigger": "‘미준수만’(기본) / ‘전체’(?range=all) 선택 후 분석",
+      "expected": "미준수만이면 표준 · 예외 · 비대상 항목은 빼되, 비대상 규칙에 맞는 항목은 남긴다. 전체면 모든 항목",
+      "roles": "전체",
+      "refs": ["ST-R07"],
+      "states": ["term-wizard.html?area=rq"],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-term-wizard-016",
+      "where": "① 대상 선택 · 옵션",
+      "trigger": "‘항목당 최대 결과 수’(3 · 5 · 10, 기본 5) 변경",
+      "expected": "③ 단어 구성에서 대안을 그 수만큼 보여 준다(선택한 대안이 범위 밖이면 맨 위에 추가). 안내 ‘대안 N개 중 M개 표시(최대 결과 수 K)’",
+      "roles": "전체",
+      "refs": ["ST-R05"],
+      "states": ["term-wizard.html?area=rq"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-term-wizard-017",
+      "where": "① 대상 선택 · 옵션",
+      "trigger": "‘우선순위’(긴 단어 우선 · 공통표준 우선 · 기관 우선) 변경 후 분석",
+      "expected": "점수 계산에서 긴 단어 우선은 조각 수 감점을 키우고, 공통표준 우선 · 기관 우선은 그 출처 단어마다 가점(+3)을 준다",
+      "roles": "전체",
+      "refs": ["ST-R05"],
+      "states": ["term-wizard.html?area=rq"],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-term-wizard-018",
+      "where": "① 대상 선택 · 옵션",
+      "trigger": "화면 열기 · ‘단어 연결자’ 입력",
+      "expected": "단어 연결자 기본값은 검수 기준의 단어 사이 기호. 최대 2자. 제안 물리명은 약어를 이 기호로 잇는다",
+      "roles": "전체",
+      "refs": ["PH-R03"],
+      "states": ["term-wizard.html?area=rq"],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-term-wizard-019",
+      "where": "① 대상 선택 · 옵션",
+      "trigger": "‘제외 문자’ 입력(띄어 써서 나열, ‘공백’ = 공백)",
+      "expected": "논리명 기준 분석 전에 이름에서 그 문자를 지운다(기본 ‘공백 ( ) - .’)",
+      "roles": "전체",
+      "refs": ["ST-R05"],
+      "states": ["term-wizard.html?area=rq"],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-term-wizard-020",
+      "where": "① 대상 선택 · 옵션",
+      "trigger": "‘Suffix 목록’ 입력(한 줄에 ‘단어 = 접미’)",
+      "expected": "테이블명 행에서 마지막 단어가 목록에 있으면 물리명 마지막 약어를 그 접미(앞 _ 제거)로 바꾼다. 기본 ‘기본 = _M / 내역 = _D / 이력 = _H’. 형식이 맞지 않는 줄은 무시",
+      "roles": "전체",
+      "refs": ["PH-R03"],
+      "states": ["term-wizard.html?area=rq"],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-term-wizard-021",
+      "where": "① 대상 선택 · 옵션",
+      "trigger": "‘표준 비대상 규칙’ 입력(한 줄에 패턴, * 와일드카드)",
+      "expected": "물리명 또는 논리명이 패턴에 맞는 속성은 자동 ‘비대상’(근거 ‘비대상 규칙 <패턴> 일치’). 기본값은 검수 기준의 표준 제외 규칙, 여기서 고친 규칙은 이번 분석에만 쓴다(‘표준 제외 규칙’ 링크 → rules.html). 대소문자 무시",
+      "roles": "전체",
+      "refs": ["ST-R07"],
+      "states": ["term-wizard.html?area=rq"],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-term-wizard-022",
+      "where": "① 대상 선택",
+      "trigger": "테이블을 하나도 고르지 않고 ‘분석’ 클릭",
+      "expected": "토스트 ‘분석할 테이블을 하나 이상 고르세요’, 단계 이동 없음",
+      "roles": "전체",
+      "refs": ["SC-35"],
+      "states": ["term-wizard.html?area=rq"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-term-wizard-023",
+      "where": "① 대상 선택",
+      "trigger": "‘분석’ 결과 항목이 0건일 때",
+      "expected": "미준수만이면 토스트 ‘선택한 테이블에 미준수 항목이 없습니다 — 대상 범위를 [전체]로 바꿔 다시 분석하세요’, 전체면 ‘분석할 속성이 없습니다’. ①에 머문다",
+      "roles": "전체",
+      "refs": ["SC-35"],
+      "states": ["term-wizard.html?area=rq"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-term-wizard-024",
+      "where": "① 대상 선택",
+      "trigger": "‘분석’ 클릭(결과 있음)",
+      "expected": "② 분석 결과로 이동. 이미 분석한 적이 있으면 토스트 ‘조건이 바뀌어 다시 분석했습니다 — 단어 구성 선택은 새로 계산됐습니다’. 모델은 바뀌지 않음",
+      "roles": "전체",
+      "refs": ["ST-R05"],
+      "states": ["term-wizard.html?area=rq"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-term-wizard-025",
+      "where": "② 분석 결과 · 판정",
+      "trigger": "분석 · 대안 선택이 바뀔 때",
+      "expected": "상태 판정: 원래 비대상 → ‘비대상’, 예외 → ‘예외’, 비대상 규칙 일치 → ‘비대상’(자동), 모델이 표준 → ‘이미 표준’, 고른 대안이 사전 용어 → ‘이미 표준’ + ‘사전에 있음 · 모델 반영 필요’, 미등록 · 사용 불가 단어 포함 또는 대안 없음 → ‘미등록 단어 포함’, 1음절 의심 → ‘1음절 의심’, 그 밖 → ‘조합 가능’",
+      "roles": "전체",
+      "refs": ["ST-R05", "ST-R07"],
+      "states": ["term-wizard.html?area=rq"],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-term-wizard-026",
+      "where": "② 분석 결과 · 점수 · 근거",
+      "trigger": "대안 계산",
+      "expected": "점수 = 100 − 미등록 조각 30(+글자당 4) − 1음절 15 − 승인 대기 8 − 사용 불가 25 − 새 단어 5 − 조각 수 감점 − 분류어 보정 4 + 사전 용어 5(+우선순위 가점), 0~100. 1음절 의심은 ‘명’과 단어 뒤 ‘자’ 제외. 근거는 ‘단어 N개 모두 일치’ · ‘미등록 ‘X’’ · ‘새 단어 ‘X’’ · ‘승인 대기 ‘X’’ · ‘사용 불가 단어 ‘X’’ · ‘1음절 ‘X’ 의심’ · ‘사전 용어 <ID>’ / ‘신청 중 <문서>’ · ‘끝 단어 X→<도메인>(이 영역 표준 속성 N개 관례)’ 또는 ‘분류어 없음 — 도메인 직접 지정’. 점수순 정렬, 같은 분해는 하나만",
+      "roles": "전체",
+      "refs": ["ST-R05"],
+      "states": ["term-wizard.html?area=rq"],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-term-wizard-027",
+      "where": "② 분석 결과 · 도메인 추천",
+      "trigger": "대안의 마지막 단어(분류어)",
+      "expected": "모델이 이미 표준이면 현재 도메인, 이 영역 표준 속성에 같은 분류어 관례가 있으면 가장 많이 쓴 도메인, 아니면 분류어 표(일자→연월일C8, 명→명V100, 코드→코드C2 …). 끝 조각 ‘일 · 시각 · NO’는 ‘일자 · 일시 · 번호’로 보정한 대안도 만든다(근거 ‘끝 ‘X’→분류어 ‘Y’ 보정’). 사전 용어면 그 약어 · 도메인을 쓴다",
+      "roles": "전체",
+      "refs": ["ST-R05"],
+      "states": ["term-wizard.html?area=rq"],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-term-wizard-028",
+      "where": "② 분석 결과 · 요약줄 · 표",
+      "trigger": "②를 열 때",
+      "expected": "요약 ‘N분석 · 상태별 건수 · M포함’. 표에 상태 · 테이블(테이블명 행은 ‘· 테이블명’) · 현재 이름 · 현재 물리명 · 최적 후보 용어(1음절 의심 배지) · 약어 · 도메인 · 점수 · 근거(두 줄, 툴팁에 전체) · [대안 N]. 비대상 · 예외 행은 흐리게, 후보 없으면 ‘후보 없음’",
+      "roles": "전체",
+      "refs": ["ST-R05"],
+      "states": ["term-wizard.html?area=rq"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-term-wizard-029",
+      "where": "② 분석 결과 · 상태 칩",
+      "trigger": "칩 클릭(전체 · 이미 표준 · 조합 가능 · 미등록 단어 포함 · 1음절 의심 · 비대상 · 예외)",
+      "expected": "그 상태 행만 보인다(건수 표시). 행이 없으면 ‘이 상태의 항목이 없습니다’",
+      "roles": "전체",
+      "refs": ["SC-35"],
+      "states": ["term-wizard.html?area=rq"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-term-wizard-030",
+      "where": "② 분석 결과 · 포함 체크",
+      "trigger": "행 체크 · 머리 체크 클릭",
+      "expected": "처리할 수 있는 행(조합 가능 · 미등록 · 1음절 의심 · 반영이 필요한 이미 표준 · 자동 비대상)만 체크 가능, 기본은 처리 가능 행 체크. 머리 체크는 보이는 처리 가능 행 전체 포함/제외(중간 상태 표시). 포함 수가 요약 · 아래 안내에 즉시 반영. 체크한 행이 ④ · ⑤ 대상",
+      "roles": "전체",
+      "refs": ["SC-35"],
+      "states": ["term-wizard.html?area=rq"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-term-wizard-031",
+      "where": "② 분석 결과",
+      "trigger": "‘대안 N’ 클릭",
+      "expected": "③ 단어 구성으로 가서 그 항목을 고른 상태로 연다. 포함하지 않은 항목이면 목록 범위가 ‘전체’로 바뀐다",
+      "roles": "전체",
+      "refs": ["ST-R05"],
+      "states": ["term-wizard.html?area=rq"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-term-wizard-032",
+      "where": "② 분석 결과 · 표 키보드",
+      "trigger": "행에 초점이 있을 때 ↑↓ · Enter · Space",
+      "expected": "↑↓ 이전/다음 행으로 초점, Enter는 ③ 단어 구성 열기, Space는 포함 체크 토글(비활성이면 무시)",
+      "roles": "전체",
+      "refs": ["SC-35"],
+      "states": ["term-wizard.html?area=rq"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-term-wizard-033",
+      "where": "③ 단어 구성 · 목록",
+      "trigger": "‘포함한 항목’ / ‘전체’ 클릭",
+      "expected": "목록이 포함한 항목만 / 모든 항목으로 바뀐다(눌림 표시). 각 항목에 ‘엔터티.이름’ · 상태 배지 · 제안 물리명 · 미포함이면 ‘· 미포함’. 포함한 항목이 없으면 ‘포함한 항목이 없습니다 — [전체]를 누르세요’",
+      "roles": "전체",
+      "refs": ["SC-35"],
+      "states": ["term-wizard.html?area=rq"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-term-wizard-034",
+      "where": "③ 단어 구성 · 목록",
+      "trigger": "항목 클릭 또는 ↑↓",
+      "expected": "그 항목이 선택 표시되고 오른쪽 상세가 바뀐다. 열려 있던 조각 편집은 닫힌다",
+      "roles": "전체",
+      "refs": ["SC-35"],
+      "states": ["term-wizard.html?area=rq"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-term-wizard-035",
+      "where": "③ 단어 구성 · 상세",
+      "trigger": "항목을 고를 때",
+      "expected": "제목 · 상태 배지 · 1음절 의심 배지 · ‘④·⑤에 포함’ 체크(처리 불가 항목은 흐리게), ‘현재 물리명 · 타입 · 기준 · 대안 수’ 안내, 범례(공통표준 단어 · 기관 단어 · 모델 표준 단어 · 신청 중 · 새 단어 · (미등록) · 사용 불가·1음절 의심). 항목이 없으면 ‘항목을 고르세요’",
+      "roles": "전체",
+      "refs": ["ST-R05"],
+      "states": ["term-wizard.html?area=rq"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-term-wizard-036",
+      "where": "③ 단어 구성 · 상세",
+      "trigger": "‘④·⑤에 포함’ 체크 변경",
+      "expected": "그 항목의 포함 여부가 바뀌어 목록 · ② · ④ · ⑤에 반영",
+      "roles": "전체",
+      "refs": ["SC-35"],
+      "states": ["term-wizard.html?area=rq"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-term-wizard-037",
+      "where": "③ 단어 구성 · 분해 대안",
+      "trigger": "대안 라디오 선택",
+      "expected": "각 대안에 조각 배지(출처별 색) · 용어 · 물리명 · 도메인(없으면 ‘도메인 미정’) · 근거 · 점수 · 직접 고친 대안은 ‘직접 고침’. 고르면 그 대안이 선택되고 상태가 다시 판정돼 ② 표와 ④ · ⑤에 반영. 대안이 없으면 ‘분해 대안이 없습니다 — 물리명이 없으면 논리명 기준으로 분석하세요’",
+      "roles": "전체",
+      "refs": ["ST-R05"],
+      "states": ["term-wizard.html?area=rq"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-term-wizard-038",
+      "where": "③ 단어 구성 · 선택한 분해 고치기",
+      "trigger": "조각 배지 클릭",
+      "expected": "편집 상자가 열린다(다시 누르면 닫힘): ‘‘X’ — 사전에 없는 조각입니다 / 새 단어(약어 Y) / <출처> 단어 Y’, 1음절 단어면 ‘1음절 단어 — 앞뒤 조각과 합친 단어인지 확인’. 초점은 ‘다른 단어로 바꾸기’ 칸",
+      "roles": "전체",
+      "refs": ["ST-R05"],
+      "states": ["term-wizard.html?area=rq"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-term-wizard-039",
+      "where": "③ 조각 편집 · 다른 단어로 바꾸기",
+      "trigger": "칸을 비운 채 ‘바꾸기’ 클릭",
+      "expected": "아무 변경 없이 단어 칸으로 초점",
+      "roles": "전체",
+      "refs": ["SC-35"],
+      "states": ["term-wizard.html?area=rq"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-term-wizard-040",
+      "where": "③ 조각 편집 · 다른 단어로 바꾸기",
+      "trigger": "사전 · 공통표준에 없는 단어로 ‘바꾸기’",
+      "expected": "토스트(오류) ‘‘X’은/는 사전·공통표준에 없는 단어입니다 — 미등록 조각이면 [새 단어로 지정]을 쓰세요’, 변경 없음",
+      "roles": "전체",
+      "refs": ["ST-R05"],
+      "states": ["term-wizard.html?area=rq"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-term-wizard-041",
+      "where": "③ 조각 편집 · 다른 단어로 바꾸기",
+      "trigger": "아는 단어로 ‘바꾸기’(Enter도 같음, 단어 검색 목록 제공)",
+      "expected": "그 조각을 바꾼 ‘직접 고침’ 대안이 맨 위에 생겨 선택되고 토스트 ‘‘X’ → ‘Y’로 바꿨습니다 · <용어> <물리명>’. 편집 상자 닫힘",
+      "roles": "전체",
+      "refs": ["ST-R05"],
+      "states": ["term-wizard.html?area=rq"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-term-wizard-042",
+      "where": "③ 조각 편집 · 새 단어 약어",
+      "trigger": "미등록 조각을 열 때",
+      "expected": "‘새 단어 약어’ 칸에 후보 큐 · 유사 사례에서 가져온 제안 약어가 미리 채워짐(없으면 빈칸, 자리표시 ‘예: RCPNT’). 안내 ‘제안 약어는 후보 큐·유사 사례에서 가져옵니다’",
+      "roles": "전체",
+      "refs": ["ST-R05"],
+      "states": ["term-wizard.html?area=rq"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-term-wizard-043",
+      "where": "③ 조각 편집 · 새 단어로 지정",
+      "trigger": "약어를 비우고 ‘새 단어로 지정’",
+      "expected": "토스트(오류) ‘약어를 입력하세요’, 약어 칸으로 초점",
+      "roles": "전체",
+      "refs": ["SC-35"],
+      "states": ["term-wizard.html?area=rq"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-term-wizard-044",
+      "where": "③ 조각 편집 · 새 단어로 지정",
+      "trigger": "검수 기준의 단어 약어 규칙(차단)에 걸리는 약어로 지정",
+      "expected": "토스트(오류)로 첫 위반 문구, 약어 칸으로 초점. 약어는 규칙의 대소문자로 바뀌어 검사",
+      "roles": "전체",
+      "refs": ["ST-R05"],
+      "states": ["term-wizard.html?area=rq"],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-term-wizard-045",
+      "where": "③ 조각 편집 · 새 단어로 지정",
+      "trigger": "올바른 약어로 ‘새 단어로 지정’(Enter도 같음)",
+      "expected": "그 조각이 같은 모든 항목에서 ‘새 단어’로 다시 판정되고 토스트 ‘‘X’을/를 새 단어(ABBR)로 지정했습니다 — 이 조각이 있는 N개 항목에 반영 · ④에서 단어 신청 항목으로 나옵니다’. 단어 검색 목록에도 추가",
+      "roles": "전체",
+      "refs": ["ST-R05"],
+      "states": ["term-wizard.html?area=rq"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-term-wizard-046",
+      "where": "③ 조각 편집 · 새 단어",
+      "trigger": "새 단어 조각에서 ‘약어 바꾸기’ / ‘새 단어 지정 취소’",
+      "expected": "약어 바꾸기는 새 약어로 다시 반영. 지정 취소는 모든 항목에서 미등록 조각으로 되돌리고 토스트 ‘‘X’ 새 단어 지정을 취소했습니다’",
+      "roles": "전체",
+      "refs": ["ST-R05"],
+      "states": ["term-wizard.html?area=rq"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-term-wizard-047",
+      "where": "③ 조각 편집",
+      "trigger": "‘닫기’ 클릭 또는 Esc",
+      "expected": "편집 상자가 닫히고 초점이 그 조각 배지로 돌아간다",
+      "roles": "전체",
+      "refs": ["SC-35"],
+      "states": ["term-wizard.html?area=rq"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-term-wizard-048",
+      "where": "④ 용어 등록 · 요약 · 목록",
+      "trigger": "④를 열 때",
+      "expected": "포함한 항목의 선택 분해로 계산: 새 단어(새 단어 지정한 조각) · 새 용어(테이블명은 ‘엔터티 용어’) · 미등록 단어(후보만) 목록. 요약 ‘N새 단어 · N새 용어 · N미등록 단어(후보만) · N사전에 있음 — 할 일 없음’, 미등록 · 사용 불가 단어가 남은 항목은 ‘N용어 신청 불가(미등록·사용 불가 단어 남음)’. 각 행에 구분 · 이름(+조각) · 약어 · 도메인 · 쓰는 곳(3곳 + ‘외 N곳’) · 상태(신청 중 · <문서> / 바구니에 있음 / 후보 <상태> / 미등록 — 후보만 가능 / 등록 전)",
+      "roles": "전체",
+      "refs": ["ST-R05", "ST-R06"],
+      "states": ["term-wizard.html?area=rq"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-term-wizard-049",
+      "where": "④ 용어 등록 · 목록",
+      "trigger": "항목 체크 · 머리 체크",
+      "expected": "신청 중인 항목은 흐리게 · 체크 불가. 바구니 · 후보 큐에 이미 있는 항목은 기본 해제, 나머지는 기본 체크. 위에 ‘N건 선택’ 또는 ‘처리할 항목을 고르세요’",
+      "roles": "전체",
+      "refs": ["SC-35"],
+      "states": ["term-wizard.html?area=rq"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-term-wizard-050",
+      "where": "④ 용어 등록",
+      "trigger": "등록할 단어 · 용어가 없을 때",
+      "expected": "‘등록할 단어·용어가 없습니다’ + (사전에 있으면 ‘포함한 항목의 용어 N개는 이미 사전에 있습니다.’) ‘⑤에서 모델에 반영하세요.’",
+      "roles": "전체",
+      "refs": ["SC-35"],
+      "states": ["term-wizard.html?area=rq"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-term-wizard-051",
+      "where": "④ 용어 등록 · 버튼",
+      "trigger": "미등록 단어만 골랐을 때",
+      "expected": "[바구니에 담기] · [바로 신청] 흐리게, ‘미등록 단어는 바구니·신청 대신 후보 큐로 보냅니다’ 표시. [후보 큐로]는 선택이 있으면 사용 가능, 선택이 없으면 셋 다 흐리게",
+      "roles": "model.edit 가진 담당 시스템 모델러(작업 중 버전)",
+      "refs": ["model.edit"],
+      "states": ["term-wizard.html?area=rq"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-term-wizard-052",
+      "where": "④ 용어 등록 · 버튼",
+      "trigger": "조회 전용(모델러 아님 · 담당 밖 · 잠김)일 때",
+      "expected": "[바구니에 담기] · [후보 큐로] · [바로 신청] 흐리게 + 이유(분석만 가능 배너와 같은 문구). 눌러도 같은 문구의 오류 토스트",
+      "roles": "모델러가 아닌 역할 · 담당 밖 모델러 · 잠긴 버전",
+      "refs": ["model.edit"],
+      "states": ["term-wizard.html?area=rq"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-term-wizard-053",
+      "where": "④ 용어 등록",
+      "trigger": "‘바구니에 담기’ 클릭",
+      "expected": "고른 단어 · 용어(미등록 단어 제외)를 사전 바구니에 담고 체크 해제, 상태 ‘바구니에 있음’. 토스트 ‘바구니에 N건 담았습니다 · 이미 있던 N건 제외 — 분석은 저장돼 있어 돌아오면 이어서 합니다’ + [바구니 보기](dictionary.html?basket=1&ret=<마법사 이어서 주소>)",
+      "roles": "model.edit 가진 담당 시스템 모델러(작업 중 버전)",
+      "refs": ["model.edit", "dict.request"],
+      "states": ["term-wizard.html?area=rq"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-term-wizard-054",
+      "where": "④ 용어 등록",
+      "trigger": "‘후보 큐로’ 클릭",
+      "expected": "고른 항목을 쓰는 곳(영역 · 엔터티 · 속성)마다 후보 큐에 등록하고 체크 해제. 토스트 ‘후보 큐에 N건(발생 위치 M곳)을 등록했습니다 — DA가 검토합니다 · 분석은 저장돼 있어 돌아오면 이어서 합니다’ + [후보 큐 보기](candidates.html?ret=…)",
+      "roles": "model.edit 가진 담당 시스템 모델러(작업 중 버전)",
+      "refs": ["model.edit"],
+      "states": ["term-wizard.html?area=rq"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-term-wizard-055",
+      "where": "④ 용어 등록",
+      "trigger": "‘바로 신청’ 클릭",
+      "expected": "‘바로 신청 (N건)’ 창: 새 단어 → 용어 순으로 정렬한 ‘구분 이름’ 배지, 미등록 단어가 섞여 있으면 ‘미등록 단어는 신청에서 빠집니다(후보 큐로 보내세요).’, 신청 사유 칸에 초점",
+      "roles": "model.edit 가진 담당 시스템 모델러(작업 중 버전)",
+      "refs": ["model.edit", "dict.request"],
+      "states": ["term-wizard.html?area=rq"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-term-wizard-056",
+      "where": "바로 신청 창",
+      "trigger": "신청 사유가 비어 있을 때",
+      "expected": "[신청] 흐리게 + ‘사유를 입력해야 합니다’",
+      "roles": "model.edit 가진 담당 시스템 모델러(작업 중 버전)",
+      "refs": ["dict.request"],
+      "states": ["term-wizard.html?area=rq"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-term-wizard-057",
+      "where": "바로 신청 창",
+      "trigger": "dict.request 권한 없이 ‘신청’ 클릭",
+      "expected": "토스트(오류) ‘사전 신청 권한이 없습니다 — [후보 큐로]를 쓰세요’, 문서 만들지 않음",
+      "roles": "dict.request 없는 사용자",
+      "refs": ["dict.request"],
+      "states": ["term-wizard.html?area=rq"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-term-wizard-058",
+      "where": "바로 신청 창",
+      "trigger": "사전 신청 검사(사전 화면과 같은 제출 검사)에 걸릴 때",
+      "expected": "창이 닫히고 토스트(오류) ‘검사에서 N건이 막힙니다 — <이름>: <문제> · …. 바구니에 담아 고친 뒤 올리세요’ + [바구니에 담기]",
+      "roles": "dict.request 가진 담당 시스템 모델러",
+      "refs": ["dict.request"],
+      "states": ["term-wizard.html?area=rq"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-term-wizard-059",
+      "where": "바로 신청 창",
+      "trigger": "진행 중인 신청과 같은 항목이 있을 때",
+      "expected": "창이 닫히고 토스트 ‘이미 진행 중인 신청과 겹칩니다 — <목록>. 그 항목은 선택에서 빼고 다시 신청하세요’",
+      "roles": "dict.request 가진 담당 시스템 모델러",
+      "refs": ["dict.request"],
+      "states": ["term-wizard.html?area=rq"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-term-wizard-060",
+      "where": "바로 신청 창",
+      "trigger": "‘신청’ 클릭(통과)",
+      "expected": "사전 결재 문서 1건(‘용어 자동분석 신청 N건 (영역)’)을 만들고 창 닫힘. 토스트 ‘결재 문서를 만들었습니다 — <문서> (N건) · ⑤에서 이 용어를 쓰는 항목은 ‘신청 중’으로 반영됩니다’(같은 신청이 있으면 ‘같은 신청이 이미 있습니다’) + [결재함에서 보기](approvals.html?doc=). 해당 단어 · 용어는 ‘신청 중’으로 다시 판정, 결재함에 문서가 보인다",
+      "roles": "dict.request 가진 담당 시스템 모델러(작업 중 버전)",
+      "refs": ["dict.request", "appr.da", "SC-20"],
+      "states": ["term-wizard.html?area=rq"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-term-wizard-061",
+      "where": "④ 용어 등록 · 안내",
+      "trigger": "‘표준 사전’ / ‘후보 큐’ 링크 클릭",
+      "expected": "dictionary.html?basket=1&ret=… / candidates.html?ret=… 로 이동. 받는 화면에 ‘하던 작업이 있습니다. 용어 자동분석으로 돌아가기’ 띠가 생긴다",
+      "roles": "전체",
+      "refs": ["SC-35"],
+      "states": ["term-wizard.html?area=rq"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-term-wizard-062",
+      "where": "⑤ 모델 반영 · 목록",
+      "trigger": "⑤를 열 때",
+      "expected": "포함한 항목 중 모델이 바뀌는 행만: 테이블 · 논리명 · 물리명 · 타입(현재 취소선 / 바뀜 굵게) · 반영 뒤 상태(표준 / 신청 중 · <문서> / 미등록 유지 / 조합 가능(신청 전) / 비대상). 미등록 조각이 남으면 물리명 · 타입은 그대로. 테이블명 행은 ‘테이블 이름은 모델에서 바꿉니다(제안 X)’. 자동 비대상 행은 ‘자동분석 비대상 규칙 <패턴>’",
+      "roles": "전체",
+      "refs": ["ST-R07"],
+      "states": ["term-wizard.html?area=rq"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-term-wizard-063",
+      "where": "⑤ 모델 반영 · 목록",
+      "trigger": "⑤를 처음 열 때",
+      "expected": "‘이름만 맞춤’(미등록 · 신청 전) 행은 기본 체크 해제, 나머지는 체크. 체크 안 한 행은 흐리게. 요약 ‘N반영할 행 · N표준 · N신청 중 · N이름만 맞춤(미등록·신청 전) · N비대상 · N제외’",
+      "roles": "전체",
+      "refs": ["ST-R07"],
+      "states": ["term-wizard.html?area=rq"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-term-wizard-064",
+      "where": "⑤ 모델 반영",
+      "trigger": "반영할 변경이 없을 때",
+      "expected": "‘반영할 변경이 없습니다 — 포함한 항목이 이미 모델과 같습니다. ②에서 포함할 항목을 고르세요.’, [모델에 반영] 흐리게",
+      "roles": "전체",
+      "refs": ["SC-35"],
+      "states": ["term-wizard.html?area=rq"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-term-wizard-065",
+      "where": "⑤ 모델 반영",
+      "trigger": "물리명이 바뀌는 행을 체크했을 때",
+      "expected": "안내 ‘물리명이 바뀌는 행은 다음 DDL 출력에서 변경분(ALTER)으로 나갑니다’",
+      "roles": "전체",
+      "refs": ["OUT-R01"],
+      "states": ["term-wizard.html?area=rq"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-term-wizard-066",
+      "where": "⑤ 모델 반영",
+      "trigger": "행 체크 · 머리 체크(‘모두 반영’) 변경",
+      "expected": "체크 상태 · 요약 · 버튼 상태 갱신. 아무것도 체크하지 않으면 [모델에 반영] 흐리게, 조회 전용이면 흐리게 + 이유",
+      "roles": "model.edit 가진 담당 시스템 모델러(작업 중 버전)",
+      "refs": ["model.edit"],
+      "states": ["term-wizard.html?area=rq"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-term-wizard-067",
+      "where": "⑤ 모델 반영",
+      "trigger": "‘모델에 반영’ 클릭 순간 버전이 잠겼거나 작업 버전이 바뀌었거나 권한이 없어졌을 때",
+      "expected": "토스트(오류) ‘지금은 반영할 수 없습니다 — <문서> <단계>(또는 작업 버전이 vN로 바뀜)’ + [새로고침]",
+      "roles": "model.edit 가진 담당 시스템 모델러",
+      "refs": ["model.edit"],
+      "states": ["term-wizard.html?area=rq"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-term-wizard-068",
+      "where": "⑤ 모델 반영",
+      "trigger": "‘모델에 반영’ 클릭(통과)",
+      "expected": "완료 상자 ‘모델 반영을 준비했습니다’ + ‘N반영(표준 a · 이름만 b) · N신청 중 · N비대상 제외 · N선택 안 함’, ‘모델 화면을 열면 작업 버전 vN에 한 번에 반영되고, 토스트의 [실행 취소]로 되돌릴 수 있습니다.’(신청 문서가 있으면 ‘용어 신청 <문서>는 되돌려도 남습니다(결재함에서 회수).’) + [모델에서 보기]에 초점. 체크 · 버튼 비활성, 저장된 분석 삭제. [모델에서 보기]를 누르면 모델 화면에서 반영",
+      "roles": "model.edit 가진 담당 시스템 모델러(작업 중 버전)",
+      "refs": ["model.edit", "ST-R07", "SC-31"],
+      "states": ["term-wizard.html?area=rq"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-term-wizard-069",
+      "where": "④ · ⑤ 처리 버튼",
+      "trigger": "다른 탭에서 로그인 사용자가 바뀐 뒤 처리",
+      "expected": "토스트 ‘다른 탭에서 사용자가 바뀌었습니다(지금 <이름>) — 새로고침한 뒤 다시 처리하세요’ + [새로고침], 처리하지 않음",
+      "roles": "전체",
+      "refs": ["model.edit"],
+      "states": ["term-wizard.html?area=rq"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-term-wizard-070",
+      "where": "전체 · 이어서 하기",
+      "trigger": "분석 뒤 입력 · 클릭 · 화면 떠나기",
+      "expected": "사용자 · 영역별로 옵션 · 새 단어 · 포함 · 대안 선택 · ④/⑤ 선택 · 필터 · 단계 · 신청 문서를 자동 저장",
+      "roles": "전체",
+      "refs": ["SC-35"],
+      "states": ["term-wizard.html?area=rq"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-term-wizard-071",
+      "where": "이어서 하기 배너",
+      "trigger": "저장한 분석이 있는 채로 다시 열 때",
+      "expected": "배너 ‘분석을 이어서 할까요? <시각>에 저장한 분석이 있습니다 — <단계> 단계 · 포함 N건 · 새 단어 N개’(버전이 바뀌었으면 ‘(vX 기준 — 지금은 vY이라 옵션만 되살립니다)’) + [이어서] · [새로 분석]",
+      "roles": "전체",
+      "refs": ["SC-35"],
+      "states": ["term-wizard.html?area=rq"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-term-wizard-072",
+      "where": "이어서 하기 배너",
+      "trigger": "‘이어서’ 클릭(또는 주소 &resume=1)",
+      "expected": "저장한 옵션 · 선택을 되살리고 저장한 단계(②~⑤)로 이동, 토스트 ‘<시각>에 저장한 분석을 이어서 엽니다 — <단계> 단계’",
+      "roles": "전체",
+      "refs": ["SC-35"],
+      "states": ["term-wizard.html?area=rq"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-term-wizard-073",
+      "where": "이어서 하기",
+      "trigger": "저장 뒤 작업 버전이 바뀐 상태에서 이어서",
+      "expected": "옵션 · 새 단어만 되살리고 ①에 머문다. 토스트 ‘작업 버전이 vX에서 vY로 바뀌어 입력 옵션과 새 단어만 되살렸습니다 — [분석]을 눌러 다시 분석하세요’",
+      "roles": "전체",
+      "refs": ["SC-35"],
+      "states": ["term-wizard.html?area=rq"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-term-wizard-074",
+      "where": "이어서 하기",
+      "trigger": "이어서 열었는데 다시 분석한 항목이 0건일 때",
+      "expected": "저장 분석을 지우고 ①로. 토스트 ‘저장한 분석의 항목이 모두 정리돼 이어서 할 것이 없습니다 — 옵션은 되살렸습니다’",
+      "roles": "전체",
+      "refs": ["SC-35"],
+      "states": ["term-wizard.html?area=rq"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-term-wizard-075",
+      "where": "이어서 하기 배너",
+      "trigger": "‘새로 분석’ 클릭",
+      "expected": "배너가 닫히고 저장한 분석 삭제. 토스트 ‘저장한 분석을 지웠습니다 — 대상을 고르고 [분석]을 누르세요’, ① 제목으로 초점",
+      "roles": "전체",
+      "refs": ["SC-35"],
+      "states": ["term-wizard.html?area=rq"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-term-wizard-076",
+      "where": "주소",
+      "trigger": "주소 열기(&auto=1, 저장한 분석 없음)",
+      "expected": "열자마자 ①의 기본 조건으로 분석해 ②로 이동",
+      "roles": "전체",
+      "refs": ["SC-35"],
+      "states": ["term-wizard.html?area=rq"],
+      "verify": "e2e"
+    }
+  ]
+}

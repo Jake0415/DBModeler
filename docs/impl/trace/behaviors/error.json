@@ -1,0 +1,263 @@
+{
+  "screen": "error.html",
+  "ids": "SC-57",
+  "source": "docs/ux/mockups/error.html",
+  "behaviors": [
+    {
+      "id": "BH-error-001",
+      "where": "안내 본문",
+      "trigger": "어떤 코드로든 열기",
+      "expected": "코드 줄 · 제목 · 설명 · 버튼 · 하단 ‘{제품} {버전} · build {빌드} · {환경}’. 브라우저 제목은 ‘{코드 줄} · NeoDB’",
+      "roles": "전체",
+      "refs": [
+        "SC-57"
+      ],
+      "states": [
+        "error.html?code=403&need=Admin&what=설정",
+        "error.html?code=404"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-error-002",
+      "where": "403",
+      "trigger": "?code=403&need=<역할>&what=<화면>",
+      "expected": "‘403 · 권한 없음’ · ‘이 화면을 볼 권한이 없습니다’ · ‘{화면}은/는 {역할} 역할이 필요합니다. 지금 역할: {내 역할들 또는 ‘조회만’}.’ (need 없으면 Admin, what 없으면 ‘이 화면’)",
+      "roles": "전체",
+      "refs": [
+        "settings"
+      ],
+      "states": [
+        "error.html?code=403&need=Admin&what=설정"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-error-003",
+      "where": "403",
+      "trigger": "주 버튼 ‘역할 변경 요청’ 클릭",
+      "expected": "mypage.html?req={역할}&what={화면}#profile로 이동 — 마이페이지에서 역할 변경 요청 창이 미리 채워져 열림(툴팁 ‘Admin에게 {역할} 역할을 요청합니다’)",
+      "roles": "전체",
+      "refs": [
+        "SC-51"
+      ],
+      "states": [
+        "error.html?code=403&need=Admin&what=설정"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-error-004",
+      "where": "403",
+      "trigger": "버튼 ‘홈으로’ 클릭",
+      "expected": "home.html로 이동",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "error.html?code=403&need=Admin&what=설정"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-error-005",
+      "where": "403",
+      "trigger": "권한 없는 화면을 주소로 직접 열기(예: 시스템 상태 · 설정)",
+      "expected": "그 화면이 403 안내로 바로 바뀜(뒤로 가기 기록 없이)",
+      "roles": "권한 없는 사람",
+      "refs": [
+        "settings"
+      ],
+      "states": [
+        "settings.html?as=kim",
+        "ops-status.html?as=kim"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-error-006",
+      "where": "404",
+      "trigger": "?code=404 또는 알 수 없는 code · code 없음",
+      "expected": "‘404 · 찾을 수 없음’ · ‘찾는 화면이나 문서가 없습니다’ · ‘삭제됐거나 다른 곳으로 옮겨졌을 수 있습니다. 검색으로 찾거나 홈에서 다시 시작하세요.’ — what이 있으면 앞에 굵게 ‘{what}은/는’",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "error.html?code=404",
+        "error.html?code=zzz"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-error-007",
+      "where": "404",
+      "trigger": "주 버튼 ‘홈으로’ 클릭",
+      "expected": "home.html로 이동",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "error.html?code=404"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-error-008",
+      "where": "404",
+      "trigger": "버튼 ‘검색으로 찾기’ 클릭",
+      "expected": "전체 검색 창이 열리고 what이 있으면 검색어로 채워져 결과가 바로 보임. 검색 창을 쓸 수 없으면 home.html로",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "error.html?code=404",
+        "error.html?code=404&what=REQ-2026-9999"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-error-009",
+      "where": "404",
+      "trigger": "버튼 ‘이전 화면’ 클릭",
+      "expected": "브라우저 뒤로 가기",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "error.html?code=404"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-error-010",
+      "where": "500",
+      "trigger": "?code=500, 같은 사이트의 이전 화면(?from= 또는 referrer, 로그인 · 오류 화면 제외)이 있을 때",
+      "expected": "‘500 · 일시적인 오류’ · ‘요청을 처리하지 못했습니다’ · ‘잠시 후 다시 시도하세요. [다시 시도]를 누르면 이전 화면({파일})으로 돌아갑니다. 저장하지 않은 입력은 남아 있지 않을 수 있으니 돌아가서 확인하세요.’ · ‘오류 ID: E-20261118-7F3A’ · [다시 시도](이전 화면) · [홈으로] · [오류 ID 복사]",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "error.html?code=500&from=approvals.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-error-011",
+      "where": "500",
+      "trigger": "이전 화면을 알 수 없을 때",
+      "expected": "문구 ‘[다시 시도]는 홈으로 돌아갑니다.’, [다시 시도]는 home.html, [홈으로] 버튼 없음",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "error.html?code=500"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-error-012",
+      "where": "500",
+      "trigger": "다른 사이트 주소가 from · referrer로 들어옴",
+      "expected": "이전 화면으로 쓰지 않음(홈으로)",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "error.html?code=500&from=https%3A%2F%2Fevil.example"
+      ],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-error-013",
+      "where": "500",
+      "trigger": "버튼 ‘오류 ID 복사’ 클릭",
+      "expected": "클립보드에 오류 ID 복사 후 토스트 ‘오류 ID E-20261118-7F3A를 복사했습니다 — 문의할 때 붙여 넣으세요’. 복사할 수 없으면 ‘오류 ID를 복사하세요’ 입력 창에 ID 표시",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "error.html?code=500"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-error-014",
+      "where": "점검",
+      "trigger": "?code=maint",
+      "expected": "‘점검 중’ · ‘정기 점검 중입니다’ · ‘11/20(금) 18:00 ~ 19:00. 점검이 끝나면 자동으로 다시 연결합니다. 편집 내용은 자동 보관됐습니다.’ · [상태 확인]",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "error.html?code=maint"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-error-015",
+      "where": "점검",
+      "trigger": "버튼 ‘상태 확인’ 클릭",
+      "expected": "페이지 새로 읽기",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "error.html?code=maint"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-error-016",
+      "where": "점검",
+      "trigger": "점검이 끝남",
+      "expected": "자동으로 다시 연결 (목업에서 확인 필요 — 목업에는 자동 재연결이 없음)",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "error.html?code=maint"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-error-017",
+      "where": "로그아웃",
+      "trigger": "?code=logout(사용자 메뉴 ‘로그아웃’)",
+      "expected": "셸 없이 ‘로그아웃’ · ‘로그아웃되었습니다’ · ‘공동 편집 중이던 업무 영역의 접속자 목록에서도 빠졌습니다.’ · [다시 로그인](login.html)",
+      "roles": "전체",
+      "refs": [
+        "PN-50"
+      ],
+      "states": [
+        "error.html?code=logout"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-error-018",
+      "where": "로그아웃",
+      "trigger": "로그아웃 처리",
+      "expected": "세션이 끝나고 공동 편집 접속자 목록에서 빠짐 (목업에서 확인 필요)",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "error.html?code=logout"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-error-019",
+      "where": "세션 만료",
+      "trigger": "?code=expired&from=<화면>",
+      "expected": "셸 없이 ‘세션 만료’ · ‘30분 동안 입력이 없어 세션이 만료됐습니다’ · ‘편집 중이던 내용은 이 브라우저에 보관했습니다. 다시 로그인하면 원래 화면으로 돌아가 이어서 작업합니다.’",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "error.html?code=expired&from=model.html%3Farea%3Drq"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-error-020",
+      "where": "세션 만료",
+      "trigger": "버튼 ‘다시 로그인하고 이어서 작업’ 클릭",
+      "expected": "login.html?expired=1&from={원래 화면, 없으면 home.html}로 이동",
+      "roles": "전체",
+      "refs": [
+        "SC-56"
+      ],
+      "states": [
+        "error.html?code=expired&from=model.html%3Farea%3Drq"
+      ],
+      "verify": "e2e"
+    }
+  ]
+}

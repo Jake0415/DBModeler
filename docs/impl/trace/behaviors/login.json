@@ -1,0 +1,561 @@
+{
+  "screen": "login.html",
+  "ids": "SC-56",
+  "source": "docs/ux/mockups/login.html",
+  "behaviors": [
+    {
+      "id": "BH-login-001",
+      "where": "로그인 카드",
+      "trigger": "로그인 화면 열기",
+      "expected": "셸 없이 로고 · ‘NeoDB’ · ‘한국데이터진흥원’ · 제목 ‘로그인’ · ‘ID와 비밀번호를 입력하세요.’ · ID · 비밀번호 칸 · [로그인]. ID 칸에 포커스",
+      "roles": "전체",
+      "refs": [
+        "SC-56"
+      ],
+      "states": [
+        "login.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-login-002",
+      "where": "로그인 카드 · 아래",
+      "trigger": "화면 하단",
+      "expected": "‘{제품} {버전} · build {빌드} · {환경}’ 표시",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "login.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-login-003",
+      "where": "로그인 카드 · 도움말",
+      "trigger": "자체 로그인이 가능한 모드",
+      "expected": "‘비밀번호를 N번 틀리면 M분 동안 잠깁니다. 비밀번호를 잊었으면 관리자에게 초기화를 요청하세요(내선 1234).’ — N · M은 인증 설정값(기본 5번 · 10분)",
+      "roles": "전체",
+      "refs": [
+        "settings"
+      ],
+      "states": [
+        "login.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-login-004",
+      "where": "배너",
+      "trigger": "주소에 ?fail=1(SSO 실패로 돌아옴)",
+      "expected": "빨간 배너 ‘SSO 인증에 실패했습니다. 다시 시도하거나 기관 IT 지원(내선 1234)에 문의하세요.’ + ‘오류 ID E-20261118-SSO1’",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "login.html?fail=1"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-login-005",
+      "where": "배너",
+      "trigger": "주소에 ?expired=1",
+      "expected": "안내 배너 ‘세션이 만료됐습니다. 편집 중이던 내용은 이 브라우저에 보관돼 있고, 로그인하면 {화면 이름} 화면으로 돌아가 이어서 작업합니다.’ — 화면 이름은 from 주소의 화면, 없으면 ‘홈’",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "login.html?from=model.html%3Farea%3Drq&expired=1"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-login-006",
+      "where": "배너",
+      "trigger": "주소에 ?revoked=1",
+      "expected": "안내 배너 ‘계정 상태나 비밀번호가 바뀌어 로그아웃됐습니다. 다시 로그인하세요.’",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "login.html?revoked=1"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-login-007",
+      "where": "돌아갈 주소",
+      "trigger": "?from= 값이 같은 사이트의 ‘<이름>.html(?…)(#…)’ 형식이 아닐 때",
+      "expected": "from을 무시 — 배너는 ‘홈’, 로그인 뒤 시작 화면으로 이동",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "login.html?from=https%3A%2F%2Fevil.example&expired=1"
+      ],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-login-008",
+      "where": "로그인 폼 · 검증",
+      "trigger": "ID 비우고 [로그인]",
+      "expected": "오류 ‘ID를 입력하세요’, ID 칸 aria-invalid + 포커스",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "login.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-login-009",
+      "where": "로그인 폼 · 검증",
+      "trigger": "비밀번호 비우고 [로그인]",
+      "expected": "오류 ‘비밀번호를 입력하세요’, 비밀번호 칸 포커스",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "login.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-login-010",
+      "where": "로그인 폼 · 검증",
+      "trigger": "없는 ID · SSO 전용 계정 · 틀린 비밀번호",
+      "expected": "모두 같은 오류 ‘ID 또는 비밀번호가 맞지 않습니다. 계속 틀리면 계정이 잠길 수 있습니다’ — ID 존재 · 잠김 · 중지 · 관리자 여부를 드러내지 않음. ID는 앞뒤 공백 제거 · 소문자로 비교",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "login.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-login-011",
+      "where": "로그인 폼 · 잠금",
+      "trigger": "같은 자체 계정으로 비밀번호를 설정 횟수(기본 5번)만큼 틀림",
+      "expected": "계정이 설정 시간(기본 10분) 동안 잠기고 감사 로그 ‘계정 잠김’(사유 ‘비밀번호 N회 실패’)",
+      "roles": "전체",
+      "refs": [
+        "settings"
+      ],
+      "states": [
+        "login.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-login-012",
+      "where": "로그인 폼 · 잠금",
+      "trigger": "잠금 시간이 지난 뒤 로그인",
+      "expected": "잠금이 풀리고 실패 횟수 0부터 다시 셈",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "login.html"
+      ],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-login-013",
+      "where": "로그인 폼 · 계정 상태",
+      "trigger": "비밀번호는 맞지만 계정이 사용 중지",
+      "expected": "‘사용이 중지된 계정입니다. 관리자에게 문의하세요’",
+      "roles": "전체",
+      "refs": [
+        "users"
+      ],
+      "states": [
+        "login.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-login-014",
+      "where": "로그인 폼 · 계정 상태",
+      "trigger": "비밀번호는 맞지만 사용 기한이 지남",
+      "expected": "‘사용 기한({날짜})이 지난 계정입니다. 사업 담당자나 관리자에게 기한 연장을 요청하세요’",
+      "roles": "사용 기한 있는 계정",
+      "refs": [],
+      "states": [
+        "login.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-login-015",
+      "where": "로그인 폼 · 계정 상태",
+      "trigger": "비밀번호는 맞지만 계정이 잠긴 상태",
+      "expected": "‘비밀번호를 여러 번 틀려 계정이 잠겼습니다. N분 뒤 다시 시도하거나 관리자에게 잠금 해제를 요청하세요’(N은 남은 분, 최소 1)",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "login.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-login-016",
+      "where": "로그인 폼 · 계정 상태",
+      "trigger": "임시 비밀번호의 24시간 사용 기한이 지남",
+      "expected": "‘임시 비밀번호의 사용 기한(24시간)이 지났습니다. 관리자에게 다시 발급을 요청하세요’",
+      "roles": "임시 비밀번호 계정",
+      "refs": [
+        "users"
+      ],
+      "states": [
+        "login.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-login-017",
+      "where": "로그인 성공",
+      "trigger": "자체 계정 로그인 성공",
+      "expected": "실패 횟수 초기화, 마지막 접속 시각 · 새 세션 시작 시각 기록 후 이동: 안전한 from이 있으면 그 화면, 없으면 마이페이지 › 환경 › 시작 화면(결재함 → approvals.html, 최근 업무 영역 → model.html?area=<마지막 영역>, 기본 → home.html)",
+      "roles": "전체",
+      "refs": [
+        "SC-51"
+      ],
+      "states": [
+        "login.html",
+        "login.html?from=model.html%3Farea%3Drq&expired=1"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-login-018",
+      "where": "로그인 성공 · 세션 만료 복귀",
+      "trigger": "?expired=1&from=<화면>으로 로그인",
+      "expected": "원래 화면으로 돌아가 보관한 편집 내용을 이어서 작업",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "login.html?from=model.html%3Farea%3Drq&expired=1"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-login-019",
+      "where": "SSO",
+      "trigger": "인증 모드가 SSO 겸용일 때",
+      "expected": "ID · 비밀번호 폼 아래 ‘또는’ 구분선 + 버튼 ‘사내 SSO로 로그인 {프로토콜}’(예: SAML 2.0)",
+      "roles": "전체",
+      "refs": [
+        "settings"
+      ],
+      "states": [
+        "login.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-login-020",
+      "where": "SSO",
+      "trigger": "인증 모드가 SSO 전용일 때",
+      "expected": "안내 ‘기관 통합 인증(SSO)으로 로그인합니다.’, ID · 비밀번호 폼 숨김, SSO 버튼이 주 버튼, 그 아래 ‘SSO 장애 · 관리자 비상 로그인’ 버튼, 도움말 ‘SSO에 문제가 있으면 기관 IT 지원(내선 1234)에 문의하세요.’",
+      "roles": "전체",
+      "refs": [
+        "settings"
+      ],
+      "states": [
+        "login.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-login-021",
+      "where": "SSO",
+      "trigger": "인증 모드가 자체 로그인만일 때",
+      "expected": "SSO 버튼이 보이지 않음",
+      "roles": "전체",
+      "refs": [
+        "settings"
+      ],
+      "states": [
+        "login.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-login-022",
+      "where": "SSO",
+      "trigger": "버튼 ‘사내 SSO로 로그인’ 클릭",
+      "expected": "IdP 인증으로 이동 후 IdP가 확인한 계정으로 로그인 — 목업은 토스트 ‘SSO 인증 화면으로 이동합니다(목업) — IdP가 확인한 {이름} 계정으로 로그인’ 뒤 0.6초 후 이동. 로컬 잠금은 그대로",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "login.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-login-023",
+      "where": "SSO",
+      "trigger": "IdP가 확인한 계정이 사용 중지",
+      "expected": "‘사용이 중지된 계정입니다. 관리자에게 문의하세요’",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "login.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-login-024",
+      "where": "비상 로그인",
+      "trigger": "버튼 ‘SSO 장애 · 관리자 비상 로그인’ 클릭",
+      "expected": "버튼이 숨고 ID · 비밀번호 폼이 보이며 맨 위에 ‘비상 로그인 사유 *’ 칸(예시 ‘예: SSO 서버 응답 없음(11/19 09:10)’) 추가 · 포커스. 안내 ‘SSO 장애 때 지정된 관리자만 ID · 비밀번호로 로그인합니다. 사용 기록이 남고 다른 관리자에게 알림이 갑니다.’",
+      "roles": "Admin",
+      "refs": [
+        "settings"
+      ],
+      "states": [
+        "login.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-login-025",
+      "where": "비상 로그인 · 검증",
+      "trigger": "사유 비우고 [로그인]",
+      "expected": "‘비상 로그인 사유를 입력하세요’, 사유 칸 포커스",
+      "roles": "Admin",
+      "refs": [],
+      "states": [
+        "login.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-login-026",
+      "where": "비상 로그인 · 검증",
+      "trigger": "SSO 전용 모드에서 Admin이 아닌 계정(또는 비상 모드 아님)으로 ID 로그인",
+      "expected": "‘지금은 SSO 로그인만 허용됩니다. 비상 로그인은 관리자만 할 수 있습니다’",
+      "roles": "Admin 아닌 사람",
+      "refs": [
+        "settings"
+      ],
+      "states": [
+        "login.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-login-027",
+      "where": "비상 로그인",
+      "trigger": "Admin 비상 로그인 성공",
+      "expected": "감사 로그 ‘관리자 비상 로그인’(사유) + 다른 Admin 전원에게 공지 알림 ‘관리자 비상 로그인 — {이름}’(audit.html 링크)",
+      "roles": "Admin",
+      "refs": [
+        "settings",
+        "audit.view"
+      ],
+      "states": [
+        "login.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-login-028",
+      "where": "비밀번호 변경 폼",
+      "trigger": "임시 비밀번호로 로그인 성공",
+      "expected": "로그인 폼 · SSO 숨기고 변경 폼 표시 — 경고 ‘임시 비밀번호로 로그인했습니다. 새 비밀번호를 정해야 계속할 수 있습니다.’ · 새 비밀번호 칸 포커스",
+      "roles": "임시 비밀번호 계정",
+      "refs": [
+        "users"
+      ],
+      "states": [
+        "login.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-login-029",
+      "where": "비밀번호 변경 폼",
+      "trigger": "비밀번호를 바꾼 지 설정 일수(기본 90일)가 지남",
+      "expected": "변경 폼 표시 — ‘비밀번호를 바꾼 지 N일이 지났습니다. 새 비밀번호를 정하세요.’",
+      "roles": "전체",
+      "refs": [
+        "settings"
+      ],
+      "states": [
+        "login.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-login-030",
+      "where": "비밀번호 변경 폼",
+      "trigger": "변경 폼 표시",
+      "expected": "규칙 ‘N자 이상 · 영문 · 숫자 · 특수문자(!@#$ 등, 공백 불가) · ID 미포함 · 같은 문자 3번 연속 금지 · 이전 비밀번호와 달라야 합니다’ (N 기본 9)",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "login.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-login-031",
+      "where": "비밀번호 변경 폼 · 검증",
+      "trigger": "규칙에 맞지 않는 새 비밀번호",
+      "expected": "‘비밀번호 규칙: {어긴 규칙 · …}’, 새 비밀번호 칸 포커스",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "login.html"
+      ],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-login-032",
+      "where": "비밀번호 변경 폼 · 검증",
+      "trigger": "새 비밀번호가 지금 비밀번호와 같음",
+      "expected": "‘이전 비밀번호와 같습니다’",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "login.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-login-033",
+      "where": "비밀번호 변경 폼 · 검증",
+      "trigger": "새 비밀번호 확인이 다름",
+      "expected": "‘비밀번호가 서로 다릅니다’, 확인 칸 포커스",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "login.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-login-034",
+      "where": "비밀번호 변경 폼 · 검증",
+      "trigger": "변경하는 사이 계정이 중지되거나 비밀번호가 다시 발급됨",
+      "expected": "변경 폼을 닫고 로그인 폼으로, 오류 ‘계정 상태가 바뀌었습니다. 처음부터 다시 로그인하세요’",
+      "roles": "전체",
+      "refs": [
+        "users"
+      ],
+      "states": [
+        "login.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-login-035",
+      "where": "비밀번호 변경 폼",
+      "trigger": "버튼 ‘비밀번호 바꾸고 계속’ 성공",
+      "expected": "비밀번호 · 변경일 저장, 임시 표시 해제, 감사 로그 ‘비밀번호 변경’(로그인 때 변경), 다음 화면에서 토스트 ‘비밀번호를 바꿨습니다’, 로그인 성공과 같은 곳으로 이동",
+      "roles": "전체",
+      "refs": [
+        "audit.view"
+      ],
+      "states": [
+        "login.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-login-036",
+      "where": "목업 안내",
+      "trigger": "접힌 ‘목업 안내’ 펼치기",
+      "expected": "기본 계정 ID와 공통 비밀번호, 해시 저장 안내",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "login.html"
+      ],
+      "verify": "exempt",
+      "exemptReason": "목업 전용 데모 안내(기본 계정 · 비밀번호)"
+    },
+    {
+      "id": "BH-login-037",
+      "where": "로그인 카드 위 안내 띠",
+      "trigger": "주소에 revoked 와 fail · expired 가 함께 있을 때",
+      "expected": "revoked(‘계정 상태나 비밀번호가 바뀌어 로그아웃됐습니다…’) 배너 하나만 보인다 — revoked 가 다른 배너를 덮어쓴다 (login.html revoked 처리)",
+      "roles": "전체",
+      "refs": [
+        "SC-56"
+      ],
+      "states": [
+        "login.html?revoked=1&fail=1&expired=1"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-login-038",
+      "where": "로그인 성공 뒤 이동",
+      "trigger": "로그인 성공 · 안전한 from 없음 · 시작 화면 설정 = ‘최근 업무 영역’",
+      "expected": "최근 업무 영역이 있으면 model.html?area=<그 영역>, 없으면 model.html 로 이동 (login.html go())",
+      "roles": "전체",
+      "refs": [
+        "SC-56",
+        "PN-50"
+      ],
+      "states": [
+        "login.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-login-039",
+      "where": "로그인 카드 위 안내 띠",
+      "trigger": "주소에 fail 과 expired 가 함께 있고 revoked 는 없을 때",
+      "expected": "SSO 실패 배너(‘SSO 인증에 실패했습니다…’)만 보인다 — fail 이 expired 보다 우선",
+      "roles": "전체",
+      "refs": [
+        "SC-56"
+      ],
+      "states": [
+        "login.html?fail=1&expired=1"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-login-040",
+      "where": "로그인 성공 뒤 이동",
+      "trigger": "로그인 성공 · 안전한 from 없음 · 시작 화면 설정 없음(기본)",
+      "expected": "home.html 로 이동",
+      "roles": "전체",
+      "refs": [
+        "SC-56",
+        "SC-55"
+      ],
+      "states": [
+        "login.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-login-041",
+      "where": "로그인 성공 뒤 이동",
+      "trigger": "로그인 성공 · 안전한 from 없음 · 시작 화면 설정 = ‘결재함’",
+      "expected": "approvals.html 로 이동",
+      "roles": "전체",
+      "refs": [
+        "SC-56",
+        "SC-20"
+      ],
+      "states": [
+        "login.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-login-042",
+      "where": "로그인 성공 뒤 이동",
+      "trigger": "from 이 있을 때",
+      "expected": "from 이 ‘<이름>.html[?…][#…]’ 형식(<이름> = 영문자 · 하이픈만 — 숫자 · 슬래시 · 점 · 콜론 없음, 목업 /^[a-z-]+…/i)이면 시작 화면 설정보다 먼저 그 주소로 이동, 그 밖의 값(외부 주소 · 경로 이동 등)은 무시하고 시작 화면 규칙을 따른다",
+      "roles": "전체",
+      "refs": [
+        "SC-56"
+      ],
+      "states": [
+        "login.html?from=model.html%3Farea%3Drq&expired=1"
+      ],
+      "verify": "e2e"
+    }
+  ]
+}

@@ -1,0 +1,1751 @@
+{
+    "note":  "요구사항 → 단계 · 작업 배정(사람 · 조정자가 고친다). screens = 화면 기본값(그 화면이 완성되는 단계), rows = 행별(화면 기본값보다 우선). 작업은 01-task-list 의 ID, P3 이후 묶음은 \u0027P3:묶음 이름\u0027. 조정자는 단계 시작 때 묶음 이름을 작업 ID로 바꾼다. 제외(verify exempt)에는 decision(Q-n · D-nnn · 계획 절)이 필요하다(화면 동작의 목업 장치는 사유에 \u0027목업\u0027으로 충분).",
+    "screens":  {
+                    "_shell":  {
+                                   "phase":  "P3",
+                                   "tasks":  [
+                                                 "T-P1-07",
+                                                 "P3:알림"
+                                             ]
+                               },
+                    "login.html":  {
+                                       "phase":  "P1",
+                                       "tasks":  [
+                                                     "T-P1-08"
+                                                 ]
+                                   },
+                    "error.html":  {
+                                       "phase":  "P1",
+                                       "tasks":  [
+                                                     "T-P1-08"
+                                                 ]
+                                   },
+                    "home.html":  {
+                                      "phase":  "P4",
+                                      "tasks":  [
+                                                    "T-P1-09",
+                                                    "P4:사업 · 두 사람 확인"
+                                                ]
+                                  },
+                    "mypage.html":  {
+                                        "phase":  "P4",
+                                        "tasks":  [
+                                                      "T-P1-09",
+                                                      "P3:알림",
+                                                      "P4:위임 · 조회 범위 · 감리"
+                                                  ]
+                                    },
+                    "settings.html":  {
+                                          "phase":  "P4",
+                                          "tasks":  [
+                                                        "T-P1-09",
+                                                        "T-P2-205",
+                                                        "T-P2-405",
+                                                        "P4:사업 · 두 사람 확인"
+                                                    ]
+                                      },
+                    "audit.html":  {
+                                       "phase":  "P4",
+                                       "tasks":  [
+                                                     "T-P1-10",
+                                                     "P4:위임 · 조회 범위 · 감리"
+                                                 ]
+                                   },
+                    "std-common.html":  {
+                                            "phase":  "P3",
+                                            "tasks":  [
+                                                          "T-P2-103",
+                                                          "P3:용어 자동분석 · 공통표준 새 판"
+                                                      ]
+                                        },
+                    "dictionary.html":  {
+                                            "phase":  "P2",
+                                            "tasks":  [
+                                                          "T-P2-103",
+                                                          "T-P2-204"
+                                                      ]
+                                        },
+                    "dict-grid.html":  {
+                                           "phase":  "P2",
+                                           "tasks":  [
+                                                         "T-P2-204"
+                                                     ]
+                                       },
+                    "dict-history.html":  {
+                                              "phase":  "P3",
+                                              "tasks":  [
+                                                            "T-P2-205",
+                                                            "P3:후보 큐 · 공표"
+                                                        ]
+                                          },
+                    "approvals.html":  {
+                                           "phase":  "P2",
+                                           "tasks":  [
+                                                         "T-P2-205",
+                                                         "T-P2-603"
+                                                     ]
+                                       },
+                    "import-excel.html":  {
+                                              "phase":  "P2",
+                                              "tasks":  [
+                                                            "T-P2-303"
+                                                        ]
+                                          },
+                    "system.html":  {
+                                        "phase":  "P2",
+                                        "tasks":  [
+                                                      "T-P2-405"
+                                                  ]
+                                    },
+                    "model.html":  {
+                                       "phase":  "P2",
+                                       "tasks":  [
+                                                     "T-P2-406",
+                                                     "T-P2-504",
+                                                     "T-P2-603"
+                                                 ]
+                                   },
+                    "standardize.html":  {
+                                             "phase":  "P2",
+                                             "tasks":  [
+                                                           "T-P2-504"
+                                                       ]
+                                         },
+                    "datatypes.html":  {
+                                           "phase":  "P3",
+                                           "tasks":  [
+                                                         "T-P2-401",
+                                                         "P3:데이터 타입 화면"
+                                                     ]
+                                       },
+                    "ddl.html":  {
+                                     "phase":  "P2",
+                                     "tasks":  [
+                                                   "T-P2-703"
+                                               ]
+                                 },
+                    "outputs.html":  {
+                                         "phase":  "P3",
+                                         "tasks":  [
+                                                       "T-P2-703",
+                                                       "P3:공식 ERD · 나머지 산출물"
+                                                   ]
+                                     },
+                    "excel-import.html":  {
+                                              "phase":  "P3",
+                                              "tasks":  [
+                                                            "P3:사전 엑셀 일괄"
+                                                        ]
+                                          },
+                    "uploads.html":  {
+                                         "phase":  "P3",
+                                         "tasks":  [
+                                                       "P3:사전 엑셀 일괄"
+                                                   ]
+                                     },
+                    "candidates.html":  {
+                                            "phase":  "P3",
+                                            "tasks":  [
+                                                          "P3:후보 큐 · 공표"
+                                                      ]
+                                        },
+                    "domain-groups.html":  {
+                                               "phase":  "P3",
+                                               "tasks":  [
+                                                             "P3:도메인 그룹 · 검수 기준"
+                                                         ]
+                                           },
+                    "rules.html":  {
+                                       "phase":  "P3",
+                                       "tasks":  [
+                                                     "P3:도메인 그룹 · 검수 기준"
+                                                 ]
+                                   },
+                    "term-wizard.html":  {
+                                             "phase":  "P3",
+                                             "tasks":  [
+                                                           "P3:용어 자동분석 · 공통표준 새 판"
+                                                       ]
+                                         },
+                    "import.html":  {
+                                        "phase":  "P5",
+                                        "tasks":  [
+                                                      "P5:DDL 가져오기"
+                                                  ]
+                                    },
+                    "ops-status.html":  {
+                                            "phase":  "P6",
+                                            "tasks":  [
+                                                          "P6:운영 준비"
+                                                      ]
+                                        }
+                },
+    "rows":  {
+                 "RP-R01":  {
+                                "phase":  "P2",
+                                "tasks":  [
+                                              "T-P2-401",
+                                              "T-P2-402",
+                                              "T-P2-601"
+                                          ]
+                            },
+                 "ST-R01":  {
+                                "phase":  "P2",
+                                "tasks":  [
+                                              "T-P2-101"
+                                          ]
+                            },
+                 "ST-R10":  {
+                                "phase":  "P2",
+                                "tasks":  [
+                                              "T-P2-101"
+                                          ]
+                            },
+                 "LG-R01":  {
+                                "phase":  "P2",
+                                "tasks":  [
+                                              "T-P2-406"
+                                          ]
+                            },
+                 "DG-R01":  {
+                                "phase":  "P2",
+                                "tasks":  [
+                                              "T-P2-406"
+                                          ]
+                            },
+                 "DG-R03":  {
+                                "phase":  "P2",
+                                "tasks":  [
+                                              "T-P2-406"
+                                          ]
+                            },
+                 "DG-R04":  {
+                                "phase":  "P2",
+                                "tasks":  [
+                                              "T-P2-504"
+                                          ]
+                            },
+                 "LG-R02":  {
+                                "phase":  "P2",
+                                "tasks":  [
+                                              "T-P2-406"
+                                          ]
+                            },
+                 "LG-R03":  {
+                                "phase":  "P2",
+                                "tasks":  [
+                                              "T-P2-406",
+                                              "T-P2-504"
+                                          ]
+                            },
+                 "LG-R04":  {
+                                "phase":  "P2",
+                                "tasks":  [
+                                              "T-P2-406"
+                                          ]
+                            },
+                 "OUT-R01":  {
+                                 "phase":  "P2",
+                                 "tasks":  [
+                                               "T-P2-703"
+                                           ]
+                             },
+                 "OUT-R02":  {
+                                 "phase":  "P2",
+                                 "tasks":  [
+                                               "T-P2-701",
+                                               "T-P2-703"
+                                           ]
+                             },
+                 "OUT-R04":  {
+                                 "phase":  "P2",
+                                 "tasks":  [
+                                               "T-P2-702"
+                                           ]
+                             },
+                 "PH-R01":  {
+                                "phase":  "P2",
+                                "tasks":  [
+                                              "T-P2-406"
+                                          ]
+                            },
+                 "PH-R02":  {
+                                "phase":  "P2",
+                                "tasks":  [
+                                              "T-P2-406"
+                                          ]
+                            },
+                 "PH-R03":  {
+                                "phase":  "P2",
+                                "tasks":  [
+                                              "T-P2-401",
+                                              "T-P2-406"
+                                          ]
+                            },
+                 "PH-R04":  {
+                                "phase":  "P2",
+                                "tasks":  [
+                                              "T-P2-406"
+                                          ]
+                            },
+                 "RP-R04":  {
+                                "phase":  "P1",
+                                "tasks":  [
+                                              "T-P1-07"
+                                          ]
+                            },
+                 "RV-R02":  {
+                                "phase":  "P2",
+                                "tasks":  [
+                                              "T-P2-302",
+                                              "T-P2-303"
+                                          ]
+                            },
+                 "ST-R02":  {
+                                "phase":  "P2",
+                                "tasks":  [
+                                              "T-P2-401",
+                                              "T-P2-405"
+                                          ]
+                            },
+                 "ST-R03":  {
+                                "phase":  "P2",
+                                "tasks":  [
+                                              "T-P2-102",
+                                              "T-P2-103"
+                                          ]
+                            },
+                 "ST-R04":  {
+                                "phase":  "P3",
+                                "tasks":  [
+                                              "P3:사전 엑셀 일괄"
+                                          ]
+                            },
+                 "ST-R05":  {
+                                "phase":  "P2",
+                                "tasks":  [
+                                              "T-P2-204"
+                                          ]
+                            },
+                 "ST-R06":  {
+                                "phase":  "P2",
+                                "tasks":  [
+                                              "T-P2-101",
+                                              "T-P2-204"
+                                          ]
+                            },
+                 "ST-R07":  {
+                                "phase":  "P2",
+                                "tasks":  [
+                                              "T-P2-503",
+                                              "T-P2-504"
+                                          ]
+                            },
+                 "ST-R08":  {
+                                "phase":  "P2",
+                                "tasks":  [
+                                              "T-P2-702",
+                                              "T-P2-703"
+                                          ]
+                            },
+                 "ST-R09":  {
+                                "phase":  "P2",
+                                "tasks":  [
+                                              "T-P2-703"
+                                          ]
+                            },
+                 "RP-R02":  {
+                                "phase":  "P2",
+                                "tasks":  [
+                                              "T-P2-402",
+                                              "T-P2-403"
+                                          ],
+                                "note":  "20 표는 W2지만 \u0027확정: 실시간 공동 편집\u0027(20 §2.0) — W1(P2)"
+                            },
+                 "DG-R02":  {
+                                "phase":  "P5",
+                                "tasks":  [
+                                              "P5:DDL 가져오기 · 영역 이동 · 통합 보기 고도화"
+                                          ]
+                            },
+                 "LG-R05":  {
+                                "phase":  "P5",
+                                "tasks":  [
+                                              "P5:모델링 완성도(W2)"
+                                          ]
+                            },
+                 "LG-R06":  {
+                                "phase":  "P5",
+                                "tasks":  [
+                                              "P5:모델링 완성도(W2)"
+                                          ]
+                            },
+                 "LG-R07":  {
+                                "phase":  "P5",
+                                "tasks":  [
+                                              "P5:모델링 완성도(W2)"
+                                          ]
+                            },
+                 "LG-R08":  {
+                                "phase":  "P5",
+                                "tasks":  [
+                                              "P5:모델링 완성도(W2)"
+                                          ]
+                            },
+                 "LG-R09":  {
+                                "phase":  "P5",
+                                "tasks":  [
+                                              "P5:모델링 완성도(W2)"
+                                          ]
+                            },
+                 "LG-R10":  {
+                                "phase":  "P5",
+                                "tasks":  [
+                                              "P5:모델링 완성도(W2)"
+                                          ]
+                            },
+                 "OUT-R03":  {
+                                 "phase":  "P5",
+                                 "tasks":  [
+                                               "P5:비교 · 부록"
+                                           ]
+                             },
+                 "OUT-R05":  {
+                                 "phase":  "P5",
+                                 "tasks":  [
+                                               "P5:비교 · 부록"
+                                           ]
+                             },
+                 "PH-R05":  {
+                                "phase":  "P5",
+                                "tasks":  [
+                                              "P5:모델링 완성도(W2)"
+                                          ]
+                            },
+                 "RP-R03":  {
+                                "phase":  "P5",
+                                "tasks":  [
+                                              "P5:모델링 완성도(W2)"
+                                          ]
+                            },
+                 "RV-R01":  {
+                                "phase":  "P5",
+                                "tasks":  [
+                                              "P5:DDL 가져오기"
+                                          ],
+                                "note":  "01-task-list §6 Q-1 — W1/W2 사람 확인 대기"
+                            },
+                 "RV-R03":  {
+                                "phase":  "P5",
+                                "tasks":  [
+                                              "P5:DDL 가져오기"
+                                          ]
+                            },
+                 "DG-R05":  {
+                                "phase":  "P1",
+                                "tasks":  [
+                                              "T-P1-07"
+                                          ],
+                                "note":  "20 표: W0 공통 컴포넌트 규칙으로 흡수(입력창 기본값 전체 선택)"
+                            },
+                 "PH-R06":  {
+                                "verify":  "exempt",
+                                "exemptReason":  "W3 — 계획 P1~P6(W1 · W2) 밖. 범위 결정은 사람(01-task-list §6 Q-2)",
+                                "decision":  "Q-2"
+                            },
+                 "RV-R04":  {
+                                "verify":  "exempt",
+                                "exemptReason":  "W3 — 계획 P1~P6(W1 · W2) 밖. 범위 결정은 사람(01-task-list §6 Q-2)",
+                                "decision":  "Q-2"
+                            },
+                 "RV-R05":  {
+                                "verify":  "exempt",
+                                "exemptReason":  "W3 — 계획 P1~P6(W1 · W2) 밖. 범위 결정은 사람(01-task-list §6 Q-2)",
+                                "decision":  "Q-2"
+                            },
+                 "SC-00":  {
+                               "phase":  "P1",
+                               "tasks":  [
+                                             "T-P1-07"
+                                         ]
+                           },
+                 "PN-50":  {
+                               "phase":  "P1",
+                               "tasks":  [
+                                             "T-P1-07"
+                                         ]
+                           },
+                 "MO-53":  {
+                               "phase":  "P1",
+                               "tasks":  [
+                                             "T-P1-07"
+                                         ]
+                           },
+                 "PN-54":  {
+                               "phase":  "P1",
+                               "tasks":  [
+                                             "T-P1-07"
+                                         ]
+                           },
+                 "PN-52":  {
+                               "phase":  "P3",
+                               "tasks":  [
+                                             "P3:알림"
+                                         ]
+                           },
+                 "SC-51":  {
+                               "phase":  "P1",
+                               "tasks":  [
+                                             "T-P1-09"
+                                         ]
+                           },
+                 "SC-55":  {
+                               "phase":  "P1",
+                               "tasks":  [
+                                             "T-P1-09"
+                                         ]
+                           },
+                 "SC-56":  {
+                               "phase":  "P1",
+                               "tasks":  [
+                                             "T-P1-08"
+                                         ]
+                           },
+                 "SC-57":  {
+                               "phase":  "P1",
+                               "tasks":  [
+                                             "T-P1-08"
+                                         ]
+                           },
+                 "SC-58":  {
+                               "phase":  "P1",
+                               "tasks":  [
+                                             "T-P1-10"
+                                         ]
+                           },
+                 "SC-42":  {
+                               "phase":  "P1",
+                               "tasks":  [
+                                             "T-P1-09"
+                                         ]
+                           },
+                 "SC-40":  {
+                               "phase":  "P2",
+                               "tasks":  [
+                                             "T-P2-205"
+                                         ]
+                           },
+                 "SC-41":  {
+                               "phase":  "P2",
+                               "tasks":  [
+                                             "T-P2-405"
+                                         ]
+                           },
+                 "SC-10":  {
+                               "phase":  "P2",
+                               "tasks":  [
+                                             "T-P2-103"
+                                         ]
+                           },
+                 "PN-11":  {
+                               "phase":  "P2",
+                               "tasks":  [
+                                             "T-P2-103"
+                                         ]
+                           },
+                 "PN-12":  {
+                               "phase":  "P2",
+                               "tasks":  [
+                                             "T-P2-204"
+                                         ]
+                           },
+                 "SC-11":  {
+                               "phase":  "P2",
+                               "tasks":  [
+                                             "T-P2-204"
+                                         ]
+                           },
+                 "SC-16":  {
+                               "phase":  "P2",
+                               "tasks":  [
+                                             "T-P2-205"
+                                         ]
+                           },
+                 "SC-18":  {
+                               "phase":  "P2",
+                               "tasks":  [
+                                             "T-P2-103"
+                                         ]
+                           },
+                 "SC-20":  {
+                               "phase":  "P2",
+                               "tasks":  [
+                                             "T-P2-205"
+                                         ]
+                           },
+                 "PN-21":  {
+                               "phase":  "P2",
+                               "tasks":  [
+                                             "T-P2-205"
+                                         ]
+                           },
+                 "MO-22":  {
+                               "phase":  "P2",
+                               "tasks":  [
+                                             "T-P2-205"
+                                         ]
+                           },
+                 "MO-23":  {
+                               "phase":  "P2",
+                               "tasks":  [
+                                             "T-P2-205"
+                                         ]
+                           },
+                 "SC-36a":  {
+                                "phase":  "P2",
+                                "tasks":  [
+                                              "T-P2-303"
+                                          ]
+                            },
+                 "SC-30":  {
+                               "phase":  "P2",
+                               "tasks":  [
+                                             "T-P2-405"
+                                         ]
+                           },
+                 "SC-31":  {
+                               "phase":  "P2",
+                               "tasks":  [
+                                             "T-P2-406"
+                                         ]
+                           },
+                 "PN-31G":  {
+                                "phase":  "P2",
+                                "tasks":  [
+                                              "T-P2-406"
+                                          ]
+                            },
+                 "PN-32":  {
+                               "phase":  "P2",
+                               "tasks":  [
+                                             "T-P2-406"
+                                         ]
+                           },
+                 "PN-33":  {
+                               "phase":  "P2",
+                               "tasks":  [
+                                             "T-P2-504"
+                                         ]
+                           },
+                 "PN-35":  {
+                               "phase":  "P2",
+                               "tasks":  [
+                                             "T-P2-406"
+                                         ]
+                           },
+                 "PN-38":  {
+                               "phase":  "P2",
+                               "tasks":  [
+                                             "T-P2-603"
+                                         ]
+                           },
+                 "PN-39":  {
+                               "phase":  "P2",
+                               "tasks":  [
+                                             "T-P2-504"
+                                         ]
+                           },
+                 "SC-34":  {
+                               "phase":  "P2",
+                               "tasks":  [
+                                             "T-P2-504"
+                                         ]
+                           },
+                 "SC-37":  {
+                               "phase":  "P2",
+                               "tasks":  [
+                                             "T-P2-703"
+                                         ]
+                           },
+                 "SC-38":  {
+                               "phase":  "P2",
+                               "tasks":  [
+                                             "T-P2-703"
+                                         ]
+                           },
+                 "PN-37":  {
+                               "phase":  "P5",
+                               "tasks":  [
+                                             "P5:비교 · 부록"
+                                         ]
+                           },
+                 "SC-13":  {
+                               "phase":  "P3",
+                               "tasks":  [
+                                             "P3:사전 엑셀 일괄"
+                                         ]
+                           },
+                 "SC-15":  {
+                               "phase":  "P3",
+                               "tasks":  [
+                                             "P3:사전 엑셀 일괄"
+                                         ]
+                           },
+                 "SC-14":  {
+                               "phase":  "P3",
+                               "tasks":  [
+                                             "P3:후보 큐 · 공표"
+                                         ]
+                           },
+                 "SC-17":  {
+                               "phase":  "P3",
+                               "tasks":  [
+                                             "P3:도메인 그룹 · 검수 기준"
+                                         ]
+                           },
+                 "SC-19":  {
+                               "phase":  "P3",
+                               "tasks":  [
+                                             "P3:데이터 타입 화면"
+                                         ]
+                           },
+                 "SC-35":  {
+                               "phase":  "P3",
+                               "tasks":  [
+                                             "P3:용어 자동분석 · 공통표준 새 판"
+                                         ]
+                           },
+                 "SC-43":  {
+                               "phase":  "P3",
+                               "tasks":  [
+                                             "P3:도메인 그룹 · 검수 기준"
+                                         ]
+                           },
+                 "SC-36":  {
+                               "phase":  "P5",
+                               "tasks":  [
+                                             "P5:DDL 가져오기"
+                                         ]
+                           },
+                 "SC-OPS":  {
+                                "phase":  "P6",
+                                "tasks":  [
+                                              "P6:운영 준비"
+                                          ]
+                            },
+                 "MD-01":  {
+                               "phase":  "P2",
+                               "tasks":  [
+                                             "T-P2-201",
+                                             "T-P2-204"
+                                         ]
+                           },
+                 "MD-02":  {
+                               "phase":  "P2",
+                               "tasks":  [
+                                             "T-P2-201",
+                                             "T-P2-204"
+                                         ]
+                           },
+                 "MD-03":  {
+                               "phase":  "P2",
+                               "tasks":  [
+                                             "T-P2-201",
+                                             "T-P2-204"
+                                         ]
+                           },
+                 "MD-04":  {
+                               "phase":  "P2",
+                               "tasks":  [
+                                             "T-P2-201",
+                                             "T-P2-204"
+                                         ]
+                           },
+                 "MD-05":  {
+                               "phase":  "P2",
+                               "tasks":  [
+                                             "T-P2-201",
+                                             "T-P2-204"
+                                         ]
+                           },
+                 "MD-06":  {
+                               "phase":  "P2",
+                               "tasks":  [
+                                             "T-P2-204"
+                                         ]
+                           },
+                 "MD-07":  {
+                               "phase":  "P2",
+                               "tasks":  [
+                                             "T-P2-204"
+                                         ]
+                           },
+                 "MD-08":  {
+                               "phase":  "P3",
+                               "tasks":  [
+                                             "P3:사전 엑셀 일괄"
+                                         ]
+                           },
+                 "MD-09":  {
+                               "phase":  "P3",
+                               "tasks":  [
+                                             "P3:사전 엑셀 일괄"
+                                         ]
+                           },
+                 "MD-10":  {
+                               "phase":  "P2",
+                               "tasks":  [
+                                             "T-P2-204"
+                                         ]
+                           },
+                 "MD-11":  {
+                               "phase":  "P2",
+                               "tasks":  [
+                                             "T-P2-203"
+                                         ]
+                           },
+                 "MD-12":  {
+                               "phase":  "P3",
+                               "tasks":  [
+                                             "P3:후보 큐 · 공표"
+                                         ]
+                           },
+                 "MD-13":  {
+                               "phase":  "P2",
+                               "tasks":  [
+                                             "T-P2-204"
+                                         ]
+                           },
+                 "MD-14":  {
+                               "phase":  "P2",
+                               "tasks":  [
+                                             "T-P2-201"
+                                         ]
+                           },
+                 "MD-15":  {
+                               "phase":  "P2",
+                               "tasks":  [
+                                             "T-P2-204"
+                                         ]
+                           },
+                 "MD-16":  {
+                               "phase":  "P2",
+                               "tasks":  [
+                                             "T-P2-204"
+                                         ]
+                           },
+                 "MD-17":  {
+                               "phase":  "P2",
+                               "tasks":  [
+                                             "T-P2-204"
+                                         ]
+                           },
+                 "MD-18":  {
+                               "phase":  "P2",
+                               "tasks":  [
+                                             "T-P2-204"
+                                         ]
+                           },
+                 "MD-19":  {
+                               "phase":  "P2",
+                               "tasks":  [
+                                             "T-P2-204"
+                                         ]
+                           },
+                 "MD-20":  {
+                               "phase":  "P2",
+                               "tasks":  [
+                                             "T-P2-202"
+                                         ]
+                           },
+                 "MD-21":  {
+                               "phase":  "P2",
+                               "tasks":  [
+                                             "T-P2-202"
+                                         ]
+                           },
+                 "MD-22":  {
+                               "phase":  "P2",
+                               "tasks":  [
+                                             "T-P2-205"
+                                         ]
+                           },
+                 "MD-23":  {
+                               "phase":  "P2",
+                               "tasks":  [
+                                             "T-P2-205"
+                                         ]
+                           },
+                 "MD-24":  {
+                               "phase":  "P3",
+                               "tasks":  [
+                                             "P3:후보 큐 · 공표"
+                                         ]
+                           },
+                 "MD-25":  {
+                               "phase":  "P2",
+                               "tasks":  [
+                                             "T-P2-202"
+                                         ]
+                           },
+                 "MD-26":  {
+                               "phase":  "P2",
+                               "tasks":  [
+                                             "T-P2-202"
+                                         ]
+                           },
+                 "MD-27":  {
+                               "phase":  "P3",
+                               "tasks":  [
+                                             "P3:알림"
+                                         ]
+                           },
+                 "MD-28":  {
+                               "phase":  "P2",
+                               "tasks":  [
+                                             "T-P2-202"
+                                         ]
+                           },
+                 "MD-29":  {
+                               "phase":  "P2",
+                               "tasks":  [
+                                             "T-P2-205"
+                                         ]
+                           },
+                 "MD-30":  {
+                               "phase":  "P3",
+                               "tasks":  [
+                                             "P3:코드 · 코드값"
+                                         ]
+                           },
+                 "MD-31":  {
+                               "phase":  "P3",
+                               "tasks":  [
+                                             "P3:코드 · 코드값"
+                                         ]
+                           },
+                 "MD-32":  {
+                               "phase":  "P3",
+                               "tasks":  [
+                                             "P3:코드 · 코드값"
+                                         ]
+                           },
+                 "MD-33":  {
+                               "phase":  "P3",
+                               "tasks":  [
+                                             "P3:코드 · 코드값"
+                                         ]
+                           },
+                 "MD-34":  {
+                               "phase":  "P2",
+                               "tasks":  [
+                                             "T-P2-204"
+                                         ]
+                           },
+                 "MD-35":  {
+                               "phase":  "P3",
+                               "tasks":  [
+                                             "P3:후보 큐 · 공표"
+                                         ]
+                           },
+                 "MD-36":  {
+                               "phase":  "P2",
+                               "tasks":  [
+                                             "T-P2-103"
+                                         ]
+                           },
+                 "MD-37":  {
+                               "phase":  "P3",
+                               "tasks":  [
+                                             "P3:알림"
+                                         ]
+                           },
+                 "MD-38":  {
+                               "phase":  "P3",
+                               "tasks":  [
+                                             "P3:사전 엑셀 일괄"
+                                         ]
+                           },
+                 "MD-40":  {
+                               "phase":  "P2",
+                               "tasks":  [
+                                             "T-P2-401",
+                                             "T-P2-405"
+                                         ]
+                           },
+                 "MD-41":  {
+                               "phase":  "P2",
+                               "tasks":  [
+                                             "T-P2-201"
+                                         ]
+                           },
+                 "MD-42":  {
+                               "phase":  "P3",
+                               "tasks":  [
+                                             "P3:후보 큐 · 공표"
+                                         ]
+                           },
+                 "MD-43":  {
+                               "phase":  "P3",
+                               "tasks":  [
+                                             "P3:후보 큐 · 공표"
+                                         ]
+                           },
+                 "MD-50":  {
+                               "phase":  "P2",
+                               "tasks":  [
+                                             "T-P2-406"
+                                         ]
+                           },
+                 "MD-51":  {
+                               "phase":  "P2",
+                               "tasks":  [
+                                             "T-P2-502"
+                                         ]
+                           },
+                 "MD-52":  {
+                               "phase":  "P2",
+                               "tasks":  [
+                                             "T-P2-503"
+                                         ]
+                           },
+                 "MD-53":  {
+                               "phase":  "P2",
+                               "tasks":  [
+                                             "T-P2-501"
+                                         ]
+                           },
+                 "MD-54":  {
+                               "phase":  "P2",
+                               "tasks":  [
+                                             "T-P2-501"
+                                         ]
+                           },
+                 "MD-55":  {
+                               "phase":  "P2",
+                               "tasks":  [
+                                             "T-P2-702"
+                                         ]
+                           },
+                 "MD-56":  {
+                               "phase":  "P3",
+                               "tasks":  [
+                                             "P3:용어 자동분석 · 공통표준 새 판"
+                                         ]
+                           },
+                 "R-01":  {
+                              "phase":  "P4",
+                              "tasks":  [
+                                            "P4:사업 · 두 사람 확인"
+                                        ]
+                          },
+                 "R-02":  {
+                              "phase":  "P2",
+                              "tasks":  [
+                                            "T-P2-202"
+                                        ]
+                          },
+                 "R-03":  {
+                              "phase":  "P4",
+                              "tasks":  [
+                                            "P4:사업 · 두 사람 확인"
+                                        ]
+                          },
+                 "R-04":  {
+                              "phase":  "P1",
+                              "tasks":  [
+                                            "T-P1-12"
+                                        ]
+                          },
+                 "R-05":  {
+                              "phase":  "P1",
+                              "tasks":  [
+                                            "T-P1-04",
+                                            "T-P1-08"
+                                        ]
+                          },
+                 "R-06":  {
+                              "phase":  "P2",
+                              "tasks":  [
+                                            "T-P2-202"
+                                        ]
+                          },
+                 "R-07":  {
+                              "phase":  "P2",
+                              "tasks":  [
+                                            "T-P2-202"
+                                        ]
+                          },
+                 "R-08":  {
+                              "phase":  "P4",
+                              "tasks":  [
+                                            "P4:위임 · 조회 범위 · 감리"
+                                        ]
+                          },
+                 "R-09":  {
+                              "phase":  "P4",
+                              "tasks":  [
+                                            "P4:사업 · 두 사람 확인"
+                                        ]
+                          },
+                 "R-10":  {
+                              "phase":  "P4",
+                              "tasks":  [
+                                            "P4:사업 · 두 사람 확인"
+                                        ]
+                          },
+                 "R-11":  {
+                              "phase":  "P2",
+                              "tasks":  [
+                                            "T-P2-404"
+                                        ]
+                          },
+                 "R-12":  {
+                              "phase":  "P4",
+                              "tasks":  [
+                                            "P4:위임 · 조회 범위 · 감리"
+                                        ]
+                          },
+                 "R-13":  {
+                              "phase":  "P4",
+                              "tasks":  [
+                                            "P4:사업 · 두 사람 확인"
+                                        ]
+                          },
+                 "R-14":  {
+                              "phase":  "P2",
+                              "tasks":  [
+                                            "T-P2-702"
+                                        ]
+                          },
+                 "R-15":  {
+                              "phase":  "P1",
+                              "tasks":  [
+                                            "T-P1-06",
+                                            "T-P1-10"
+                                        ]
+                          },
+                 "R-16":  {
+                              "phase":  "P4",
+                              "tasks":  [
+                                            "P4:사업 · 두 사람 확인"
+                                        ]
+                          },
+                 "R-17":  {
+                              "phase":  "P2",
+                              "tasks":  [
+                                            "T-P2-406"
+                                        ]
+                          },
+                 "R-18":  {
+                              "phase":  "P2",
+                              "tasks":  [
+                                            "T-P2-404"
+                                        ]
+                          },
+                 "R-19":  {
+                              "phase":  "P2",
+                              "tasks":  [
+                                            "T-P2-404"
+                                        ]
+                          },
+                 "R-20":  {
+                              "phase":  "P2",
+                              "tasks":  [
+                                            "T-P2-404"
+                                        ]
+                          },
+                 "R-21":  {
+                              "phase":  "P4",
+                              "tasks":  [
+                                            "P4:위임 · 조회 범위 · 감리"
+                                        ]
+                          },
+                 "R-22":  {
+                              "phase":  "P4",
+                              "tasks":  [
+                                            "P4:사업 · 두 사람 확인"
+                                        ]
+                          },
+                 "R-23":  {
+                              "phase":  "P4",
+                              "tasks":  [
+                                            "P4:사업 · 두 사람 확인"
+                                        ]
+                          },
+                 "R-26":  {
+                              "phase":  "P4",
+                              "tasks":  [
+                                            "P4:사업 · 두 사람 확인"
+                                        ],
+                              "note":  "제목을 원본(claude-r2rbac-agree)에서 확인해 채울 것"
+                          },
+                 "R-27":  {
+                              "phase":  "P3",
+                              "tasks":  [
+                                            "P3:데이터 타입 화면"
+                                        ]
+                          },
+                 "R-28":  {
+                              "phase":  "P3",
+                              "tasks":  [
+                                            "P3:데이터 타입 화면"
+                                        ]
+                          },
+                 "N-01":  {
+                              "phase":  "P4",
+                              "tasks":  [
+                                            "P4:사업 · 두 사람 확인"
+                                        ]
+                          },
+                 "N-02":  {
+                              "phase":  "P4",
+                              "tasks":  [
+                                            "P4:사업 · 두 사람 확인"
+                                        ]
+                          },
+                 "N-03":  {
+                              "phase":  "P4",
+                              "tasks":  [
+                                            "P4:사업 · 두 사람 확인"
+                                        ]
+                          },
+                 "N-04":  {
+                              "phase":  "P4",
+                              "tasks":  [
+                                            "P4:위임 · 조회 범위 · 감리"
+                                        ]
+                          },
+                 "N-05":  {
+                              "phase":  "P4",
+                              "tasks":  [
+                                            "P4:사업 · 두 사람 확인"
+                                        ]
+                          },
+                 "N-06":  {
+                              "phase":  "P4",
+                              "tasks":  [
+                                            "P4:사업 · 두 사람 확인"
+                                        ]
+                          },
+                 "N-07":  {
+                              "phase":  "P4",
+                              "tasks":  [
+                                            "P4:SSO · 메일 · 기한 만료"
+                                        ]
+                          },
+                 "ARCH-13.1":  {
+                                   "phase":  "P2",
+                                   "tasks":  [
+                                                 "T-P1-14",
+                                                 "T-P2-602"
+                                             ]
+                               },
+                 "ARCH-13.2":  {
+                                   "phase":  "P2",
+                                   "tasks":  [
+                                                 "T-P2-201",
+                                                 "T-P2-602"
+                                             ]
+                               },
+                 "ARCH-13.3":  {
+                                   "phase":  "P2",
+                                   "tasks":  [
+                                                 "T-P2-501",
+                                                 "T-P2-502"
+                                             ]
+                               },
+                 "ARCH-13.4":  {
+                                   "phase":  "P2",
+                                   "tasks":  [
+                                                 "T-P2-201",
+                                                 "T-P2-202",
+                                                 "T-P2-203"
+                                             ]
+                               },
+                 "ARCH-13.5":  {
+                                   "phase":  "P2",
+                                   "tasks":  [
+                                                 "T-P2-201",
+                                                 "T-P2-203"
+                                             ]
+                               },
+                 "ARCH-13.6":  {
+                                   "phase":  "P1",
+                                   "tasks":  [
+                                                 "T-P1-04"
+                                             ]
+                               },
+                 "ARCH-13.7":  {
+                                   "phase":  "P6",
+                                   "tasks":  [
+                                                 "T-P1-15",
+                                                 "T-P2-301",
+                                                 "P6:운영 준비"
+                                             ]
+                               },
+                 "ARCH-13.8":  {
+                                   "phase":  "P6",
+                                   "tasks":  [
+                                                 "T-P1-14",
+                                                 "T-P1-15",
+                                                 "P6:운영 준비"
+                                             ],
+                                   "note":  "TS 기본안 검증: 망 반입 · 저장/복구 · 실제 부하"
+                               },
+                 "ARCH-13.9":  {
+                                   "verify":  "exempt",
+                                   "exemptReason":  "단계 구성 자체 — 01-task-list · 계획 §10에 반영(기능이 아니라 검증 대상 아님)",
+                                   "decision":  "계획 §10 · 01-task-list(단계 구성 자체)"
+                               },
+                 "S-01":  {
+                              "phase":  "P1",
+                              "tasks":  [
+                                            "T-P1-13"
+                                        ]
+                          },
+                 "S-09":  {
+                              "phase":  "P1",
+                              "tasks":  [
+                                            "T-P1-13"
+                                        ]
+                          },
+                 "S-13":  {
+                              "phase":  "P1",
+                              "tasks":  [
+                                            "T-P1-13"
+                                        ]
+                          },
+                 "S-14":  {
+                              "phase":  "P2",
+                              "tasks":  [
+                                            "T-P2-105"
+                                        ]
+                          },
+                 "S-02":  {
+                              "phase":  "P2",
+                              "tasks":  [
+                                            "T-P2-206"
+                                        ]
+                          },
+                 "S-03":  {
+                              "phase":  "P2",
+                              "tasks":  [
+                                            "T-P2-206"
+                                        ]
+                          },
+                 "S-04":  {
+                              "phase":  "P2",
+                              "tasks":  [
+                                            "T-P2-206"
+                                        ]
+                          },
+                 "S-15":  {
+                              "phase":  "P2",
+                              "tasks":  [
+                                            "T-P2-304"
+                                        ]
+                          },
+                 "S-05":  {
+                              "phase":  "P2",
+                              "tasks":  [
+                                            "T-P2-407"
+                                        ]
+                          },
+                 "S-07":  {
+                              "phase":  "P2",
+                              "tasks":  [
+                                            "T-P2-407",
+                                            "T-P2-604"
+                                        ]
+                          },
+                 "S-16":  {
+                              "phase":  "P2",
+                              "tasks":  [
+                                            "T-P2-505"
+                                        ]
+                          },
+                 "S-06":  {
+                              "phase":  "P2",
+                              "tasks":  [
+                                            "T-P2-604"
+                                        ]
+                          },
+                 "S-08":  {
+                              "phase":  "P2",
+                              "tasks":  [
+                                            "T-P2-704"
+                                        ]
+                          },
+                 "S-10":  {
+                              "phase":  "P4",
+                              "tasks":  [
+                                            "P4:위임 · 조회 범위 · 감리"
+                                        ]
+                          },
+                 "S-11":  {
+                              "phase":  "P4",
+                              "tasks":  [
+                                            "P4:사업 · 두 사람 확인"
+                                        ]
+                          },
+                 "S-12":  {
+                              "phase":  "P4",
+                              "tasks":  [
+                                            "P4:사업 · 두 사람 확인"
+                                        ]
+                          },
+                 "S-17":  {
+                              "phase":  "P4",
+                              "tasks":  [
+                                            "P4:위임 · 조회 범위 · 감리"
+                                        ]
+                          },
+                 "BH-model-136":  {
+                                      "phase":  "P5",
+                                      "tasks":  [
+                                                    "P5:모델링 완성도(W2)"
+                                                ],
+                                      "note":  "목업 자리표시 — 제외가 아니라 W2 기능. 구현 전 UX · 계약 설계(F-38)",
+                                      "verify":  "test"
+                                  },
+                 "BH-model-294":  {
+                                      "phase":  "P5",
+                                      "tasks":  [
+                                                    "P5:모델링 완성도(W2)"
+                                                ],
+                                      "note":  "목업 자리표시 — 제외가 아니라 W2 기능(F-38)",
+                                      "verify":  "test"
+                                  },
+                 "BH-model-296":  {
+                                      "phase":  "P5",
+                                      "tasks":  [
+                                                    "P5:모델링 완성도(W2)"
+                                                ],
+                                      "note":  "목업 자리표시 — 제외가 아니라 W2 기능(F-38)",
+                                      "verify":  "test"
+                                  },
+                 "BH-model-298":  {
+                                      "phase":  "P5",
+                                      "tasks":  [
+                                                    "P5:모델링 완성도(W2)"
+                                                ],
+                                      "note":  "목업 자리표시 — 제외가 아니라 W2 기능(F-38)",
+                                      "verify":  "test"
+                                  },
+                 "BH-settings-047":  {
+                                         "phase":  "P4",
+                                         "tasks":  [
+                                                       "P4:사업 · 두 사람 확인"
+                                                   ],
+                                         "note":  "목업은 (목업) 문구만 — 실제 기능, 범위는 UX · 계약 판단",
+                                         "verify":  "test"
+                                     },
+                 "BH-settings-051":  {
+                                         "phase":  "P4",
+                                         "tasks":  [
+                                                       "P4:사업 · 두 사람 확인"
+                                                   ],
+                                         "note":  "목업은 (목업) 문구만 — 실제 기능, 범위는 UX · 계약 판단",
+                                         "verify":  "test"
+                                     },
+                 "BH-std-common-027":  {
+                                           "phase":  "P3",
+                                           "tasks":  [
+                                                         "P3:용어 자동분석 · 공통표준 새 판"
+                                                     ],
+                                           "note":  "보완 저장 = 서버 저장(F-42)",
+                                           "verify":  "test"
+                                       },
+                 "BH-std-common-034":  {
+                                           "phase":  "P3",
+                                           "tasks":  [
+                                                         "P3:용어 자동분석 · 공통표준 새 판"
+                                                     ],
+                                           "note":  "구현 = 실제 원본 파일 선택 · 읽기 · 차이(목업은 고정 예시)",
+                                           "verify":  "test"
+                                       },
+                 "BH-_shell-076":  {
+                                       "phase":  "P3",
+                                       "tasks":  [
+                                                     "T-P1-07",
+                                                     "P3:알림"
+                                                 ],
+                                       "note":  "실제 로딩 표시를 검증(F-06) — UX가 형태를 정함",
+                                       "verify":  "test"
+                                   },
+                 "BH-_shell-102":  {
+                                       "phase":  "P3",
+                                       "tasks":  [
+                                                     "T-P1-07",
+                                                     "P3:알림"
+                                                 ],
+                                       "note":  "목업 전용 표시라 했지만 기능 범위 미정 — UX 판단 전까지 검증 대상",
+                                       "verify":  "test"
+                                   },
+                 "BH-import-006":  {
+                                       "phase":  "P5",
+                                       "tasks":  [
+                                                     "P5:DDL 가져오기"
+                                                 ],
+                                       "note":  "구현 = 실제 .sql 파일 고르기 · 읽기(목업은 내장 예시만)",
+                                       "verify":  "test"
+                                   },
+                 "BH-login-022":  {
+                                      "phase":  "P4",
+                                      "tasks":  [
+                                                    "P4:SSO · 메일 · 기한 만료"
+                                                ],
+                                      "note":  "SSO 로그인 — P4"
+                                  },
+                 "MS-login-3":  {
+                                    "phase":  "P4",
+                                    "tasks":  [
+                                                  "P4:SSO · 메일 · 기한 만료",
+                                                  "T-P1-16"
+                                              ],
+                                    "note":  "SSO 실패 상태 — P4"
+                                },
+                 "BH-approvals-137":  {
+                                          "phase":  "P3",
+                                          "tasks":  [
+                                                        "P3:알림"
+                                                    ],
+                                          "note":  "신청 · 결재 집계(MD-37) — P3"
+                                      },
+                 "BH-login-031":  {
+                                      "phase":  "P1",
+                                      "tasks":  [
+                                                    "T-P1-08"
+                                                ],
+                                      "note":  "오류 문구 · 포커스는 화면 동작 — e2e(TR-10)",
+                                      "verify":  "e2e"
+                                  },
+                 "BH-login-007":  {
+                                      "phase":  "P1",
+                                      "tasks":  [
+                                                    "T-P1-08"
+                                                ],
+                                      "note":  "배너 · 로그인 후 이동은 화면 동작 — e2e(TR-10)",
+                                      "verify":  "e2e"
+                                  },
+                 "UIR-01":  {
+                                "phase":  "P1",
+                                "tasks":  [
+                                              "T-P1-07",
+                                              "T-P1-16"
+                                          ],
+                                "note":  "공통 UI 규칙 — 공용 컴포넌트(T-P1-07)에서 구현, 상태 전수 E2E(T-P1-16)와 단계별 UX 비교로 모든 화면에 적용 확인"
+                            },
+                 "UIR-02":  {
+                                "phase":  "P1",
+                                "tasks":  [
+                                              "T-P1-07",
+                                              "T-P1-16"
+                                          ],
+                                "note":  "공통 UI 규칙 — 공용 컴포넌트(T-P1-07)에서 구현, 상태 전수 E2E(T-P1-16)와 단계별 UX 비교로 모든 화면에 적용 확인"
+                            },
+                 "UIR-03":  {
+                                "phase":  "P1",
+                                "tasks":  [
+                                              "T-P1-07",
+                                              "T-P1-16"
+                                          ],
+                                "note":  "공통 UI 규칙 — 공용 컴포넌트(T-P1-07)에서 구현, 상태 전수 E2E(T-P1-16)와 단계별 UX 비교로 모든 화면에 적용 확인"
+                            },
+                 "UIR-04":  {
+                                "phase":  "P1",
+                                "tasks":  [
+                                              "T-P1-07",
+                                              "T-P1-16"
+                                          ],
+                                "note":  "공통 UI 규칙 — 공용 컴포넌트(T-P1-07)에서 구현, 상태 전수 E2E(T-P1-16)와 단계별 UX 비교로 모든 화면에 적용 확인"
+                            },
+                 "UIR-05":  {
+                                "phase":  "P1",
+                                "tasks":  [
+                                              "T-P1-07",
+                                              "T-P1-16"
+                                          ],
+                                "note":  "공통 UI 규칙 — 공용 컴포넌트(T-P1-07)에서 구현, 상태 전수 E2E(T-P1-16)와 단계별 UX 비교로 모든 화면에 적용 확인"
+                            },
+                 "UIR-06":  {
+                                "phase":  "P1",
+                                "tasks":  [
+                                              "T-P1-07",
+                                              "T-P1-16"
+                                          ],
+                                "note":  "공통 UI 규칙 — 공용 컴포넌트(T-P1-07)에서 구현, 상태 전수 E2E(T-P1-16)와 단계별 UX 비교로 모든 화면에 적용 확인"
+                            },
+                 "UIR-07":  {
+                                "phase":  "P1",
+                                "tasks":  [
+                                              "T-P1-07",
+                                              "T-P1-16"
+                                          ],
+                                "note":  "공통 UI 규칙 — 공용 컴포넌트(T-P1-07)에서 구현, 상태 전수 E2E(T-P1-16)와 단계별 UX 비교로 모든 화면에 적용 확인"
+                            },
+                 "UIR-08":  {
+                                "phase":  "P1",
+                                "tasks":  [
+                                              "T-P1-07",
+                                              "T-P1-16"
+                                          ],
+                                "note":  "공통 UI 규칙 — 공용 컴포넌트(T-P1-07)에서 구현, 상태 전수 E2E(T-P1-16)와 단계별 UX 비교로 모든 화면에 적용 확인"
+                            },
+                 "UIR-09":  {
+                                "phase":  "P1",
+                                "tasks":  [
+                                              "T-P1-07",
+                                              "T-P1-16"
+                                          ],
+                                "note":  "공통 UI 규칙 — 공용 컴포넌트(T-P1-07)에서 구현, 상태 전수 E2E(T-P1-16)와 단계별 UX 비교로 모든 화면에 적용 확인"
+                            },
+                 "R-24":  {
+                              "phase":  "P3",
+                              "tasks":  [
+                                            "P3:데이터 타입 화면"
+                                        ]
+                          },
+                 "R-25":  {
+                              "phase":  "P4",
+                              "tasks":  [
+                                            "P4:사업 · 두 사람 확인"
+                                        ]
+                          },
+                 "BH-approvals-138":  {
+                                          "phase":  "P3",
+                                          "tasks":  [
+                                                        "P3:알림"
+                                                    ],
+                                          "verify":  "e2e",
+                                          "note":  "신청 · 결재 집계(MD-37) — P3 · 카드 · 빨강 테두리는 화면 확인(e2e)"
+                                      },
+                 "BH-approvals-139":  {
+                                          "phase":  "P3",
+                                          "tasks":  [
+                                                        "P3:알림"
+                                                    ],
+                                          "note":  "신청 · 결재 집계(MD-37) — P3"
+                                      },
+                 "BH-approvals-140":  {
+                                          "phase":  "P3",
+                                          "tasks":  [
+                                                        "P3:알림"
+                                                    ],
+                                          "note":  "신청 · 결재 집계(MD-37) — P3"
+                                      },
+                 "BH-approvals-141":  {
+                                          "phase":  "P3",
+                                          "tasks":  [
+                                                        "P3:알림"
+                                                    ],
+                                          "note":  "신청 · 결재 집계(MD-37) — P3"
+                                      },
+                 "BH-approvals-142":  {
+                                          "phase":  "P3",
+                                          "tasks":  [
+                                                        "P3:알림"
+                                                    ],
+                                          "note":  "신청 · 결재 집계(MD-37) — P3"
+                                      },
+                 "BH-approvals-143":  {
+                                          "phase":  "P4",
+                                          "tasks":  [
+                                                        "P4:사업 · 두 사람 확인"
+                                                    ],
+                                          "note":  "결재함 › 확인 요청(R-01 · R-03) — P4"
+                                      },
+                 "BH-approvals-144":  {
+                                          "phase":  "P4",
+                                          "tasks":  [
+                                                        "P4:사업 · 두 사람 확인"
+                                                    ],
+                                          "note":  "결재함 › 확인 요청(R-01 · R-03) — P4"
+                                      },
+                 "BH-approvals-145":  {
+                                          "phase":  "P4",
+                                          "tasks":  [
+                                                        "P4:사업 · 두 사람 확인"
+                                                    ],
+                                          "note":  "결재함 › 확인 요청(R-01 · R-03) — P4"
+                                      },
+                 "BH-approvals-146":  {
+                                          "phase":  "P4",
+                                          "tasks":  [
+                                                        "P4:사업 · 두 사람 확인"
+                                                    ],
+                                          "note":  "결재함 › 확인 요청(R-01 · R-03) — P4"
+                                      },
+                 "BH-approvals-147":  {
+                                          "phase":  "P4",
+                                          "tasks":  [
+                                                        "P4:사업 · 두 사람 확인"
+                                                    ],
+                                          "note":  "결재함 › 확인 요청(R-01 · R-03) — P4"
+                                      },
+                 "BH-approvals-148":  {
+                                          "phase":  "P4",
+                                          "tasks":  [
+                                                        "P4:사업 · 두 사람 확인"
+                                                    ],
+                                          "note":  "결재함 › 확인 요청(R-01 · R-03) — P4"
+                                      },
+                 "BH-approvals-149":  {
+                                          "phase":  "P4",
+                                          "tasks":  [
+                                                        "P4:사업 · 두 사람 확인"
+                                                    ],
+                                          "note":  "결재함 › 확인 요청(R-01 · R-03) — P4"
+                                      },
+                 "BH-approvals-150":  {
+                                          "phase":  "P4",
+                                          "tasks":  [
+                                                        "P4:사업 · 두 사람 확인"
+                                                    ],
+                                          "note":  "결재함 › 확인 요청(R-01 · R-03) — P4"
+                                      },
+                 "BH-approvals-151":  {
+                                          "phase":  "P4",
+                                          "tasks":  [
+                                                        "P4:사업 · 두 사람 확인"
+                                                    ],
+                                          "note":  "결재함 › 확인 요청(R-01 · R-03) — P4"
+                                      },
+                 "BH-approvals-152":  {
+                                          "phase":  "P4",
+                                          "tasks":  [
+                                                        "P4:사업 · 두 사람 확인"
+                                                    ],
+                                          "note":  "결재함 › 확인 요청(R-01 · R-03) — P4"
+                                      },
+                 "BH-approvals-153":  {
+                                          "phase":  "P4",
+                                          "tasks":  [
+                                                        "P4:사업 · 두 사람 확인"
+                                                    ],
+                                          "note":  "결재함 › 확인 요청(R-01 · R-03) — P4"
+                                      },
+                 "BH-approvals-154":  {
+                                          "phase":  "P4",
+                                          "tasks":  [
+                                                        "P4:사업 · 두 사람 확인"
+                                                    ],
+                                          "note":  "결재함 › 확인 요청(R-01 · R-03) — P4"
+                                      },
+                 "BH-approvals-155":  {
+                                          "phase":  "P4",
+                                          "tasks":  [
+                                                        "P4:사업 · 두 사람 확인"
+                                                    ],
+                                          "note":  "결재함 › 확인 요청(R-01 · R-03) — P4"
+                                      },
+                 "BH-approvals-156":  {
+                                          "phase":  "P4",
+                                          "tasks":  [
+                                                        "P4:사업 · 두 사람 확인"
+                                                    ],
+                                          "note":  "결재함 › 확인 요청(R-01 · R-03) — P4"
+                                      }
+             }
+}

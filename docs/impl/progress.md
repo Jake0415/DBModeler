@@ -8,6 +8,7 @@
 | 결정 | 작업 | 결정 종류 | W1 경로 막음 | 상태 | 응답 |
 |---|---|---|---|---|---|
 | [01-task-list §6 Q-1](01-task-list.md) | DDL 가져오기(SC-36) W1/W2 | 문서 충돌 — 우선순위 20 §2.0(W1) ↔ 백엔드 설계 §13.9(W2). 지금은 P5(W2) | 아니오(엑셀 정의서 경로로 W1 완주 가능) | 확인 대기 | |
+| [01-task-list §6 Q-2](01-task-list.md) | W3 요구 3개(PH-R06 · RV-R04 · RV-R05) | 계획 밖 — 추적표에서 제외(사유 기록) | 아니오 | 확인 대기 | |
 
 ## 현재 단계
 - 단계: **P0 준비**
@@ -38,6 +39,16 @@
 - 주요 결정: 리뷰어는 `codex -s read-only -a never …` 읽기 전용 터미널, 의존 = 계약은 main 병합 뒤 · 검증은 리뷰 통과 뒤, BE · FE 묶음은 통합 worktree에서 QA → 시나리오 → 권한 감사 차례로, 수정은 같은 worktree에 새 수정 Task(모델 상향), worktree 정리는 `orca worktree rm --run-hooks --delete-branch`(예비: `worktree-env.ps1 -Prune -Target <절대 경로>`), 브랜치는 Orca 기본 이름 기록, T-P1-02 → 02b(BE) → 02c, T-P1-01에 lint
 - 실측: Orca 새 worktree 준비(node_modules 공유 · DB · 시험 계정) 성공, `--run-hooks` 정리 성공, `--run-hooks` 없으면 DB 남음
 - 리뷰: Codex Sol 4회(REV-01 ~ 24, 수정 4회, 기각 2: REV-02 실측 근거 · REV-16 UX 모델은 계획 §3.2)
+
+## 요구사항 추적 · 완전성 검사 (2026-11-25)
+- 목적: 모든 기능이 빠짐없이 구현 · 동작 확인되는지 자동 판정 — 규칙 [계획 §15](00-orchestration-plan.md), 데이터 [trace/](trace/)
+- 추적표 `trace/requirements.json` **2,505행**: 요구(REQ 45 · UIR 9) · 화면(UI 45) · 메타(META 49) · 권한(RBAC 35) · 구조(ARCH 9) · 시나리오(SCN 17) · 목업 상태(MS 70) · 화면 동작(BH 2,226, 목업 27개 화면 전수 — [behaviors/](trace/behaviors/))
+- 명령: `npm run trace:extract`(추적표 생성) → `npm run trace:test`(커밋된 깨끗한 트리에서 vitest · Playwright 실행, `.trace/runs/<시각>/`) → `npm run trace:check -- --gate start|end --phase Pn [--report]`
+- 판정: 테스트 이름의 `[ID]` 태그 + 실행 결과(그 ID를 태그한 파일에서 통과, 화면 행은 e2e, 목업 상태 행은 역할별 통과). 건너뜀 · fixme · 예상 실패는 불인정. 제외는 사람 결정(Q-n · D-nnn 응답 = 확인) 있을 때만
+- 관문: 묶음 시작 = 모든 행에 단계 · 실제 작업 ID, 묶음 끝 = 범위 행 전부 통과 + 실행이 HEAD · 깨끗한 트리 · 입력 지문 일치 · 실행 중 파일 변경 없음
+- 현재: 테스트 없음 2,466 · 제외 36 · 제외(사람 결정 대기 — Q-2) 3. P1 · P2 시작 관문 통과
+- 리뷰: Codex Sol 4회(TR-01 ~ 14), 수정 5회(상한) — 모두 해결, 남은 한계는 후속 F-005 · F-006
+- 목업 점검에서 나온 UX 판단 필요 항목: [trace/mockup-findings.md](trace/mockup-findings.md)(F-01 ~ 43 — 특히 F-26 · F-39 · F-40은 목업 ↔ 권한표 충돌, 사람 확인)
 
 ## P0 준비 점검표
 - [x] Orca 에이전트 권한 — 2026-11-25 설정: **Codex = ‘대신 승인’**(`--approve-for-me` = workspace-write 샌드박스 + 승인 자동 검토, 리뷰어는 지시로 읽기 전용 · QA/권한 감사관은 `e2e/`만 씀) + 인수 `-c windows.sandbox=unelevated`(관리자 샌드박스 팝업 방지) · 실행 확인. **Claude = 전체 액세스 유지**(구현 에이전트, worktree 안에서 작업) · 기본 모델 Opus 4.8 → **Opus 5.5**

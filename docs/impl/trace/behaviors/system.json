@@ -1,0 +1,939 @@
+{
+  "screen": "system.html",
+  "ids": "SC-30",
+  "source": "docs/ux/mockups/system.html",
+  "behaviors": [
+    {
+      "id": "BH-system-001",
+      "where": "머리",
+      "trigger": "주소 열기",
+      "expected": "제목에 지금 시스템 이름(예: ‘요구사항관리’), 옆 배지에 ‘DBMS · 스키마’(예: ‘Oracle 19c · RQMS’)가 보이고 브라우저 제목이 ‘<시스템> · 시스템 홈’",
+      "roles": "전체",
+      "refs": [
+        "SC-30"
+      ],
+      "states": [
+        "system.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-system-002",
+      "where": "머리",
+      "trigger": "주소 열기 — settings 권한이 있을 때",
+      "expected": "[시스템 설정] 링크가 보이고 누르면 settings.html#sys로 이동",
+      "roles": "settings 가진 Admin",
+      "refs": [
+        "settings"
+      ],
+      "states": [
+        "system.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-system-003",
+      "where": "머리",
+      "trigger": "주소 열기 — settings 권한이 없을 때",
+      "expected": "[시스템 설정] 링크가 숨겨짐(403 화면으로 가는 링크를 두지 않음)",
+      "roles": "Admin 외 전체",
+      "refs": [
+        "settings"
+      ],
+      "states": [
+        "system.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-system-004",
+      "where": "머리",
+      "trigger": "[시스템 전체 ERD] 클릭",
+      "expected": "model.html?sys=1로 이동해 시스템 전체 ERD(영역 묶음 보기)가 열림",
+      "roles": "전체",
+      "refs": [
+        "model.view",
+        "SC-31"
+      ],
+      "states": [
+        "system.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-system-005",
+      "where": "머리",
+      "trigger": "[+ 업무 영역] 클릭 — area.create 있음",
+      "expected": "‘새 업무 영역’ 창이 열리고 이름 칸에 포커스",
+      "roles": "area.create 가진 담당 시스템 모델러 · DA · Admin",
+      "refs": [
+        "area.create"
+      ],
+      "states": [
+        "system.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-system-006",
+      "where": "머리",
+      "trigger": "[+ 업무 영역] — area.create 없는 모델러(담당 시스템 아님)",
+      "expected": "버튼이 흐리게 비활성, 툴팁 ‘내 담당 시스템에 <시스템>이 없어 업무 영역을 만들 수 없습니다’",
+      "roles": "담당 시스템이 아닌 모델러",
+      "refs": [
+        "area.create"
+      ],
+      "states": [
+        "system.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-system-007",
+      "where": "머리",
+      "trigger": "[+ 업무 영역] — 모델러 역할이 없을 때",
+      "expected": "버튼이 흐리게 비활성, 툴팁 ‘업무 영역은 모델러 · Admin만 만들 수 있습니다’",
+      "roles": "기관 담당자 · 감리 · 역할 없음",
+      "refs": [
+        "area.create"
+      ],
+      "states": [
+        "system.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-system-008",
+      "where": "머리",
+      "trigger": "[사용 중인 영역 모두 옮기기 · 복제] 표시 조건",
+      "expected": "Admin이고 사용 중인 업무 영역이 있고 다른 사용 시스템이 있을 때만 보임 — 그 밖에는 숨김",
+      "roles": "settings · area.manage 가진 Admin",
+      "refs": [
+        "settings",
+        "area.manage"
+      ],
+      "states": [
+        "system.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-system-009",
+      "where": "요약",
+      "trigger": "주소 열기",
+      "expected": "‘업무 영역’ 수, ‘테이블 · 컬럼’ 수(작업본 기준, 잠긴 영역은 제출 사본, 참조 엔터티 제외), 명명 템플릿 ‘%(EntityStdName)%(ClassSuffix)’, 영역별 ‘모델 확정 최종 승인’ 사용/안 함이 표시됨",
+      "roles": "전체",
+      "refs": [
+        "SC-30",
+        "PH-R03"
+      ],
+      "states": [
+        "system.html"
+      ],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-system-010",
+      "where": "새 업무 영역 창",
+      "trigger": "이름이 비어 있을 때",
+      "expected": "[만들기]가 비활성(공백만 입력해도 비어 있는 것으로 봄)",
+      "roles": "area.create 가진 사용자",
+      "refs": [
+        "area.create"
+      ],
+      "states": [
+        "system.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-system-011",
+      "where": "새 업무 영역 창",
+      "trigger": "이름 입력 후 [만들기]",
+      "expected": "v1 작업 버전의 빈 업무 영역을 만들고 model.html?area=<새 id>로 이동, 다음 화면에 ‘업무 영역 ‘<이름>’을 만들었습니다 — v1 작업 버전’ 알림",
+      "roles": "area.create 가진 사용자",
+      "refs": [
+        "area.create",
+        "SC-31"
+      ],
+      "states": [
+        "system.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-system-012",
+      "where": "새 업무 영역 창",
+      "trigger": "[만들기] — 다른 탭에서 역할이 바뀐 뒤",
+      "expected": "만들지 않고 역할 변경 안내 토스트(새로고침 요청)",
+      "roles": "area.create 가진 사용자",
+      "refs": [
+        "area.create"
+      ],
+      "states": [
+        "system.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-system-013",
+      "where": "새 업무 영역 창",
+      "trigger": "[만들기] — 실행 시점에 권한이 없을 때",
+      "expected": "만들지 않고 토스트 ‘이 시스템에 업무 영역을 만들 권한이 없습니다’",
+      "roles": "area.create 가진 사용자",
+      "refs": [
+        "area.create"
+      ],
+      "states": [
+        "system.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-system-014",
+      "where": "새 업무 영역 창",
+      "trigger": "[만들기] — 이 시스템을 맡은 모델러가 아무도 없을 때",
+      "expected": "영역은 만들되 토스트 ‘<시스템>을 맡은 모델러가 없어 아무도 이 영역을 편집할 수 없습니다 — 담당 지정이 필요합니다’",
+      "roles": "area.create 가진 사용자(DA · Admin)",
+      "refs": [
+        "area.create",
+        "model.edit"
+      ],
+      "states": [
+        "system.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-system-015",
+      "where": "새 업무 영역 창",
+      "trigger": "[엑셀로 만들기] 클릭",
+      "expected": "입력한 이름을 가지고 import-excel.html?name=<이름>으로 이동(이름이 비었으면 import-excel.html)",
+      "roles": "area.create 가진 사용자",
+      "refs": [
+        "SC-36a",
+        "RV-R02"
+      ],
+      "states": [
+        "system.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-system-016",
+      "where": "새 업무 영역 창",
+      "trigger": "[DDL로 만들기] 클릭",
+      "expected": "import.html로 이동",
+      "roles": "area.create 가진 사용자",
+      "refs": [
+        "model.edit"
+      ],
+      "states": [
+        "system.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-system-017",
+      "where": "새 업무 영역 창",
+      "trigger": "[취소] 또는 Esc",
+      "expected": "창이 닫힘",
+      "roles": "area.create 가진 사용자",
+      "refs": [],
+      "states": [
+        "system.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-system-018",
+      "where": "새 업무 영역 창",
+      "trigger": "주소 system.html#new 열기(모델 트리 [+]에서 옴)",
+      "expected": "‘새 업무 영역’ 창이 자동으로 열리고 주소의 #new가 지워져 새로고침해도 다시 열리지 않음",
+      "roles": "area.create 가진 사용자",
+      "refs": [
+        "area.create"
+      ],
+      "states": [
+        "system.html#new"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-system-019",
+      "where": "업무 영역 표",
+      "trigger": "주소 열기",
+      "expected": "사용 중인 영역마다 한 행: 이름(링크) · 설명 · 상태 배지(‘검토 중 · <문서 번호>’ / ‘확정본’ / ‘작업 중’) · ‘v<작업> (v<기준> 확정 기준)’ 또는 ‘(확정본 없음)’ · 테이블 수 · 준수율 · 미준수 · 예외 · 담당 · 수정일",
+      "roles": "전체",
+      "refs": [
+        "SC-30",
+        "ST-R08"
+      ],
+      "states": [
+        "system.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-system-020",
+      "where": "업무 영역 표",
+      "trigger": "아직 모델 화면을 열지 않은 영역",
+      "expected": "준수율 · 미준수 · 예외 칸이 ‘—’로 표시",
+      "roles": "전체",
+      "refs": [
+        "ST-R08"
+      ],
+      "states": [
+        "system.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-system-021",
+      "where": "업무 영역 표",
+      "trigger": "영역 이름 링크 또는 행의 빈 곳 클릭",
+      "expected": "model.html?area=<id>로 이동(글자를 끌어 선택 중이거나 버튼 · 메뉴를 누른 경우는 이동하지 않음)",
+      "roles": "전체",
+      "refs": [
+        "model.view",
+        "SC-31"
+      ],
+      "states": [
+        "system.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-system-022",
+      "where": "업무 영역 표",
+      "trigger": "주소 system.html#area-<id>로 도착(경로의 영역 링크)",
+      "expected": "해당 행이 강조 배경 · 왼쪽 띠로 표시됨",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "system.html#area-rq"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-system-023",
+      "where": "업무 영역 표 ⋯ 메뉴",
+      "trigger": "행 끝 ⋯ 클릭",
+      "expected": "‘영역 정보 수정’ · ‘다른 시스템으로 옮기기 · 복제’ · ‘사용 중지 · 삭제’ 메뉴가 열림",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "system.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-system-024",
+      "where": "업무 영역 표 ⋯ 메뉴",
+      "trigger": "‘영역 정보 수정’ — area.info 없음",
+      "expected": "메뉴 항목이 흐리게(aria-disabled) 이유 툴팁 ‘이 영역을 바꿀 권한이 없습니다(담당 모델러 · Admin)’, 누르면 같은 문구 토스트 후 ⋯로 포커스 복귀",
+      "roles": "area.info 없는 사용자",
+      "refs": [
+        "area.info"
+      ],
+      "states": [
+        "system.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-system-025",
+      "where": "업무 영역 표 ⋯ 메뉴",
+      "trigger": "‘다른 시스템으로 옮기기 · 복제’ · ‘사용 중지 · 삭제’ — Admin 아님",
+      "expected": "두 항목이 흐리게, 툴팁 ‘Admin만 할 수 있습니다’, 누르면 같은 문구 토스트",
+      "roles": "Admin 외 전체",
+      "refs": [
+        "area.manage",
+        "settings"
+      ],
+      "states": [
+        "system.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-system-026",
+      "where": "업무 영역 표 ⋯ 메뉴",
+      "trigger": "항목 실행 — 다른 탭에서 역할이 바뀐 뒤",
+      "expected": "이유 ‘권한이 바뀌었습니다 — 새로고침한 뒤 다시 하세요’가 안내됨",
+      "roles": "전체",
+      "refs": [
+        "area.info",
+        "area.manage"
+      ],
+      "states": [
+        "system.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-system-027",
+      "where": "영역 정보 수정 창",
+      "trigger": "‘영역 정보 수정’ 클릭",
+      "expected": "창이 열리고 이름 · 설명 · 담당 모델러(이 시스템을 편집할 수 있는 사용자 + ‘(정하지 않음)’)가 지금 값으로 채워짐, 이름 칸에 포커스",
+      "roles": "area.info 가진 담당 모델러 · Admin",
+      "refs": [
+        "area.info"
+      ],
+      "states": [
+        "system.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-system-028",
+      "where": "영역 정보 수정 창",
+      "trigger": "이름을 비우고 [저장]",
+      "expected": "칸 아래 ‘이름을 입력하세요’, 칸이 오류 표시되고 포커스",
+      "roles": "area.info 가진 사용자",
+      "refs": [
+        "area.info"
+      ],
+      "states": [
+        "system.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-system-029",
+      "where": "영역 정보 수정 창",
+      "trigger": "같은 시스템에 있는 이름으로 [저장]",
+      "expected": "‘이 시스템에 같은 이름의 업무 영역이 있습니다(보관함 포함)’ 오류",
+      "roles": "area.info 가진 사용자",
+      "refs": [
+        "area.info"
+      ],
+      "states": [
+        "system.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-system-030",
+      "where": "영역 정보 수정 창",
+      "trigger": "아무것도 바꾸지 않고 [저장]",
+      "expected": "창이 닫히고 토스트 ‘바뀐 내용이 없습니다’",
+      "roles": "area.info 가진 사용자",
+      "refs": [
+        "area.info"
+      ],
+      "states": [
+        "system.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-system-031",
+      "where": "영역 정보 수정 창",
+      "trigger": "바꾼 뒤 [저장]",
+      "expected": "결재 없이 바로 바뀌고 새로고침 후 ‘업무 영역 정보를 바꿨습니다 · <n>건 · 감사 로그에 기록’ 알림, 감사 로그에 ‘업무 영역 정보 수정’(바뀐 항목 전/후) 기록",
+      "roles": "area.info 가진 사용자",
+      "refs": [
+        "area.info",
+        "audit.view"
+      ],
+      "states": [
+        "system.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-system-032",
+      "where": "영역 정보 수정 창",
+      "trigger": "[저장] — 실행 시점에 권한이 없거나 바뀌었을 때",
+      "expected": "저장하지 않고 이유 토스트(예: ‘이 영역을 바꿀 권한이 없습니다(담당 모델러 · Admin)’)",
+      "roles": "area.info 가진 사용자",
+      "refs": [
+        "area.info"
+      ],
+      "states": [
+        "system.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-system-033",
+      "where": "다른 시스템으로 옮기기 창",
+      "trigger": "확정본 · 결재 이력이 없는 영역에서 실행",
+      "expected": "제목 ‘다른 시스템으로 옮기기’, 안내 ‘확정본 · 결재 이력이 없어 영역을 그대로 옮깁니다.’, 버튼 [옮기기]",
+      "roles": "settings · area.manage 가진 Admin",
+      "refs": [
+        "area.manage"
+      ],
+      "states": [
+        "system.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-system-034",
+      "where": "다른 시스템으로 옮기기 창",
+      "trigger": "확정본 또는 결재 이력이 있는 영역에서 실행",
+      "expected": "제목 ‘다른 시스템으로 복제’, 안내 배너 ‘확정본 · 결재 이력이 있어 옮길 수 없습니다. …’, ‘복제본 이름’ 칸이 나오고 버튼 [복제]",
+      "roles": "settings · area.manage 가진 Admin",
+      "refs": [
+        "area.manage"
+      ],
+      "states": [
+        "system.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-system-035",
+      "where": "다른 시스템으로 옮기기 창",
+      "trigger": "창 열림",
+      "expected": "대상 시스템 목록에 지금 시스템을 뺀 사용 시스템이 나오고 가장 최근 등록 시스템이 골라져 있음",
+      "roles": "settings · area.manage 가진 Admin",
+      "refs": [
+        "area.manage"
+      ],
+      "states": [
+        "system.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-system-036",
+      "where": "다른 시스템으로 옮기기 창",
+      "trigger": "옮길 수 있는 다른 시스템이 없을 때",
+      "expected": "목록에 ‘옮길 수 있는 시스템이 없습니다’, 영향 칸에 ‘설정 › 시스템’ 링크, 버튼 비활성, 포커스는 [취소]",
+      "roles": "settings · area.manage 가진 Admin",
+      "refs": [
+        "area.manage",
+        "settings"
+      ],
+      "states": [
+        "system.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-system-037",
+      "where": "다른 시스템으로 옮기기 창",
+      "trigger": "대상 시스템 선택(바꿀 때마다)",
+      "expected": "영향 목록 갱신: 바뀔 컬럼 타입 수(같은 DBMS면 그대로) · 변환 불가 타입과 매핑 화면 링크 · 끊길 참조(옮기기) 또는 다시 이을/빠질 참조(복제) · 대상 시스템 모델러 없음 경고 · 버전 처리 안내",
+      "roles": "settings · area.manage 가진 Admin",
+      "refs": [
+        "area.manage",
+        "type.map"
+      ],
+      "states": [
+        "system.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-system-038",
+      "where": "다른 시스템으로 옮기기 창",
+      "trigger": "대상 시스템에 같은 이름의 영역이 있을 때(옮기기)",
+      "expected": "영향 목록에 ‘…같은 이름의 업무 영역이 있어 옮길 수 없습니다 — 먼저 [영역 정보 수정]으로 이름을 바꾸세요’, [옮기기] 비활성",
+      "roles": "settings · area.manage 가진 Admin",
+      "refs": [
+        "area.manage"
+      ],
+      "states": [
+        "system.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-system-039",
+      "where": "다른 시스템으로 옮기기 창",
+      "trigger": "결재가 진행 중인 영역에서 실행",
+      "expected": "경고 배너 ‘결재가 진행 중입니다 — 결재함에서 회수한 뒤 다시 하세요’와 ‘결재함 열기’ 링크, 실행 버튼 비활성, 포커스는 [취소]",
+      "roles": "settings · area.manage 가진 Admin",
+      "refs": [
+        "area.manage"
+      ],
+      "states": [
+        "system.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-system-040",
+      "where": "다른 시스템으로 옮기기 창",
+      "trigger": "[옮기기] 클릭",
+      "expected": "영역이 대상 시스템으로 옮겨지고 새로고침 후 ‘‘<영역>’을(를) <시스템>(으)로 옮겼습니다 · 컬럼 타입 <n>개 변환 · 감사 로그에 기록’ 알림, 표에서 빠짐",
+      "roles": "settings · area.manage 가진 Admin",
+      "refs": [
+        "area.manage"
+      ],
+      "states": [
+        "system.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-system-041",
+      "where": "다른 시스템으로 옮기기 창",
+      "trigger": "[옮기기] — 실행 중 실패",
+      "expected": "토스트 ‘옮기지 못했습니다 — 이름이 겹치거나 상태가 바뀌었습니다’",
+      "roles": "settings · area.manage 가진 Admin",
+      "refs": [
+        "area.manage"
+      ],
+      "states": [
+        "system.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-system-042",
+      "where": "다른 시스템으로 옮기기 창",
+      "trigger": "[복제] — 복제본 이름이 대상 시스템에 이미 있을 때",
+      "expected": "이름 칸 아래 ‘<시스템>에 같은 이름의 업무 영역이 있습니다’ 오류, 포커스",
+      "roles": "settings · area.manage 가진 Admin",
+      "refs": [
+        "area.manage"
+      ],
+      "states": [
+        "system.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-system-043",
+      "where": "다른 시스템으로 옮기기 창",
+      "trigger": "[복제] 클릭",
+      "expected": "대상 시스템에 v1 작업 중 복제본을 만들고 원본 시스템 홈에 머문 채 원본의 ‘사용 중지’ 창이 바로 열림 — 안내 배너 ‘<시스템>에 복제본 ‘<이름>’을(를) 만들었습니다’와 ‘복제본 열기’ 링크, 사유 칸에 ‘‘<시스템>’ 시스템으로 복제함 — 복제본 ‘<이름>’’이 미리 채워짐",
+      "roles": "settings · area.manage 가진 Admin",
+      "refs": [
+        "area.manage"
+      ],
+      "states": [
+        "system.html?area=rq&act=move"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-system-044",
+      "where": "다른 시스템으로 옮기기 창",
+      "trigger": "[복제] — 실패",
+      "expected": "토스트 ‘복제하지 못했습니다 — 새로고침한 뒤 다시 하세요’",
+      "roles": "settings · area.manage 가진 Admin",
+      "refs": [
+        "area.manage"
+      ],
+      "states": [
+        "system.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-system-045",
+      "where": "사용 중지 · 삭제 창",
+      "trigger": "이력(확정본 · 결재 문서 · 참조)이 있는 영역에서 실행",
+      "expected": "제목 ‘‘<영역>’ 사용 중지’, 삭제할 수 없는 이유와 숨김 · 보관 안내, ‘사유 *’ 칸, 버튼 [사용 중지], 포커스는 사유 칸",
+      "roles": "settings · area.manage 가진 Admin",
+      "refs": [
+        "area.manage"
+      ],
+      "states": [
+        "system.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-system-046",
+      "where": "사용 중지 · 삭제 창",
+      "trigger": "이력이 없는 영역에서 실행",
+      "expected": "제목 ‘‘<영역>’ 삭제’, 위험 배너 ‘…엔터티 <n>개와 함께 지우며 되돌릴 수 없습니다. 감사 로그에는 남습니다.’, 위험 버튼 [삭제], 포커스는 [취소]",
+      "roles": "settings · area.manage 가진 Admin",
+      "refs": [
+        "area.manage"
+      ],
+      "states": [
+        "system.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-system-047",
+      "where": "사용 중지 · 삭제 창",
+      "trigger": "사유 없이 [사용 중지]",
+      "expected": "사유 칸이 오류 표시 · 포커스되고 토스트 ‘사유를 입력하세요’",
+      "roles": "settings · area.manage 가진 Admin",
+      "refs": [
+        "area.manage"
+      ],
+      "states": [
+        "system.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-system-048",
+      "where": "사용 중지 · 삭제 창",
+      "trigger": "사유 입력 후 [사용 중지]",
+      "expected": "영역이 사용 중지되어 표에서 빠지고 새로고침 후 ‘‘<영역>’을(를) 사용 중지했습니다 — 아래 보관함에서 다시 쓸 수 있습니다’ 알림, 보관함이 펼쳐진 채 열림, 감사 로그 기록",
+      "roles": "settings · area.manage 가진 Admin",
+      "refs": [
+        "area.manage",
+        "audit.view"
+      ],
+      "states": [
+        "system.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-system-049",
+      "where": "사용 중지 · 삭제 창",
+      "trigger": "[삭제] 클릭",
+      "expected": "영역과 엔터티가 지워지고 새로고침 후 ‘‘<영역>’을(를) 삭제했습니다 · 감사 로그에 기록’ 알림 — 실패하면 ‘삭제하지 못했습니다 — 상태가 바뀌었습니다’",
+      "roles": "settings · area.manage 가진 Admin",
+      "refs": [
+        "area.manage"
+      ],
+      "states": [
+        "system.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-system-050",
+      "where": "사용 중지 · 삭제 창",
+      "trigger": "결재가 진행 중인 영역에서 실행",
+      "expected": "경고 배너 ‘결재가 진행 중입니다 — 결재함에서 회수한 뒤 다시 하세요’ + ‘결재함 열기’ 링크, 버튼 비활성",
+      "roles": "settings · area.manage 가진 Admin",
+      "refs": [
+        "area.manage"
+      ],
+      "states": [
+        "system.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-system-051",
+      "where": "업무 영역 창 공통",
+      "trigger": "Esc 또는 [취소]",
+      "expected": "창이 닫히고 포커스가 창을 연 ⋯ 버튼으로 돌아감",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "system.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-system-052",
+      "where": "업무 영역 창 공통",
+      "trigger": "주소 system.html?area=<id>&act=edit|move|off 열기(모델 트리 영역 메뉴에서 옴)",
+      "expected": "해당 영역의 그 창이 바로 열림 — 그 항목이 비활성이면 이유 토스트만",
+      "roles": "전체",
+      "refs": [
+        "area.info",
+        "area.manage"
+      ],
+      "states": [
+        "system.html?area=rq&act=edit"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-system-053",
+      "where": "보관함",
+      "trigger": "이 시스템에 사용 중지한 영역이 없을 때",
+      "expected": "‘보관함’ 접이 영역이 숨겨짐",
+      "roles": "전체",
+      "refs": [
+        "area.manage"
+      ],
+      "states": [
+        "system.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-system-054",
+      "where": "보관함",
+      "trigger": "사용 중지한 영역이 있을 때",
+      "expected": "‘보관함 <n> — 사용 중지한 업무 영역’ 아래에 영역 · 버전 · 사유 · 중지한 사람과 시각이 보이고 이름은 model.html?area=<id>(조회 전용) 링크",
+      "roles": "전체",
+      "refs": [
+        "area.manage"
+      ],
+      "states": [
+        "system.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-system-055",
+      "where": "보관함",
+      "trigger": "[다시 사용] 클릭",
+      "expected": "영역이 다시 사용 중이 되고 새로고침 후 ‘‘<영역>’을(를) 다시 씁니다’ 알림 — 같은 이름의 사용 중 영역이 있으면 토스트 ‘같은 이름 ‘<영역>’의 업무 영역이 있어 다시 쓸 수 없습니다 — 그 영역 이름을 먼저 바꾸세요’",
+      "roles": "settings · area.manage 가진 Admin",
+      "refs": [
+        "area.manage"
+      ],
+      "states": [
+        "system.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-system-056",
+      "where": "보관함",
+      "trigger": "Admin이 아닐 때",
+      "expected": "[다시 사용] 버튼이 보이지 않음",
+      "roles": "Admin 외 전체",
+      "refs": [
+        "area.manage"
+      ],
+      "states": [
+        "system.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-system-057",
+      "where": "모두 옮기기 · 복제 창",
+      "trigger": "[사용 중인 영역 모두 옮기기 · 복제] 클릭",
+      "expected": "창이 열리고 대상 시스템(가장 최근 등록 시스템 기본)과 처리 순서표(참조되는 영역 먼저: 순서 · 영역 · 처리(옮기기/복제/건너뜀과 이유) · 타입 변환 수 · 참조 이음/빠짐)가 나옴, 대상 선택에 포커스",
+      "roles": "settings · area.manage 가진 Admin",
+      "refs": [
+        "area.manage",
+        "settings"
+      ],
+      "states": [
+        "system.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-system-058",
+      "where": "모두 옮기기 · 복제 창",
+      "trigger": "대상 시스템 바꾸기",
+      "expected": "처리 계획표가 다시 계산되고 확인 단계가 풀림(버튼 문구 ‘모두 처리’로 복귀)",
+      "roles": "settings · area.manage 가진 Admin",
+      "refs": [
+        "area.manage"
+      ],
+      "states": [
+        "system.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-system-059",
+      "where": "모두 옮기기 · 복제 창",
+      "trigger": "모든 영역이 건너뜀일 때",
+      "expected": "[모두 처리] 비활성",
+      "roles": "settings · area.manage 가진 Admin",
+      "refs": [
+        "area.manage"
+      ],
+      "states": [
+        "system.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-system-060",
+      "where": "모두 옮기기 · 복제 창",
+      "trigger": "옮길 시스템 담당자가 있을 때",
+      "expected": "‘담당 시스템도 함께 옮기기 — <이름들>에게 대상 시스템 담당을 더합니다’ 확인란(기본 켬)이 보임 — 담당자가 없으면 숨김",
+      "roles": "settings · area.manage 가진 Admin",
+      "refs": [
+        "users"
+      ],
+      "states": [
+        "system.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-system-061",
+      "where": "모두 옮기기 · 복제 창",
+      "trigger": "[모두 처리] 첫 클릭",
+      "expected": "바로 실행하지 않고 버튼이 ‘<n>개 처리 확인’으로 바뀌며 경고 ‘한 번 더 누르면 <n>개 영역을 <시스템>(으)로 처리합니다…’",
+      "roles": "settings · area.manage 가진 Admin",
+      "refs": [
+        "area.manage"
+      ],
+      "states": [
+        "system.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-system-062",
+      "where": "모두 옮기기 · 복제 창",
+      "trigger": "확인 버튼 두 번째 클릭",
+      "expected": "영역별로 옮기기/복제 실행(복제 원본은 확인란이 켜져 있으면 사용 중지), 서로 참조하던 영역은 새 영역끼리 다시 이음, 담당 시스템 추가, 감사 로그 기록 후 ‘처리 결과 — 완료 · 실패 · 건너뜀’ 목록(항목마다 ‘열기’ 링크)과 남은 영역 안내 배너 표시, [취소]가 [닫기]로 바뀜",
+      "roles": "settings · area.manage 가진 Admin",
+      "refs": [
+        "area.manage",
+        "audit.view"
+      ],
+      "states": [
+        "system.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-system-063",
+      "where": "모두 옮기기 · 복제 창",
+      "trigger": "처리 결과 — 원래 시스템에 남은 영역이 없을 때",
+      "expected": "안내 배너에 ‘설정 › 시스템 › [시스템 정보]에서 이 시스템 사용 중지’ 링크와 원래 이름을 새 시스템에 쓰는 방법 안내",
+      "roles": "settings · area.manage 가진 Admin",
+      "refs": [
+        "settings"
+      ],
+      "states": [
+        "system.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-system-064",
+      "where": "모두 옮기기 · 복제 창",
+      "trigger": "실행 후 창 닫기(Esc · [닫기])",
+      "expected": "페이지가 새로고침되어 표가 결과를 반영",
+      "roles": "settings · area.manage 가진 Admin",
+      "refs": [
+        "area.manage"
+      ],
+      "states": [
+        "system.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-system-065",
+      "where": "모두 옮기기 · 복제 창",
+      "trigger": "[모두 처리] — 실행 시점에 Admin이 아닐 때",
+      "expected": "토스트 ‘Admin만 할 수 있습니다’",
+      "roles": "settings · area.manage 가진 Admin",
+      "refs": [
+        "settings"
+      ],
+      "states": [
+        "system.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-system-066",
+      "where": "목업 장치",
+      "trigger": "주소에 &audit=1&as=<사용자>",
+      "expected": "스크립트로 이동해도 같은 검토 역할이 유지됨",
+      "roles": "목업",
+      "refs": [],
+      "states": [
+        "system.html?audit=1&as=kim"
+      ],
+      "verify": "exempt",
+      "exemptReason": "목업 전용 데모 기능(검토 모드 · ?as= 역할 바꾸기)"
+    }
+  ]
+}

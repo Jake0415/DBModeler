@@ -1,0 +1,1573 @@
+{
+  "screen": "_shell",
+  "ids": "SC-00",
+  "source": "docs/ux/mockups/assets/app.js · docs/ux/mockups/home.html · docs/ux/mockups/index.html",
+  "behaviors": [
+    {
+      "id": "BH-_shell-001",
+      "where": "상단 바 · 로고",
+      "trigger": "‘NeoDB’ 로고 클릭",
+      "expected": "home.html로 이동. 홈에서는 로고에 현재 화면 표시(aria-current)",
+      "roles": "전체",
+      "refs": [
+        "SC-55"
+      ],
+      "states": [
+        "home.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-_shell-002",
+      "where": "상단 바",
+      "trigger": "로그인 상태의 모든 일반 화면 열기",
+      "expected": "로고 · 기관명 ‘한국데이터진흥원’ · 주 메뉴(표준 사전 · 모델 · 결재함 · 관리) · 검색 · 바구니 · 알림 · 사용자 버튼이 있는 상단 바가 그려짐",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "home.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-_shell-003",
+      "where": "상단 바 · 주 메뉴",
+      "trigger": "현재 화면이 속한 메뉴 계열",
+      "expected": "사전 계열(사전 · 엑셀 · 후보 · 직접 등록 · 도메인 그룹 · 데이터 타입 · 검수 기준 · 공통표준)은 ‘표준 사전’, 시스템 · 모델은 ‘모델’, 결재함은 ‘결재함’, 설정 · 감사 로그 · 시스템 상태는 ‘관리’ 탭이 강조됨(aria-current)",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "dictionary.html",
+        "model.html",
+        "approvals.html",
+        "settings.html?as=lee"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-_shell-004",
+      "where": "상단 바 · 주 메뉴",
+      "trigger": "버튼 ‘표준 사전’ 클릭",
+      "expected": "드롭다운에 통합 검색 · 엑셀 가져오기 · 업로드 이력 · 직접 등록 · 후보 큐 · 변경 내역 · 도메인 그룹 · 분류 · 데이터 타입 · 축약명 · 공통표준 · 행정표준코드 · 검수 기준이 구분선과 함께 보이고 첫 항목에 포커스. 지금 화면 항목은 강조",
+      "roles": "전체",
+      "refs": [
+        "dict.view"
+      ],
+      "states": [
+        "home.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-_shell-005",
+      "where": "상단 바 · 표준 사전 메뉴",
+      "trigger": "판단 대기 후보가 있을 때",
+      "expected": "‘후보 큐’ 항목 옆에 대기 건수 숫자 표시",
+      "roles": "전체",
+      "refs": [
+        "cand.decide"
+      ],
+      "states": [
+        "home.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-_shell-006",
+      "where": "상단 바 · 주 메뉴",
+      "trigger": "링크 ‘모델’ 클릭",
+      "expected": "system.html(시스템 홈)로 이동",
+      "roles": "전체",
+      "refs": [
+        "model.view"
+      ],
+      "states": [
+        "home.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-_shell-007",
+      "where": "상단 바 · 주 메뉴",
+      "trigger": "링크 ‘결재함’ 클릭",
+      "expected": "approvals.html로 이동",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "home.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-_shell-008",
+      "where": "상단 바 · 결재함",
+      "trigger": "내 차례 결재가 있을 때",
+      "expected": "‘결재함’ 옆에 내 차례 건수 숫자, 읽기 이름 ‘결재함 내 차례 N건’",
+      "roles": "appr.da · appr.final 가진 사람 · 대리인",
+      "refs": [
+        "appr.da",
+        "appr.final"
+      ],
+      "states": [
+        "home.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-_shell-009",
+      "where": "상단 바 · 결재함",
+      "trigger": "내 차례 결재 중 기한을 넘긴 것이 있을 때",
+      "expected": "빨간 점 표시(툴팁 ‘기한을 넘긴 결재가 있습니다’), 읽기 이름에 ‘, 기한 넘김 있음’",
+      "roles": "appr.da · appr.final 가진 사람 · 대리인",
+      "refs": [
+        "appr.da",
+        "appr.final"
+      ],
+      "states": [
+        "home.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-_shell-010",
+      "where": "상단 바 · 결재함",
+      "trigger": "화면 안에서 결재 처리 후",
+      "expected": "결재함 숫자 · 기한 넘김 점이 새로고침 없이 다시 계산됨(refreshTop)",
+      "roles": "appr.da · appr.final 가진 사람",
+      "refs": [
+        "appr.da",
+        "appr.final"
+      ],
+      "states": [
+        "approvals.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-_shell-011",
+      "where": "상단 바 · 관리 메뉴",
+      "trigger": "settings 또는 users 권한이 있을 때",
+      "expected": "‘관리’ 드롭다운 보임 — ‘설정’ · ‘감사 로그’",
+      "roles": "settings · users(Admin)",
+      "refs": [
+        "settings",
+        "users",
+        "SC-40",
+        "SC-58"
+      ],
+      "states": [
+        "settings.html?as=lee"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-_shell-012",
+      "where": "상단 바 · 관리 메뉴",
+      "trigger": "settings 권한이 있을 때",
+      "expected": "‘관리’ 드롭다운에 ‘시스템 상태’ 항목 추가",
+      "roles": "settings(Admin)",
+      "refs": [
+        "settings",
+        "SC-OPS"
+      ],
+      "states": [
+        "settings.html?as=lee"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-_shell-013",
+      "where": "상단 바 · 관리 메뉴",
+      "trigger": "settings · users 없고 audit.view만 있을 때",
+      "expected": "드롭다운 대신 단일 링크 ‘감사 로그’(audit.html)만 보임",
+      "roles": "DA · 기관 담당자 · 감리(audit.view)",
+      "refs": [
+        "audit.view",
+        "SC-58"
+      ],
+      "states": [
+        "home.html?as=hyun"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-_shell-014",
+      "where": "상단 바 · 관리 메뉴",
+      "trigger": "settings · users · audit.view 모두 없을 때",
+      "expected": "관리 메뉴 항목이 아예 보이지 않음",
+      "roles": "모델러 · 조회만",
+      "refs": [
+        "audit.view",
+        "settings"
+      ],
+      "states": [
+        "home.html?as=park"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-_shell-015",
+      "where": "상단 바 · 드롭다운 메뉴",
+      "trigger": "메뉴 버튼에서 ↓ 키",
+      "expected": "닫힌 메뉴가 열리고 첫 항목에 포커스",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "home.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-_shell-016",
+      "where": "상단 바 · 드롭다운 메뉴",
+      "trigger": "열린 메뉴에서 ↑ ↓ Home End",
+      "expected": "메뉴 항목 사이를 순환 이동",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "home.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-_shell-017",
+      "where": "상단 바 · 드롭다운 메뉴",
+      "trigger": "Esc 키",
+      "expected": "열린 메뉴가 닫히고 메뉴 버튼으로 포커스 복귀",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "home.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-_shell-018",
+      "where": "상단 바 · 드롭다운 메뉴",
+      "trigger": "메뉴 바깥 클릭 또는 포커스가 메뉴 밖으로 나감",
+      "expected": "열린 메뉴가 닫힘(aria-expanded=false)",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "home.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-_shell-019",
+      "where": "상단 바 · 검색",
+      "trigger": "버튼 ‘검색 (Ctrl K)’ 클릭",
+      "expected": "전체 검색 창이 열리고 검색어 입력에 포커스, 입력은 비워짐",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "home.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-_shell-020",
+      "where": "전역 단축키",
+      "trigger": "Ctrl+K(Mac은 Cmd+K)",
+      "expected": "상단 바가 있는 화면에서 전체 검색 창 열림",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "home.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-_shell-021",
+      "where": "전체 검색 창",
+      "trigger": "검색어가 비어 있을 때",
+      "expected": "‘검색어를 입력하세요. 최근 연 화면·문서는 여기에 보입니다(실제 제품).’ 표시",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "home.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-_shell-022",
+      "where": "전체 검색 창",
+      "trigger": "검색어 입력",
+      "expected": "결과가 ‘표준 사전’(최대 6, 정확 일치 → 앞부분 일치 → 나머지 순, 삭제 보관 제외) · ‘결재 문서’(볼 수 있는 문서만, 최대 5) · ‘모델’(엔터티 · 속성, 최대 8) · ‘화면’(최대 4) 그룹으로 표시되고 첫 결과 선택",
+      "roles": "전체",
+      "refs": [
+        "dict.view",
+        "appr.viewall",
+        "model.view"
+      ],
+      "states": [
+        "home.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-_shell-023",
+      "where": "전체 검색 창",
+      "trigger": "2글자 이하 검색어",
+      "expected": "앞부분 일치로만 찾음(대소문자 무시) — 3글자 이상은 포함 검색",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "home.html"
+      ],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-_shell-024",
+      "where": "전체 검색 창",
+      "trigger": "결과가 없을 때",
+      "expected": "‘‘{검색어}’ 결과가 없습니다. 사전에 없는 단어면 모델에서 후보 등록을 하세요.’ 표시",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "home.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-_shell-025",
+      "where": "전체 검색 창",
+      "trigger": "↑ ↓ 키 / Enter",
+      "expected": "선택 결과 이동 / 선택한 결과 주소로 이동(사전 → dictionary.html?q=…&sel=…, 문서 → approvals.html?doc=…, 모델 → model.html?area=…&focus=…, 화면 → 해당 파일)",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "home.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-_shell-026",
+      "where": "전체 검색 창",
+      "trigger": "Esc 키 또는 창 바깥 클릭",
+      "expected": "검색 창 닫히고 검색 버튼으로 포커스 복귀",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "home.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-_shell-027",
+      "where": "상단 바 · 바구니",
+      "trigger": "dict.request 권한이 있을 때",
+      "expected": "바구니 아이콘 보임, 담긴 항목이 있으면 건수 점 표시, 툴팁 ‘사전 바구니 N건’",
+      "roles": "모델러 · DA(dict.request)",
+      "refs": [
+        "dict.request"
+      ],
+      "states": [
+        "home.html?as=kim"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-_shell-028",
+      "where": "상단 바 · 바구니",
+      "trigger": "바구니 아이콘 클릭",
+      "expected": "dictionary.html?basket=1(바구니 열어서 신청)로 이동",
+      "roles": "모델러 · DA(dict.request)",
+      "refs": [
+        "dict.request",
+        "SC-10"
+      ],
+      "states": [
+        "home.html?as=kim"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-_shell-029",
+      "where": "상단 바 · 바구니",
+      "trigger": "dict.request 권한이 없을 때",
+      "expected": "바구니 아이콘이 보이지 않음",
+      "roles": "기관 담당자 · Admin만 · 감리 · 조회만",
+      "refs": [
+        "dict.request"
+      ],
+      "states": [
+        "home.html?as=hyun"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-_shell-030",
+      "where": "상단 바 · 알림",
+      "trigger": "안 읽은 알림이 있을 때",
+      "expected": "종 아이콘에 안 읽은 건수 점 표시, 읽기 이름 ‘알림 N건’",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "home.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-_shell-031",
+      "where": "상단 바 · 알림",
+      "trigger": "종 아이콘 클릭",
+      "expected": "알림 패널 열림 — ‘알림’ · ‘N 안 읽음’ 배지 · [모두 읽음] · 종류 칩 · 목록(안 읽은 항목 강조, 제목 · 내용 · 시각) · ‘30일 보관 · 메일 알림은 결재선 담당자만’. 다시 누르면 닫힘",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "home.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-_shell-032",
+      "where": "알림 패널",
+      "trigger": "칩 ‘전체 · 결재 · 후보 · 작업 · 참조 · 공지’ 클릭",
+      "expected": "그 종류만 표시(‘결재’는 결재 결과 알림 포함)",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "home.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-_shell-033",
+      "where": "알림 패널",
+      "trigger": "고른 종류의 알림이 없을 때",
+      "expected": "‘이 종류의 알림이 없습니다’ 표시",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "home.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-_shell-034",
+      "where": "알림 패널",
+      "trigger": "알림 항목 클릭",
+      "expected": "그 알림이 읽음 처리되고 알림의 주소로 이동(제품 정보 알림은 제품 정보 창 열림)",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "home.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-_shell-035",
+      "where": "알림 패널",
+      "trigger": "버튼 ‘모두 읽음’ 클릭",
+      "expected": "내 알림 전부 읽음 처리, 목록 강조 해제, 종 아이콘 건수 점 사라짐",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "home.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-_shell-036",
+      "where": "알림 패널",
+      "trigger": "링크 ‘알림 설정’ 클릭",
+      "expected": "mypage.html#notify로 이동",
+      "roles": "전체",
+      "refs": [
+        "SC-51"
+      ],
+      "states": [
+        "home.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-_shell-037",
+      "where": "알림 패널 · 사용자 메뉴",
+      "trigger": "패널 바깥 클릭 또는 Esc",
+      "expected": "열린 알림 패널 · 사용자 메뉴가 닫힘",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "home.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-_shell-038",
+      "where": "알림 패널",
+      "trigger": "마이페이지에서 앱 알림을 끈 종류",
+      "expected": "그 종류의 알림은 알림 목록에 오지 않음 (목업에서 확인 필요)",
+      "roles": "전체",
+      "refs": [
+        "SC-51"
+      ],
+      "states": [
+        "mypage.html#notify"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-_shell-039",
+      "where": "상단 바 · 사용자 메뉴",
+      "trigger": "아바타(이름 첫 글자) 클릭",
+      "expected": "사용자 메뉴 열림 — 이름 · 소속 · 메일 · 역할 배지, 첫 항목에 포커스",
+      "roles": "전체",
+      "refs": [
+        "PN-50"
+      ],
+      "states": [
+        "home.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-_shell-040",
+      "where": "상단 바 · 사용자 메뉴",
+      "trigger": "이번 버전의 제품 정보를 아직 보지 않았을 때",
+      "expected": "아바타에 새 기능 점, 메뉴 ‘제품 정보’ 옆에 ‘새 기능’ 배지",
+      "roles": "전체",
+      "refs": [
+        "PN-50"
+      ],
+      "states": [
+        "home.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-_shell-041",
+      "where": "사용자 메뉴",
+      "trigger": "항목 ‘마이페이지’ · ‘내 신청’ · ‘알림 설정’ 클릭",
+      "expected": "각각 mypage.html · mypage.html#mine · mypage.html#notify로 이동. ‘내 신청’ 옆에 ‘진행 중 N’(보완 필요가 있으면 ‘ · 보완 필요 N’)",
+      "roles": "전체",
+      "refs": [
+        "PN-50",
+        "SC-51"
+      ],
+      "states": [
+        "home.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-_shell-042",
+      "where": "사용자 메뉴",
+      "trigger": "테마 ‘라이트 · 다크 · 시스템’ 클릭",
+      "expected": "테마가 바로 바뀌고 저장(모든 화면 · 다음 방문에 유지), 고른 값 강조",
+      "roles": "전체",
+      "refs": [
+        "PN-50"
+      ],
+      "states": [
+        "home.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-_shell-043",
+      "where": "사용자 메뉴",
+      "trigger": "항목 ‘단축키 ?’ 클릭",
+      "expected": "메뉴 닫히고 단축키 창 열림",
+      "roles": "전체",
+      "refs": [
+        "PN-50"
+      ],
+      "states": [
+        "home.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-_shell-044",
+      "where": "사용자 메뉴",
+      "trigger": "항목 ‘도움말’ 클릭",
+      "expected": "도움말 문서를 새 탭으로 엶 — 목업은 토스트 ‘도움말 문서를 새 탭으로 엽니다(목업)’만 (목업에서 확인 필요)",
+      "roles": "전체",
+      "refs": [
+        "PN-50"
+      ],
+      "states": [
+        "home.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-_shell-045",
+      "where": "사용자 메뉴",
+      "trigger": "항목 ‘제품 정보’ 클릭",
+      "expected": "제품 정보 창 열림(제품 · 버전 · 빌드 · 배포 환경 · 사전 기준 ‘공통표준 {판} · 기관 사전 제정 N차’ · 릴리스 노트 · 오픈소스 라이선스 · 지원 연락처), 본 버전으로 기록되어 새 기능 점 · 배지 사라짐",
+      "roles": "전체",
+      "refs": [
+        "PN-50"
+      ],
+      "states": [
+        "home.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-_shell-046",
+      "where": "제품 정보 창",
+      "trigger": "링크 ‘전문 보기’ 클릭",
+      "expected": "라이선스 전문을 엶 — 목업은 토스트 ‘라이선스 전문을 엽니다(목업)’ (목업에서 확인 필요)",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "home.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-_shell-047",
+      "where": "제품 정보 창",
+      "trigger": "버튼 ‘버전 정보 복사’ 클릭",
+      "expected": "토스트 ‘버전 정보를 복사했습니다’ — 목업은 실제 복사를 하지 않음 (목업에서 확인 필요)",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "home.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-_shell-048",
+      "where": "제품 정보 창 · 단축키 창",
+      "trigger": "버튼 ‘닫기’ · X · Esc",
+      "expected": "창 닫힘",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "home.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-_shell-049",
+      "where": "사용자 메뉴",
+      "trigger": "항목 ‘로그아웃’ 클릭",
+      "expected": "error.html?code=logout(로그아웃 안내, 셸 없음)으로 이동",
+      "roles": "전체",
+      "refs": [
+        "SC-57"
+      ],
+      "states": [
+        "home.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-_shell-050",
+      "where": "사용자 메뉴",
+      "trigger": "메뉴 하단",
+      "expected": "‘NeoDB {버전} · build {빌드}’ 표시",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "home.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-_shell-051",
+      "where": "전역 단축키",
+      "trigger": "? 키(입력 칸 밖, 화면 안내가 없는 화면)",
+      "expected": "단축키 창 열림 — 공통 · 모델 캔버스 단축키 표",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "home.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-_shell-052",
+      "where": "단축키 창",
+      "trigger": "체크 ‘한 글자 단축키(V·E·R·M) 사용’ 바꾸기",
+      "expected": "설정이 저장되어 모델 캔버스 한 글자 단축키가 켜짐/꺼짐(마이페이지 › 환경과 같은 값)",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "home.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-_shell-053",
+      "where": "화면 안내",
+      "trigger": "사전 계열 · 결재함 · 감사 로그 · 설정 · 마이페이지 화면 열기",
+      "expected": "탭 줄(또는 머리) 오른쪽 끝에 ‘화면 안내’ 버튼, 패널은 기본 접힘(사용자가 펼친 화면만 펼친 채 유지)",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "dictionary.html",
+        "approvals.html",
+        "mypage.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-_shell-054",
+      "where": "화면 안내",
+      "trigger": "버튼 ‘화면 안내’ 클릭 또는 ? 키(입력 칸 밖)",
+      "expected": "패널 펼침/접힘 — 설명 · 사용 순서 · 표시 설명 · 언제 · 누가 · 참고 링크. 사용자별 · 화면별로 기억. 탭이 있는 화면은 탭을 바꾸면 내용이 그 탭 것으로 바뀜",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "dictionary.html",
+        "mypage.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-_shell-055",
+      "where": "화면 안내",
+      "trigger": "패널 안에서 Esc 또는 접기 버튼",
+      "expected": "패널 접히고 ‘화면 안내’ 버튼으로 포커스",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "dictionary.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-_shell-056",
+      "where": "사전 화면 탭 줄",
+      "trigger": "사전 계열 화면 열기",
+      "expected": "머리 아래에 사전 화면 탭 줄(통합 검색 · 엑셀 가져오기 · 직접 등록 · 후보 큐 · 변경 내역 · 도메인 그룹 · 분류 · 데이터 타입 · 축약명 · 공통표준 · 행정표준코드 · 검수 기준), 지금 화면 강조. 업로드 이력은 엑셀 가져오기 탭에 속함",
+      "roles": "전체",
+      "refs": [
+        "dict.view"
+      ],
+      "states": [
+        "dictionary.html",
+        "uploads.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-_shell-057",
+      "where": "셸 표시",
+      "trigger": "login.html · error.html?code=logout · error.html?code=expired 열기",
+      "expected": "상단 바 · 모델 트리 없이 본문만 표시(토스트 영역만 있음)",
+      "roles": "전체",
+      "refs": [
+        "SC-56",
+        "SC-57"
+      ],
+      "states": [
+        "login.html",
+        "error.html?code=logout"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-_shell-058",
+      "where": "셸 표시",
+      "trigger": "그 밖의 error.html(403 · 404 · 500 · 점검)",
+      "expected": "로그인 상태 상단 바가 함께 보임",
+      "roles": "전체",
+      "refs": [
+        "SC-57"
+      ],
+      "states": [
+        "error.html?code=404"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-_shell-059",
+      "where": "세션",
+      "trigger": "계정이 사용 중지됐거나, 지금 세션 시작 뒤 관리자가 세션을 끊음(비밀번호 초기화 · 상태 변경)",
+      "expected": "로그인 · 오류 화면이 아닌 화면을 열면 login.html?revoked=1로 바로 이동",
+      "roles": "전체",
+      "refs": [
+        "users"
+      ],
+      "states": [
+        "login.html?revoked=1"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-_shell-060",
+      "where": "세션",
+      "trigger": "계정 사용 기한이 지났을 때",
+      "expected": "로그인 · 오류 화면이 아닌 화면을 열면 login.html?expired=1로 이동, 모든 권한 판정이 거부됨",
+      "roles": "외주 · 감리 등 사용 기한 있는 계정",
+      "refs": [],
+      "states": [
+        "login.html?expired=1"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-_shell-061",
+      "where": "세션",
+      "trigger": "30분 동안 입력 없음",
+      "expected": "세션 만료 후 error.html?code=expired로 이동, 5분 전에 알림 — 목업에는 시간 측정이 없음 (목업에서 확인 필요)",
+      "roles": "전체",
+      "refs": [
+        "SC-57"
+      ],
+      "states": [
+        "error.html?code=expired&from=model.html%3Farea%3Drq"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-_shell-062",
+      "where": "다른 탭 변경",
+      "trigger": "다른 탭에서 사용자(역할)가 바뀜",
+      "expected": "오류 토스트 ‘다른 탭에서 사용자가 바뀌었습니다 — 이 화면의 처리 버튼은 새로고침할 때까지 막힙니다’ + [새로고침] (한 번만)",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "home.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-_shell-063",
+      "where": "다른 탭 변경",
+      "trigger": "다른 탭에서 결재 · 모델 · 사전 · 업로드 · 공표 · 후보 데이터가 바뀜",
+      "expected": "토스트 ‘다른 탭에서 상태가 바뀌었습니다 — 최신 상태로 다시 불러오세요’ + [새로고침] (한 번만)",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "home.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-_shell-064",
+      "where": "토스트",
+      "trigger": "알림 토스트 표시",
+      "expected": "일반은 4초, 동작 버튼이 있으면 12초 뒤 사라짐. 마우스 · 포커스가 올라가 있으면 멈춤. 오류(danger)는 닫기 전까지 남고 [닫기] 버튼이 있음",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "home.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-_shell-065",
+      "where": "토스트",
+      "trigger": "화면 이동 직전에 남긴 메시지(flash)",
+      "expected": "다음 화면이 열린 직후 토스트로 한 번 표시",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "home.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-_shell-066",
+      "where": "돌아가기 배너",
+      "trigger": "&ret=<화면>으로 연 화면",
+      "expected": "본문 위 배너 ‘하던 작업이 있습니다.’ + ‘이전 작업으로 돌아가기’(용어 자동분석이면 ‘용어 자동분석으로 돌아가기’) + [닫기]. 화면 주소가 바뀌어도 이 탭에서 유지, 링크 · 닫기 누르면 사라짐",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "dict-grid.html?ret=term-wizard.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-_shell-067",
+      "where": "대화 상자(모달)",
+      "trigger": "Esc 키",
+      "expected": "열린 창이 닫히고 창을 연 버튼으로 포커스 복귀",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "mypage.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-_shell-068",
+      "where": "대화 상자(모달)",
+      "trigger": "Tab · Shift+Tab",
+      "expected": "포커스가 열린 창 안에서만 순환",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "mypage.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-_shell-069",
+      "where": "대화 상자(모달)",
+      "trigger": "창 열기",
+      "expected": "창 안 첫 입력(없으면 첫 버튼)에 포커스",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "mypage.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-_shell-070",
+      "where": "필수 입력 버튼",
+      "trigger": "data-needs 필드가 비어 있음(공백만도 빈 값)",
+      "expected": "버튼 비활성 + 버튼 옆 안내(기본 ‘사유를 입력해야 합니다’), 필드 aria-invalid. 화면이 막는 이유가 있으면 그 이유를 표시",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "mypage.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-_shell-071",
+      "where": "밑줄 탭",
+      "trigger": "탭 버튼에서 ← → Home End",
+      "expected": "이웃 탭으로 포커스 이동하며 바로 열림(숨긴 탭 건너뜀)",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "mypage.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-_shell-072",
+      "where": "밑줄 탭",
+      "trigger": "주소에 #탭이름",
+      "expected": "그 탭이 열린 채 화면 시작",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "mypage.html#notify"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-_shell-073",
+      "where": "목록 필터 칩",
+      "trigger": "칩으로 거른 결과가 0건일 때",
+      "expected": "표에 ‘필터에 맞는 항목이 없습니다’ + [모두 지우기] 행, [모두 지우기]는 그 그룹 첫 칩(전체)으로 되돌림. 화면 낭독기에 ‘N건’ 알림",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "approvals.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-_shell-074",
+      "where": "클릭 가능한 표 행",
+      "trigger": "행 클릭 / ↑ ↓ / Enter · Space",
+      "expected": "행 선택 강조 + 연결된 오른쪽 패널 열림 / 보이는 이웃 행으로 포커스 / 클릭과 같음. 표 하나는 Tab 한 번으로 빠져나감",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "approvals.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-_shell-075",
+      "where": "작업 버튼",
+      "trigger": "data-busy 버튼 클릭",
+      "expected": "잠깐(기본 0.6초) 진행 중 표시 · 비활성 후 원래대로",
+      "roles": "전체",
+      "refs": [],
+      "states": [],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-_shell-076",
+      "where": "목록 표",
+      "trigger": "주소에 ?skel=1",
+      "expected": "목록 표 위에 짧은 로딩 골격이 보였다 사라짐",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "approvals.html?skel=1"
+      ],
+      "verify": "exempt",
+      "exemptReason": "목업 전용 미리보기 매개변수(?skel=1) — 실제 로딩 표시는 구현에서 정함"
+    },
+    {
+      "id": "BH-_shell-077",
+      "where": "표시 설정",
+      "trigger": "마이페이지에서 고른 표 밀도 · 테마",
+      "expected": "모든 화면에서 저장된 표 밀도(촘촘 32 · 기본 36 · 넓게 44) · 테마로 그려짐",
+      "roles": "전체",
+      "refs": [
+        "SC-51"
+      ],
+      "states": [
+        "home.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-_shell-078",
+      "where": "모델 트리",
+      "trigger": "home · system · model 계열 화면 열기",
+      "expected": "왼쪽에 모델 트리 표시. 사전 · 결재함 · 관리 · 마이페이지 화면은 트리 없이 전체 폭",
+      "roles": "전체",
+      "refs": [
+        "model.view"
+      ],
+      "states": [
+        "home.html",
+        "system.html",
+        "approvals.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-_shell-079",
+      "where": "모델 트리 · 머리",
+      "trigger": "시스템 이름 클릭",
+      "expected": "system.html(시스템 홈)로 이동, 툴팁에 시스템 이름 · DB · 코드",
+      "roles": "전체",
+      "refs": [
+        "model.view",
+        "SC-30"
+      ],
+      "states": [
+        "home.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-_shell-080",
+      "where": "모델 트리 · 머리",
+      "trigger": "버튼 ‘시스템 바꾸기’ 클릭",
+      "expected": "볼 수 있는 시스템만(model.view) 목록으로 열리고, 고르면 system.html?system=<코드>로 이동",
+      "roles": "전체",
+      "refs": [
+        "model.view"
+      ],
+      "states": [
+        "home.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-_shell-081",
+      "where": "모델 트리 · 찾기",
+      "trigger": "‘엔터티·속성·테이블·용어 찾기’에 입력",
+      "expected": "맞는 영역 · 엔터티 · 속성 · 관계 · 용어만 남고 일치 부분 강조, 2글자 이하는 앞부분 일치. 화면 낭독기에 ‘N건 찾음’ / ‘맞는 객체가 없습니다’",
+      "roles": "전체",
+      "refs": [
+        "model.view"
+      ],
+      "states": [
+        "home.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-_shell-082",
+      "where": "모델 트리 · 찾기",
+      "trigger": "맞는 객체가 없을 때",
+      "expected": "트리 자리에 ‘맞는 객체가 없습니다’",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "home.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-_shell-083",
+      "where": "모델 트리 · 찾기",
+      "trigger": "찾기 칸에서 Esc / ↓",
+      "expected": "검색어 지우고 트리 원래대로 / 첫 트리 행으로 포커스",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "home.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-_shell-084",
+      "where": "모델 트리 · 거르기",
+      "trigger": "메뉴 ‘거르기’에서 미준수만 · 예외 있는 것만 · 참조 숨기기 · 분류(전체 · 기준 · 거래 · 이력 · 코드)",
+      "expected": "조건에 맞는 엔터티만 표시, 찾기 아래에 적용 조건 요약 + [지우기]",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "home.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-_shell-085",
+      "where": "모델 트리 · 거르기",
+      "trigger": "버튼 ‘지우기’ 클릭",
+      "expected": "모든 거르기 해제, 찾기 칸으로 포커스",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "home.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-_shell-086",
+      "where": "모델 트리 · 거르기",
+      "trigger": "행 간격 ‘촘촘 · 기본 · 넓게’",
+      "expected": "트리 행 높이 바뀜, 사용자별 저장(고르지 않으면 표 밀도 설정을 따름)",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "home.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-_shell-087",
+      "where": "모델 트리 · 업무 영역 머리",
+      "trigger": "area.create 권한이 있을 때",
+      "expected": "‘+ 새 업무 영역’ 버튼 보이고 누르면 system.html#new로 이동. 권한 없으면 숨김",
+      "roles": "모델러 · DA · Admin(area.create, 담당 시스템)",
+      "refs": [
+        "area.create"
+      ],
+      "states": [
+        "home.html?as=kim",
+        "home.html?as=hyun"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-_shell-088",
+      "where": "모델 트리 · 업무 영역 머리",
+      "trigger": "버튼 ‘트리 보는 법’ 클릭",
+      "expected": "아이콘별 뜻(업무 영역 · 다이어그램 · 테이블 · 컬럼 · PK · FK · 서브타입 · 용어 · 도메인 · 제약조건 · 인덱스 · 참조)과 준수 상태 색 설명이 메뉴로 열림",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "home.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-_shell-089",
+      "where": "모델 트리",
+      "trigger": "트리 그려짐",
+      "expected": "업무 영역 › 다이어그램 · 엔터티(6개 넘고 종류가 둘 이상이면 기준 정보 · 거래 · 이력 · 코드 묶음) · 다른 영역에서 참조 · 관계 · 서브타입 · 표준 용어 · 도메인. 물리 모드는 테이블 · 관계(FK) · 제약조건 · 인덱스. 엔터티마다 준수 점 · 미준수 수, 영역마다 상태 배지(검토 · 확정 · v번호)",
+      "roles": "전체",
+      "refs": [
+        "model.view"
+      ],
+      "states": [
+        "home.html",
+        "model.html",
+        "ddl.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-_shell-090",
+      "where": "모델 트리",
+      "trigger": "영역 · 폴더 행 클릭(또는 펼침 화살표)",
+      "expected": "펼침/접힘, 사용자별 · 영역 버전별로 기억",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "home.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-_shell-091",
+      "where": "모델 트리",
+      "trigger": "홈 · 시스템 홈에서 객체 행 한 번 클릭",
+      "expected": "행만 선택. 이 탭에서 처음이면 토스트 ‘두 번 누르거나 Enter를 누르면 모델 화면에서 엽니다’(용어 · 도메인은 ‘사전에서 엽니다’)",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "home.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-_shell-092",
+      "where": "모델 트리",
+      "trigger": "객체 행 두 번 클릭 또는 Enter · Space",
+      "expected": "엔터티 · 속성 → model.html?area=…&focus=…(&attr=…)&tree=1, 다이어그램 → model.html?area=…&view=…, 용어 · 도메인 → dictionary.html?q=…(두 번 클릭은 사용 엔터티로 모델 열기). 모델 화면에서는 그 화면이 선택 처리",
+      "roles": "전체",
+      "refs": [
+        "model.view"
+      ],
+      "states": [
+        "home.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-_shell-093",
+      "where": "모델 트리 · 키보드",
+      "trigger": "↑ ↓ Home End ← → * 글자 키",
+      "expected": "행 이동 / 처음 · 끝 / 접기 · 부모로 / 펼치기 · 첫 자식으로 / 같은 단계 모두 펼치기 / 그 글자로 시작하는 다음 행으로",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "home.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-_shell-094",
+      "where": "모델 트리 · 노드 메뉴",
+      "trigger": "행 오른쪽 클릭 · ⋯ 버튼 · Shift+F10 · 메뉴 키",
+      "expected": "행 종류별 메뉴 열림(첫 사용 가능 항목에 포커스, ↑ ↓ Home End · 글자 키 이동, Esc · Tab · ← 닫고 행으로 복귀, 바깥 클릭 · 스크롤 · 창 크기 변경 시 닫힘)",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "home.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-_shell-095",
+      "where": "모델 트리 · 노드 메뉴",
+      "trigger": "메뉴 항목 구성",
+      "expected": "영역: 모델 열기 · 표준 맞추기 · DDL 만들기 · 산출물 · 결재함 열기 · 보기 추가 · 영역 정보 수정… · 다른 시스템으로 옮기기 · 복제… · 사용 중지 · 삭제… · 모두 펼치기/접기. 엔터티: 선택 · 위치 맞춤 · 이름 바꾸기 F2 · 속성 추가 Insert · 표준 맞추기 · DDL 미리보기 · 사용처 · 보기에 배치/빼기 · 다른 영역으로 옮기기… · 삭제 Delete. 속성 · 관계 · 보기 · 용어 · 도메인 · 제약조건 · 인덱스도 각자 메뉴",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "home.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-_shell-096",
+      "where": "모델 트리 · 노드 메뉴",
+      "trigger": "편집 항목을 쓸 수 없을 때",
+      "expected": "항목에 자물쇠 + 툴팁 이유, 누르면 이유 토스트: ‘다른 영역에서 참조한 객체 — 원본 영역에서만 고칠 수 있습니다’ · ‘제출본은 조회 전용입니다’ · ‘결재 중이라 편집할 수 없습니다 — 회수하거나 결재가 끝난 뒤 편집하세요’ · ‘확정본은 고칠 수 없습니다 — 다음 작업 버전에서 편집하세요’ · ‘담당 시스템에 {시스템} 영역이 없어 조회만 할 수 있습니다’ · ‘모델 편집은 모델러만 할 수 있습니다’",
+      "roles": "전체",
+      "refs": [
+        "model.edit"
+      ],
+      "states": [
+        "home.html?as=hyun",
+        "model.html?area=risk"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-_shell-097",
+      "where": "모델 트리 · 노드 메뉴",
+      "trigger": "settings 권한 없이 영역 메뉴 ‘옮기기 · 복제’ · ‘사용 중지 · 삭제’",
+      "expected": "항목 잠김, 이유 ‘Admin만 할 수 있습니다’",
+      "roles": "Admin 아닌 사람",
+      "refs": [
+        "settings",
+        "area.manage"
+      ],
+      "states": [
+        "home.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-_shell-098",
+      "where": "모델 트리 · 노드 메뉴",
+      "trigger": "이동 항목(모델 열기 · 표준 맞추기 · DDL · 산출물 · 결재함 열기 · 사전 화면 열기 · 후보 큐 보기 · 사전에서 보기 · 원본 열기 · 영역 정보 수정 등)",
+      "expected": "해당 화면 주소로 이동(모델 화면 사전 탭이 있으면 ‘사전에서 보기’는 그 탭에서 검색)",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "home.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-_shell-099",
+      "where": "모델 트리 · 노드 메뉴",
+      "trigger": "편집 명령(이름 바꾸기 · 속성 추가 · 삭제 등)을 모델 화면이 아닌 곳에서 실행",
+      "expected": "이 탭에만 남는 일회용 명령으로 model.html?area=…&focus=…를 열고 거기서 실행",
+      "roles": "모델러(model.edit)",
+      "refs": [
+        "model.edit"
+      ],
+      "states": [
+        "home.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-_shell-100",
+      "where": "모델 트리 · 노드 메뉴",
+      "trigger": "항목 ‘사용처 (관계)’",
+      "expected": "토스트 ‘‘{엔터티}’ — 부모 N: … · 자식 N: …’ (모델 화면은 해당 엔터티 강조)",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "home.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-_shell-101",
+      "where": "모델 트리 · 키보드",
+      "trigger": "F2 · Delete인데 그 행에 해당 명령이 없을 때",
+      "expected": "토스트 ‘이 항목은 이름을 바꿀 수 없습니다’ / ‘이 항목은 트리에서 지울 수 없습니다’",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "home.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-_shell-102",
+      "where": "모델 트리 · 노드 메뉴",
+      "trigger": "목업 표시 항목(관계 FK ‘이름 규칙 다시 적용’)",
+      "expected": "토스트 ‘제약조건 이름을 명명 템플릿대로 다시 만듭니다(목업) — 시스템 설정 › 명명 템플릿’",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "ddl.html"
+      ],
+      "verify": "exempt",
+      "exemptReason": "목업 전용 표시 항목 — 기능은 구현 범위에서 정함"
+    },
+    {
+      "id": "BH-_shell-103",
+      "where": "모델 트리",
+      "trigger": "엔터티 행 끌기",
+      "expected": "모델 캔버스에 놓으면 같은 영역은 지금 보기에 배치, 다른 영역은 참조로 추가(모델 화면이 처리)",
+      "roles": "모델러(model.edit)",
+      "refs": [
+        "model.edit"
+      ],
+      "states": [
+        "model.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-_shell-104",
+      "where": "모델 트리",
+      "trigger": "캔버스에서 엔터티 · 속성 선택",
+      "expected": "트리가 그 행을 펼쳐 표시 · 강조하고 보이도록 스크롤(키보드 포커스는 옮기지 않음)",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "model.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-_shell-105",
+      "where": "모델 트리 · 하단",
+      "trigger": "링크 ‘시스템 전체 ERD’ · ‘엑셀 정의서 가져오기’ · ‘DDL 가져오기’",
+      "expected": "model.html?sys=1 · import-excel.html(&area 유지) · import.html(&area 유지)로 이동, 지금 화면이면 강조",
+      "roles": "전체",
+      "refs": [
+        "SC-36",
+        "SC-36a"
+      ],
+      "states": [
+        "home.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-_shell-106",
+      "where": "모델 트리 · 최근 연 엔터티",
+      "trigger": "모델에서 엔터티 패널을 연 적이 있을 때 / 없을 때",
+      "expected": "최근 3개가 링크로(엔터티 · 영역 이름) 보이고 누르면 model.html?area=…&focus=… / ‘모델에서 엔터티를 열면 여기에 남습니다’",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "home.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-_shell-107",
+      "where": "모델 트리 · 접기",
+      "trigger": "버튼 ‘접기’ · [«] · Ctrl+B(입력 칸 밖)",
+      "expected": "왼쪽 칸이 아이콘 레일(시스템 홈 · 영역 첫 글자 · 시스템 전체 ERD · 가져오기)로 접힘/펼침, 사용자별 저장",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "home.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-_shell-108",
+      "where": "모델 트리 · 접기",
+      "trigger": "접힌 레일의 [»] 클릭",
+      "expected": "트리 펼침, [«]로 포커스",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "home.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-_shell-109",
+      "where": "모델 트리 · 접기",
+      "trigger": "사용자가 고른 적 없이 model.html을 1920px 미만(또는 1600 프레임)으로 열기",
+      "expected": "트리가 접힌 채 시작(트리에서 온 &tree=1이면 펼침)",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "model.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-_shell-110",
+      "where": "모델 트리 · 접기",
+      "trigger": "모델 화면에서 캔버스 760px + 트리 240px이 들어가지 않을 때",
+      "expected": "트리가 먼저 접힘(기억하지 않음)",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "model.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-_shell-111",
+      "where": "모델 트리 · 폭",
+      "trigger": "모델 계열 화면에서 폭 조절 손잡이 끌기 · ← → 키",
+      "expected": "240px부터 캔버스 760px을 남기는 폭까지 조절, 사용자별 저장(홈 · 시스템 홈은 내용에 맞춰 최대 400px)",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "model.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-_shell-112",
+      "where": "모델 트리 · 폭",
+      "trigger": "폭 조절 손잡이 두 번 클릭",
+      "expected": "내용에 맞춘 폭으로, 토스트 ‘트리 폭을 내용에 맞췄습니다 · Npx’",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "model.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-_shell-113",
+      "where": "모델 트리 · 모델 화면",
+      "trigger": "탭 ‘모델 | 사전’ 클릭 · ← → · Alt+1 / Alt+2",
+      "expected": "왼쪽 칸이 모델 트리 / 사전 패널로 바뀜(접혀 있으면 펼침), 마지막 탭 기억",
+      "roles": "전체",
+      "refs": [
+        "PN-32"
+      ],
+      "states": [
+        "model.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-_shell-114",
+      "where": "상단 바 · 목업 도구",
+      "trigger": "점선 버튼 ‘목업’ 클릭",
+      "expected": "목업 도구 팝업(역할 · 화면 크기 · 테마 · 화면 정보 · 목업 지도 · 퍼블리싱 점검 · 데이터 초기화), 남은 검토 메모 수 표시",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "home.html"
+      ],
+      "verify": "exempt",
+      "exemptReason": "목업 전용 데모 기능"
+    },
+    {
+      "id": "BH-_shell-115",
+      "where": "목업 도구",
+      "trigger": "역할 선택 바꾸기",
+      "expected": "그 사용자로 바뀌어 새 세션으로 다시 열림(?as= 제거)",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "home.html"
+      ],
+      "verify": "exempt",
+      "exemptReason": "목업 전용 데모 기능(역할 바꾸기)"
+    },
+    {
+      "id": "BH-_shell-116",
+      "where": "목업 도구",
+      "trigger": "화면 크기 ‘맞춤 · 1920 · 1600’ · 테마 ‘라이트 · 다크’",
+      "expected": "프레임 폭 · 테마 미리보기 바뀜",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "home.html"
+      ],
+      "verify": "exempt",
+      "exemptReason": "목업 전용 데모 기능"
+    },
+    {
+      "id": "BH-_shell-117",
+      "where": "목업 도구",
+      "trigger": "버튼 ‘화면 정보’ · ‘목업 지도’ · ‘퍼블리싱 점검’",
+      "expected": "화면 ID · 상태별 바로가기 · 설계 문서 · 검토 메모 패널 / index.html / 디자인 가이드 점검 표",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "home.html"
+      ],
+      "verify": "exempt",
+      "exemptReason": "목업 전용 데모 기능"
+    },
+    {
+      "id": "BH-_shell-118",
+      "where": "목업 도구",
+      "trigger": "버튼 ‘데이터 초기화’",
+      "expected": "결재 진행 · 알림 읽음 등 목업 데이터 초기화 후 토스트 ‘목업 데이터를 초기화했습니다’",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "home.html"
+      ],
+      "verify": "exempt",
+      "exemptReason": "목업 전용 데모 기능(초기화 버튼)"
+    },
+    {
+      "id": "BH-_shell-119",
+      "where": "주소",
+      "trigger": "?as=<사용자> · &audit=1",
+      "expected": "그 사용자 역할로 화면 열기(검토 모드는 화면 이동에도 역할 유지)",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "home.html?as=kim"
+      ],
+      "verify": "exempt",
+      "exemptReason": "목업 전용 데모 기능(?as=)"
+    },
+    {
+      "id": "BH-_shell-120",
+      "where": "목업 지도",
+      "trigger": "index.html 열기",
+      "expected": "역할별 바로가기 · 교차 시나리오 · 화면 지도 표",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "index.html"
+      ],
+      "verify": "exempt",
+      "exemptReason": "목업 전용 안내 페이지(목업 지도)"
+    }
+  ]
+}

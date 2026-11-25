@@ -1,0 +1,388 @@
+{
+  "screen": "uploads.html",
+  "ids": "SC-15",
+  "source": "docs/ux/mockups/uploads.html",
+  "behaviors": [
+    {
+      "id": "BH-uploads-001",
+      "where": "머리",
+      "trigger": "버튼 ‘엑셀 가져오기’ 클릭",
+      "expected": "excel-import.html 로 이동",
+      "roles": "전체",
+      "refs": ["SC-13"],
+      "states": ["uploads.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-uploads-002",
+      "where": "목록",
+      "trigger": "화면 열기",
+      "expected": "볼 수 있는 업로드 묶음만 최근 업로드 순으로 표시 — 내가 올린 묶음 + excel.viewall이면 다른 사람 묶음까지",
+      "roles": "전체 (다른 사람 묶음은 excel.viewall)",
+      "refs": ["excel.viewall"],
+      "states": ["uploads.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-uploads-003",
+      "where": "목록",
+      "trigger": "excel.viewall 없는 사용자(모델러)가 열기",
+      "expected": "다른 사람이 올린 묶음은 목록에 보이지 않음",
+      "roles": "modeler 등 excel.viewall 없음",
+      "refs": ["excel.viewall"],
+      "states": ["uploads.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-uploads-004",
+      "where": "도구 줄 · 검색",
+      "trigger": "검색창에 입력(파일명 · 업로드 번호 · 신청번호)",
+      "expected": "즉시 걸러지고 선택이 풀리며 주소 q= 가 갱신됨",
+      "roles": "전체",
+      "refs": ["ST-R03"],
+      "states": ["uploads.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-uploads-005",
+      "where": "도구 줄 · 검색",
+      "trigger": "검색창에서 Esc / ↓",
+      "expected": "Esc: 검색어가 있으면 지우고 다시 그림. ↓: 첫 행으로 포커스 이동",
+      "roles": "전체",
+      "refs": [],
+      "states": ["uploads.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-uploads-006",
+      "where": "도구 줄 · 상태 칩",
+      "trigger": "칩(전체 · 임시 저장 · 신청됨 · 반영됨 · 반려·회수 · 취소) 클릭",
+      "expected": "그 상태의 묶음만 보이고 선택이 풀리며 주소 f= 갱신. 상태는 연결 신청 단계를 따름(결재 중 → 신청됨, 완료 → 반영됨, 반려·회수 → 보완)",
+      "roles": "전체",
+      "refs": [],
+      "states": ["uploads.html?f=임시 저장"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-uploads-007",
+      "where": "목록 머리",
+      "trigger": "필터 · 검색 상태(자동)",
+      "expected": "‘n건’ 또는 ‘{전체}건 중 n건’ · 최근 업로드 순, 걸린 필터 칩 ‘상태: …’ · ‘검색: …’과 [모두 지우기]",
+      "roles": "전체",
+      "refs": ["ST-R03"],
+      "states": ["uploads.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-uploads-008",
+      "where": "목록 머리",
+      "trigger": "필터 칩의 × 또는 [모두 지우기] 클릭",
+      "expected": "그 필터(또는 모두)가 풀리고 선택이 해제되며 검색창에 포커스",
+      "roles": "전체",
+      "refs": [],
+      "states": ["uploads.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-uploads-009",
+      "where": "목록 행",
+      "trigger": "목록 표시(자동)",
+      "expected": "업로드 번호 · 시각 · 파일 · 종류 · 올린 사람 · 기준본 · 행 수 · 결과(‘신규 n · 변경 n · 후보 n · 동일 n · 보류 n · 오류 n’ 또는 메모) · 연결 신청(신청번호 + 단계) · 상태 배지(반려·회수는 ‘반려·회수 — 보완 필요’)",
+      "roles": "전체",
+      "refs": ["MD-08"],
+      "states": ["uploads.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-uploads-010",
+      "where": "목록 행",
+      "trigger": "보류 행이 남은 묶음(자동)",
+      "expected": "상태 옆 배지 ‘보류 n 남음’(툴팁 ‘앞선 신청이 끝나면 업로드 이력에서 [보류 행 다시 검증]으로 이어서 신청’)",
+      "roles": "전체",
+      "refs": [],
+      "states": ["uploads.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-uploads-011",
+      "where": "목록 행",
+      "trigger": "임시 저장 · 보완 묶음이 검증 뒤 검수 기준 · 사전이 바뀜(자동)",
+      "expected": "배지 ‘재검증 필요’(툴팁 ‘검증 뒤 검수 기준·사전이 바뀜’)",
+      "roles": "전체",
+      "refs": ["SC-43"],
+      "states": ["uploads.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-uploads-012",
+      "where": "목록 행 · 상세 패널",
+      "trigger": "연결 신청 링크 클릭",
+      "expected": "approvals.html?doc={신청번호} 로 이동",
+      "roles": "전체",
+      "refs": ["SC-20"],
+      "states": ["uploads.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-uploads-013",
+      "where": "목록 행",
+      "trigger": "행 클릭 · Enter",
+      "expected": "그 행이 선택되고 오른쪽 상세 패널이 열리며 주소 sel= 갱신. 처음 열 때 자동 선택 없음",
+      "roles": "전체",
+      "refs": [],
+      "states": ["uploads.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-uploads-014",
+      "where": "목록",
+      "trigger": "필터 · 검색으로 결과가 비었을 때",
+      "expected": "‘필터에 맞는 업로드가 없습니다’ + [모두 지우기]",
+      "roles": "전체",
+      "refs": [],
+      "states": ["uploads.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-uploads-015",
+      "where": "목록",
+      "trigger": "볼 수 있는 업로드가 하나도 없을 때",
+      "expected": "‘아직 업로드가 없습니다’ · ‘사전에서 편집용 엑셀을 내려받아 고친 뒤 올리면 여기에 묶음으로 남습니다.’ + [엑셀 가져오기]",
+      "roles": "전체",
+      "refs": [],
+      "states": ["uploads.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-uploads-016",
+      "where": "상세 패널",
+      "trigger": "주소 ?b={ID} 또는 ?sel={ID} 로 열기",
+      "expected": "그 묶음의 상세 패널이 열린 채 시작(b= 는 예전 주소 별칭)",
+      "roles": "전체",
+      "refs": [],
+      "states": ["uploads.html?b=UP-2026-0007"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-uploads-017",
+      "where": "상세 패널",
+      "trigger": "없는 업로드 ID로 열기",
+      "expected": "경고 배너 ‘{ID} 업로드를 찾을 수 없습니다.’",
+      "roles": "전체",
+      "refs": [],
+      "states": ["uploads.html?b=UP-9999-0000"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-uploads-018",
+      "where": "상세 패널",
+      "trigger": "볼 권한 없는 다른 사람의 묶음 ID로 열기",
+      "expected": "내용 없이 ‘다른 사람이 올린 업로드입니다 — 올린 사람과 DA만 볼 수 있습니다.’",
+      "roles": "excel.viewall 없음",
+      "refs": ["excel.viewall"],
+      "states": ["uploads.html?b=UP-2026-0007"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-uploads-019",
+      "where": "상세 패널 · 머리",
+      "trigger": "묶음 선택",
+      "expected": "업로드 번호 · 종류 배지 · 파일명 · ‘{올린 사람} · {시각} · 기준본 {ID}’",
+      "roles": "전체",
+      "refs": [],
+      "states": ["uploads.html?b=UP-2026-0007"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-uploads-020",
+      "where": "상세 패널 · 머리",
+      "trigger": "닫기(×, ‘상세 닫기 — 묶음은 그대로’) 클릭",
+      "expected": "패널이 닫히고 선택 해제(주소 sel 제거), 포커스는 그 행으로 돌아감",
+      "roles": "전체",
+      "refs": [],
+      "states": ["uploads.html?b=UP-2026-0007"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-uploads-021",
+      "where": "상세 패널 · 검증·비교 결과",
+      "trigger": "묶음 선택",
+      "expected": "신규 · 변경 · 동일 · 동일 내용 대기 · 다른 내용 대기(보류) · 버전 충돌 · 후보 선택 · 선행 승인(보류) · 오류 · 파일에서 빠짐 건수. 결과가 없으면 경고 배너(메모 또는 ‘검증 결과 없음’)",
+      "roles": "전체",
+      "refs": ["MD-08"],
+      "states": ["uploads.html?b=UP-2026-0007"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-uploads-022",
+      "where": "상세 패널",
+      "trigger": "신청한 묶음 선택",
+      "expected": "‘신청한 내용’ — ‘신규 n · 변경 n · 후보 n · 미사용 n — 보류 n · 제외 n’",
+      "roles": "전체",
+      "refs": [],
+      "states": ["uploads.html?b=UP-2026-0007"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-uploads-023",
+      "where": "상세 패널 · 연결 신청",
+      "trigger": "묶음 선택",
+      "expected": "연결 신청마다 신청번호 링크 · 단계 배지 · 건수. 없으면 ‘아직 신청하지 않았습니다’",
+      "roles": "전체",
+      "refs": ["MD-21"],
+      "states": ["uploads.html?b=UP-2026-0007"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-uploads-024",
+      "where": "상세 패널",
+      "trigger": "재검증 필요 묶음 선택",
+      "expected": "경고 배너 ‘검증 뒤 검수 기준 또는 사전이 바뀌었습니다 — [이어서 작업]에서 다시 검증해야 신청할 수 있습니다. 화면에서 고친 값은 유지됩니다.’",
+      "roles": "전체",
+      "refs": [],
+      "states": ["uploads.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-uploads-025",
+      "where": "상세 패널",
+      "trigger": "반려·회수된 묶음 선택",
+      "expected": "경고 배너 ‘반려·회수됐습니다. 이어서 보정한 뒤 다시 신청하면 새 신청번호가 만들어지고 이 묶음에 연결됩니다.’",
+      "roles": "전체",
+      "refs": ["MD-21"],
+      "states": ["uploads.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-uploads-026",
+      "where": "상세 패널 · 보류",
+      "trigger": "보류 행이 있고 아직 이어지지 않은 신청 묶음 선택",
+      "expected": "배너 ‘보류 n행 — 앞선 신청이 끝나면 다시 검증해 새 업로드 묶음으로 이어서 신청합니다.’ 올린 사람에게만 [보류 행 다시 검증] 보임",
+      "roles": "버튼: 올린 사람",
+      "refs": [],
+      "states": ["uploads.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-uploads-027",
+      "where": "상세 패널 · 보류",
+      "trigger": "버튼 ‘보류 행 다시 검증’ 클릭 — 진행할 수 있는 행이 있음",
+      "expected": "보류 행을 지금 상태로 다시 판정해 새 임시 저장 묶음 ‘{파일} (보류 행)’을 만들고 그 묶음을 선택, 원 묶음에 이어짐 기록. 토스트 ‘보류 n행 다시 검증 — 신청 가능 a · 아직 대기 b. 새 묶음 {ID}에서 이어서 신청하세요’ + [이어서 작업] → excel-import.html?resume={ID}",
+      "roles": "올린 사람",
+      "refs": ["MD-08"],
+      "states": ["uploads.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-uploads-028",
+      "where": "상세 패널 · 보류",
+      "trigger": "[보류 행 다시 검증] — 모든 보류 행이 아직 대기",
+      "expected": "새 묶음을 만들지 않고 토스트 ‘보류 n행 모두 아직 앞선 신청이 진행 중입니다 — 끝나면 다시 검증하세요’",
+      "roles": "올린 사람",
+      "refs": [],
+      "states": ["uploads.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-uploads-029",
+      "where": "상세 패널 · 보류",
+      "trigger": "[보류 행 다시 검증] — 다시 검증할 행 상세가 없음",
+      "expected": "토스트 ‘이 묶음에는 다시 검증할 보류 행이 없습니다(목업 시드는 행 상세가 없음)’",
+      "roles": "올린 사람",
+      "refs": [],
+      "states": ["uploads.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-uploads-030",
+      "where": "상세 패널 · 보류",
+      "trigger": "다른 탭에서 사용자가 바뀐 뒤 [보류 행 다시 검증]",
+      "expected": "처리하지 않고 토스트 ‘다른 탭에서 사용자가 바뀌었습니다(지금 {이름}) — 새로고침한 뒤 다시 처리하세요’ + [새로고침]",
+      "roles": "올린 사람",
+      "refs": [],
+      "states": ["uploads.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-uploads-031",
+      "where": "상세 패널",
+      "trigger": "보류 행이 이어진 묶음 · 이어받은 묶음 선택",
+      "expected": "‘보류 행은 {ID}로 이어졌습니다.’ 또는 ‘원 묶음 {ID}의 보류 행입니다.’ — 링크는 uploads.html?b={ID}",
+      "roles": "전체",
+      "refs": [],
+      "states": ["uploads.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-uploads-032",
+      "where": "상세 패널",
+      "trigger": "반영본 재업로드로 왕복 완료가 기록된 묶음 선택",
+      "expected": "‘왕복 완료 — 반영본 재업로드 n행 모두 동일 ({시각})’",
+      "roles": "전체",
+      "refs": ["MD-08"],
+      "states": ["uploads.html?b=UP-2026-0007"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-uploads-033",
+      "where": "상세 패널 · 하단",
+      "trigger": "버튼 ‘이어서 작업’ 클릭",
+      "expected": "excel-import.html?resume={ID} 로 이동. 내가 올린 임시 저장 · 보완 묶음에만 보임",
+      "roles": "올린 사람",
+      "refs": [],
+      "states": ["uploads.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-uploads-034",
+      "where": "상세 패널 · 하단",
+      "trigger": "버튼 ‘원본’ 클릭",
+      "expected": "올린 원본 파일 내려받기 — 열람 기록이 감사 로그에 남음. 목업은 토스트 ‘원본_{파일} — 내려받기 시연(목업)…’ (목업에서 확인 필요)",
+      "roles": "올린 사람 · excel.viewall",
+      "refs": ["excel.viewall", "audit.view"],
+      "states": ["uploads.html?b=UP-2026-0007"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-uploads-035",
+      "where": "상세 패널 · 하단",
+      "trigger": "버튼 ‘보정본’ 클릭(검증 결과가 있는 묶음만 보임)",
+      "expected": "‘보정본_{ID}.xlsx’ 내려받기 — 화면에서 고친 값 + ‘변경점’ 시트. 목업은 토스트로 시연(목업에서 확인 필요)",
+      "roles": "올린 사람 · excel.viewall",
+      "refs": [],
+      "states": ["uploads.html?b=UP-2026-0007"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-uploads-036",
+      "where": "상세 패널 · 하단",
+      "trigger": "반영됨 묶음에서 버튼 ‘반영본’ 클릭",
+      "expected": "‘반영본_{ID}.xlsx’ 내려받기 — 반영 시점의 새 버전·ID. 이어서 작업이 없으면 주 버튼. 목업은 토스트로 시연(목업에서 확인 필요)",
+      "roles": "올린 사람 · excel.viewall",
+      "refs": ["MD-08"],
+      "states": ["uploads.html?b=UP-2026-0007"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-uploads-037",
+      "where": "상세 패널 · 하단",
+      "trigger": "반영됨 묶음에서 버튼 ‘반영본 다시 올려 확인’ 클릭",
+      "expected": "excel-import.html?verify={ID} 로 이동",
+      "roles": "올린 사람 · excel.viewall",
+      "refs": ["SC-13"],
+      "states": ["uploads.html?b=UP-2026-0007"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-uploads-038",
+      "where": "상세 패널 · 하단",
+      "trigger": "화면 표시",
+      "expected": "안내 문구 ‘내려받기 시연(목업)’",
+      "roles": "전체",
+      "refs": [],
+      "states": ["uploads.html?b=UP-2026-0007"],
+      "verify": "exempt",
+      "exemptReason": "목업 전용 안내 문구(내려받기 시연)"
+    }
+  ]
+}

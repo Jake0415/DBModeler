@@ -1,0 +1,717 @@
+{
+  "screen": "std-common.html",
+  "ids": "SC-18",
+  "source": "docs/ux/mockups/std-common.html",
+  "behaviors": [
+    {
+      "id": "BH-std-common-001",
+      "where": "머리",
+      "trigger": "화면을 열 때",
+      "expected": "제목 옆 배지 ‘공통표준 {판}’과 [사전에서 공통 항목 보기](dictionary.html?src=공통)",
+      "roles": "전체",
+      "refs": [
+        "dict.view"
+      ],
+      "states": [
+        "std-common.html?as=lee"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-std-common-002",
+      "where": "현재 판 카드",
+      "trigger": "화면을 열 때",
+      "expected": "‘공공데이터 공통표준 {판}’ · 단어 · 용어 · 도메인 · 행정표준코드 수 · 적재일. 새 판이 반영된 뒤면 ‘이전 판 {판} · 반영 문서 {링크} · …’, 처음 적재 판이면 ‘행정안전부 배포 원문을 시스템이 적재한 판입니다 · …’",
+      "roles": "전체",
+      "refs": [
+        "dict.view"
+      ],
+      "states": [
+        "std-common.html?as=lee"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-std-common-003",
+      "where": "탭",
+      "trigger": "행정표준코드 · 새 판 반영 · 적재 이력 탭 클릭",
+      "expected": "탭마다 건수(새 판 반영은 비교 차이 수 또는 담은 보완 수), 누른 탭 내용이 보임. ?tab=new · ?tab=hist면 그 탭으로 열림",
+      "roles": "전체",
+      "refs": [
+        "dict.view"
+      ],
+      "states": [
+        "std-common.html?as=lee",
+        "std-common.html?as=lee&tab=new",
+        "std-common.html?as=lee&tab=hist"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-std-common-004",
+      "where": "행정표준코드 목록",
+      "trigger": "목록을 볼 때",
+      "expected": "공통 행정표준코드만 코드명(신청 중이면 ‘신청 중’) · 영문 · 도메인 · 코드값 수(원문 일부면 ‘원문 일부’, 보완을 담았으면 ‘보완 담음’) · 소관기관(없으면 —) · 제정차수 · 연결 용어 수로 보임",
+      "roles": "전체",
+      "refs": [
+        "dict.view"
+      ],
+      "states": [
+        "std-common.html?as=lee"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-std-common-005",
+      "where": "행정표준코드 목록",
+      "trigger": "검색어 입력",
+      "expected": "코드명 · 영문 · 소관기관 · 연결 용어 이름 · 약어를 칸별로(초성 · 여러 단어 · 띄어쓰기 무시) 찾아 바로 바뀜",
+      "roles": "전체",
+      "refs": [
+        "dict.view"
+      ],
+      "states": [
+        "std-common.html?as=lee&q=가족"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-std-common-006",
+      "where": "행정표준코드 목록",
+      "trigger": "소관기관 선택",
+      "expected": "‘소관기관 전체’와 기관별 ‘{기관} · {건수}’(표기 없는 코드는 맨 끝 ‘(소관기관 표기 없음)’) 중 고른 기관 코드만 보임",
+      "roles": "전체",
+      "refs": [
+        "dict.view"
+      ],
+      "states": [
+        "std-common.html?as=lee"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-std-common-007",
+      "where": "행정표준코드 목록",
+      "trigger": "원문 칩(전체 · 원문 일부 · 원문 전체) 클릭",
+      "expected": "원문이 코드값 일부만 싣는 코드 / 전부 싣는 코드만 보임, 칩에 건수",
+      "roles": "전체",
+      "refs": [
+        "dict.view"
+      ],
+      "states": [
+        "std-common.html?as=lee&part=p"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-std-common-008",
+      "where": "결과 줄",
+      "trigger": "목록이 바뀔 때",
+      "expected": "조건이 없으면 ‘행정표준코드 {n}종 · 원문 일부 {m}종 · 연결 용어 {k}건’, 있으면 ‘{n}종 중 {m}종’ + 조건 칩(검색 · 소관기관 · 원문) + [모두 지우기]. 칩 × · [모두 지우기] 후 다음 칩(없으면 검색칸)으로 포커스. 화면 낭독기에 건수",
+      "roles": "전체",
+      "refs": [
+        "dict.view"
+      ],
+      "states": [
+        "std-common.html?as=lee"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-std-common-009",
+      "where": "행정표준코드 목록",
+      "trigger": "맞는 코드가 없을 때",
+      "expected": "‘필터에 맞는 행정표준코드가 없습니다’ + [모두 지우기]",
+      "roles": "전체",
+      "refs": [
+        "dict.view"
+      ],
+      "states": [
+        "std-common.html?as=lee&q=없는코드"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-std-common-010",
+      "where": "주소",
+      "trigger": "조건 · 선택을 바꿀 때 / 그 주소로 열 때",
+      "expected": "검색어(q) · 소관기관(org) · 원문(part) · 선택 코드(sel)가 주소에 남아 같은 목록 · 상세로 열림. ?code={ID}(사전 상세의 [원문 보기])도 그 코드 상세를 엶",
+      "roles": "전체",
+      "refs": [
+        "dict.view",
+        "SC-10"
+      ],
+      "states": [
+        "std-common.html?as=lee&code=C-S001"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-std-common-011",
+      "where": "코드 상세",
+      "trigger": "코드 행 클릭",
+      "expected": "오른쪽 상세: ‘공통’ · ‘행정표준코드’(원문 일부면 ‘원문 일부’) 배지, 코드명, ‘{영문} · {ID}’, 도메인 · 소관기관 · 제정차수 · 설명, 코드값 표(값 · 이름 · 순서 · 상태), ‘원문 허용값’(용어 시트 ‘허용값’ 열 그대로), 연결 용어(사전 검색 링크 · 약어 · 도메인) 또는 ‘연결된 용어가 없습니다.’",
+      "roles": "전체",
+      "refs": [
+        "dict.view"
+      ],
+      "states": [
+        "std-common.html?as=lee&code=C-S001"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-std-common-012",
+      "where": "코드 상세",
+      "trigger": "원문 일부 코드를 열 때",
+      "expected": "‘소관기관 원본으로 보완 필요 — 원문은 값 일부만 싣습니다 — 소관기관({기관}) 원본으로 코드값을 채우는 변경 신청을 올리세요. 공통 항목이라 일반 바구니가 아니라 새 판 반영(공통표준 신청)에 담깁니다.’ 경고",
+      "roles": "전체",
+      "refs": [
+        "dict.view"
+      ],
+      "states": [
+        "std-common.html?as=lee"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-std-common-013",
+      "where": "코드 상세",
+      "trigger": "[× 닫기] 클릭",
+      "expected": "상세가 닫히고 행 선택이 풀리며 주소의 sel이 지워짐",
+      "roles": "전체",
+      "refs": [
+        "dict.view"
+      ],
+      "states": [
+        "std-common.html?as=lee&code=C-S001"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-std-common-014",
+      "where": "코드 상세",
+      "trigger": "공통표준 신청 권한이 있고 진행 중 공통표준 신청이 없을 때",
+      "expected": "하단 [＋ 코드값 보완 담기]가 켜짐",
+      "roles": "dict.common 가진 DA · Admin",
+      "refs": [
+        "dict.common"
+      ],
+      "states": [
+        "std-common.html?as=lee&code=C-S001"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-std-common-015",
+      "where": "코드 상세",
+      "trigger": "공통표준 신청 권한이 없을 때",
+      "expected": "[코드값 보완 담기]가 흐려지고 ‘공통표준 새 판 신청은 DA · Admin만 작성합니다(지금 {이름}) — 내용은 읽기만 할 수 있습니다’",
+      "roles": "모델러 · 기관 담당자 · 감리 등 dict.common 없는 계정",
+      "refs": [
+        "dict.common"
+      ],
+      "states": [
+        "std-common.html?as=park&code=C-S001"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-std-common-016",
+      "where": "코드 상세",
+      "trigger": "진행 중인 공통표준 신청이 있을 때",
+      "expected": "[코드값 보완 담기]가 흐려지고 ‘공통표준 신청 {신청번호}가 결재 중이라 새로 담을 수 없습니다’",
+      "roles": "dict.common 가진 DA · Admin",
+      "refs": [
+        "dict.common"
+      ],
+      "states": [
+        "std-common.html?as=lee&code=C-S001"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-std-common-017",
+      "where": "코드값 보완 창",
+      "trigger": "[코드값 보완 담기] 클릭",
+      "expected": "‘코드값 보완 — {코드명}’ 창: ‘공통 항목은 일반 바구니(기관 신청)로 바꿀 수 없습니다. … 새 판 반영 품의(공통표준 신청)에 함께 담겨 DA · 최종 승인 뒤 반영됩니다.’ 안내, 원문 허용값, 코드값 칸(지금 값 또는 이미 담은 보완을 ‘값 : 이름’ 줄로), ‘소관기관({기관}) 원본의 값을 모두 적으세요 · 도메인 {도메인}’, 코드값 칸 포커스",
+      "roles": "dict.common 가진 DA · Admin",
+      "refs": [
+        "dict.common"
+      ],
+      "states": [
+        "std-common.html?as=lee&code=C-S001"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-std-common-018",
+      "where": "코드값 보완 창",
+      "trigger": "코드값 입력",
+      "expected": "한 줄(또는 쉼표)에 ‘값 : 이름’으로 읽고 ‘지금 {n}개 → {m}개 (새 값 {k}개)’ 미리보기. 문제는 ‘막힘 · {문구}’ 목록, 없으면 ‘검사 통과 — 새 판 반영에 담을 수 있습니다’. 막히면 [새 판 반영에 담기]가 흐려지고 첫 문구가 이유",
+      "roles": "dict.common 가진 DA · Admin",
+      "refs": [
+        "dict.common",
+        "MD-31"
+      ],
+      "states": [
+        "std-common.html?as=lee&code=C-S001"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-std-common-019",
+      "where": "코드값 보완 창",
+      "trigger": "코드값이 없을 때",
+      "expected": "‘코드값이 없습니다’ 막힘",
+      "roles": "dict.common 가진 DA · Admin",
+      "refs": [
+        "MD-31"
+      ],
+      "states": [
+        "std-common.html?as=lee&code=C-S001"
+      ],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-std-common-020",
+      "where": "코드값 보완 창",
+      "trigger": "‘값 : 이름’ 꼴이 아닌 줄",
+      "expected": "‘‘{줄}’ — ‘값 : 이름’ 꼴이 아닙니다’ 막힘",
+      "roles": "dict.common 가진 DA · Admin",
+      "refs": [
+        "MD-31"
+      ],
+      "states": [
+        "std-common.html?as=lee&code=C-S001"
+      ],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-std-common-021",
+      "where": "코드값 보완 창",
+      "trigger": "같은 값이 둘 이상",
+      "expected": "‘코드값 중복: {값들}’ 막힘",
+      "roles": "dict.common 가진 DA · Admin",
+      "refs": [
+        "MD-31"
+      ],
+      "states": [
+        "std-common.html?as=lee&code=C-S001"
+      ],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-std-common-022",
+      "where": "코드값 보완 창",
+      "trigger": "값 길이가 도메인 길이와 다를 때",
+      "expected": "‘도메인 {도메인} 길이 {n}자와 다른 값: {값들}’ 막힘",
+      "roles": "dict.common 가진 DA · Admin",
+      "refs": [
+        "MD-31"
+      ],
+      "states": [
+        "std-common.html?as=lee&code=C-S001"
+      ],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-std-common-023",
+      "where": "코드값 보완 창",
+      "trigger": "지금 코드값과 똑같을 때",
+      "expected": "‘지금 코드값과 같습니다 — 소관기관 원본의 값을 더하세요’ 막힘",
+      "roles": "dict.common 가진 DA · Admin",
+      "refs": [
+        "MD-31"
+      ],
+      "states": [
+        "std-common.html?as=lee&code=C-S001"
+      ],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-std-common-024",
+      "where": "코드값 보완 창",
+      "trigger": "[새 판 반영에 담기] 클릭",
+      "expected": "보완 값이 이 화면의 새 판 반영에 담기고(원본을 올린 뒤면 그 행이 선택됨) 창이 닫힘. 목록에 ‘보완 담음’, 상세에 ‘보완 코드값 {n}개를 새 판 반영에 담았습니다 — 신청을 올리면 결재 뒤 반영됩니다.’ + [새 판 반영 보기]. ‘‘{코드명}’ 코드값 {n}개를 새 판 반영에 담았습니다 — 일반 바구니가 아니라 공통표준 신청으로 올라갑니다’ 알림 + [새 판 반영 보기]",
+      "roles": "dict.common 가진 DA · Admin",
+      "refs": [
+        "dict.common"
+      ],
+      "states": [
+        "std-common.html?as=lee&code=C-S001"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-std-common-025",
+      "where": "코드값 보완 창",
+      "trigger": "[새 판 반영 보기] 클릭(상세 · 알림)",
+      "expected": "새 판 반영 탭으로 바뀜",
+      "roles": "dict.common 가진 DA · Admin",
+      "refs": [
+        "dict.common"
+      ],
+      "states": [
+        "std-common.html?as=lee&code=C-S001"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-std-common-026",
+      "where": "코드값 보완 창",
+      "trigger": "[취소] 클릭 또는 Esc",
+      "expected": "창이 닫히고 담지 않음",
+      "roles": "dict.common 가진 DA · Admin",
+      "refs": [
+        "dict.common"
+      ],
+      "states": [
+        "std-common.html?as=lee&code=C-S001"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-std-common-027",
+      "where": "코드값 보완",
+      "trigger": "담은 보완을 둔 채 화면을 떠날 때",
+      "expected": "담은 보완이 비워짐(‘목업: 이 화면을 떠나면 비워집니다.’ 안내)",
+      "roles": "dict.common 가진 DA · Admin",
+      "refs": [
+        "dict.common"
+      ],
+      "states": [
+        "std-common.html?as=lee&tab=new"
+      ],
+      "verify": "exempt",
+      "exemptReason": "목업 전용 — 보완은 화면 메모리에만 둠(제품 저장 방식 미정)"
+    },
+    {
+      "id": "BH-std-common-028",
+      "where": "새 판 반영",
+      "trigger": "이 판이 이미 현재 판일 때",
+      "expected": "‘공통표준 2026.05는 이미 현재 판입니다(반영 문서 {신청번호}).’ 경고, [원본 파일 고르기] 흐림(같은 이유)",
+      "roles": "전체",
+      "refs": [
+        "dict.common"
+      ],
+      "states": [
+        "std-common.html?as=lee&tab=new"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-std-common-029",
+      "where": "새 판 반영",
+      "trigger": "진행 중인 공통표준 신청이 있을 때",
+      "expected": "‘공통표준 신청 {신청번호}({단계} 차례)가 진행 중입니다 — 끝날 때까지 새 신청을 올릴 수 없습니다.’ 경고 + [신청 보기](approvals.html?doc=), [원본 파일 고르기] 흐림",
+      "roles": "전체",
+      "refs": [
+        "dict.common",
+        "MD-10"
+      ],
+      "states": [
+        "std-common.html?as=lee&tab=new"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-std-common-030",
+      "where": "새 판 반영",
+      "trigger": "공통표준 신청 권한이 없을 때",
+      "expected": "보라색 잠금 안내 ‘공통표준 새 판 신청은 DA · Admin만 작성합니다(지금 {이름}) — 내용은 읽기만 할 수 있습니다 원본 비교는 볼 수 있지만 항목 고르기와 신청하기는 막혀 있습니다.’ — 원본 고르기 · 비교 보기는 가능, 체크 · 사유 · [신청하기]는 흐림",
+      "roles": "모델러 · 기관 담당자 · 감리 등 dict.common 없는 계정",
+      "refs": [
+        "dict.common"
+      ],
+      "states": [
+        "std-common.html?as=park&tab=new"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-std-common-031",
+      "where": "새 판 반영",
+      "trigger": "단계 표시",
+      "expected": "원본 올리기 → 판 비교 → 신청하기. 원본 전에는 1단계, 비교 뒤 고른 항목이 없으면 2단계, 있으면 3단계가 현재로 표시되고 앞 단계는 완료",
+      "roles": "전체",
+      "refs": [
+        "dict.common"
+      ],
+      "states": [
+        "std-common.html?as=lee&tab=new"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-std-common-032",
+      "where": "1 원본 올리기",
+      "trigger": "[원본 파일 고르기] 클릭",
+      "expected": "파일 이름(공공데이터 공통표준(2026.05월).xlsx)과 머리글 검사 ✓ 4줄(판 표기 2026.05 — 지금 판보다 새 판 · 시트 3개 — 지금 판과 같음 · 열 이름 일치 — ‘행정표준코드명’ · ‘허용값’ 열 포함 · 행 수)이 보이고 판 비교가 만들어짐. 버튼이 [다시 고르기]로 바뀌고 ‘{파일} — 머리글 검사 통과 · 판 비교를 만들었습니다’ 알림",
+      "roles": "전체",
+      "refs": [
+        "dict.common"
+      ],
+      "states": [
+        "std-common.html?as=lee&tab=new"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-std-common-033",
+      "where": "1 원본 올리기",
+      "trigger": "[다시 고르기] 클릭",
+      "expected": "비교를 다시 만들고 고른 항목을 처음 상태로 되돌림. ‘원본을 다시 읽었습니다 — 고른 항목을 처음 상태로 되돌렸습니다’",
+      "roles": "전체",
+      "refs": [
+        "dict.common"
+      ],
+      "states": [
+        "std-common.html?as=lee&tab=new"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-std-common-034",
+      "where": "1 원본 올리기",
+      "trigger": "원본 파일을 고를 때(목업)",
+      "expected": "실제 파일을 읽지 않고 고정 예시 차이를 쓰며 ‘목업: 예시 차이로 보여 줍니다’ 표시",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "std-common.html?as=lee&tab=new"
+      ],
+      "verify": "exempt",
+      "exemptReason": "목업 전용 데모 — 실제 파일 선택 · 읽기 없음(고정 예시 차이)"
+    },
+    {
+      "id": "BH-std-common-035",
+      "where": "2 판 비교",
+      "trigger": "원본을 올리기 전",
+      "expected": "2 · 3단계 카드가 흐려지고 ‘원본을 올리면 지금 판과 다른 항목이 여기에 나옵니다.’ · ‘비교 결과에서 반영할 항목을 고르면 신청을 올릴 수 있습니다.’. 행정표준코드 탭에서 담은 보완이 있으면 ‘행정표준코드 원본 보완 {n}건({코드명들})이 담겨 있습니다 — 원본을 올리면 비교 결과에 함께 나오고 같은 신청으로 올라갑니다. …’",
+      "roles": "전체",
+      "refs": [
+        "dict.common"
+      ],
+      "states": [
+        "std-common.html?as=lee&tab=new"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-std-common-036",
+      "where": "2 판 비교",
+      "trigger": "비교가 만들어졌을 때(요약)",
+      "expected": "제목 옆 ‘{지금 판} → 2026.05 · 차이 {n}건’, 요약 ‘신규 단어 {n} · 신규 용어 · 신규 도메인 · 변경 · 폐기 · 행정표준코드 변경 {n}(소관기관 원본 보완 {m} 포함)’",
+      "roles": "전체",
+      "refs": [
+        "dict.common"
+      ],
+      "states": [
+        "std-common.html?as=lee&tab=new"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-std-common-037",
+      "where": "2 판 비교",
+      "trigger": "비교 행을 만들 때",
+      "expected": "이미 공통 사전에 있는 신규, 이미 미사용인 폐기, 바뀌는 칸이 없는 변경, 값이 같은 코드는 비교에서 빠짐. 폐기는 미사용으로, 코드 변경은 기존 값 + 새 값(보완이 있으면 보완 값)으로 만듦",
+      "roles": "전체",
+      "refs": [
+        "dict.common"
+      ],
+      "states": [
+        "std-common.html?as=lee&tab=new"
+      ],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-std-common-038",
+      "where": "2 판 비교",
+      "trigger": "같은 이름의 기관 항목이 있는 신규 항목",
+      "expected": "‘기관 항목과 충돌 {n}건 — DA 처리 목록’ 경고와 ‘같은 이름의 기관 항목이 약어 · 도메인을 다르게 씁니다. 공통으로 올릴 수 없어 이번 신청에서 빠집니다 — …’, 항목별 ‘기관 {약어 · 도메인} ({ID}) ↔ 공통 새 판 {약어 · 도메인}’ + [사전에서 열기]. 그 행은 노란 배경 · ‘기관 충돌’, 체크가 흐려지고 ‘기관 항목과 충돌 — DA가 먼저 정리해야 합니다’, 선택에서 빠짐",
+      "roles": "전체",
+      "refs": [
+        "dict.common",
+        "MD-41"
+      ],
+      "states": [
+        "std-common.html?as=lee&tab=new"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-std-common-039",
+      "where": "2 판 비교",
+      "trigger": "구분 칩(전체 구분 · 신규 · 변경 · 폐기) · 종류 칩(전체 종류 · 단어 · 용어 · 도메인 · 코드) 클릭",
+      "expected": "그 구분 · 종류 행만 보이고 칩에 포커스 유지. 맞는 행이 없으면 ‘필터에 맞는 차이가 없습니다’ + [모두 지우기](두 칩을 전체로)",
+      "roles": "전체",
+      "refs": [
+        "dict.common"
+      ],
+      "states": [
+        "std-common.html?as=lee&tab=new"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-std-common-040",
+      "where": "2 판 비교",
+      "trigger": "비교 표를 볼 때",
+      "expected": "구분 배지(신규 · 변경 · 폐기) · 종류 · 이름(+ ID, ‘원본 보완’) · 지금 · 새 판(코드는 ‘코드값 {n}개 (+값 이름, …)’) · 영향(‘기관 충돌’ · ‘모델 {n}곳’ · —). 처음에는 충돌 아닌 행이 모두 골라져 있고 ‘고른 항목 {n} / {충돌 뺀 수}’",
+      "roles": "전체",
+      "refs": [
+        "dict.common"
+      ],
+      "states": [
+        "std-common.html?as=lee&tab=new"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-std-common-041",
+      "where": "2 판 비교",
+      "trigger": "행 체크 · 머리 체크 클릭",
+      "expected": "행을 고르거나 해제. 머리 체크는 지금 보이는 충돌 아닌 행 전부, 일부만 골랐으면 중간 상태. 막힌 상태(권한 없음 · 진행 중 · 이미 반영)면 체크가 흐려짐",
+      "roles": "dict.common 가진 DA · Admin",
+      "refs": [
+        "dict.common"
+      ],
+      "states": [
+        "std-common.html?as=lee&tab=new"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-std-common-042",
+      "where": "2 판 비교",
+      "trigger": "폐기 항목 중 모델 사용처가 있을 때",
+      "expected": "‘폐기 항목은 지우지 않고 미사용으로 바꿉니다. 모델에서 쓰는 곳은 그대로 두고 다음 표준 맞추기에서 다시 검토합니다.’",
+      "roles": "전체",
+      "refs": [
+        "dict.common",
+        "MD-12"
+      ],
+      "states": [
+        "std-common.html?as=lee&tab=new"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-std-common-043",
+      "where": "3 신청하기",
+      "trigger": "비교가 만들어졌을 때",
+      "expected": "신청 사유 칸(예시 ‘행정안전부 공공데이터 공통표준 2026.05 개정 반영’), 결재선 ‘올림 {나} → {단계} {승인자들}’(최종 단계에서 나는 빠짐, 없으면 ‘승인자 없음’)과 ‘공통표준 신청도 일반 사전 신청과 같은 결재선을 탑니다. 최종 승인되면 공통 항목이 반영되고 현재 판이 2026.05로 바뀝니다.’, ‘담기는 항목 {n}건 — 신규 {a} · 변경 {b} · 미사용 {c}’",
+      "roles": "전체",
+      "refs": [
+        "dict.common",
+        "MD-20"
+      ],
+      "states": [
+        "std-common.html?as=lee&tab=new"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-std-common-044",
+      "where": "3 신청하기",
+      "trigger": "고른 항목을 검사할 때",
+      "expected": "공통 신청 기준(기관 형식 규칙은 빼고 중복 · 참조 · 같은 항목 진행 중 신청 등은 검사)으로 판정. 막히면 빨간 ‘검사에서 막힌 항목 {n}건’ 목록, 통과면 ‘검사 통과 — 신청을 올릴 수 있습니다’",
+      "roles": "dict.common 가진 DA · Admin",
+      "refs": [
+        "dict.common",
+        "MD-20"
+      ],
+      "states": [
+        "std-common.html?as=lee&tab=new"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-std-common-045",
+      "where": "3 신청하기",
+      "trigger": "[신청하기]를 누를 수 없을 때",
+      "expected": "[신청하기]가 흐려지고 이유: 막힘 안내 문구 / ‘반영할 항목을 하나 이상 고르세요’ / ‘검사에서 막힌 항목 {n}건이 있습니다’ / 사유가 비면 ‘신청 사유를 입력해야 올릴 수 있습니다’",
+      "roles": "dict.common 가진 DA · Admin",
+      "refs": [
+        "dict.common"
+      ],
+      "states": [
+        "std-common.html?as=lee&tab=new"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-std-common-046",
+      "where": "3 신청하기",
+      "trigger": "[신청하기] 클릭 — 실행 때 다시 확인",
+      "expected": "그사이 막힘이 생겼으면 그 문구로 오류 알림 후 다시 그림, 사유가 비면 ‘신청 사유를 입력하세요’ 알림과 사유 칸 포커스, 검사에서 막히면 ‘검사에서 막힌 항목 {n}건 — 목록을 확인하세요’",
+      "roles": "dict.common 가진 DA · Admin",
+      "refs": [
+        "dict.common"
+      ],
+      "states": [
+        "std-common.html?as=lee&tab=new"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-std-common-047",
+      "where": "3 신청하기",
+      "trigger": "[신청하기] 통과",
+      "expected": "공통표준 신청 문서가 만들어지고(제목 ‘공통표준 2026.05 반영 — {n}건’, 사유 · 항목 · 원본 파일 이름) 감사 로그에 ‘공통표준 새 판 신청’이 남은 뒤 approvals.html?new=1&doc={신청번호}로 이동",
+      "roles": "dict.common 가진 DA · Admin",
+      "refs": [
+        "dict.common",
+        "MD-20",
+        "SC-20"
+      ],
+      "states": [
+        "std-common.html?as=lee&tab=new"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-std-common-048",
+      "where": "3 신청하기",
+      "trigger": "항목이 다른 신청에서 신청 중이라 문서를 만들 수 없을 때",
+      "expected": "‘다른 신청에서 신청 중인 항목이 있어 올리지 못했습니다: {항목들}’ 오류 알림 후 다시 그림",
+      "roles": "dict.common 가진 DA · Admin",
+      "refs": [
+        "dict.common",
+        "MD-10"
+      ],
+      "states": [
+        "std-common.html?as=lee&tab=new"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-std-common-049",
+      "where": "3 신청하기",
+      "trigger": "다른 탭에서 사용자가 바뀐 뒤 [신청하기]",
+      "expected": "처리하지 않고 ‘다른 탭에서 사용자가 바뀌었습니다(지금 {이름}) — 새로고침한 뒤 다시 처리하세요’ + [새로고침]",
+      "roles": "dict.common 가진 DA · Admin",
+      "refs": [],
+      "states": [
+        "std-common.html?as=lee&tab=new"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-std-common-050",
+      "where": "적재 이력",
+      "trigger": "적재 이력 탭을 볼 때",
+      "expected": "‘공통표준을 처음 적재한 기록과, 새 판을 반영하려고 올린 신청입니다. …’ 안내, 공통표준 신청마다 판 · ‘새 판 신청’ · 문서 링크 · 상태(반영됨 · 반려됨 · 회수됨 · {단계} 차례) · 일시 · 올린 사람 · 제목(반영 {n}건 · 실패 {m}건), 맨 아래 초기 적재 행(2025.11 · 현재 판 또는 이전 판 · 2025-11-30 · 시스템 · 단어 3,284 · 용어 13,176 · 도메인 129 · 행정표준코드 {n})",
+      "roles": "전체",
+      "refs": [
+        "dict.view"
+      ],
+      "states": [
+        "std-common.html?as=lee&tab=hist"
+      ],
+      "verify": "e2e"
+    }
+  ]
+}

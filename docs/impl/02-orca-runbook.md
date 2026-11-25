@@ -38,6 +38,11 @@
 4. [coordinator-kickoff.md](coordinator-kickoff.md)의 프롬프트를 붙여 넣는다(‘이번 실행 목표’만 바꿈).
 5. 조정자가 시작 전 확인(모델 · 버전 · DB · 사용량)을 보고하고 Run을 만든 뒤 작업 에이전트들을 띄운다. 사이드바에 작업별 worktree가 생긴다.
 
+## 3-1. 빠짐없이 — 요구사항 추적 (계획 §15)
+- 모든 기능 행(요구 · 화면 · 메타 규칙 · RBAC · 시나리오 · 목업 상태 · 화면 동작)이 `docs/impl/trace/requirements.json`에 있고, 테스트 이름의 `[ID]`로 연결된다.
+- 조정자는 **단계 시작**에 `npm run trace:check -- --phase Pn --gate start`(전부 배정), **단계 끝**에 `npm run trace:test` → `npm run trace:check -- --phase Pn --gate end --report`(전부 통과)를 통과해야 넘어간다.
+- 현황: `docs/impl/trace/coverage.md`(단계 끝마다 갱신).
+
 ## 4. 사람이 보는 것
 - **[progress.md](progress.md) 맨 위 ‘확인 필요’** — 자체 결정 · 보류. ‘응답’ 칸에 확인 / 뒤집기 / 방향 제시를 적고 조정자에게 “확인 필요 응답 반영하고 계속해”.
 - Orca 알림(작업 끝 · 입력 필요) · 사용량 표시(80%면 조정자가 새 배정을 멈춘다).

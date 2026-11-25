@@ -1,0 +1,688 @@
+{
+  "screen": "home.html",
+  "ids": "SC-55",
+  "source": "docs/ux/mockups/home.html",
+  "behaviors": [
+    {
+      "id": "BH-home-001",
+      "where": "머리",
+      "trigger": "홈 열기",
+      "expected": "제목 ‘홈’ 옆에 오늘 날짜 ‘M/D(요일)’",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "home.html?as=kim"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-home-002",
+      "where": "머리 · 오른쪽",
+      "trigger": "링크 ‘공통표준 {판}’ 클릭",
+      "expected": "std-common.html로 이동(툴팁 ‘공통표준 · 행정표준코드 화면 열기’). 판은 공통표준 화면과 같은 값",
+      "roles": "전체",
+      "refs": [
+        "SC-18"
+      ],
+      "states": [
+        "home.html?as=kim"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-home-003",
+      "where": "머리 · 오른쪽",
+      "trigger": "링크 ‘기관 사전 제정 N차’ 클릭",
+      "expected": "dict-history.html로 이동, N은 마지막 공표 차수",
+      "roles": "전체",
+      "refs": [
+        "SC-16"
+      ],
+      "states": [
+        "home.html?as=kim"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-home-004",
+      "where": "긴급 배너",
+      "trigger": "내 차례 결재 중 기한(SLA) 넘긴 것이 있을 때",
+      "expected": "맨 위 빨간 배너 ‘기한 넘긴 결재 N건’ + [결재함 열기](approvals.html?box=queue). 긴급 배너는 하나만",
+      "roles": "DA · 기관 담당자",
+      "refs": [
+        "appr.da",
+        "appr.final"
+      ],
+      "states": [
+        "home.html?as=kim"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-home-005",
+      "where": "긴급 배너",
+      "trigger": "내 차례 기한 넘김은 없고 보완 필요한 내 신청이 있을 때",
+      "expected": "배너 ‘보완 필요한 내 신청 N건’ + 1건이면 [{신청번호} 열기](approvals.html?doc=…), 여러 건이면 [내 신청 열기](approvals.html?box=mine)",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "home.html?as=park"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-home-006",
+      "where": "긴급 배너",
+      "trigger": "위 둘이 없고 Admin이며 기관 전체 기한 넘긴 결재가 있을 때",
+      "expected": "배너 ‘기관 전체 기한 넘긴 결재 N건’ + [오래 머무는 결재 보기](#stale)",
+      "roles": "Admin",
+      "refs": [
+        "settings"
+      ],
+      "states": [
+        "home.html?as=lee"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-home-007",
+      "where": "오늘 할 일",
+      "trigger": "처리할 일이 하나 이상일 때",
+      "expected": "표(할 일 · 건수 · 가장 오래 · 상태 · 바로 가기)에 건수 0보다 큰 항목만, 급한 순서로. 가장 오래 없으면 ‘—’. 표 아래 ‘문제 없음: …’에 0건 항목 이름",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "home.html?as=kim",
+        "home.html?as=park"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-home-008",
+      "where": "오늘 할 일",
+      "trigger": "처리할 일이 모두 0건일 때",
+      "expected": "섹션이 한 줄로 접히고 ‘처리할 일이 없습니다’(툴팁 ‘문제 없음: …’)",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "home.html?as=hyun"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-home-009",
+      "where": "오늘 할 일 · 행",
+      "trigger": "admin.confirm 권한 + 내가 확인할 관리 변경 요청이 있을 때",
+      "expected": "‘관리 변경 확인 요청’ N건 · 상태 ‘7일 안 확인’ · [확인 요청](approvals.html?box=confirm)",
+      "roles": "기관 담당자(admin.confirm)",
+      "refs": [
+        "admin.confirm"
+      ],
+      "states": [
+        "home.html?as=hyun"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-home-010",
+      "where": "오늘 할 일 · 행",
+      "trigger": "DA · 기관 담당자 또는 나에게 위임한 사람이 있을 때",
+      "expected": "‘결재 대기 · 내 차례’ N건 · 가장 오래 일수 · 기한 넘김 있으면 ‘기한 넘김 N’ · [결재함](approvals.html?box=queue)",
+      "roles": "DA · 기관 담당자 · 대리인",
+      "refs": [
+        "appr.da",
+        "appr.final"
+      ],
+      "states": [
+        "home.html?as=kim",
+        "home.html?as=hyun"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-home-011",
+      "where": "오늘 할 일 · 행",
+      "trigger": "DA일 때",
+      "expected": "‘후보 큐 · 판단 대기’ N건 · [후보 큐](candidates.html)",
+      "roles": "DA",
+      "refs": [
+        "cand.decide"
+      ],
+      "states": [
+        "home.html?as=kim"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-home-012",
+      "where": "오늘 할 일 · 행",
+      "trigger": "DA이고 재검사 실패 이력이 있는 진행 중 문서가 있을 때",
+      "expected": "‘재검사 실패 · 신청자 보완’ N건 · ‘실패’ · 첫 문서 번호 링크",
+      "roles": "DA",
+      "refs": [
+        "appr.da"
+      ],
+      "states": [
+        "home.html?as=kim"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-home-013",
+      "where": "오늘 할 일 · 행",
+      "trigger": "Admin일 때 — 역할 요청",
+      "expected": "‘역할 요청’ N건, 있으면 첫 요청자 이름(settings.html?user=…), 없으면 ‘사용자·역할’(settings.html)",
+      "roles": "Admin",
+      "refs": [
+        "users"
+      ],
+      "states": [
+        "home.html?as=lee"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-home-014",
+      "where": "오늘 할 일 · 행",
+      "trigger": "Admin일 때 — 7일 안 만료 계정",
+      "expected": "‘7일 안 만료 계정’ N건 · ‘{이름} D-n · …’ · [사용자 · 역할](settings.html?tab=users)",
+      "roles": "Admin",
+      "refs": [
+        "users"
+      ],
+      "states": [
+        "home.html?as=lee"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-home-015",
+      "where": "오늘 할 일 · 행",
+      "trigger": "Admin이고 내가 낸 관리 변경이 확인 대기일 때",
+      "expected": "‘기관 담당자 확인 대기 · 내 신청’ N건 · [확인 요청]",
+      "roles": "Admin",
+      "refs": [
+        "users"
+      ],
+      "states": [
+        "home.html?as=lee"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-home-016",
+      "where": "오늘 할 일 · 행",
+      "trigger": "Admin이고 결재할 사람이 없는 시스템이 있을 때",
+      "expected": "‘결재 공백 — 처리할 사람이 없는 시스템’ N건 · 시스템 이름 · [사용자 · 역할]",
+      "roles": "Admin",
+      "refs": [
+        "users"
+      ],
+      "states": [
+        "home.html?as=lee"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-home-017",
+      "where": "오늘 할 일 · 행",
+      "trigger": "Admin일 때 — 기관 전체 기한 넘김",
+      "expected": "‘기한 넘긴 결재 · 기관 전체’ N건 · ‘{SLA}일 넘김’ · [오래 머무는 결재](#stale)",
+      "roles": "Admin",
+      "refs": [
+        "settings"
+      ],
+      "states": [
+        "home.html?as=lee"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-home-018",
+      "where": "오늘 할 일 · 행",
+      "trigger": "내 계정 사용 기한이 14일 이하로 남았을 때",
+      "expected": "‘내 계정 사용 기한 D-n ({날짜})’ · 진행 중 내 신청 수 · ‘남은 일: 진행 중 신청’ · [내 신청]",
+      "roles": "사용 기한 있는 계정(외주 · 감리)",
+      "refs": [],
+      "states": [
+        "home.html?as=park"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-home-019",
+      "where": "오늘 할 일 · 행",
+      "trigger": "역할이 없거나 감리만 있을 때",
+      "expected": "조회만: ‘조회 — 표준 사전’(사전 항목 수 · [표준 사전]). 감리: ‘감리 — 끝난 결재 문서’([결재함 전체]) + ‘감리 — 감사 로그 · 산출물’([감사 로그])",
+      "roles": "조회만 · 감리",
+      "refs": [
+        "audit.view"
+      ],
+      "states": [],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-home-020",
+      "where": "오늘 할 일 · 행",
+      "trigger": "모델러일 때 — 미준수",
+      "expected": "‘미준수 · 내 업무 영역’ 미준수 수 · 첫 미준수 영역의 [표준 맞추기](standardize.html?area=…&f=todo), 없으면 [업무 영역](#areas)",
+      "roles": "모델러",
+      "refs": [
+        "model.edit"
+      ],
+      "states": [
+        "home.html?as=park"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-home-021",
+      "where": "오늘 할 일 · 행",
+      "trigger": "모델러이고 작업 중 영역에 끝나지 않은 연결 신청이 있을 때",
+      "expected": "‘확정 전 완료할 연결 신청’ N건 · 첫 신청 번호 링크",
+      "roles": "모델러",
+      "refs": [
+        "model.submit"
+      ],
+      "states": [
+        "home.html?as=park"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-home-022",
+      "where": "오늘 할 일 · 행",
+      "trigger": "반려 · 회수된 내 신청",
+      "expected": "‘보완 필요 · 내 신청’ N건 · ‘반려·회수’ · 첫 문서 링크(없으면 [내 신청])",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "home.html?as=park"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-home-023",
+      "where": "업무 영역",
+      "trigger": "표 그려짐",
+      "expected": "영역 · 시스템(DBMS) · 단계(검토 · 확정 태그, 그 밖은 작업 · 표준 맞추기 · 확정 신청 전) · 준수율 · 미준수(없으면 ‘—’) · 다음 행동. 영역 이름은 model.html?area=…",
+      "roles": "전체",
+      "refs": [
+        "model.view"
+      ],
+      "states": [
+        "home.html?as=kim"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-home-024",
+      "where": "업무 영역",
+      "trigger": "모델러로 볼 때",
+      "expected": "담당 시스템의 영역만 표시. 다른 역할은 전체 영역",
+      "roles": "모델러",
+      "refs": [
+        "model.edit"
+      ],
+      "states": [
+        "home.html?as=park",
+        "home.html?as=kim"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-home-025",
+      "where": "업무 영역",
+      "trigger": "보여 줄 영역이 없을 때",
+      "expected": "‘담당 업무 영역이 없습니다.’",
+      "roles": "전체",
+      "refs": [],
+      "states": [],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-home-026",
+      "where": "업무 영역 · 다음 행동",
+      "trigger": "영역 상태별",
+      "expected": "검토 중 → 결재 문서 번호 링크 + 기한 넘김이면 빨간 일수, 아니면 ‘{단계} N일’ / 확정 → [다음 버전 시작] / 엔터티 없음 → [모델 시작] / 미준수 있음 → [표준 맞추기] / 연결 신청 진행 중 → ‘{번호} 완료 후 확정’ / 그 밖 → [확정 신청]",
+      "roles": "전체",
+      "refs": [
+        "model.submit"
+      ],
+      "states": [
+        "home.html?as=kim"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-home-027",
+      "where": "업무 영역 · 준수율",
+      "trigger": "준수율 계산",
+      "expected": "정수 % + 막대, 목표선(기관 목표, 기본 90%) 표시, 목표 미만이면 막대가 경고 색. 편집 중 영역은 끝난 연결 신청 미반영분도 미준수로 셈",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "home.html?as=kim"
+      ],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-home-028",
+      "where": "업무 영역",
+      "trigger": "표 아래",
+      "expected": "‘막대의 세로 눈금은 목표 준수율 N%입니다. 준수율은 검수 기준 v{판}로 계산합니다’ + 꺼 둔 규칙이 있으면 그 안내",
+      "roles": "전체",
+      "refs": [
+        "SC-43"
+      ],
+      "states": [
+        "home.html?as=kim"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-home-029",
+      "where": "업무 영역",
+      "trigger": "링크 ‘시스템 홈’ 클릭",
+      "expected": "system.html로 이동",
+      "roles": "전체",
+      "refs": [
+        "SC-30"
+      ],
+      "states": [
+        "home.html?as=kim"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-home-030",
+      "where": "현황",
+      "trigger": "DA · 기관 담당자 · Admin으로 볼 때",
+      "expected": "표(항목 · 값 · 기준 · 판정): 표준 준수율(목표 N%, ‘N%p 부족’/‘충족’) · 기한 넘긴 결재(0건 기준) · 평균 처리 기간(SLA일 이내) · 진행 중 결재 · 확정된 업무 영역(‘검토 중 N’) · 표준 사전 항목(‘이번 달 N건 변경’) · 후보 큐 대기. 모델러만이면 현황 없음",
+      "roles": "DA · 기관 담당자 · Admin",
+      "refs": [],
+      "states": [
+        "home.html?as=kim",
+        "home.html?as=hyun",
+        "home.html?as=lee"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-home-031",
+      "where": "현황",
+      "trigger": "항목 링크 클릭",
+      "expected": "표준 준수율 · 확정된 업무 영역 → #areas, 기한 넘긴 결재 → #stale, 진행 중 결재 → DA · 기관 담당자는 approvals.html?box=all, 그 밖은 ?box=mine, 표준 사전 항목 → dictionary.html, 후보 큐 대기 → candidates.html",
+      "roles": "전체",
+      "refs": [
+        "appr.viewall"
+      ],
+      "states": [
+        "home.html?as=kim"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-home-032",
+      "where": "현황",
+      "trigger": "왼쪽 칸 폭이 좁을 때",
+      "expected": "‘기준’ 열이 숨고 기준이 값 아래 작은 글씨로 접힘",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "home.html?as=kim"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-home-033",
+      "where": "내 신청",
+      "trigger": "진행 중 · 보완 필요 신청이 있을 때",
+      "expected": "표(신청번호 · 단계 · 머문 일)에 보완 필요가 먼저, 진행 중만 머문 일수. 번호 툴팁은 제목, 누르면 approvals.html?doc=…",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "home.html?as=park"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-home-034",
+      "where": "내 신청",
+      "trigger": "진행 중인 신청이 없을 때",
+      "expected": "‘진행 중인 신청이 없습니다.’",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "home.html?as=hyun"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-home-035",
+      "where": "내 신청",
+      "trigger": "완료 신청이 있을 때",
+      "expected": "‘완료 N건: ’ + 최근 3건 번호 끝 4자리 링크",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "home.html?as=kim"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-home-036",
+      "where": "내 신청",
+      "trigger": "링크 ‘전체’ 클릭",
+      "expected": "approvals.html?box=mine으로 이동",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "home.html?as=kim"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-home-037",
+      "where": "내 후보",
+      "trigger": "모델러이고 내가 등록한 후보가 있을 때",
+      "expected": "후보 이름(candidates.html?c=…) · 종류 · 상태(등록 완료 / 판단 대기 / 그 밖 진행 태그) + [후보 큐] 링크. 없으면 섹션 없음",
+      "roles": "모델러",
+      "refs": [
+        "dict.request"
+      ],
+      "states": [
+        "home.html?as=park"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-home-038",
+      "where": "결재 흐름",
+      "trigger": "DA · 기관 담당자 · Admin으로 볼 때",
+      "expected": "가로 막대 ‘DA 승인 대기 · 최종 승인 대기 · 완료 · 반려·회수’ 건수(대기 단계는 평균 머문 일수)",
+      "roles": "DA · 기관 담당자 · Admin",
+      "refs": [],
+      "states": [
+        "home.html?as=kim"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-home-039",
+      "where": "결재 흐름",
+      "trigger": "대기 단계 평균 머문 일수가 SLA 이상일 때",
+      "expected": "가장 느린 단계 막대 강조 + 머리에 ‘병목 {단계} N.N일’ 태그",
+      "roles": "DA · 기관 담당자 · Admin",
+      "refs": [],
+      "states": [
+        "home.html?as=kim"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-home-040",
+      "where": "막힘 사유",
+      "trigger": "반려 · 재검사 실패 사유와 진행 중 사전 신청 검사 문제가 있을 때",
+      "expected": "유형별 묶음 상위 5개를 문서 수 순으로, 실제 문구와 문서 번호 링크(최대 3). 같은 유형에 문구가 여럿이면 하위 목록 + 3건 넘으면 ‘외 N건 — 결재함에서 보기’",
+      "roles": "DA · 기관 담당자 · Admin",
+      "refs": [
+        "appr.da"
+      ],
+      "states": [
+        "home.html?as=kim"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-home-041",
+      "where": "막힘 사유",
+      "trigger": "막힌 신청이 없을 때",
+      "expected": "‘막힌 신청이 없습니다.’",
+      "roles": "DA · 기관 담당자 · Admin",
+      "refs": [],
+      "states": [],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-home-042",
+      "where": "막힘 사유",
+      "trigger": "링크 ‘검수 기준’ 클릭",
+      "expected": "rules.html로 이동",
+      "roles": "DA · 기관 담당자 · Admin",
+      "refs": [
+        "SC-43"
+      ],
+      "states": [
+        "home.html?as=kim"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-home-043",
+      "where": "오래 머무는 결재",
+      "trigger": "DA · 기관 담당자 · Admin으로 볼 때",
+      "expected": "진행 중 결재 상위 5건(번호 · 단계 · 일수, 기한 넘김은 빨간 태그), 없으면 ‘진행 중인 결재가 없습니다’. [결재함] 링크",
+      "roles": "DA · 기관 담당자 · Admin",
+      "refs": [],
+      "states": [
+        "home.html?as=kim"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-home-044",
+      "where": "사전 변경 · 최근 6주",
+      "trigger": "DA · 기관 담당자 · Admin으로 볼 때",
+      "expected": "주별 사전 변경 수 막대 6개, 공표가 있던 주는 강조 + ‘공표’. [변경 내역](dict-history.html)",
+      "roles": "DA · 기관 담당자 · Admin",
+      "refs": [
+        "SC-16"
+      ],
+      "states": [
+        "home.html?as=kim"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-home-045",
+      "where": "내 결재 · 기한 넘김",
+      "trigger": "model.edit 권한이 없을 때",
+      "expected": "맨 앞 섹션: 내 차례(+Admin은 기관 전체 기한 넘김) 최대 5건 — 문서 · 제목(넘치면 줄임, 툴팁 전체) · 구분 · 머문 일, 기한 넘김 먼저. 머리에 ‘기한 넘김 N’ + [결재함]",
+      "roles": "기관 담당자 · DA만 · Admin(모델러 아님)",
+      "refs": [
+        "model.edit",
+        "appr.final"
+      ],
+      "states": [
+        "home.html?as=hyun",
+        "home.html?as=lee"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-home-046",
+      "where": "내 결재 · 기한 넘김",
+      "trigger": "5건을 넘을 때 / 하나도 없을 때",
+      "expected": "‘나머지 N건 결재함에서 보기’ 링크 / ‘내 차례 결재와 기한 넘긴 결재가 없습니다.’",
+      "roles": "모델러 아님",
+      "refs": [
+        "model.edit"
+      ],
+      "states": [
+        "home.html?as=hyun"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-home-047",
+      "where": "내 결재 · 기한 넘김",
+      "trigger": "섹션 아래",
+      "expected": "‘모델 편집 권한이 없어 왼쪽 모델 트리는 접어 두었습니다. 트리 아래 [접기] 단추로 펼칠 수 있습니다.’",
+      "roles": "모델러 아님",
+      "refs": [
+        "model.edit"
+      ],
+      "states": [
+        "home.html?as=hyun"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-home-048",
+      "where": "모델 트리",
+      "trigger": "model.edit 없고 사용자가 트리 접기를 고른 적 없을 때",
+      "expected": "왼쪽 모델 트리가 접힌 채 시작. 한 번 펼치거나 접으면 그 선택을 따름",
+      "roles": "모델러 아님",
+      "refs": [
+        "model.edit"
+      ],
+      "states": [
+        "home.html?as=hyun"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-home-049",
+      "where": "사전 구축 순서",
+      "trigger": "DA이고 닫은 적 없을 때",
+      "expected": "안내 카드 ‘사전 구축 순서’: 도메인그룹(‘즉시 저장’) → 분류(‘신청 후 반영’) → 단어 · 도메인 · 용어 직접 등록 → 신청(‘신청 후 반영’) + 설명 문구. 링크는 domain-groups.html · dict-grid.html · dictionary.html?basket=1",
+      "roles": "DA",
+      "refs": [
+        "dict.group",
+        "dict.request"
+      ],
+      "states": [
+        "home.html?as=kim"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-home-050",
+      "where": "사전 구축 순서",
+      "trigger": "버튼 ‘다시 보지 않기’ 클릭",
+      "expected": "카드가 사라지고 토스트 ‘사전 구축 순서 안내를 닫았습니다’, 사용자별로 기억해 다시 보이지 않음",
+      "roles": "DA",
+      "refs": [],
+      "states": [
+        "home.html?as=kim"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-home-051",
+      "where": "배치",
+      "trigger": "대표 역할별 화면 구성",
+      "expected": "모델러: 왼쪽 오늘 할 일 · 업무 영역, 오른쪽 내 신청 · 내 후보. DA: 왼쪽 오늘 할 일 · 구축 순서 · 업무 영역 · 결재 흐름 · 막힘 사유, 오른쪽 현황 · 내 신청 · 오래 머무는 결재 · 사전 변경 · 내 후보. Admin · 기관 담당자: 좌우가 바뀌어(4:8) 현황 · 오래 머무는 결재 · 사전 변경(모델러 겸임이면 내 신청)이 왼쪽",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "home.html?as=kim",
+        "home.html?as=park",
+        "home.html?as=hyun",
+        "home.html?as=lee"
+      ],
+      "verify": "e2e"
+    }
+  ]
+}

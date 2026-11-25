@@ -1,0 +1,2133 @@
+{
+  "screen": "approvals.html",
+  "ids": "SC-20 · PN-21 · MO-22 · MO-23",
+  "source": "docs/ux/mockups/approvals.html",
+  "behaviors": [
+    {
+      "id": "BH-approvals-001",
+      "where": "결재함 머리 · 박스 버튼",
+      "trigger": "주소 열기(box 없음)",
+      "expected": "결재 차례를 받을 수 있는 사람(appr.da · appr.final · 위임받은 대리인)은 '대기함'이 기본으로 열리고 첫 문서가 자동 선택됨. 그 밖의 사람은 '내 신청'이 열림",
+      "roles": "전체",
+      "refs": [
+        "appr.da",
+        "appr.final",
+        "R-08",
+        "SC-20"
+      ],
+      "states": [
+        "approvals.html",
+        "approvals.html?box=mine&as=park"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-002",
+      "where": "결재함 머리 · 박스 버튼",
+      "trigger": "결재 역할도 위임도 없을 때",
+      "expected": "'대기함' 버튼이 숨겨짐. 주소에 box=queue를 넣어도 '내 신청'으로 열림",
+      "roles": "결재 역할 없는 사용자(모델러 · 조회만 · 임시 비밀번호 DA)",
+      "refs": [
+        "appr.da",
+        "appr.final",
+        "R-05"
+      ],
+      "states": [
+        "approvals.html?box=mine&as=park"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-003",
+      "where": "결재함 머리 · 박스 버튼",
+      "trigger": "화면 표시",
+      "expected": "'대기함' · '내 신청' · '참조함' 버튼마다 그 박스의 문서 수가 붙음. 누른 버튼은 눌림(aria-pressed) 상태",
+      "roles": "전체",
+      "refs": [
+        "SC-20",
+        "MD-22"
+      ],
+      "states": [
+        "approvals.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-004",
+      "where": "결재함 머리 · 박스 버튼",
+      "trigger": "확인 요청 권한이 있거나 나를 대상으로 한 관리 변경 요청이 있을 때",
+      "expected": "'확인 요청' 버튼이 보이고, 숫자는 내가 확인할 수 있는 대기 건수(0이면 숫자 없음). 조건이 없으면 버튼 숨김, box=confirm 주소는 '내 신청'으로 열림",
+      "roles": "admin.confirm · users · settings 가진 사람, 또는 역할을 받는 사람",
+      "refs": [
+        "admin.confirm",
+        "users",
+        "settings",
+        "R-01",
+        "R-03"
+      ],
+      "states": [
+        "approvals.html?box=confirm&as=hyun",
+        "approvals.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-005",
+      "where": "결재함 머리 · 박스 버튼",
+      "trigger": "DA · 기관 담당자 · Admin일 때",
+      "expected": "'집계' 버튼이 보임. 그 밖의 사람(모델러 · 감리 · 조회만)은 숨김이고 box=stats 주소는 '내 신청'으로 열림",
+      "roles": "DA · 기관 담당자 · settings 가진 사람",
+      "refs": [
+        "settings"
+      ],
+      "states": [
+        "approvals.html?box=stats",
+        "approvals.html?box=mine&as=park"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-006",
+      "where": "결재함 머리 · 박스 버튼",
+      "trigger": "박스 버튼 클릭",
+      "expected": "목록이 그 박스로 바뀜. '대기함'만 첫 문서를 자동으로 열고 '내 신청' · '참조함'은 상세를 닫은 채 둠. 주소의 box=가 바뀌고 브라우저 뒤로 가기 이력에 쌓임",
+      "roles": "전체",
+      "refs": [
+        "SC-20"
+      ],
+      "states": [
+        "approvals.html",
+        "approvals.html?box=mine"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-007",
+      "where": "결재함 머리",
+      "trigger": "주소 box=all 열기",
+      "expected": "박스 버튼은 눌린 것이 없고, 도구 줄 오른쪽에 '볼 수 있는 전체 문서 — 대기함 · 내 신청 · 참조함에 없는 문서도 함께 보입니다' 안내가 보임. 목록은 열람 판정(canSeeDoc)으로 볼 수 있는 문서 전부",
+      "roles": "전체",
+      "refs": [
+        "R-07"
+      ],
+      "states": [
+        "approvals.html?box=all"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-008",
+      "where": "결재함 전체",
+      "trigger": "브라우저 뒤로 · 앞으로",
+      "expected": "주소의 box · q · type · step · sel 값으로 박스 · 검색 · 필터 · 선택 문서가 되돌아감",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "approvals.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-009",
+      "where": "결재함 위 안내 띠",
+      "trigger": "검토 대기인 검수 기준 변경 제안이 있을 때",
+      "expected": "'검수 기준 변경 제안 n건이 검토를 기다립니다 — 모델러가 보낸 기준 변경 요청입니다.' 띠와 '검토하기' 링크(rules.html?sec=props)가 보임. 권한이 없으면 띠 없음",
+      "roles": "rules.edit 가진 사람(DA · Admin)",
+      "refs": [
+        "rules.edit",
+        "N-04"
+      ],
+      "states": [
+        "approvals.html?as=lee"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-010",
+      "where": "새 신청 결과 띠",
+      "trigger": "주소 ?new=1&doc=ID 열기 — 내가 1단계를 처리할 수 있는 내 진행 중 신청",
+      "expected": "'ID 신청됨. 제목. 1단계를 내가 처리할 수 있어 바로 대기함에 들어왔습니다. 직접 승인하면 ‘자기 승인’으로 남습니다.' 띠가 보이고 대기함이 열림",
+      "roles": "신청자 겸 DA",
+      "refs": [
+        "appr.da",
+        "R-02"
+      ],
+      "states": [
+        "approvals.html?new=1&doc=REQ-2026-0014"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-011",
+      "where": "새 신청 결과 띠",
+      "trigger": "주소 ?new=1&doc=ID 열기 — 내가 1단계를 처리할 수 없는 내 진행 중 신청",
+      "expected": "'ID 신청됨. 제목. 1단계 담당 n명에게 알렸습니다.' 띠가 보이고 '내 신청'이 열림",
+      "roles": "신청자",
+      "refs": [
+        "appr.da"
+      ],
+      "states": [
+        "approvals.html?new=1&doc=REQ-2026-0011&as=park"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-012",
+      "where": "새 신청 결과 띠",
+      "trigger": "주소에 dup=1이 함께 있을 때",
+      "expected": "'ID 이미 신청돼 있습니다. … 같은 내용의 진행 중 신청이 있어 새로 만들지 않았습니다.' 띠",
+      "roles": "신청자",
+      "refs": [],
+      "states": [
+        "approvals.html?new=1&dup=1&doc=REQ-2026-0014"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-013",
+      "where": "새 신청 결과 띠",
+      "trigger": "?new=1&doc=ID가 내 진행 중 신청이 아닐 때",
+      "expected": "볼 수 있는 문서면 'ID는 지금 (단계) 상태입니다. 새 신청 결과 화면이 아닙니다.', 없거나 볼 수 없으면 빨간 띠 'ID 신청을 찾을 수 없거나 볼 수 없습니다. 신청이 만들어지지 않았을 수 있습니다. 내 신청에서 확인하세요.'",
+      "roles": "전체",
+      "refs": [
+        "R-07"
+      ],
+      "states": [
+        "approvals.html?new=1&doc=REQ-2026-0007",
+        "approvals.html?new=1&doc=REQ-2099-0001"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-014",
+      "where": "도구 줄 · 검색",
+      "trigger": "검색어 입력",
+      "expected": "신청번호 · 제목 · 요청자 이름을 필드별로, 대소문자 없이 찾음('12'로 REQ-2026-0012). 입력할 때마다 목록 · 개수 줄이 바뀌고 주소에 q=가 남음",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "approvals.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-015",
+      "where": "도구 줄 · 검색",
+      "trigger": "검색 칸에서 Esc",
+      "expected": "검색어가 지워지고 목록이 다시 그려짐",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "approvals.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-016",
+      "where": "도구 줄 · 필터",
+      "trigger": "버튼 '필터' 클릭",
+      "expected": "필터 팝오버가 열리고 첫 선택 상자에 포커스. 다시 누르거나 '닫기' · 바깥 클릭 · Esc로 닫히고 포커스는 '필터' 버튼으로",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "approvals.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-017",
+      "where": "필터 팝오버",
+      "trigger": "'문서 유형' 선택(전체 · 사전 신청 · 모델 확정)",
+      "expected": "목록이 그 유형만 남고 주소에 type=가 남음",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "approvals.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-018",
+      "where": "필터 팝오버",
+      "trigger": "'단계' 선택(전체 · DA 승인 · 최종 승인 · 완료 · 반려됨 · 회수됨)",
+      "expected": "목록이 그 단계만 남고 주소에 step=가 남음",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "approvals.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-019",
+      "where": "도구 줄 · 필터",
+      "trigger": "유형 · 단계 필터를 고른 상태",
+      "expected": "'필터' 버튼에 고른 필터 수(1~2) 배지가 보임. 없으면 배지 숨김",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "approvals.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-020",
+      "where": "필터 팝오버",
+      "trigger": "버튼 '필터 초기화' 클릭",
+      "expected": "유형 · 단계가 '전체'로 돌아감(검색어는 그대로)",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "approvals.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-021",
+      "where": "목록 개수 줄",
+      "trigger": "필터 · 검색 적용",
+      "expected": "'전체 N건 중 M건 · 내 차례 우선 · 오래 머문 순'과 적용된 조건 칩('검색: …' · '유형: …' · '단계: …') + '모두 지우기'. 칩의 ×는 그 조건만, '모두 지우기'는 셋 다 지움. 조건이 없으면 'M건'만",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "approvals.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-022",
+      "where": "목록",
+      "trigger": "화면 표시",
+      "expected": "정렬은 내 차례 문서 먼저, 그다음 진행 중 문서의 머문 일이 많은 순",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "approvals.html"
+      ],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-approvals-023",
+      "where": "목록 행",
+      "trigger": "화면 표시",
+      "expected": "신청번호 · 유형(사전 신청/모델 확정) · 제목 · 요청자(내 신청이면 '(나)') · 현재 단계(신청 → DA 승인 → 최종 승인 작은 단계 표시) · 머문 일 · 건수 · 신청일. 완료 · 회수 · 반려 문서는 흐리게",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "approvals.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-024",
+      "where": "목록 행 · 머문 일",
+      "trigger": "진행 중 문서가 결재 기한(설정 › 기관 › 운영 목표, 기본 3일) 이상 머물 때",
+      "expected": "머문 일이 빨간 오류 아이콘과 함께 보이고 화면 낭독기에 '기한 넘김'. 끝난 문서는 '—'",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "approvals.html"
+      ],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-approvals-025",
+      "where": "목록 행",
+      "trigger": "행 클릭 · Enter",
+      "expected": "그 문서의 상세 패널(PN-21)이 열리고 행이 선택 표시됨. Enter는 포커스를 행에 둠. ↑ · ↓로 행 사이 포커스 이동",
+      "roles": "전체",
+      "refs": [
+        "PN-21"
+      ],
+      "states": [
+        "approvals.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-026",
+      "where": "목록 · 빈 상태",
+      "trigger": "대기함에 문서가 있지만 필터에 모두 가려졌을 때",
+      "expected": "'필터에 맞는 대기 문서가 없습니다 · 대기 N건이 필터에 가려져 있습니다.' + '모두 지우기'",
+      "roles": "결재자",
+      "refs": [],
+      "states": [
+        "approvals.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-027",
+      "where": "목록 · 빈 상태",
+      "trigger": "대기함이 비었고 내가 처리한 이력이 있을 때",
+      "expected": "'처리할 결재를 모두 마쳤습니다' + '내 신청 보기' 링크",
+      "roles": "결재자",
+      "refs": [],
+      "states": [
+        "approvals.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-028",
+      "where": "목록 · 빈 상태",
+      "trigger": "대기함이 비었고 처리한 이력도 없을 때",
+      "expected": "'지금 처리할 결재가 없습니다 · 새 신청이 들어오면 알림으로 알려 드립니다.'",
+      "roles": "결재자",
+      "refs": [],
+      "states": [
+        "approvals.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-029",
+      "where": "목록 · 빈 상태",
+      "trigger": "대기함 밖 박스에서 맞는 문서가 없을 때",
+      "expected": "'필터에 맞는 문서가 없습니다'(조건이 있으면 '모두 지우기' 함께)",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "approvals.html?box=mine"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-030",
+      "where": "대기함",
+      "trigger": "목록 판정",
+      "expected": "그 단계의 역할이 있고 모델 확정 문서면 그 영역의 시스템이 담당 시스템일 때만 대기함에 들어옴. 사전 신청은 기관 전체. 참조함 = 참조자로 지정된 문서, 내 신청 = 내가 신청한 문서",
+      "roles": "appr.da 가진 DA · appr.final 가진 기관 담당자",
+      "refs": [
+        "appr.da",
+        "appr.final",
+        "MD-22",
+        "MD-26"
+      ],
+      "states": [
+        "approvals.html",
+        "approvals.html?as=choi"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-031",
+      "where": "대기함",
+      "trigger": "자기 승인이 비허용으로 설정됐을 때 내 신청",
+      "expected": "내 신청은 DA 단계여도 대기함에 뜨지 않음(같은 단계의 다른 결재자가 처리)",
+      "roles": "신청자 겸 DA",
+      "refs": [
+        "appr.da",
+        "R-06"
+      ],
+      "states": [
+        "approvals.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-032",
+      "where": "대기함",
+      "trigger": "최종 승인 단계 문서",
+      "expected": "신청자와 1단계(DA) 승인자(대리였으면 원 담당자 포함)는 최종 승인 차례가 오지 않음",
+      "roles": "appr.final 가진 기관 담당자",
+      "refs": [
+        "appr.final",
+        "R-02"
+      ],
+      "states": [
+        "approvals.html?doc=REQ-2026-0010&as=hyun"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-033",
+      "where": "대기함",
+      "trigger": "결재 위임 기간 중인 대리인",
+      "expected": "원 담당자 차례인 문서가 대리인 대기함에 뜸. 대리인 자신의 신청과(최종 단계) 대리인이 1단계 승인한 문서는 빠짐. 대리인은 같은 결재 역할이 있어야 하고 임시 비밀번호면 안 됨",
+      "roles": "위임받은 같은 역할 내부 사용자",
+      "refs": [
+        "R-08"
+      ],
+      "states": [
+        "approvals.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-034",
+      "where": "대기함",
+      "trigger": "임시 비밀번호 상태 · 사용 중지 · 기한 만료 계정",
+      "expected": "결재 차례가 오지 않음(대기함 · 승인 · 반려 없음)",
+      "roles": "임시 비밀번호 DA · 중지 · 만료 계정",
+      "refs": [
+        "appr.da",
+        "appr.final",
+        "R-05"
+      ],
+      "states": [
+        "approvals.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-035",
+      "where": "결재함 · 단축키",
+      "trigger": "J · K 키",
+      "expected": "목록에서 다음 · 이전 문서를 열고 그 행에 포커스",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "approvals.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-036",
+      "where": "결재함 · 단축키",
+      "trigger": "A 키",
+      "expected": "열린 문서의 승인(또는 자기 승인) 버튼이 켜져 있으면 누른 것과 같음",
+      "roles": "결재자",
+      "refs": [
+        "appr.da",
+        "appr.final"
+      ],
+      "states": [
+        "approvals.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-037",
+      "where": "결재함 · 단축키",
+      "trigger": "R 키",
+      "expected": "열린 문서에 반려 버튼이 있으면 반려 창(MO-23)을 엶",
+      "roles": "결재자",
+      "refs": [
+        "MO-23"
+      ],
+      "states": [
+        "approvals.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-038",
+      "where": "결재함 · 단축키",
+      "trigger": "입력 칸 · 창이 열렸을 때 · Ctrl/Alt 조합 · 단일 키 설정 꺼짐",
+      "expected": "J · K · A · R이 동작하지 않음",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "approvals.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-039",
+      "where": "상세 패널 · 문서 없음",
+      "trigger": "없는 신청번호로 주소 열기(?doc= 또는 ?sel=)",
+      "expected": "패널에 '문서를 찾을 수 없습니다' · 'ID 결재 문서가 없거나 삭제됐습니다. 신청번호로 다시 찾거나 목록으로 돌아가세요.'와 신청번호 찾기 칸이 보임",
+      "roles": "전체",
+      "refs": [
+        "PN-21"
+      ],
+      "states": [
+        "approvals.html?doc=REQ-2099-0001"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-040",
+      "where": "상세 패널 · 열람 권한 없음",
+      "trigger": "결재 중 문서를 신청자 · 결재선 밖 사람이 열 때",
+      "expected": "'열람 권한이 없습니다' · '결재 중인 문서는 신청자와 이 문서의 결재 담당자만 볼 수 있습니다. 결재가 끝나면 참조자 · 결재 역할도 볼 수 있습니다.' 참조자 · 다른 DA · 기관 담당자도 볼 수 없음",
+      "roles": "신청자 · 결재선 밖 사용자",
+      "refs": [
+        "R-07"
+      ],
+      "states": [
+        "approvals.html?doc=REQ-2026-0011&as=choi"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-041",
+      "where": "상세 패널 · 열람 권한 없음",
+      "trigger": "끝난 문서를 볼 수 없는 사람이 열 때",
+      "expected": "'이 결재 문서는 신청자 · 참조자 · 결재 역할(DA · 기관 담당자)만 볼 수 있습니다. 지금 역할: …'. 감리는 조회 범위 안의 끝난 문서만 볼 수 있음",
+      "roles": "appr.viewall 없는 사용자",
+      "refs": [
+        "appr.viewall",
+        "R-07",
+        "R-12"
+      ],
+      "states": [
+        "approvals.html?doc=REQ-2026-0005&as=park"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-042",
+      "where": "상세 패널 · 막다른 곳",
+      "trigger": "신청번호 찾기 제출",
+      "expected": "빈 값이면 칸에 포커스만. 없거나 볼 수 없으면 'ID 신청을 찾을 수 없거나 볼 수 없습니다.'(대문자로 맞춰 찾음). 찾으면 그 문서가 속한 박스로 바꾸고 상세를 열어 제목에 포커스",
+      "roles": "전체",
+      "refs": [
+        "R-07"
+      ],
+      "states": [
+        "approvals.html?doc=REQ-2099-0001"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-043",
+      "where": "상세 패널 · 막다른 곳",
+      "trigger": "버튼 '내 신청으로' · '결재함 목록으로'",
+      "expected": "그 박스로 바꾸고 첫 문서를 엶. '결재함 목록으로'는 대기함이 있는 사람에게만 보임",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "approvals.html?doc=REQ-2099-0001"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-044",
+      "where": "상세 패널",
+      "trigger": "닫기(×) 클릭",
+      "expected": "패널이 닫히고 선택이 풀림",
+      "roles": "전체",
+      "refs": [
+        "PN-21"
+      ],
+      "states": [
+        "approvals.html?doc=REQ-2026-0016"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-045",
+      "where": "상세 패널 머리",
+      "trigger": "문서 열기",
+      "expected": "신청번호 · 유형 · 상태 배지(완료/반려됨/회수됨/'DA 승인 · 내 차례' 등) · 제목 · '신청 이름 · 일시 · 참조 …'가 보임",
+      "roles": "열람 가능한 사람",
+      "refs": [
+        "PN-21"
+      ],
+      "states": [
+        "approvals.html?doc=REQ-2026-0016",
+        "approvals.html?doc=REQ-2026-0007"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-046",
+      "where": "상세 패널 머리 · 요약 줄",
+      "trigger": "진행 중 사전 신청 문서",
+      "expected": "'내 차례' 또는 '(단계) 대기' · '확인할 항목 N건 · 반려 n' · 검사 실패가 있으면 '검사 실패 n건' 버튼(누르면 검사 결과 탭) 아니면 '검사 통과' · 'N일째'(기한 넘김이면 ' · 기한 넘김')",
+      "roles": "열람 가능한 사람",
+      "refs": [],
+      "states": [
+        "approvals.html?doc=REQ-2026-0016"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-047",
+      "where": "상세 패널 머리 · 요약 줄",
+      "trigger": "진행 중 모델 확정 문서",
+      "expected": "'확인할 변경 N건 · 배치만 n' · 확정하는 단계에서 연결 신청이 진행 중이면 빨간 '확정 차단 n건', 아니면 '진행 중 연결 신청 n건' 버튼(항목 탭으로) · '검사 실패 n건' 버튼 또는 '검사 통과'",
+      "roles": "열람 가능한 사람",
+      "refs": [],
+      "states": [
+        "approvals.html?doc=REQ-2026-0011"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-048",
+      "where": "상세 패널 머리 · 모델 링크",
+      "trigger": "모델 확정 문서",
+      "expected": "'vN 모델 보기'(model.html?area&snap) · 'vN-1 대비 변경'(MO-26 창) · '산출물'(outputs.html, 완료면 snap 포함) 링크가 보임",
+      "roles": "열람 가능한 사람",
+      "refs": [],
+      "states": [
+        "approvals.html?doc=REQ-2026-0011"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-049",
+      "where": "상세 패널 머리 · 업로드 링크",
+      "trigger": "엑셀 일괄 문서",
+      "expected": "올린 사람과 DA에게는 '업로드 UP-…' 링크(uploads.html). 그 밖의 사람에게는 '업로드 UP-…: 원본 파일은 올린 사람과 DA만 볼 수 있습니다'",
+      "roles": "올린 사람 · excel.viewall 가진 DA",
+      "refs": [
+        "excel.viewall"
+      ],
+      "states": [
+        "approvals.html?doc=REQ-2026-0016"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-050",
+      "where": "상세 패널 · 결재선",
+      "trigger": "문서 열기",
+      "expected": "신청 → DA 승인 → 최종 승인 3단계가 상태 글(완료 · 진행 중 · 반려 · 진행 안 함 · 대기)과 함께 보임. 처리한 단계는 '이름 · 일시', 반려 단계는 '반려 · 이름 · 일시', 지금 단계는 내 차례면 '내 차례' 아니면 '(역할) 처리 대기', 회수면 신청 칸에 '회수 일시', 종료 뒤 단계는 '진행 안 함 · 회수/반려로 종료'",
+      "roles": "열람 가능한 사람",
+      "refs": [
+        "PN-21",
+        "MD-20"
+      ],
+      "states": [
+        "approvals.html?doc=REQ-2026-0016",
+        "approvals.html?doc=REQ-2026-0010&as=hyun",
+        "approvals.html?doc=REQ-2026-0007"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-051",
+      "where": "상세 패널 · 결재선",
+      "trigger": "자기 승인한 단계",
+      "expected": "그 단계 이름 옆에 '자기 승인' 배지",
+      "roles": "열람 가능한 사람",
+      "refs": [
+        "R-02"
+      ],
+      "states": [
+        "approvals.html?doc=REQ-2026-0007"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-052",
+      "where": "상세 패널 · 결재선 각주",
+      "trigger": "문서 열기",
+      "expected": "'결재선은 신청 당시 설정 기준 — ' + 최종 승인 끔(생략) / 최종 승인 없음, DA 승인으로 완료 / 시스템 설정: 모델 확정 최종 승인 사용 / 기관 설정: 사전 신청 최종 승인 사용 중 하나. 최종 승인이 없으면 3번째 칸은 '최종 승인 없음' 또는 '최종 승인 생략'",
+      "roles": "열람 가능한 사람",
+      "refs": [],
+      "states": [
+        "approvals.html?doc=REQ-2026-0016",
+        "approvals.html?doc=REQ-2026-0007"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-053",
+      "where": "상세 패널 · 본문",
+      "trigger": "문서 열기",
+      "expected": "'신청 사유'와 탭 '항목 N' · '검사 결과' · '영향'(항목이 있는 사전 문서만) · '처리 이력 N'",
+      "roles": "열람 가능한 사람",
+      "refs": [],
+      "states": [
+        "approvals.html?doc=REQ-2026-0016",
+        "approvals.html?doc=REQ-2026-0011"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-054",
+      "where": "상세 패널",
+      "trigger": "항목이 있는 사전 문서를 열 때",
+      "expected": "패널이 넓어지고 목록의 유형 · 신청일 열이 숨겨짐",
+      "roles": "열람 가능한 사람",
+      "refs": [],
+      "states": [
+        "approvals.html?doc=REQ-2026-0016"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-055",
+      "where": "항목 탭 · 사전",
+      "trigger": "항목이 하나도 없는 사전 문서",
+      "expected": "빨간 띠 '이 문서에는 반영할 항목이 없습니다. 승인해도 사전이 바뀌지 않습니다. 반려 후 항목을 담아 다시 신청해야 합니다.'",
+      "roles": "열람 가능한 사람",
+      "refs": [],
+      "states": [
+        "approvals.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-056",
+      "where": "항목 탭 · 사전",
+      "trigger": "문서 열기",
+      "expected": "항목마다 두 줄 카드: 번호 · '종류 작업' 배지(추가/변경/미사용/삭제) · 이름 · 기존 ID · '검사 실패' 태그 · '함께 신청한 단어 …에 의존' / 변경 필드 '전 → 후'(빈 값은 '(빈 값)') 또는 약어 · 도메인 · 영문명, 분해 후보 선택 · 사유 · 경고 확인 · 출처",
+      "roles": "열람 가능한 사람",
+      "refs": [],
+      "states": [
+        "approvals.html?doc=REQ-2026-0016",
+        "approvals.html?doc=REQ-2026-0014"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-057",
+      "where": "항목 탭 · 사전",
+      "trigger": "이전 결재에서 반려된 항목",
+      "expected": "카드가 빨간 바탕 · 이름 취소선, '반려' 태그 + 사유 + '반려자 · 단계'. 결재자가 아닌 사람에게는 '항목 n건은 결재 중 반려돼 반영하지 않습니다(신청자 바구니로 돌아감).' 안내",
+      "roles": "열람 가능한 사람",
+      "refs": [],
+      "states": [
+        "approvals.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-058",
+      "where": "항목 탭 · 거르기",
+      "trigger": "칩 '전체 · 추가 · 변경 · 미사용/삭제 · 검사 실패 · 반려 표시' 클릭",
+      "expected": "칩마다 건수가 붙고, 고른 칩의 항목만 남음(영향 탭 행은 거르지 않음)",
+      "roles": "열람 가능한 사람",
+      "refs": [],
+      "states": [
+        "approvals.html?doc=REQ-2026-0016"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-059",
+      "where": "항목 탭 · 거르기",
+      "trigger": "'항목 이름 · 약어 찾기' 입력 · Esc",
+      "expected": "이름 · 약어로 항목을 거름(입력해도 포커스 유지). Esc는 검색어를 지움",
+      "roles": "열람 가능한 사람",
+      "refs": [],
+      "states": [
+        "approvals.html?doc=REQ-2026-0016"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-060",
+      "where": "항목 탭 · 개수 줄",
+      "trigger": "거르기 적용",
+      "expected": "'N건 중 M건 · 신청 순' + '검색: …' · 칩 이름 조건 칩(× 지움). 조건이 없으면 '항목 N건 · 신청 순'. 남는 항목이 없으면 '필터에 맞는 항목이 없습니다' + '모두 지우기'",
+      "roles": "열람 가능한 사람",
+      "refs": [],
+      "states": [
+        "approvals.html?doc=REQ-2026-0016"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-061",
+      "where": "항목 탭 · 거르기",
+      "trigger": "다른 문서를 열 때",
+      "expected": "항목 거르기 · 검색이 '전체'로 초기화됨",
+      "roles": "열람 가능한 사람",
+      "refs": [],
+      "states": [
+        "approvals.html?doc=REQ-2026-0016"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-062",
+      "where": "항목 탭 · 항목 반려",
+      "trigger": "내 차례인 사전 문서 열기",
+      "expected": "안내 '일부 항목만 문제가 있으면 항목마다 [이 항목 반려]로 빼고 나머지를 승인할 수 있습니다. 반려한 항목은 반영하지 않고 신청자 바구니로 돌려보냅니다.'와 항목마다 '이 항목 반려' 버튼이 보임. 내 차례가 아니면 버튼 숨김",
+      "roles": "그 단계 결재자(appr.da · appr.final · 대리인)",
+      "refs": [
+        "appr.da",
+        "appr.final"
+      ],
+      "states": [
+        "approvals.html?doc=REQ-2026-0016",
+        "approvals.html?doc=REQ-2026-0010&as=hyun"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-063",
+      "where": "항목 탭 · 항목 반려",
+      "trigger": "버튼 '이 항목 반려' 클릭",
+      "expected": "그 카드 아래 사유 칸(최대 80자, '반려 사유 (필수 · Enter 반려 · Esc 취소)') · '반려' · '취소'가 열리고 칸에 포커스",
+      "roles": "그 단계 결재자",
+      "refs": [
+        "appr.da",
+        "appr.final"
+      ],
+      "states": [
+        "approvals.html?doc=REQ-2026-0016"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-064",
+      "where": "항목 탭 · 항목 반려",
+      "trigger": "사유 비운 채 '반려' 또는 Enter",
+      "expected": "'반려 사유를 입력해야 합니다' 오류 알림, 칸에 포커스",
+      "roles": "그 단계 결재자",
+      "refs": [],
+      "states": [
+        "approvals.html?doc=REQ-2026-0016"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-065",
+      "where": "항목 탭 · 항목 반려",
+      "trigger": "사유 입력 후 '반려' 또는 Enter",
+      "expected": "카드가 빨간 바탕 · 이름 취소선, '반려 표시' 태그 + 사유, '반려 취소' 버튼. 바닥 버튼이 '문서 전체 반려'와 'N건 승인 · n건 반려'(신청자면 '자기 승인 N건 · n건 반려')로 바뀜. 표시는 승인 전까지 이 화면에만 있고 같은 탭 새로고침 뒤에도 남음",
+      "roles": "그 단계 결재자",
+      "refs": [
+        "appr.da",
+        "appr.final"
+      ],
+      "states": [
+        "approvals.html?doc=REQ-2026-0016"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-066",
+      "where": "항목 탭 · 항목 반려",
+      "trigger": "사유 칸에서 '취소' 또는 Esc",
+      "expected": "사유 칸이 닫히고 '이 항목 반려' 버튼에 포커스",
+      "roles": "그 단계 결재자",
+      "refs": [],
+      "states": [
+        "approvals.html?doc=REQ-2026-0016"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-067",
+      "where": "항목 탭 · 항목 반려",
+      "trigger": "버튼 '반려 취소' 클릭",
+      "expected": "그 항목의 반려 표시와 그 항목에 대한 '그대로 둠' 선택이 지워지고 '이 항목 반려' 버튼에 포커스",
+      "roles": "그 단계 결재자",
+      "refs": [],
+      "states": [
+        "approvals.html?doc=REQ-2026-0016"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-068",
+      "where": "항목 탭 · 의존 항목",
+      "trigger": "단어 · 도메인 · 도메인분류 항목을 반려 표시했고 같은 문서에 그것에 기대는 추가 항목이 있을 때",
+      "expected": "그 카드 아래 경고 띠 '이 (종류)에 기대는 n건(이름, …) — 함께 반려하지 않으면 승인 재검사에서 걸립니다' + '함께 반려 n건' · '그대로 둠'. 바닥에 '의존 미처리 n'",
+      "roles": "그 단계 결재자",
+      "refs": [],
+      "states": [
+        "approvals.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-069",
+      "where": "항목 탭 · 의존 항목",
+      "trigger": "버튼 '함께 반려 n건' 클릭",
+      "expected": "기대는 항목들이 사유 '‘기준 항목’ 반려에 따름 — (기준 사유)'로 함께 반려 표시되고 '‘이름’에 기대는 n건(…)을 함께 반려 표시했습니다' 알림",
+      "roles": "그 단계 결재자",
+      "refs": [],
+      "states": [
+        "approvals.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-070",
+      "where": "항목 탭 · 의존 항목",
+      "trigger": "버튼 '그대로 둠' 클릭",
+      "expected": "경고 띠가 사라지고 그 의존은 미처리 수에서 빠짐",
+      "roles": "그 단계 결재자",
+      "refs": [],
+      "states": [
+        "approvals.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-071",
+      "where": "항목 탭 · 항목 반려",
+      "trigger": "결재 권한이 없는데 항목 반려 조작이 들어올 때(다른 탭에서 권한이 바뀜 등)",
+      "expected": "'지금 역할로는 이 문서의 항목을 반려할 수 없습니다' 오류 알림, 아무것도 바뀌지 않음",
+      "roles": "결재자 아님",
+      "refs": [
+        "appr.da",
+        "appr.final"
+      ],
+      "states": [
+        "approvals.html?doc=REQ-2026-0016"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-072",
+      "where": "항목 탭 · 남은 반려 표시",
+      "trigger": "같은 탭에서 새로고침 뒤 저장되지 않은 반려 표시가 남은 문서를 열 때",
+      "expected": "경고 띠 '이 문서에 저장되지 않은 반려 표시 n건이 남아 있습니다 (이름, …).' + '이어서' · '지우기'. '이어서'는 표시를 되살리고 '반려 표시 n건을 이어서 처리합니다', '지우기'는 버리고 '남아 있던 반려 표시를 지웠습니다'",
+      "roles": "그 단계 결재자",
+      "refs": [],
+      "states": [
+        "approvals.html?doc=REQ-2026-0016"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-073",
+      "where": "항목 탭 · 남은 반려 표시",
+      "trigger": "남은 표시에 답하지 않고 새 항목을 반려 표시할 때",
+      "expected": "남아 있던 표시를 덮어쓰지 않고 합쳐서 이어감",
+      "roles": "그 단계 결재자",
+      "refs": [],
+      "states": [
+        "approvals.html?doc=REQ-2026-0016"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-074",
+      "where": "항목 탭 · 사전",
+      "trigger": "목업 시드 문서(대표 행만)",
+      "expected": "띠 '목업 시드: 이 문서는 N건 중 대표 n행만 담고 있습니다. 승인하면 이 n행만 반영됩니다.'",
+      "roles": "열람 가능한 사람",
+      "refs": [],
+      "states": [
+        "approvals.html?doc=REQ-2026-0016"
+      ],
+      "verify": "exempt",
+      "exemptReason": "목업 전용 시드 표시(대표 행 · 제출 사본 없음) — 제품 데이터에는 없음"
+    },
+    {
+      "id": "BH-approvals-075",
+      "where": "항목 탭 · 엑셀 문서",
+      "trigger": "엑셀 일괄 문서 열기",
+      "expected": "신청 때 고정된 요약 '신규 · 변경 · 후보 확정 · 미사용 · 보류 · 제외' 수와 업로드 링크, '기준본 …'이 항목 카드 위에 보임",
+      "roles": "열람 가능한 사람",
+      "refs": [],
+      "states": [
+        "approvals.html?doc=REQ-2026-0016"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-076",
+      "where": "항목 탭 · 모델",
+      "trigger": "모델 확정 문서 열기",
+      "expected": "'준수율(신청 시점) · 미준수 · 예외 · vN-1 대비 변경' 수, '승인은 제출 사본(일시)으로 판정합니다.' + '제출 사본 보기' 링크, '표준 예외 목록'(위치 · 항목 · 사유, 없으면 '예외 없음')",
+      "roles": "열람 가능한 사람",
+      "refs": [],
+      "states": [
+        "approvals.html?doc=REQ-2026-0011"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-077",
+      "where": "항목 탭 · 모델",
+      "trigger": "모델이 진행 중 용어 신청에 기댈 때",
+      "expected": "'연결된 용어 신청 n' 표(속성 · 신청 링크 · 단계). 진행 중이 있으면 DA 단계(최종 있음)는 'DA 단계는 확인 표시 후 넘길 수 있지만, 최종 승인(확정)은 연결 신청이 모두 완료돼야 합니다.', 확정 단계는 '연결 신청이 모두 완료돼야 확정할 수 있습니다.' + '반려·회수된 신청이 있으면 승인할 수 없습니다.'",
+      "roles": "열람 가능한 사람",
+      "refs": [],
+      "states": [
+        "approvals.html?doc=REQ-2026-0011"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-078",
+      "where": "항목 탭 · 모델",
+      "trigger": "제출 모델 사본이 없는 시드 문서",
+      "expected": "'제출 사본 없음(목업 시드)' 표시",
+      "roles": "열람 가능한 사람",
+      "refs": [],
+      "states": [
+        "approvals.html?doc=REQ-2026-0011"
+      ],
+      "verify": "exempt",
+      "exemptReason": "목업 전용 시드 표시(대표 행 · 제출 사본 없음) — 제품 데이터에는 없음"
+    },
+    {
+      "id": "BH-approvals-079",
+      "where": "검사 결과 탭 · 사전",
+      "trigger": "진행 중 사전 문서",
+      "expected": "항목 · 구분 · 현재 사전 기준(통과 / 실패 n건 + 문제 / '검사 제외 · 이유') 표. 반려(표시)한 항목은 검사에서 빠짐",
+      "roles": "열람 가능한 사람",
+      "refs": [],
+      "states": [
+        "approvals.html?doc=REQ-2026-0016",
+        "approvals.html?doc=REQ-2026-0014"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-080",
+      "where": "검사 결과 탭 · 사전",
+      "trigger": "실패 항목 이름 버튼 클릭",
+      "expected": "항목 탭으로 바꾸고 그 행이 가려져 있으면 거르기를 풀고, 행을 가운데로 스크롤해 2.4초 강조, '이 항목 반려'(또는 '반려 취소')에 포커스",
+      "roles": "열람 가능한 사람",
+      "refs": [],
+      "states": [
+        "approvals.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-081",
+      "where": "검사 결과 탭 · 사전",
+      "trigger": "검수 기준 버전 표시",
+      "expected": "'검수 기준: 신청 시점 vA · 현재 vB'. 다르면 '신청 뒤 기준이 바뀌어 현재 기준으로 다시 검사합니다' + '무엇이 바뀌었나'(rules.html?from=vA), 항상 '기준 보기' 링크와 꺼진 규칙 안내",
+      "roles": "열람 가능한 사람",
+      "refs": [],
+      "states": [
+        "approvals.html?doc=REQ-2026-0016"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-082",
+      "where": "검사 결과 탭 · 사전",
+      "trigger": "경고 수준 문제가 있는 항목",
+      "expected": "그 행 끝에 '경고 n · 내용'(노랑)",
+      "roles": "열람 가능한 사람",
+      "refs": [],
+      "states": [
+        "approvals.html?doc=REQ-2026-0016"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-083",
+      "where": "검사 결과 탭 · 사전",
+      "trigger": "검사 결과 아래",
+      "expected": "실패가 있으면 'n건 실패. DA 승인과 최종 승인 모두 이 검사를 다시 하며, 실패가 있으면 승인하지 않고 이력에 남깁니다. 반려해 보완을 요청하세요.', 없으면 '승인할 때마다(DA·최종) 현재 사전 기준으로 다시 검사합니다.'",
+      "roles": "열람 가능한 사람",
+      "refs": [],
+      "states": [
+        "approvals.html?doc=REQ-2026-0016"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-084",
+      "where": "검사 결과 탭 · 사전",
+      "trigger": "완료 문서",
+      "expected": "다시 검사하지 않고 '최종 승인 때 검사를 통과해 반영했습니다. 반영 N건 · 실패 n건(…). 반영 뒤 바뀐 내용은 표준 사전 변경 내역에서 확인하세요.'(링크)",
+      "roles": "열람 가능한 사람",
+      "refs": [],
+      "states": [
+        "approvals.html?doc=REQ-2026-0007"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-085",
+      "where": "검사 결과 탭 · 사전",
+      "trigger": "검사할 항목이 없을 때",
+      "expected": "'검사할 항목이 없습니다.'",
+      "roles": "열람 가능한 사람",
+      "refs": [],
+      "states": [
+        "approvals.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-086",
+      "where": "검사 결과 탭 · 모델",
+      "trigger": "모델 확정 문서",
+      "expected": "검사 · 신청 시점 · 제출 모델 재검사 표: 미준수(통과/n건), 연결된 용어 신청(통과/'반려·회수 n건'), 표준 예외(사유 기록) 수. 아래 '승인은 제출된 모델 사본으로 다시 검사합니다(지금 작업 중인 모델이 아님).'",
+      "roles": "열람 가능한 사람",
+      "refs": [
+        "MD-20"
+      ],
+      "states": [
+        "approvals.html?doc=REQ-2026-0011"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-087",
+      "where": "영향 탭 · 사전",
+      "trigger": "탭 '영향'을 처음 열 때",
+      "expected": "합계 '모델 컬럼 · 기대는 항목 · 주의'와 항목별 '사용하는 모델 컬럼 n곳'(있으면 '표준 맞추기에서 보기' 링크, 신규는 '신규 — 사용하는 모델 컬럼 0곳'), 단어 · 도메인 · 분류는 기대는 용어/도메인 수와 이름(6개 넘으면 '외 n건')을 보임",
+      "roles": "열람 가능한 사람",
+      "refs": [],
+      "states": [
+        "approvals.html?doc=REQ-2026-0016"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-088",
+      "where": "영향 탭 · 사전",
+      "trigger": "위험한 변경이 있을 때",
+      "expected": "항목 아래 경고: '허용 값이 바뀜 — 기존 데이터 위반 가능. 반영 전 운영 데이터 점검 필요' · '이름·약어·규격이 바뀜 — 사용처 다시 판정 필요' · '(미사용/삭제) 대상인데 아직 쓰는 곳이 있음'",
+      "roles": "열람 가능한 사람",
+      "refs": [],
+      "states": [
+        "approvals.html?doc=REQ-2026-0010&as=hyun"
+      ],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-approvals-089",
+      "where": "처리 이력 탭",
+      "trigger": "탭 열기",
+      "expected": "신청 · 승인 · 반려 · 회수 · 의견(펜 아이콘)이 시간순. 자기 승인은 '(자기 승인)', 대리는 '(대리 — 원 담당자)', 재검사 실패 · 반영 실패 · 항목 반려 · 담당 지정 필요도 한 줄씩",
+      "roles": "열람 가능한 사람",
+      "refs": [
+        "R-02",
+        "R-08"
+      ],
+      "states": [
+        "approvals.html?doc=REQ-2026-0007"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-090",
+      "where": "처리 이력 탭 · 의견",
+      "trigger": "진행 중 사전 문서에서 의견 입력 후 '의견 남기기'",
+      "expected": "빈 값이면 칸에 포커스만(최대 200자). 저장되면 이력에 '의견'으로 붙고, 내가 신청자가 아니면 신청자에게 'ID에 의견이 달렸습니다' 알림, '의견을 남겼습니다. 처리 이력에 보이며 결재에는 영향이 없습니다'. 그사이 볼 수 없게 됐으면 '문서를 다시 확인하세요. 결재가 끝났거나 볼 수 없습니다'",
+      "roles": "열람 가능한 사람",
+      "refs": [],
+      "states": [
+        "approvals.html?doc=REQ-2026-0016"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-091",
+      "where": "상세 패널 바닥 · 결재자",
+      "trigger": "내 차례 문서",
+      "expected": "'DA로서'(또는 '기관 담당자로서') + '반려' + '승인' 버튼, 왼쪽에 'J K 이동 A 승인 R 반려' 단축키 안내",
+      "roles": "그 단계 결재자(appr.da · appr.final · 대리인)",
+      "refs": [
+        "appr.da",
+        "appr.final",
+        "R-08"
+      ],
+      "states": [
+        "approvals.html?doc=REQ-2026-0016",
+        "approvals.html?doc=REQ-2026-0010&as=hyun"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-092",
+      "where": "상세 패널 바닥 · 결재자 아님",
+      "trigger": "진행 중이지만 내 차례가 아닌 문서",
+      "expected": "승인 · 반려 버튼이 숨겨지고 '지금은 (역할) 차례입니다'(그 단계 역할이 없으면 ' · 내 역할로는 조회만 가능')",
+      "roles": "결재선의 다른 사람 · 신청자",
+      "refs": [
+        "appr.da",
+        "appr.final"
+      ],
+      "states": [
+        "approvals.html?doc=REQ-2026-0012",
+        "approvals.html?doc=REQ-2026-0010&as=hyun"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-093",
+      "where": "상세 패널 바닥 · 자기 승인",
+      "trigger": "신청자가 그 단계 결재자이고 자기 승인 허용",
+      "expected": "승인 버튼 이름이 '자기 승인'",
+      "roles": "신청자 겸 DA",
+      "refs": [
+        "appr.da",
+        "R-02"
+      ],
+      "states": [
+        "approvals.html?doc=REQ-2026-0014"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-094",
+      "where": "상세 패널 바닥 · 자기 승인",
+      "trigger": "자기 승인이 비허용인데 신청자에게 승인 버튼이 그려질 때",
+      "expected": "'자기 승인' 버튼이 흐려지고 툴팁 '자기 승인이 비허용으로 설정돼 있습니다 — 같은 단계의 다른 결재자가 승인합니다(설정 › 기관 › 자기 승인)'(목업에서 확인 필요 — 비허용이면 내 신청이 대기함에 오지 않아 이 상태가 보이지 않을 수 있음)",
+      "roles": "신청자 겸 DA",
+      "refs": [
+        "R-06"
+      ],
+      "states": [
+        "approvals.html?doc=REQ-2026-0014"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-095",
+      "where": "상세 패널 바닥 · 모델 확정 차단",
+      "trigger": "확정하는 단계(최종, 또는 최종 없는 DA)에서 연결 용어 신청이 진행 중일 때",
+      "expected": "빨간 글 'REQ-… 완료 전에는 확정할 수 없습니다', '반려' 버튼, 흐린 '승인'(툴팁 '연결 용어 신청이 끝나야 확정할 수 있습니다')",
+      "roles": "그 단계 결재자",
+      "refs": [
+        "appr.da",
+        "appr.final"
+      ],
+      "states": [
+        "approvals.html?doc=REQ-2026-0011"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-096",
+      "where": "상세 패널 바닥 · 모든 항목 반려",
+      "trigger": "사전 문서의 모든 항목이 반려(표시)됐을 때",
+      "expected": "'모든 항목을 반려해 문서 반려로 처리합니다' + '문서 반려 (항목 N건)'. 누르면 반려 창의 의견에 '항목 전체 반려 — 이름: 사유 · …'가 미리 채워짐(고칠 수 있음)",
+      "roles": "그 단계 결재자",
+      "refs": [
+        "MO-23"
+      ],
+      "states": [
+        "approvals.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-097",
+      "where": "상세 패널 바닥 · 완료",
+      "trigger": "완료 문서",
+      "expected": "'완료 · 마지막 처리 일시 이름', 모델이면 'vN 확정본 보기'(model.html?area&snap) 버튼",
+      "roles": "열람 가능한 사람",
+      "refs": [],
+      "states": [
+        "approvals.html?doc=REQ-2026-0007",
+        "approvals.html?doc=REQ-2026-0003"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-098",
+      "where": "상세 패널 바닥 · 끝난 문서",
+      "trigger": "반려됨 · 회수됨 문서를 신청자가 아닌 사람이 볼 때",
+      "expected": "'반려됨. 더 처리할 일이 없습니다'(또는 '회수됨. …')",
+      "roles": "열람 가능한 사람",
+      "refs": [],
+      "states": [
+        "approvals.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-099",
+      "where": "상세 패널 바닥 · 신청자",
+      "trigger": "내가 신청한 진행 중 문서",
+      "expected": "'신청자로서' + '회수' 버튼",
+      "roles": "신청자",
+      "refs": [
+        "MD-21"
+      ],
+      "states": [
+        "approvals.html?doc=REQ-2026-0014"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-100",
+      "where": "상세 패널 바닥 · 신청자",
+      "trigger": "내가 신청한 반려됨 · 회수됨 문서",
+      "expected": "'신청자로서' + '보완해서 다시 신청'(모델 → model.html?area, 엑셀 → excel-import.html?resume=, 표준 맞추기 → standardize.html?redo=, 그 밖 → dictionary.html?redo=) + '새 신청번호로 만들어집니다'",
+      "roles": "신청자",
+      "refs": [
+        "MD-21"
+      ],
+      "states": [
+        "approvals.html?box=mine"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-101",
+      "where": "승인 창(MO-24)",
+      "trigger": "버튼 '승인' 클릭(신청자 아님)",
+      "expected": "'승인' 창이 열리고 제목에 포커스. 요약 'ID 제목' + 다음 단계가 있으면 '승인하면 최종 승인(기관 담당자)으로 넘어갑니다.', 모델은 '승인하면 확정본이 되고, 모델 화면에서 다음 작업 버전을 시작할 수 있습니다.', 사전은 '승인하면 사전에 반영되고 각 항목의 버전이 올라갑니다.' 항목 반려가 있으면 '항목 n건 반려 — 반영하지 않고 신청자(이름) 바구니로 돌려보냅니다. 나머지 N건을 승인합니다.', 의존 미처리가 있으면 '의존 미처리 n건 — …'. 승인 의견은 선택",
+      "roles": "그 단계 결재자",
+      "refs": [
+        "appr.da",
+        "appr.final"
+      ],
+      "states": [
+        "approvals.html?doc=REQ-2026-0012"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-102",
+      "where": "승인 창 · 자기 승인 창",
+      "trigger": "진행 중 연결 용어 신청이 있는 모델 문서",
+      "expected": "창에 확인 체크 '진행 중인 용어 신청 n건(REQ-…)을 확인했습니다. 반려되면 확정본에서 다시 맞춰야 합니다'가 나옴(열 때마다 해제)",
+      "roles": "그 단계 결재자",
+      "refs": [],
+      "states": [
+        "approvals.html?doc=REQ-2026-0011"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-103",
+      "where": "승인 창 · 자기 승인 창",
+      "trigger": "연결 신청 확인 체크 없이 승인",
+      "expected": "'진행 중인 연결 용어 신청을 확인했다고 표시해야 승인할 수 있습니다' 오류, 승인 안 됨",
+      "roles": "그 단계 결재자",
+      "refs": [],
+      "states": [
+        "approvals.html?doc=REQ-2026-0011"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-104",
+      "where": "승인 창 · 반려 창 · 회수 창 · 자기 승인 창",
+      "trigger": "'취소' · Esc",
+      "expected": "창이 닫히고 포커스가 연 버튼으로 돌아감",
+      "roles": "전체",
+      "refs": [
+        "MO-22",
+        "MO-23"
+      ],
+      "states": [
+        "approvals.html?doc=REQ-2026-0012"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-105",
+      "where": "자기 승인 창(MO-22)",
+      "trigger": "버튼 '자기 승인' 클릭",
+      "expected": "'자기 승인' 창: '본인이 신청한 문서를 ID · DA(항목 n건 반려 · N건 승인) 단계에서 승인합니다. 사유는 결재 이력과 감사 로그에 ‘자기 승인’으로 남습니다.' 사유 칸이 비워진 채 포커스",
+      "roles": "신청자 겸 그 단계 결재자",
+      "refs": [
+        "MO-22",
+        "R-02",
+        "MD-25"
+      ],
+      "states": [
+        "approvals.html?doc=REQ-2026-0014"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-106",
+      "where": "자기 승인 창(MO-22)",
+      "trigger": "자기 승인 사유가 비었을 때",
+      "expected": "'사유 남기고 승인'이 흐려지고 '사유를 입력해야 합니다'가 보임(공백만은 빈 값)",
+      "roles": "신청자 겸 그 단계 결재자",
+      "refs": [
+        "MO-22"
+      ],
+      "states": [
+        "approvals.html?doc=REQ-2026-0014"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-107",
+      "where": "자기 승인 창(MO-22)",
+      "trigger": "사유 입력 후 '사유 남기고 승인'",
+      "expected": "이력에 승인 줄이 '(자기 승인)'과 사유로 남고 감사 로그 종류 '자기 승인'. 최종 승인이 없던 결재선이면 최종 승인 단계가 붙고 이력 '자기 승인 — 최종 승인 단계 추가'(사유 '자기 승인한 문서는 최종 승인을 거칩니다(R-02)'), 문서는 최종 승인 단계로 넘어감",
+      "roles": "신청자 겸 DA",
+      "refs": [
+        "R-02",
+        "MO-22",
+        "MD-25"
+      ],
+      "states": [
+        "approvals.html?doc=REQ-2026-0014"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-108",
+      "where": "자기 승인 창(MO-22)",
+      "trigger": "신청자가 아닌 최종 승인자가 없을 때 자기 승인",
+      "expected": "'자기 승인은 신청자가 아닌 최종 승인자가 있을 때만 할 수 있습니다 — 다른 DA가 승인하거나 기관 담당자를 지정하세요' 오류, 승인 안 됨",
+      "roles": "신청자 겸 DA",
+      "refs": [
+        "R-02"
+      ],
+      "states": [
+        "approvals.html?doc=REQ-2026-0014"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-109",
+      "where": "자기 승인 창(MO-22)",
+      "trigger": "창을 연 사이 자기 승인이 비허용으로 바뀜",
+      "expected": "'자기 승인이 비허용으로 바뀌었습니다 — 승인하지 않았습니다. 같은 단계의 다른 결재자가 승인합니다' 오류",
+      "roles": "신청자 겸 DA",
+      "refs": [
+        "R-06"
+      ],
+      "states": [
+        "approvals.html?doc=REQ-2026-0014"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-110",
+      "where": "승인 · 반려 · 회수 실행",
+      "trigger": "실행 순간 문서 단계가 창을 열 때와 다를 때(회수는 진행 중이 아닐 때)",
+      "expected": "'ID의 상태가 바뀌어 처리하지 않았습니다(지금 (단계)). 최신 상태를 다시 확인하세요' 오류, 목록 · 상세 다시 그림",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "approvals.html?doc=REQ-2026-0012"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-111",
+      "where": "승인 · 반려 실행",
+      "trigger": "실행 순간 내 차례가 아닐 때(권한 · 담당 · 위임이 바뀜)",
+      "expected": "'지금 역할(…)로는 ID의 (역할) 단계를 처리할 수 없습니다' 오류, 처리 안 됨",
+      "roles": "전체",
+      "refs": [
+        "appr.da",
+        "appr.final",
+        "R-08"
+      ],
+      "states": [
+        "approvals.html?doc=REQ-2026-0012"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-112",
+      "where": "승인 · 반려 · 회수 · 의견 실행",
+      "trigger": "다른 탭에서 로그인 사용자가 바뀐 뒤 실행",
+      "expected": "'다른 탭에서 사용자가 바뀌었습니다(지금 이름) — 새로고침한 뒤 다시 처리하세요' 오류 + '새로고침' 버튼",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "approvals.html?doc=REQ-2026-0012"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-113",
+      "where": "승인 실행 · 모델",
+      "trigger": "확정하는 단계에서 연결 용어 신청이 진행 중",
+      "expected": "'연결된 용어 신청이 아직 진행 중이라 확정할 수 없습니다. REQ-…. 먼저 처리하거나 신청자에게 보완을 요청하세요' 오류 + 'REQ-… 열기' 버튼",
+      "roles": "그 단계 결재자",
+      "refs": [],
+      "states": [
+        "approvals.html?doc=REQ-2026-0011"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-114",
+      "where": "승인 실행 · 모델",
+      "trigger": "제출 사본 재검사에 미준수 · 반려/회수된 연결 신청이 있을 때",
+      "expected": "이력 '재검사 실패. 승인 취소'(사유 '제출 모델 미준수 n건') + '재검사 실패. 제출된 모델에 미준수 n건이 있어 승인하지 않았습니다. 이력에 남겼습니다' 오류",
+      "roles": "그 단계 결재자",
+      "refs": [
+        "MD-20"
+      ],
+      "states": [
+        "approvals.html?doc=REQ-2026-0011"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-115",
+      "where": "승인 실행 · 사전",
+      "trigger": "현재 사전 기준 재검사에 실패 항목이 있을 때",
+      "expected": "이력 '재검사 실패. 승인 취소'(항목: 문제) + '재검사 실패 n건. 사전에 반영하지 않았습니다. [검사 결과] 탭과 이력을 확인하고 반려하세요' 오류",
+      "roles": "그 단계 결재자",
+      "refs": [],
+      "states": [
+        "approvals.html?doc=REQ-2026-0016"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-116",
+      "where": "승인 실행 · 사전",
+      "trigger": "모든 항목이 반려(표시)된 상태로 승인",
+      "expected": "'모든 항목이 반려돼 승인할 수 없습니다. 문서 반려로 처리하세요' 오류",
+      "roles": "그 단계 결재자",
+      "refs": [],
+      "states": [
+        "approvals.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-117",
+      "where": "승인 결과 · DA 단계",
+      "trigger": "최종 승인이 있는 결재선에서 DA 승인",
+      "expected": "문서가 최종 승인 단계로 넘어가고 최종 승인할 수 있는 사람에게 'ID. 최종 승인 차례' 알림, 신청자에게 'ID DA 승인됨. 최종 승인 대기' 알림, 'DA 승인. 최종 승인 담당자 n명에게 알렸습니다' 알림",
+      "roles": "appr.da 가진 DA · 대리인",
+      "refs": [
+        "appr.da"
+      ],
+      "states": [
+        "approvals.html?doc=REQ-2026-0012"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-118",
+      "where": "승인 결과 · DA 단계",
+      "trigger": "DA 승인 뒤 최종 승인할 수 있는 사람이 없을 때",
+      "expected": "이력 '최종 승인 담당자 없음 — 담당 지정 필요' + 'DA 승인. 이 시스템을 맡은 최종 승인자가 없어 결재가 멈춰 있습니다 — Admin에게 담당 지정을 요청하세요' 오류 알림",
+      "roles": "appr.da 가진 DA",
+      "refs": [
+        "appr.final"
+      ],
+      "states": [
+        "approvals.html?doc=REQ-2026-0011"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-119",
+      "where": "승인 결과 · 모델 완료",
+      "trigger": "모델 확정의 마지막 단계 승인",
+      "expected": "확정본(vN)이 만들어지고 신청자에게 'ID 최종 승인. vN 확정본' 알림, '(DA 승인으로 완료 또는 최종 승인). 확정본(vN)이 만들어졌습니다. 모델 화면에서 다음 작업 버전을 시작할 수 있습니다' + '확정본 보기' 버튼",
+      "roles": "그 단계 결재자",
+      "refs": [
+        "appr.da",
+        "appr.final"
+      ],
+      "states": [
+        "approvals.html?doc=REQ-2026-0011"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-120",
+      "where": "승인 결과 · 사전 완료",
+      "trigger": "사전 신청의 마지막 단계 승인",
+      "expected": "반려 안 된 항목이 사전에 반영(신규 V1 · 기존 버전 +1 · 진행 중 표시 해제 · 변경 내역 한 줄씩). 실패가 있으면 이력 '반영 실패 n건'. 신청자에게 'ID 반영됨 — 반영 n · 반려 n(바구니로 돌아감) · 실패 n' 알림, '최종 승인. 사전에 n건 반영 … · 항목 버전이 올라갔습니다(제정차수는 DA 공표 때만)'(실패 있으면 오류 색)",
+      "roles": "그 단계 결재자",
+      "refs": [
+        "appr.final",
+        "appr.da"
+      ],
+      "states": [
+        "approvals.html?doc=REQ-2026-0010&as=hyun"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-121",
+      "where": "승인 결과 · 사전 완료",
+      "trigger": "사용 중인 기존 항목(변경 · 미사용)이 반영됐을 때",
+      "expected": "모델러 전원에게 문서당 한 건 'ID 사전 반영. 사용 중인 항목 n건 변경' 알림(표준 맞추기 링크)",
+      "roles": "그 단계 결재자",
+      "refs": [],
+      "states": [
+        "approvals.html?doc=REQ-2026-0010&as=hyun"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-122",
+      "where": "승인 결과 · 엑셀 문서",
+      "trigger": "엑셀 일괄 문서가 반영될 때",
+      "expected": "업로드 묶음 상태가 '반영됨'이 되고, 알림에 '반영본 내려받기' 버튼('반영본_UP-….xlsx. 새 버전·ID가 들어간 편집용 엑셀'), 신청자 알림에 '엑셀 원본을 반영본으로 맞추세요'",
+      "roles": "그 단계 결재자",
+      "refs": [],
+      "states": [
+        "approvals.html?doc=REQ-2026-0016"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-123",
+      "where": "승인 결과 · 항목 반려",
+      "trigger": "반려 표시가 있는 채 승인",
+      "expected": "표시한 항목이 문서에 반려(사유 · 반려자 · 단계)로 기록되고 이력 '항목 n건 반려'. 그 항목들은 신청자 바구니로 돌아가고(이미 담긴 같은 항목은 건너뜀), 사전의 '진행 중' 표시가 풀리며(신규는 '보완 필요'), 신청자에게 'ID 항목 n건이 반려되어 바구니로 돌아갔습니다' 알림(dictionary.html?basket=1). 결과 알림에 ' · 항목 n건 반려(신청자 바구니로 n건 돌려보냄)'",
+      "roles": "그 단계 결재자",
+      "refs": [
+        "appr.da",
+        "appr.final"
+      ],
+      "states": [
+        "approvals.html?doc=REQ-2026-0016"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-124",
+      "where": "승인 결과 · 대리",
+      "trigger": "위임받은 대리인이 승인 · 반려",
+      "expected": "이력에 '(역할) 승인 (대리 — 원 담당자)' 또는 '반려 (대리 — 원 담당자)'로 남음",
+      "roles": "위임받은 대리인",
+      "refs": [
+        "R-08"
+      ],
+      "states": [
+        "approvals.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-125",
+      "where": "반려 창(MO-23)",
+      "trigger": "버튼 '반려'(또는 '문서 전체 반려') 클릭",
+      "expected": "'반려 · ID' 창이 열림. '반려 의견 *(신청자에게 앱 알림으로 전달됩니다)'",
+      "roles": "그 단계 결재자",
+      "refs": [
+        "MO-23"
+      ],
+      "states": [
+        "approvals.html?doc=REQ-2026-0012"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-126",
+      "where": "반려 창(MO-23)",
+      "trigger": "반려 의견이 비었을 때",
+      "expected": "'반려' 버튼이 흐려지고 '반려 의견을 입력해야 합니다'가 보임",
+      "roles": "그 단계 결재자",
+      "refs": [
+        "MO-23"
+      ],
+      "states": [
+        "approvals.html?doc=REQ-2026-0012"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-127",
+      "where": "반려 창(MO-23)",
+      "trigger": "의견 입력 후 '반려'",
+      "expected": "문서가 반려됨(항목 반려 표시는 버려짐). 이력 '반려'(대리면 대리 표시), 사전 항목의 '진행 중' 해제, 엑셀이 아닌 사전 문서는 항목 전부를 '문서 반려 — 의견' 사유로 신청자 바구니에 돌려보냄, 신청자에게 'ID 반려됨. 보완 필요' 알림. '반려했습니다. 신청자에게 의견과 함께 알렸습니다 · 항목 n건을 신청자 바구니로 돌려보냄 · 사전 항목 n건의 ‘진행 중’을 풀었습니다'",
+      "roles": "그 단계 결재자",
+      "refs": [
+        "appr.da",
+        "appr.final",
+        "MO-23"
+      ],
+      "states": [
+        "approvals.html?doc=REQ-2026-0012"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-128",
+      "where": "회수 창(MO-25)",
+      "trigger": "버튼 '회수' 클릭",
+      "expected": "'회수 · ID' 창: '회수하면 결재가 취소되고, 모델 확정이면 업무 영역 잠금이 풀려 다시 편집할 수 있습니다.' 사유 칸 포커스. 사유가 비면 '회수' 버튼 흐림 + '사유를 입력해야 합니다'",
+      "roles": "신청자",
+      "refs": [
+        "MD-21"
+      ],
+      "states": [
+        "approvals.html?doc=REQ-2026-0014"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-129",
+      "where": "회수 창(MO-25)",
+      "trigger": "사유 입력 후 '회수'",
+      "expected": "DA · 최종 어느 단계든 진행 중이면 회수됨. 이력 '회수', 사전 '진행 중' 해제. 모델은 '회수했습니다. 업무 영역 잠금이 풀려 다시 편집할 수 있습니다' + '모델 열기', 사전은 '회수했습니다 · 사전 항목 n건의 ‘진행 중’을 풀었습니다' + '보완해서 다시 신청'",
+      "roles": "신청자",
+      "refs": [
+        "MD-21"
+      ],
+      "states": [
+        "approvals.html?doc=REQ-2026-0014"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-130",
+      "where": "회수 실행",
+      "trigger": "신청자가 아닌 사람이 회수를 실행",
+      "expected": "'신청자만 회수할 수 있습니다' 오류",
+      "roles": "신청자 아님",
+      "refs": [],
+      "states": [
+        "approvals.html?doc=REQ-2026-0014"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-131",
+      "where": "대기함 연속 처리",
+      "trigger": "대기함에서 승인 · 반려 완료",
+      "expected": "다음 문서가 자동으로 열리고 결과와 합친 알림 하나: '(결과) · 다음 문서(ID)를 열었습니다' / '… · 필터에 맞는 대기 문서가 없습니다 · 남은 대기 n건' / '… · 대기함을 모두 처리했습니다' + '실행 취소' 버튼. 포커스는 선택 행(없으면 상세 제목)",
+      "roles": "그 단계 결재자",
+      "refs": [],
+      "states": [
+        "approvals.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-132",
+      "where": "대기함 연속 처리",
+      "trigger": "알림의 '실행 취소' 클릭",
+      "expected": "그 결정 전 상태로 되돌리고 그 문서를 다시 엶. 이후 다른 결재를 처리했으면 '이후에 다른 결재를 처리해 이 결정은 되돌릴 수 없습니다', 그사이 다른 화면에서 같은 데이터가 바뀌었으면 '그사이 다른 화면에서 바뀐 내용이 있어 되돌리지 않았습니다'",
+      "roles": "그 단계 결재자",
+      "refs": [],
+      "states": [
+        "approvals.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-133",
+      "where": "변경 비교 창(MO-26)",
+      "trigger": "링크 'vN-1 대비 변경' 클릭",
+      "expected": "제목 'vN-1 확정본 대비 변경 · vN (ID)'. 구분 · 대상 · vN-1 · vN 표(삭제 · 참조 해제 · 관계 삭제는 빨강, 예외 태그, 변경은 전 취소선/후 강조), 구조 변경이 없으면 '구조(엔터티 · 속성 · 관계 · 참조) 변경이 없습니다'. 'DB 동작 변경 n건'(CASCADE 태그)은 따로, '배치만 바뀜 n건'은 접힌 상태",
+      "roles": "열람 가능한 사람",
+      "refs": [],
+      "states": [
+        "approvals.html?doc=REQ-2026-0011"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-134",
+      "where": "변경 비교 창(MO-26)",
+      "trigger": "직전 확정본 사본이 없을 때",
+      "expected": "'vN-1 확정본 사본이 없어 비교할 수 없습니다. 제출 사본은 [ERD로 보기]에서 확인하세요.'",
+      "roles": "열람 가능한 사람",
+      "refs": [],
+      "states": [
+        "approvals.html?doc=REQ-2026-0011"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-135",
+      "where": "변경 비교 창(MO-26)",
+      "trigger": "제출 모델 사본이 없는 시드 문서",
+      "expected": "'이 문서에는 제출 모델 사본이 없습니다(목업 시드 문서). …'",
+      "roles": "열람 가능한 사람",
+      "refs": [],
+      "states": [
+        "approvals.html?doc=REQ-2026-0011"
+      ],
+      "verify": "exempt",
+      "exemptReason": "목업 전용 시드 표시(대표 행 · 제출 사본 없음) — 제품 데이터에는 없음"
+    },
+    {
+      "id": "BH-approvals-136",
+      "where": "변경 비교 창(MO-26)",
+      "trigger": "'ERD로 보기' · '닫기' · ×",
+      "expected": "'ERD로 보기'는 model.html?area=…&snap=ID로 이동, 닫기는 창을 닫음",
+      "roles": "열람 가능한 사람",
+      "refs": [],
+      "states": [
+        "approvals.html?doc=REQ-2026-0011"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-137",
+      "where": "집계 보기",
+      "trigger": "박스 '집계' 클릭",
+      "expected": "검색 · 목록 대신 집계가 보임. 기간(이번 주 · 이번 달 · 전체)과 문서 유형(전체 · 표준 사전 · 모델 확정) 선택, '(기간 범위) · 신청일 기준 · 문서 N건 (전체 기간 M건)'. 누른 선택에 포커스 유지",
+      "roles": "DA · 기관 담당자 · Admin",
+      "refs": [],
+      "states": [
+        "approvals.html?box=stats"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-138",
+      "where": "집계 보기",
+      "trigger": "기간 · 유형 안에 문서가 있을 때",
+      "expected": "카드 5개: 진행 중(기한 넘김 n이면 빨강 테두리 · 없으면 '기한 넘김 없음') · 완료(승인율 % 또는 '결정된 문서 없음') · 반려 · 회수(항목 반려 n건) · 평균 처리 시간(끝난 문서 n건 기준, 분/시간/일) · 처리 항목",
+      "roles": "DA · 기관 담당자 · Admin",
+      "refs": [],
+      "states": [
+        "approvals.html?box=stats"
+      ],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-approvals-139",
+      "where": "집계 보기",
+      "trigger": "카드 '진행 중 — 어디서 기다리나'",
+      "expected": "DA 승인 대기 · 최종 승인 대기별 처리할 사람 · 건수 · 기한 넘김, '가장 오래 기다린 문서' 4건(신청번호 링크 → 상세), 없으면 '진행 중인 문서가 없습니다.', 각주 '기한 = 설정 › 기관 › 운영 목표의 결재 기한(n일)'",
+      "roles": "DA · 기관 담당자 · Admin",
+      "refs": [],
+      "states": [
+        "approvals.html?box=stats"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-140",
+      "where": "집계 보기",
+      "trigger": "카드 '상태 분포'",
+      "expected": "진행 중 · 완료 · 반려 · 회수 막대와 범례(건수 · %), '반려 사유 상위' 5개(사유 · 문서 반려/항목 반려 · 횟수) 또는 '이 기간에 반려가 없습니다.'",
+      "roles": "DA · 기관 담당자 · Admin",
+      "refs": [],
+      "states": [
+        "approvals.html?box=stats"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-141",
+      "where": "집계 보기",
+      "trigger": "카드 '요청자별'",
+      "expected": "요청자(나 표시)마다 전체 · 진행 중 · 기한 넘김 · 완료 · 반려 · 회수 · 항목 · 비중 막대, 많은 순",
+      "roles": "DA · 기관 담당자 · Admin",
+      "refs": [],
+      "states": [
+        "approvals.html?box=stats"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-142",
+      "where": "집계 보기",
+      "trigger": "기간 · 유형 안에 문서가 없을 때",
+      "expected": "'(기간)에 들어온 (유형) 문서가 없습니다. 기간을 넓혀 보세요.'",
+      "roles": "DA · 기관 담당자 · Admin",
+      "refs": [],
+      "states": [
+        "approvals.html?box=stats"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-143",
+      "where": "확인 요청 탭 · 목록",
+      "trigger": "박스 '확인 요청' 클릭",
+      "expected": "검색 · 목록 대신 관리 변경 목록(번호 · 내용 · 신청 · 상태)과 상세가 보임. 안내 '관리 변경은 결재 문서와 따로 셉니다 — 결재 기한 · 준수율 집계에 들어가지 않습니다. 신청자와 역할을 받는 사람은 확인할 수 없습니다.' 목록 = 내가 확인할 것 · 내가 신청한 것 · 나를 대상으로 한 것(admin.confirm이면 처리된 것도), 대기가 먼저",
+      "roles": "admin.confirm · users · settings 가진 사람, 역할을 받는 사람",
+      "refs": [
+        "admin.confirm",
+        "R-01",
+        "R-03"
+      ],
+      "states": [
+        "approvals.html?box=confirm&as=hyun",
+        "approvals.html?box=confirm&as=lee"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-144",
+      "where": "확인 요청 탭 · 목록",
+      "trigger": "볼 요청이 없을 때",
+      "expected": "'확인할 관리 변경이 없습니다 — 새 요청이 오면 홈과 알림에 보입니다'",
+      "roles": "확인 요청 탭을 보는 사람",
+      "refs": [],
+      "states": [
+        "approvals.html?box=confirm&as=hyun"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-145",
+      "where": "확인 요청 탭 · 목록",
+      "trigger": "행 클릭 · Enter · 주소 ar=",
+      "expected": "그 요청의 상세가 열림(없거나 볼 수 없는 ar=이면 첫 요청)",
+      "roles": "확인 요청 탭을 보는 사람",
+      "refs": [],
+      "states": [
+        "approvals.html?box=confirm&as=hyun"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-146",
+      "where": "확인 요청 탭 · 상세",
+      "trigger": "요청 열기",
+      "expected": "'AR-… · 제목', 신청(이름 · 일시) · 받는 사람(이름 · ID · 소속 · 기한) · 사유 · 영향 · 처리(일시 · 처리자 · 거절 사유), 항목 · 지금 · 바뀐 뒤 표(역할 · 담당 시스템 · 사전 최종 승인 · 모델 확정 최종 승인 · 자기 승인)",
+      "roles": "확인 요청 탭을 보는 사람",
+      "refs": [
+        "R-01",
+        "R-03"
+      ],
+      "states": [
+        "approvals.html?box=confirm&as=hyun"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-147",
+      "where": "확인 요청 탭 · 상태",
+      "trigger": "대기 요청",
+      "expected": "상태 배지 '확인 대기'와 'n일 안에 확인하지 않으면 자동 취소됩니다.'. 7일이 지나면 상태가 '7일 지나 자동 취소'로 바뀜. 그 밖 상태: '확인됨 · 적용' · '거절' · '요청 취소' · '값이 바뀌어 적용 안 함'",
+      "roles": "확인 요청 탭을 보는 사람",
+      "refs": [
+        "admin.confirm"
+      ],
+      "states": [
+        "approvals.html?box=confirm&as=hyun"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-148",
+      "where": "확인 요청 탭 · 상세 버튼",
+      "trigger": "확인할 수 있는 기관 담당자가 대기 요청을 열 때",
+      "expected": "'관리 변경 거절' · '확인하고 적용' 버튼이 보임",
+      "roles": "admin.confirm 가진 기관 담당자(신청자 · 받는 사람 아님)",
+      "refs": [
+        "admin.confirm",
+        "R-01",
+        "R-03"
+      ],
+      "states": [
+        "approvals.html?box=confirm&as=hyun"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-149",
+      "where": "확인 요청 탭 · 상세 버튼",
+      "trigger": "신청자 본인이 대기 요청을 열 때",
+      "expected": "확인 버튼 대신 '내가 신청한 변경은 확인할 수 없습니다'와 '확인 요청 취소' 버튼",
+      "roles": "요청 신청자(Admin)",
+      "refs": [
+        "R-01",
+        "R-03"
+      ],
+      "states": [
+        "approvals.html?box=confirm&as=lee"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-150",
+      "where": "확인 요청 탭 · 상세 버튼",
+      "trigger": "역할을 받는 사람이 대기 요청을 열 때",
+      "expected": "확인 버튼 없이 '나에게 주는 역할은 내가 확인할 수 없습니다'",
+      "roles": "역할을 받는 사람",
+      "refs": [
+        "R-03"
+      ],
+      "states": [
+        "approvals.html?box=confirm&as=hyun"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-151",
+      "where": "확인 요청 탭 · 상세 버튼",
+      "trigger": "그 밖의 사람이 대기 요청을 열 때",
+      "expected": "확인 버튼 없이 '기관 담당자가 확인합니다'",
+      "roles": "users · settings 가진 사람 등",
+      "refs": [],
+      "states": [
+        "approvals.html?box=confirm&as=hyun"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-152",
+      "where": "확인 요청 탭 · 확인",
+      "trigger": "버튼 '확인하고 적용' 클릭",
+      "expected": "정책 요청은 설정 값이, 역할 요청은 그 사람의 역할 · 담당 시스템이 바로 바뀜. 상태 '확인됨 · 적용', 감사 로그 '관리 변경 확인 — 적용', 신청자와 받는 사람에게 'AR-… 확인됨 · 적용' 알림, 'AR-…를 확인하고 적용했습니다 · 감사 로그에 남았습니다'",
+      "roles": "admin.confirm 가진 기관 담당자",
+      "refs": [
+        "admin.confirm",
+        "R-01",
+        "R-03"
+      ],
+      "states": [
+        "approvals.html?box=confirm&as=hyun"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-153",
+      "where": "확인 요청 탭 · 확인",
+      "trigger": "신청 뒤 시작 값(정책 값 · 대상의 역할 · 담당 · 상태)이 바뀐 요청을 확인",
+      "expected": "적용하지 않고 상태 '값이 바뀌어 적용 안 함', 감사 로그 '관리 변경 적용 안 함 — 값이 바뀜', 신청자에게 'AR-… 적용 안 함 — 값이 바뀜' 알림, '신청 뒤 값이 바뀌어 적용하지 않았습니다 — 신청자에게 다시 신청하도록 알렸습니다' 오류",
+      "roles": "admin.confirm 가진 기관 담당자",
+      "refs": [
+        "admin.confirm",
+        "R-01",
+        "R-03"
+      ],
+      "states": [
+        "approvals.html?box=confirm&as=hyun"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-154",
+      "where": "확인 요청 탭 · 거절",
+      "trigger": "버튼 '관리 변경 거절' 클릭",
+      "expected": "'AR-… 거절' 사유 창('거절 사유 *'). 비우고 확인하면 '거절 사유을(를) 적어 주세요', 취소 · Esc는 아무것도 안 함. 사유를 넣으면 상태 '거절', 감사 로그 '관리 변경 거절', 신청자 · 받는 사람에게 'AR-… 거절됨' 알림, 'AR-…를 거절했습니다'",
+      "roles": "admin.confirm 가진 기관 담당자",
+      "refs": [
+        "admin.confirm",
+        "R-01",
+        "R-03"
+      ],
+      "states": [
+        "approvals.html?box=confirm&as=hyun"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-155",
+      "where": "확인 요청 탭 · 취소",
+      "trigger": "버튼 '확인 요청 취소' 클릭",
+      "expected": "상태 '요청 취소', 감사 로그 '관리 변경 확인 요청 취소', 'AR-… 확인 요청을 취소했습니다'",
+      "roles": "요청 신청자",
+      "refs": [
+        "R-01",
+        "R-03"
+      ],
+      "states": [
+        "approvals.html?box=confirm&as=lee"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-156",
+      "where": "확인 요청 탭 · 실행 재확인",
+      "trigger": "이미 처리된 요청에 확인 · 거절 · 취소 / 권한 없는 계정 / 신청자 아닌 취소",
+      "expected": "'이미 처리된 요청입니다'(거절 사유 쓰는 사이 처리되면 '그 사이 처리된 요청입니다') · '지금 계정으로는 확인할 수 없습니다' · '신청한 사람만 요청을 취소할 수 있습니다'",
+      "roles": "전체",
+      "refs": [
+        "admin.confirm"
+      ],
+      "states": [
+        "approvals.html?box=confirm&as=hyun"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-157",
+      "where": "대기함 · 문서 상세 단축키",
+      "trigger": "한글 입력 조합 중이거나 Meta(Win/Cmd) 키와 함께 단축키를 누름",
+      "expected": "단축키가 동작하지 않는다(입력 · 운영체제 단축키를 가로채지 않음) (approvals.html 단축키 처리 — 한글 조합 · Meta 검사)",
+      "roles": "전체",
+      "refs": [
+        "SC-20"
+      ],
+      "states": [
+        "approvals.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-158",
+      "where": "문서 상세 · 의견",
+      "trigger": "의견을 저장",
+      "expected": "저장 직후 '처리 이력' 탭이 열리고 포커스가 의견 입력 칸으로 돌아온다 (approvals.html 의견 저장 처리)",
+      "roles": "의견을 쓸 수 있는 결재선 · 신청자",
+      "refs": [
+        "PN-21"
+      ],
+      "states": [
+        "approvals.html?doc=REQ-2026-0016"
+      ],
+      "verify": "e2e"
+    }
+  ]
+}

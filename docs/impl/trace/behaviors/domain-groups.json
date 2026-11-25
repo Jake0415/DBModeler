@@ -1,0 +1,925 @@
+{
+  "screen": "domain-groups.html",
+  "ids": "SC-17",
+  "source": "docs/ux/mockups/domain-groups.html",
+  "behaviors": [
+    {
+      "id": "BH-domain-groups-001",
+      "where": "머리",
+      "trigger": "화면을 열 때",
+      "expected": "제목 옆 배지 ‘공통 그룹 {n} · 기관 그룹 {m}’",
+      "roles": "전체",
+      "refs": [
+        "dict.view"
+      ],
+      "states": [
+        "domain-groups.html?as=lee"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-domain-groups-002",
+      "where": "머리",
+      "trigger": "[바구니] 클릭",
+      "expected": "dictionary.html?basket=1로 이동. 버튼에 바구니 건수 배지(비면 숨김)",
+      "roles": "전체",
+      "refs": [
+        "MD-13"
+      ],
+      "states": [
+        "domain-groups.html?as=lee"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-domain-groups-003",
+      "where": "머리",
+      "trigger": "그룹 관리 권한이 있을 때 / 없을 때",
+      "expected": "있으면 [＋ 그룹 추가]가 켜지고, 없으면 흐려지며 ‘도메인 그룹 직접 관리 권한(DA · Admin)이 필요합니다’ 설명",
+      "roles": "전체",
+      "refs": [
+        "dict.group"
+      ],
+      "states": [
+        "domain-groups.html?as=lee",
+        "domain-groups.html?as=park"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-domain-groups-004",
+      "where": "머리",
+      "trigger": "사전 신청 권한이 있을 때 / 없을 때",
+      "expected": "있으면 [＋ 분류 추가 신청]이 켜지고, 없으면 흐려지며 ‘사전 신청 권한이 없습니다 — 모델러 · DA만 신청할 수 있습니다’ 설명",
+      "roles": "전체",
+      "refs": [
+        "dict.request"
+      ],
+      "states": [
+        "domain-groups.html?as=lee",
+        "domain-groups.html?as=hyun"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-domain-groups-005",
+      "where": "그룹 · 분류 표",
+      "trigger": "표를 볼 때",
+      "expected": "그룹 행: 펼침 단추 · 그룹명 · 설명 · 출처 · 상태(신청 분류가 있으면 ‘+신청 {n}’) · 분류 수 · 도메인 수 · 용어 수. 분류 행(들여쓰기): 분류명 · 연결 형식단어 · 설명 · 출처 · 상태(변경 · 미사용이 진행 중이면 ‘신청 중 {신청번호} · {작업}’, 바구니면 ‘바구니 {작업}’) · 도메인 수 · 용어 수. 바구니 · 진행 중 신청의 새 분류는 흐린 행으로 ‘바구니’ / ‘신청 중 {신청번호}’. 미사용 그룹 · 분류는 흐린 이름",
+      "roles": "전체",
+      "refs": [
+        "dict.view",
+        "MD-02",
+        "MD-03"
+      ],
+      "states": [
+        "domain-groups.html?as=lee"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-domain-groups-006",
+      "where": "그룹 · 분류 표",
+      "trigger": "그룹의 펼침 단추 클릭 · 그룹 행에서 → / ←",
+      "expected": "그 그룹의 분류 행을 펼치거나 접고 포커스 유지. 분류가 없는 그룹은 단추가 자리만 차지함",
+      "roles": "전체",
+      "refs": [
+        "dict.view"
+      ],
+      "states": [
+        "domain-groups.html?as=lee"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-domain-groups-007",
+      "where": "도구 막대",
+      "trigger": "[모두 펼치기] · [모두 접기] 클릭",
+      "expected": "모든 그룹을 펼침 / 접음. 검색어가 있거나 상태 ‘신청 중 · 바구니’ 필터면 항상 펼쳐 보임",
+      "roles": "전체",
+      "refs": [
+        "dict.view"
+      ],
+      "states": [
+        "domain-groups.html?as=lee"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-domain-groups-008",
+      "where": "도구 막대",
+      "trigger": "검색어 입력",
+      "expected": "그룹명 · 설명이 맞으면 그 그룹의 분류를 모두 보이고, 아니면 분류명 · 연결 형식단어 · 설명으로 찾음(초성 · 여러 단어 · 띄어쓰기 무시)",
+      "roles": "전체",
+      "refs": [
+        "dict.view"
+      ],
+      "states": [
+        "domain-groups.html?as=lee&q=코드"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-domain-groups-009",
+      "where": "도구 막대",
+      "trigger": "출처 칩(전체 · 공통 · 기관) · 상태 칩(전체 상태 · 사용 · 미사용 · 신청 중 · 바구니) 클릭",
+      "expected": "조건에 맞는 그룹 · 분류만 보임. ‘신청 중 · 바구니’는 변경 · 미사용이 걸린 분류와 새 분류 행",
+      "roles": "전체",
+      "refs": [
+        "dict.view"
+      ],
+      "states": [
+        "domain-groups.html?as=lee&st=신청"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-domain-groups-010",
+      "where": "결과 줄",
+      "trigger": "목록이 바뀔 때",
+      "expected": "조건이 없으면 ‘그룹 {n}개 · 분류 {m}개 · 신청 중 · 바구니 분류 {k}개 · 변경 · 미사용 신청 중 · 바구니 {j}개 · 그룹 순’(해당 부분만), 있으면 ‘그룹 {n}개 · 분류 {m}개 (전체 그룹 · 분류)’ + 조건 칩 + [모두 지우기]. 칩 × · [모두 지우기] 후 다음 칩(없으면 검색칸) 포커스. 화면 낭독기에 건수",
+      "roles": "전체",
+      "refs": [
+        "dict.view"
+      ],
+      "states": [
+        "domain-groups.html?as=lee"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-domain-groups-011",
+      "where": "그룹 · 분류 표",
+      "trigger": "맞는 그룹 · 분류가 없을 때",
+      "expected": "‘필터에 맞는 그룹 · 분류가 없습니다’ + [모두 지우기]",
+      "roles": "전체",
+      "refs": [
+        "dict.view"
+      ],
+      "states": [
+        "domain-groups.html?as=lee&q=없는그룹"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-domain-groups-012",
+      "where": "그룹 · 분류 표",
+      "trigger": "바구니 · 신청의 새 분류가 없는 그룹을 가리킬 때",
+      "expected": "‘그룹을 찾을 수 없음’ 행과 ‘이 분류가 가리키는 그룹({그룹})이 없습니다 — 바구니에서 빼거나 다른 그룹으로 다시 신청하세요’, 그 아래 해당 분류 행",
+      "roles": "전체",
+      "refs": [
+        "MD-14"
+      ],
+      "states": [
+        "domain-groups.html?as=lee"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-domain-groups-013",
+      "where": "주소",
+      "trigger": "조건 · 선택을 바꿀 때 / 그 주소로 열 때",
+      "expected": "검색어(q) · 출처(src) · 상태(st) · 선택한 그룹 · 분류(sel)가 주소에 남아 같은 화면으로 열림(새 분류 행 선택은 남지 않음)",
+      "roles": "전체",
+      "refs": [
+        "dict.view"
+      ],
+      "states": [
+        "domain-groups.html?as=lee&sel=G4"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-domain-groups-014",
+      "where": "그룹 · 분류 표",
+      "trigger": "다른 화면 · 탭에서 바구니가 바뀔 때",
+      "expected": "표 · 상세 · 바구니 배지가 다시 그려짐",
+      "roles": "전체",
+      "refs": [
+        "MD-13"
+      ],
+      "states": [
+        "domain-groups.html?as=lee"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-domain-groups-015",
+      "where": "그룹 상세",
+      "trigger": "그룹 행 클릭",
+      "expected": "오른쪽 상세: 출처 · ‘도메인 그룹’ · 상태 배지, 그룹명, ID, 설명 · 분류 {n}개(사용 {m}) · 도메인 · 용어 수, 분류 목록(‘↔ 형식단어’, 출처, 미사용 · 신청 표시), 도메인 목록, ‘변경 기록 · 결재 없이 반영 · 사유 필수’(없으면 ‘변경 기록이 없습니다.’). 닫기(‘상세 닫기 — 그룹 · 분류는 그대로’)",
+      "roles": "전체",
+      "refs": [
+        "dict.view"
+      ],
+      "states": [
+        "domain-groups.html?as=lee&sel=G4"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-domain-groups-016",
+      "where": "그룹 상세",
+      "trigger": "공통 그룹을 열 때",
+      "expected": "‘공통 표준(행안부) — 그룹 자체는 조회 전용입니다. 이 그룹 아래에 기관 분류는 신청할 수 있습니다(정책).’ 안내, [수정] · [미사용]이 흐려지고 ‘공통(행안부) 표준은 조회 전용입니다’",
+      "roles": "dict.group 가진 DA",
+      "refs": [
+        "dict.group"
+      ],
+      "states": [
+        "domain-groups.html?as=lee&sel=G1"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-domain-groups-017",
+      "where": "그룹 상세",
+      "trigger": "도메인 목록",
+      "expected": "사전에 있는 도메인은 dictionary.html?sel={ID} 링크, 시드 이름만 있는 도메인은 흐린 이름과 ‘흐린 이름은 목업 시드의 도메인 이름 목록에만 있는 항목입니다(사전 상세 없음).’. 없으면 ‘이 그룹에 속한 도메인이 아직 없습니다.’",
+      "roles": "전체",
+      "refs": [
+        "dict.view"
+      ],
+      "states": [
+        "domain-groups.html?as=lee&sel=G4"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-domain-groups-018",
+      "where": "그룹 상세",
+      "trigger": "그룹 관리 권한 없이 열 때",
+      "expected": "[수정] · [미사용](또는 [다시 사용])이 흐려지고 ‘도메인 그룹 직접 관리 권한(DA · Admin)이 필요합니다’",
+      "roles": "dict.group 없는 계정(모델러 · 기관 담당자 · 감리 등)",
+      "refs": [
+        "dict.group"
+      ],
+      "states": [
+        "domain-groups.html?as=park&sel=G4"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-domain-groups-019",
+      "where": "그룹 상세",
+      "trigger": "사용 중인 분류가 있는 기관 그룹",
+      "expected": "[미사용]이 흐려지고 ‘사용 중인 분류 {n}개({이름들})가 있어 미사용으로 바꿀 수 없습니다 — 분류를 먼저 정리하세요’",
+      "roles": "dict.group 가진 DA",
+      "refs": [
+        "dict.group",
+        "MD-11"
+      ],
+      "states": [
+        "domain-groups.html?as=lee"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-domain-groups-020",
+      "where": "그룹 상세",
+      "trigger": "신청 중 · 바구니 분류가 가리키는 기관 그룹",
+      "expected": "[미사용]이 흐려지고 ‘신청 중 · 바구니 분류 {n}개({이름들})가 이 그룹을 가리킵니다’",
+      "roles": "dict.group 가진 DA",
+      "refs": [
+        "dict.group"
+      ],
+      "states": [
+        "domain-groups.html?as=lee"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-domain-groups-021",
+      "where": "그룹 상세",
+      "trigger": "미사용 그룹",
+      "expected": "[미사용] 대신 [다시 사용]",
+      "roles": "dict.group 가진 DA",
+      "refs": [
+        "dict.group"
+      ],
+      "states": [
+        "domain-groups.html?as=lee"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-domain-groups-022",
+      "where": "그룹 추가 · 수정 창",
+      "trigger": "[그룹 추가] · 상세 [수정] 클릭",
+      "expected": "‘도메인 그룹 추가’ / ‘도메인 그룹 수정 — {그룹명}’ 창: ‘결재 없이 바로 반영됩니다. 변경 사유는 그룹 변경 기록과 감사 로그에 남습니다.’, 그룹명(최대 40자) · 설명 · 변경 사유. 수정이면 지금 값이 채워짐. 그룹명 칸 포커스",
+      "roles": "dict.group 가진 DA",
+      "refs": [
+        "dict.group"
+      ],
+      "states": [
+        "domain-groups.html?as=lee"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-domain-groups-023",
+      "where": "그룹 추가 · 수정 창",
+      "trigger": "분류 · 도메인이 묶인 그룹을 수정할 때",
+      "expected": "그룹명 칸이 흐려지고 ‘분류 {n}개 · 도메인 {m}개가 이 그룹 이름으로 묶여 있어 이름은 바꿀 수 없습니다(도메인의 도메인 그룹 값이 이름으로 저장됨) — 설명만 고칠 수 있습니다’, 설명 칸 포커스",
+      "roles": "dict.group 가진 DA",
+      "refs": [
+        "dict.group"
+      ],
+      "states": [
+        "domain-groups.html?as=lee"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-domain-groups-024",
+      "where": "그룹 추가 · 수정 창",
+      "trigger": "그룹명 · 설명 · 변경 사유 중 빈 칸이 있을 때",
+      "expected": "[저장]이 흐려지고 ‘그룹명 · 설명 · 변경 사유를 입력해야 저장할 수 있습니다’",
+      "roles": "dict.group 가진 DA",
+      "refs": [
+        "dict.group"
+      ],
+      "states": [
+        "domain-groups.html?as=lee"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-domain-groups-025",
+      "where": "그룹 추가 · 수정 창",
+      "trigger": "설명 입력",
+      "expected": "‘{n}/500’ 글자 수, 500자를 넘으면 빨강",
+      "roles": "dict.group 가진 DA",
+      "refs": [
+        "dict.group"
+      ],
+      "states": [
+        "domain-groups.html?as=lee"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-domain-groups-026",
+      "where": "그룹 추가 · 수정 창",
+      "trigger": "다른 그룹과 같은 이름(대소문자 무시)",
+      "expected": "‘같은 이름의 그룹 ‘{이름}’이 있습니다’ 막힘, [저장] 흐림",
+      "roles": "dict.group 가진 DA",
+      "refs": [
+        "dict.group"
+      ],
+      "states": [
+        "domain-groups.html?as=lee"
+      ],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-domain-groups-027",
+      "where": "그룹 추가 · 수정 창",
+      "trigger": "그룹명에 < 또는 >",
+      "expected": "‘그룹명에 < > 를 쓸 수 없습니다’ 막힘",
+      "roles": "dict.group 가진 DA",
+      "refs": [
+        "dict.group"
+      ],
+      "states": [
+        "domain-groups.html?as=lee"
+      ],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-domain-groups-028",
+      "where": "그룹 추가 · 수정 창",
+      "trigger": "설명이 500자를 넘을 때",
+      "expected": "‘설명은 500자 이내 — 지금 {n}자’ 막힘",
+      "roles": "dict.group 가진 DA",
+      "refs": [
+        "dict.group"
+      ],
+      "states": [
+        "domain-groups.html?as=lee"
+      ],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-domain-groups-029",
+      "where": "그룹 추가 · 수정 창",
+      "trigger": "수정에서 이름 · 설명이 그대로일 때",
+      "expected": "‘바뀐 내용이 없습니다’ 막힘",
+      "roles": "dict.group 가진 DA",
+      "refs": [
+        "dict.group"
+      ],
+      "states": [
+        "domain-groups.html?as=lee"
+      ],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-domain-groups-030",
+      "where": "그룹 추가 · 수정 창",
+      "trigger": "추가에서 [저장] 클릭",
+      "expected": "기관 · 사용 그룹이 생기고 변경 기록(‘그룹 추가’ · 사유 · 시각 · 처리자)과 감사 로그에 남음. 새 그룹이 선택 · 펼쳐지고 ‘도메인 그룹 ‘{이름}’을 추가했습니다 — 변경 기록에 남겼습니다’ 알림",
+      "roles": "dict.group 가진 DA",
+      "refs": [
+        "dict.group",
+        "audit.view"
+      ],
+      "states": [
+        "domain-groups.html?as=lee"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-domain-groups-031",
+      "where": "그룹 추가 · 수정 창",
+      "trigger": "수정에서 [저장] 클릭",
+      "expected": "이름 · 설명이 바뀌고 변경 기록 ‘그룹 수정(이름 {이전} → {이후} · 설명)’과 감사 로그에 남음. ‘도메인 그룹 ‘{이름}’을 수정했습니다’. 실행 때 이름이 잠긴 그룹이면 ‘사용 중인 그룹은 이름을 바꿀 수 없습니다’, 공통 그룹이면 ‘공통(행안부) 표준은 조회 전용입니다’ 오류",
+      "roles": "dict.group 가진 DA",
+      "refs": [
+        "dict.group"
+      ],
+      "states": [
+        "domain-groups.html?as=lee"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-domain-groups-032",
+      "where": "그룹 창 · 상태 창",
+      "trigger": "[저장] 실행 때 권한이 없거나 다른 탭에서 사용자가 바뀐 경우",
+      "expected": "저장하지 않고 ‘도메인 그룹 직접 관리 권한(DA · Admin)이 필요합니다’ 또는 ‘다른 탭에서 사용자가 바뀌었습니다(지금 {이름}) — 새로고침한 뒤 다시 처리하세요’ 오류 알림",
+      "roles": "dict.group 가진 DA",
+      "refs": [
+        "dict.group"
+      ],
+      "states": [
+        "domain-groups.html?as=lee"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-domain-groups-033",
+      "where": "그룹 상태 창",
+      "trigger": "상세 [미사용] · [다시 사용] 클릭",
+      "expected": "‘그룹 미사용 — {그룹명}’ / ‘그룹 다시 사용 — {그룹명}’ 창. 미사용은 ‘미사용 그룹에는 새 분류를 신청할 수 없습니다. 분류가 없는 그룹만 미사용으로 바꿀 수 있습니다.’, 다시 사용은 ‘다시 사용하면 이 그룹에 분류를 신청할 수 있습니다.’. 변경 사유 칸 포커스, 비면 [저장] 흐림 ‘변경 사유를 입력해야 저장할 수 있습니다’",
+      "roles": "dict.group 가진 DA",
+      "refs": [
+        "dict.group"
+      ],
+      "states": [
+        "domain-groups.html?as=lee"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-domain-groups-034",
+      "where": "그룹 상태 창",
+      "trigger": "[저장] 클릭",
+      "expected": "그룹 상태가 미사용 / 사용으로 바뀌고 변경 기록 · 감사 로그에 남음, ‘도메인 그룹 ‘{이름}’ → {미사용|사용}’ 알림. 미사용은 실행 때 다시 확인해 막히면 그 이유로 오류 알림 후 창을 닫음",
+      "roles": "dict.group 가진 DA",
+      "refs": [
+        "dict.group",
+        "MD-11"
+      ],
+      "states": [
+        "domain-groups.html?as=lee"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-domain-groups-035",
+      "where": "그룹 창 · 상태 창",
+      "trigger": "[취소] 클릭 또는 Esc",
+      "expected": "창이 닫히고 바뀌지 않음",
+      "roles": "dict.group 가진 DA",
+      "refs": [
+        "dict.group"
+      ],
+      "states": [
+        "domain-groups.html?as=lee"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-domain-groups-036",
+      "where": "분류 상세",
+      "trigger": "분류 행 클릭",
+      "expected": "상세: 출처 · ‘도메인분류’ · 상태 · 신청 표시 배지, 분류명, ‘{그룹} 그룹 · {ID} · V{n}’, 도메인 그룹(공통 그룹 아래 기관 분류면 ‘(공통 그룹 아래 기관 분류)’) · 연결 형식단어 · 도메인명 규칙(‘분류명 + 타입 + 길이 예: {분류}C8 · {분류}V100’) · 설명 · 버전 · 최근 문서 링크, ‘용어의 끝 단어가 {형식단어}이면 이 분류의 도메인({분류}…)을 써야 합니다.’, 도메인 목록, 이 분류의 도메인을 쓰는 용어(사전 링크 20개 + ‘외 {n}개’, 없으면 ‘없음’), 변경 이력(버전 · 작업 · 문서 · 칸별 전후 · 시각 · 처리자 · 사유), 기록",
+      "roles": "전체",
+      "refs": [
+        "dict.view",
+        "MD-02",
+        "MD-03"
+      ],
+      "states": [
+        "domain-groups.html?as=lee&sel=K08"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-domain-groups-037",
+      "where": "분류 상세",
+      "trigger": "공통 분류를 열 때",
+      "expected": "‘공통표준 원문(행안부) — 기관에서 바꾸거나 미사용으로 돌릴 수 없습니다. 바꾸려면 공통표준 관리에서 새 판으로 신청합니다.’ 안내, 하단은 버튼 없이 ‘공통표준 원문 — 공통표준 관리에서 새 판 신청’",
+      "roles": "전체",
+      "refs": [
+        "dict.view",
+        "SC-18"
+      ],
+      "states": [
+        "domain-groups.html?as=lee&sel=K01"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-domain-groups-038",
+      "where": "분류 상세",
+      "trigger": "변경 · 미사용이 진행 중이거나 바구니에 담긴 분류",
+      "expected": "‘신청 중 — {신청번호}에서 {작업} 결재 중입니다. 결재가 끝날 때까지 새로 담을 수 없습니다.’ 또는 ‘바구니에 {작업}으로 담김 — 아직 신청 전’(미사용이면 사유, 변경이면 칸별 전후와 ‘[변경 담기]로 다시 고치면 바구니의 변경 내용이 바뀝니다.’) 안내",
+      "roles": "전체",
+      "refs": [
+        "MD-13",
+        "MD-29"
+      ],
+      "states": [
+        "domain-groups.html?as=lee"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-domain-groups-039",
+      "where": "분류 상세",
+      "trigger": "기관 분류 하단 버튼",
+      "expected": "[변경 담기] · [미사용 담기]. 못 하는 이유가 있으면 흐려지고 이유가 함께 보임: 권한 없음 ‘사전 신청 권한이 없습니다 — 모델러 · DA만 신청할 수 있습니다’, 미사용 분류 ‘미사용 분류입니다 — 변경 · 미사용을 담을 수 없습니다’, 진행 중 ‘{신청번호}에서 이 분류를 신청 중({작업}) — 결재가 끝난 뒤 다시 담으세요’",
+      "roles": "전체",
+      "refs": [
+        "dict.request",
+        "MD-10"
+      ],
+      "states": [
+        "domain-groups.html?as=lee&sel=K08",
+        "domain-groups.html?as=hyun&sel=K08"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-domain-groups-040",
+      "where": "분류 상세",
+      "trigger": "바구니에 미사용으로 담긴 분류의 [변경 담기]",
+      "expected": "흐려지고 ‘바구니에 미사용으로 담겨 있습니다 — 바구니에서 빼야 변경을 담을 수 있습니다’",
+      "roles": "dict.request 가진 모델러 · DA",
+      "refs": [
+        "MD-13"
+      ],
+      "states": [
+        "domain-groups.html?as=lee"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-domain-groups-041",
+      "where": "분류 상세",
+      "trigger": "도메인이 쓰는 분류의 [미사용 담기]",
+      "expected": "흐려지고 ‘도메인 {n}개({이름들} 외)가 이 분류를 써서 미사용으로 바꿀 수 없습니다’",
+      "roles": "dict.request 가진 모델러 · DA",
+      "refs": [
+        "MD-11"
+      ],
+      "states": [
+        "domain-groups.html?as=lee&sel=K08"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-domain-groups-042",
+      "where": "분류 상세",
+      "trigger": "바구니에 담긴 분류의 [미사용 담기]",
+      "expected": "흐려지고 ‘이미 바구니에 미사용으로 담겨 있습니다’ 또는 ‘바구니에 변경으로 담겨 있습니다 — 바구니에서 빼야 미사용을 담을 수 있습니다’",
+      "roles": "dict.request 가진 모델러 · DA",
+      "refs": [
+        "MD-13"
+      ],
+      "states": [
+        "domain-groups.html?as=lee"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-domain-groups-043",
+      "where": "분류 변경 폼",
+      "trigger": "[변경 담기] 클릭",
+      "expected": "상세 안에 ‘분류 변경 — 바구니에 담기’ 폼: ‘바뀐 칸만 담깁니다(초록 칸). 도메인 신청과 같은 결재(DA → 최종 승인)로 반영됩니다.’, 분류명 · 연결 형식단어 · 도메인 그룹(사용 그룹, ‘(공통)’ 표시, ‘공통 그룹으로도 옮길 수 있습니다(정책)’) · 설명. 바구니에 변경이 있으면 그 값으로 시작. [분류 추가 신청]의 강조가 풀리고 분류명(잠겼으면 형식단어) 칸 포커스. 다시 그려져도 입력한 값은 유지",
+      "roles": "dict.request 가진 모델러 · DA",
+      "refs": [
+        "dict.request",
+        "MD-15"
+      ],
+      "states": [
+        "domain-groups.html?as=lee&sel=K08"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-domain-groups-044",
+      "where": "분류 변경 폼",
+      "trigger": "도메인이 쓰는 분류",
+      "expected": "분류명 칸이 흐려지고 ‘도메인 {n}개(…)의 이름이 분류명으로 시작해 분류명은 바꿀 수 없습니다(연결 형식단어 · 도메인 그룹 · 설명만)’",
+      "roles": "dict.request 가진 모델러 · DA",
+      "refs": [
+        "MD-11"
+      ],
+      "states": [
+        "domain-groups.html?as=lee&sel=K08"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-domain-groups-045",
+      "where": "분류 변경 폼",
+      "trigger": "연결 형식단어 목록",
+      "expected": "사전 형식단어 + 바구니의 형식단어 Y 단어 + 지금 단어를 ‘— 이 분류(현재)’ · ‘— 분류 ‘{분류}’에 연결됨’ · ‘— 바구니의 새 단어’ · ‘— 연결 안 됨’으로 표시. 도움말에 고른 단어의 연결 상태와 ‘연결 안 된 형식단어: …’(없으면 ‘모든 형식단어가 분류에 연결되어 있습니다.’) · ‘목록에 없으면 단어를 형식단어 Y로 먼저 신청하세요.’",
+      "roles": "dict.request 가진 모델러 · DA",
+      "refs": [
+        "MD-02"
+      ],
+      "states": [
+        "domain-groups.html?as=lee&sel=K08"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-domain-groups-046",
+      "where": "분류 변경 폼",
+      "trigger": "칸 값을 바꿀 때",
+      "expected": "바뀐 칸은 초록 바탕 · ‘바뀜’ 표시, 분류명 도움말이 ‘도메인명 = 분류명 + 타입 + 길이 — 예: {새 이름}C8’로 바뀜. 검사 목록에 ‘막힘 · …’ / ‘주의 · …’ 또는 ‘검사 통과 — 바구니에 담을 수 있습니다’, 막히면 [바구니에 담기]가 흐려지고 첫 막힘이 이유",
+      "roles": "dict.request 가진 모델러 · DA",
+      "refs": [
+        "MD-15"
+      ],
+      "states": [
+        "domain-groups.html?as=lee&sel=K08"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-domain-groups-047",
+      "where": "분류 변경 폼",
+      "trigger": "바뀐 칸이 없을 때",
+      "expected": "‘바뀐 칸이 없습니다’(바구니에 변경이 있으면 ‘바뀐 칸이 없습니다 — 담긴 변경을 빼려면 바구니에서 지우세요’) 막힘",
+      "roles": "dict.request 가진 모델러 · DA",
+      "refs": [
+        "MD-15"
+      ],
+      "states": [
+        "domain-groups.html?as=lee"
+      ],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-domain-groups-048",
+      "where": "분류 변경 폼",
+      "trigger": "분류명을 비우거나 다른 분류와 같은 이름",
+      "expected": "‘분류명이 비어 있습니다’ / ‘같은 이름의 분류 ‘{이름}’이 있습니다’ / ‘같은 이름의 분류 ‘{이름}’을 신청 중이거나 바구니에 담았습니다’ 막힘",
+      "roles": "dict.request 가진 모델러 · DA",
+      "refs": [
+        "MD-03"
+      ],
+      "states": [
+        "domain-groups.html?as=lee"
+      ],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-domain-groups-049",
+      "where": "분류 변경 폼 · 분류 추가 창",
+      "trigger": "분류명이 숫자나 영문 대문자로 끝날 때",
+      "expected": "‘분류명이 숫자나 영문 대문자로 끝나면 축약명과 붙어 도메인명 해석이 어긋날 수 있습니다’ 주의",
+      "roles": "dict.request 가진 모델러 · DA",
+      "refs": [
+        "MD-03"
+      ],
+      "states": [
+        "domain-groups.html?as=lee"
+      ],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-domain-groups-050",
+      "where": "분류 변경 폼",
+      "trigger": "연결 형식단어를 비우거나 바꿀 때",
+      "expected": "비우면 ‘연결 형식단어를 고르세요’ 막힘. 다른 분류에 이미 연결된 단어면 ‘‘{단어}’은 이미 분류 ‘{분류}’에 연결됨 — 형식단어 하나에 분류 하나가 원칙입니다(용어 검사가 첫 분류만 봄)’ 주의, 바꾸면 ‘기존 형식단어 ‘{단어}’은 연결이 풀립니다 — ‘{단어}’로 끝나는 용어의 도메인 검사가 달라집니다’ 주의",
+      "roles": "dict.request 가진 모델러 · DA",
+      "refs": [
+        "MD-02"
+      ],
+      "states": [
+        "domain-groups.html?as=lee"
+      ],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-domain-groups-051",
+      "where": "분류 변경 폼",
+      "trigger": "결재 검사와 같은 규칙",
+      "expected": "‘공통 분류는 기관에서 바꿀 수 없음’, ‘도메인이 쓰는 분류는 이름을 바꿀 수 없음(도메인명이 분류명으로 시작)’, ‘‘{단어}’은 형식단어가 아님’(바구니의 형식단어 Y 새 단어는 형식단어로 봄), ‘사용 중인 도메인 그룹을 고르세요’ 막힘",
+      "roles": "dict.request 가진 모델러 · DA",
+      "refs": [
+        "MD-02",
+        "MD-11"
+      ],
+      "states": [
+        "domain-groups.html?as=lee"
+      ],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-domain-groups-052",
+      "where": "분류 변경 폼",
+      "trigger": "[바구니에 담기] 클릭",
+      "expected": "실행 때 다시 확인(못 담게 됐으면 그 이유로 오류 알림 후 폼을 닫음). 바구니에 같은 분류 변경이 있으면 바꿔 쓰고 ‘바구니의 분류 ‘{이름}’의 변경 내용을 고쳤습니다 — {칸들}’, 없으면 새로 담고 ‘분류 ‘{이름}’의 변경({칸들})을 바구니에 담았습니다’ + [바구니 열기]. 다른 작업으로 담겨 있으면 ‘분류 ‘{이름}’은 이미 바구니에 다른 작업으로 담겨 있습니다’",
+      "roles": "dict.request 가진 모델러 · DA",
+      "refs": [
+        "dict.request",
+        "MD-13",
+        "MD-15"
+      ],
+      "states": [
+        "domain-groups.html?as=lee&sel=K08"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-domain-groups-053",
+      "where": "분류 변경 · 미사용 폼",
+      "trigger": "[취소] 클릭",
+      "expected": "폼이 닫히고 [변경 담기]로 포커스",
+      "roles": "dict.request 가진 모델러 · DA",
+      "refs": [],
+      "states": [
+        "domain-groups.html?as=lee&sel=K08"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-domain-groups-054",
+      "where": "분류 미사용 폼",
+      "trigger": "[미사용 담기] 클릭",
+      "expected": "‘분류 미사용 — 바구니에 담기’ 폼: ‘반영되면 이 분류로 새 도메인을 만들 수 없고, 형식단어 {단어}는 연결 안 된 상태가 됩니다. 결재(DA → 최종 승인)를 거쳐 반영됩니다.’ 경고, 미사용 사유 칸 포커스, 결재 검사 결과(‘막힘 · …’ 또는 ‘검사 통과 — 바구니에 담을 수 있습니다’). 사유가 비면 [미사용 담기]가 흐려지고 ‘미사용 사유를 입력해야 담을 수 있습니다’",
+      "roles": "dict.request 가진 모델러 · DA",
+      "refs": [
+        "dict.request",
+        "MD-12"
+      ],
+      "states": [
+        "domain-groups.html?as=lee"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-domain-groups-055",
+      "where": "분류 미사용 폼",
+      "trigger": "폼의 [미사용 담기] 클릭",
+      "expected": "실행 때 다시 확인(막히면 이유로 오류 알림). 미사용 행이 바구니에 담기고 ‘분류 ‘{이름}’의 미사용을 바구니에 담았습니다 — 결재가 끝나면 반영됩니다’ + [바구니 열기]. 이미 담겨 있으면 ‘분류 ‘{이름}’은 이미 바구니에 담겨 있습니다’",
+      "roles": "dict.request 가진 모델러 · DA",
+      "refs": [
+        "dict.request",
+        "MD-12",
+        "MD-13"
+      ],
+      "states": [
+        "domain-groups.html?as=lee"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-domain-groups-056",
+      "where": "신청 · 바구니 분류 상세",
+      "trigger": "흐린 새 분류 행 클릭",
+      "expected": "상세: ‘기관’ · ‘도메인분류’ · ‘바구니’ / ‘신청 중’ 배지, 이름, ‘내 바구니에 담김 — 아직 신청 전’ / ‘{신청번호} 결재 중’, 도메인 그룹 · 연결 형식단어 · 설명 · 작업, 안내(바구니: ‘도메인 신청과 함께 결재하면 분류 → 도메인 순서대로 반영됩니다. 같은 이름의 분류는 다시 담을 수 없습니다.’ / 진행 중: ‘최종 승인되면 분류가 등록되고 이 그룹 아래 ‘사용’으로 바뀝니다. …’), [바구니 열기] / [신청 내용 보기]",
+      "roles": "전체",
+      "refs": [
+        "MD-14",
+        "MD-29"
+      ],
+      "states": [
+        "domain-groups.html?as=lee"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-domain-groups-057",
+      "where": "상세",
+      "trigger": "[× 닫기] 클릭",
+      "expected": "상세가 닫히고 선택 · 열린 폼이 풀리며 [분류 추가 신청]이 다시 강조, 주소의 sel이 지워짐",
+      "roles": "전체",
+      "refs": [
+        "dict.view"
+      ],
+      "states": [
+        "domain-groups.html?as=lee&sel=G4"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-domain-groups-058",
+      "where": "분류 추가 창",
+      "trigger": "[분류 추가 신청] 클릭",
+      "expected": "‘도메인분류 추가 신청’ 창: ‘분류는 도메인과 같은 결재로 등록됩니다. 바구니에 담아 도메인 신청과 함께 올리면 분류 → 도메인 순서로 반영됩니다.’, 분류명(최대 20자) · 도메인 그룹(사용 그룹만, 공통은 ‘(공통)’, 고른 그룹 또는 고른 분류의 그룹이 기본) · 연결 형식단어(‘형식단어 고르기’ + 연결 상태 표시) · 설명. 도움말에 ‘연결 안 된 형식단어 {n}개: …’ · ‘단어 신청 열기’ 링크(dictionary.html?basket=1). 분류명 칸 포커스",
+      "roles": "dict.request 가진 모델러 · DA",
+      "refs": [
+        "dict.request",
+        "MD-02",
+        "MD-03"
+      ],
+      "states": [
+        "domain-groups.html?as=lee"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-domain-groups-059",
+      "where": "분류 추가 창",
+      "trigger": "분류명이 비어 있을 때",
+      "expected": "[바구니에 담기]가 흐려지고 ‘분류명을 입력하세요’",
+      "roles": "dict.request 가진 모델러 · DA",
+      "refs": [
+        "dict.request"
+      ],
+      "states": [
+        "domain-groups.html?as=lee"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-domain-groups-060",
+      "where": "분류 추가 창",
+      "trigger": "분류명 · 그룹 · 형식단어 · 설명 입력",
+      "expected": "분류명 도움말이 ‘도메인명 = 분류명 + 타입 + 길이 — 예: {이름}C8, {이름}V100’로 바뀌고 검사 목록(‘막힘 · …’ / ‘주의 · …’ / ‘검사 통과 — 바구니에 담을 수 있습니다’)이 바로 바뀜. 막히면 [바구니에 담기]가 흐려지고 첫 막힘이 이유",
+      "roles": "dict.request 가진 모델러 · DA",
+      "refs": [
+        "MD-03"
+      ],
+      "states": [
+        "domain-groups.html?as=lee"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-domain-groups-061",
+      "where": "분류 추가 창",
+      "trigger": "분류 규칙(사전 화면 · 직접 등록과 같은 항목 검사)",
+      "expected": "‘같은 이름의 분류가 있음’, ‘{신청번호}에서 같은 이름을 신청 중’, ‘같이 작성 중인 행과 이름이 겹침’(바구니와), ‘금칙어 — ‘{단어}’을(를) 쓰세요’, ‘연결 형식단어가 비어 있음’, ‘‘{단어}’은 형식단어가 아님’, ‘도메인 그룹을 고르세요’ 막힘. 이미 다른 분류에 연결된 형식단어는 ‘… 형식단어 하나에 분류 하나가 원칙입니다(용어 검사가 첫 분류만 봄)’ 주의",
+      "roles": "dict.request 가진 모델러 · DA",
+      "refs": [
+        "MD-02",
+        "MD-03"
+      ],
+      "states": [
+        "domain-groups.html?as=lee"
+      ],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-domain-groups-062",
+      "where": "분류 추가 창",
+      "trigger": "사전 신청 권한이 없을 때",
+      "expected": "[바구니에 담기]가 흐려지고 ‘사전 신청 권한이 없습니다’",
+      "roles": "dict.request 없는 역할(기관 담당자 · 감리 · 역할 없는 계정 등)",
+      "refs": [
+        "dict.request"
+      ],
+      "states": [
+        "domain-groups.html?as=hyun"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-domain-groups-063",
+      "where": "분류 추가 창",
+      "trigger": "[바구니에 담기] 클릭",
+      "expected": "분류 추가 행이 바구니에 담기고 창이 닫히며 선택이 풀림. 표의 그룹 아래 ‘바구니’ 행이 생기고 ‘분류 ‘{이름}’을 바구니에 담았습니다 — 도메인 신청과 함께 결재하면 순서대로 반영됩니다’ + [바구니 열기]. 이미 있으면 ‘분류 ‘{이름}’은 이미 바구니에 있습니다’. 다른 탭에서 사용자가 바뀌었으면 처리하지 않고 오류 알림",
+      "roles": "dict.request 가진 모델러 · DA",
+      "refs": [
+        "dict.request",
+        "MD-13",
+        "MD-14"
+      ],
+      "states": [
+        "domain-groups.html?as=lee"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-domain-groups-064",
+      "where": "분류 추가 창",
+      "trigger": "[취소] 클릭 또는 Esc",
+      "expected": "창이 닫히고 담지 않음",
+      "roles": "dict.request 가진 모델러 · DA",
+      "refs": [],
+      "states": [
+        "domain-groups.html?as=lee"
+      ],
+      "verify": "e2e"
+    }
+  ]
+}

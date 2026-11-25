@@ -271,6 +271,17 @@ ID: T-<단계>-<번호>   제목:
 - 병합은 조정자만, ⑦까지 통과한 뒤 `--no-ff`로 main에 합치고 push한다. PR은 쓰지 않는다.
 - 보류 브랜치는 지우지 않는다(결정 기록에 브랜치 이름).
 
+## 15. 요구사항 추적 · 완전성 (빠지면 실패)
+- **추적표**: `docs/impl/trace/requirements.json`(자동 생성 `npm run trace:extract`) — 출처 문서의 기능 행 전부: 우선순위 요구(REQ) · 화면/패널(UI) · 메타 규칙(META) · RBAC 2차(RBAC) · 백엔드 §13(ARCH) · 다중 계정 시나리오(SCN) · 목업 상태(MS) · **화면 동작(BH, `trace/behaviors/*.json`)**. 배정(단계 · 작업)은 `trace/assign.json`(사람 · 조정자), 동작 목록 규칙은 `trace/behaviors/_schema.md`.
+- **출처**(추가): RBAC 최종 합의표 `docs/ux/review/resolution-rbac-r2.md`, 우선순위 §2.2 공통 UI 규칙(ID 없음 → `UIR-01~09`).
+- **연결**: **테스트 제목(`it`/`test`의 첫 인자) 자체**에 행 ID를 `[ID]`로 넣는다(예: `test('[ST-R08][BH-model-041] 준수율 …')`). describe 제목 · 주석의 ID는 세지 않는다. 작업 지시서의 ‘추적 ID’에 그 작업이 덮어야 할 행을 적는다.
+- **판정**(`npm run trace:test` → `npm run trace:check`): 행마다 통과 · 실패 · 건너뜀(skip · fixme · todo) · 실행 결과 없음 · 단위 테스트만 · 테스트 없음 · 미배정 · 작업 ID 문제 · 제외 · 제외(근거 없음). **화면 · API 행은 `e2e/` 파일의 테스트가 이번 실행에서 통과해야 통과**(`verify: unit` 행 · ARCH 제외). 건너뜀 · 예상된 실패(`test.fail`)는 미충족. 제외는 사람 결정(`decision`) 필수(화면 동작의 목업 장치만 사유로 충분).
+- **실행 결과**: `trace:test`가 실행마다 `.trace/runs/<시각>/`에 vitest · Playwright 결과와 meta(커밋 · 변경 여부 · 입력 지문)를 남기고, 검사는 **가장 최근 실행만** 읽는다.
+- **관문**: 단계 시작 = `trace:check --phase Pn --gate start`(추적표 최신 · 그 단계 행이 모두 실제 작업 ID에 배정 · 미분해 묶음 없음) · 단계 끝 = 깨끗한 main에서 `trace:test` 후 `trace:check --phase Pn --gate end`(P1~Pn 행이 모두 통과 또는 제외, 실행 커밋 = HEAD · 변경 없음 · 지문 일치 · 필수 러너 결과). 통과해야 단계를 닫는다. 보고서 `--report` → `trace/coverage.md`.
+- **배정**: 화면 동작은 화면 기본값 + refs로 가리킨 행 중 가장 늦은 단계. 여러 단계에 걸친 화면은 조정자가 단계 시작 때 행별로 바로잡는다.
+- **목업이 바뀌면**: UX 담당이 해당 화면의 동작 목록을 고치고 `trace:extract`를 다시 돌린다(새 행은 미배정으로 나타나 시작 관문에서 걸린다).
+- **W3**(계획 밖) 행은 제외 + 사유(사람 확인 Q-2). W2 행은 P5에 배정하고 제외하지 않는다.
+
 ## 14. 남은 확인
 - `gpt-6.2-sol` · `gpt-6.2-astra` 이름은 Codex CLI 업데이트 뒤 실제 호출로 확인한다(§3.3).
 - ~~Orca 브라우저 탭 쿠키 공유~~ — 확인(2026-11-25): 같은 프로필은 공유, 프로필을 나누면 분리 → §9.2.

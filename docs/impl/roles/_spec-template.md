@@ -10,6 +10,8 @@
 범위(쓰기 허용 경로):
 의존 · 이어받기: <앞 작업 ID · 브랜치 · 계약 파일>
 권한 영향: <권한 id → 역할별 허용 · 숨김 · 흐리게+이유 · 403>
+추적 ID: <이 작업이 덮을 requirements.json 행 ID 전부 — 예: SC-20, PN-21, R-02, MD-25, BH-approvals-001~034. 테스트 이름에 [ID]로 붙인다>
+
 완료 기준: <돌릴 명령 · 볼 화면 · 시나리오 — 숫자로 확인 가능하게>
 검증 명령: <예: npm run build · npm test · npm run build -w @neodb/web — 아직 없는 검사(lint 등)는 '없음'>
 금지: 범위 밖 파일 · 공용 패키지(계약 담당 제외) · 목업(UX 제외) · main 병합/push · e2e/rbac/perm-matrix.json · docs/impl/rbac-matrix.md(예외: 이 지시서에 아래 '권한표 변경 승인'이 있는 계약 작업)

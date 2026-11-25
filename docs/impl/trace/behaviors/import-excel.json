@@ -1,0 +1,798 @@
+{
+  "screen": "import-excel.html",
+  "ids": "SC-36a",
+  "source": "docs/ux/mockups/import-excel.html",
+  "behaviors": [
+    {
+      "id": "BH-import-excel-001",
+      "where": "머리 경로",
+      "trigger": "화면 열기",
+      "expected": "경로에 현재 시스템 이름, 누르면 system.html?system=<코드>",
+      "roles": "전체",
+      "refs": ["SC-36a"],
+      "states": ["import-excel.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-import-excel-002",
+      "where": "머리 · 가져올 형식",
+      "trigger": "‘DDL’ 클릭",
+      "expected": "import.html(들어온 영역이 있으면 ?area=)로 이동. ‘엑셀 정의서’가 눌린 상태로 표시",
+      "roles": "전체",
+      "refs": ["SC-36"],
+      "states": ["import-excel.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-import-excel-003",
+      "where": "단계 표시줄",
+      "trigger": "단계가 바뀔 때",
+      "expected": "‘파일 · 가져올 위치 · 검사 · 미리보기 · 완료’ 중 현재 단계 강조(aria-current=step), 지난 단계는 체크 표시. 단계 이동 시 그 단계 제목으로 초점, 위로 스크롤",
+      "roles": "전체",
+      "refs": ["RV-R02"],
+      "states": ["import-excel.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-import-excel-004",
+      "where": "아래 고정 줄",
+      "trigger": "‘취소’ 클릭",
+      "expected": "model.html(들어온 영역이 있으면 ?area=)로 이동. ④ 완료에서는 숨김. [이전]은 ① · ④에서 숨김, [다음]은 ① · ④에서 숨김",
+      "roles": "전체",
+      "refs": ["SC-36a"],
+      "states": ["import-excel.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-import-excel-005",
+      "where": "① 파일 · 양식 내려받기",
+      "trigger": "‘양식 내려받기 (.xlsx)’ 클릭",
+      "expected": "‘테이블설계_양식_<시스템코드>.xlsx’ 내려받기: ‘테이블 설계’ 시트(14열 머리글 + 예시 행)와 ‘작성가이드’ 시트. 토스트 ‘양식을 내려받았습니다 — ‘테이블 설계’ 시트에 한 행씩 쓰세요’. 버튼 옆 ‘예시 타입: <DB> 매핑(<문자> · <숫자> · <일시>)’",
+      "roles": "전체",
+      "refs": ["RV-R02", "ST-R04"],
+      "states": ["import-excel.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-import-excel-006",
+      "where": "① 파일 · 오류 배너",
+      "trigger": "엑셀 처리 라이브러리를 불러오지 못했을 때 양식 내려받기 · 파일 올리기",
+      "expected": "화면 위 오류 배너 ‘엑셀 라이브러리를 불러오지 못했습니다 — 네트워크를 확인하세요. [정상 예시]로 시험은 할 수 있습니다’(파일 올리기는 ‘… 네트워크를 확인하거나 예시로 시험하세요’)",
+      "roles": "전체",
+      "refs": ["SC-36a"],
+      "states": ["import-excel.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-import-excel-007",
+      "where": "① 파일 · 올리기 영역",
+      "trigger": "영역 클릭 또는 초점 상태에서 Enter · Space",
+      "expected": "파일 고르기 창(.xlsx만)이 열린다. 고른 파일을 읽는다",
+      "roles": "전체",
+      "refs": ["RV-R02"],
+      "states": ["import-excel.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-import-excel-008",
+      "where": "① 파일 · 올리기 영역",
+      "trigger": "파일 끌어 오기 · 놓기",
+      "expected": "끌어 오는 동안 영역 강조, 벗어나면 해제. 놓으면 첫 파일을 읽는다",
+      "roles": "전체",
+      "refs": ["RV-R02"],
+      "states": ["import-excel.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-import-excel-009",
+      "where": "① 파일 · 검증",
+      "trigger": ".xlsx가 아닌 파일",
+      "expected": "오류 배너 ‘‘<파일>’ — .xlsx 파일만 올릴 수 있습니다. 엑셀에서 ‘Excel 통합 문서(*.xlsx)’로 저장하세요’, 단계 이동 없음",
+      "roles": "전체",
+      "refs": ["RV-R02"],
+      "states": ["import-excel.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-import-excel-010",
+      "where": "① 파일 · 검증",
+      "trigger": "10MB를 넘는 파일",
+      "expected": "오류 배너 ‘‘<파일>’ — 10MB를 넘습니다. 불필요한 시트를 지워 주세요’",
+      "roles": "전체",
+      "refs": ["RV-R02"],
+      "states": ["import-excel.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-import-excel-011",
+      "where": "① 파일 · 읽기",
+      "trigger": "파일 읽는 중",
+      "expected": "영역 안 상태 문구 ‘‘<파일>’ 읽는 중…’. 읽는 사이 다른 파일을 고르면 늦게 끝난 앞 파일 결과는 버린다",
+      "roles": "전체",
+      "refs": ["RV-R02"],
+      "states": ["import-excel.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-import-excel-012",
+      "where": "① 파일 · 읽기",
+      "trigger": "파일을 읽지 못하거나 엑셀로 해석할 수 없을 때",
+      "expected": "읽기 실패면 ‘‘<파일>’을(를) 읽지 못했습니다 — 파일을 닫고 다시 고르세요’, 해석 실패면 ‘‘<파일>’은(는) 엑셀 파일로 읽을 수 없습니다 — .xlsx로 다시 저장해 올리세요’ 오류 배너",
+      "roles": "전체",
+      "refs": ["RV-R02"],
+      "states": ["import-excel.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-import-excel-013",
+      "where": "① 파일 · 파일 없이 시험",
+      "trigger": "‘정상 예시’ · ‘오류가 있는 예시’ · ‘다른 영역 참조 예시’ 클릭",
+      "expected": "내장 예시 시트로 ②로 이동(같은 시스템에 확정본이 있는 다른 영역이 없으면 ‘다른 영역 참조 예시’는 흐리게 + ‘같은 시스템에 확정본이 있는 다른 업무 영역이 없습니다’)",
+      "roles": "전체",
+      "refs": ["SC-36a"],
+      "states": ["import-excel.html"],
+      "verify": "exempt",
+      "exemptReason": "목업 전용 데모 기능(파일 없이 시험하는 내장 예시)"
+    },
+    {
+      "id": "BH-import-excel-014",
+      "where": "① 파일 · 읽기 성공",
+      "trigger": "파일을 읽었을 때",
+      "expected": "② 가져올 위치로 이동, 제목 옆 ‘— <파일 이름>’. 새 업무 영역 이름 칸이 비었거나 자동값이면 파일 이름에서 ‘.xlsx’ · ‘양식’ · ‘검사결과’ 꼬리를 뗀 40자 이내 이름으로 채움(주소 ?name= 우선, 없으면 ‘엑셀 가져오기’). 이전 참조 · 값 선택은 비워진다",
+      "roles": "전체",
+      "refs": ["RV-R02"],
+      "states": ["import-excel.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-import-excel-015",
+      "where": "① 읽기 규칙 · 시트",
+      "trigger": "통합 문서를 읽을 때",
+      "expected": "‘ERD’ · ‘작성가이드’ · ‘검사 요약’ 시트(머리글에 테이블 물리명 없으면)와 빈 시트는 건너뛴다. 머리글은 양식 이름 · 영문 키 · 별칭(NOT NULL → 필수, ‘NULL 허용 여부’ N → 필수)으로 읽는다",
+      "roles": "전체",
+      "refs": ["ST-R04", "RV-R02"],
+      "states": ["import-excel.html"],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-import-excel-016",
+      "where": "① 읽기 규칙 · 시트",
+      "trigger": "‘인덱스’ 시트가 있을 때",
+      "expected": "경고 ‘인덱스 시트는 가져오지 않습니다 — 모델 화면에서 편집하세요’",
+      "roles": "전체",
+      "refs": ["RV-R02"],
+      "states": ["import-excel.html"],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-import-excel-017",
+      "where": "① 읽기 규칙 · 머리글",
+      "trigger": "필수 열(테이블 물리명 · 컬럼 물리명 · 컬럼 논리명 · 컬럼 타입)이 없는 시트",
+      "expected": "빠진 열마다 오류 ‘필수 열 ‘<열>’이 없습니다 — 1행 머리글을 양식대로 두세요’, 그 시트 행은 읽지 않음",
+      "roles": "전체",
+      "refs": ["ST-R04", "RV-R02"],
+      "states": ["import-excel.html"],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-import-excel-018",
+      "where": "① 읽기 규칙 · 예전 양식",
+      "trigger": "표준용어 · 원천 열이 있는 예전 18열 양식",
+      "expected": "경고 ‘예전 양식으로 읽었습니다 — 테이블 물리명이 빈 행은 바로 위 테이블에 붙습니다. 표준용어 · 원천 열은 가져오지 않습니다’. 상속은 시트를 넘지 않고, 시트 첫 테이블 물리명이 비면 오류 ‘이 시트 첫 테이블의 물리명이 비어 있습니다’",
+      "roles": "전체",
+      "refs": ["RV-R02"],
+      "states": ["import-excel.html"],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-import-excel-019",
+      "where": "① 읽기 규칙",
+      "trigger": "읽을 데이터 행이 하나도 없을 때",
+      "expected": "오류 ‘테이블 데이터가 없습니다 — ‘테이블 설계’ 시트에 한 행 이상 쓰세요’",
+      "roles": "전체",
+      "refs": ["RV-R02"],
+      "states": ["import-excel.html"],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-import-excel-020",
+      "where": "② 가져올 위치",
+      "trigger": "‘새 업무 영역’ / ‘기존 업무 영역’ 선택",
+      "expected": "새 업무 영역이면 ‘업무 영역 이름 *’ 칸, 기존이면 업무 영역 선택과 올리는 방식(병합(기본) / 덮어쓰기)이 보인다. 고른 칸은 테두리 강조",
+      "roles": "전체",
+      "refs": ["RV-R02"],
+      "states": ["import-excel.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-import-excel-021",
+      "where": "② 가져올 위치 · 기존 업무 영역 목록",
+      "trigger": "화면 열기",
+      "expected": "영역마다 ‘이름 · v버전’, 결재 중 · 확정본 · 편집 권한 없는 영역은 흐리게 + ‘(결재 중)’ · ‘(확정본 — 새 작업 버전을 먼저 시작)’ · ‘(편집 권한 없음)’. 들어온 영역(?area=)이 편집 가능하면 미리 골라지고 ‘기존 업무 영역’이 선택된다",
+      "roles": "전체",
+      "refs": ["model.edit"],
+      "states": ["import-excel.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-import-excel-022",
+      "where": "② 가져올 위치 · 경고 배너",
+      "trigger": "들어온 영역이 잠겨 있거나 편집 권한이 없을 때",
+      "expected": "경고 ‘들어온 영역 ‘<이름>’은(는) <이유>이라 올릴 수 없습니다 — 새 업무 영역이나 다른 영역을 고르세요’",
+      "roles": "전체",
+      "refs": ["model.edit"],
+      "states": ["import-excel.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-import-excel-023",
+      "where": "② 가져올 위치",
+      "trigger": "편집할 수 있는 영역이 하나도 없을 때",
+      "expected": "‘기존 업무 영역’ 선택지 흐리게 + ‘편집할 수 있는 업무 영역이 없습니다’",
+      "roles": "전체",
+      "refs": ["model.edit"],
+      "states": ["import-excel.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-import-excel-024",
+      "where": "② 가져올 위치 · 새 이름",
+      "trigger": "이름을 비우고 ‘다음: 검사 · 미리보기’",
+      "expected": "칸 아래 ‘이름을 입력하세요’, 칸 오류 표시 · 초점, 단계 이동 없음",
+      "roles": "전체",
+      "refs": ["area.create"],
+      "states": ["import-excel.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-import-excel-025",
+      "where": "② 가져올 위치 · 새 이름",
+      "trigger": "이 시스템에 같은 이름(보관함 포함)이 있을 때 ‘다음’",
+      "expected": "칸 아래 ‘이 시스템에 같은 이름의 업무 영역이 있습니다(보관함 포함)’, 단계 이동 없음",
+      "roles": "전체",
+      "refs": ["area.create"],
+      "states": ["import-excel.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-import-excel-026",
+      "where": "② 가져올 위치 · 기존 영역",
+      "trigger": "고른 영역을 지금 올릴 수 없을 때 ‘다음’",
+      "expected": "‘이 업무 영역은 지금 올릴 수 없습니다’, 영역 선택으로 초점",
+      "roles": "전체",
+      "refs": ["model.edit"],
+      "states": ["import-excel.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-import-excel-027",
+      "where": "② 가져올 위치",
+      "trigger": "‘다음: 검사 · 미리보기’ 클릭(통과)",
+      "expected": "③으로 이동해 고른 위치 기준으로 검사, ‘문제’ 탭으로 연다(오류 없이 다른 영역 참조가 있으면 ‘관계’ 탭)",
+      "roles": "전체",
+      "refs": ["RV-R02", "RV-R03"],
+      "states": ["import-excel.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-import-excel-028",
+      "where": "아래 고정 줄",
+      "trigger": "‘이전’ 클릭",
+      "expected": "③에서는 ②로, ②에서는 ①로 돌아간다",
+      "roles": "전체",
+      "refs": ["SC-36a"],
+      "states": ["import-excel.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-import-excel-029",
+      "where": "③ 검사 규칙 · 테이블",
+      "trigger": "새 양식에서 테이블 물리명이 빈 행",
+      "expected": "오류 ‘테이블 물리명은 모든 행에 반복해서 씁니다’",
+      "roles": "전체",
+      "refs": ["RV-R02"],
+      "states": ["import-excel.html"],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-import-excel-030",
+      "where": "③ 검사 규칙 · 테이블",
+      "trigger": "테이블 물리명이 대소문자만 다른 행",
+      "expected": "오류 ‘‘A’과 ‘B’이 대소문자만 다릅니다’",
+      "roles": "전체",
+      "refs": ["RV-R02"],
+      "states": ["import-excel.html"],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-import-excel-031",
+      "where": "③ 검사 규칙 · 테이블",
+      "trigger": "같은 테이블인데 논리명 · 설명이 첫 행과 다를 때(새 양식은 빈칸도 비교)",
+      "expected": "오류 ‘‘<표>’의 논리명이 N행(‘<값>’)과 다릅니다 — 모든 행에 같은 값을 쓰세요’ / ‘‘<표>’의 설명이 N행과 다릅니다 — 모든 행에 같은 값을 쓰세요’",
+      "roles": "전체",
+      "refs": ["RV-R02"],
+      "states": ["import-excel.html"],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-import-excel-032",
+      "where": "③ 검사 규칙 · 컬럼",
+      "trigger": "컬럼 물리명이 빈 행",
+      "expected": "오류 ‘컬럼 물리명이 비어 있습니다’",
+      "roles": "전체",
+      "refs": ["RV-R02"],
+      "states": ["import-excel.html"],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-import-excel-033",
+      "where": "③ 검사 규칙 · 컬럼",
+      "trigger": "같은 테이블에 컬럼 물리명이 겹칠 때(대소문자 무시)",
+      "expected": "오류 ‘<표>.<컬럼>이 두 번 있습니다(N행 · M행)’",
+      "roles": "전체",
+      "refs": ["RV-R02"],
+      "states": ["import-excel.html"],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-import-excel-034",
+      "where": "③ 검사 규칙 · 컬럼",
+      "trigger": "컬럼 논리명 · 컬럼 타입이 빈 행",
+      "expected": "오류 ‘컬럼 논리명이 비어 있습니다’ / ‘컬럼 타입이 비어 있습니다’",
+      "roles": "전체",
+      "refs": ["RV-R02"],
+      "states": ["import-excel.html"],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-import-excel-035",
+      "where": "③ 검사 규칙 · 길이",
+      "trigger": "길이 · 소수점 자리수가 숫자가 아니거나, 길이가 필요한 타입에 길이가 없을 때",
+      "expected": "경고 ‘길이 · 소수점 자리수가 숫자가 아닙니다 — 원본 그대로 가져옵니다’ / ‘<타입>에 길이가 없습니다’(VARCHAR · CHAR · NUMBER 계열). 타입에 괄호가 없고 길이가 있으면 ‘타입(길이,자리수)’로 합친다",
+      "roles": "전체",
+      "refs": ["RV-R02"],
+      "states": ["import-excel.html"],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-import-excel-036",
+      "where": "③ 검사 규칙 · 타입",
+      "trigger": "시스템 데이터타입 매핑에 없는 타입",
+      "expected": "경고 ‘‘<타입>’은 이 시스템(<DB>)의 데이터타입 매핑에 없는 타입입니다 — 그대로 가져옵니다’",
+      "roles": "전체",
+      "refs": ["RV-R02"],
+      "states": ["import-excel.html"],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-import-excel-037",
+      "where": "③ 검사 규칙 · 이름",
+      "trigger": "컬럼 · 테이블 물리명이 DB 이름 길이를 넘거나 예약어일 때",
+      "expected": "경고 ‘N자를 넘습니다(<DB> 이름 길이)’(Oracle · Tibero 30, PostgreSQL 63, MySQL 64) / ‘‘<이름>’은 예약어입니다’",
+      "roles": "전체",
+      "refs": ["RV-R02"],
+      "states": ["import-excel.html"],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-import-excel-038",
+      "where": "③ 검사 규칙 · PK · 필수",
+      "trigger": "PK · 필수 칸이 Y/빈칸(예 · O · 1 · TRUE · YES / N · 아니오 · X · 0 · FALSE · NO 포함) 외 값일 때",
+      "expected": "경고 ‘‘<값>’ — PK는 Y 또는 빈칸으로 쓰세요(아님으로 읽었습니다)’ / ‘‘<값>’ — 필수는 Y 또는 빈칸으로 쓰세요(아님으로 읽었습니다)’",
+      "roles": "전체",
+      "refs": ["RV-R02"],
+      "states": ["import-excel.html"],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-import-excel-039",
+      "where": "③ 검사 규칙 · PK",
+      "trigger": "PK 컬럼이 없는 테이블",
+      "expected": "경고 ‘<표>에 PK가 없습니다’",
+      "roles": "전체",
+      "refs": ["RV-R03"],
+      "states": ["import-excel.html"],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-import-excel-040",
+      "where": "③ 검사 규칙 · 참조",
+      "trigger": "참조 테이블 · 참조 컬럼 중 하나만 적은 행",
+      "expected": "오류 ‘참조 테이블과 참조 컬럼을 함께 입력하세요’",
+      "roles": "전체",
+      "refs": ["RV-R02"],
+      "states": ["import-excel.html"],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-import-excel-041",
+      "where": "③ 검사 규칙 · 참조",
+      "trigger": "참조 테이블을 이 파일 · 대상 영역(병합) · 같은 시스템 다른 영역 어디서도 못 찾을 때",
+      "expected": "오류 ‘참조 테이블 ‘<표>’이 이 파일에도 (대상 영역에도) 같은 시스템의 다른 영역에도 없습니다’",
+      "roles": "전체",
+      "refs": ["RV-R02"],
+      "states": ["import-excel.html"],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-import-excel-042",
+      "where": "③ 검사 규칙 · 참조",
+      "trigger": "덮어쓰기에서 대상 영역에서 빠지는 테이블을 참조할 때",
+      "expected": "오류 ‘‘<표>’은 덮어쓰기로 대상 영역에서 빠지는 테이블입니다 — 이 파일에 넣거나 병합으로 올리세요’",
+      "roles": "전체",
+      "refs": ["RV-R02"],
+      "states": ["import-excel.html"],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-import-excel-043",
+      "where": "③ 검사 규칙 · 참조",
+      "trigger": "참조 컬럼이 부모에 없거나 PK가 아닐 때",
+      "expected": "오류 ‘참조 컬럼 ‘<컬럼>’이 ‘<부모>’에 없습니다’ / ‘참조 대상 ‘<부모.컬럼>’이 PK가 아닙니다 — 부모의 PK 컬럼을 참조합니다’",
+      "roles": "전체",
+      "refs": ["RV-R02"],
+      "states": ["import-excel.html"],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-import-excel-044",
+      "where": "③ 검사 규칙 · 참조",
+      "trigger": "FK 컬럼과 부모 PK의 타입 계열(문자 · 숫자 · 일시)이 다를 때",
+      "expected": "오류 ‘참조 컬럼과 타입이 맞지 않습니다(<자식 타입> / <부모 타입>)’",
+      "roles": "전체",
+      "refs": ["RV-R02"],
+      "states": ["import-excel.html"],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-import-excel-045",
+      "where": "③ 검사 규칙 · 참조",
+      "trigger": "복합 PK 부모의 키를 일부만 참조할 때",
+      "expected": "오류 ‘‘<부모>’의 PK N개를 모두 참조하세요 — 빠진 키: <키 목록>’",
+      "roles": "전체",
+      "refs": ["RV-R02"],
+      "states": ["import-excel.html"],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-import-excel-046",
+      "where": "③ 검사 규칙 · 다른 영역 참조",
+      "trigger": "부모가 같은 시스템 다른 영역에만 있을 때",
+      "expected": "그 영역 확정본에 있으면 참조 관계 후보(기본 ‘참조로 가져오기’ 체크). 확정본이 없거나 확정본에 없는 테이블이면 경고 ‘<영역>에 확정본이 없어 참조할 수 없습니다’ / ‘<영역> 확정본에 이 테이블이 없습니다(작업 중에 새로 만든 테이블) — FK 컬럼만 일반 컬럼으로 남기고 관계는 만들지 않습니다’. 체크를 끄면 경고 ‘<영역> › <표>을(를) 참조로 가져오지 않습니다 — FK 컬럼은 일반 컬럼으로 남습니다’",
+      "roles": "전체",
+      "refs": ["RV-R02"],
+      "states": ["import-excel.html"],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-import-excel-047",
+      "where": "③ 검사 규칙 · 병합",
+      "trigger": "병합 대상 영역에 같은 관계가 이미 있거나 FK 컬럼이 다른 관계에 쓰일 때",
+      "expected": "같은 관계는 처리 ‘이미 있음 — 건너뜀’. FK 충돌은 처리 ‘FK 충돌 — 만들지 않음’ + 경고 ‘<표>.<컬럼>은 이미 다른 관계의 FK입니다 — 이 관계는 만들지 않습니다(ERD에서 정리하세요)’",
+      "roles": "전체",
+      "refs": ["RV-R02"],
+      "states": ["import-excel.html"],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-import-excel-048",
+      "where": "③ 검사 규칙 · 관계 유형",
+      "trigger": "관계를 만들 때",
+      "expected": "자기 참조는 ‘재귀’(비식별 · 없어도 된다, 논리명이 ‘상위’로 시작하면 역할명 ‘상위’), FK가 모두 PK면 ‘식별’, 아니면 ‘비식별’. FK가 모두 필수(또는 PK)면 선택성 ‘반드시 있다’, 아니면 ‘없어도 된다’. 같은 부모 두 번째 관계는 ‘두 번째 관계 — 역할명은 ERD에서’",
+      "roles": "전체",
+      "refs": ["RV-R02"],
+      "states": ["import-excel.html"],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-import-excel-049",
+      "where": "③ 검사 · 머리",
+      "trigger": "검사가 끝났을 때",
+      "expected": "상태 배지 ‘오류 있음 — 가져올 수 없음’ / ‘경고만 있음’ / ‘문제 없음’, 대상 줄 ‘<파일> → 새 업무 영역 ‘<이름>’’ 또는 ‘<영역> · 병합/덮어쓰기’, 요약 카드 ‘테이블 · 컬럼 · 만들 관계 · 오류 · 경고’(오류 · 경고 색 강조)",
+      "roles": "전체",
+      "refs": ["RV-R03"],
+      "states": ["import-excel.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-import-excel-050",
+      "where": "③ 검사 · 요약 카드",
+      "trigger": "다른 영역 참조가 있을 때 ‘다른 영역 참조 N — 고르기’ 클릭",
+      "expected": "‘관계’ 탭으로 바뀌고 탭에 초점",
+      "roles": "전체",
+      "refs": ["RV-R02"],
+      "states": ["import-excel.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-import-excel-051",
+      "where": "③ 검사 · 탭",
+      "trigger": "탭 클릭 또는 ← → Home End",
+      "expected": "‘문제 N · 테이블 N · 관계 N’(기존 영역이면 ‘병합 계획’ 또는 ‘덮어쓰기 계획’ 추가) 탭 전환, 화살표로 이동하면 그 탭에 초점",
+      "roles": "전체",
+      "refs": ["RV-R03"],
+      "states": ["import-excel.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-import-excel-052",
+      "where": "③ 검사 · 문제 탭",
+      "trigger": "탭 열기",
+      "expected": "오류 먼저, 행 순으로 ‘구분(오류/경고) · 시트 · 행 · 열 · 내용’. 문제가 없으면 ‘문제가 없습니다’",
+      "roles": "전체",
+      "refs": ["RV-R03"],
+      "states": ["import-excel.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-import-excel-053",
+      "where": "③ 검사 · 문제 탭",
+      "trigger": "‘행 보기’ 클릭",
+      "expected": "그 엑셀 행의 채워진 값(‘열 이름 값’)이 아래에 펼쳐지고 버튼이 ‘접기’로 바뀜. 다시 누르면 접힘",
+      "roles": "전체",
+      "refs": ["RV-R03"],
+      "states": ["import-excel.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-import-excel-054",
+      "where": "③ 검사 · 테이블 탭",
+      "trigger": "탭 열기",
+      "expected": "테이블마다 ‘물리명 · 논리명 · 컬럼 수 · PK · 참조 수 · 점검(오류 / 정상 / PK 없음)’. 읽은 테이블이 없으면 ‘읽은 테이블이 없습니다’",
+      "roles": "전체",
+      "refs": ["RV-R03"],
+      "states": ["import-excel.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-import-excel-055",
+      "where": "③ 검사 · 관계 탭",
+      "trigger": "탭 열기",
+      "expected": "‘부모(다른 영역 › / 대상 영역 › 표시) → 자식 · FK 컬럼(자식→부모) · 유형 · 선택성 · 처리’. 참조 행이 없으면 ‘참조 테이블 · 참조 컬럼이 적힌 행이 없습니다 — 관계는 가져온 뒤 ERD에서 맺습니다’",
+      "roles": "전체",
+      "refs": ["RV-R02"],
+      "states": ["import-excel.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-import-excel-056",
+      "where": "③ 검사 · 관계 탭",
+      "trigger": "다른 영역 참조 행의 ‘참조로 가져오기’ 체크 변경",
+      "expected": "선택을 기억한 채 다시 검사해 요약 · 경고 · ‘만들 관계’ 수가 바뀌고 관계 탭에 머문다(초점 유지)",
+      "roles": "전체",
+      "refs": ["RV-R02"],
+      "states": ["import-excel.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-import-excel-057",
+      "where": "③ 검사 · 병합 계획 탭",
+      "trigger": "병합으로 기존 영역을 골랐을 때",
+      "expected": "‘병합 계획 — <영역> vN’: ‘테이블: 새로 N(목록) · 갱신 N(컬럼 추가 n · 값 다름 n) · 그대로 N’, ‘관계: 새로 N · 이미 있음 N · FK 충돌 N · 엑셀에 없는 기존 관계는 그대로’",
+      "roles": "전체",
+      "refs": ["RV-R02"],
+      "states": ["import-excel.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-import-excel-058",
+      "where": "③ 검사 · 병합 계획 탭",
+      "trigger": "같은 물리명인데 논리명 · 타입 · PK · 필수 값이 다를 때",
+      "expected": "‘값이 다른 항목 N개 — 남길 값을 고르세요’ 표(테이블.컬럼 · 항목 · 지금 값 · 엑셀 값 · 남길 값, 기본 ‘엑셀 값’). 선택은 다시 검사해도 유지. [모두 엑셀 값] / [모두 지금 값]으로 한 번에 바꿈. 가져올 때 고른 값을 쓰고, 이름이 바뀐 속성은 표준 상태를 다시 판정",
+      "roles": "전체",
+      "refs": ["RV-R02"],
+      "states": ["import-excel.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-import-excel-059",
+      "where": "③ 검사 · 덮어쓰기 계획 탭",
+      "trigger": "덮어쓰기로 기존 영역을 골랐을 때",
+      "expected": "경고 ‘덮어쓰기 계획 — <영역>을(를) 엑셀 기준으로 바꿉니다.’ + ‘빠지는 테이블 N: 목록’ · ‘남는 테이블에서 빠지는 컬럼 N — 표: 컬럼’ · ‘기존 관계 N개는 모두 지우고, 엑셀의 참조로 M개를 다시 만듭니다’ · ‘… 작업 버전만 바뀌고 확정본은 그대로 · 완료 화면에서 한 번 되돌릴 수 있습니다’",
+      "roles": "전체",
+      "refs": ["RV-R02"],
+      "states": ["import-excel.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-import-excel-060",
+      "where": "③ 아래 고정 줄",
+      "trigger": "모델러가 담당 시스템이 아니거나 모델러가 아닐 때",
+      "expected": "[가져오기] 흐리게 + 빨간 안내 ‘모델러가 담당 시스템에서만 가져올 수 있습니다’",
+      "roles": "모델러가 아닌 역할 · 담당 밖 모델러",
+      "refs": ["model.edit"],
+      "states": ["import-excel.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-import-excel-061",
+      "where": "③ 아래 고정 줄",
+      "trigger": "검사 오류가 1건 이상일 때",
+      "expected": "[가져오기] 흐리게 + ‘오류 N건을 엑셀에서 고친 뒤 다시 올리세요 — [검사 결과 표시된 엑셀 내려받기]로 위치를 확인할 수 있습니다’",
+      "roles": "model.edit 가진 담당 시스템 모델러",
+      "refs": ["model.edit", "RV-R03"],
+      "states": ["import-excel.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-import-excel-062",
+      "where": "③ 아래 고정 줄",
+      "trigger": "새 업무 영역인데 area.create 권한이 없을 때",
+      "expected": "[가져오기] 흐리게 + ‘업무 영역을 만들 권한이 없습니다’",
+      "roles": "area.create 없는 사용자",
+      "refs": ["area.create"],
+      "states": ["import-excel.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-import-excel-063",
+      "where": "③ 아래 고정 줄",
+      "trigger": "오류 없이 경고만 있을 때",
+      "expected": "[가져오기] 사용 가능 + ‘경고 N건은 표시만 하고 가져옵니다’",
+      "roles": "model.edit 가진 담당 시스템 모델러",
+      "refs": ["model.edit"],
+      "states": ["import-excel.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-import-excel-064",
+      "where": "③ 검사 · 머리",
+      "trigger": "‘검사 결과 표시된 엑셀 내려받기’ 클릭",
+      "expected": "‘<원본 이름>_검사결과.xlsx’ 내려받기: 모든 시트를 그대로 두고 데이터 시트 끝에 ‘검사 결과’ 열(‘[오류]/[경고] 열: 내용’), 마지막에 ‘검사 요약’ 시트. 토스트 ‘각 시트 끝에 ‘검사 결과’ 열을 붙인 파일을 내려받았습니다 — 고친 뒤 [다른 파일 올리기](검사 결과 열 · 요약 시트는 무시합니다)’. 라이브러리가 없으면 오류 토스트 ‘엑셀 라이브러리를 불러오지 못했습니다 — 문제 탭의 위치를 보고 고치세요’",
+      "roles": "전체",
+      "refs": ["RV-R03"],
+      "states": ["import-excel.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-import-excel-065",
+      "where": "① 읽기 규칙",
+      "trigger": "검사 결과 파일을 다시 올릴 때",
+      "expected": "‘검사 요약’ 시트는 건너뛰고, 원래 시트만 다시 검사한다. 내려받기 파일 이름에 ‘_검사결과’가 겹쳐 붙지 않는다",
+      "roles": "전체",
+      "refs": ["RV-R03"],
+      "states": ["import-excel.html"],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-import-excel-066",
+      "where": "③ 검사 · 머리",
+      "trigger": "‘다른 파일 올리기’ 클릭",
+      "expected": "읽은 내용 · 검사 결과를 비우고 ①로 돌아가 올리기 영역에 초점",
+      "roles": "전체",
+      "refs": ["RV-R02"],
+      "states": ["import-excel.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-import-excel-067",
+      "where": "③ 아래 고정 줄",
+      "trigger": "덮어쓰기에서 ‘가져오기’ 첫 클릭",
+      "expected": "버튼이 ‘덮어쓰기 확인’으로 바뀌고 ‘한 번 더 누르면 위 덮어쓰기 계획대로 바꿉니다.’ 표시. 위치 · 방식 · 남길 값을 바꾸면 확인이 풀린다. 두 번째 클릭에 실행",
+      "roles": "model.edit 가진 담당 시스템 모델러",
+      "refs": ["model.edit"],
+      "states": ["import-excel.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-import-excel-068",
+      "where": "③ 아래 고정 줄",
+      "trigger": "새 업무 영역으로 ‘가져오기’ 클릭(통과)",
+      "expected": "그 이름으로 업무 영역(v1 작업 버전, 설명 ‘엑셀 ‘<파일>’에서 가져옴’)을 만들고 ④ 완료로 이동. 감사 로그 ‘엑셀로 모델 가져오기’(파일 · 방식 · 테이블 · 관계 · 참조 엔터티 · 경고 수). 저장에 실패하면 만들다 만 영역을 지우고 토스트 ‘저장하지 못했습니다(브라우저 저장 공간 등) — 업무 영역을 만들지 않았습니다’",
+      "roles": "model.edit · area.create 가진 담당 시스템 모델러",
+      "refs": ["model.edit", "area.create", "RV-R02", "SC-58"],
+      "states": ["import-excel.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-import-excel-069",
+      "where": "③ 아래 고정 줄",
+      "trigger": "실행 순간 이름이 겹치거나 만들 권한이 없을 때",
+      "expected": "②로 돌아가 ‘이름이 겹치거나 만들 권한이 없습니다’",
+      "roles": "model.edit 가진 담당 시스템 모델러",
+      "refs": ["area.create"],
+      "states": ["import-excel.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-import-excel-070",
+      "where": "③ 아래 고정 줄",
+      "trigger": "기존 영역으로 ‘가져오기’ 클릭(통과)",
+      "expected": "작업 버전에 병합(같은 물리명 갱신 · 새 것 추가 · 없는 것 유지) 또는 덮어쓰기(엑셀에 없는 테이블 · 관계 삭제)로 저장(수정 번호 +1) 후 ④ 완료, 감사 로그 기록. 실행 순간 잠겼으면 ②로 돌아가 ‘이 업무 영역은 지금 올릴 수 없습니다(<이유>)’, 저장 실패면 토스트 ‘저장하지 못했습니다 — 가져오지 않았습니다’",
+      "roles": "model.edit 가진 담당 시스템 모델러(작업 중 버전)",
+      "refs": ["model.edit", "RV-R02", "SC-58"],
+      "states": ["import-excel.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-import-excel-071",
+      "where": "③ 아래 고정 줄",
+      "trigger": "다른 탭에서 로그인 사용자가 바뀐 뒤 ‘가져오기’",
+      "expected": "토스트 ‘다른 탭에서 사용자가 바뀌었습니다(지금 <이름>) — 새로고침한 뒤 다시 처리하세요’ + [새로고침], 가져오지 않음",
+      "roles": "전체",
+      "refs": ["model.edit"],
+      "states": ["import-excel.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-import-excel-072",
+      "where": "가져오기 · 모델 생성 규칙",
+      "trigger": "가져온 구조로 모델을 만들 때",
+      "expected": "테이블 분류는 물리명 끝 _M → 기본, _D → 내역, _R → 관계, 그 밖 → 코드 계열(K). 속성 표준 상태는 사전 용어면 표준, 분해되면 조합 가능, 아니면 미등록. 새 엔터티는 기존 엔터티 아래, 부모가 자식보다 위에 배치. ‘가져온 테이블 (<파일 이름>)’ 보기를 만든다. 다른 영역 참조는 그 영역 확정본 엔터티를 참조 엔터티(PK와 ‘…명’ 컬럼)로 추가. 관계명은 비워 둔다",
+      "roles": "전체",
+      "refs": ["RV-R02", "RV-R03"],
+      "states": ["import-excel.html"],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-import-excel-073",
+      "where": "④ 완료",
+      "trigger": "가져오기가 끝났을 때",
+      "expected": "‘가져왔습니다 — <영역> vN 작업 중’ + ‘<방식> · 테이블 N(새로 n) · 만든 관계 n · 다른 영역 참조 엔터티 n · ‘가져온 테이블’ 보기’, 참조로 안 가져온 FK가 있으면 ‘참조로 가져오지 않은 FK 컬럼 N개는 일반 컬럼으로 남겼습니다 — ERD에서 관계를 맺으세요’, 경고가 있으면 ‘경고 N건 — 모델의 표준 맞추기 · 구조 점검에서 다시 보입니다’, ‘관계명은 비어 있습니다 — ERD 관계 패널에서 명사로 입력하세요(소속 · 담당)’, 다음 순서 안내",
+      "roles": "model.edit 가진 담당 시스템 모델러",
+      "refs": ["RV-R03"],
+      "states": ["import-excel.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-import-excel-074",
+      "where": "④ 완료",
+      "trigger": "‘모델 열기’ / ‘표준 맞추기’ 클릭",
+      "expected": "model.html?area=<영역> / standardize.html?area=<영역>&from=import 로 이동",
+      "roles": "전체",
+      "refs": ["RV-R03", "SC-34"],
+      "states": ["import-excel.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-import-excel-075",
+      "where": "④ 완료 · 가져오기 취소",
+      "trigger": "‘가져오기 취소’ 첫 클릭",
+      "expected": "버튼이 ‘취소 확인’으로 바뀌고 ‘한 번 더 누르면 업무 영역 ‘<이름>’을(를) 지웁니다’(기존 영역이면 ‘가져오기 전 상태로 돌립니다’) 표시",
+      "roles": "model.edit 가진 담당 시스템 모델러",
+      "refs": ["model.edit"],
+      "states": ["import-excel.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-import-excel-076",
+      "where": "④ 완료 · 가져오기 취소",
+      "trigger": "‘취소 확인’ 클릭",
+      "expected": "새 영역이면 영역을 지우고, 기존 영역이면 가져오기 전 내용으로 되돌린다. 감사 로그 ‘엑셀 가져오기 취소’, 토스트 ‘가져오기를 취소했습니다 — 가져오기 전 상태로 돌렸습니다’, ①로 돌아감. 실패하면 토스트 ‘되돌리지 못했습니다 — 모델에서 직접 고치세요’",
+      "roles": "model.edit 가진 담당 시스템 모델러",
+      "refs": ["model.edit", "SC-58"],
+      "states": ["import-excel.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-import-excel-077",
+      "where": "④ 완료 · 가져오기 취소",
+      "trigger": "취소 시점에 사용자 변경 · 편집 권한 회수 · 잠금 · 확정 신청 진행 중",
+      "expected": "버튼 흐리게 + ‘권한 · 결재 상태가 바뀌어 되돌릴 수 없습니다(편집 권한 회수 · 확정 신청 · 잠금) — 모델에서 직접 고치세요.’",
+      "roles": "전체",
+      "refs": ["model.edit", "model.submit"],
+      "states": ["import-excel.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-import-excel-078",
+      "where": "④ 완료 · 가져오기 취소",
+      "trigger": "가져온 뒤 다른 편집(수정 번호 · 작업 버전 변경)이 있었을 때",
+      "expected": "버튼 흐리게 + ‘가져온 뒤 다른 편집이 있어 되돌릴 수 없습니다 — 모델에서 직접 고치세요.’",
+      "roles": "전체",
+      "refs": ["model.edit"],
+      "states": ["import-excel.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-import-excel-079",
+      "where": "주소",
+      "trigger": "주소 열기(?name=<이름>) — 시스템 홈 새 영역 창에서 옴",
+      "expected": "‘새 업무 영역’이 선택되고 이름 칸에 그 이름이 채워진다(파일을 읽어도 유지)",
+      "roles": "전체",
+      "refs": ["area.create"],
+      "states": ["import-excel.html"],
+      "verify": "e2e"
+    }
+  ]
+}

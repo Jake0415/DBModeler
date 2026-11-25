@@ -18,3 +18,6 @@ infra/data/
 
 # 목업 기준 스크린샷 — scripts/mockup-baseline.mjs --shots 로 언제든 다시 만든다
 e2e/baseline/
+
+# 추적표 검사용 테스트 실행 결과 — npm run trace:test
+.trace/

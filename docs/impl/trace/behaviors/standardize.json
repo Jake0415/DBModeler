@@ -1,0 +1,537 @@
+{
+  "screen": "standardize.html",
+  "ids": "SC-34",
+  "source": "docs/ux/mockups/standardize.html",
+  "behaviors": [
+    {
+      "id": "BH-standardize-001",
+      "where": "머리 경로",
+      "trigger": "주소 열기(?area=)",
+      "expected": "경로 첫 칸에 그 영역의 시스템 이름, 둘째 칸에 ‘영역 이름 · v버전’이 보이고, 영역 칸은 system.html#area-<영역>(시스템 홈의 그 영역 카드)으로 이동. 주소에 area가 없거나 잘못되면 기본 영역으로 연다",
+      "roles": "전체",
+      "refs": ["model.view", "SC-34"],
+      "states": ["standardize.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-standardize-002",
+      "where": "머리 · 영역 화면 메뉴",
+      "trigger": "화면 열기",
+      "expected": "경로 옆에 ‘모델 · 표준 맞추기 · DDL · 산출물’ 메뉴가 생기고 ‘표준 맞추기’가 눌린 상태(aria-current=page). 작업본 미준수가 있으면 표준 맞추기에 건수 배지와 ‘표준 맞추기 — 미준수 N건’ 툴팁, 링크는 &f=todo 포함. 0건이면 배지 숨김",
+      "roles": "전체",
+      "refs": ["ST-R08"],
+      "states": ["standardize.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-standardize-003",
+      "where": "머리 · 범위 배지",
+      "trigger": "화면 열기",
+      "expected": "‘범위: 영역 전체 · 테이블 N개 · 속성 M개’ 표시(참조 엔터티 제외)",
+      "roles": "전체",
+      "refs": ["ST-R07"],
+      "states": ["standardize.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-standardize-004",
+      "where": "머리 · 동작",
+      "trigger": "버튼 ‘다시 분석’ 클릭",
+      "expected": "버튼이 잠깐(약 0.8초) 진행 중 표시 후 화면을 다시 불러와 작업본 · 사전 · 진행 중 신청 기준으로 다시 판정. 화면에서 기록만 하고 적용하지 않은 예외 · 비대상은 사라진다",
+      "roles": "전체",
+      "refs": ["ST-R07"],
+      "states": ["standardize.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-standardize-005",
+      "where": "머리 · 동작",
+      "trigger": "링크 ‘용어 일괄 만들기(마법사)’ 클릭",
+      "expected": "term-wizard.html?area=<영역>&from=standardize 로 이동(모델 맥락 &e= · &a= 가 있으면 함께 넘김). 옆에 ‘미등록 단어 · 용어가 많을 때 한 번에 만듭니다’ 안내",
+      "roles": "전체",
+      "refs": ["SC-35"],
+      "states": ["standardize.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-standardize-006",
+      "where": "가져오기 직후 배너",
+      "trigger": "주소 열기(?from=import)",
+      "expected": "정보 배너 ‘DDL 가져오기가 끝나 자동으로 열었습니다.’ + 마지막 가져오기가 이 영역이면 ‘가져온 N개 테이블·M개 컬럼을 ‘영역’ 영역 vX에 추가하고/로 만들고 분석했습니다.’, 아니면 ‘가져온 구조를 분석했습니다.’",
+      "roles": "전체",
+      "refs": ["RV-R03", "SC-36"],
+      "states": ["standardize.html?from=import"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-standardize-007",
+      "where": "목록 · 판정(테이블명 행)",
+      "trigger": "테이블 물리명이 ‘—’인 엔터티가 있을 때",
+      "expected": "‘테이블명’ 행이 생긴다. 엔터티 용어 신청이 승인 완료면 ‘표준’ + ‘T-DONE … 승인 완료 — 테이블명은 모델에서 반영’, 같은 이름 신청이 진행 중이면 ‘신청 중’ + ‘T-WAIT <문서> <단계>’, 아니면 ‘조합 가능’ + ‘E-NAME 테이블명 미정 — 엔터티 용어 신청’",
+      "roles": "전체",
+      "refs": ["ST-R06", "ST-R07"],
+      "states": ["standardize.html"],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-standardize-008",
+      "where": "목록 · 판정(속성)",
+      "trigger": "속성 상태가 표준(ok)이고 검수 기준 위반이 없을 때",
+      "expected": "상태 ‘표준’, 진단 ‘OK 표준’, 처리 ‘변경 없음’, 체크 불가",
+      "roles": "전체",
+      "refs": ["ST-R07", "ST-R08"],
+      "states": ["standardize.html"],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-standardize-009",
+      "where": "목록 · 판정(속성)",
+      "trigger": "표준 · 신청 중 속성이 현재 검수 기준(차단 규칙)에 걸릴 때",
+      "expected": "상태 ‘검수 기준 위반’, 진단 ‘P-RULE <첫 위반 문구>’, 처리 ‘예외로 유지 · 모델에서 이름 고치기 · <규칙 링크>’. ‘모델에서 이름 고치기’는 model.html?area=<영역>으로 이동. 할 일(미준수)로 센다",
+      "roles": "전체",
+      "refs": ["ST-R07", "ST-R08"],
+      "states": ["standardize.html"],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-standardize-010",
+      "where": "목록 · 판정(속성)",
+      "trigger": "속성이 예외 또는 비대상일 때",
+      "expected": "예외는 ‘예외’ 배지 + ‘X-EX 예외 — 사유 기록’, 비대상은 ‘비대상’ + ‘X-NA 비대상’. 처리 칸에 ‘사유: <사유>’, 체크 불가",
+      "roles": "전체",
+      "refs": ["ST-R07"],
+      "states": ["standardize.html?f=ex"],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-standardize-011",
+      "where": "목록 · 판정(속성)",
+      "trigger": "속성이 용어 신청 중(req)일 때",
+      "expected": "연결 문서가 승인 완료면 ‘표준’ + ‘T-DONE <문서> 승인 완료 — 표준’, 반려 · 회수면 ‘조합 가능’ + ‘T-ENDED <문서> <단계> — 다시 맞추기’, 진행 중이면 ‘신청 중’ + ‘T-WAIT <문서> <단계>’, 문서가 없으면 ‘T-WAIT 용어 신청 중(연결 문서 없음)’",
+      "roles": "전체",
+      "refs": ["ST-R07", "RV-R03"],
+      "states": ["standardize.html"],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-standardize-012",
+      "where": "목록 · 판정(속성)",
+      "trigger": "현재 이름이 사전 단어로 분해될 때",
+      "expected": "제안 용어가 사전에 있으면 ‘사전에 있음’ + ‘T-HAVE 사전에 있음 <ID>’ · 처리 ‘용어 적용’, 같은 용어 신청이 진행 중이면 ‘신청 중’ + ‘T-WAIT <문서> 진행 중 — 기다림’ · 처리 ‘신청 중 용어로 맞춤 / 예외로 유지’, 1음절 단어가 끼면 ‘조합 가능’ + ‘T-SUS 1음절 단어 포함 — 분해 확인’ · 처리 ‘분해 확인 후 용어 신청 / 예외로 유지’, 그 밖에는 ‘조합 가능’ + ‘T-COMB 단어 조합 가능 — 용어 신청’ · 처리 ‘용어 신청 묶음 / 예외로 유지’",
+      "roles": "전체",
+      "refs": ["ST-R05", "ST-R07"],
+      "states": ["standardize.html"],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-standardize-013",
+      "where": "목록 · 판정(속성)",
+      "trigger": "현재 이름에 사전에 없는 단어가 있을 때",
+      "expected": "상태 ‘미등록 단어’. 단어가 승인 대기면 ‘W-PEND 단어 ‘X’ 승인 대기 · <문서>’ · 처리 ‘선행 승인 대기 / 예외로 유지’, 후보 큐에 있으면 ‘W-CAND 단어 ‘X’ 후보 <상태>’, 아니면 ‘W-UNREG 미등록 단어 ‘X’’ · 처리 ‘후보 등록 / 예외로 유지’. 이름 칸 아랫줄에 ‘‘X’ 미등록’",
+      "roles": "전체",
+      "refs": ["ST-R05", "ST-R07"],
+      "states": ["standardize.html"],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-standardize-014",
+      "where": "목록 · 이름 · 물리명 칸",
+      "trigger": "제안이 현재와 다를 때",
+      "expected": "한 칸 두 줄: 윗줄 현재 값(취소선), 아랫줄 제안 값(굵게). 제안이 없거나 같으면 값만. 이름을 고친 속성은 툴팁 ‘원래 이름 <이름>’. 도메인 칸에 제안 도메인",
+      "roles": "전체",
+      "refs": ["ST-R07"],
+      "states": ["standardize.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-standardize-015",
+      "where": "목록 · 처리 칸",
+      "trigger": "처리 방법이 둘 이상인 행",
+      "expected": "‘처리 방법’ 선택 상자가 보이고 고른 값이 일괄 줄 미리보기와 적용 결과에 반영. 방법이 하나면 글자로만, 결재 대기 행은 ‘· <문서 번호>’ 링크(approvals.html?doc=)",
+      "roles": "model.edit 가진 담당 시스템 모델러(작업 중 버전)",
+      "refs": ["model.edit", "ST-R07"],
+      "states": ["standardize.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-standardize-016",
+      "where": "목록 · 행 체크",
+      "trigger": "화면 열기",
+      "expected": "처리할 수 있는 행(조합 가능 · 사전에 있음 · 미등록 단어 · 검수 기준 위반 · 맞출 수 있는 신청 중)만 체크 가능. 조합 가능 · 사전에 있음 · 신청 중은 기본 체크, 미등록 단어 · 검수 기준 위반은 기본 해제, 나머지는 흐리게",
+      "roles": "model.edit 가진 담당 시스템 모델러(작업 중 버전)",
+      "refs": ["model.edit", "ST-R07"],
+      "states": ["standardize.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-standardize-017",
+      "where": "목록",
+      "trigger": "분석할 속성이 없을 때",
+      "expected": "빈 행 ‘이 업무 영역에 분석할 속성이 없습니다.’",
+      "roles": "전체",
+      "refs": ["SC-34"],
+      "states": ["standardize.html?area=risk"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-standardize-018",
+      "where": "상태 칩 줄",
+      "trigger": "칩 클릭(전체 · 할 일(미준수) · 표준 · 조합 가능 · 신청 중 · 미등록 단어 · 예외 · 비대상)",
+      "expected": "칩마다 건수 표시, 누른 칩만 켜지고 그 상태 행만 보인다. 할 일 = 조합 가능 + 신청 중 + 미등록 단어(검수 기준 위반 포함). 주소의 f= 가 바뀐다(replaceState)",
+      "roles": "전체",
+      "refs": ["ST-R07"],
+      "states": ["standardize.html", "standardize.html?f=ex"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-standardize-019",
+      "where": "상태 칩 줄 · 오른쪽",
+      "trigger": "화면 열기",
+      "expected": "‘분석 <시각> · 사전 기준 현재(제정 N차 + 승인 반영분)’ 표시",
+      "roles": "전체",
+      "refs": ["ST-R07"],
+      "states": ["standardize.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-standardize-020",
+      "where": "목록",
+      "trigger": "고른 상태에 행이 없을 때",
+      "expected": "‘필터에 맞는 항목이 없습니다’ + [모두 지우기]. [모두 지우기]를 누르면 ‘전체’ 칩으로 돌아간다",
+      "roles": "전체",
+      "refs": ["SC-34"],
+      "states": ["standardize.html?f=ex"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-standardize-021",
+      "where": "목록 머리 건수 줄",
+      "trigger": "필터를 켜거나 끌 때",
+      "expected": "필터 없으면 ‘N건 · 테이블 순’, 있으면 ‘N건 중 M건 · 테이블 순’ + 칩 ‘상태: <이름> ×’. ×를 누르면 필터 해제. 화면 낭독기에 건수 알림",
+      "roles": "전체",
+      "refs": ["SC-34"],
+      "states": ["standardize.html?f=ex"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-standardize-022",
+      "where": "주소",
+      "trigger": "주소 열기(?f=<상태>)",
+      "expected": "그 상태 칩이 켜진 채 열린다. f=todo인데 할 일이 0건이면 전체 목록 + 토스트 ‘남은 미준수가 없어 전체 목록을 보여 줍니다’",
+      "roles": "전체",
+      "refs": ["ST-R07"],
+      "states": ["standardize.html?f=ex"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-standardize-023",
+      "where": "목록 머리 체크박스",
+      "trigger": "클릭",
+      "expected": "지금 보이는 행 중 처리 가능한 행을 모두 선택/해제. 일부만 선택이면 중간 상태 표시. 처리 가능한 행이 없거나 조회 전용이면 흐리게",
+      "roles": "model.edit 가진 담당 시스템 모델러(작업 중 버전)",
+      "refs": ["model.edit"],
+      "states": ["standardize.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-standardize-024",
+      "where": "일괄 처리 줄",
+      "trigger": "행 선택 · 처리 방법 변경",
+      "expected": "왼쪽에 ‘N건 선택’(선택 없고 기록만 있으면 ‘기록 N건 대기’, 둘 다 없으면 ‘처리할 행을 고르세요’). 미리보기 ‘<n>모델 변경 · <0/1>결재 신청 (용어 n) · <n>후보 등록 · <n>남는 미준수’. 편집 가능하면 줄은 항상 보인다",
+      "roles": "model.edit 가진 담당 시스템 모델러(작업 중 버전)",
+      "refs": ["model.edit", "ST-R07"],
+      "states": ["standardize.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-standardize-025",
+      "where": "일괄 처리 줄 · 계산",
+      "trigger": "선택 · 처리 방법이 바뀔 때",
+      "expected": "모델 변경 = 용어 적용 + 용어 신청 + 신청 중 용어로 맞춤 + 예외로 유지 + 화면에서 기록한 예외 · 비대상. 결재 신청은 용어가 1개 이상이면 1건. 남는 미준수 = 처리하지 않는 조합 가능 · 미등록 · 맞출 수 있는 신청 중 행 + 후보 등록 · 선행 승인 대기로 고른 행. 물리명 변경 수는 툴팁 ‘물리명 변경 N건 포함’",
+      "roles": "전체",
+      "refs": ["ST-R07"],
+      "states": ["standardize.html"],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-standardize-026",
+      "where": "일괄 처리 줄",
+      "trigger": "필터로 가려진 행이 선택돼 있을 때",
+      "expected": "‘숨긴 선택 N건 제외’ 표시(툴팁 ‘필터로 숨긴 행의 선택은 적용하지 않습니다’). 가려진 행은 예외 · 비대상 · 적용 대상에서 빠진다",
+      "roles": "model.edit 가진 담당 시스템 모델러(작업 중 버전)",
+      "refs": ["model.edit"],
+      "states": ["standardize.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-standardize-027",
+      "where": "일괄 처리 줄",
+      "trigger": "버튼 ‘선택 해제’ 클릭",
+      "expected": "모든 행(가려진 행 포함) 선택 해제. 선택이 없으면 버튼 흐리게",
+      "roles": "model.edit 가진 담당 시스템 모델러(작업 중 버전)",
+      "refs": ["model.edit"],
+      "states": ["standardize.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-standardize-028",
+      "where": "일괄 처리 줄",
+      "trigger": "버튼 ‘예외로 표시’ 클릭",
+      "expected": "‘예외로 유지 (선택 N건)’ 창이 열리고 선택한 ‘엔터티.속성’ 배지 목록과 사유 칸이 보인다. 선택이 없으면 버튼 흐리게",
+      "roles": "model.edit 가진 담당 시스템 모델러(작업 중 버전)",
+      "refs": ["model.edit", "ST-R07"],
+      "states": ["standardize.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-standardize-029",
+      "where": "예외로 유지 창",
+      "trigger": "사유 칸이 비어 있을 때(공백만 포함)",
+      "expected": "[예외 기록] 흐리게 + ‘사유를 입력해야 합니다’ 표시, 사유 칸 오류 표시",
+      "roles": "model.edit 가진 담당 시스템 모델러(작업 중 버전)",
+      "refs": ["model.edit"],
+      "states": ["standardize.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-standardize-030",
+      "where": "예외로 유지 창",
+      "trigger": "버튼 ‘예외 기록’ 클릭",
+      "expected": "창이 닫히고 선택 행이 ‘예외’로 바뀌어 처리 칸에 ‘사유: <사유>’. 토스트 ‘N건을 예외로 기록했습니다. 아래 줄의 [적용]을 누르면 사유와 함께 모델에 반영됩니다’ + [실행 취소]. 아직 모델에는 저장되지 않음",
+      "roles": "model.edit 가진 담당 시스템 모델러(작업 중 버전)",
+      "refs": ["model.edit", "ST-R07"],
+      "states": ["standardize.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-standardize-031",
+      "where": "토스트",
+      "trigger": "예외 · 비대상 기록 토스트의 ‘실행 취소’ 클릭",
+      "expected": "기록한 행이 원래 상태로 돌아가고 토스트 ‘N건을 되돌렸습니다’",
+      "roles": "model.edit 가진 담당 시스템 모델러(작업 중 버전)",
+      "refs": ["model.edit"],
+      "states": ["standardize.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-standardize-032",
+      "where": "일괄 처리 줄 · ⋯ 더 보기",
+      "trigger": "⋯ 클릭 후 ‘비대상으로 지정’ 클릭",
+      "expected": "‘비대상으로 지정 (선택 N건)’ 창이 열리고 선택 목록 · 구분(연계·이관용 임시 컬럼 / 외부 시스템 소유 컬럼 / 기타) · 사유 · ‘같은 이름 패턴을 표준 제외 규칙에 추가 신청’ 체크가 보인다. 선택이 없으면 메뉴 항목 흐리게. 바깥 클릭 · Esc로 메뉴 닫힘",
+      "roles": "model.edit 가진 담당 시스템 모델러(작업 중 버전)",
+      "refs": ["model.edit", "ST-R07"],
+      "states": ["standardize.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-standardize-033",
+      "where": "비대상으로 지정 창",
+      "trigger": "사유 칸이 비어 있을 때",
+      "expected": "[비대상 지정] 흐리게 + ‘사유를 입력해야 합니다’",
+      "roles": "model.edit 가진 담당 시스템 모델러(작업 중 버전)",
+      "refs": ["model.edit"],
+      "states": ["standardize.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-standardize-034",
+      "where": "비대상으로 지정 창",
+      "trigger": "버튼 ‘비대상 지정’ 클릭",
+      "expected": "창이 닫히고 선택 행이 ‘비대상’으로 바뀌어 사유가 ‘<구분> · <사유>’로 기록. 토스트 ‘N건을 비대상으로 지정했습니다. 아래 줄의 [적용]을 누르면 사유와 함께 모델에 반영됩니다’ + [실행 취소]. 창 입력은 비워진다",
+      "roles": "model.edit 가진 담당 시스템 모델러(작업 중 버전)",
+      "refs": ["model.edit", "ST-R07"],
+      "states": ["standardize.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-standardize-035",
+      "where": "비대상으로 지정 창",
+      "trigger": "‘표준 제외 규칙에 추가 신청’ 체크 후 지정",
+      "expected": "추가 토스트 ‘같은 이름 패턴의 표준 제외 규칙 추가도 함께 신청했습니다 — DA가 [설정 › 표준 제외 규칙]에서 검토합니다’. 신청이 실제로 어디에 쌓이는지는 (목업에서 확인 필요)",
+      "roles": "model.edit 가진 담당 시스템 모델러(작업 중 버전)",
+      "refs": ["model.edit"],
+      "states": ["standardize.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-standardize-036",
+      "where": "모든 창(예외 · 비대상 · 적용)",
+      "trigger": "‘취소’ 클릭 또는 Esc",
+      "expected": "창이 닫히고 초점이 연 버튼으로 돌아간다. 창이 열린 동안 Tab은 창 안에서만 돈다",
+      "roles": "전체",
+      "refs": ["SC-34"],
+      "states": ["standardize.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-standardize-037",
+      "where": "일괄 처리 줄",
+      "trigger": "적용 버튼 상태",
+      "expected": "선택이 있으면 ‘선택 적용’, 선택은 없고 기록만 있으면 ‘기록 N건 적용’. 선택 · 기록 모두 없거나 조회 전용이면 흐리게",
+      "roles": "model.edit 가진 담당 시스템 모델러(작업 중 버전)",
+      "refs": ["model.edit"],
+      "states": ["standardize.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-standardize-038",
+      "where": "일괄 처리 줄",
+      "trigger": "버튼 ‘선택 적용’ 클릭",
+      "expected": "‘표준 맞추기 적용’ 창: 요약 표 ‘모델 변경 N건(용어 적용 · 신청할 용어로 이름 맞춤 · 결재 대기 중인 용어로 맞춤 · 예외로 유지 · 비대상 지정 · └ 물리명 변경 (운영 DB 영향))’, ‘결재 신청 0/1건(용어 n) · 후보 등록 n건’, ‘적용 뒤 남는 미준수’. 아래 되돌리기 안내 ‘용어 신청 문서와 후보 등록은 되돌려도 남습니다’",
+      "roles": "model.edit 가진 담당 시스템 모델러(작업 중 버전)",
+      "refs": ["model.edit", "ST-R07"],
+      "states": ["standardize.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-standardize-039",
+      "where": "표준 맞추기 적용 창",
+      "trigger": "물리명이 바뀌는 행이 있을 때",
+      "expected": "경고 배너 ‘물리명 변경은 운영 DB에 영향이 있습니다. 모델에는 바로 반영되고, 운영 DB는 다음 DDL 출력에서 변경분(ALTER)으로 바뀝니다.’ 없으면 숨김",
+      "roles": "model.edit 가진 담당 시스템 모델러(작업 중 버전)",
+      "refs": ["model.edit", "OUT-R01"],
+      "states": ["standardize.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-standardize-040",
+      "where": "표준 맞추기 적용 창",
+      "trigger": "용어 신청 행이 있는데 ‘용어 신청 사유’가 비었을 때",
+      "expected": "‘용어 신청 사유 *’ 칸이 보이고 비어 있으면 [적용] 흐리게 + ‘용어 신청 사유·예외 사유를 입력해야 합니다’. 용어 신청 행이 없으면 칸 숨김",
+      "roles": "model.edit 가진 담당 시스템 모델러(작업 중 버전)",
+      "refs": ["model.edit"],
+      "states": ["standardize.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-standardize-041",
+      "where": "표준 맞추기 적용 창",
+      "trigger": "처리 방법 ‘예외로 유지’ 행이 있는데 예외 사유가 비었을 때",
+      "expected": "‘‘예외로 유지’ 행의 사유 *’ 칸(대상 ‘엔터티.속성’ 목록 표시)이 보이고 비어 있으면 [적용] 흐리게 + ‘용어 신청 사유·예외 사유를 입력해야 합니다’",
+      "roles": "model.edit 가진 담당 시스템 모델러(작업 중 버전)",
+      "refs": ["model.edit"],
+      "states": ["standardize.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-standardize-042",
+      "where": "표준 맞추기 적용 창",
+      "trigger": "버튼 ‘적용’ 클릭",
+      "expected": "용어 신청 행이 있으면 사전 결재 문서 1건(‘표준 맞추기 용어 신청 N건 (영역)’, 사유 포함)을 만들고, 후보 등록 행은 발생 위치와 함께 후보 큐에 등록한 뒤 model.html?area=<영역>(&focus=)로 이동해 작업 버전에 한 번에 반영(모델 화면 토스트 [실행 취소]로 되돌림)",
+      "roles": "model.edit 가진 담당 시스템 모델러(작업 중 버전)",
+      "refs": ["model.edit", "ST-R07", "SC-31"],
+      "states": ["standardize.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-standardize-043",
+      "where": "표준 맞추기 적용 창",
+      "trigger": "적용 순간 버전이 잠겼거나 작업 버전이 바뀌었거나 편집 권한이 없어졌을 때",
+      "expected": "창이 닫히고 토스트 ‘지금은 적용할 수 없습니다 — <문서> <단계>(또는 작업 버전이 vN로 바뀜). 선택은 그대로 두었습니다’ + [새로고침]. 아무것도 저장되지 않음",
+      "roles": "model.edit 가진 담당 시스템 모델러",
+      "refs": ["model.edit"],
+      "states": ["standardize.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-standardize-044",
+      "where": "표준 맞추기 적용 창",
+      "trigger": "같은 용어가 이미 진행 중인 신청에 있을 때",
+      "expected": "창이 닫히고 토스트 ‘이미 진행 중인 신청과 겹칩니다 — <용어 목록>. 그 행은 선택에서 빼고 다시 적용하세요’. 문서 · 모델 변경 없음",
+      "roles": "model.edit 가진 담당 시스템 모델러(작업 중 버전)",
+      "refs": ["model.edit", "dict.request"],
+      "states": ["standardize.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-standardize-045",
+      "where": "표준 맞추기 적용 창",
+      "trigger": "다른 탭에서 로그인 사용자가 바뀐 뒤 ‘적용’ 클릭",
+      "expected": "토스트 ‘다른 탭에서 사용자가 바뀌었습니다(지금 <이름>) — 새로고침한 뒤 다시 처리하세요’ + [새로고침], 적용하지 않음",
+      "roles": "전체",
+      "refs": ["model.edit"],
+      "states": ["standardize.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-standardize-046",
+      "where": "머리 아래 배너",
+      "trigger": "모델러 역할이 없는 사용자가 열 때",
+      "expected": "‘조회 전용 — 표준 맞추기는 모델러 역할만 할 수 있습니다.’ + [모델로]. 행 체크 · 처리 선택 · 일괄 처리 줄이 숨겨지고 판정 목록만 보인다",
+      "roles": "모델러가 아닌 역할(DA · 기관 담당자 · 감리 · Admin 등)",
+      "refs": ["model.edit"],
+      "states": ["standardize.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-standardize-047",
+      "where": "머리 아래 배너",
+      "trigger": "모델러이지만 이 영역의 시스템이 담당 시스템이 아닐 때",
+      "expected": "‘조회 전용 — 내 담당 시스템에 <시스템>이/가 없어 조회만 할 수 있습니다. 담당 시스템 추가 요청’(mypage.html?req=sys&sys=<시스템>) + [모델로]. 편집 요소 숨김",
+      "roles": "담당 시스템 밖 모델러",
+      "refs": ["model.edit"],
+      "states": ["standardize.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-standardize-048",
+      "where": "머리 아래 배너",
+      "trigger": "작업 버전이 확정 결재 중이거나 확정본일 때",
+      "expected": "‘조회 전용 — <문서> 확정 결재 중(또는 확정본)이라 고칠 수 없습니다.’ + [모델로]. 편집 요소 숨김",
+      "roles": "전체",
+      "refs": ["model.edit", "model.submit"],
+      "states": ["standardize.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-standardize-049",
+      "where": "머리 아래 배너",
+      "trigger": "주소 열기(?redo=<반려 · 회수된 용어 신청 문서>)",
+      "expected": "경고 배너 ‘<문서> 보완해서 다시 적용 — <단계> · 의견: <마지막 의견>. 그때 신청한 용어: … 다시 적용하면 새 신청번호가 만들어집니다.’ 적용 창의 용어 신청 사유에 예전 사유가 미리 채워짐",
+      "roles": "model.edit 가진 담당 시스템 모델러(작업 중 버전)",
+      "refs": ["model.edit", "dict.request"],
+      "states": ["standardize.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-standardize-050",
+      "where": "모델 맥락 배너",
+      "trigger": "주소 열기(?e=<엔터티>&a=<속성>)",
+      "expected": "그 엔터티(· 속성) 행이 강조되고 가운데로 스크롤. 필터에 가려지면 ‘전체’로 바뀜. 배너 ‘모델의 <엔터티.속성>에서 왔습니다 — 해당 행 N개를 표시했습니다.’(from=ddl이면 ‘DDL 출력 전 점검의 …’), 맞출 행이 없으면 ‘이 항목은 맞출 것이 없습니다(표준 · 예외 · 비대상).’, 엔터티를 못 찾으면 ‘모델에서 고른 엔터티를 찾지 못했습니다 — 전체 목록을 보여 줍니다.’",
+      "roles": "전체",
+      "refs": ["SC-31", "PN-37"],
+      "states": ["standardize.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-standardize-051",
+      "where": "모델 맥락 배너 · 경로",
+      "trigger": "‘모델에서 보기’ 또는 ‘모델로’ 클릭",
+      "expected": "model.html?area=<영역>(맥락이 있으면 &focus=<엔터티>)로 이동. 검토 모드(&audit=1&as=)는 유지",
+      "roles": "전체",
+      "refs": ["SC-31"],
+      "states": ["standardize.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-standardize-052",
+      "where": "모델 트리",
+      "trigger": "트리에서 이 영역의 엔터티 선택",
+      "expected": "그 엔터티의 보이는 행들이 강조되고 첫 행으로 스크롤. 맞출 행이 없으면 토스트 ‘이 엔터티는 맞출 항목이 없습니다(미준수 없음)’, 필터에 모두 가려지면 ‘이 엔터티의 행 N개가 지금 필터에 가려져 있습니다 — [전체]를 누르세요’",
+      "roles": "전체",
+      "refs": ["SC-34"],
+      "states": ["standardize.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-standardize-053",
+      "where": "목록",
+      "trigger": "예외 · 비대상 기록이나 실행 취소로 목록을 다시 그릴 때",
+      "expected": "상태가 바뀌지 않은 다른 행의 체크 · 처리 방법 선택은 그대로 유지되고 칩 건수 · 미리보기가 다시 계산된다",
+      "roles": "model.edit 가진 담당 시스템 모델러(작업 중 버전)",
+      "refs": ["model.edit"],
+      "states": ["standardize.html"],
+      "verify": "e2e"
+    }
+  ]
+}

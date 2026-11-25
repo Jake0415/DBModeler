@@ -1,0 +1,1391 @@
+{
+  "screen": "excel-import.html",
+  "ids": "SC-13",
+  "source": "docs/ux/mockups/excel-import.html",
+  "behaviors": [
+    {
+      "id": "BH-excel-import-001",
+      "where": "단계 막대",
+      "trigger": "화면 열기 · 단계 이동",
+      "expected": "6단계(방식·종류 · 업로드 · 열 매핑 · 검증·비교 · 결과 검토·보정 · 신청) 중 지금 단계는 강조(aria-current), 지난 단계는 체크 표시",
+      "roles": "전체",
+      "refs": ["ST-R04", "MD-08"],
+      "states": ["excel-import.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-002",
+      "where": "단계 막대",
+      "trigger": "지난 단계 버튼 클릭",
+      "expected": "그 단계로 돌아가고 단계 제목에 포커스. ‘검증·비교’ 단계와 검증 중(4단계)에는 돌아가기 버튼이 없음",
+      "roles": "전체",
+      "refs": ["ST-R04"],
+      "states": ["excel-import.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-003",
+      "where": "1단계 · 가져오는 방식",
+      "trigger": "카드 ‘편집용 파일 다시 올리기’ 클릭(기본 선택)",
+      "expected": "숨김 열(항목 ID·버전·기준본)로 바뀐 것만 찾는 왕복 방식 선택. 2단계 기준본 배너에 ‘기준본 {ID} — {시각} {이름}이 내려받은 편집용 파일 기준입니다(범위 · n건)…’",
+      "roles": "전체",
+      "refs": ["MD-08", "ST-R04"],
+      "states": ["excel-import.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-004",
+      "where": "1단계 · 가져오는 방식",
+      "trigger": "카드 ‘새 항목 등록 (빈 양식)’ 클릭 또는 주소 ?mode=init",
+      "expected": "초기 적재 방식 선택 — 예시 행이 새 항목만(‘신규(초기 적재)’)으로 바뀌고 기준본 배너가 ‘초기 적재 — 기준본 없이 새 항목만 등록합니다. 빠짐·충돌 판정은 하지 않습니다.’",
+      "roles": "전체",
+      "refs": ["MD-08"],
+      "states": ["excel-import.html?mode=init"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-005",
+      "where": "1단계 · 가져오는 방식",
+      "trigger": "이미 임시 저장된 묶음에서 다른 방식 카드 클릭",
+      "expected": "방식이 바뀌지 않고 토스트 ‘이미 저장된 묶음은 방식을 바꿀 수 없습니다 — 새 업로드로 시작하세요’",
+      "roles": "dict.request 가진 올린 사람",
+      "refs": ["dict.request"],
+      "states": ["excel-import.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-006",
+      "where": "1단계 · 종류",
+      "trigger": "종류 버튼(표준단어 · 표준도메인 · 표준용어 · 코드값) 클릭",
+      "expected": "선택 표시(aria-pressed)와 설명 문구가 바뀌고, 빈 양식 파일명 · 3단계 열 매핑 표 · 5단계 격자 열 · 머리 배지 ‘기관 사전 · 표준{종류}’가 그 종류로 바뀜. 기본은 표준용어",
+      "roles": "전체",
+      "refs": ["MD-08"],
+      "states": ["excel-import.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-007",
+      "where": "1단계 · 종류",
+      "trigger": "단어 · 도메인 · 코드값 종류 선택",
+      "expected": "추가 검사 안내 배너 표시 — 단어: ‘영문약어명 중복(W-DUPABBR)·비슷한 약어(W-SIMABBR, 경고)·약어 길이(W-ABBRLEN)’, 도메인: ‘데이터 타입(D-BADTYPE)·도메인명 규칙(D-NAMERULE)’, 코드값: ‘코드 그룹별로 한 결재 항목 · CV-DUP · CV-LEN’. 용어는 배너 없음",
+      "roles": "전체",
+      "refs": ["MD-08", "MD-31"],
+      "states": ["excel-import.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-008",
+      "where": "1단계 · 종류",
+      "trigger": "파일을 이미 고른 뒤 종류 변경",
+      "expected": "고른 파일이 해제되고 토스트 ‘종류를 {종류}로 바꿨습니다 — 그 양식 파일을 다시 선택하세요’. 고친 내용 · 되돌리기 기록 · 필터 초기화",
+      "roles": "전체",
+      "refs": [],
+      "states": ["excel-import.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-009",
+      "where": "1단계 · 종류",
+      "trigger": "저장된 묶음(이어서 작업)에서 다른 종류 클릭",
+      "expected": "종류가 바뀌지 않고 토스트 ‘{묶음 ID}는 {종류} 묶음이라 종류를 바꿀 수 없습니다 — 새 업로드로 시작하세요’",
+      "roles": "dict.request 가진 올린 사람",
+      "refs": [],
+      "states": ["excel-import.html?resume=UP-2026-0007"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-010",
+      "where": "1단계 · 종류",
+      "trigger": "주소 ?kind=단어|도메인|용어|코드 로 열기",
+      "expected": "그 종류가 선택된 채 열림. 이어서 작업하는 묶음은 묶음의 종류가 주소보다 우선",
+      "roles": "전체",
+      "refs": [],
+      "states": ["excel-import.html?kind=단어"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-011",
+      "where": "1단계 · 끌어 놓기 띠",
+      "trigger": "띠 클릭 · Enter/Space · [파일 선택] 클릭",
+      "expected": "운영체제 파일 선택 창이 열림(XLSX · XLS · CSV만 보임)",
+      "roles": "전체",
+      "refs": ["MD-08"],
+      "states": ["excel-import.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-012",
+      "where": "1단계 · 끌어 놓기 띠",
+      "trigger": "파일을 띠에 끌어 놓기",
+      "expected": "위에서 고른 방식 · 종류로 바로 2단계로 넘어가 파일을 받음(파일 검사 규칙은 2단계와 같음)",
+      "roles": "전체",
+      "refs": ["MD-08"],
+      "states": ["excel-import.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-013",
+      "where": "1단계",
+      "trigger": "링크 ‘편집용 엑셀 (사전에서)’ 클릭",
+      "expected": "dictionary.html#download 로 이동",
+      "roles": "전체",
+      "refs": [],
+      "states": ["excel-import.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-014",
+      "where": "1단계",
+      "trigger": "버튼 ‘빈 양식’ 클릭",
+      "expected": "고른 종류의 빈 양식 ‘빈 양식_{시트}_양식v2.xlsx’ 내려받기(안내·목록 시트 포함). 목업은 같은 문구의 토스트로 시연(목업에서 확인 필요)",
+      "roles": "전체",
+      "refs": ["MD-08"],
+      "states": ["excel-import.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-015",
+      "where": "1단계 · 최근 업로드",
+      "trigger": "화면 열기",
+      "expected": "볼 수 있는 업로드 묶음(내 것 + excel.viewall이면 전체) 최근 4개를 업로드 · 파일(종류 · 행 수) · 상태 배지(‘반려·회수 — 보완 필요’ 등) · ‘보류 n 남음’ 배지 · 연결 신청 링크와 함께 표시",
+      "roles": "전체 (다른 사람 묶음은 excel.viewall)",
+      "refs": ["excel.viewall"],
+      "states": ["excel-import.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-016",
+      "where": "1단계 · 최근 업로드",
+      "trigger": "행의 버튼 ‘이어서 작업’ 또는 링크 ‘보기’ 클릭",
+      "expected": "내가 올린 임시 저장 · 보완 묶음은 [이어서 작업] → excel-import.html?resume={ID}, 그 밖에는 [보기] → uploads.html?b={ID}",
+      "roles": "이어서 작업: 올린 사람 · 보기: 전체",
+      "refs": [],
+      "states": ["excel-import.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-017",
+      "where": "1단계 · 최근 업로드",
+      "trigger": "볼 수 있는 업로드가 없을 때",
+      "expected": "‘최근 업로드가 없습니다’",
+      "roles": "전체",
+      "refs": [],
+      "states": ["excel-import.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-018",
+      "where": "1단계 · 최근 업로드",
+      "trigger": "링크 ‘업로드 이력 전체’ 클릭",
+      "expected": "uploads.html 로 이동",
+      "roles": "전체",
+      "refs": ["SC-15"],
+      "states": ["excel-import.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-019",
+      "where": "하단 바",
+      "trigger": "1단계에서 버튼 ‘파일 올리기’ 클릭",
+      "expected": "2단계(업로드)로 이동. 1단계에서 [이전]은 흐리게",
+      "roles": "전체",
+      "refs": [],
+      "states": ["excel-import.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-020",
+      "where": "2단계 · 끌어 놓기 상자",
+      "trigger": "상자 클릭 · Enter/Space · [파일 선택] 클릭 · 파일 끌어 놓기",
+      "expected": "파일 선택 창이 열리거나 놓은 파일을 받음",
+      "roles": "전체",
+      "refs": ["MD-08"],
+      "states": ["excel-import.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-021",
+      "where": "2단계 · 파일 검사",
+      "trigger": "XLSX · XLS · CSV가 아닌 파일 선택",
+      "expected": "파일 카드 숨김, 오류 배너 ‘올릴 수 없습니다 — ‘{파일명}’ · XLSX · XLS · CSV 파일만 올릴 수 있습니다. 사전에서 내려받은 편집용 엑셀이나 빈 양식을 쓰세요.’ [열 매핑 확인] 흐리게",
+      "roles": "전체",
+      "refs": ["MD-08"],
+      "states": ["excel-import.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-022",
+      "where": "2단계 · 파일 검사",
+      "trigger": "20MB 넘는 파일 선택",
+      "expected": "오류 배너 ‘올릴 수 없습니다 — {크기} · 상한 20MB를 넘었습니다. 시트를 나누거나 필터로 범위를 줄여 다시 내려받은 편집용 파일을 쓰세요.’",
+      "roles": "전체",
+      "refs": ["MD-08"],
+      "states": ["excel-import.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-023",
+      "where": "2단계 · 파일 검사",
+      "trigger": "10만 행 넘는 파일 올림",
+      "expected": "오류 배너 ‘올릴 수 없습니다 — {n}행 · 상한 10만 행을 넘었습니다(파일 {크기}). 시트를 나누거나 필터로 범위를 줄여…’ (목업은 실제 행 수를 읽지 않고 데모 버튼으로만 재현 — 목업에서 확인 필요)",
+      "roles": "전체",
+      "refs": ["MD-08"],
+      "states": ["excel-import.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-024",
+      "where": "2단계 · 파일 카드",
+      "trigger": "올바른 파일 선택",
+      "expected": "파일 카드(형식 배지 · 파일명 · 크기)와 기준본 배너 표시, 토스트 ‘‘{파일명}’ 올림 — {크기} · …’, [열 매핑 확인] 사용 가능",
+      "roles": "전체 (조회 전용 역할도 올려서 오류 확인 가능)",
+      "refs": ["MD-08"],
+      "states": ["excel-import.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-025",
+      "where": "2단계 · 끌어 놓기",
+      "trigger": "파일 여러 개를 한 번에 끌어 놓기",
+      "expected": "토스트 ‘파일 {n}개 중 첫 파일만 올립니다 — 한 번에 한 파일’ 후 첫 파일만 받음",
+      "roles": "전체",
+      "refs": [],
+      "states": ["excel-import.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-026",
+      "where": "페이지 전체",
+      "trigger": "파일을 페이지 위로 끌기(1·2단계)",
+      "expected": "끌어 놓기 상자가 강조되고 상자 위에서는 실선 강조. 1·2단계 밖에서는 놓기 커서가 ‘없음’",
+      "roles": "전체",
+      "refs": [],
+      "states": ["excel-import.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-027",
+      "where": "페이지 전체",
+      "trigger": "3단계 이후에 파일 끌어 놓기",
+      "expected": "파일을 받지 않고 토스트 ‘파일은 1 · 2단계에서 올립니다 — [파일 바꾸기]로 돌아가세요’",
+      "roles": "전체",
+      "refs": [],
+      "states": ["excel-import.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-028",
+      "where": "2단계",
+      "trigger": "버튼 ‘예시 파일로 해 보기’ 클릭",
+      "expected": "종류별 예시 파일 카드로 다음 단계를 보여 줌",
+      "roles": "전체",
+      "refs": [],
+      "states": ["excel-import.html"],
+      "verify": "exempt",
+      "exemptReason": "목업 전용 데모 기능(예시 파일)"
+    },
+    {
+      "id": "BH-excel-import-029",
+      "where": "2단계",
+      "trigger": "버튼 ‘상한 초과 파일(12만 행)’ 클릭",
+      "expected": "10만 행 상한 오류 배너를 재현",
+      "roles": "전체",
+      "refs": [],
+      "states": ["excel-import.html"],
+      "verify": "exempt",
+      "exemptReason": "목업 전용 데모 기능(오류 재현 버튼)"
+    },
+    {
+      "id": "BH-excel-import-030",
+      "where": "2단계 · 파일 카드",
+      "trigger": "버튼 ‘바꾸기’ 클릭",
+      "expected": "파일 카드가 사라지고 다시 고를 수 있음. 저장된 묶음에 보정·선택이 있으면 토스트 ‘새 파일은 새 업로드 묶음으로 검증합니다 — {ID}의 보정·선택은 그 묶음에 그대로 남습니다(업로드 이력에서 이어서 작업)’ 후 새 묶음으로 시작",
+      "roles": "전체",
+      "refs": [],
+      "states": ["excel-import.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-031",
+      "where": "하단 바",
+      "trigger": "2단계에서 파일을 고르지 않았을 때",
+      "expected": "[열 매핑 확인] 흐리게, 안내 ‘파일을 선택하세요’",
+      "roles": "전체",
+      "refs": [],
+      "states": ["excel-import.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-032",
+      "where": "3단계 · 열 매핑",
+      "trigger": "3단계 진입",
+      "expected": "파일명 · ‘필수 항목 n/n 연결’ · 종류별 안내와 함께 머리글 이름 기준 자동 연결 표(파일 머리글 · 예시 값 · NeoDB 항목 · 상태: 자동/조회 전용/합침/확인 필요/왕복 식별). 구 양식 별칭 허용 문구, 성공 배너",
+      "roles": "전체",
+      "refs": ["MD-08", "ST-R04"],
+      "states": ["excel-import.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-033",
+      "where": "3단계 · 열 매핑",
+      "trigger": "‘확인 필요’ 열의 선택(‘(가져오지 않음)’ · ‘설명에 덧붙이기’) 변경",
+      "expected": "그 열의 처리 방식이 바뀜(목업은 선택만 바뀌고 결과에 반영하지 않음 — 목업에서 확인 필요)",
+      "roles": "전체",
+      "refs": ["ST-R04"],
+      "states": ["excel-import.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-034",
+      "where": "3단계 · 열 매핑",
+      "trigger": "버튼 ‘파일 바꾸기’ 클릭",
+      "expected": "2단계로 돌아감",
+      "roles": "전체",
+      "refs": [],
+      "states": ["excel-import.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-035",
+      "where": "하단 바",
+      "trigger": "3단계에서 버튼 ‘검증 시작’ 클릭",
+      "expected": "4단계로 넘어가 검증·비교 진행 시작",
+      "roles": "전체",
+      "refs": ["ST-R04"],
+      "states": ["excel-import.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-036",
+      "where": "4단계 · 검증·비교",
+      "trigger": "검증 진행 중(자동)",
+      "expected": "진행 막대(%) · ‘{n} / {N}행 확인 · {p}% · {단계}’ 문구 · 단계 표시(입력 형식 → 업무 규칙 → 기준본·현재 사전 비교 → 결재 대기 확인)가 갱신됨. 서버에서 계속된다는 안내 배너",
+      "roles": "전체",
+      "refs": ["ST-R04", "MD-08"],
+      "states": ["excel-import.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-037",
+      "where": "4단계 · 검증·비교",
+      "trigger": "검증 완료(자동)",
+      "expected": "5단계로 넘어가고 토스트 ‘검증·비교 완료 — {ID}로 임시 저장했습니다’. 새 업로드 묶음(임시 저장)이 생기고 처음 오류 수가 기록됨, 상태 칩에 포커스",
+      "roles": "dict.request (조회 전용 역할은 저장하지 않음)",
+      "refs": ["dict.request", "MD-08"],
+      "states": ["excel-import.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-038",
+      "where": "4단계 · 검증·비교",
+      "trigger": "버튼 ‘취소’ 클릭",
+      "expected": "검증을 멈추고 3단계로 돌아감, 토스트 ‘검증을 취소했습니다 — 열 매핑으로 돌아왔습니다(저장한 것 없음)’",
+      "roles": "전체",
+      "refs": [],
+      "states": ["excel-import.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-039",
+      "where": "하단 바",
+      "trigger": "4단계 진행 중",
+      "expected": "[이전] · [다음] 흐리게, 안내 ‘검증이 끝나면 결과 검토로 넘어갑니다’",
+      "roles": "전체",
+      "refs": [],
+      "states": ["excel-import.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-040",
+      "where": "하단 바 · 저장 표시",
+      "trigger": "5단계에서 고칠 때마다(자동)",
+      "expected": "묶음에 자동 임시 저장되고 ‘{ID} · 임시 저장 HH:MM’ 표시, 머리 배지 ‘기관 사전 · 표준{종류} · {ID}’. 조회 전용이면 ‘조회 전용’, 예시 화면이면 ‘예시 · 저장 안 함’",
+      "roles": "dict.request 가진 올린 사람",
+      "refs": ["dict.request"],
+      "states": ["excel-import.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-041",
+      "where": "5단계 · 상태 칩",
+      "trigger": "칩(전체 · 오류 · 충돌 · 후보 선택 · 신규 · 변경) 클릭",
+      "expected": "그 상태의 행만 표에 보이고 칩이 눌린 상태로 포커스 유지. 각 칩에 건수, 0건 칩은 흐리게 남음",
+      "roles": "전체",
+      "refs": ["MD-08"],
+      "states": ["excel-import.html?step=5"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-042",
+      "where": "5단계 · 상태 칩",
+      "trigger": "선택 ‘더보기…’에서 상태(동일 · 같은 내용 결재 중 · 다른 내용 결재 중 · 선행 승인 · 빠짐) 고르기",
+      "expected": "그 상태로 거르고 선택 첫 항목이 ‘다른 상태 해제’로 바뀜",
+      "roles": "전체",
+      "refs": [],
+      "states": ["excel-import.html?step=5"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-043",
+      "where": "5단계 · 도구 줄",
+      "trigger": "칩 ‘방금 바꾼 행만’ 클릭",
+      "expected": "마지막 작업이 바꾼 행만 보이도록 켜고 끔. 바꾼 행이 없으면 토스트 ‘아직 바꾼 행이 없습니다’(칩 흐리게)",
+      "roles": "전체",
+      "refs": [],
+      "states": ["excel-import.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-044",
+      "where": "5단계 · 도구 줄",
+      "trigger": "고친 뒤(자동)",
+      "expected": "‘마지막 작업: {작업} · {시각}’ 표시, 마우스를 올리면 최근 6개 작업",
+      "roles": "dict.request",
+      "refs": [],
+      "states": ["excel-import.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-045",
+      "where": "5단계 · 도구 줄",
+      "trigger": "버튼 ‘되돌리기 (n)’ 클릭",
+      "expected": "가장 최근 작업을 되돌리고 토스트 ‘되돌렸습니다 — {작업} · 남은 작업 n개’. 나중에 입력한 미사용 사유는 유지. 없으면 토스트 ‘되돌릴 작업이 없습니다’",
+      "roles": "dict.request 가진 올린 사람",
+      "refs": [],
+      "states": ["excel-import.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-046",
+      "where": "5단계",
+      "trigger": "단축키 Ctrl+Z (글 입력 칸 · 창 밖)",
+      "expected": "[되돌리기]와 같은 동작. 입력 칸에 포커스가 있거나 창이 열려 있으면 동작하지 않음",
+      "roles": "dict.request 가진 올린 사람",
+      "refs": [],
+      "states": ["excel-import.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-047",
+      "where": "5단계 · 도구 줄",
+      "trigger": "조회 전용일 때 [되돌리기] · [찾아 바꾸기] · [자동 수정 제안] 보기",
+      "expected": "흐리게(aria-disabled) + 툴팁 ‘조회 전용 — {사유}’, 누르면 토스트 ‘조회 전용 — {사유}’",
+      "roles": "dict.request 없는 역할 · 남의 묶음 · 신청된 묶음",
+      "refs": ["dict.request", "RP-R04"],
+      "states": ["excel-import.html?resume=UP-2026-0007"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-048",
+      "where": "5단계 · 도구 줄",
+      "trigger": "버튼 ‘찾아 바꾸기’ 클릭 또는 단축키 Ctrl+H",
+      "expected": "찾아 바꾸기 창이 열리고 찾을 값 칸에 포커스(지난 검색어는 선택된 채)",
+      "roles": "dict.request 가진 올린 사람",
+      "refs": [],
+      "states": ["excel-import.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-049",
+      "where": "5단계 · 도구 줄",
+      "trigger": "버튼 ‘오류 가이드 (전체 n행)’ 클릭",
+      "expected": "화면 필터와 관계없이 전체 오류 행 + 확인 필요 행(경고 · 후보 미선택 · 보류 · 충돌)을 ‘{파일}_오류가이드.csv’로 내려받고 토스트 ‘… 내려받았습니다 — 화면 필터와 관계없이 전체 오류 n행 + 확인 필요 m행 · CSV(목업 — 실제는 XLSX…)’. 열: 구분 · 원본 행 · 상태 · 칸 · 규칙 · 오류 칸 · 사유 · 수정 방법 · 수정 제안",
+      "roles": "전체 (조회 전용도 가능)",
+      "refs": ["MD-08"],
+      "states": ["excel-import.html?step=5"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-050",
+      "where": "5단계 · 도구 줄",
+      "trigger": "오류도 확인 행도 없을 때 [오류 가이드] 클릭",
+      "expected": "토스트 ‘남은 오류도 확인할 행도 없습니다 — 내려받을 가이드가 없습니다’",
+      "roles": "전체",
+      "refs": [],
+      "states": ["excel-import.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-051",
+      "where": "5단계 · 도구 줄",
+      "trigger": "버튼 ‘보정본 (CSV)’ 클릭",
+      "expected": "파일의 모든 행(기준본 범위 밖 · 빠짐 포함, 상태 열로 구분) + 숨김 열(항목 ID · 버전 · 기준본) + 변경점(파일 값 → 보정 값)을 ‘{파일}_보정본.csv’로 내려받고 토스트로 행 수 안내",
+      "roles": "전체",
+      "refs": ["MD-08"],
+      "states": ["excel-import.html?step=5"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-052",
+      "where": "5단계 · 도구 줄",
+      "trigger": "필터를 걸어 내려받은 기준본으로 올렸을 때(자동)",
+      "expected": "‘기준본 {ID} 범위({범위}) 밖 n행은 비교·신청에서 뺐습니다’ 안내. 빠짐 판정은 그 범위 안에서만",
+      "roles": "전체",
+      "refs": ["MD-08"],
+      "states": ["excel-import.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-053",
+      "where": "5단계 · 오류 막대",
+      "trigger": "오류가 있을 때(자동)",
+      "expected": "‘처음 오류 n →’ 진행 · ‘오류 n’ · 규칙별 버튼(규칙 코드 · 이름 · 건수) 표시",
+      "roles": "전체",
+      "refs": ["MD-08"],
+      "states": ["excel-import.html?step=5"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-054",
+      "where": "5단계 · 오류 막대",
+      "trigger": "규칙 버튼 클릭",
+      "expected": "그 규칙의 오류 행만 보이고 다시 누르면 해제, 버튼 포커스 유지",
+      "roles": "전체",
+      "refs": [],
+      "states": ["excel-import.html?step=5"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-055",
+      "where": "5단계 · 오류 막대",
+      "trigger": "오류가 하나도 없을 때(자동)",
+      "expected": "‘오류 없음 · 처음 오류 n → 0’ 과 ‘남은 확인: 경고 확인 n · 후보 미선택 n · 충돌 n · 보류 n · 빠짐 n’ 또는 ‘남은 확인 없음 — 신청 n건’",
+      "roles": "전체",
+      "refs": [],
+      "states": ["excel-import.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-056",
+      "where": "5단계 · 오류 막대",
+      "trigger": "버튼 ‘다음 오류 F8’ 클릭 또는 단축키 F8 (창이 닫혀 있을 때)",
+      "expected": "다음 오류 행을 선택하고 고칠 칸(없으면 패널의 [제안 적용] · [ID 지우고 새 항목으로] · [기존 항목 변경으로], 없으면 행)에 포커스. 지금 보기에 오류가 없으면 필터를 풀고 이동. 오류가 없으면 토스트 ‘남은 오류가 없습니다’",
+      "roles": "전체",
+      "refs": [],
+      "states": ["excel-import.html?step=5"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-057",
+      "where": "5단계 · 오류 막대",
+      "trigger": "버튼 ‘자동 수정 제안 n건 미리보기’ 클릭",
+      "expected": "지금 보이는 자동 수정 대상 행으로 미리보기 창이 열림. 보이는 대상이 없으면 토스트 ‘지금 보이는 행에는 자동 수정 대상이 없습니다 — 필터를 바꿔 보세요’",
+      "roles": "dict.request 가진 올린 사람",
+      "refs": [],
+      "states": ["excel-import.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-058",
+      "where": "5단계 · 결과 표",
+      "trigger": "결과 표시(자동)",
+      "expected": "행마다 원본 행 · 상태 배지(신규 · 변경 · 동일 · 같은 내용 결재 중 · 다른 내용 결재 중 · 버전 충돌 · 후보 선택 · 선행 승인 필요 · 오류 · 파일에서 빠짐) · 5색 행 색 · 경고 아이콘 · 종류별 칸 · 사유 · 규칙. 옆으로 밀어도 행 · 상태 · 이름 열은 고정",
+      "roles": "전체",
+      "refs": ["MD-08", "ST-R04"],
+      "states": ["excel-import.html?step=5"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-059",
+      "where": "5단계 · 결과 표",
+      "trigger": "행 클릭 · Enter",
+      "expected": "행이 선택 표시되고 오른쪽 행 상세 패널이 그 행으로 바뀜",
+      "roles": "전체",
+      "refs": [],
+      "states": ["excel-import.html?step=5"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-060",
+      "where": "5단계 · 결과 표",
+      "trigger": "필터에 맞는 행이 없을 때",
+      "expected": "표에 ‘이 조건의 행이 없습니다’, 패널에 ‘이 조건에 맞는 행이 없습니다 — 필터를 바꾸세요’",
+      "roles": "전체",
+      "refs": [],
+      "states": ["excel-import.html?step=5"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-061",
+      "where": "5단계 · 결과 표",
+      "trigger": "결과 표시(자동)",
+      "expected": "범례 ‘녹색 신청 · 회색 제외 · 파랑 같은 내용 결재 중 · 주황 확인·선택·보류 · 붉은색 오류 · 경고(신청 가능, 기록) · 전→후 = 바뀐 칸’",
+      "roles": "전체",
+      "refs": ["MD-08"],
+      "states": ["excel-import.html?step=5"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-062",
+      "where": "5단계 · 결과 표",
+      "trigger": "현재 사전과 다른 칸 · 화면에서 고친 칸(자동)",
+      "expected": "옛 값에 취소선 + 새 값 표시(화면 읽기에는 ‘현재 사전 X, 파일 값’ / ‘파일 값 X, 고친 값’). 고친 칸은 툴팁 ‘파일 값: {값}’",
+      "roles": "전체",
+      "refs": [],
+      "states": ["excel-import.html?step=5"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-063",
+      "where": "5단계 · 결과 표",
+      "trigger": "오류 행의 오류 칸(자동)",
+      "expected": "붉은 칸 + 툴팁 ‘{규칙}: {사유}’, 화면 읽기 ‘{행}행 {칸} — 오류 {규칙}: {사유} · Enter 다시 검증 · Esc 파일 값’. 쓸 수 있을 때만 바로 고칠 수 있음",
+      "roles": "고치기: dict.request 가진 올린 사람",
+      "refs": [],
+      "states": ["excel-import.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-064",
+      "where": "5단계 · 결과 표 · 칸 고치기",
+      "trigger": "오류 칸을 고친 뒤 Enter 또는 칸 벗어나기 — 통과",
+      "expected": "결재 재검사와 같은 규칙으로 행을 다시 판정해 상태 갱신, 임시 저장, 토스트 ‘{행}행 다시 검증 — {판정}’(또는 ‘칸은 통과했지만 아직 오류: …’ · ‘형식은 통과 · 구성 단어 승인 대기로 보류’)과 [실행 취소]",
+      "roles": "dict.request 가진 올린 사람",
+      "refs": ["MD-08"],
+      "states": ["excel-import.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-065",
+      "where": "5단계 · 칸 고치기 검증",
+      "trigger": "칸을 비우고 확정",
+      "expected": "저장하지 않고 ‘빈 값은 쓸 수 없습니다’",
+      "roles": "dict.request",
+      "refs": [],
+      "states": ["excel-import.html"],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-excel-import-066",
+      "where": "5단계 · 칸 고치기 검증",
+      "trigger": "단어 · 용어 이름이 검수 기준 이름 규칙(차단)에 어긋남 / 도메인 · 코드 이름에 공백",
+      "expected": "저장하지 않고 검수 기준 문구 또는 ‘이름에 공백이 있습니다’",
+      "roles": "dict.request",
+      "refs": ["SC-43"],
+      "states": ["excel-import.html"],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-excel-import-067",
+      "where": "5단계 · 칸 고치기 검증",
+      "trigger": "X-ZERO 오류 행의 설명을 0으로 시작하지 않게 입력",
+      "expected": "‘앞자리 0이 없습니다 — 0012처럼 0을 살려 입력하세요’",
+      "roles": "dict.request",
+      "refs": [],
+      "states": ["excel-import.html"],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-excel-import-068",
+      "where": "5단계 · 칸 고치기 검증 · 도메인",
+      "trigger": "타입 칸에 N·C·V·D·T 밖의 값",
+      "expected": "‘데이터 타입은 N·C·V·D·T 중 하나’",
+      "roles": "dict.request",
+      "refs": ["MD-03"],
+      "states": ["excel-import.html?kind=도메인"],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-excel-import-069",
+      "where": "5단계 · 칸 고치기 검증 · 도메인",
+      "trigger": "길이 칸이 숫자 또는 숫자,숫자가 아님",
+      "expected": "‘길이는 숫자 또는 숫자,숫자(예: 18,2)’",
+      "roles": "dict.request",
+      "refs": ["MD-03"],
+      "states": ["excel-import.html?kind=도메인"],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-excel-import-070",
+      "where": "5단계 · 칸 고치기 검증 · 도메인",
+      "trigger": "도메인명을 분류+타입+길이와 다르게 입력",
+      "expected": "‘도메인명은 분류+타입+길이({계산 값})로 계산합니다’",
+      "roles": "dict.request",
+      "refs": ["MD-03"],
+      "states": ["excel-import.html?kind=도메인"],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-excel-import-071",
+      "where": "5단계 · 칸 고치기 검증 · 단어",
+      "trigger": "영문약어명이 검수 기준(차단)에 어긋남",
+      "expected": "저장하지 않고 검수 기준 문구 표시",
+      "roles": "dict.request",
+      "refs": ["SC-43"],
+      "states": ["excel-import.html?kind=단어"],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-excel-import-072",
+      "where": "5단계 · 칸 고치기",
+      "trigger": "고친 값이 검증에 실패",
+      "expected": "값은 칸에 남지만 저장하지 않음 — 칸 붉게(aria-invalid), 표 위 알림 ‘{행}행 {칸} ‘{값}’ — {사유}. 저장하지 않았습니다 · 고친 뒤 Enter, 파일 값으로 되돌리려면 Esc’",
+      "roles": "dict.request",
+      "refs": [],
+      "states": ["excel-import.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-073",
+      "where": "5단계 · 칸 고치기",
+      "trigger": "편집 중 Esc",
+      "expected": "칸이 파일 값으로 돌아가고 알림이 사라짐",
+      "roles": "dict.request",
+      "refs": [],
+      "states": ["excel-import.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-074",
+      "where": "토스트",
+      "trigger": "고친 뒤 토스트의 [실행 취소] 클릭",
+      "expected": "마지막 작업이면 되돌림. 이미 되돌렸으면 ‘이미 되돌린 작업입니다’, 뒤에 다른 작업이 있으면 ‘이 작업 뒤에 n개 작업이 더 있습니다 — 도구 줄 [되돌리기]로 최근 작업부터 차례로 되돌리세요’",
+      "roles": "dict.request",
+      "refs": [],
+      "states": ["excel-import.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-075",
+      "where": "5단계 · 도메인",
+      "trigger": "분류 · 타입 · 길이를 고침",
+      "expected": "도메인명과 영문약어명 끝(_{타입}{길이})이 자동으로 다시 계산되어 고친 칸으로 표시",
+      "roles": "dict.request",
+      "refs": ["MD-03"],
+      "states": ["excel-import.html?kind=도메인"],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-excel-import-076",
+      "where": "5단계 · 용어",
+      "trigger": "용어명을 고침(사전 이름과 다름)",
+      "expected": "다시 분해해 약어를 다시 계산. 미등록 단어면 오류 T-UNKWORD ‘미등록 단어: … — 단어부터 등록하세요’, 구성 단어가 다른 신청에서 승인 전이면 ‘선행 승인 필요’ 보류(‘단어 ‘{단어}’ 승인 후 재검증({신청})’)",
+      "roles": "dict.request",
+      "refs": ["MD-04", "MD-08"],
+      "states": ["excel-import.html"],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-excel-import-077",
+      "where": "5단계 · 행 판정",
+      "trigger": "검증 · 고치기 · 제안 적용 · 자동 수정 · 찾아 바꾸기 · 다시 검증 뒤(자동)",
+      "expected": "한 판정 규칙: 결재 재검사가 막을 행은 신규/변경으로 보이지 않고 실제 사유 · 규칙으로 오류. 같은 항목을 다른 신청이 바꾸는 중이면 ‘다른 내용 결재 중’(‘{신청} 진행 중(같은 항목의 다른 변경) — 고친 값 보류’), 경고는 사유 끝에 ‘경고 있음(신청 시 확인)’, 사전과 같으면 ‘동일’",
+      "roles": "전체",
+      "refs": ["MD-08", "MD-10"],
+      "states": ["excel-import.html"],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-excel-import-078",
+      "where": "5단계 · 코드값 행 판정",
+      "trigger": "코드값 행 검증(자동)",
+      "expected": "코드 도메인 길이와 다르면 CV-LEN ‘코드값 ‘{값}’는 n자리 — 도메인 {도메인}은 m자리’, 같은 코드 안 중복이면 CV-DUP ‘코드값 ‘{값}’가 {행}행({이름})에도 있음 — 한 코드 안에서 한 번만’, 사전에 있으면 동일/변경, 없으면 신규",
+      "roles": "전체",
+      "refs": ["MD-31"],
+      "states": ["excel-import.html?kind=코드"],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-excel-import-079",
+      "where": "5단계 · 행 상세 패널",
+      "trigger": "행 선택",
+      "expected": "머리 ‘{행}행 · {이름}’ · 상태 배지 · ‘처리: 등록 신청/변경 신청/제외/보류/선택/보정/무시’. 값 비교 3열(현재 사전 · 파일 원본 · 보정 값)과 항목 ID(없으면 ‘(없음 — 이름+약어로 짝짓기)’, 코드값은 코드+코드값 짝)",
+      "roles": "전체",
+      "refs": ["MD-08"],
+      "states": ["excel-import.html?step=5"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-080",
+      "where": "5단계 · 행 상세 패널 · 버전 충돌",
+      "trigger": "충돌 행에서 라디오 ‘현재 값 유지’ / ‘파일 값으로 변경 신청’ 선택",
+      "expected": "칸 단위 3방향 비교(내려받은 값 · 현재 사전 · 파일 값) 아래 선택. 기본은 현재 값 유지(이 행 제외), 파일 값을 고르면 신청 대상에 들어감. 선택도 되돌리기 기록에 남고 임시 저장",
+      "roles": "dict.request 가진 올린 사람",
+      "refs": ["MD-08"],
+      "states": ["excel-import.html?step=5"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-081",
+      "where": "5단계 · 행 상세 패널 · 결재 중",
+      "trigger": "같은 내용/다른 내용 결재 중 행 선택",
+      "expected": "배너 ‘{신청} 진행 중 — 같은 내용이라 제외합니다.’ 또는 ‘고친 값은 보류로 보존됩니다. 그 신청이 끝나면 [보류 행 다시 검증]으로 이어갑니다.’ + [결재 보기] → approvals.html?doc={신청}",
+      "roles": "전체",
+      "refs": ["MD-08", "SC-20"],
+      "states": ["excel-import.html?step=5"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-082",
+      "where": "5단계 · 행 상세 패널 · 후보 선택",
+      "trigger": "분해 후보 라디오 선택",
+      "expected": "고른 후보로 신청 대상에 들어감. 1음절 의심 후보를 고르면 토스트 ‘1음절 분해는 의심 — 확인 후 선택했습니다’",
+      "roles": "dict.request 가진 올린 사람",
+      "refs": ["MD-09", "MD-06"],
+      "states": ["excel-import.html?step=5"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-083",
+      "where": "5단계 · 행 상세 패널 · 선행 승인",
+      "trigger": "선행 승인 필요 행 선택",
+      "expected": "배너 ‘다른 신청({신청})의 새 단어 ‘{단어}’가 아직 승인 전입니다. 이 행은 보류되고, 단어가 승인되면 업로드 이력에서 다시 검증해 이어서 신청합니다.’ + [결재 보기]",
+      "roles": "전체",
+      "refs": ["MD-04"],
+      "states": ["excel-import.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-084",
+      "where": "5단계 · 행 상세 패널 · 오류",
+      "trigger": "오류 행 선택",
+      "expected": "‘무엇이 틀렸나 · {규칙}’, 사유와 문제 목록, ‘고치는 법 · {규칙별 안내}’, ‘표에서 붉은 칸({칸})을 바로 고치면 즉시 다시 검증합니다(Enter 확인 · Esc 파일 값).’ 또는 ‘칸 하나를 고쳐서 풀리는 문제가 아닙니다…’",
+      "roles": "전체",
+      "refs": ["MD-08"],
+      "states": ["excel-import.html?step=5"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-085",
+      "where": "5단계 · 행 상세 패널 · 오류",
+      "trigger": "검수 기준 규칙(P-CHARS · P-FORM · W-ABBRLEN · T-ABBRLEN · T-ABBR · W-ABBRFMT · T-SPACE) 오류의 링크 ‘기준 보기 · vN’ 클릭",
+      "expected": "rules.html?k={종류}&f={칸}(T-ABBR는 &sec=naming)로 이동해 그 규칙을 연 채 보여 줌",
+      "roles": "전체",
+      "refs": ["SC-43"],
+      "states": ["excel-import.html?step=5"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-086",
+      "where": "5단계 · 행 상세 패널 · 수정 제안",
+      "trigger": "제안이 있는 오류 행 선택 후 [제안 적용] 클릭",
+      "expected": "제안 카드(전 → 후, ‘검사: {판정}’ 미리보기) 내용대로 고치고 다시 판정, 토스트 ‘{행}행을 보정했습니다 — {판정 또는 아직 오류: …}’ + [실행 취소]",
+      "roles": "dict.request 가진 올린 사람",
+      "refs": ["MD-08"],
+      "states": ["excel-import.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-087",
+      "where": "5단계 · 행 상세 패널 · X-DUPID",
+      "trigger": "버튼 ‘ID 지우고 새 항목으로’ 클릭",
+      "expected": "항목 ID를 지우고 새 항목으로 다시 판정, 토스트 ‘{행}행을 새 항목으로 바꿨습니다 — {판정}’ 또는 ‘{행}행: 새 항목으로도 신청할 수 없습니다 — {사유}’",
+      "roles": "dict.request 가진 올린 사람",
+      "refs": [],
+      "states": ["excel-import.html?step=5"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-088",
+      "where": "5단계 · 행 상세 패널 · X-NAMEDUP",
+      "trigger": "버튼 ‘기존 항목({ID}) 변경으로’ 클릭",
+      "expected": "그 항목 변경으로 바꿔 다시 판정, 토스트 ‘{행}행을 기존 항목 변경으로 바꿨습니다 — …’ / ‘사전과 같아 신청에서 제외합니다’ / ‘변경으로도 신청할 수 없습니다 — …’",
+      "roles": "dict.request 가진 올린 사람",
+      "refs": ["MD-10"],
+      "states": ["excel-import.html?kind=단어"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-089",
+      "where": "5단계 · 행 상세 패널 · 파일에서 빠짐",
+      "trigger": "라디오 ‘무시’ / ‘미사용 신청’ 선택",
+      "expected": "기본 무시(사전 그대로). 미사용 신청을 고르면 ‘미사용 사유 *’ 칸이 나타나고 신청 대상(미사용)에 들어감. 안내 ‘삭제(V0)는 W2 — 여기서는 하지 않습니다.’",
+      "roles": "dict.request 가진 올린 사람",
+      "refs": ["MD-12"],
+      "states": ["excel-import.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-090",
+      "where": "5단계 · 행 상세 패널 · 파일에서 빠짐",
+      "trigger": "미사용 사유 입력",
+      "expected": "사유가 행에 저장(임시 저장)되고 되돌리기를 해도 유지",
+      "roles": "dict.request 가진 올린 사람",
+      "refs": ["MD-12"],
+      "states": ["excel-import.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-091",
+      "where": "5단계 · 행 상세 패널",
+      "trigger": "경고가 있는 행 선택",
+      "expected": "경고 배너(경고 문구 + 규칙 안내, 예: 도메인 변경 — 사용 중 컬럼 재검토 알림)",
+      "roles": "전체",
+      "refs": ["MD-11"],
+      "states": ["excel-import.html?step=5"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-092",
+      "where": "5단계 · 행 상세 패널",
+      "trigger": "조회 전용일 때 행 선택",
+      "expected": "배너 ‘조회 전용 — {사유}. 고치기·선택은 할 수 없습니다.’, 패널의 입력 · 버튼 모두 흐리게, 표 칸은 고칠 수 없음",
+      "roles": "dict.request 없는 역할 · 남의 묶음 · 신청된 묶음 · 예시 화면",
+      "refs": ["dict.request", "RP-R04"],
+      "states": ["excel-import.html?resume=UP-2026-0007"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-093",
+      "where": "하단 바",
+      "trigger": "5단계 표시 중(자동)",
+      "expected": "안내 ‘오류 n행은 신청에서 빠집니다 · F8 다음 오류’ / ‘오류 없음 · {남은 확인}’ / ‘조회 전용 — {사유}’. 버튼 ‘신청 준비’, [이전]은 3단계로",
+      "roles": "전체",
+      "refs": [],
+      "states": ["excel-import.html?step=5"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-094",
+      "where": "하단 바",
+      "trigger": "조회 전용으로 5 · 6단계",
+      "expected": "[신청 준비] · [신청] 버튼 숨김",
+      "roles": "dict.request 없는 역할 · 남의 묶음 · 신청된 묶음",
+      "refs": ["dict.request"],
+      "states": ["excel-import.html?resume=UP-2026-0007"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-095",
+      "where": "자동 수정 미리보기 창",
+      "trigger": "창 열림",
+      "expected": "부제 ‘지금 표에 보이는 오류 행 중 자동으로 고칠 수 있는 n건입니다. 그중 m건은 고쳐도 검사를 통과하지 못해 고르지 않았습니다. 적용할 행만 고르세요.’, 행마다 규칙 · 칸 · 파일 값 → 바뀔 값 · 검사 결과. 통과 못 하는 행은 처음부터 해제, 첫 행 체크박스에 포커스",
+      "roles": "dict.request 가진 올린 사람",
+      "refs": [],
+      "states": ["excel-import.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-096",
+      "where": "자동 수정 미리보기 창",
+      "trigger": "규칙 칩 클릭(대상 규칙이 2개 이상일 때만 보임)",
+      "expected": "그 규칙의 대상만 표시, 칩 포커스 유지",
+      "roles": "dict.request",
+      "refs": [],
+      "states": ["excel-import.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-097",
+      "where": "자동 수정 미리보기 창",
+      "trigger": "행 체크박스 · 머리 체크박스(보이는 대상 모두) 변경",
+      "expected": "고른 행이 바뀌고 머리 체크박스는 전부/일부(중간 상태)/없음 표시",
+      "roles": "dict.request",
+      "refs": [],
+      "states": ["excel-import.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-098",
+      "where": "자동 수정 미리보기 창",
+      "trigger": "고른 행 수 변화(자동)",
+      "expected": "적용 버튼 문구 ‘n건 적용(다른 규칙 m건 포함)’, 하나도 없으면 ‘적용할 행을 고르세요’ + 흐리게",
+      "roles": "dict.request",
+      "refs": [],
+      "states": ["excel-import.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-099",
+      "where": "자동 수정 미리보기 창",
+      "trigger": "버튼 ‘n건 적용’ 클릭",
+      "expected": "창이 닫히고 고른 행을 고쳐 다시 판정. 2건 이상이면 ‘방금 바꾼 행만’ 보기로 전환. 토스트 ‘자동 수정 n건 적용 · m건은 아직 오류 · k건은 고르지 않아 그대로’ + [실행 취소]",
+      "roles": "dict.request 가진 올린 사람",
+      "refs": [],
+      "states": ["excel-import.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-100",
+      "where": "자동 수정 · 찾아 바꾸기 창",
+      "trigger": "버튼 ‘취소’ 또는 Esc",
+      "expected": "아무것도 바꾸지 않고 창이 닫히며 연 버튼으로 포커스가 돌아감",
+      "roles": "dict.request",
+      "refs": [],
+      "states": ["excel-import.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-101",
+      "where": "찾아 바꾸기 창",
+      "trigger": "창 열림",
+      "expected": "범위 문구 ‘지금 표에 보이는 n행이 대상입니다(필터 적용 중). 결재 중·충돌·파일에서 빠짐 m행은 바꾸지 않습니다. {계산 칸}은 계산 값이라 바꾸지 않습니다. 항목 ID가 있는 행의 이름은 짝짓기 키라 바꾸지 않습니다.’(코드값: 사전에 있는 코드값)",
+      "roles": "dict.request 가진 올린 사람",
+      "refs": [],
+      "states": ["excel-import.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-102",
+      "where": "찾아 바꾸기 창",
+      "trigger": "찾을 값 · 바꿀 값 입력",
+      "expected": "바뀔 칸 미리보기(행 · 칸 · 지금 값(찾은 글자 강조) · 바뀔 값 · 검사)와 요약 ‘n칸(m행)을 바꿉니다 · 도메인명 k칸이 따라 바뀝니다 · j칸은 건너뜁니다(짝짓기 키 · 규칙)’. 비면 ‘찾을 값을 입력하면 바뀔 칸과 검사 결과를 미리 보여 줍니다’, 없으면 ‘‘{값}’ — 보이는 행에서 찾지 못했습니다’. 바꿀 값이 비면 찾은 글자를 지움",
+      "roles": "dict.request",
+      "refs": [],
+      "states": ["excel-import.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-103",
+      "where": "찾아 바꾸기 창",
+      "trigger": "칸 선택 · ‘칸 전체가 같을 때만’ · ‘대소문자 구분’ 변경",
+      "expected": "범위 줄 ‘범위: {칸} · 칸 전체 일치/일부 일치 · 대소문자 구분/무시’과 미리보기가 갱신. 고른 칸은 다시 열어도 유지",
+      "roles": "dict.request",
+      "refs": [],
+      "states": ["excel-import.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-104",
+      "where": "찾아 바꾸기 창 · 건너뜀",
+      "trigger": "짝짓기 키 칸(항목 ID 있는 행의 이름 · 사전 코드값)이 맞음",
+      "expected": "그 칸은 ‘건너뜀 · 짝짓기 키라 바꾸지 않음’",
+      "roles": "dict.request",
+      "refs": [],
+      "states": ["excel-import.html"],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-excel-import-105",
+      "where": "찾아 바꾸기 창 · 건너뜀",
+      "trigger": "바꾼 값이 칸 형식 검사(빈 값 · 이름 규칙 · 타입 · 길이 등)에 실패",
+      "expected": "‘건너뜀 · {검사 문구}’",
+      "roles": "dict.request",
+      "refs": [],
+      "states": ["excel-import.html"],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-excel-import-106",
+      "where": "찾아 바꾸기 창 · 건너뜀",
+      "trigger": "두 바꿈이 유일해야 하는 값(이름 · 단어 약어 · 같은 코드의 코드값)으로 겹침",
+      "expected": "‘건너뜀 · 바꾼 값끼리 겹침’",
+      "roles": "dict.request",
+      "refs": [],
+      "states": ["excel-import.html"],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-excel-import-107",
+      "where": "찾아 바꾸기 창 · 건너뜀",
+      "trigger": "바꾸면 행이 결재 재검사에 막힘",
+      "expected": "정상 행은 ‘건너뜀 · 바꾸면 오류 · {사유}’, 이미 오류인 행은 ‘건너뜀 · 아직 오류 · {사유}’. 통과하는 칸은 ‘통과 · {상태}’ 또는 ‘적용 · 행은 아직 오류: …’",
+      "roles": "dict.request",
+      "refs": [],
+      "states": ["excel-import.html"],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-excel-import-108",
+      "where": "찾아 바꾸기 창",
+      "trigger": "바뀔 칸이 200칸을 넘음",
+      "expected": "앞 200칸만 보여 주고 ‘앞 200칸만 보여 줍니다 — 나머지 n칸도 같은 규칙으로 바뀝니다. 칸이나 필터로 범위를 좁혀 확인하세요’",
+      "roles": "dict.request",
+      "refs": [],
+      "states": ["excel-import.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-109",
+      "where": "찾아 바꾸기 창",
+      "trigger": "찾을 값 칸에서 Enter",
+      "expected": "아무것도 바꾸지 않음(일괄 변경은 버튼으로만)",
+      "roles": "dict.request",
+      "refs": [],
+      "states": ["excel-import.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-110",
+      "where": "찾아 바꾸기 창",
+      "trigger": "버튼 ‘n칸 바꾸기’ 클릭",
+      "expected": "바꿀 칸이 없으면 ‘바꾸기’ 흐리게. 누르면 창이 닫히고 바꾼 뒤 다시 판정, 여러 행이면 ‘방금 바꾼 행만’ 보기. 토스트 ‘찾아 바꾸기 — n칸(m행) 바꿨습니다 · k행은 아직 오류’ + [실행 취소]",
+      "roles": "dict.request 가진 올린 사람",
+      "refs": [],
+      "states": ["excel-import.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-111",
+      "where": "6단계 · 신청 요약",
+      "trigger": "6단계 진입",
+      "expected": "요약표: 신청 대상(등록·변경) · 미사용 신청 · 보류 · 오류로 제외 · 후보 미선택으로 제외(있을 때) · 변경 없음 — 건수와 ‘{행}행 {이름}’ 목록. 코드값은 ‘결재 항목 n건 — 코드 그룹 하나가 결재 항목 하나’",
+      "roles": "dict.request 가진 올린 사람",
+      "refs": ["MD-08", "MD-31"],
+      "states": ["excel-import.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-112",
+      "where": "6단계",
+      "trigger": "6단계 진입",
+      "expected": "바구니 안내 배너(‘[바구니로 보내기]는 신청할 행을 내 바구니에 담습니다…’)",
+      "roles": "dict.request",
+      "refs": [],
+      "states": ["excel-import.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-113",
+      "where": "6단계",
+      "trigger": "DA 역할도 가진 사용자가 6단계 진입",
+      "expected": "자기 승인 안내 — 허용이면 ‘DA 역할도 있어 이 문서를 직접 승인하면 자기 승인입니다(사유 필수 · 감사 로그에 남음)…’, 비허용 설정이면 ‘…자기 승인이 비허용으로 설정돼 있어, 이 문서는 다른 DA가 승인합니다.’ DA 역할이 없으면 숨김",
+      "roles": "da 역할 보유자",
+      "refs": ["MD-25"],
+      "states": ["excel-import.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-114",
+      "where": "6단계",
+      "trigger": "신청 대상에 경고 행이 있을 때",
+      "expected": "체크박스 ‘경고 n건을 확인했습니다 — {행}행 {이름}: {경고} · …’ 표시. 체크 전에는 [신청] 막힘 + ‘경고 행을 확인했다고 표시하세요’",
+      "roles": "dict.request",
+      "refs": ["MD-08"],
+      "states": ["excel-import.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-115",
+      "where": "6단계 · 신청 사유",
+      "trigger": "신청 사유가 비었거나 공백뿐",
+      "expected": "[신청] 흐리게 + ‘사유를 입력해야 합니다’, 칸 aria-invalid. 라벨에 ‘1~1,000자’ (1,000자 초과 막기는 목업에 없음 — 목업에서 확인 필요)",
+      "roles": "dict.request",
+      "refs": ["MD-01"],
+      "states": ["excel-import.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-116",
+      "where": "6단계 · 결재선",
+      "trigger": "6단계 진입",
+      "expected": "결재선 미리보기 ‘신청(나 · 지금) → DA 승인(필수) → 최종 승인(기관 담당자 · 기관 설정 사용 중)’. 사전 신청 최종 승인 설정이 꺼져 있으면 마지막 단계가 ‘최종 승인 없음 · DA 승인으로 완료(기관 설정)’",
+      "roles": "dict.request",
+      "refs": ["MD-20", "MD-41"],
+      "states": ["excel-import.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-117",
+      "where": "6단계 · 신청 막힘",
+      "trigger": "검증 뒤 검수 기준 · 사전이 바뀐 묶음",
+      "expected": "[신청] 막힘 + ‘검증 뒤 기준이 바뀌었습니다 — [다시 검증] 후 신청하세요’",
+      "roles": "dict.request",
+      "refs": ["MD-08"],
+      "states": ["excel-import.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-118",
+      "where": "6단계 · 신청 막힘",
+      "trigger": "미사용 신청 행에 사유가 없음",
+      "expected": "[신청] 막힘 + ‘미사용 신청 행의 사유를 입력하세요(결과 검토 단계)’",
+      "roles": "dict.request",
+      "refs": ["MD-12"],
+      "states": ["excel-import.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-119",
+      "where": "6단계 · 신청 막힘",
+      "trigger": "신청 대상 + 미사용이 0건",
+      "expected": "[신청] 막힘 + ‘신청할 행이 없습니다’",
+      "roles": "dict.request",
+      "refs": [],
+      "states": ["excel-import.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-120",
+      "where": "6단계 · 하단 바",
+      "trigger": "버튼 ‘바구니로 보내기’ 클릭",
+      "expected": "신청 대상 행을 바구니 항목(출처 ‘엑셀 {파일} · {ID} {행}행’)으로 담고 토스트 ‘바구니에 n건 담음(중복 m건 제외)’ + [바구니 열기] → dictionary.html?basket=1. 담을 행이 없으면 ‘바구니에 담을 정상 행이 없습니다’. 6단계 · 쓸 수 있을 때만 보임",
+      "roles": "dict.request 가진 올린 사람",
+      "refs": ["dict.request"],
+      "states": ["excel-import.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-121",
+      "where": "6단계 · 하단 바",
+      "trigger": "버튼 ‘n건 신청’(코드값: ‘n행(결재 항목 m) 신청’) 클릭",
+      "expected": "결재 문서(사전 · 엑셀 일괄)가 만들어지고 approvals.html?new=1&doc={신청번호}로 이동. 업로드 묶음 상태 ‘신청됨’ · 연결 신청 · 신청한 내용이 기록되어 업로드 이력에 보임",
+      "roles": "dict.request 가진 올린 사람",
+      "refs": ["dict.request", "MD-08", "MD-20", "SC-20"],
+      "states": ["excel-import.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-122",
+      "where": "6단계 · 신청",
+      "trigger": "화면을 연 사이 검수 기준 · 사전이 바뀐 뒤 [신청]",
+      "expected": "신청하지 않고 토스트 ‘검증한 뒤 검수 기준이 vX → vY로(또는 사전이) 바뀌었습니다 — 새로고침해서 [다시 검증]한 뒤 신청하세요’ + [새로고침], 버튼 막힘",
+      "roles": "dict.request",
+      "refs": ["MD-08"],
+      "states": ["excel-import.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-123",
+      "where": "6단계 · 신청",
+      "trigger": "[신청] 시 결재 재검사에서 막힐 항목이 있음",
+      "expected": "신청하지 않고 그 행을 오류로 돌려 5단계 오류 필터로 열고 토스트 ‘결재 재검사에서 막힐 항목이 n건 있습니다 — {이름}: {문제} … 그 m행을 오류로 돌려 결과 검토를 열었습니다. 고친 뒤 신청하세요’",
+      "roles": "dict.request",
+      "refs": ["MD-20"],
+      "states": ["excel-import.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-124",
+      "where": "6단계 · 신청",
+      "trigger": "[신청] 시 진행 중인 다른 신청과 겹침",
+      "expected": "토스트 ‘진행 중인 다른 신청과 겹치는 행이 있습니다 — {항목}. 결과 검토에서 그 행을 다시 확인하세요’",
+      "roles": "dict.request",
+      "refs": ["MD-10"],
+      "states": ["excel-import.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-125",
+      "where": "저장 · 신청",
+      "trigger": "다른 탭에서 이 묶음을 신청 · 변경한 뒤 저장 또는 신청",
+      "expected": "저장 · 신청하지 않고 토스트 ‘{ID}가 다른 탭에서 바뀌었습니다({상태}) — 이 탭의 내용은 저장하지 않았습니다. 새로고침하세요’ + [새로고침], 저장 표시 ‘저장 안 함 · 다른 탭 변경’",
+      "roles": "dict.request",
+      "refs": [],
+      "states": ["excel-import.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-126",
+      "where": "저장 · 신청 · 바구니",
+      "trigger": "다른 탭에서 사용자가 바뀐 뒤 저장 · 신청 · 바구니로 보내기",
+      "expected": "처리하지 않고 토스트 ‘다른 탭에서 사용자가 바뀌었습니다(지금 {이름}) — 새로고침한 뒤 다시 처리하세요’ + [새로고침], 저장 표시 ‘저장 안 함 · 사용자 바뀜’",
+      "roles": "전체",
+      "refs": [],
+      "states": ["excel-import.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-127",
+      "where": "이어서 작업 배너",
+      "trigger": "주소 ?resume={내 임시 저장 · 보완 묶음}",
+      "expected": "5단계로 바로 열리고 배너 ‘{ID} · {파일} 이어서 작업 — {신청} {단계}: 보완해서 다시 신청하면 새 신청번호가 만들어집니다’. 고친 값 · 선택이 그대로",
+      "roles": "dict.request 가진 올린 사람",
+      "refs": ["MD-21"],
+      "states": ["excel-import.html?resume=UP-2026-0007"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-128",
+      "where": "이어서 작업 배너",
+      "trigger": "주소 ?resume={결재 중 · 반영 완료 묶음}",
+      "expected": "배너 ‘{ID} · {파일} — {신청} {단계}. 신청된 묶음은 조회 전용입니다(결재 문서 내용을 바꾸지 않음). 보완하려면 반려·회수 뒤에 다시 여세요.’ 고치기 · 신청 불가",
+      "roles": "올린 사람 · excel.viewall",
+      "refs": [],
+      "states": ["excel-import.html?resume=UP-2026-0007"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-129",
+      "where": "이어서 작업 배너",
+      "trigger": "주소 ?resume={다른 사람이 올린 묶음}",
+      "expected": "배너 ‘{ID} — {이름}이 올린 묶음이라 열람만 할 수 있습니다.’ 조회 전용",
+      "roles": "excel.viewall (DA)",
+      "refs": ["excel.viewall"],
+      "states": ["excel-import.html?resume=UP-2026-0007"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-130",
+      "where": "이어서 작업 배너",
+      "trigger": "주소 ?resume= · ?verify= 에 없는 ID · 볼 수 없는 ID · 빈 값",
+      "expected": "1단계로 열리고 배너 ‘{ID} 업로드를 찾을 수 없거나 열람 권한이 없습니다. 새 업로드는 1단계부터 시작하세요 — 이 화면은 아무것도 저장하지 않습니다.’ + [업로드 이력] · [새 업로드]",
+      "roles": "전체",
+      "refs": ["excel.viewall"],
+      "states": ["excel-import.html?resume=UP-9999-0000"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-131",
+      "where": "반영본 확인 배너",
+      "trigger": "주소 ?verify={최종 승인된 묶음} — 현재 사전과 모두 같음",
+      "expected": "5단계로 열리고 성공 배너 ‘반영본 재업로드 확인 — {ID}의 반영본({신청} 반영 n행)을 현재 사전과 칸 단위로 비교했습니다. n행 모두 동일 → 왕복 완료.’ 업로드 이력에 ‘왕복 완료’가 기록됨",
+      "roles": "올린 사람 · excel.viewall",
+      "refs": ["MD-08"],
+      "states": ["excel-import.html?verify=UP-2026-0007"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-132",
+      "where": "반영본 확인 배너",
+      "trigger": "주소 ?verify= — 현재 사전과 다른 행이 있음",
+      "expected": "경고 배너 ‘n행이 현재 사전과 다릅니다 — 반영 뒤 사전이 다시 바뀌었습니다. 왕복 완료로 기록하지 않습니다. 최신 편집용 엑셀을 다시 내려받으세요.’, 행 사유 ‘반영본과 다름 — {칸}: 반영본 X · 현재 Y’",
+      "roles": "올린 사람 · excel.viewall",
+      "refs": ["MD-08"],
+      "states": ["excel-import.html?verify=UP-2026-0007"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-133",
+      "where": "반영본 확인 배너",
+      "trigger": "주소 ?verify={아직 반영 안 된 묶음 · 제출 행 상세가 없는 묶음}",
+      "expected": "‘{ID}는 아직 반영 완료된 묶음이 아닙니다({단계}) — 반영본 확인은 최종 승인 뒤에 할 수 있습니다.’ 또는 ‘… 제출 행 상세가 없어 행 단위로 비교할 수 없습니다. 왕복 완료로 기록하지 않습니다.’, 행 없음",
+      "roles": "올린 사람 · excel.viewall",
+      "refs": [],
+      "states": ["excel-import.html?verify=UP-2026-0007"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-134",
+      "where": "예시 화면 배너",
+      "trigger": "주소 ?step=n 으로 바로 열기",
+      "expected": "배너 ‘예시 화면 — 주소로 바로 연 결과 화면이라 저장하지 않습니다. 실제 작업은 1단계부터 하세요.’, 조회 전용",
+      "roles": "전체",
+      "refs": [],
+      "states": ["excel-import.html?step=5"],
+      "verify": "exempt",
+      "exemptReason": "목업 전용 데모 주소(?step=)"
+    },
+    {
+      "id": "BH-excel-import-135",
+      "where": "조회 전용 배너",
+      "trigger": "사전 신청 권한 없는 사용자가 새 업로드로 열기",
+      "expected": "배너 ‘조회 전용 — {이름}님 역할은 사전 신청 권한이 없어 검증 결과 보기까지만 할 수 있습니다. 파일을 올려 오류를 확인하고 가이드를 내려받을 수는 있지만, 고치기와 신청은 할 수 없습니다. 신청은 DA·모델러에게 요청하세요.’ + [업로드 이력]",
+      "roles": "dict.request 없는 역할(owner · auditor · admin · 역할 없음)",
+      "refs": ["dict.request", "RP-R04"],
+      "states": ["excel-import.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-136",
+      "where": "다시 검증 배너",
+      "trigger": "검증 뒤 검수 기준 · 사전이 바뀐 내 묶음을 열기",
+      "expected": "배너 ‘다시 검증해야 합니다 — 이 묶음을 검증한 뒤 검수 기준이 vX → vY로(또는 사전이) 바뀌었습니다. 화면에서 고친 값은 그대로 두고 현재 기준으로 다시 검증합니다.’ + [다시 검증]",
+      "roles": "dict.request 가진 올린 사람",
+      "refs": ["MD-08"],
+      "states": ["excel-import.html?resume=UP-2026-0007"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-137",
+      "where": "다시 검증 배너",
+      "trigger": "버튼 ‘다시 검증’ 클릭",
+      "expected": "신규 · 변경 · 보류 · 오류 행을 현재 기준으로 다시 판정(고친 값 유지), 배너 사라짐, 토스트 ‘현재 기준으로 다시 검증했습니다 — 고친 값은 유지’",
+      "roles": "dict.request 가진 올린 사람",
+      "refs": ["MD-08"],
+      "states": ["excel-import.html?resume=UP-2026-0007"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-138",
+      "where": "5단계 · 결과 표",
+      "trigger": "행 상세가 저장되지 않은 시드 묶음을 이어서 열기",
+      "expected": "연결 결재 문서의 대표 행을 ‘{신청} 제출 행(목업 시드: n건 중 대표 행)’으로 보여 줌",
+      "roles": "전체",
+      "refs": [],
+      "states": ["excel-import.html?resume=UP-2026-0007"],
+      "verify": "exempt",
+      "exemptReason": "목업 시드 데이터 처리(행 상세 없는 시드 묶음)"
+    }
+  ]
+}

@@ -1,0 +1,229 @@
+{
+  "screen": "import.html",
+  "ids": "SC-36",
+  "source": "docs/ux/mockups/import.html",
+  "behaviors": [
+    {
+      "id": "BH-import-001",
+      "where": "머리 경로",
+      "trigger": "화면 열기",
+      "expected": "경로 첫 칸에 현재 시스템 이름(system.html로 이동)",
+      "roles": "전체",
+      "refs": ["SC-36"],
+      "states": ["import.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-import-002",
+      "where": "머리 · 가져올 형식",
+      "trigger": "‘엑셀 정의서’ 클릭",
+      "expected": "import-excel.html(들어온 영역이 있으면 ?area=)로 이동. ‘DDL’이 눌린 상태로 표시",
+      "roles": "전체",
+      "refs": ["SC-36a"],
+      "states": ["import.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-import-003",
+      "where": "머리 아래 배너",
+      "trigger": "모델러 역할이 없는 사용자가 열 때",
+      "expected": "‘조회 전용 — DDL 가져오기는 모델러 역할만 할 수 있습니다.’, [가져오기] 흐리게(읽기 · 미리보기는 됨)",
+      "roles": "모델러가 아닌 역할",
+      "refs": ["model.edit"],
+      "states": ["import.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-import-004",
+      "where": "머리 아래 배너",
+      "trigger": "모델러이지만 현재 시스템이 담당 시스템이 아닐 때",
+      "expected": "‘조회 전용 — 내 담당 시스템에 <시스템>이/가 없어 가져오기를 할 수 없습니다. 담당 시스템 추가 요청’(mypage.html?req=sys&sys=), [가져오기] 흐리게",
+      "roles": "담당 시스템 밖 모델러",
+      "refs": ["model.edit"],
+      "states": ["import.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-import-005",
+      "where": "DDL 입력",
+      "trigger": "화면 열기",
+      "expected": "DDL 칸에 요구사항관리 예시 DDL(테이블 3 · FK 1)이 미리 채워지고 바로 읽기 미리보기가 그려진다",
+      "roles": "전체",
+      "refs": ["SC-36"],
+      "states": ["import.html"],
+      "verify": "exempt",
+      "exemptReason": "목업 전용 데모 기능(예시 DDL 미리 채우기)"
+    },
+    {
+      "id": "BH-import-006",
+      "where": "DDL 입력 · 도구줄",
+      "trigger": "‘예시 .sql 파일 불러오기’ / ‘잘못된 예시’ 클릭",
+      "expected": "예시 DDL 또는 ‘SELECT * FROM RQMS.RQRM_D;’를 채우고 바로 읽는다",
+      "roles": "전체",
+      "refs": ["SC-36"],
+      "states": ["import.html"],
+      "verify": "exempt",
+      "exemptReason": "목업 전용 데모 기능(내장 예시 불러오기 — 실제 .sql 파일 고르기는 목업에 없음)"
+    },
+    {
+      "id": "BH-import-007",
+      "where": "DDL 입력 · 도구줄",
+      "trigger": "‘읽기’ 클릭",
+      "expected": "버튼이 잠깐 진행 중 표시 후 DDL 칸 내용을 읽어 오른쪽 미리보기를 다시 그린다",
+      "roles": "전체",
+      "refs": ["RV-R01"],
+      "states": ["import.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-import-008",
+      "where": "읽기 규칙",
+      "trigger": "DDL을 읽을 때",
+      "expected": "CREATE TABLE 블록마다 테이블(스키마 접두 무시, 여는 괄호 뒤 ‘-- 주석’은 테이블 논리명, 없으면 물리명), 컬럼 줄 ‘이름 타입 … -- 한글명’(주석 없으면 물리명을 논리명으로, NOT NULL 인식, 타입 대문자), PRIMARY KEY(…) 제약, ALTER TABLE … ADD CONSTRAINT … FOREIGN KEY(…) REFERENCES 를 읽는다. 다른 CONSTRAINT 줄은 무시",
+      "roles": "전체",
+      "refs": ["RV-R01"],
+      "states": ["import.html"],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-import-009",
+      "where": "읽기 규칙",
+      "trigger": "컬럼 형식으로 읽을 수 없는 줄",
+      "expected": "오류 행 ‘<테이블>: 읽을 수 없는 줄 — <줄 앞 40자>’를 미리보기 아래에 빨간 행으로 표시(테이블은 읽은 만큼 유지)",
+      "roles": "전체",
+      "refs": ["RV-R01"],
+      "states": ["import.html"],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-import-010",
+      "where": "읽기 규칙",
+      "trigger": "CREATE TABLE 문이 하나도 없을 때",
+      "expected": "오류 행 ‘CREATE TABLE 문을 찾지 못했습니다’, 상태 배지 ‘읽기 실패’, [가져오기] 흐리게",
+      "roles": "전체",
+      "refs": ["RV-R01"],
+      "states": ["import.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-import-011",
+      "where": "읽기 미리보기 · 머리",
+      "trigger": "읽기 결과",
+      "expected": "상태 배지: 테이블 없이 오류만 ‘읽기 실패’, 테이블과 오류 ‘일부 경고’, 오류 없음 ‘읽음’. 오른쪽에 ‘테이블 N · 컬럼 N · PK N · FK N’",
+      "roles": "전체",
+      "refs": ["RV-R01"],
+      "states": ["import.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-import-012",
+      "where": "읽기 미리보기 · 표",
+      "trigger": "읽기 결과",
+      "expected": "테이블마다 ‘물리명 · 논리명 · 컬럼 수 · PK(체크/—) · FK 수 · 점검(정상 / PK 없음)’. PK 없는 테이블 행은 경고 색. 결과가 없으면 ‘결과 없음’. 처음 빈 상태 문구는 ‘왼쪽에 DDL을 넣고 [파싱]을 누르세요’(버튼 이름은 ‘읽기’ — 목업에서 확인 필요)",
+      "roles": "전체",
+      "refs": ["RV-R01", "RV-R03"],
+      "states": ["import.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-import-013",
+      "where": "아래 고정 줄",
+      "trigger": "읽기 결과가 바뀔 때",
+      "expected": "테이블이 있으면 버튼 이름 ‘N개 테이블 가져오기’ + 주 버튼으로 강조(읽기 버튼은 보통으로), 없거나 권한이 없으면 ‘가져오기’ 흐리게(읽기 버튼이 주 버튼). PK 없는 테이블이 있으면 ‘PK 없는 테이블 N개는 경고와 함께 가져옵니다’",
+      "roles": "model.edit 가진 담당 시스템 모델러",
+      "refs": ["model.edit", "RV-R01"],
+      "states": ["import.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-import-014",
+      "where": "가져올 위치",
+      "trigger": "‘새 업무 영역’ / ‘기존 업무 영역에 추가’ 선택",
+      "expected": "새 업무 영역이면 ‘새 업무 영역 이름 *’ 칸이 보이고 영역 선택은 흐리게, 기존이면 이름 칸 숨김 · 영역 선택 사용 가능. 기본은 새 업무 영역, 이름 기본값 ‘현행 요구사항 DB’",
+      "roles": "전체",
+      "refs": ["RV-R01"],
+      "states": ["import.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-import-015",
+      "where": "가져올 위치 · 기존 업무 영역",
+      "trigger": "화면 열기",
+      "expected": "영역마다 ‘이름 · v버전’, 작업 중이 아닌 영역은 흐리게 + ‘(편집 불가)’. 들어온 영역(?area=)이 작업 중이면 미리 골라진다",
+      "roles": "전체",
+      "refs": ["model.edit"],
+      "states": ["import.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-import-016",
+      "where": "아래 고정 줄",
+      "trigger": "새 업무 영역 이름을 비우고 ‘가져오기’",
+      "expected": "토스트(오류) ‘새 업무 영역 이름을 입력하세요’, 이름 칸으로 초점. 같은 이름 중복 검사는 이 화면에 없다(목업에서 확인 필요)",
+      "roles": "model.edit 가진 담당 시스템 모델러",
+      "refs": ["area.create"],
+      "states": ["import.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-import-017",
+      "where": "아래 고정 줄",
+      "trigger": "기존 영역이 실행 순간 편집할 수 없는 상태일 때 ‘가져오기’",
+      "expected": "토스트(오류) ‘그 업무 영역은 지금 편집할 수 없습니다’, 가져오지 않음",
+      "roles": "model.edit 가진 담당 시스템 모델러",
+      "refs": ["model.edit"],
+      "states": ["import.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-import-018",
+      "where": "아래 고정 줄",
+      "trigger": "다른 탭에서 로그인 사용자가 바뀐 뒤 ‘가져오기’",
+      "expected": "토스트 ‘다른 탭에서 사용자가 바뀌었습니다(지금 <이름>) — 새로고침한 뒤 다시 처리하세요’ + [새로고침], 가져오지 않음",
+      "roles": "전체",
+      "refs": ["model.edit"],
+      "states": ["import.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-import-019",
+      "where": "아래 고정 줄",
+      "trigger": "새 업무 영역으로 ‘N개 테이블 가져오기’ 클릭",
+      "expected": "그 이름으로 업무 영역(v1 작업 버전)을 만들고 standardize.html?area=<새 영역>&from=import 로 이동(검토 모드 유지). 표준 맞추기에 ‘DDL 가져오기가 끝나 자동으로 열었습니다. 가져온 N개 테이블·M개 컬럼을 … v1로 만들고 분석했습니다.’",
+      "roles": "model.edit 가진 담당 시스템 모델러",
+      "refs": ["model.edit", "area.create", "RV-R01", "RV-R03", "SC-34"],
+      "states": ["import.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-import-020",
+      "where": "아래 고정 줄",
+      "trigger": "기존 업무 영역으로 ‘N개 테이블 가져오기’ 클릭",
+      "expected": "고른 영역 작업 버전에 가져온 테이블 · 관계를 덧붙여 저장(기존 배치 오른쪽, 수정 번호 +1) 후 standardize.html?area=<영역>&from=import 로 이동, 배너 ‘… vN에 추가하고 분석했습니다.’",
+      "roles": "model.edit 가진 담당 시스템 모델러(작업 중 버전)",
+      "refs": ["model.edit", "RV-R01", "RV-R03"],
+      "states": ["import.html"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-import-021",
+      "where": "가져오기 · 모델 생성 규칙",
+      "trigger": "가져온 구조로 모델을 만들 때",
+      "expected": "테이블 분류는 _M → 기본, _D → 내역, 그 밖 → 코드 계열(K). 3열 격자로 배치. 속성 PK · NOT NULL 반영, 표준 상태는 사전 용어면 표준, 분해되면 조합 가능, 아니면 미등록. FK마다 비식별 관계(이름 비움)를 만들고 FK 컬럼 표시. 부모가 이번 DDL에 없으면 관계를 만들지 않음",
+      "roles": "전체",
+      "refs": ["RV-R01", "RV-R03"],
+      "states": ["import.html"],
+      "verify": "unit"
+    },
+    {
+      "id": "BH-import-022",
+      "where": "아래 고정 줄",
+      "trigger": "‘취소’ 클릭",
+      "expected": "model.html(들어온 영역이 있으면 ?area=)로 이동",
+      "roles": "전체",
+      "refs": ["SC-31"],
+      "states": ["import.html"],
+      "verify": "e2e"
+    }
+  ]
+}

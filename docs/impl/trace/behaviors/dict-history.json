@@ -1,0 +1,312 @@
+{
+  "screen": "dict-history.html",
+  "ids": "SC-16",
+  "source": "docs/ux/mockups/dict-history.html",
+  "behaviors": [
+    {
+      "id": "BH-dict-history-001",
+      "where": "머리",
+      "trigger": "화면을 열 때",
+      "expected": "제목 옆 배지에 ‘현재 제정 {n}차 · {시각} 공표’",
+      "roles": "전체",
+      "refs": [
+        "dict.view"
+      ],
+      "states": [
+        "dict-history.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-dict-history-002",
+      "where": "머리",
+      "trigger": "공표 권한이 있는 계정으로 열 때",
+      "expected": "[공표 (미공표 {n}건)]이 보이고, 누르면 dictionary.html#publish로 이동해 공표 창이 열림",
+      "roles": "dict.publish 가진 DA(임시 비밀번호가 아닌 계정)",
+      "refs": [
+        "dict.publish",
+        "SC-10"
+      ],
+      "states": [
+        "dict-history.html?as=lee"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-dict-history-003",
+      "where": "머리",
+      "trigger": "공표 권한이 없는 계정으로 열 때",
+      "expected": "[공표] 버튼이 숨겨짐",
+      "roles": "dict.publish 없는 계정(모델러 · 기관 담당자 · 감리 · 임시 비밀번호 DA 등)",
+      "refs": [
+        "dict.publish"
+      ],
+      "states": [
+        "dict-history.html?as=park"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-dict-history-004",
+      "where": "머리",
+      "trigger": "미공표 변경이 0건일 때 [공표] 클릭",
+      "expected": "[공표 (미공표 0건)]이 흐리게(aria-disabled) 보이고, 눌러도 이동하지 않고 ‘직전 공표 이후 승인된 변경이 없습니다’ 알림",
+      "roles": "dict.publish 가진 DA(임시 비밀번호가 아닌 계정)",
+      "refs": [
+        "dict.publish"
+      ],
+      "states": [
+        "dict-history.html?as=lee"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-dict-history-005",
+      "where": "머리",
+      "trigger": "영구 삭제 권한 또는 감사 로그 보기 권한이 있을 때",
+      "expected": "[영구 삭제 로그] 버튼이 보임",
+      "roles": "dict.purge 또는 audit.view 가진 계정(DA · Admin · 기관 담당자 · 감리)",
+      "refs": [
+        "dict.purge",
+        "audit.view"
+      ],
+      "states": [
+        "dict-history.html?as=lee"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-dict-history-006",
+      "where": "머리",
+      "trigger": "두 권한이 모두 없을 때",
+      "expected": "[영구 삭제 로그] 버튼이 숨겨짐",
+      "roles": "모델러 등 dict.purge · audit.view 없는 계정",
+      "refs": [
+        "dict.purge",
+        "audit.view"
+      ],
+      "states": [
+        "dict-history.html?as=park"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-dict-history-007",
+      "where": "영구 삭제 로그",
+      "trigger": "[영구 삭제 로그] 클릭",
+      "expected": "목록이 영구 삭제 로그로 바뀜: ‘영구 삭제 로그 {n}건 · 수행자·사유·근거 결재 — 항목과 개별 이력은 지워지고 이 기록과 결재 기록만 남습니다’ + [변경 내역으로]. 행은 시각 · 이름 · ID · 종류 · ‘영구 삭제’ 배지 · ‘DA · Admin’ · ‘사유: …’ · 근거 결재 링크(approvals.html?doc=) · 수행자. 없으면 ‘영구 삭제 기록이 없습니다’",
+      "roles": "dict.purge 또는 audit.view 가진 계정",
+      "refs": [
+        "dict.purge",
+        "audit.view",
+        "MD-24"
+      ],
+      "states": [
+        "dict-history.html?as=lee"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-dict-history-008",
+      "where": "영구 삭제 로그",
+      "trigger": "[변경 내역으로] 클릭",
+      "expected": "지금 조건의 변경 내역 목록으로 돌아감",
+      "roles": "dict.purge 또는 audit.view 가진 계정",
+      "refs": [
+        "audit.view"
+      ],
+      "states": [
+        "dict-history.html?as=lee"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-dict-history-009",
+      "where": "머리",
+      "trigger": "[엑셀 보고서 ({n}건)] 클릭",
+      "expected": "‘표준사전_변경내역_{기간}.xlsx — {n}건 · 필터: {기간 · 종류 · 검색}(파일 첫 줄) · 필드별 전후 · 신청번호 · 모델 사용처 수’ 알림. 버튼의 건수는 지금 목록 건수",
+      "roles": "전체",
+      "refs": [
+        "dict.view",
+        "MD-23"
+      ],
+      "states": [
+        "dict-history.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-dict-history-010",
+      "where": "도구 막대",
+      "trigger": "검색어 입력",
+      "expected": "항목 · 항목 ID · 신청번호 · 처리자를 칸별로 찾아 바로 목록이 바뀜. 검색칸에서 Esc면 검색어를 지움",
+      "roles": "전체",
+      "refs": [
+        "dict.view",
+        "MD-23"
+      ],
+      "states": [
+        "dict-history.html?q=T-0021"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-dict-history-011",
+      "where": "도구 막대",
+      "trigger": "종류 칩(전체 · 추가 · 변경 · 미사용 · 공표) 클릭",
+      "expected": "그 변경 구분을 포함하는 행만 보이고 칩이 켜짐",
+      "roles": "전체",
+      "refs": [
+        "dict.view",
+        "MD-23"
+      ],
+      "states": [
+        "dict-history.html?a=변경"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-dict-history-012",
+      "where": "도구 막대",
+      "trigger": "기간 선택",
+      "expected": "기본 ‘최근 30일’. ‘최근 7일’ · ‘최근 30일’은 오늘 기준, ‘직전 공표 이후’는 아직 공표되지 않은 변경만, ‘전체 기간’은 모두",
+      "roles": "전체",
+      "refs": [
+        "dict.view"
+      ],
+      "states": [
+        "dict-history.html",
+        "dict-history.html?unpub=1"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-dict-history-013",
+      "where": "도구 막대",
+      "trigger": "[기준 시각 비교 (W2)]",
+      "expected": "흐린 버튼, 설명 ‘W2: 두 기준 시각 비교(History로 그 시점 재구성)’",
+      "roles": "전체",
+      "refs": [],
+      "states": [
+        "dict-history.html"
+      ],
+      "verify": "exempt",
+      "exemptReason": "W2 범위 — 기준 시각 비교는 2차 기능(흐린 자리 표시만)"
+    },
+    {
+      "id": "BH-dict-history-014",
+      "where": "결과 줄",
+      "trigger": "목록이 바뀔 때",
+      "expected": "‘{n}건’(조건이 있으면 ‘{기간 안 건수}건 중 {n}건’) · 기간 이름 · ‘최근 순’ · 조건 칩 · ‘이력은 추가만 되고 지워지지 않습니다’, 화면 낭독기에 건수",
+      "roles": "전체",
+      "refs": [
+        "dict.view"
+      ],
+      "states": [
+        "dict-history.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-dict-history-015",
+      "where": "결과 줄",
+      "trigger": "조건 칩 × · [모두 지우기] 클릭",
+      "expected": "× 는 그 조건(검색 · 종류)만 지우고, [모두 지우기]는 검색 · 종류를 지우고 기간을 ‘최근 30일’로 되돌림. 다음 칩(없으면 검색칸)으로 포커스",
+      "roles": "전체",
+      "refs": [
+        "dict.view"
+      ],
+      "states": [
+        "dict-history.html?q=T-0021&a=변경"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-dict-history-016",
+      "where": "주소",
+      "trigger": "조건을 바꿀 때 / 그 주소로 열 때",
+      "expected": "검색어(q) · 종류(a) · 기간(per — 30일이면 생략, 전체는 all)이 주소에 남아 같은 목록으로 열림. ?unpub=1이면 ‘직전 공표 이후’로 열림",
+      "roles": "전체",
+      "refs": [
+        "dict.view"
+      ],
+      "states": [
+        "dict-history.html?unpub=1",
+        "dict-history.html?per=all"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-dict-history-017",
+      "where": "변경 목록",
+      "trigger": "목록을 볼 때",
+      "expected": "행마다 반영 시각 · 항목(+ 항목 ID · 사용처 수) · 종류 · 변경 배지(공표는 보라, 미사용은 회색, 그 밖은 초록) · 반영 구분(공표 · 초기 적재 · 사용자 변경 승인 · 데이터 보완) · 버전 · 내용(칸별 ‘{칸}: {이전} → {이후}’, 빈 값은 ‘(빈 값)’, 업로드 묶음 표시) · 신청 링크(approvals.html?doc=) · 처리자 · 공표 차수 또는 ‘미공표’",
+      "roles": "전체",
+      "refs": [
+        "dict.view",
+        "MD-23"
+      ],
+      "states": [
+        "dict-history.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-dict-history-018",
+      "where": "변경 목록",
+      "trigger": "변경 내역이 아예 없을 때",
+      "expected": "‘아직 변경 내역이 없습니다’ · ‘사전 신청이 최종 승인되면 항목별로 쌓입니다.’",
+      "roles": "전체",
+      "refs": [
+        "dict.view"
+      ],
+      "states": [
+        "dict-history.html"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-dict-history-019",
+      "where": "변경 목록",
+      "trigger": "검색 · 종류 조건에 맞는 행이 없을 때",
+      "expected": "‘필터에 맞는 변경이 없습니다’ + [모두 지우기]",
+      "roles": "전체",
+      "refs": [
+        "dict.view"
+      ],
+      "states": [
+        "dict-history.html?q=없는항목"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-dict-history-020",
+      "where": "변경 목록",
+      "trigger": "조건 없이 기간 안에 변경이 없을 때",
+      "expected": "‘{기간} 변경이 없습니다’ + [전체 기간 보기](기간을 ‘전체 기간’으로)",
+      "roles": "전체",
+      "refs": [
+        "dict.view"
+      ],
+      "states": [
+        "dict-history.html?per=7"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-dict-history-021",
+      "where": "주소",
+      "trigger": "?pub={차수} 또는 #pub-{차수}로 열기(감사 로그 등에서)",
+      "expected": "기간이 ‘전체 기간’으로 열리고 그 공표 행이 강조 · 가운데로 스크롤 · 포커스됨. 결과 줄에 ‘제정 {n}차 ({시각} · {처리자}) 공표 행을 표시했습니다 · 이 차수에 실린 변경 {m}건’ + [표시 지우기]. 공표 행이 목록에 없으면 그 차수의 변경 행을 강조하고 ‘이 차수에 실린 변경 {m}건을 표시했습니다’, 둘 다 없으면 ‘이 차수의 기록이 지금 목록에 없습니다(필터 또는 이전 기록)’",
+      "roles": "전체",
+      "refs": [
+        "dict.view",
+        "audit.view"
+      ],
+      "states": [
+        "dict-history.html?pub=12"
+      ],
+      "verify": "e2e"
+    }
+  ]
+}

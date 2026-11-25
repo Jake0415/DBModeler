@@ -22,6 +22,9 @@
 7. 화면 작업이 있는 단계면 main에서 `node scripts/mockup-baseline.mjs --shots`로 목업 기준 스크린샷을 만든다(저장소 제외 파일 — worktree에는 없다). 지시서에는 **절대 경로** `D:\project\DBModeler\e2e\baseline\mockups\`와 목업 기준 커밋을 적는다.
 
 ## 3. 작업 만들기
+- **단계 시작 관문(추적)** — 순서를 지킨다: ① `trace/assign.json`에서 이 단계의 묶음 이름(`P3:…`)을 실제 작업 ID로 바꾸고(01-task-list에 그 작업 행도 추가), 미배정 행 · 이 단계에 잘못 들어온 행(화면 기본값 때문에 — 예: 다른 단계 기능을 다루는 동작)을 행별로 고친다 → ② `npm run trace:extract`(배정을 고친 **뒤에** 다시 뽑는다) → ③ `npm run trace:check -- --phase <Pn> --gate start`가 통과해야 첫 배정을 한다(추적표가 입력보다 오래되면 · 없는 작업 ID · 미분해 묶음 · 미배정 · 근거 없는 제외는 실패). assign.json · requirements.json · 01-task-list 변경은 main에 커밋.
+- 제외(`verify: exempt`)는 사람 결정이 있어야 한다: assign.json 행에 `decision`(Q-n · D-nnn)과 `exemptReason`. 조정자가 혼자 기능 행을 제외하지 않는다.
+- 지시서 ‘추적 ID’에 그 작업이 덮을 행(이 작업 ID가 배정된 행 — `requirements.json`에서 `tasks`로 찾는다)을 **모두** 적는다. 검증 작업 지시서에도 같은 목록을 넘긴다.
 - 01-task-list의 작업을 `task-create --deps`로 등록한다(지시서 = [_spec-template.md](_spec-template.md)를 채운 파일, `--spec-file`).
 - **의존 조건은 작업 종류로 다르다.**
   - 구현 작업(contract · be · fe · collab · ux 목업 수정): 앞의 **계약 작업이 main에 병합된 뒤**에 띄운다(새 worktree는 main에서 만들어지므로 병합 전 계약이 없다). Orca의 `worker_done`만으로 띄우지 않는다.
@@ -92,4 +95,5 @@
 
 ## 9. 단계 끝
 - 묶음 끝: 리뷰어 반론 리뷰(읽기 전용 터미널, 지시서에 ‘반론 리뷰’) · 그 묶음의 후속 목록을 묶어 처리.
-- 단계 끝: progress에 요약(작업 수 · 회차 분포 · 보류 · 후속 · 사용량), ‘확인 필요’를 정리해 보여 주고 다음 단계로 갈지 사람에게 묻는다.
+- **단계 끝 관문(추적)**: 병합을 모두 마치고 **커밋 · push된 깨끗한 main**에서 전체 회귀 — `npm run build` · `npm test` · `npm run trace:extract`(입력이 바뀌었으면 커밋) · `npm run trace:test`(이번 실행 결과를 `.trace/runs/<시각>/`에 — vitest + Playwright, 커밋 · 변경 여부 · 입력 지문 기록) → `npm run trace:check -- --phase <Pn> --gate end --report`. 이 관문은 가장 최근 실행만 보고, 실행 커밋 ≠ HEAD · 실행 때 변경 있음 · 입력 지문 다름 · Playwright 결과 없음(e2e/ 테스트가 있을 때)이면 실패한다. **실패 행이 있으면 단계를 닫지 않는다** — 행마다 원인 작업에 수정을 보내거나(테스트 없음 = 테스트 작업, 실패 = 구현 수정), 사람 확인이 필요한 행은 결정 기록에 올린다. `trace/coverage.md`를 커밋한다.
+- 단계 끝: progress에 요약(작업 수 · 회차 분포 · 보류 · 후속 · 사용량 · **추적 통과 n / 전체 n**), ‘확인 필요’를 정리해 보여 주고 다음 단계로 갈지 사람에게 묻는다.
