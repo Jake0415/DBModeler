@@ -36,7 +36,8 @@
 - [x] 모델 확인(계획 §3.3) — 2026-11-25: `gpt-6.2-sol` · `gpt-6.2-astra` · `claude-opus-5-5` · `claude-fable-5-2` 모두 경고 없이 응답, Codex 프로젝트 기본값 Sol · medium 적용 확인
 - [x] 미커밋 목업 · 검토 문서 커밋 — 이미 커밋돼 있음(남은 것: `NeoDB-mockups-20261120.zip`·폴더, 빈 `model.html` — 사용자 판단)
 - [x] worktree 준비 스크립트(DB 이름 · API 포트) — `scripts/worktree-env.ps1`, Codex Sol 리뷰 4회(수정 3회 + 후속 2건 반영, 기각 1건: `-Drop` 뒤 기록 저장 실패 시 기록 잔존 — 다음 실행이 DB를 다시 만들 뿐 해가 없음)
-- [ ] 시험 계정 시드 · 역할별 로그인 저장 틀 · DB 초기화
+- [x] 시험 계정 시드 · DB 초기화 — `npm run db:seed:test` · `scripts/worktree-env.ps1 -Reset -Seed -TestAccounts`, 13개 계정(계획 §9.1). API 로그인 확인: 정상 4 · 임시 비밀번호 변경 요구(tdatmp) · 기한 만료(texp) · 사용 중지(tstop) 401 + 이유. Codex Sol 리뷰 3회(R-01~07: 수정 2회, 후속 F-001 · F-002, 기각 1건 — 빈 `?`/`#` 주소는 접속지가 같아 해 없음)
+- [ ] 역할별 로그인 상태 저장 틀(Playwright storageState) — web · E2E 틀이 생기는 P1로 이동. 시나리오별 빠른 초기화(시드가 끝난 DB를 TEMPLATE으로 복제)도 P1 E2E 틀에서
 - [ ] PERMS → 권한 검사 표 생성기
 - [ ] 작업 목록(기능 → 목업 → API → 테스트 대응표)
 - [ ] 목업 기준 스크린샷

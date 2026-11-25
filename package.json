@@ -14,6 +14,7 @@
     "db:generate": "npm run generate -w @neodb/db",
     "db:migrate": "npm run migrate -w @neodb/db",
     "db:seed": "npm run seed -w @neodb/db",
+    "db:seed:test": "npm run seed:test -w @neodb/db",
     "dev:api": "npm run dev -w @neodb/api"
   },
   "devDependencies": {

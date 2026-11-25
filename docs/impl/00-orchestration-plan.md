@@ -203,12 +203,13 @@ orca orchestration check --wait --types worker_done,escalation,question --timeou
 | `tda` | DA (담당 통합ERP) | 1단계 승인 · 후보 큐 · 공표 |
 | `tda2` | DA (다른 시스템) | 담당 밖 모델 결재 불가 |
 | `tmod` | 모델러 · 외주 (통합ERP, 기한 있음) | 편집 · 확정 신청, 범위 밖 403 |
-| `tmod-in` | 모델러 · 내부 | 내부 조회 범위(기관 전체) |
+| `tmodin` | 모델러 · 내부 | 내부 조회 범위(기관 전체) |
 | `town` | 기관 담당자 | 최종 승인 · 관리 변경 확인 |
 | `town2` | 기관 담당자 | 두 사람 확인 · 위임 대리인 |
 | `taud` | 감리 (기한 있음) | 읽기 전용 · 끝난 결재 · 감사 로그 |
 | `tview` | 역할 없음 | 편집 도구 숨김 · 내려받기 차단 |
-| 특수 | 기한 만료 외주 · 임시 비밀번호 DA · 사용 중지 · 겸임(모델러+DA) | 권한 없음 · 결재 잠김 · 자기 승인 규칙 |
+| `texp` · `tdatmp` · `tstop` · `tmulti` | 기한 만료 외주 · 임시 비밀번호 DA(24시간) · 사용 중지 · 겸임(모델러+DA) | 권한 없음 · 결재 잠김 · 자기 승인 규칙 |
+- 만들기: `npm run db:seed:test`(또는 `scripts/worktree-env.ps1 -TestAccounts`). 정의: `packages/db/src/scripts/seed-test.ts`. 개발 DB(localhost:55432, `neodb` · `neodb_*`)에서만 실행되고, 메일이 `@test.localhost`인 시드 계정만 다시 만든다. 공통 비밀번호 = `.env`의 `TEST_PASSWORD`(시험값).
 - 업무 영역 고정: `e_hr` = 통합ERP › 인사관리, `rq` = 요구사항관리 › 프로젝트(목업 데이터와 같게).
 - 비밀번호는 **시드의 시험값**만. 운영 설치에서는 시험 계정이 빠진다(설계 §13.6).
 

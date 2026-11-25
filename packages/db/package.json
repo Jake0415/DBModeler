@@ -8,7 +8,8 @@
     "build": "tsc -b",
     "generate": "drizzle-kit generate --config drizzle.config.ts",
     "migrate": "tsc -b && node dist/scripts/migrate.js",
-    "seed": "tsc -b && node dist/scripts/seed.js"
+    "seed": "tsc -b && node dist/scripts/seed.js",
+    "seed:test": "tsc -b && node --env-file-if-exists=../../.env dist/scripts/seed-test.js --test-accounts"
   },
   "dependencies": {
     "@neodb/domain": "0.1.0",

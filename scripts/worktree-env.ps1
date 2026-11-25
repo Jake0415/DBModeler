@@ -23,7 +23,8 @@ param(
   [switch]$Seed,          # 마이그레이션 뒤 시드도 넣는다
   [switch]$NoMigrate,     # 마이그레이션을 건너뛴다
   [switch]$Drop,          # 이 worktree의 DB와 배정 기록을 지우고 끝낸다 (worktree 정리 때)
-  [switch]$Adopt          # 배정 기록 없이 남아 있는 같은 이름의 DB를 이 worktree가 넘겨받는다
+  [switch]$Adopt,         # 배정 기록 없이 남아 있는 같은 이름의 DB를 이 worktree가 넘겨받는다
+  [switch]$TestAccounts   # 시험 계정(계획 §9.1)도 다시 만든다 — npm run db:seed:test
 )
 
 $ErrorActionPreference = 'Stop'
@@ -193,6 +194,15 @@ try {
     if ($set.Contains($k)) { $out.Add("$k=$($set[$k])"); $done[$k] = $true } else { $out.Add($l) }
   }
   foreach ($k in $set.Keys) { if (-not $done[$k]) { $out.Add("$k=$($set[$k])") } }
+  # .env.example 에만 있는 키(나중에 추가된 시험값 등)는 가져온다
+  $examplePath = Join-Path $root '.env.example'
+  if (Test-Path $examplePath) {
+    # 키 비교는 Node --env-file 처럼 앞뒤 공백 · 'export ' 접두어를 무시한다
+    $have = @{}; foreach ($l in $out) { if ($l -match '^\s*(?:export\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*=') { $have[$Matches[1]] = $true } }
+    foreach ($l in [System.IO.File]::ReadAllLines($examplePath, [System.Text.Encoding]::UTF8)) {
+      if ($l -match '^([A-Z][A-Z0-9_]*)=' -and -not $have[$Matches[1]]) { $out.Add($l) }
+    }
+  }
   # 실제로 교체에 쓸 임시 파일을 지금 써 둔다 — 여기서 실패하면 DB 는 그대로다
   $tmpEnv = "$envPath.tmp"
   [System.IO.File]::WriteAllLines($tmpEnv, $out, (New-Object System.Text.UTF8Encoding $false))
@@ -227,6 +237,10 @@ if (-not $NoMigrate) {
 if ($Seed) {
   npm run db:seed --silent
   if ($LASTEXITCODE -ne 0) { throw '시드 실패' }
+}
+if ($TestAccounts) {
+  npm run db:seed:test --silent
+  if ($LASTEXITCODE -ne 0) { throw '시험 계정 시드 실패' }
 }
 
 Write-Host ''
