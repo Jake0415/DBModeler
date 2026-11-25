@@ -344,10 +344,10 @@
   window.physOf = (code, ab, len, sc) => physBy(typeMapOf(code)[ab], typeOf(ab), len, sc);
   window.physOfDbms = (dbms, ab, len, sc) => physBy(typeRulesDefault(dbms, ab), typeOf(ab), len, sc);
   // domain name → { cls, ab, len, sc }: the trailing capitals are matched against registered abbreviations, longest first ('ID V10', '내용XML', '일시T3')
-  window.parseDomName = n => { const m = String(n || '').trim().match(/^(.*?)([A-Z]+)(\d*)(?:,(\d+))?$/); if (!m) return null; const run = m[2], abs = new Set(getTypes().map(t => t.ab)); let ab = '';
+  window.parseDomName = n => { const m = String(n || '').trim().match(/^(.*?)([A-Z]+)(\d*)(?:[,_](\d+))?$/);   /* 31: the scale separator may be ',' or '_' (naming.scaleSep); both read */ if (!m) return null; const run = m[2], abs = new Set(getTypes().map(t => t.ab)); let ab = '';
     for (let k = Math.min(3, run.length); k >= 1; k--) if (abs.has(run.slice(-k))) { ab = run.slice(-k); break; }
     if (!ab) return null; const cls = (m[1] + run.slice(0, run.length - ab.length)).trim(); return cls ? { cls, ab, len: m[3] || '', sc: m[4] || '' } : null; };
-  window.domName = (cls, ab, len, sc) => { const t = typeOf(ab); const a = t ? t.arg : ''; return cls + ab + (a === 'n' ? len : a === 'p,s' ? len + (sc ? ',' + sc : '') : a === 'f' ? (+len > 0 ? len : '') : ''); };
+  window.domName = (cls, ab, len, sc) => { const t = typeOf(ab); const a = t ? t.arg : ''; return cls + ab + (a === 'n' ? len : a === 'p,s' ? len + (sc ? getPolicy().naming.scaleSep + sc : '') : a === 'f' ? (+len > 0 ? len : '') : ''); };
   window.domPhys = (dom, code) => { const p = parseDomName(dom); if (!p) return { t: null, warn: '도메인 이름을 해석할 수 없음' }; return Object.assign({ ab: p.ab }, physOf(code, p.ab, p.len, p.sc)); };
   // usage: domains named with the abbreviation, attributes that picked the type directly (표준 외 타입)
   window.typeUsage = ab => { const doms = [...knownDomains()].filter(n => { const p = parseDomName(n); return p && p.ab === ab; }); let attrs = 0, direct = [];
@@ -791,11 +791,12 @@
     const nn = chg['단어명'] ? String(chg['단어명'][1]).trim() : d.name, na = chg['영문약어명'] ? String(chg['영문약어명'][1]).trim() : d.abbr;
     if (nn === d.name && na === d.abbr) return [];
     return getDict().filter(x => x.k === 'term' && x.ver > 0 && x.st !== '삭제 보관' && x.src !== '공통').map(t => {
-      const ent = t.kn === '엔터티 용어', head = ent ? t.name.replace(/(기본|내역|이력|관계|정보)$/, '') : t.name, dc = decompose(head);
+      const ent = t.kn === '엔터티 용어', head = ent ? t.name.replace(entitySuffixRe(), '') : t.name, dc = decompose(head);
       if (!dc.parts.some(p => p.w === d.name)) return null;
       const name = dc.parts.map(p => p.w === d.name ? nn : p.w).join('') + (ent ? t.name.slice(head.length) : '');
-      const parts = t.abbr.split('_'), i = dc.parts.findIndex(p => p.w === d.name);
-      const abbr = parts.length >= dc.parts.length ? parts.map((p, j) => (j === i && p === d.abbr) ? na : p).join('_') : t.abbr.split(d.abbr).join(na);
+      // 31 · Codex-5: the parts come from the word order (decompose), not from splitting the abbreviation — works for any separator, '' included
+      const sep = polSep(), sfx = ent ? (entitySuffixes().find(x => t.name.endsWith(x.w)) || {}).a : '', mine = dc.parts.map(p => p.abbr || '?').join(sep) + (sfx ? sep + sfx : '');
+      const abbr = mine === t.abbr ? dc.parts.map(p => p.w === d.name ? na : (p.abbr || '?')).join(sep) + (sfx ? sep + sfx : '') : t.abbr.split(d.abbr).join(na);   /* an abbreviation that is not the plain composition (old · hand-made) keeps the text replace — 직접 확인 */
       const c = {}; if (name !== t.name) c[ent ? '엔터티명' : '용어명'] = [t.name, name]; if (abbr !== t.abbr) c['영문약어명'] = [t.abbr, abbr];
       return Object.keys(c).length ? { k: ent ? 'entity' : 'term', id: t.id, name: t.name, act: '변경', chg: c, auto: d.id, from: `단어 ‘${d.name}’ 변경에 따름` } : null;
     }).filter(Boolean);
@@ -868,7 +869,7 @@
     const name = (it.name || '').trim(), k = it.k, live = x => x.ver > 0 && x.st !== '삭제 보관' && x.id !== ctx.self;   // ctx.self: a change is checked against everyone but itself
     const openNew = openItems().filter(x => opOf(x.it) === '추가');
     if (!name) { B('name', '이름이 비어 있음'); return out; }
-    if (/\s/.test(name) && k !== 'class') B('name', '이름에 공백이 있음');
+    if (k !== 'class') { const RK = k === 'entity' ? 'term' : k; if (pol.fields[RK]) itemRuleProblems(Object.assign({}, it, { k: RK }), pol).forEach(p => out.push(p)); }   /* 31: field rules from the policy (length · letters · symbols · extra conditions) */
     const sameKind = x => x.k === k || (k === 'entity' && x.k === 'term');
     if (dict.some(x => sameKind(x) && x.name === name && live(x))) B('name', `같은 이름이 사전에 있음(${dict.find(x => sameKind(x) && x.name === name && live(x)).id}) — 변경으로`);
     else if (openNew.some(x => x.it.name === name && (!x.it.k || x.it.k === k))) B('name', `${openNew.find(x => x.it.name === name).doc}에서 같은 이름을 신청 중`);
@@ -876,9 +877,8 @@
     const forb = dict.find(x => x.k === 'word' && (x.forbid || []).includes(name)); if (forb) B('name', `금칙어 — '${forb.name}'을(를) 쓰세요`);
     const abbr = (it.abbr || '').trim();
     if (k === 'word') {
-      const lim = pol.wordAbbr || 6;
       if (!abbr) B('abbr', '영문약어명이 비어 있음');
-      else { if (!/^[A-Z][A-Z0-9]*$/.test(abbr)) B('abbr', '영문약어명은 대문자 · 숫자, 숫자로 시작 불가'); if (abbr.length > lim) B('abbr', `영문약어명 ${lim}자 초과(검수 기준 v${pol.ver})`);
+      else {   /* format · length come from the field rule above (31) */
         const same = dict.find(x => x.k === 'word' && x.abbr === abbr && x.name !== name && live(x)) || batch.find(b => b.k === 'word' && b.abbr === abbr && b.name !== name);
         if (same) B('abbr', `약어 ${abbr}${josa(abbr, '을/를').slice(-1)} '${same.name}'${josa(same.name, '이/가').slice(-1)} 씀`);
         else { const sim = dict.find(x => x.k === 'word' && live(x) && x.abbr !== abbr && abbr.length >= 3 && (x.abbr.startsWith(abbr.slice(0, 4)) || abbr.startsWith(x.abbr.slice(0, 4)))); if (sim) Wn('abbr', `비슷한 약어 ${sim.name} ${sim.abbr} — 다르면 중복 허용 사유`); } }
@@ -886,18 +886,19 @@
       [...(it.syn || []), ...(it.forbid || [])].forEach(s => { if (dict.some(x => x.k === 'word' && live(x) && (x.name === s || (x.syn || []).includes(s) || (x.forbid || []).includes(s)))) B('syn', `동의어 · 금칙어 '${s}'가 다른 단어와 겹침`); });
     }
     if (k === 'term' || k === 'entity') {
-      const dc = decompose(k === 'entity' ? name.replace(/(기본|내역|이력|관계|정보)$/, '') : name, batch.filter(b => b.k === 'word'));
+      const dc = decompose(k === 'entity' ? name.replace(entitySuffixRe(pol), '') : name, batch.filter(b => b.k === 'word'));
       const unk = dc.parts.filter(p => p.unknown).map(p => p.w), pend = dc.parts.filter(p => !p.unknown && !p.ok && !batch.some(b => b.k === 'word' && b.name === p.w)).map(p => p.w);
       if (unk.length) B('name', `미등록 단어: ${unk.join(', ')} — 단어를 같이 작성하세요`);
       if (pend.length) Wn('name', `승인 전 단어: ${pend.join(', ')}`);
-      if (dc.sus) Wn('name', '1음절 분해 의심 — 단어 구성을 확인하세요');
-      const want = dc.parts.map(p => p.abbr || '?').join('_') + (k === 'entity' ? (({ 기본: '_M', 내역: '_D', 이력: '_H', 관계: '_R', 정보: '_I' })[(name.match(/(기본|내역|이력|관계|정보)$/) || [])[1]] || '') : '');
-      if (abbr && !unk.length && abbr !== want) B('abbr', `영문약어명은 단어 약어 조합 ${want}여야 함`);
-      if (abbr.length > 30) B('abbr', `영문약어명 ${abbr.length}자 — 30자 초과(대상 DBMS)`);
+      const NL = pol.naming, sep = NL.sep, LV = (lvl, f, msg, rule) => { if (lvl !== 'off') out.push({ f, msg, lvl, rule, ver: pol.ver }); };   /* 31: naming rules with their own level */
+      if (dc.sus) LV(NL.splitSuspectLvl, 'name', '한 글자 단어로 잘게 쪼개진 것 같음(1음절 분해 의심) — 단어 구성을 확인하세요', 'naming.splitSuspect');
+      const sfx = k === 'entity' ? (entitySuffixes(pol).find(x => name.endsWith(x.w)) || {}).a : '';
+      const want = dc.parts.map(p => p.abbr || '?').join(sep) + (sfx ? sep + sfx : '');
+      if (abbr && !unk.length && abbr !== want) LV(NL.composeLvl, 'abbr', `영문약어명은 단어 약어 조합 ${want}여야 함`, 'naming.compose');
       if (k === 'term') { const dom = (it.dom || '').trim(); if (!dom) B('dom', '도메인이 비어 있음'); else if (!knownDomains().has(dom) && !batch.some(b => b.k === 'domain' && b.name === dom)) B('dom', `도메인 '${dom}'이 사전에 없음`);
-        const last = dc.parts.slice(-1)[0], fws = formatWords().concat(batch.filter(b => b.k === 'word' && b.fmt === 'Y').map(b => b.name)); if (last && !fws.includes(last.w)) Wn('name', `형식단어로 끝나지 않음(끝 단어 '${last.w}')`);
+        const last = dc.parts.slice(-1)[0], fws = formatWords().concat(batch.filter(b => b.k === 'word' && b.fmt === 'Y').map(b => b.name)); if (last && !fws.includes(last.w)) LV(NL.endsWithFormatWordLvl, 'name', `형식단어로 끝나지 않음(끝 단어 '${last.w}')`, 'naming.endsWithFormatWord');
         else if (last && dom) { const c = classOfFw(last.w); if (c && !dom.startsWith(c.name) && !dom.startsWith(last.w)) Wn('dom', `끝 단어 '${last.w}'의 분류는 '${c.name}' — 도메인 ${dom}과 다름`); } }
-      if (k === 'entity' && !/(기본|내역|이력|관계|정보)$/.test(name)) Wn('name', '엔터티 분류어(기본 · 내역 · 이력 · 관계 · 정보)로 끝나지 않음');
+      if (k === 'entity' && !entitySuffixRe(pol).test(name)) LV(pol.model.entitySuffixLvl, 'name', `엔터티 분류어(${entitySuffixes(pol).map(x => x.w).join(' · ')})로 끝나지 않음`, 'naming.entitySuffix');
     }
     if (k === 'domain') {
       const pd = parseDomName(name), m = pd && [name, pd.cls, pd.ab, pd.len, pd.sc];   /* 27: abbreviations come from the type registry */
@@ -959,7 +960,7 @@
       if (forbid && op !== '미사용') res.problems.push(`금칙어 '${forbid.forbid.find(f => name.includes(f))}' 포함 — '${forbid.name}' 사용`);
       if (it.rej) { res.problems = []; res.skip = '항목 반려'; out.push(res); return; }   // DX-12: a rejected item is no longer judged
       // the shared item check (same rules as the form, the screen grid and the excel validation); the rest below adds doc-level checks
-      if (op === '추가') checkItem(Object.assign({}, it, { k: k || it.k }), { batch: (doc.items || []).filter(o => o !== it && !o.rej && opOf(o) === '추가') }).filter(p => p.lvl === 'block' && !/신청 중|사전에 있음/.test(p.msg)).forEach(p => res.problems.push(p.msg));
+      if (op === '추가') checkItem(Object.assign({}, it, { k: k || it.k }), { batch: (doc.items || []).filter(o => o !== it && !o.rej && opOf(o) === '추가') }).filter(p => p.lvl === 'block' && !/신청 중|사전에 있음/.test(p.msg) && !(doc.kind === 'common' && p.rule)).forEach(p => res.problems.push(p.msg));   /* Q4: a common edition skips the organisation's rules (p.rule); duplicates · references stay */
       if (op === '추가' && k === 'code') {
         const vals = it.vals || [], len = +(String(it.dom || '').match(/\d+$/) || [0])[0];
         if (!vals.length) res.problems.push('코드값이 없음');
@@ -969,14 +970,12 @@
       }
       if (op === '추가' && (k === 'term' || k === 'entity')) {
         if (it.dom && !knownDomains().has(it.dom) && !(doc.items || []).some(o => o.k === 'domain' && o.name === it.dom && !o.rej && opOf(o) === '추가')) res.problems.push(`도메인 '${it.dom}'이 사전에 없음`);
-        if ((it.abbr || '').length > 30) res.problems.push(`영문약어명 ${it.abbr.length}자 — 30자 초과(대상 DBMS 기준)`);
         { const dc = decompose(name, (doc.items || []).filter(o => o.k === 'word' && !o.rej && opOf(o) === '추가')); const inDoc = w => (doc.items || []).some(o => o.k === 'word' && o.name === w && !o.rej);
           const pend = dc.pending.filter(p => !inDoc(p.w)); if (pend.length) res.problems.push(`구성 단어 미승인: ${pend.map(p => p.w + (p.doc ? `(${p.doc} 진행 중)` : '')).join(', ')}`);
           /* unknown words and the abbreviation rule come from checkItem above */ }
       }
       if (op === '추가') {
         if (k === 'word' && !(it.abbr || '').trim()) res.problems.push('영문약어명이 비어 있음');
-        { const lim = (window.getPolicy ? getPolicy().wordAbbr : 0) || 6; if (k === 'word' && (it.abbr || '').length > lim) res.problems.push(`단어 영문약어명 ${lim}자 초과(검수 기준)`); }
         const same = dict.find(x => x.name === name && (!k || x.k === k) && x.ver > 0);
         if (same) res.problems.push(`같은 이름의 ${same.kn}${josa(same.kn, '이/가').slice(-1)} 이미 있음(${same.id} · ${same.src}) — 변경 신청으로`);
         const o = open.find(x => x.it.name === name && (!x.it.k || !k || x.it.k === k) && opOf(x.it) === '추가');
@@ -1007,6 +1006,7 @@
           if (op === '변경' && nn) { const nv = String(nn[1][1]).trim(); if (dict.some(x => x.id !== d.id && x.k === d.k && x.name === nv && x.ver > 0)) res.problems.push(`새 이름 '${nv}'이 이미 있음`); }
           // the FINAL values of a change pass the same item rules as a new item (only for the fields that change; the item itself is excluded from duplicate checks)
           if (op === '변경' && it.chg) { const merged = mergedOf(d, it), kk = d.kn === '엔터티 용어' ? 'entity' : d.k, fields = Object.keys(it.chg).map(l => FIELD[l] || l);
+            if (fields.includes('name')) fields.push('abbr'); if (fields.includes('abbr') && (kk === 'term' || kk === 'entity')) fields.push('name');   // 31 · Codex-2: the fields a change drags along (a renamed term's composed abbreviation)
             // only problems the change INTRODUCES: a rule the stored item already broke (legacy abbreviation) is not blamed on this change
             const sig = p => p.f + '|' + p.msg.replace(/[A-Z0-9_]+/g, '#'), batchO = (doc.items || []).filter(o => o !== it && !o.rej);
             const before = new Set(checkItem(Object.assign({}, d, { k: kk }), { self: d.id }).filter(p => p.lvl === 'block').map(sig));
@@ -1157,8 +1157,121 @@
   window.saveProjects = L => S('dbm-projects', L);
 
   /* ---- validation policy (검수 기준) with a version number — documents and upload validations remember the version they were checked with ---- */
-  window.getPolicy = () => J('dbm-policy', { ver: 3, at: '2026-11-10 09:00', by: '이데이터', hist: [{ ver: 3, at: '2026-11-10 09:00', by: '이데이터', what: '용어 영문약어명 상한 30자(Oracle 기준)' }, { ver: 2, at: '2026-10-20 14:00', by: '이데이터', what: '단어 영문약어명 6자 이내' }] });
+  /* 31 검수 기준 2차 — policy v2: per kind × field rules + naming rules + model name rules. schemaVersion (storage shape) is not ver (policy content).
+     Rule = { lvl: block|warn|off, max|null, min|null, chars: [...]|null (null = any letter kind, [] = none), special: []|[chars]|'all', noLeadDigit, noDoubleSep, noReserved }
+     fixed checks (required · duplicates · dictionary references · types · code value integrity) are not here and can't be switched off */
+  const RULE = o => Object.assign({ lvl: 'block', max: null, min: null, chars: null, special: [], noLeadDigit: false, noDoubleSep: false, noReserved: false }, o);
+  const PHYS = () => RULE({ max: 30, chars: ['upper', 'digit'], special: ['_'], noLeadDigit: true, noDoubleSep: true, noReserved: true });
+  window.POLICY_DEFAULT = () => ({
+    schemaVersion: 2, dbms: 'oracle',
+    fields: {
+      word: { name: RULE({ chars: ['hangul', 'upper', 'lower', 'digit'] }), abbr: RULE({ max: 6, chars: ['upper', 'digit'], noLeadDigit: true }), eng: RULE({ lvl: 'warn', max: 100, chars: ['upper', 'lower', 'space'] }), desc: RULE({ lvl: 'warn', max: 1000, special: 'all' }) },
+      domain: { name: RULE({ chars: ['hangul', 'upper', 'digit'], special: [','] }), desc: RULE({ lvl: 'warn', max: 1000, special: 'all' }) },
+      term: { name: RULE({ chars: ['hangul', 'upper', 'lower', 'digit'] }), abbr: RULE({ max: 30, chars: ['upper', 'digit'], special: ['_'], noLeadDigit: true, noDoubleSep: true, noReserved: true }), desc: RULE({ lvl: 'warn', max: 1000, special: 'all' }) },
+      code: { abbr: RULE({ max: 30, chars: ['upper', 'digit'], special: ['_'], noLeadDigit: true }), name: RULE({ max: 100, chars: ['hangul', 'upper', 'lower', 'digit'] }), value: RULE({ lvl: 'warn', chars: ['upper', 'lower', 'digit'], special: ['_'] }), valueName: RULE({ max: 100, chars: ['hangul', 'upper', 'lower', 'digit', 'space'], special: ['(', ')'] }) }
+    },
+    model: { entity: { name: RULE({ chars: ['hangul', 'upper', 'lower', 'digit'] }), phys: PHYS() }, attr: { name: RULE({ chars: ['hangul', 'upper', 'lower', 'digit'] }), phys: PHYS() },
+      entitySuffix: [{ w: '기본', a: 'M' }, { w: '내역', a: 'D' }, { w: '이력', a: 'H' }, { w: '관계', a: 'R' }, { w: '정보', a: 'I' }], entitySuffixLvl: 'warn' },
+    naming: { sep: '_', composeLvl: 'block', endsWithFormatWordLvl: 'warn', splitSuspectLvl: 'warn', scaleSep: ',' }
+  });
+  const POL_HIST0 = [{ ver: 3, at: '2026-11-10 09:00', by: '이데이터', what: '용어 영문약어명 상한 30자(Oracle 기준)' }, { ver: 2, at: '2026-10-20 14:00', by: '이데이터', what: '단어 영문약어명 6자 이내' }];
+  // old stored values (v1 shape: { ver, wordAbbr?, hist }) are read into v2: no value → defaults · no wordAbbr → 6 · wordAbbr → fields.word.abbr.max
+  const polMerge = (base, o) => { if (!o || typeof o !== 'object') return base; Object.keys(base).forEach(k => { if (!(k in o)) return; const b = base[k], v = o[k];
+    base[k] = b && typeof b === 'object' && !Array.isArray(b) && v && typeof v === 'object' && !Array.isArray(v) ? polMerge(b, v) : v; }); return base; };
+  window.policyFrom = raw => { raw = raw || {}; const p = POLICY_DEFAULT();
+    if (raw.schemaVersion === 2) polMerge(p, raw); else if (raw.wordAbbr) p.fields.word.abbr.max = +raw.wordAbbr;
+    p.ver = raw.ver || 3; p.at = raw.at || '2026-11-10 09:00'; p.by = raw.by || '이데이터'; p.hist = raw.hist || POL_HIST0; p.bodies = raw.bodies || {}; p.props = raw.props || [];
+    Object.defineProperty(p, 'wordAbbr', { get() { return p.fields.word.abbr.max || 0; }, enumerable: false });   // old readers
+    return p; };
+  window.getPolicy = () => policyFrom(J('dbm-policy', null));
   window.savePolicy = p => S('dbm-policy', p);
+  // the policy a version was checked with: the stored body of that version, else (v2 · v3 before 31) the defaults with that version's word limit
+  window.policyAt = ver => { const p = getPolicy(); if (!ver || ver === p.ver) return p; const b = p.bodies[ver]; if (b) return policyFrom(Object.assign({ schemaVersion: 2 }, b, { ver, hist: p.hist }));
+    const h = p.hist.filter(x => x.ver <= ver).map(x => (String(x.what).match(/단어 영문약어명[^\d]*(\d+)자/) || [])[1]).find(Boolean);   // the last word limit the history names up to that version
+    const r = policyFrom({ ver, wordAbbr: +h || 6, hist: p.hist }); r.restored = true; return r; };   /* Codex-impl-7: no stored body → rebuilt, shown as such */
+  window.POL_KIND = { word: '단어', domain: '도메인', term: '용어', code: '코드', entity: '엔터티(모델)', attr: '속성(모델)' };
+  window.POL_FIELD = { word: { name: '단어명', abbr: '단어 영문약어명', eng: '영문명', desc: '설명' }, domain: { name: '도메인명', desc: '설명' }, term: { name: '용어명', abbr: '용어 영문약어명', desc: '설명' },
+    code: { abbr: '영문 코드명', name: '코드명', value: '코드값', valueName: '코드값명' }, entity: { name: '엔터티명', phys: '테이블명(물리)' }, attr: { name: '속성명', phys: '컬럼명(물리)' } };
+  window.POL_CHARS = { hangul: ['한글', /^[가-힣ㄱ-ㅎㅏ-ㅣ]$/], upper: ['영문 대문자', /^[A-Z]$/], lower: ['영문 소문자', /^[a-z]$/], digit: ['숫자', /^[0-9]$/], space: ['공백', /^ $/] };
+  window.POL_LVL = { block: '막기', warn: '경고만', off: '검사 안 함' };
+  window.POL_SPECIAL_CHIPS = [['_', '밑줄'], ['-', '하이픈'], ['/', '빗금'], [',', '쉼표'], ['.', '마침표'], ['(', '여는 괄호'], [')', '닫는 괄호'], ['&', '앰퍼샌드']];
+  const isSym = c => /^[\p{P}\p{S}]$/u.test(c);
+  window.polRule = (pol, k, f) => k === 'entity' || k === 'attr' ? pol.model[k][f] : (pol.fields[k] || {})[f];
+  // a rule as words: "영문 대문자 · 숫자 · 기호 _ -" (UX-03: null / [] / 'all' never shown as such)
+  window.ruleCharsText = r => { const c = r.chars == null ? ['글자 종류 제한 없음'] : r.chars.map(x => POL_CHARS[x][0]);
+    const s = r.special === 'all' ? '모든 기호(공백 · 외국 글자 제외)' : r.special.length ? '기호 ' + r.special.join(' ') : '';
+    return [...c, s].filter(Boolean).join(' · ') || '허용 글자 없음'; };
+  window.ruleExtraText = r => [r.noLeadDigit && '숫자로 시작 금지', r.noDoubleSep && '기호 연속 금지', r.noReserved && 'DB가 쓰는 낱말 금지', r.min && `최소 ${r.min}자`].filter(Boolean).join(' · ') || '—';
+  const RESERVED = { oracle: 'ACCESS ADD ALL ALTER AND ANY AS ASC AUDIT BETWEEN BY CHAR CHECK CLUSTER COLUMN COMMENT COMPRESS CONNECT CREATE CURRENT DATE DECIMAL DEFAULT DELETE DESC DISTINCT DROP ELSE EXCLUSIVE EXISTS FILE FLOAT FOR FROM GRANT GROUP HAVING IDENTIFIED IMMEDIATE IN INCREMENT INDEX INITIAL INSERT INTEGER INTERSECT INTO IS LEVEL LIKE LOCK LONG MAXEXTENTS MINUS MODE MODIFY NOT NULL NUMBER OF OFFLINE ON ONLINE OPTION OR ORDER PRIOR PUBLIC RAW RENAME RESOURCE REVOKE ROW ROWID ROWNUM ROWS SELECT SESSION SET SHARE SIZE SMALLINT START SYNONYM SYSDATE TABLE THEN TO TRIGGER UID UNION UNIQUE UPDATE USER VALIDATE VALUES VARCHAR VARCHAR2 VIEW WHENEVER WHERE WITH',
+    postgresql: 'ALL ANALYSE ANALYZE AND ANY ARRAY AS ASC ASYMMETRIC BOTH CASE CAST CHECK COLLATE COLUMN CONSTRAINT CREATE CURRENT_DATE CURRENT_ROLE CURRENT_TIME CURRENT_TIMESTAMP CURRENT_USER DEFAULT DEFERRABLE DESC DISTINCT DO ELSE END EXCEPT FALSE FETCH FOR FOREIGN FROM GRANT GROUP HAVING IN INITIALLY INTERSECT INTO LATERAL LEADING LIMIT LOCALTIME LOCALTIMESTAMP NOT NULL OFFSET ON ONLY OR ORDER PLACING PRIMARY REFERENCES RETURNING SELECT SESSION_USER SOME SYMMETRIC TABLE THEN TO TRAILING TRUE UNION UNIQUE USER USING VARIADIC WHEN WHERE WINDOW WITH' };
+  window.isReserved = (v, dbms) => new Set(RESERVED[dbms || 'oracle'].split(' ')).has(String(v).toUpperCase());
+  /* ONE field-rule judge for every screen: [{ f, rule, k, lvl, msg, ver }] — an 'off' rule says nothing (it neither passes nor fails, Q2) */
+  window.ruleProblems = (k, f, value, pol, o = {}) => {
+    pol = pol || getPolicy(); const r = polRule(pol, k, f), out = []; if (!r || r.lvl === 'off') return out;
+    const v = String(value == null ? '' : value).trim().normalize('NFC'); if (!v || v === '—') return out;
+    const L = (POL_FIELD[k] || {})[f] || f, tag = `(검수 기준 v${pol.ver})`, P = (rule, msg) => out.push({ f: o.f || f, rule: `${k}.${f}.${rule}`, k, field: f, lvl: r.lvl, msg: `${msg}${tag}`, ver: pol.ver });
+    const len = Array.from(v).length;
+    if (r.max && len > r.max) P('max', `${L} ${len}자 — ${r.max}자 초과`);
+    if (r.min && len < r.min) P('min', `${L} ${len}자 — ${r.min}자 이상`);
+    const chars = Array.from(v);
+    if (/\s/.test(v) && !(r.chars == null || r.chars.includes('space'))) P('space', `${L}에 공백이 있음`);
+    const bad = [...new Set(chars.filter(c => !/\s/.test(c) && (isSym(c) ? !(r.special === 'all' || r.special.includes(c)) : !(r.chars == null || r.chars.some(x => POL_CHARS[x][1].test(c))))))];
+    if (bad.length) P('chars', `${L}에 쓸 수 없는 글자 ${bad.slice(0, 5).join(' ')} — 허용: ${ruleCharsText(r)}`);
+    if (r.noLeadDigit && /^[0-9]/.test(v)) P('lead', `${josa(L, '은/는')} 숫자로 시작할 수 없음`);
+    if (r.noDoubleSep) { const m = v.match(/([\p{P}\p{S}])\1/u); if (m) P('double', `${L}에 기호 ${m[0]} 연속`); }
+    if (r.noReserved && isReserved(v, o.dbms || pol.dbms)) P('reserved', `${L} '${v}'은(는) ${(o.dbms || pol.dbms) === 'postgresql' ? 'PostgreSQL' : 'Oracle'}이 쓰는 낱말(예약어)`);
+    return out; };
+  // the field checks of a whole item (the fields the item kind has)
+  window.itemRuleProblems = (it, pol) => { pol = pol || getPolicy(); const k = it.k === 'entity' ? 'term' : it.k; const F = { word: { name: it.name, abbr: it.abbr, eng: it.eng, desc: it.desc }, domain: { name: it.name, desc: it.desc }, term: { name: it.name, abbr: it.abbr, desc: it.desc }, code: { abbr: it.abbr, name: it.name } }[k];
+    if (!F) return []; const out = Object.entries(F).flatMap(([f, v]) => ruleProblems(k, f, v, pol));
+    if (k === 'code') (it.vals || []).forEach(x => { out.push(...ruleProblems('code', 'value', x.v, pol, { f: 'vals' }), ...ruleProblems('code', 'valueName', x.nm, pol, { f: 'vals' })); });
+    return out; };
+  // Q4: the imported common standard is not judged by the organisation's format rules (a grey "기관 기준 예외" badge instead)
+  window.policyExempt = d => !!d && d.src === '공통';
+  // naming helpers — term / entity abbreviations are joined with the policy separator; parts are split back by it (no separator → by the known word abbreviations)
+  window.polSep = pol => (pol || getPolicy()).naming.sep;
+  window.joinAbbr = (parts, pol) => parts.join(polSep(pol));
+  window.splitAbbr = (abbr, n, pol) => { const s = polSep(pol); return s ? String(abbr).split(s) : null; };
+  window.entitySuffixes = pol => (pol || getPolicy()).model.entitySuffix.filter(x => x.w);
+  window.entitySuffixRe = pol => new RegExp(`(${entitySuffixes(pol).map(x => x.w).join('|') || '\\uFFFF'})$`);
+  // an abbreviation as the policy keeps it: upper-cased only when the field does not allow lower case letters (no forced upper case otherwise)
+  window.abbrCase = (v, k = 'word') => { const r = polRule(getPolicy(), k, 'abbr'); v = String(v == null ? '' : v); return r && r.chars && !r.chars.includes('lower') ? v.toUpperCase() : v; };
+  /* settings that fight each other — caught before saving (UX-01). lvl block → the save button stays off */
+  window.policyConflicts = pol => { const out = [], F = pol.fields, sep = pol.naming.sep, X = (lvl, msg, k, f) => out.push({ lvl, msg, k, f });
+    const lacks = (r, c) => r.special !== 'all' && !r.special.includes(c);
+    if (sep && F.term.abbr.lvl !== 'off' && lacks(F.term.abbr, sep)) X('block', `단어 사이 기호 ‘${sep}’를 용어 영문약어명이 허용하지 않습니다 — 모든 용어 약어가 막힙니다`, 'term', 'abbr');
+    const quoted = c => !['_', '$', '#'].includes(c);   // DB identifiers without quotes take letters · digits · _ $ #
+    ['entity', 'attr'].forEach(k => { const r = pol.model[k].phys; if (!sep || r.lvl === 'off' || !lacks(r, sep)) return;
+      if (quoted(sep)) X('warn', `단어 사이 기호 ‘${sep}’는 DB에서 따옴표가 필요해 ${POL_FIELD[k].phys}에는 쓸 수 없습니다 — 사전 용어 약어에만 쓰이고, 물리명은 ‘_’로 이어야 표준 맞추기 · DDL을 통과합니다`, null, null);
+      else X('block', `단어 사이 기호 ‘${sep}’를 ${POL_FIELD[k].phys}이 허용하지 않습니다`, k, 'phys'); });
+    const wa = F.word.abbr, ta = F.term.abbr;
+    if (ta.lvl !== 'off' && ta.chars) { const miss = (wa.chars || Object.keys(POL_CHARS)).filter(c => c !== 'space' && !ta.chars.includes(c)); if (miss.length) X('block', `단어 영문약어명은 ${miss.map(c => POL_CHARS[c][0]).join(' · ')}를 허용하는데 용어 영문약어명은 막습니다 — 그 단어로 만든 용어가 모두 막힙니다`, 'term', 'abbr'); }
+    if (ta.lvl !== 'off' && (wa.special === 'all' ? ta.special !== 'all' : wa.special.some(c => lacks(ta, c)))) X('block', `단어 영문약어명이 허용하는 기호를 용어 영문약어명이 막습니다`, 'term', 'abbr');
+    if (wa.max && ta.max && wa.max * 4 + 3 > ta.max) X('warn', `단어 약어 ${wa.max}자 × 4개 + 기호면 ${wa.max * 4 + 3}자 — 용어 약어 상한 ${ta.max}자를 넘을 수 있습니다`, 'term', 'abbr');
+    const dl = pol.dbms === 'postgresql' ? 63 : 30;
+    ['entity', 'attr'].forEach(k => { const r = pol.model[k].phys, nm = POL_FIELD[k].phys; if (r.lvl === 'off') return;
+      const q = r.special === 'all' ? ['모든 기호'] : r.special.filter(c => !['_', '$', '#'].includes(c)); if (q.length || (r.chars == null || r.chars.includes('space') || r.chars.includes('hangul'))) X('block', `${nm}에 DB에서 따옴표가 필요한 글자(${[...q, ...(r.chars == null ? ['모든 글자'] : r.chars.filter(c => ['space', 'hangul'].includes(c)).map(c => POL_CHARS[c][0]))].join(' · ')})를 허용했습니다 — 물리명에는 쓸 수 없습니다(Q5)`, k, 'phys');
+      if (r.max && r.max > dl) X('warn', `${nm} ${r.max}자는 ${pol.dbms === 'postgresql' ? 'PostgreSQL' : 'Oracle'} 상한 ${dl}자보다 깁니다`, k, 'phys'); });
+    if (ta.max && ta.max > dl) X('warn', `용어 영문약어명 ${ta.max}자는 대상 DB 상한 ${dl}자보다 깁니다 — 컬럼명으로 쓸 때 잘립니다`, 'term', 'abbr');
+    return out; };
+  // rules switched off — shown next to every compliance rate (Q2)
+  window.offRules = pol => { pol = pol || getPolicy(); const L = [];
+    Object.entries(pol.fields).forEach(([k, fs]) => Object.entries(fs).forEach(([f, r]) => { if (r.lvl === 'off') L.push(`${POL_KIND[k]} ${POL_FIELD[k][f]}`); }));
+    ['entity', 'attr'].forEach(k => Object.entries(pol.model[k]).forEach(([f, r]) => { if (r.lvl === 'off') L.push(`${POL_FIELD[k][f]}`); }));
+    const N = { composeLvl: '용어 약어 = 단어 약어 조합', endsWithFormatWordLvl: '형식단어로 끝남', splitSuspectLvl: '한 글자 단어로 잘게 쪼개짐' };
+    Object.entries(N).forEach(([key, n]) => { if (pol.naming[key] === 'off') L.push(n); }); if (pol.model.entitySuffixLvl === 'off') L.push('엔터티 분류어 접미');
+    return L; };
+  window.offRulesHtml = pol => { const L = offRules(pol); return L.length ? `<a class="caption muted" href="rules.html?f=off" title="${L.join(' · ')}">검사 안 함 규칙 ${L.length}개</a>` : ''; };
+  // model names judged again by the policy (P4) — a stored 'ok' is not trusted on its own
+  window.attrRuleProblems = (a, pol, dbms) => { pol = pol || getPolicy(); if (!a || a.s === 'na' || a.edit) return [];
+    return [...ruleProblems('attr', 'name', a.n, pol, { f: 'n', dbms }), ...ruleProblems('attr', 'phys', a.p, pol, { f: 'p', dbms })]; };
+  window.entRuleProblems = (e, pol, dbms) => { pol = pol || getPolicy(); if (!e || e.ref) return [];
+    const out = [...ruleProblems('entity', 'name', e.n, pol, { f: 'n', dbms }), ...ruleProblems('entity', 'phys', e.p, pol, { f: 'p', dbms })];
+    const lvl = pol.model.entitySuffixLvl; if (lvl !== 'off' && e.n && !entitySuffixRe(pol).test(e.n)) out.push({ f: 'n', rule: 'naming.entitySuffix', k: 'entity', field: 'name', lvl, msg: `엔터티 분류어(${entitySuffixes(pol).map(x => x.w).join(' · ')})로 끝나지 않음(검수 기준 v${pol.ver})`, ver: pol.ver });
+    return out; };
+  // "기준: 필드 · 규칙 · 검수 기준 vN [기준 보기]" (UX-02) — the link opens the rule line (highlighted); an old version opens read-only
+  window.ruleLink = (p, label = '기준 보기') => { if (!p || !p.rule) return ''; const [k, f] = p.rule.split('.'); const q = k === 'naming' ? 'sec=naming' : `k=${k}&f=${f}`;
+    return `<a class="rule-ref" href="rules.html?${q}${p.ver && p.ver !== getPolicy().ver ? '&v=' + p.ver : ''}">${label}</a>`; };
   window.dictRev = () => getChanges().length;   // a cheap "dictionary changed" marker for validation tokens
 
   /* ---- word decomposition for analysis (term names → standard words). Common words are seeded here for the mockup ---- */
@@ -1189,7 +1302,7 @@
       if (k) { if (unknown) { parts.push({ w: unknown, unknown: true }); unknown = ''; } parts.push(cur(k)); i += k.length; } else { unknown += name[i]; i++; } }
     if (unknown) parts.push({ w: unknown, unknown: true });
     const unk = parts.filter(p => p.unknown), pend = parts.filter(p => !p.unknown && !p.ok);
-    return { parts, unknown: unk, pending: pend, abbr: parts.map(p => p.abbr || '?').join('_'), ok: !unk.length && !pend.length, sus: parts.some(p => !p.unknown && p.w.length === 1 && !['명', '자'].includes(p.w)) };
+    return { parts, unknown: unk, pending: pend, abbr: parts.map(p => p.abbr || '?').join(polSep()), ok: !unk.length && !pend.length, sus: parts.some(p => !p.unknown && p.w.length === 1 && !['명', '자'].includes(p.w)) };
   };
   window.knownDomains = () => new Set(getDict().filter(x => x.k === 'domain' && x.ver > 0 && x.st === '사용').map(x => x.name).concat(['연월일C8', '명V100', 'ID V10', '코드C1', '코드C2', '여부C1', '내용V1000', '금액N15', '일련번호N10', '일시T', '엔터티 용어', '엔터티']));
 
@@ -1297,7 +1410,8 @@
   window.reqEnded = m => { if (!m) return []; const docs = getDocs(); const out = []; m.E.forEach(e => e.a.forEach(a => { if (a.s !== 'req' || !a.reqDoc) return; const d = docs.find(x => x.id === a.reqDoc); if (d && ['rejected', 'withdrawn'].includes(d.step)) out.push(`${e.n}.${a.n}(${d.id} ${STEP_NAME[d.step]})`); }));
     m.E.forEach(e => { if (!e.st || !e.reqDoc) return; const d = docs.find(x => x.id === e.reqDoc); if (d && ['rejected', 'withdrawn'].includes(d.step)) out.push(`${e.n} 엔터티 용어(${d.id} ${STEP_NAME[d.step]})`); }); return out; };
   /* compliance of a model copy — the model screen, system ERD and outputs use this one formula (CX15-04/05) */
-  window.compOf = m => { let tot = 0, ok = 0, bad = 0, ex = 0, na = 0, req = 0; (m ? m.E : []).forEach(e => { if (e.ref) return; tot++; if (e.p === '—') bad++; else ok++; e.a.forEach(a => { if (a.edit) return; if (a.s === 'na') { na++; return; } tot++; if (a.s === 'ok') ok++; else if (a.s === 'ex') { ok++; ex++; } else if (a.s === 'req') { ok++; req++; } else bad++; }); }); return { rate: tot ? Math.floor(ok / tot * 100) : 0, bad, ex, na, req, tot }; };
+  /* Q2 (31): compliance counts items — the denominator stays; each item is judged by the rules that are ON (an 'off' rule neither passes nor fails it) */
+  window.compOf = m => { let tot = 0, ok = 0, bad = 0, ex = 0, na = 0, req = 0, rule = 0; const pol = getPolicy(), RB = ps => ps.some(p => p.lvl === 'block'); (m ? m.E : []).forEach(e => { if (e.ref) return; tot++; if (e.p === '—') bad++; else if (RB(entRuleProblems(e, pol))) { bad++; rule++; } else ok++; e.a.forEach(a => { if (a.edit) return; if (a.s === 'na') { na++; return; } tot++; if ((a.s === 'ok' || a.s === 'req') && RB(attrRuleProblems(a, pol))) { bad++; rule++; } else if (a.s === 'ok') ok++; else if (a.s === 'ex') { ok++; ex++; } else if (a.s === 'req') { ok++; req++; } else bad++; }); }); return { rate: tot ? Math.floor(ok / tot * 100) : 0, bad, ex, na, req, tot, rule, off: offRules(pol).length }; };
   /* '영역 화면' menu (resolution-tree-menu): the one place to move between the area's four screens — next to the path in the page head.
      links (navigation, not toggles) with icon + label; the current screen is shown pressed + aria-current="page"; the 미준수 badge counts the
      WORK COPY (the 표준 맞추기 target) and hides at 0; snapshots keep &snap= on 모델 · DDL · 산출물 */
@@ -1332,7 +1446,8 @@
     let n = a.querySelector('.anav-n'); if (!bad) { if (n) n.remove(); return; }
     if (!n) { n = document.createElement('span'); n.className = 'anav-n'; n.setAttribute('aria-hidden', 'true'); a.appendChild(n); } n.textContent = bad;
   };
-  window.modelBad = m => m ? m.E.reduce((n, e) => n + (e.ref ? 0 : (e.p === '—' ? 1 : 0) + e.a.filter(a => !a.edit && (a.s === 'comb' || a.s === 'unreg')).length), 0) : null;
+  window.modelBad = m => { if (!m) return null; const pol = getPolicy(), RB = ps => ps.some(p => p.lvl === 'block');   /* 31 · Codex-impl-1: the approval re-check uses today's policy too */
+    return m.E.reduce((n, e) => n + (e.ref ? 0 : (e.p === '—' || RB(entRuleProblems(e, pol)) ? 1 : 0) + e.a.filter(a => !a.edit && (a.s === 'comb' || a.s === 'unreg' || ((a.s === 'ok' || a.s === 'req') && RB(attrRuleProblems(a, pol))))).length), 0); };
   /* baselines: every editable download is recorded (range, item ids, versions) — round-trip judgement uses this, not the file alone */
   window.recordBaseline = (scope, ids) => { const all = J('dbm-baselines', []); const t = new Date(); const id = `BL-${today().replace(/-/g, '')}-${String(t.getHours()).padStart(2, '0')}${String(t.getMinutes()).padStart(2, '0')}`; all.unshift({ id, at: now(), by: ME.id, scope, n: ids.length, ids }); S('dbm-baselines', all.slice(0, 20)); return id; };
   window.latestBaseline = () => (J('dbm-baselines', [])).find(b => b.by === ME.id) || { id: 'BL-20261116-0905', at: '11/16 09:05', by: 'kim', scope: '용어 · 필터: 요구사항', n: 13 };

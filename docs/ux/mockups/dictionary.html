@@ -370,7 +370,7 @@ window.pageInit = function () {
     const it = I.find(x => x.id === sel); const p = $('pn-detail'); if (!it) { p.innerHTML = ''; p.classList.remove('open'); return; }
     const common = it.src === '공통', REL = related(it);   // computed once per draw (count + table)
     const hist = it.hist.length ? `<div class="tl">${it.hist.map(h => `<div class="ev"><div class="flex"><b>${h.v}</b><span class="badge">${h.act}</span><span class="grow"></span><span class="caption mono">${h.at}</span></div><div class="caption muted">${h.by}${h.doc !== '—' ? ` · <a href="approvals.html?doc=${h.doc}">${h.doc}</a>` : ''}${h.why ? ' · 사유: ' + h.why : ''}</div>${h.diff.length ? `<table class="tbl u-mt-4"><thead><tr><th>칸</th><th>이전</th><th>이후</th></tr></thead><tbody>${h.diff.map(d => `<tr><td>${d[0]}</td><td><span class="old-v">${d[1] === '' ? '(빈 문자열)' : d[1] == null ? '(NULL)' : d[1]}</span></td><td>${d[2]}</td></tr>`).join('')}</tbody></table>` : ''}<button class="btn ghost sm" data-toast="${it.name}_${h.v}.xlsx — 그 버전의 값" data-toast-type="info">이 버전 엑셀</button></div>`).join('')}</div>` : '<div class="caption muted">이력이 없습니다.</div>';
-    p.innerHTML = `<div class="rp-head"><div class="t"><span class="badge ${common ? 'b-common' : 'b-org'}">${it.src}</span><span class="badge">${it.kn}</span><span class="badge ${it.st === '사용' ? 'b-success' : it.st === '신청 중' ? 'b-info' : ''}">${it.st}</span><button class="iconbtn close u-w-28 u-h-28" data-close="pn-detail" aria-label="상세 닫기 — 항목은 그대로" title="상세 닫기 — 항목은 그대로"><i data-ic=x></i></button></div>
+    p.innerHTML = `<div class="rp-head"><div class="t"><span class="badge ${common ? 'b-common' : 'b-org'}">${it.src}</span>${policyExempt(it) && itemRuleProblems(Object.assign({}, it, { k: it.kn === '엔터티 용어' ? 'term' : it.k })).some(p => p.lvl === 'block') ? `<span class="badge" title="${String(itemRuleProblems(Object.assign({}, it, { k: it.kn === '엔터티 용어' ? 'term' : it.k })).filter(p => p.lvl === 'block').map(p => p.msg).join(' / ')).replace(/["<>&]/g, '')}">기관 기준 예외</span>` : ''}<span class="badge">${it.kn}</span><span class="badge ${it.st === '사용' ? 'b-success' : it.st === '신청 중' ? 'b-info' : ''}">${it.st}</span><button class="iconbtn close u-w-28 u-h-28" data-close="pn-detail" aria-label="상세 닫기 — 항목은 그대로" title="상세 닫기 — 항목은 그대로"><i data-ic=x></i></button></div>
         <h2 class="u-mt-8">${it.name}</h2><div class="rp-sub">${[it.abbr, it.eng].filter(x => x && x !== '—').join(' · ')} · <span class="mono">${it.id}</span></div></div>
       <div class="rp-body">
         ${common ? '<div class="banner u-mb-12"><i data-ic=info></i><div><b>공통 표준</b> — 조회 전용입니다. 기관에서 바꿀 수 없습니다.</div></div>' : ''}
@@ -574,7 +574,7 @@ window.pageInit = function () {
     const fail = (msg, fid) => { toast(msg, 'danger'); if (fid && $(fid)) { $(fid).setAttribute('aria-invalid', 'true'); $(fid).focus(); } };
     if (!it.name || it.name === '—') return fail(it.k === 'domain' ? '도메인 규격이 올바르지 않습니다 — 길이는 1 이상 정수' : `${{ term: '용어명', word: '단어명', entity: '엔터티명', code: '코드명' }[it.k]}을 입력하세요`, { term: 'tm-name', word: 'wd-name', domain: 'dm-len', entity: 'en-name', code: 'cd-name' }[it.k]);
     if (it.k === 'word' && !it.abbr) return fail('영문약어명을 입력하세요', 'wd-abbr');
-    if (it.k === 'word' && it.abbr.length > ((getPolicy().wordAbbr) || 6)) return fail(`영문약어명은 ${getPolicy().wordAbbr || 6}자 이내입니다(검수 기준 v${getPolicy().ver})`, 'wd-abbr');
+    { const rp = itemRuleProblems(it).filter(p => p.lvl === 'block'); if (rp.length) return fail(rp[0].msg, { term: 'tm-name', word: rp[0].field === 'abbr' ? 'wd-abbr' : 'wd-name', code: 'cd-abbr' }[it.k]); }   // 31: the field rules of the policy
     if (it.k === 'word' && I.some(x => x.k === 'word' && x.abbr === it.abbr && x.name !== it.name && x.ver > 0)) return fail(`영문약어명 ${it.abbr}는 다른 단어(${I.find(x => x.k === 'word' && x.abbr === it.abbr).name})가 씁니다 — 다른 약어를 쓰세요`, 'wd-abbr');
     if (it.k === 'term' && (!it.abbr || it.abbr === '—')) return fail('분해 후보를 골라 약어를 정하세요', 'tm-name');
     if (it.k === 'entity' && (!it.abbr || it.abbr.includes('?'))) return fail('엔터티명을 단어로 분해할 수 없습니다 — 모르는 단어를 먼저 담으세요', 'en-name');
@@ -603,12 +603,13 @@ window.pageInit = function () {
   const ENT_SFX = { 기본: 'M', 내역: 'D', 이력: 'H', 관계: 'R', 정보: 'I' };
   // DX-09: a word already in the basket counts for analysis (it will be judged together in the same request)
   const withBasket = dc => { dc.parts.forEach(p => { const w = p.unknown && queue.find(q => q.k === 'word' && opOf(q) === '추가' && q.name === p.w); if (w) { p.unknown = false; p.ok = true; p.abbr = w.abbr; p.basket = true; } });
-    dc.unknown = dc.parts.filter(p => p.unknown); dc.abbr = dc.parts.map(p => p.abbr || '?').join('_'); dc.ok = !dc.unknown.length && !dc.parts.some(p => !p.unknown && !p.ok); return dc; };
+    dc.unknown = dc.parts.filter(p => p.unknown); dc.abbr = dc.parts.map(p => p.abbr || '?').join(polSep()); dc.ok = !dc.unknown.length && !dc.parts.some(p => !p.unknown && !p.ok); return dc; };
   function anEntity() {
     const n = $('en-name').value.trim(); if (!n) { $('en-res').textContent = '—'; return null; }
+    const ENT_SFX = Object.fromEntries(entitySuffixes().map(x => [x.w, x.a])), sep = polSep();   // 31: entity class words and the separator come from the policy
     const last = Object.keys(ENT_SFX).find(s => n.endsWith(s) && n.length > s.length);
     const head = last ? n.slice(0, -last.length) : n, dc = withBasket(decompose(head));
-    const abbr = dc.parts.map(p => p.abbr || '?').join('_') + (last ? '_' + ENT_SFX[last] : '');
+    const abbr = dc.parts.map(p => p.abbr || '?').join(sep) + (last ? sep + ENT_SFX[last] : '');
     $('en-res').innerHTML = `${dc.parts.map(p => p.unknown ? `<b class="u-danger">${p.w}?</b>` : p.basket ? `<span class="u-accent">${p.w}(바구니)</span>` : p.ok ? p.w : `<span class="u-warning">${p.w}(승인 전)</span>`).join(' + ')}${last ? ` + <b>${last}</b> <span class="caption muted">엔터티 분류어 → _${ENT_SFX[last]}</span>` : ' <span class="badge b-warning">엔터티 분류어로 끝나지 않음</span>'}<div class="u-mt-4">물리명 <b class="mono">${abbr}</b> · 도메인 없음(엔터티 용어)</div>${dc.unknown.length ? `<div class="caption u-danger u-mt-4">‘${dc.unknown.map(p => p.w).join(', ')}’${jo(dc.unknown.map(p => p.w).join(', '), '은/는')} 사전에 없는 단어 — 단어를 같은 바구니에 먼저 담으면 함께 판정합니다</div>` : ''}`;
     return { abbr, ok: !dc.unknown.length };
   }
@@ -621,7 +622,7 @@ window.pageInit = function () {
     const bad = len ? vals.filter(v => v.v.length !== len) : []; if (bad.length) out.push(`도메인 ${it.dom}(길이 ${len}자)와 다른 값: ${bad.map(v => v.v).join(', ')}`);
     if (vals.some(v => !v.nm)) out.push('이름이 없는 코드값이 있습니다');
     return out; };
-  const codeItem = () => ({ k: 'code', name: $('cd-name').value.trim(), abbr: $('cd-abbr').value.trim().toUpperCase(), dom: $('cd-dom').value, scope: $('cd-scope').value, sys: $('cd-scope').value === '시스템' ? $('cd-sys').value : undefined, ctype: $('cd-type').value, vals: parseVals($('cd-vals').value) });
+  const codeItem = () => ({ k: 'code', name: $('cd-name').value.trim(), abbr: abbrCase($('cd-abbr').value.trim(), 'code'), dom: $('cd-dom').value, scope: $('cd-scope').value, sys: $('cd-scope').value === '시스템' ? $('cd-sys').value : undefined, ctype: $('cd-type').value, vals: parseVals($('cd-vals').value) });
   function chkCode() { const p = codeProblems(codeItem()); $('cd-chk').innerHTML = $('cd-vals').value.trim() ? (p.length ? `<span class="u-danger">${p.join(' · ')}</span>` : `<span class="u-success">코드값 ${codeItem().vals.length}개 · 길이 · 중복 정상</span>`) : '값을 입력하면 길이 · 중복을 바로 확인합니다 · 앞자리 0은 그대로 보존'; $('cd-sys').disabled = $('cd-scope').value !== '시스템'; }
   ['cd-vals', 'cd-dom', 'cd-scope'].forEach(id => { $(id).addEventListener('input', chkCode); $(id).addEventListener('change', chkCode); });
   $('add-code').onclick = () => add(codeItem());
@@ -650,7 +651,7 @@ window.pageInit = function () {
   $('add-term').onclick = () => { if (analysed !== $('tm-name').value.trim() || !$('tm-abbr').value) { toast('용어명을 바꾼 뒤 분석이 끝나지 않았거나 분해할 수 없습니다 — 분석 결과를 확인하세요', 'danger'); return; } add0(); };
   const add0 = () => add({ k: 'term', name: $('tm-name').value.trim(), abbr: pickAbbr(), dom: $('tm-dom').value, desc: $('tm-desc').value.trim(), from: '분해: ' + ((document.querySelector('#pn-request [data-rq="term"] .cand.on .grow') || {}).textContent || '') });
   // similar-standard banner from the same rule as the duplicate-reason check (CL12-11)
-  ['wd-name', 'wd-abbr'].forEach(id => $(id).addEventListener('input', () => { const it = { k: 'word', name: $('wd-name').value.trim(), abbr: $('wd-abbr').value.trim().toUpperCase() }; const sm = it.abbr.length >= 3 && I.find(x => x.k === 'word' && x.abbr !== it.abbr && (x.abbr.startsWith(it.abbr.slice(0, 4)) || it.abbr.startsWith(x.abbr.slice(0, 4)))); $('wd-sim').hidden = !sm; if (sm) $('wd-sim-t').innerHTML = `비슷한 표준이 있습니다: <b>${sm.name} ${sm.abbr}</b>(${sm.src}). 같은 뜻이면 기존 단어를 쓰세요. 다르면 바구니에서 중복 허용 사유를 적습니다.`; }));
+  ['wd-name', 'wd-abbr'].forEach(id => $(id).addEventListener('input', () => { const it = { k: 'word', name: $('wd-name').value.trim(), abbr: abbrCase($('wd-abbr').value.trim(), 'word') }; const sm = it.abbr.length >= 3 && I.find(x => x.k === 'word' && x.abbr !== it.abbr && (x.abbr.startsWith(it.abbr.slice(0, 4)) || it.abbr.startsWith(x.abbr.slice(0, 4)))); $('wd-sim').hidden = !sm; if (sm) $('wd-sim-t').innerHTML = `비슷한 표준이 있습니다: <b>${sm.name} ${sm.abbr}</b>(${sm.src}). 같은 뜻이면 기존 단어를 쓰세요. 다르면 바구니에서 중복 허용 사유를 적습니다.`; }));
   $('q-body').addEventListener('click', e => {
     const d = e.target.closest('[data-del]'); if (d) { queue.splice(+d.dataset.del, 1); drawQueue(); return; }
     const ed = e.target.closest('[data-edit]'); if (!ed) return; const it = queue[+ed.dataset.edit];
@@ -802,7 +803,7 @@ window.pageInit = function () {
   // G2: word — format word links to a class; synonyms and forbidden words are separate
   $('wd-cls').innerHTML = '<option value="">(나중에 분류를 만들 때 연결)</option>' + GR.classes.filter(c => c.st === '사용').map(c => `<option value="${c.id}">${c.name} · ${(GR.groups.find(g => g.id === c.group) || {}).name} (지금 형식단어 ${c.fw})</option>`).join('');
   $('wd-fmt').onchange = () => { $('wd-cls-f').hidden = $('wd-fmt').value !== 'Y'; };
-  const wordItem = () => ({ k: 'word', name: $('wd-name').value.trim(), abbr: $('wd-abbr').value.trim().toUpperCase(), eng: $('wd-eng').value.trim(), fmt: $('wd-fmt').value, syn: $('wd-syn').value.split(',').map(s => s.trim()).filter(Boolean), forbid: $('wd-forbid').value.split(',').map(s => s.trim()).filter(Boolean), desc: $('wd-desc').value.trim() });
+  const wordItem = () => ({ k: 'word', name: $('wd-name').value.trim(), abbr: abbrCase($('wd-abbr').value.trim(), 'word'), eng: $('wd-eng').value.trim(), fmt: $('wd-fmt').value, syn: $('wd-syn').value.split(',').map(s => s.trim()).filter(Boolean), forbid: $('wd-forbid').value.split(',').map(s => s.trim()).filter(Boolean), desc: $('wd-desc').value.trim() });
   ['wd-name', 'wd-abbr', 'wd-syn', 'wd-forbid'].forEach(id => $(id).addEventListener('input', () => { const p = checkItem(wordItem(), { batch: queue }).filter(x => x.lvl === 'block' && $('wd-name').value.trim()); $('wd-err').textContent = p.map(x => x.msg).join(' · '); }));
   $('add-word').onclick = () => { const p = checkItem(wordItem(), { batch: queue }).filter(x => x.lvl === 'block'); if (p.length) { toast(p[0].msg, 'danger'); return; } add(wordItem()); };
   $('add-domain').onclick = () => { const it = domItem(), p = checkItem(it, { batch: queue }).filter(x => x.lvl === 'block'); if (p.length) { toast(p[0].msg, 'danger'); return; } add(it); };
@@ -821,7 +822,7 @@ window.pageInit = function () {
       panel.querySelector('.rp-body').insertAdjacentHTML('afterbegin', `<div class="banner warning u-mb-12"><i data-ic=warn></i><div><b>${d.id} 보완해서 다시 신청</b> — ${STEP_NAME[d.step]}${last && last.why ? ` · 의견: ${last.why}` : ''}. 아래 바구니는 그 문서의 항목입니다. 고친 뒤 신청하면 <b>새 신청번호</b>가 만들어집니다.</div></div>`);
     } else if (d) toast(`${d.id}는 내가 보완할 수 있는 상태가 아닙니다(${STEP_NAME[d.step]})`, 'info');
   }
-  if ($('wd-lim')) $('wd-lim').textContent = `${getPolicy().wordAbbr || 6}자 이내`;
+  if ($('wd-lim')) $('wd-lim').textContent = `${getPolicy().fields.word.abbr.max ? getPolicy().fields.word.abbr.max + '자 이내' : '길이 제한 없음'} · ${ruleCharsText(getPolicy().fields.word.abbr)}`;
   applyCond(Object.fromEntries(q0.entries()));   // DX-20: conditions from the URL (reload · back · shared link)
   if (BK.reason && !$('rq-why').value) $('rq-why').value = BK.reason;
   // usability B2: from the badge / [바구니 열기] the basket comes first; the entry forms fold behind one button (open when the basket is empty)

@@ -9,10 +9,36 @@
 <link rel="stylesheet" href="assets/app.css">
 <script src="assets/app.js"></script>
 <style>
-  /* R-19: 검수 기준 moved here from 설정 — DA · Admin edit, everyone reads */
-  .rules-body { padding:0 20px 80px; }
-  .ro .rules-body input, .ro .rules-body select { pointer-events:none; }
-  .savebar2 { position:sticky; bottom:0; display:flex; align-items:center; gap:12px; padding:12px 20px; background:var(--surface); border-top:1px solid var(--border); }
+  /* R-19: 검수 기준 — DA · Admin edit, everyone reads. 31: policy v2 — field rules · naming rules · model name rules · proposals */
+  .rules-body { padding:0 20px 96px; }
+  .savebar2 { position:sticky; bottom:0; display:flex; align-items:center; gap:12px; padding:12px 20px; background:var(--surface); border-top:1px solid var(--border); z-index:2; }
+  .pol-tbl td, .pol-tbl th { vertical-align:top; }
+  .pol-tbl tr.sum.chg td:first-child { box-shadow:inset 3px 0 0 var(--ds-blue-700); }
+  .pol-tbl tr.sum.hl td { background:var(--ds-blue-100); }
+  .pol-tbl tr.exp > td { background:var(--ds-gray-100); padding:12px 16px 16px; }
+  .pol-tbl .act { white-space:nowrap; text-align:right; }
+  .pol-ed { display:grid; grid-template-columns:120px 1fr; gap:10px 16px; align-items:start; border:0; margin:0; padding:0; min-width:0; }
+  .pol-ed > legend { grid-column:1/-1; font-weight:600; padding:0; margin-bottom:4px; }
+  .pol-ed .lab { font-size:13px; color:var(--fg-2); padding-top:6px; }
+  .pol-ed .row { display:flex; flex-wrap:wrap; gap:8px 14px; align-items:center; }
+  .pol-ed .hint { flex-basis:100%; font-size:12px; color:var(--fg-3); }
+  .sym { height:28px; min-width:40px; padding:0 10px; border-radius:var(--r-full); border:0; box-shadow:var(--ring); background:var(--surface); font:500 13px var(--font-mono); cursor:pointer; color:var(--fg-2); }
+  .sym[aria-pressed="true"] { background:var(--ds-gray-1000, #171717); color:#fff; box-shadow:none; }
+  .sym:disabled { opacity:.5; cursor:not-allowed; }
+  .sym .nm { font:400 11px var(--font-sans); margin-left:4px; opacity:.8; }
+  .tryout { display:grid; grid-template-columns:auto 1fr; gap:4px 10px; font-size:13px; margin-top:6px; }
+  .tryout .ok { color:var(--ds-green-800, #1a7f37); } .tryout .no { color:var(--ds-red-800, #c62828); } .tryout .wn { color:var(--ds-amber-800, #a15c07); }
+  .prev-box { border:1px solid var(--border); border-radius:var(--r-md); padding:10px 12px; font-size:13px; display:grid; grid-template-columns:120px 1fr; gap:6px 12px; }
+  .prev-box .mono s { color:var(--fg-3); }
+  .conf { border:1px solid var(--ds-red-400, #f2a5a5); border-radius:var(--r-md); padding:8px 12px; margin:12px 0; }
+  .conf.warnonly { border-color:var(--ds-amber-400, #f5c46b); }
+  .conf li { margin:4px 0; }
+  .lock { color:var(--fg-3); font-size:12px; }
+  .pol-ed.off > .lab, .pol-ed.off > .row:not(:has([data-lvl])) { opacity:.45; }   /* 검사 안 함: the conditions below do nothing */
+  .rule-ref { font-size:12px; }
+  .imp-n { font-variant-numeric:tabular-nums; font-weight:600; }
+  .sfx-tbl input { width:100%; }
+  .tabdot { display:inline-block; width:6px; height:6px; border-radius:50%; background:var(--ds-blue-700); margin-left:4px; vertical-align:middle; }
 </style>
 </head>
 <body data-page="rules">
@@ -24,82 +50,296 @@
     <span class="caption muted" id="r-who"></span>
   </div>
   <div class="scroll"><div class="rules-body">
-  <div class="banner info u-mt-12" id="r-ro" hidden><i data-ic=info></i><div class="caption">조회 전용 — 검수 기준은 <b>DA · Admin</b>이 고칩니다. 신청 · 표준 맞추기 · 엑셀 검사가 이 기준으로 막히거나 경고합니다.</div></div>
+  <div class="banner info u-mt-12" id="r-ro" hidden><i data-ic=info></i><div class="caption">조회 전용 — 검수 기준은 <b>DA · Admin</b>이 고칩니다. 우리 기관 표준을 바꾸고 싶으면 줄마다 있는 <b>[변경 제안]</b>으로 DA에게 보내세요. 신청 · 표준 맞추기 · 엑셀 검사 · 모델 검증이 이 기준으로 막히거나 경고합니다.</div></div>
+  <div id="r-ban"></div>
   <div class="set-wrap" id="rules">
-    <h3 class="set-sec first">검사 규칙</h3>
-    <div class="set-row"><div class="l"><b>지금 기준</b></div><div id="pol-head"></div><div class="aside"><span>저장하면 검수 기준 버전이 하나 오르고 다음 신청부터 적용됩니다.</span><span>이전 기준으로 검사한 엑셀 묶음은 업로드 이력에 ‘재검증 필요’로 표시됩니다.</span><span>진행 중인 신청은 승인할 때 새 기준으로 다시 검사합니다.</span></div></div>
-    <div class="set-row wide"><div class="l"><b>항목별 규칙</b><span>칩으로 단어 · 도메인 · 용어 · 코드를 고릅니다</span></div><div>
-    <div class="seg u-mb-12" id="rk-chips" role="group" aria-label="항목"><button type="button" class="on" data-rk="word" aria-pressed="true">단어</button><button type="button" class="" data-rk="domain" aria-pressed="false">도메인</button><button type="button" class="" data-rk="term" aria-pressed="false">용어</button><button type="button" class="" data-rk="code" aria-pressed="false">코드</button></div>
-    <table class="tbl set-tbl"><thead><tr><th>필드</th><th>필수</th><th>최대 길이</th><th>허용 문자</th><th>위반 시</th></tr></thead>
-    <tbody data-rk-body="domain" hidden>
-      <tr><td>도메인명</td><td><i data-ic=check></i><span class="sr-only">필수</span></td><td class="mono">—</td><td>분류어 + 타입 축약 + 길이 (예: 연월일C8)</td><td><span class="badge b-danger">차단</span></td></tr>
-      <tr><td>데이터 타입 · 길이</td><td><i data-ic=check></i><span class="sr-only">필수</span></td><td class="mono">—</td><td>시스템 타입 매핑에 있는 타입</td><td><span class="badge b-danger">차단</span></td></tr>
-      <tr><td>도메인 그룹 · 분류</td><td><i data-ic=check></i><span class="sr-only">필수</span></td><td class="mono">—</td><td>사전에 있는 그룹 · 분류</td><td><span class="badge b-danger">차단</span></td></tr>
-      <tr><td>설명</td><td></td><td class="mono">1000자</td><td>제한 없음</td><td><span class="badge b-warning">경고</span></td></tr>
-    </tbody>
-    <tbody data-rk-body="term" hidden>
-      <tr><td>용어명</td><td><i data-ic=check></i><span class="sr-only">필수</span></td><td class="mono">—</td><td>사전에 있는 단어로만 조합</td><td><span class="badge b-danger">차단</span></td></tr>
-      <tr><td>영문약어명</td><td><i data-ic=check></i><span class="sr-only">필수</span></td><td class="mono">30자</td><td>구성 단어 약어를 _로 이은 값</td><td><span class="badge b-danger">차단</span></td></tr>
-      <tr><td>도메인</td><td><i data-ic=check></i><span class="sr-only">필수</span></td><td class="mono">—</td><td>마지막 단어(분류어)에 맞는 도메인</td><td><span class="badge b-danger">차단</span></td></tr>
-      <tr><td>설명</td><td></td><td class="mono">1000자</td><td>제한 없음</td><td><span class="badge b-warning">경고</span></td></tr>
-    </tbody>
-    <tbody data-rk-body="code" hidden>
-      <tr><td>코드값</td><td><i data-ic=check></i><span class="sr-only">필수</span></td><td class="mono">도메인 길이</td><td>도메인 허용 값 규칙</td><td><span class="badge b-danger">차단</span></td></tr>
-      <tr><td>코드값명</td><td><i data-ic=check></i><span class="sr-only">필수</span></td><td class="mono">100자</td><td>한글·영문·숫자</td><td><span class="badge b-danger">차단</span></td></tr>
-      <tr><td>정렬 순서</td><td></td><td class="mono">—</td><td>숫자</td><td><span class="badge b-warning">경고</span></td></tr>
-    </tbody>
-    <tbody data-rk-body="word">
-      <tr><td>단어명</td><td><i data-ic=check></i><span class="sr-only">필수</span></td><td class="mono">—</td><td>한글·영문·숫자</td><td><span class="badge b-danger">차단</span></td></tr>
-      <tr><td><label for="pol-wd">단어 영문약어명</label></td><td><i data-ic=check></i><span class="sr-only">필수</span></td><td><span class="numf"><span class="flex mono"><input class="input mono n3" id="pol-wd" type="number" min="2" max="10" step="1" value="6" aria-describedby="pol-wd-r pol-wd-e">자</span><span class="rng" id="pol-wd-r">허용 2~10 · 단위 자</span><span class="ferr" id="pol-wd-e" role="alert"></span></span></td><td>영문 대문자·숫자</td><td><span class="badge b-danger">차단</span></td></tr>
-      <tr><td>영문명</td><td></td><td class="mono">100자</td><td>영문·공백</td><td><span class="badge b-warning">경고</span></td></tr>
-      <tr><td>설명</td><td></td><td class="mono">1000자</td><td>제한 없음</td><td><span class="badge b-warning">경고</span></td></tr>
-    </tbody></table></div></div>
-    <div class="set-row wide"><div class="l"><b>변경 이력</b></div><div><table class="tbl set-tbl"><thead><tr><th>버전</th><th>시각</th><th>변경자</th><th>내용</th></tr></thead><tbody id="pol-hist"></tbody></table></div></div>
+    <h3 class="set-sec first">지금 기준</h3>
+    <div class="set-row"><div class="l"><b>기준 버전</b></div><div><div id="pol-head"></div><div class="flex u-wrap u-gap-8 u-mt-8" id="pol-tools"></div></div>
+      <div class="aside"><span>공공데이터 공통표준 값에서 출발해 우리 기관에 맞게 고칩니다.</span><span>저장하면 버전이 하나 오르고 다음 신청 · 검사부터 적용됩니다. 기존 데이터는 고치지 않고 "다시 검사 필요"만 표시합니다.</span></div></div>
+
+    <h3 class="set-sec" id="sec-dict">사전 규칙</h3>
+    <div class="set-row wide"><div class="l"><b>항목별 규칙</b><span>칩으로 단어 · 도메인 · 용어 · 코드를 고릅니다. 필수 · 중복 · 사전 참조 검사는 항상 막습니다.</span></div><div>
+      <div class="seg u-mb-12" id="rk-chips" role="group" aria-label="사전 항목"></div>
+      <table class="tbl set-tbl pol-tbl" id="t-dict"><thead><tr><th>필드</th><th>필수</th><th>최대 길이</th><th>허용 글자</th><th>추가 조건</th><th>어기면</th><th class="act"><span class="sr-only">고치기</span></th></tr></thead><tbody></tbody></table>
+    </div></div>
+
+    <h3 class="set-sec" id="sec-model">모델 이름 규칙 <span class="badge">모델</span></h3>
+    <div class="set-row wide"><div class="l"><b>엔터티 · 속성</b><span>모델의 이름 · 물리명을 검사합니다. 표준 맞추기 · 모델 준수율 · 확정 신청 · DDL이 이 기준을 씁니다.</span></div><div>
+      <table class="tbl set-tbl pol-tbl" id="t-model"><thead><tr><th>필드</th><th>필수</th><th>최대 길이</th><th>허용 글자</th><th>추가 조건</th><th>어기면</th><th class="act"><span class="sr-only">고치기</span></th></tr></thead><tbody></tbody></table>
+    </div></div>
+    <div class="set-row wide"><div class="l"><b>엔터티 분류어</b><span>엔터티 이름 끝 낱말 → 테이블명 끝 약어</span></div><div>
+      <table class="tbl set-tbl sfx-tbl" id="t-sfx"><thead><tr><th>분류어</th><th>테이블명 끝</th><th class="act"><span class="sr-only">삭제</span></th></tr></thead><tbody></tbody></table>
+      <div class="flex u-gap-8 u-mt-8" id="sfx-tools"></div>
+    </div></div>
+
+    <h3 class="set-sec" id="sec-naming">명명 규칙</h3>
+    <div id="naming"></div>
+
+    <h3 class="set-sec" id="sec-props">변경 제안</h3>
+    <div class="set-row wide"><div class="l"><b>모델러 제안</b><span>모델러가 보낸 기준 변경 제안 — DA가 시험해 보고 반영합니다</span></div><div id="props"></div></div>
+
+    <h3 class="set-sec">변경 이력</h3>
+    <div class="set-row wide"><div class="l"><b>버전</b></div><div><table class="tbl set-tbl"><thead><tr><th>버전</th><th>시각</th><th>변경자</th><th>내용</th><th class="act"><span class="sr-only">보기</span></th></tr></thead><tbody id="pol-hist"></tbody></table></div></div>
+
     <h3 class="set-sec">표준 제외 규칙</h3>
     <div class="set-row"><div class="l"><b>엔터티</b><span>유형으로 제외</span></div>
-      <div class="flex u-wrap u-gap-12"><label class="flex"><input type="checkbox" checked> 가상(Pseudo)</label><label class="flex"><input type="checkbox" checked> 외부(External)</label><label class="flex"><input type="checkbox" checked> 공통 참조</label><label class="flex"><input type="checkbox"> 삭제 예정(Drop)</label></div><div class="aside"><span>체크한 유형의 엔터티는 자동으로 비대상이 되어 준수율 계산에서 빠집니다.</span><span>저장하면 다음 표준 검사부터 적용됩니다.</span></div></div>
+      <div class="flex u-wrap u-gap-12"><label class="flex"><input type="checkbox" checked disabled> 가상(Pseudo)</label><label class="flex"><input type="checkbox" checked disabled> 외부(External)</label><label class="flex"><input type="checkbox" checked disabled> 공통 참조</label><label class="flex"><input type="checkbox" disabled> 삭제 예정(Drop)</label></div><div class="aside"><span>체크한 유형의 엔터티는 자동으로 비대상이 되어 준수율 계산에서 빠집니다.</span></div></div>
     <div class="set-row"><div class="l"><b>속성·컬럼</b><span>유형·이름으로 제외</span></div>
       <div>
-        <div class="flex u-wrap u-gap-12 u-mb-8"><label class="flex"><input type="checkbox" checked> 시스템 컬럼</label><label class="flex"><input type="checkbox" checked> FK(부모가 표준이면 상속)</label><label class="flex"><input type="checkbox"> 가상 속성</label></div>
-        <div class="field"><label for="ex-pat">이름 패턴(쉼표로 구분)</label><input class="input mono" id="ex-pat" value="*_BAK, TMP_*, ETL_*"></div>
+        <div class="flex u-wrap u-gap-12 u-mb-8"><label class="flex"><input type="checkbox" checked disabled> 시스템 컬럼</label><label class="flex"><input type="checkbox" checked disabled> FK(부모가 표준이면 상속)</label><label class="flex"><input type="checkbox" disabled> 가상 속성</label></div>
+        <div class="field"><label for="ex-pat">이름 패턴(쉼표로 구분)</label><input class="input mono" id="ex-pat" value="*_BAK, TMP_*, ETL_*" disabled></div>
       </div><div class="aside"><span><b class="mono">*</b>는 아무 글자입니다. 예: <span class="mono">TMP_*</span>는 TMP_로 시작하는 컬럼</span><span>FK는 부모 속성이 표준이면 그 판정을 물려받습니다.</span></div></div>
-    <div class="set-row"><div class="l"><b>논리 → 물리</b></div><div><label class="flex"><input type="checkbox" checked> 논리에서 비대상이면 물리에서도 비대상</label></div><div class="aside"><span>끄면 물리 캔버스에서 다시 판정합니다(게이트 A 점검에 나타남).</span></div></div>
-    <div class="set-row"><div class="l"><b>직접 지정</b><span>모델 [표 보기]·[표준 맞추기]에서 비대상 지정</span></div><div>허용 · <b>사유 필수</b> · 현재 <span class="mono">1</span>건</div><div class="aside"><span>직접 지정한 비대상은 사유가 남고 확정 결재에서 DA가 확인합니다.</span><a href="standardize.html?f=na">비대상 목록 → 표준 맞추기<i data-ic=ext data-s=12 aria-hidden="true"></i></a></div></div>
+    <div class="caption muted u-mt-4">표준 제외 규칙은 지금 기관 기본값을 보여 줍니다 — 고치는 기능은 구현 단계에서 정책 버전과 함께 저장합니다.</div>
   </div>
   </div></div>
-  <div class="savebar2" id="r-bar" hidden><span class="caption" id="r-bar-t">바뀐 내용이 있습니다 — 저장하면 검수 기준 버전이 하나 오릅니다</span><span class="grow"></span><button class="btn" id="r-reset">되돌리기</button><button class="btn primary" id="r-save">저장</button></div>
+  <div class="savebar2" id="r-bar" hidden><span class="caption" id="r-bar-t"></span><span class="grow"></span><button class="btn" id="r-reset">되돌리기</button><button class="btn primary" id="r-save">영향 보고 저장</button></div>
 </div>
 </div>
 <script>
 (function () {
-  const $ = id => document.getElementById(id);
-  const edit = can('rules.edit');
-  document.body.classList.toggle('ro', !edit); $('r-ro').hidden = edit;
-  document.querySelectorAll('#rules input, #rules select').forEach(i => { if (!edit || i.id !== 'pol-wd') i.disabled = true; });
-  { const h = [...document.querySelectorAll('#rules .set-sec')].find(x => /표준 제외/.test(x.textContent)); if (h) h.insertAdjacentHTML('afterend', '<div class="caption muted u-mt-4">표준 제외 규칙은 지금 기관 기본값을 보여 줍니다 — 고치는 기능은 구현 단계에서 정책 버전과 함께 저장합니다.</div>'); }   /* UI-12 */
-  const draw = () => { const p = getPolicy(); $('r-ver').textContent = 'v' + p.ver; $('r-who').textContent = '적용 ' + p.at + ' · ' + p.by;
-    $('pol-head').innerHTML = '<b>검수 기준 v' + p.ver + '</b> · 적용 ' + p.at + ' · ' + p.by;
-    $('pol-hist').innerHTML = p.hist.map(h => '<tr><td class="mono">v' + h.ver + '</td><td class="mono">' + h.at + '</td><td>' + h.by + '</td><td>' + h.what + '</td></tr>').join(''); $('pol-wd').value = p.wordAbbr || 6; };
-  draw();
-  // 항목 칩: word · domain · term · code tables
-  document.querySelectorAll('#rk-chips [data-rk]').forEach(c => c.addEventListener('click', () => { document.querySelectorAll('#rk-chips [data-rk]').forEach(x => { x.classList.toggle('on', x === c); x.setAttribute('aria-pressed', String(x === c)); }); document.querySelectorAll('[data-rk-body]').forEach(b => b.hidden = b.dataset.rkBody !== c.dataset.rk); }));   /* UX-27 */
-  const wd = $('pol-wd');
-  const dirty = () => +wd.value !== (getPolicy().wordAbbr || 6);
-  wd.addEventListener('input', () => { const er = $('pol-wd-e'); if (er) er.textContent = ''; wd.removeAttribute('aria-invalid'); $('r-bar').hidden = !dirty(); $('r-bar-t').textContent = '단어 영문약어명 ' + (getPolicy().wordAbbr || 6) + '자 → ' + wd.value + '자 · 저장하면 다음 신청부터 적용'; });
-  $('r-reset').onclick = () => { draw(); $('r-bar').hidden = true; };
+  const $ = id => document.getElementById(id), q = new URLSearchParams(location.search);
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+  const clone = o => JSON.parse(JSON.stringify(o));
+  const DICT_K = ['word', 'domain', 'term', 'code'], MODEL_K = ['entity', 'attr'];
+  const REQ = { word: ['name', 'abbr'], domain: ['name'], term: ['name', 'abbr'], code: ['abbr', 'name', 'value', 'valueName'], entity: ['name', 'phys'], attr: ['name', 'phys'] };
+  const viewVer = +q.get('v') || 0, cur = getPolicy(), RO_VER = viewVer && viewVer !== cur.ver;
+  const edit = can('rules.edit') && !RO_VER;
+  let base = RO_VER ? policyAt(viewVer) : cur, D = clone(base);
+  const DEF = POLICY_DEFAULT();
+  let tab = DICT_K.includes(q.get('k')) ? q.get('k') : 'word', open = new Set(), onlyDiff = false; const pickOn = new Set();   // rows where '고른 것만' is chosen before any symbol (UX-impl N-01)
+  document.body.classList.toggle('ro', !edit); $('r-ro').hidden = can('rules.edit') || RO_VER;
+
+  /* ---- what differs: field rules · model rules · suffixes · naming · DB ---- */
+  const RK = ['lvl', 'max', 'min', 'chars', 'special', 'noLeadDigit', 'noDoubleSep', 'noReserved'];
+  const sameV = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+  const ruleOf = (P, k, f) => polRule(P, k, f);
+  const ruleTxt = r => `${r.max ? r.max + '자' : '길이 제한 없음'} · ${ruleCharsText(r)} · ${POL_LVL[r.lvl]}`;
+  const NAMING_N = { sep: '단어 사이 기호', composeLvl: '용어 약어 = 단어 약어 조합', endsWithFormatWordLvl: '형식단어로 끝남', splitSuspectLvl: '한 글자 단어로 잘게 쪼개짐', scaleSep: '도메인 소수점 기호' };
+  const sepTxt = s => s === '' ? '없음' : s;
+  function diffs(A, B) {
+    const out = [];
+    [...DICT_K, ...MODEL_K].forEach(k => Object.keys(POL_FIELD[k]).forEach(f => { const a = ruleOf(A, k, f), b = ruleOf(B, k, f); if (a && b && RK.some(x => !sameV(a[x], b[x]))) out.push({ k, f, label: `${POL_KIND[k]} · ${POL_FIELD[k][f]}`, from: ruleTxt(a), to: ruleTxt(b) }); }));
+    Object.keys(NAMING_N).forEach(x => { if (!sameV(A.naming[x], B.naming[x])) out.push({ k: 'naming', f: x, label: NAMING_N[x], from: x.endsWith('Lvl') ? POL_LVL[A.naming[x]] : sepTxt(A.naming[x]), to: x.endsWith('Lvl') ? POL_LVL[B.naming[x]] : sepTxt(B.naming[x]) }); });
+    if (A.model.entitySuffixLvl !== B.model.entitySuffixLvl) out.push({ k: 'naming', f: 'entitySuffixLvl', label: '엔터티 분류어로 끝남', from: POL_LVL[A.model.entitySuffixLvl], to: POL_LVL[B.model.entitySuffixLvl] });
+    if (!sameV(A.model.entitySuffix, B.model.entitySuffix)) out.push({ k: 'sfx', f: '', label: '엔터티 분류어 · 접미', from: A.model.entitySuffix.map(x => x.w + '→' + x.a).join(' '), to: B.model.entitySuffix.map(x => x.w + '→' + x.a).join(' ') });
+    if (A.dbms !== B.dbms) out.push({ k: 'naming', f: 'dbms', label: '대상 DB', from: A.dbms, to: B.dbms });
+    return out;
+  }
+  const isChg = (k, f) => { const a = ruleOf(base, k, f), b = ruleOf(D, k, f); return RK.some(x => !sameV(a[x], b[x])); };
+  const isDef = (k, f) => { const a = ruleOf(DEF, k, f), b = ruleOf(D, k, f); return !RK.some(x => !sameV(a[x], b[x])); };
+
+  /* ---- head ---- */
+  function drawHead() {
+    $('r-ver').textContent = 'v' + base.ver; $('r-who').textContent = '적용 ' + base.at + ' · ' + base.by;
+    const nd = diffs(DEF, D).length;
+    $('pol-head').innerHTML = `<b>검수 기준 v${base.ver}</b> · 적용 ${esc(base.at)} · ${esc(base.by)} · <span class="${nd ? '' : 'muted'}">공통표준 기본값에서 <b>${nd}곳</b> 바꿈</span> ${offRulesHtml(D)}`;
+    $('pol-tools').innerHTML = `<button class="btn sm" id="t-diff" aria-pressed="${onlyDiff}">${onlyDiff ? '모든 줄 보기' : '기본값과 다른 곳만 보기'}</button>${edit ? '<button class="btn sm ghost" id="t-def">공통표준 기본값으로 되돌리기</button>' : ''}`;
+    $('t-diff').onclick = () => { onlyDiff = !onlyDiff; drawAll(); };
+    if ($('t-def')) $('t-def').onclick = () => { const keep = { ver: D.ver, at: D.at, by: D.by, hist: D.hist, bodies: D.bodies, props: D.props }; D = Object.assign(clone(DEF), keep); open.clear(); drawAll(); toast('공통표준 기본값으로 바꿨습니다 — 저장하기 전까지는 적용되지 않습니다', 'info'); };
+  }
+
+  /* ---- rule rows ---- */
+  const lvlBadge = l => `<span class="badge ${l === 'block' ? 'b-danger' : l === 'warn' ? 'b-warning' : ''}">${POL_LVL[l]}</span>`;
+  function sumCells(k, f) { const r = ruleOf(D, k, f), req = REQ[k].includes(f), cf = policyConflicts(D).filter(c => c.k === k && c.f === f);
+    return `<td>${esc(POL_FIELD[k][f])}${isChg(k, f) ? ' <span class="badge b-info">바뀜</span>' : ''}${cf.length ? ` <span class="badge ${cf.some(c => c.lvl === 'block') ? 'b-danger' : 'b-warning'}" title="${esc(cf.map(c => c.msg).join(' / '))}">${cf.some(c => c.lvl === 'block') ? '맞지 않음' : '확인'}</span>` : ''}</td><td>${req ? '<i data-ic=check></i><span class="sr-only">필수</span> <span class="lock" title="필수 · 중복 검사는 끌 수 없습니다"><i data-ic=lock data-s=12 aria-hidden="true"></i></span>' : ''}</td><td class="mono">${r.max ? r.max + '자' : '<span class="muted">제한 없음</span>'}</td><td>${esc(ruleCharsText(r))}</td><td class="caption">${esc(ruleExtraText(r))}</td><td>${lvlBadge(r.lvl)}</td>`; }
+  function rowHtml(k, f) { const id = `${k}-${f}`, on = open.has(id);
+    const act = edit ? `<button class="btn sm" data-tog="${id}" aria-expanded="${on}" aria-controls="ex-${id}" aria-label="${esc(POL_FIELD[k][f])} ${on ? '접기' : '고치기'}">${on ? '접기' : '고치기'}</button>` : RO_VER ? '' : `<button class="btn sm ghost" data-prop="${id}" aria-label="${esc(POL_FIELD[k][f])} 변경 제안">변경 제안</button>`;
+    return `<tr class="sum${isChg(k, f) ? ' chg' : ''}" id="row-${id}" data-k="${k}" data-f="${f}">${sumCells(k, f)}<td class="act">${act}</td></tr>${on ? `<tr class="exp" id="ex-${id}"><td colspan="7">${editor(k, f)}</td></tr>` : ''}`; }
+  function editor(k, f) { const r = ruleOf(D, k, f), id = `${k}-${f}`, nm = POL_FIELD[k][f], dis = edit ? '' : 'disabled';
+    const mode = r.special === 'all' ? 'all' : r.special.length || pickOn.has(id) ? 'pick' : 'none';
+    const chips = POL_SPECIAL_CHIPS.map(([c, n]) => `<button type="button" class="sym" data-sym="${esc(c)}" aria-pressed="${r.special === 'all' || r.special.includes(c)}" ${mode !== 'pick' || !edit ? 'disabled' : ''} aria-label="${n} ${esc(c)}">${esc(c)}<span class="nm">${n}</span></button>`).join('');
+    const extra = r.special !== 'all' ? r.special.filter(c => !POL_SPECIAL_CHIPS.some(x => x[0] === c)).map(c => `<button type="button" class="sym" data-sym="${esc(c)}" aria-pressed="true" ${!edit ? 'disabled' : ''} aria-label="직접 넣은 기호 ${esc(c)} 빼기">${esc(c)}<span class="nm">× 빼기</span></button>`).join('') : '';
+    return `<fieldset class="pol-ed${r.lvl === 'off' ? ' off' : ''}" data-ed="${id}"><legend>${esc(POL_KIND[k])} · ${esc(nm)}</legend>
+      <div class="lab">글자 종류</div><div class="row">${Object.entries(POL_CHARS).map(([c, [n]]) => `<label class="flex"><input type="checkbox" data-ch="${c}" ${r.chars == null || r.chars.includes(c) ? 'checked' : ''} ${r.chars == null ? 'disabled' : dis}> ${n}</label>`).join('')}
+        <label class="flex"><input type="checkbox" data-chnull ${r.chars == null ? 'checked' : ''} ${dis}> 글자 종류 제한 없음</label><span class="hint">외국 글자(한자 · 일본어 등)는 "글자 종류 제한 없음"일 때만 들어갑니다.</span></div>
+      <div class="lab">기호</div><div class="row" role="radiogroup" aria-label="${esc(nm)} 기호">${[['none', '쓰지 않음'], ['pick', '고른 것만'], ['all', '모든 기호(공백 · 외국 글자 제외)']].map(([v, n]) => `<label class="flex"><input type="radio" name="sp-${id}" value="${v}" data-spm ${mode === v ? 'checked' : ''} ${dis}> ${n}</label>`).join('')}
+        <div class="row" style="flex-basis:100%">${chips}${extra}${mode === 'pick' && edit ? `<span class="flex u-gap-4"><label class="sr-only" for="sy-${id}">기호 직접 넣기</label><input class="input mono n3" id="sy-${id}" data-syin maxlength="8" placeholder="예: #" style="width:84px"><button type="button" class="btn sm" data-syadd>넣기</button></span>` : ''}</div>
+        <span class="hint" id="sp-res-${id}">${mode === 'none' ? '기호는 하나도 쓸 수 없습니다.' : mode === 'all' ? '문장부호 · 기호는 모두 됩니다. 공백 · 외국 글자는 기호가 아닙니다.' : r.special.length ? `쓸 수 있는 기호: ${esc(r.special.join(' '))}` : '고른 기호가 없습니다 — "쓰지 않음"과 같습니다.'}</span></div>
+      <div class="lab"><label for="mx-${id}">최대 길이</label></div><div class="row"><span class="flex u-gap-4"><input class="input mono n3" type="number" min="1" max="4000" id="mx-${id}" data-max value="${r.max || ''}" ${r.max == null ? 'disabled' : dis} style="width:96px">자</span><label class="flex"><input type="checkbox" data-maxnull ${r.max == null ? 'checked' : ''} ${dis}> 길이 제한 없음</label><span class="hint">글자 수로 셉니다(한글 한 글자 = 1).</span></div>
+      <div class="lab">추가 조건</div><div class="row"><label class="flex"><input type="checkbox" data-x="noLeadDigit" ${r.noLeadDigit ? 'checked' : ''} ${dis}> 숫자로 시작 금지</label><label class="flex"><input type="checkbox" data-x="noDoubleSep" ${r.noDoubleSep ? 'checked' : ''} ${dis}> 기호 연속 금지(예: __)</label><label class="flex"><input type="checkbox" data-x="noReserved" ${r.noReserved ? 'checked' : ''} ${dis}> DB가 쓰는 낱말(예약어) 금지</label></div>
+      <div class="lab">어기면</div><div class="row"><div class="seg" role="radiogroup" aria-label="${esc(nm)} 어기면">${Object.entries(POL_LVL).map(([v, n]) => `<button type="button" role="radio" aria-checked="${r.lvl === v}" class="${r.lvl === v ? 'on' : ''}" data-lvl="${v}" ${dis}>${n}</button>`).join('')}</div><span class="hint">검사 안 함: 이 규칙은 통과로도 위반으로도 세지 않습니다. 준수율 옆에 "검사 안 함 규칙 n개"로 보입니다.</span></div>
+      <div class="lab"><label for="try-${id}">시험해 보기</label></div><div><input class="input mono" id="try-${id}" data-try placeholder="값을 넣어 보세요" value="${esc(sampleOf(k, f))}"><div class="tryout" id="tryo-${id}" aria-live="polite"></div>
+        <div class="flex u-wrap u-gap-4 u-mt-4">${examplesOf(k, f).map(x => `<button type="button" class="chip" style="height:24px;font-size:12px" data-ex="${esc(x)}">${esc(x)}</button>`).join('')}</div></div>
+    </fieldset>`; }
+  function sampleOf(k, f) { return ({ 'word-abbr': 'QLTRVW', 'word-name': '품질검토', 'term-abbr': 'RISK_GRD_CD', 'term-name': '리스크등급코드', 'domain-name': '금액N18,2', 'attr-phys': 'RISK_GRD_CD', 'entity-phys': 'RISK_M', 'code-abbr': 'RISK_GRD' })[`${k}-${f}`] || ''; }
+  function examplesOf(k, f) { return ({ abbr: ['custNo', 'CUST-NO', 'TABLE', '1ST_DT'], phys: ['CUST-NO', 'custNo', 'ORDER', '고객번호'], name: ['고객 번호', '고객(주)', 'e메일'] })[f] || ['예시 값', 'A/B']; }
+  function tryHtml(k, f, v) { const lineOf = (P, t) => { const ps = ruleProblems(k, f, v, P); const b = ps.filter(p => p.lvl === 'block'), w = ps.filter(p => p.lvl === 'warn');
+      return `<span class="muted">${t}</span><span class="${b.length ? 'no' : w.length ? 'wn' : 'ok'}">${!String(v).trim() ? '—' : b.length ? '막힘 · ' + esc(b.map(p => p.msg.replace(/\(검수 기준 v\d+\)/, '')).join(' / ')) : w.length ? '경고 · ' + esc(w.map(p => p.msg.replace(/\(검수 기준 v\d+\)/, '')).join(' / ')) : ruleOf(P, k, f).lvl === 'off' ? '검사 안 함' : '통과'}</span>`; };
+    return lineOf(base, `지금 기준(v${base.ver})`) + lineOf(Object.assign(clone(D), { ver: base.ver }), '바꾼 뒤'); }
+  function drawTables() {
+    $('rk-chips').innerHTML = DICT_K.map(k => `<button type="button" class="${tab === k ? 'on' : ''}" data-rk="${k}" aria-pressed="${tab === k}">${POL_KIND[k]}${Object.keys(POL_FIELD[k]).some(f => isChg(k, f)) ? '<span class="tabdot" aria-label="바뀐 곳 있음"></span>' : ''}</button>`).join('');
+    const rows = ks => ks.flatMap(k => Object.keys(POL_FIELD[k]).filter(f => !onlyDiff || !isDef(k, f)).map(f => rowHtml(k, f))).join('') || `<tr><td colspan="7" class="caption muted">기본값과 다른 곳이 없습니다.</td></tr>`;
+    $('t-dict').tBodies[0].innerHTML = rows([tab]); $('t-model').tBodies[0].innerHTML = rows(MODEL_K);
+    document.querySelectorAll('[data-try]').forEach(inp => { const [k, f] = inp.id.slice(4).split('-'); $('tryo-' + k + '-' + f).innerHTML = tryHtml(k, f, inp.value); });
+  }
+  function drawSfx() { const S = D.model.entitySuffix, dis = edit ? '' : 'disabled';
+    $('t-sfx').tBodies[0].innerHTML = S.map((x, i) => `<tr><td><label class="sr-only" for="sw-${i}">분류어 ${i + 1}</label><input class="input" id="sw-${i}" data-sw="${i}" value="${esc(x.w)}" ${dis}></td><td><label class="sr-only" for="sa-${i}">테이블명 끝 ${i + 1}</label><input class="input mono" id="sa-${i}" data-sa="${i}" value="${esc(x.a)}" ${dis}></td><td class="act">${edit ? `<button class="btn sm ghost" data-sdel="${i}" aria-label="${esc(x.w)} 빼기">빼기</button>` : ''}</td></tr>`).join('');
+    $('sfx-tools').innerHTML = edit ? `<button class="btn sm" id="s-add">분류어 더하기</button><span class="caption muted">예: 산출물<b>기본</b> → DLVRBL${sepTxt(D.naming.sep) === '없음' ? '' : esc(D.naming.sep)}<b>${esc((S[0] || {}).a || 'M')}</b></span>` : `<span class="caption muted">${S.map(x => esc(x.w) + ' → ' + esc(x.a)).join(' · ')}</span>`;
+    if ($('s-add')) $('s-add').onclick = () => { D.model.entitySuffix.push({ w: '', a: '' }); drawSfx(); changed(); const L = document.querySelectorAll('[data-sw]'); L[L.length - 1].focus(); }; }
+
+  /* ---- naming rules + preview (UX-10) ---- */
+  const exTerms = () => { const want = ['리스크대응완료일자', '산출물제출일자', '고객번호']; return want.map(n => ({ n, dc: decompose(n) })).filter(x => x.dc.ok || x.dc.parts.every(p => p.abbr)); };
+  function namingHtml() { const N = D.naming, dis = edit ? '' : 'disabled';
+    const lvlSeg = (key, label, obj = N) => `<div class="seg" role="radiogroup" aria-label="${label}">${Object.entries(POL_LVL).map(([v, n]) => `<button type="button" role="radio" aria-checked="${obj[key] === v}" class="${obj[key] === v ? 'on' : ''}" data-nlvl="${key}" data-nobj="${obj === N ? 'naming' : 'model'}" data-v="${v}" ${dis}>${n}</button>`).join('')}</div>`;
+    const t0 = exTerms()[0], ab = s => t0 ? t0.dc.parts.map(p => p.abbr).join(s) : 'RISK_RSPNS_CMPTN_YMD';
+    const SEPS = [['_', '밑줄 _', ab('_'), ''], ['', '없음', ab(''), '단어 경계가 안 보입니다 · 약어끼리 겹칠 수 있습니다'], ['-', '하이픈 -', ab('-'), 'DB에서 따옴표가 필요합니다 — 물리명에는 쓸 수 없습니다']];
+    const row = (l, sub, body, aside) => `<div class="set-row"><div class="l"><b>${l}</b>${sub ? `<span>${sub}</span>` : ''}</div><div>${body}</div>${aside ? `<div class="aside">${aside}</div>` : ''}</div>`;
+    return row('단어 사이 기호', '용어 · 엔터티 약어를 이을 때', `<div class="row flex u-wrap u-gap-12" role="radiogroup" aria-label="단어 사이 기호">${SEPS.map(([v, n, e, risk]) => `<label class="flex" style="align-items:flex-start"><input type="radio" name="n-sep" value="${v}" data-nsep ${N.sep === v ? 'checked' : ''} ${dis}><span>${n} <span class="mono caption">${esc(e)}</span>${risk ? `<br><span class="caption u-warning">${risk}</span>` : ''}</span></label>`).join('')}</div>`, '<span>바꾸면 기존 용어 · 물리명은 그대로 두고 "다시 검사 필요"로 표시합니다. 이름을 실제로 바꾸려면 변경 신청을 따로 만듭니다.</span>')
+      + row('용어 약어 = 단어 약어 조합', '용어 영문약어명이 구성 단어 약어를 이은 값인지', lvlSeg('composeLvl', '조합 일치'))
+      + row('형식단어로 끝남', '용어 끝 낱말이 형식단어(일자 · 코드 · 명 …)인지', lvlSeg('endsWithFormatWordLvl', '형식단어로 끝남'))
+      + row('한 글자 단어로 잘게 쪼개짐', '1음절 분해 의심', lvlSeg('splitSuspectLvl', '한 글자 단어'))
+      + row('엔터티 분류어로 끝남', '엔터티 이름 끝이 분류어인지', lvlSeg('entitySuffixLvl', '엔터티 분류어', D.model))
+      + row('도메인 소수점 기호', '정밀도 · 소수점 도메인', `<div class="row flex u-gap-12" role="radiogroup" aria-label="소수점 기호">${[[',', '쉼표 , — 금액N18,2'], ['_', '밑줄 _ — 금액N18_2']].map(([v, n]) => `<label class="flex"><input type="radio" name="n-sc" value="${v}" data-nsc ${N.scaleSep === v ? 'checked' : ''} ${dis}> ${n}</label>`).join('')}</div>`)
+      + row('대상 DB', '용어 약어 · 물리명 상한과 DB가 쓰는 낱말', `<div class="row flex u-gap-12" role="radiogroup" aria-label="대상 DB">${[['oracle', 'Oracle — 30자'], ['postgresql', 'PostgreSQL — 63자']].map(([v, n]) => `<label class="flex"><input type="radio" name="n-db" value="${v}" data-ndb ${D.dbms === v ? 'checked' : ''} ${dis}> ${n}</label>`).join('')}</div>`, '<span>모델의 물리명은 시스템 DB(시스템 설정)를 우선합니다.</span>')
+      + row('미리보기', '이전 → 이후', `<div class="prev-box" id="n-prev"></div>`);
+  }
+  function drawPreview() { const B = base.naming.sep, A = D.naming.sep, L = [];
+    exTerms().forEach(({ n, dc }) => { const b = dc.parts.map(p => p.abbr).join(B), a = dc.parts.map(p => p.abbr).join(A); L.push(['용어', `${esc(n)} → ${b === a ? `<span class="mono">${esc(a)}</span>` : `<span class="mono"><s>${esc(b)}</s> → <b>${esc(a)}</b></span>`}`]); });
+    const sb = (base.model.entitySuffix.find(x => x.w === '기본') || {}).a, sa = (D.model.entitySuffix.find(x => x.w === '기본') || {}).a;
+    L.push(['엔터티', `산출물기본 → <span class="mono">${('DLVRBL' + B + (sb || '?')) === ('DLVRBL' + A + (sa || '?')) ? esc('DLVRBL' + A + (sa || '?')) : `<s>DLVRBL${esc(B + (sb || '?'))}</s> → <b>DLVRBL${esc(A + (sa || '?'))}</b>`}</span>${sa ? '' : ' <span class="caption u-warning">‘기본’ 분류어가 없습니다</span>'}`]);
+    L.push(['도메인', `금액 · N · 18 · 2 → <span class="mono">${base.naming.scaleSep === D.naming.scaleSep ? '금액N18' + esc(D.naming.scaleSep) + '2' : `<s>금액N18${esc(base.naming.scaleSep)}2</s> → <b>금액N18${esc(D.naming.scaleSep)}2</b>`}</span>`]);
+    const ta = D.fields.term.abbr; if (ta.chars && ta.chars.includes('lower')) L.push(['DDL', `사전 <span class="mono">custNo</span> → DDL <span class="mono">CUSTNO</span> <span class="caption muted">(물리명은 대문자로 비교 · 출력)</span>`]);
+    $('n-prev').innerHTML = L.map(([a, b]) => `<span class="muted">${a}</span><span>${b}</span>`).join(''); }
+
+  /* ---- conflicts (UX-01) ---- */
+  function drawConflicts() { const C = policyConflicts(D), el = $('r-ban').querySelector('#conf');
+    const html = C.length ? `<div class="conf${C.some(c => c.lvl === 'block') ? '' : ' warnonly'}" id="conf" role="status"><b>${C.some(c => c.lvl === 'block') ? '서로 맞지 않는 설정이 있어 저장할 수 없습니다' : '확인할 설정'}</b><ul class="caption" style="margin:4px 0 0;padding-left:18px">${C.map(c => `<li>${c.lvl === 'block' ? '<span class="badge b-danger">막기</span>' : '<span class="badge b-warning">확인</span>'} ${esc(c.msg)}${edit && c.k ? ` <button class="linkbtn" data-fix="${c.k}-${c.f}">이 줄 고치기</button>` : ''}</li>`).join('')}</ul></div>` : '';
+    if (el) el.outerHTML = html || '<span id="conf"></span>'; else $('r-ban').insertAdjacentHTML('beforeend', html || '<span id="conf"></span>'); return C; }
+
+  /* ---- proposals (UX-04) ---- */
+  function drawProps() { const P = (getPolicy().props || []).filter(p => p.st === '검토 대기' || p.by === ME.id);
+    $('props').innerHTML = P.length ? `<table class="tbl set-tbl"><thead><tr><th>규칙</th><th>바라는 값</th><th>사유</th><th>제안</th><th>상태</th><th class="act"><span class="sr-only">처리</span></th></tr></thead><tbody>${P.map(p => `<tr><td>${esc(POL_KIND[p.k])} · ${esc(POL_FIELD[p.k][p.f])}</td><td>${esc(p.want)}</td><td class="caption">${esc(p.why)}</td><td class="caption">${esc(p.byName)} · ${esc(p.at)}</td><td><span class="badge ${p.st === '검토 대기' ? 'b-warning' : p.st === '반영' ? 'b-success' : ''}">${esc(p.st)}</span></td><td class="act">${edit && p.st === '검토 대기' ? `<button class="btn sm" data-popen="${p.id}">줄 열어 시험</button> <button class="btn sm ghost" data-pdone="${p.id}">반영으로 표시</button> <button class="btn sm ghost" data-prej="${p.id}">거절</button>` : ''}</td></tr>`).join('')}</tbody></table>`
+      : `<div class="caption muted">${edit ? '검토할 제안이 없습니다. 모델러는 줄마다 [변경 제안]으로 보냅니다.' : '보낸 제안이 없습니다. 바꾸고 싶은 기준 줄의 [변경 제안]을 누르세요.'}</div>`; }
+  function propose(k, f) { const ov = document.createElement('div'); ov.className = 'overlay open'; ov.setAttribute('role', 'dialog'); ov.setAttribute('aria-modal', 'true'); ov.setAttribute('aria-labelledby', 'pp-t');
+    ov.innerHTML = `<div class="modal"><div class="m-head"><h3 id="pp-t">기준 변경 제안 — ${esc(POL_KIND[k])} · ${esc(POL_FIELD[k][f])}</h3></div><div class="m-body"><p class="caption u-mt-0">지금: ${esc(ruleTxt(ruleOf(base, k, f)))}</p><div class="field"><label for="pp-w">바라는 기준 *</label><input class="input" id="pp-w" placeholder="예: 기호 - 도 쓰게 해 주세요 / 8자까지"></div><div class="field"><label for="pp-y">사유 *</label><textarea class="input" id="pp-y" rows="3" placeholder="예: 연계 시스템 컬럼명이 CUST-NO 형식이라 맞춰야 합니다"></textarea></div><div class="caption muted">DA에게 검토 요청이 갑니다. 반영되면 검수 기준 버전이 오르고 변경 이력에 남습니다.</div></div><div class="m-foot"><button class="btn" id="pp-no">취소</button><span class="grow"></span><button class="btn primary" id="pp-ok">제안 보내기</button></div></div>`;
+    document.body.appendChild(ov); const back = document.activeElement, close = () => { ov.remove(); if (back) back.focus(); };
+    ov.querySelector('#pp-no').onclick = close; ov.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
+    ov.querySelector('#pp-ok').onclick = () => { const w = $('pp-w').value.trim(), y = $('pp-y').value.trim(); if (!w || !y) { toast('바라는 기준과 사유를 모두 쓰세요', 'danger'); (w ? $('pp-y') : $('pp-w')).focus(); return; }
+      const P = getPolicy(), id = 'PP-' + String((P.props || []).length + 1).padStart(3, '0'); P.props = [{ id, k, f, want: w, why: y, by: ME.id, byName: ME.name, at: isoToday(), st: '검토 대기' }].concat(P.props || []); savePolicy(P);
+      pushAudit({ act: '검수 기준 변경 제안', target: `${POL_KIND[k]} · ${POL_FIELD[k][f]}`, why: w + ' — ' + y }); close(); drawProps(); toast(`${id} 제안을 DA에게 보냈습니다 — 변경 제안 칸에서 상태를 봅니다`, 'success'); };
+    setTimeout(() => $('pp-w').focus(), 0); }
+  function setProp(id, st) { const P = getPolicy(), p = (P.props || []).find(x => x.id === id); if (!p) return; p.st = st; p.doneBy = ME.name; savePolicy(P); D.props = P.props; pushAudit({ act: `검수 기준 제안 ${st}`, target: id, why: `${POL_KIND[p.k]} · ${POL_FIELD[p.k][p.f]}` }); drawProps(); toast(`${id}를 ‘${st}’로 표시했습니다`, 'success'); }
+
+  /* ---- history ---- */
+  function drawHist() { $('pol-hist').innerHTML = cur.hist.map((h, i) => { const ch = h.changes || []; return `<tr><td class="mono">v${h.ver}</td><td class="mono">${esc(h.at)}</td><td>${esc(h.by)}</td><td>${esc(h.what)}${ch.length > 1 ? ` <details style="display:inline"><summary class="linkbtn">펼치기</summary><ul class="caption" style="margin:4px 0;padding-left:18px">${ch.map(c => `<li>${esc(c.label)}: ${esc(c.from)} → ${esc(c.to)}</li>`).join('')}</ul></details>` : ''}</td><td class="act">${h.ver !== cur.ver ? `<a class="rule-ref" href="rules.html?v=${h.ver}">이 버전 보기</a>` : '<span class="caption muted">지금</span>'}</td></tr>`; }).join(''); }
+
+  /* ---- banners from the URL: an old version · what changed since a version · rules switched off ---- */
+  function drawBanners() { let h = '';
+    if (RO_VER) h += `<div class="banner warning u-mt-12"><i data-ic=info></i><div class="caption"><b>v${viewVer} 기준을 보고 있습니다(읽기 전용)</b> — 그때 검사한 신청 · 엑셀 묶음은 이 기준으로 판정했습니다.${base.restored ? ' <b>이 버전은 저장된 본문이 없어 변경 이력으로 다시 만든 값입니다</b>(이력에 없는 규칙은 공통표준 기본값).' : ''} <a href="rules.html">지금 기준(v${cur.ver}) 보기</a></div></div>`;
+    const from = +q.get('from'); if (from && from !== cur.ver) { const ch = diffs(policyAt(from), cur); h += `<div class="banner info u-mt-12"><i data-ic=info></i><div class="caption"><b>v${from} → v${cur.ver}에서 바뀐 것 ${ch.length}곳</b><ul style="margin:4px 0 0;padding-left:18px">${ch.map(c => `<li>${esc(c.label)}: ${esc(c.from)} → <b>${esc(c.to)}</b></li>`).join('') || '<li>규칙 차이 없음</li>'}</ul></div></div>`; }
+    if (q.get('f') === 'off') { const L = offRules(cur); h += `<div class="banner info u-mt-12"><i data-ic=info></i><div class="caption"><b>검사 안 함 규칙 ${L.length}개</b> — 통과로도 위반으로도 세지 않습니다. 준수율 분모(속성 수)는 그대로입니다.${L.length ? `<br>${L.map(esc).join(' · ')}` : ''}</div></div>`; }
+    $('r-ban').innerHTML = h + '<span id="conf"></span>'; }
+
+  /* ---- save bar ---- */
+  function changed() { const ch = diffs(base, D); $('r-bar').hidden = !edit || !ch.length; { const nb = policyConflicts(D).filter(c => c.lvl === 'block').length; $('r-bar-t').innerHTML = nb ? `<b class="u-danger">서로 맞지 않는 설정 ${nb}개</b> — 고치기 전에는 저장할 수 없습니다 <a href="#conf" class="linkbtn">무엇이 맞지 않나</a>` : `바뀐 곳 ${ch.length}곳 — 저장하면 검수 기준 v${base.ver + 1}이 됩니다`; } drawHead(); drawConflicts(); drawPreview(); $('r-save').disabled = policyConflicts(D).some(c => c.lvl === 'block'); }
+  function drawAll() { drawHead(); drawTables(); drawSfx(); $('naming').innerHTML = namingHtml(); drawPreview(); drawConflicts(); drawProps(); drawHist(); changed(); }
+
+  /* ---- events ---- */
+  const content = $('content');
+  content.addEventListener('click', e => { const t = e.target.closest('button, a'); if (!t) return;
+    if (t.dataset.rk) { tab = t.dataset.rk; drawTables(); return; }
+    if (t.dataset.tog) { const id = t.dataset.tog; open.has(id) ? open.delete(id) : open.add(id); drawTables(); const b = document.querySelector(`[data-tog="${id}"]`); if (open.has(id)) { const f = document.querySelector(`#ex-${id} input:not([disabled])`); if (f) f.focus(); } else if (b) b.focus(); return; }
+    if (t.dataset.prop) { const [k, f] = t.dataset.prop.split('-'); propose(k, f); return; }
+    if (t.dataset.fix) { const [k, f] = t.dataset.fix.split('-'); openRow(k, f); return; }
+    if (t.dataset.popen) { const p = (getPolicy().props || []).find(x => x.id === t.dataset.popen); if (p) { openRow(p.k, p.f); toast(`${p.id} — 바라는 기준: ${p.want} · 줄에서 바꾸고 시험해 보세요`, 'info'); } return; }
+    if (t.dataset.pdone) { setProp(t.dataset.pdone, '반영'); return; } if (t.dataset.prej) { setProp(t.dataset.prej, '거절'); return; }
+    if (t.dataset.sdel != null && edit) { D.model.entitySuffix.splice(+t.dataset.sdel, 1); drawSfx(); changed(); return; }
+    if (t.dataset.nlvl && edit) { (t.dataset.nobj === 'model' ? D.model : D.naming)[t.dataset.nlvl] = t.dataset.v; $('naming').innerHTML = namingHtml(); changed(); const b = document.querySelector(`[data-nlvl="${t.dataset.nlvl}"][data-v="${t.dataset.v}"]`); if (b) b.focus(); return; }
+    if (t.dataset.ex != null) { const ed = t.closest('[data-ed]'); const inp = ed.querySelector('[data-try]'); inp.value = t.dataset.ex; inp.dispatchEvent(new Event('input', { bubbles: true })); return; }
+    const ed = t.closest('[data-ed]'); if (!ed || !edit) return; const [k, f] = ed.dataset.ed.split('-'), r = ruleOf(D, k, f);
+    if (t.dataset.lvl) { r.lvl = t.dataset.lvl; refreshRow(k, f, `[data-lvl="${t.dataset.lvl}"]`); return; }
+    if (t.dataset.sym != null && r.special !== 'all') { const c = t.dataset.sym; r.special = r.special.includes(c) ? r.special.filter(x => x !== c) : r.special.concat(c); refreshRow(k, f, `[data-sym="${CSS.escape(c)}"]`); return; }
+    if (t.hasAttribute('data-syadd')) { addSyms(k, f, ed.querySelector('[data-syin]')); return; }
+  });
+  function addSyms(k, f, inp) { const r = ruleOf(D, k, f), raw = inp.value; let note = [];
+    const chars = Array.from(raw.normalize('NFKC'));   // full-width → half-width (UX-07)
+    if (raw !== raw.normalize('NFKC')) note.push('전각 기호를 반각으로 바꿨습니다');
+    const add = [], skip = []; chars.forEach(c => { if (/\s/.test(c)) return; if (/^[\p{P}\p{S}]$/u.test(c)) { if (!r.special.includes(c) && !add.includes(c)) add.push(c); } else skip.push(c); });
+    if (skip.length) note.push(`글자 · 숫자(${skip.slice(0, 4).join(' ')})는 기호가 아니라 뺐습니다 — 글자 종류에서 고르세요`);
+    if (!add.length) { toast(note.join(' · ') || '넣을 기호가 없습니다', 'info'); inp.focus(); return; }
+    r.special = r.special.concat(add); refreshRow(k, f, '[data-syin]'); toast(`기호 ${add.join(' ')}를 넣었습니다${note.length ? ' · ' + note.join(' · ') : ''}`, 'success'); }
+  content.addEventListener('keydown', e => { if (e.key === 'Escape') { const ex = e.target.closest('tr.exp'); if (ex) { const id = ex.id.slice(3); open.delete(id); drawTables(); const b = document.querySelector(`[data-tog="${id}"]`); if (b) b.focus(); return; } }
+    if (e.key === 'Enter' && e.target.matches('[data-syin]')) { e.preventDefault(); const ed = e.target.closest('[data-ed]'), [k, f] = ed.dataset.ed.split('-'); addSyms(k, f, e.target); } });
+  content.addEventListener('input', e => { const t = e.target;
+    if (t.dataset.try != null) { const [k, f] = t.closest('[data-ed]').dataset.ed.split('-'); $(`tryo-${k}-${f}`).innerHTML = tryHtml(k, f, t.value); return; }
+    if (!edit) return;
+    if (t.dataset.sw != null) { D.model.entitySuffix[+t.dataset.sw].w = t.value.trim(); changed(); return; }
+    if (t.dataset.sa != null) { D.model.entitySuffix[+t.dataset.sa].a = abbrCase(t.value.trim(), 'term'); changed(); return; }
+    const ed = t.closest('[data-ed]'); if (!ed) return; const [k, f] = ed.dataset.ed.split('-'), r = ruleOf(D, k, f);
+    if (t.dataset.max != null) { const n = +t.value; if (Number.isInteger(n) && n >= 1 && n <= 4000) { r.max = n; t.removeAttribute('aria-invalid'); refreshSum(k, f); } else t.setAttribute('aria-invalid', 'true'); return; } });
+  content.addEventListener('change', e => { const t = e.target; if (!edit) return;
+    if (t.dataset.nsep != null) { D.naming.sep = t.value; $('naming').innerHTML = namingHtml(); drawSfx(); changed(); document.querySelector(`[data-nsep][value="${t.value}"]`).focus(); return; }
+    if (t.dataset.nsc != null) { D.naming.scaleSep = t.value; changed(); return; }
+    if (t.dataset.ndb != null) { D.dbms = t.value; changed(); return; }
+    const ed = t.closest('[data-ed]'); if (!ed) return; const [k, f] = ed.dataset.ed.split('-'), r = ruleOf(D, k, f);
+    if (t.dataset.ch) { const set = new Set(r.chars || []); t.checked ? set.add(t.dataset.ch) : set.delete(t.dataset.ch); r.chars = Object.keys(POL_CHARS).filter(c => set.has(c)); refreshRow(k, f, `[data-ch="${t.dataset.ch}"]`); return; }
+    if (t.hasAttribute('data-chnull')) { r.chars = t.checked ? null : Object.keys(POL_CHARS).filter(c => c !== 'space'); refreshRow(k, f, '[data-chnull]'); return; }
+    if (t.hasAttribute('data-spm')) { t.value === 'pick' ? pickOn.add(`${k}-${f}`) : pickOn.delete(`${k}-${f}`); r.special = t.value === 'all' ? 'all' : t.value === 'none' ? [] : (r.special === 'all' ? [] : r.special); refreshRow(k, f, `[data-spm][value="${t.value}"]`); return; }
+    if (t.hasAttribute('data-maxnull')) { r.max = t.checked ? null : (ruleOf(DEF, k, f).max || 30); refreshRow(k, f, '[data-maxnull]'); return; }
+    if (t.dataset.x) { r[t.dataset.x] = t.checked; refreshRow(k, f, `[data-x="${t.dataset.x}"]`); return; } });
+  function refreshSum(k, f) { const tr = $(`row-${k}-${f}`); if (tr) { tr.classList.toggle('chg', isChg(k, f)); const act = tr.querySelector('.act').outerHTML; tr.innerHTML = sumCells(k, f) + act; }
+    const inp = document.querySelector(`#ex-${k}-${f} [data-try]`); if (inp) $(`tryo-${k}-${f}`).innerHTML = tryHtml(k, f, inp.value);
+    $('rk-chips').querySelectorAll('[data-rk]').forEach(b => { const kk = b.dataset.rk, has = Object.keys(POL_FIELD[kk]).some(ff => isChg(kk, ff)); const dot = b.querySelector('.tabdot'); if (has && !dot) b.insertAdjacentHTML('beforeend', '<span class="tabdot" aria-label="바뀐 곳 있음"></span>'); if (!has && dot) dot.remove(); });
+    changed(); }
+  function refreshRow(k, f, focusSel) { const ex = $(`ex-${k}-${f}`); if (ex) { const tryv = (ex.querySelector('[data-try]') || {}).value; ex.firstElementChild.innerHTML = editor(k, f); if (tryv != null) ex.querySelector('[data-try]').value = tryv; if (focusSel) { const el = ex.querySelector(focusSel); if (el) el.focus(); } } refreshSum(k, f); }
+  function openRow(k, f) { if (DICT_K.includes(k)) tab = k; if (edit) open.add(`${k}-${f}`); onlyDiff = false; drawAll(); const tr = $(`row-${k}-${f}`); if (tr) { document.querySelectorAll('tr.sum.hl').forEach(x => x.classList.remove('hl')); tr.classList.add('hl'); tr.scrollIntoView({ block: 'center' }); const f0 = document.querySelector(`#ex-${k}-${f} input:not([disabled])`) || tr.querySelector('button'); if (f0) f0.focus(); } }
+  $('r-reset').onclick = () => { D = clone(base); open.clear(); drawAll(); toast('바꾼 내용을 되돌렸습니다', 'info'); };
+
+  /* ---- impact before saving (PC-02 → UX-11 · Codex-5) ---- */
+  function impact(A, B) {
+    const live = getDict().filter(x => x.ver > 0 && x.st !== '삭제 보관'), res = { newBlock: [], newWarn: [], newPass: [], exempt: 0, sepTerms: 0, clash: [], open: 0, attrs: 0, attrEx: [], bats: 0 };
+    const blk = (it, P) => itemRuleProblems(Object.assign({}, it, { k: it.kn === '엔터티 용어' ? 'term' : it.k }), P);
+    live.forEach(d => { if (!['word', 'domain', 'term', 'code'].includes(d.k)) return; const a = blk(d, A), b = blk(d, B); if (policyExempt(d)) { if (b.some(p => p.lvl === 'block')) res.exempt++; return; }
+      const ab = a.some(p => p.lvl === 'block'), bb = b.some(p => p.lvl === 'block'), aw = a.some(p => p.lvl === 'warn'), bw = b.some(p => p.lvl === 'warn');
+      if (bb && !ab) res.newBlock.push(d); else if (!bb && bw && !aw) res.newWarn.push(d); else if (ab && !bb) res.newPass.push(d); });
+    if (A.naming.sep !== B.naming.sep) { const terms = live.filter(d => d.k === 'term' && d.src !== '공통' && d.abbr && d.abbr !== '—');
+      res.sepTerms = terms.filter(d => A.naming.sep ? d.abbr.includes(A.naming.sep) : true).length;
+      const seen = new Map(); terms.forEach(d => { const nv = A.naming.sep ? d.abbr.split(A.naming.sep).join(B.naming.sep) : d.abbr; if (seen.has(nv)) res.clash.push([seen.get(nv), d, nv]); else seen.set(nv, d); }); }
+    openItems().forEach(o => { const a = blk(o.it, A).some(p => p.lvl === 'block'), b = blk(o.it, B).some(p => p.lvl === 'block'); if (b && !a) res.open++; });
+    try { const ms = getModels(); Object.keys(ms).forEach(ar => { const md = modelOf(ar, ms[ar].ver); (md.E || []).forEach(e => { if (e.ref) return; (e.a || []).forEach(x => { const a = attrRuleProblems(x, A).some(p => p.lvl === 'block'), b = attrRuleProblems(x, B).some(p => p.lvl === 'block'); if (b && !a) { res.attrs++; if (res.attrEx.length < 3) res.attrEx.push(`${e.p}.${x.p}`); } }); }); }); } catch (err) {}
+    res.bats = (getBatches() || []).filter(b => b.policyVer === A.ver && !/반영됨|취소/.test(b.status || '')).length;
+    return res; }
   $('r-save').onclick = () => {
     if (!can('rules.edit')) { toast('저장하지 않았습니다. 검수 기준은 DA · Admin만 고칠 수 있습니다', 'danger'); return; }
-    const n = +wd.value, er = $('pol-wd-e'); if (!Number.isInteger(n) || n < 2 || n > 10) { if (er) er.textContent = '2~10 사이의 정수를 입력하세요'; wd.setAttribute('aria-invalid', 'true'); wd.focus(); toast('저장하지 않았습니다. 단어 영문약어명이 2~10자 범위를 벗어났습니다. 표시된 값을 고치세요', 'danger'); return; }   /* PC-06 */
-    const p0 = getPolicy(), bats = (getBatches() || []).filter(b => b.policyVer && b.policyVer === p0.ver && !/반영됨|취소/.test(b.status || '')).length;
-    if (!$('r-save').dataset.ok) { const ov = document.createElement('div'); ov.className = 'overlay open'; ov.setAttribute('role', 'dialog'); ov.setAttribute('aria-modal', 'true'); ov.setAttribute('aria-labelledby', 'rc-t');
-      ov.innerHTML = '<div class="modal"><div class="m-head"><h3 id="rc-t">검수 기준을 v' + (p0.ver + 1) + '로 올립니다</h3></div><div class="m-body"><p class="u-mt-0">단어 영문약어명 최대 길이 ' + (p0.wordAbbr || 6) + '자 → <b>' + n + '자</b></p><ul class="caption" style="padding-left:16px;margin:0"><li>다음 신청 · 표준 맞추기 · 엑셀 검사부터 적용됩니다. 진행 중 결재 문서는 신청 때 기준 그대로입니다.</li><li>이전 기준으로 검사한 엑셀 묶음' + (bats ? ' ' + bats + '개' : '') + '은 업로드 이력에서 다시 검증하라고 안내됩니다.</li><li>감사 로그에 남습니다.</li></ul></div><div class="m-foot"><button class="btn" id="rc-no">취소</button><span class="grow"></span><button class="btn primary" id="rc-ok">검수 기준 저장</button></div></div>';
-      document.body.appendChild(ov); const back = $('r-save'); const close = () => { ov.remove(); back.focus(); }; ov.querySelector('#rc-no').onclick = close; ov.addEventListener('keydown', e => { if (e.key === 'Escape') close(); }); ov.querySelector('#rc-ok').onclick = () => { ov.remove(); back.dataset.ok = '1'; back.click(); }; setTimeout(() => ov.querySelector('#rc-ok').focus(), 0); return; }   /* PC-02: impact first */
-    delete $('r-save').dataset.ok; if (er) er.textContent = ''; wd.removeAttribute('aria-invalid');
-    const p = getPolicy(); const t = new Date(); const at = isoToday() + ' ' + String(t.getHours()).padStart(2, '0') + ':' + String(t.getMinutes()).padStart(2, '0');
-    const nv = { ver: p.ver + 1, at, by: ME.name, wordAbbr: n, hist: [{ ver: p.ver + 1, at, by: ME.name, what: '단어 영문약어명 ' + (p.wordAbbr || 6) + '자 → ' + n + '자' }].concat(p.hist) };
-    savePolicy(nv); pushAudit({ act: '검수 기준 v' + nv.ver, target: '검수 기준', why: nv.hist[0].what });
-    draw(); $('r-bar').hidden = true; toast('검수 기준 v' + nv.ver + '로 저장했습니다 — 다음 신청부터 적용 · 이전 기준으로 검사한 엑셀 묶음은 다시 검증하라고 안내합니다', 'success');
-  };
+    const bad = document.querySelector('[data-max][aria-invalid="true"]'); if (bad) { bad.focus(); toast('저장하지 않았습니다. 최대 길이는 1~4000 사이의 정수입니다', 'danger'); return; }
+    const ch = diffs(base, D), C = policyConflicts(D), blockC = C.filter(c => c.lvl === 'block'), I = impact(base, Object.assign(clone(D), { ver: base.ver }));
+    const big = base.naming.sep !== D.naming.sep || I.newBlock.length + I.attrs > 20;
+    const ex = L => L.slice(0, 3).map(d => `${esc(d.name)}${d.abbr && d.abbr !== '—' ? ' ' + esc(d.abbr) : ''}`).join(', ');
+    const ov = document.createElement('div'); ov.className = 'overlay open'; ov.setAttribute('role', 'dialog'); ov.setAttribute('aria-modal', 'true'); ov.setAttribute('aria-labelledby', 'rc-t');
+    ov.innerHTML = `<div class="modal" style="max-width:640px"><div class="m-head"><h3 id="rc-t">검수 기준을 v${base.ver + 1}로 올립니다</h3></div><div class="m-body">
+      ${blockC.length ? `<div class="conf"><b>① 서로 맞지 않는 설정 — 고치기 전에는 저장할 수 없습니다</b><ul class="caption" style="margin:4px 0 0;padding-left:18px">${blockC.map(c => `<li>${esc(c.msg)}${c.k ? ` <button class="linkbtn" data-mfix="${c.k}-${c.f}">이 줄 고치기</button>` : ''}</li>`).join('')}</ul></div>` : C.length ? `<div class="conf warnonly caption"><b>① 확인할 설정</b> ${C.map(c => esc(c.msg)).join(' · ')}</div>` : '<p class="caption muted u-mt-0">① 서로 맞지 않는 설정 없음</p>'}
+      <p class="u-mb-4"><b>② 바뀐 규칙 ${ch.length}곳</b></p><ul class="caption" style="margin:0;padding-left:18px">${ch.map(c => `<li>${esc(c.label)}: ${esc(c.from)} → <b>${esc(c.to)}</b></li>`).join('')}</ul>
+      <p class="u-mb-4"><b>③ 새 기준으로 다시 판정하면</b></p><ul class="caption" style="margin:0;padding-left:18px">
+        <li>사전 항목 새로 막힘 <span class="imp-n">${I.newBlock.length}</span>건${I.newBlock.length ? ` (예: ${ex(I.newBlock)})` : ''} · 새로 경고 <span class="imp-n">${I.newWarn.length}</span>건 · 새로 통과 <span class="imp-n">${I.newPass.length}</span>건</li>
+        ${I.sepTerms ? `<li>단어 사이 기호가 바뀌어 기존 용어 약어 <span class="imp-n">${I.sepTerms}</span>건이 "다시 검사 필요" — 이름은 그대로 둡니다${I.clash.length ? ` · <b class="u-danger">이름이 같아지는 용어 ${I.clash.length}쌍</b> (예: ${esc(I.clash[0][2])} = ${esc(I.clash[0][0].name)} · ${esc(I.clash[0][1].name)})` : ''}</li>` : ''}
+        <li>진행 중 신청 항목 새로 막힘 <span class="imp-n">${I.open}</span>건 — 승인할 때 새 기준으로 다시 검사합니다</li>
+        <li>모델 속성 새로 미준수 <span class="imp-n">${I.attrs}</span>개${I.attrEx.length ? ` (예: ${esc(I.attrEx.join(', '))})` : ''}</li>
+        <li>다시 검증해야 하는 엑셀 묶음 <span class="imp-n">${I.bats}</span>개</li>
+        ${I.exempt ? `<li>공통표준 항목 ${I.exempt}건은 기관 기준 예외라 판정하지 않습니다(회색 배지)</li>` : ''}</ul>
+      <p class="u-mb-4"><b>④ 적용 방식</b></p><ul class="caption" style="margin:0;padding-left:18px"><li>다음 신청 · 표준 맞추기 · 엑셀 검사 · 모델 검증부터 적용합니다. 기존 사전 · 확정 모델 · 물리명은 고치지 않습니다.</li><li>진행 중 결재는 신청 때 버전을 기록해 두고, 승인 때 새 기준으로 다시 검사합니다.</li><li>이름을 실제로 바꾸려면 사전에서 변경 신청을 따로 만듭니다(참조 · PK/FK · DDL 확인).</li><li>감사 로그에 남습니다.</li></ul>
+      ${big && !blockC.length ? `<label class="flex u-mt-12"><input type="checkbox" id="rc-ack"> 영향을 확인했습니다 — 단어 사이 기호를 바꾸거나 막히는 곳이 많습니다</label>` : ''}
+    </div><div class="m-foot"><button class="btn" id="rc-no">취소</button><span class="grow"></span><button class="btn primary" id="rc-ok" ${blockC.length || big ? 'disabled' : ''}>검수 기준 v${base.ver + 1} 저장</button></div></div>`;
+    document.body.appendChild(ov); const back = $('r-save'), close = () => { ov.remove(); back.focus(); };
+    ov.querySelector('#rc-no').onclick = close; ov.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
+    ov.querySelectorAll('[data-mfix]').forEach(b => b.onclick = () => { ov.remove(); const [k, f] = b.dataset.mfix.split('-'); openRow(k, f); });
+    if ($('rc-ack')) $('rc-ack').onchange = () => { $('rc-ok').disabled = !$('rc-ack').checked; };
+    ov.querySelector('#rc-ok').onclick = () => { ov.remove(); doSave(ch); };
+    setTimeout(() => (ov.querySelector('#rc-ack') || ov.querySelector(blockC.length ? '[data-mfix]' : '#rc-ok')).focus(), 0); };
+  function doSave(ch) {
+    const t = new Date(), at = isoToday() + ' ' + String(t.getHours()).padStart(2, '0') + ':' + String(t.getMinutes()).padStart(2, '0');
+    const body = P => { const o = clone(P); ['ver', 'at', 'by', 'hist', 'bodies', 'props'].forEach(x => delete o[x]); return o; };
+    const what = ch.length === 1 ? `${ch[0].label}: ${ch[0].from} → ${ch[0].to}` : `${ch[0].label} 외 ${ch.length - 1}곳`;
+    const nv = Object.assign(body(D), { schemaVersion: 2, ver: base.ver + 1, at, by: ME.name, props: getPolicy().props || [],
+      hist: [{ ver: base.ver + 1, at, by: ME.name, what, changes: ch.map(c => ({ label: c.label, from: c.from, to: c.to })) }].concat(base.hist),
+      bodies: Object.assign({}, base.bodies, { [base.ver]: body(base) }) });   // the old body stays readable (Codex-4)
+    savePolicy(nv); pushAudit({ act: '검수 기준 v' + nv.ver, target: '검수 기준', why: what });
+    base = getPolicy(); D = clone(base); open.clear(); drawAll();
+    toast(`검수 기준 v${nv.ver}로 저장했습니다 — 다음 신청 · 검사부터 적용 · 이전 기준으로 검사한 엑셀 묶음은 다시 검증하라고 안내합니다`, 'success'); }
+
+  /* ---- start ---- */
+  drawBanners(); drawAll();
+  if (q.get('k') && q.get('f') && POL_FIELD[q.get('k')] && POL_FIELD[q.get('k')][q.get('f')]) openRow(q.get('k'), q.get('f'));
+  else if (q.get('sec')) { const s = $('sec-' + q.get('sec')); if (s) { s.scrollIntoView({ block: 'start' }); s.classList.add('hl'); } }
 })();
 </script>
 </body>

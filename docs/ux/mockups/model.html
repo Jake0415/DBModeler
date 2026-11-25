@@ -364,11 +364,12 @@ window.pageInit = function () {
   // compliance recalculated from data on every render (CX-21)
   function updateComp() {
     let tot = 0, okc = 0, bad = 0, exc = 0, nac = 0, reqc = 0;
-    E.forEach(e => { if (e.ref) return; tot++; if (e.p === '—') bad++; else okc++;
+    const pol = getPolicy(), RB = ps => ps.some(p => p.lvl === 'block');   /* Q2 (31): same counting as compOf — items stay in the denominator, judged by the rules that are on */
+    E.forEach(e => { if (e.ref) return; tot++; if (e.p === '—' || RB(entRuleProblems(e, pol))) bad++; else okc++;
       e.a.forEach(a => { if (a.edit) return; if (a.s === 'na') { nac++; return; } tot++;
-        if (a.s === 'ok') okc++; else if (a.s === 'ex') { okc++; exc++; } else if (a.s === 'req') { okc++; reqc++; } else bad++; }); });
+        if ((a.s === 'ok' || a.s === 'req') && RB(attrRuleProblems(a, pol))) bad++; else if (a.s === 'ok') okc++; else if (a.s === 'ex') { okc++; exc++; } else if (a.s === 'req') { okc++; reqc++; } else bad++; }); });
     const rate = tot ? Math.floor(okc / tot * 100) : 0;
-    $('rate').textContent = rate + '%'; $('c-bad').textContent = bad; $('c-ex').textContent = exc; $('c-na').textContent = nac;
+    $('rate').textContent = rate + '%'; { let o = $('rate-off'); if (!o) { $('rate').insertAdjacentHTML('afterend', '<span id="rate-off"></span>'); o = $('rate-off'); } o.innerHTML = offRulesHtml(pol) ? ' · ' + offRulesHtml(pol) : ''; } $('c-bad').textContent = bad; $('c-ex').textContent = exc; $('c-na').textContent = nac;
     const exList = []; E.forEach(e => e.a.forEach(a => { if (a.s === 'ex') exList.push([e.p !== '—' ? e.p : e.n, a.p !== '—' ? a.p : a.n, a.exReason || '—']); }));
     lastComp = { rate, bad, req: reqc, na: nac, exList };
     $('c-cand').textContent = candOpenCount();

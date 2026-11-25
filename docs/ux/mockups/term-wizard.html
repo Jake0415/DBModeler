@@ -211,6 +211,7 @@ MDFCN_ID
 <script>
 window.pageInit = function () {
   const q = new URLSearchParams(location.search), $ = id => document.getElementById(id);
+  if ($('o-conn')) $('o-conn').value = polSep();   // 31: the word separator starts from the policy (단어 사이 기호)
   // script-driven moves keep the review role (&audit=1&as=) like the shell does for plain links (go() is the stepper here, so: nav)
   const nav = u => { const as = q.has('audit') && q.get('as'); if (as && !/[?&]as=/.test(u)) u += (u.includes('?') ? '&' : '?') + 'audit=1&as=' + as; location.href = u; };
   const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
@@ -289,7 +290,7 @@ window.pageInit = function () {
   function readOpt() {
     const suffix = {}; $('o-suffix').value.split('\n').forEach(l => { const m = l.split('='); if (m.length === 2 && m[0].trim() && m[1].trim()) suffix[m[0].trim()] = m[1].trim(); });
     const strip = $('o-strip').value.split(/\s+/).filter(Boolean).map(t => t === '공백' ? ' ' : t);
-    return { basis: radio('basis'), range: radio('range'), max: +$('o-max').value, prio: $('o-prio').value, conn: $('o-conn').value || '_', suffix, strip,
+    return { basis: radio('basis'), range: radio('range'), max: +$('o-max').value, prio: $('o-prio').value, conn: $('o-conn').value, suffix, strip,
       na: $('o-na').value.split('\n').map(s => s.trim()).filter(Boolean), ents: [...document.querySelectorAll('#o-ents input:checked')].map(c => c.value), entRows: $('o-entrow').checked };
   }
   const glob = p => new RegExp('^' + p.replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*') + '$', 'i');
@@ -579,7 +580,8 @@ window.pageInit = function () {
       toast(`‘${esc(c.parts[editPart].w)}’ → ‘${esc(w)}’로 바꿨습니다 · ${esc(a.term)} ${esc(a.phys)}`, 'success'); editPart = null; drawWords(); return;
     }
     if (e.target.id === 'd-new') {
-      const ab = $('d-abbr').value.trim().toUpperCase(); if (!/^[A-Z][A-Z0-9_]*$/.test(ab)) { toast('약어는 영문 대문자·숫자·_ 로 입력하세요', 'danger'); $('d-abbr').focus(); return; }
+      const ab = abbrCase($('d-abbr').value.trim(), 'word'), rp = ab ? ruleProblems('word', 'abbr', ab).filter(p => p.lvl === 'block') : [{ msg: '약어를 입력하세요' }];   // 31: the policy field rule, not a page regex
+      if (rp.length) { toast(rp[0].msg, 'danger'); $('d-abbr').focus(); return; }
       const w = c.parts[editPart].w; newWords[w] = ab; refreshAlts();
       const hit = rows.filter(x => x.choice && x.choice.parts.some(p => p.w === w && p.kind === 'new')).length;
       toast(`‘${esc(w)}’${josa(w, '을/를').slice(w.length)} 새 단어(${ab})로 지정했습니다 — 이 조각이 있는 ${hit}개 항목에 반영 · ④에서 단어 신청 항목으로 나옵니다`, 'success'); editPart = null; drawWords(); return;

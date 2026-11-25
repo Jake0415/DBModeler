@@ -94,6 +94,10 @@
     <h1>결재함</h1>
     <div class="seg u-ml-24" id="boxes" role="group" aria-label="결재함"></div>
   </div>
+  <div id="pol-props-note"></div>
+  <script>/* 31 · UX-impl N-04: modelers' rule proposals reach the DA here (결재함) */
+  (function () { if (!window.can || !can('rules.edit')) return; const n = (getPolicy().props || []).filter(p => p.st === '검토 대기').length; if (!n) return;
+    document.getElementById('pol-props-note').innerHTML = `<div class="banner info" style="margin:12px 20px 0"><i data-ic=info></i><div class="grow caption"><b>검수 기준 변경 제안 ${n}건</b>이 검토를 기다립니다 — 모델러가 보낸 기준 변경 요청입니다.</div><a class="btn sm" href="rules.html?sec=props">검토하기</a></div>`; })();</script>
   <div class="page-body">
     <div class="main">
       <div class="pad u-pb-0" id="new-banner" hidden></div>
@@ -451,10 +455,12 @@ window.pageInit = function () {
     if (d.step === 'done') { const a = d.applied || {}; return `<div class="banner">${icon('check')}<div>최종 승인 때 검사를 통과해 반영했습니다. 반영 ${a.applied != null ? a.applied : (d.items || []).length}건${a.failed && a.failed.length ? ` · 실패 ${a.failed.length}건(${a.failed.map(f => f.join(': ')).join(', ')})` : ''}. 반영 뒤 바뀐 내용은 <a href="dict-history.html">표준 사전 변경 내역</a>에서 확인하세요.</div></div>`; }
     const R = checkDictDoc(withMarks(d));   // DX-12: rejected (or marked) items are skipped
     if (!R.length) return '<div class="caption muted">검사할 항목이 없습니다.</div>';
-    const pol = getPolicy(); const pv = `<div class="caption muted u-mb-8">검수 기준: 신청 시점 ${d.policyVer ? 'v' + d.policyVer : '기록 없음'} · 현재 v${pol.ver}${d.policyVer && d.policyVer !== pol.ver ? '. <b class="u-warning">신청 뒤 기준이 바뀌어 현재 기준으로 다시 검사합니다</b>' : ''}</div>`;
+    const pol = getPolicy(); const pv = `<div class="caption muted u-mb-8">검수 기준: 신청 시점 ${d.policyVer ? 'v' + d.policyVer : '기록 없음'} · 현재 v${pol.ver}${d.policyVer && d.policyVer !== pol.ver ? `. <b class="u-warning">신청 뒤 기준이 바뀌어 현재 기준으로 다시 검사합니다</b> <a class="rule-ref" href="rules.html?from=${d.policyVer}">무엇이 바뀌었나</a>` : ''} · <a class="rule-ref" href="rules.html">기준 보기</a>${offRulesHtml(pol) ? ' · ' + offRulesHtml(pol) : ''}</div>`;   /* 31 · Codex-4 · UX-02 */
+    const WN = (withMarks(d).items || []).map(it => { if (it.rej) return []; const op = opOf(it), ex = op === '변경' && it.id ? getDict().find(x => x.id === it.id) : null;   // 31 · Codex-impl-5: changes too (the final values)
+      const tgt = op === '추가' ? Object.assign({}, it) : ex ? Object.assign(mergedOf(ex, it), { k: ex.kn === '엔터티 용어' ? 'entity' : ex.k }) : null; return tgt ? checkItem(tgt, { self: ex ? ex.id : undefined, batch: (d.items || []).filter(o => o !== it && !o.rej) }).filter(p => p.lvl === 'warn').map(p => p.msg) : []; });   // 31 · Codex-2: warnings reach the check tab
     const n = R.filter(r => r.problems.length).length;
     const aligned = R.length === (d.items || []).length;   // one result per submitted item → a failing name can jump to its row (A5)
-    return pv + `<table class="tbl"><thead><tr><th>항목</th><th>구분</th><th>현재 사전 기준</th></tr></thead><tbody>${R.map((r, i) => `<tr><td>${aligned && r.problems.length ? `<button type="button" class="sumlink err" data-goitem="${i}" aria-label="${esc(r.name)} — 항목 탭에서 보기">${esc(r.name)}</button>` : esc(r.name)}</td><td>${r.op}</td><td>${r.skip ? `<span class="caption muted">검사 제외 · ${r.skip}</span>` : r.problems.length ? tag('err', r.problems.length + '건') + ' <span class="caption">' + r.problems.join(' / ') + '</span>' : tag('ok', '통과')}</td></tr>`).join('')}</tbody></table><div class="caption ${n ? '' : 'muted'} u-mt-8">${n ? `<b class="u-danger">${n}건 실패</b>. DA 승인과 최종 승인 모두 이 검사를 다시 하며, 실패가 있으면 승인하지 않고 이력에 남깁니다. 반려해 보완을 요청하세요.` : '승인할 때마다(DA·최종) 현재 사전 기준으로 다시 검사합니다.'}</div>`;
+    return pv + `<table class="tbl"><thead><tr><th>항목</th><th>구분</th><th>현재 사전 기준</th></tr></thead><tbody>${R.map((r, i) => `<tr><td>${aligned && r.problems.length ? `<button type="button" class="sumlink err" data-goitem="${i}" aria-label="${esc(r.name)} — 항목 탭에서 보기">${esc(r.name)}</button>` : esc(r.name)}</td><td>${r.op}</td><td>${r.skip ? `<span class="caption muted">검사 제외 · ${r.skip}</span>` : r.problems.length ? tag('err', r.problems.length + '건') + ' <span class="caption">' + r.problems.join(' / ') + '</span>' : tag('ok', '통과')}${aligned && WN[i] && WN[i].length ? ` <span class="caption u-warning">경고 ${WN[i].length} · ${esc(WN[i].join(' / '))}</span>` : ''}</td></tr>`).join('')}</tbody></table><div class="caption ${n ? '' : 'muted'} u-mt-8">${n ? `<b class="u-danger">${n}건 실패</b>. DA 승인과 최종 승인 모두 이 검사를 다시 하며, 실패가 있으면 승인하지 않고 이력에 남깁니다. 반려해 보완을 요청하세요.` : '승인할 때마다(DA·최종) 현재 사전 기준으로 다시 검사합니다.'}</div>`;
   }
   /* A2 impact tab (dictionary documents): what each item touches today — model columns that use it, entries that rely on it, risky field changes */
   function impactOf(d) {
@@ -773,7 +779,7 @@ window.pageInit = function () {
       if (box === 'queue') captureToast();
       // DX-12: marked items are written to the document as rejected (with reason · who · step) before the approval itself
       const back = d.type === 'dict' ? markRejected(d) : [];
-      const af = actingFor(USERS[ME.id] || ME, d, d.step); addHist(d, { act: `${stepRole(d.step)} 승인${af ? ` (대리 — ${af.name})` : ''}`, why, step: d.step, self, forId: af ? af.id : undefined });   /* R-08 */
+      const af = actingFor(USERS[ME.id] || ME, d, d.step); addHist(d, { act: `${stepRole(d.step)} 승인${af ? ` (대리 — ${af.name})` : ''}`, why, step: d.step, self, forId: af ? af.id : undefined, policyVer: d.policyVer, checkVer: getPolicy().ver });   /* 31 · Codex-impl-5: 신청 vA · 판정 vB per step */   /* R-08 */
       if (self) { const fin = approversFor(Object.assign({}, d, { line: ['da', 'final'], hist: (d.hist || []).concat([{ step: 'da', act: 'DA 승인', whoId: ME.id }]) }), 'final').filter(u => u.id !== ME.id); if (!fin.length) { toast('자기 승인은 신청자가 아닌 최종 승인자가 있을 때만 할 수 있습니다 — 다른 DA가 승인하거나 기관 담당자를 지정하세요', 'danger'); pending = null; return; } }
       if (self && d.step === 'da' && !hasFinal(d)) { d.line = ['da', 'final']; addHist(d, { act: '자기 승인 — 최종 승인 단계 추가', why: '자기 승인한 문서는 최종 승인을 거칩니다(R-02)', step: 'da' }); }
       const was = d.step; d.step = was === 'da' && hasFinal(d) ? 'final' : 'done'; d.decisionPolicyVer = getPolicy().ver;

@@ -120,6 +120,9 @@ window.pageInit = function () {
     // each finding keeps where it is (entity · attribute) so the row can open the model or standardize there (D8)
     const block = [], warn = [], F = (t, e, a, std) => ({ t, e, a, std });
     target.forEach(e => { if (e.p === '—' || !ascii(e.p)) block.push(F(`${e.n}: 테이블 물리명 ${e.p === '—' ? '없음' : '무효'}`, e, null, true)); e.a.forEach(a => { if (a.edit) return; if (a.p === '—' || !ascii(a.p)) block.push(F(`${e.n}.${a.n}: 물리명 ${a.p === '—' ? '없음' : '무효(' + a.p + ')'}`, e, a, true)); else if (a.t === '—') block.push(F(`${e.n}.${a.n}: 타입 없음`, e, a, false)); else if (a.s === 'ex') warn.push(F(`${e.n}.${a.n}: 비표준 · 예외 사유 있음`, e, a, false)); else if (['comb', 'unreg'].includes(a.s)) warn.push(F(`${e.n}.${a.n}: 미준수`, e, a, true)); }); });
+    { const DB = /postgre/i.test(String(L.model.dbms || curSys().dbms || curSys().db || '')) ? 'postgresql' : 'oracle';   /* 31 · Codex-6: the same policy judgement + the system DB rules (length · reserved words · upper-case collisions) */
+      target.forEach(e => { [...entRuleProblems(e, null, DB), ...e.a.filter(a => !a.edit).flatMap(a => attrRuleProblems(a, null, DB).map(p => Object.assign(p, { at: a })))].forEach(p => { if (p.f !== 'p') return; (p.lvl === 'block' ? block : warn).push(F(`${e.n}${p.at ? '.' + p.at.n : ''}: ${p.msg}`, e, p.at || null, true)); });
+        const seen = {}; e.a.filter(a => !a.edit && a.p !== '—').forEach(a => { const u = a.p.toUpperCase(); if (seen[u] && seen[u] !== a.p) block.push(F(`${e.n}: 컬럼명 ${seen[u]} · ${a.p}는 DB에서 같은 이름(${u})입니다`, e, a, true)); seen[u] = seen[u] || a.p; }); }); }
     if (scope === 'sys') block.push(F('시스템 전체는 조회용입니다 — 업무 영역별로 출력하세요'));
     if (!target.length && scope !== 'sys') block.push(F('출력할 테이블이 없습니다 — 범위를 고르세요'));
     const lines = [];

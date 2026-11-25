@@ -143,7 +143,7 @@ window.pageInit = function () {
         : a.C.bad ? `<a href="standardize.html?area=${a.id}&f=todo">표준 맞추기</a>`
         : a.open.length ? `<span class="muted">${a.open.join(', ')} 완료 후 확정</span>` : `<a href="model.html?area=${a.id}">확정 신청</a>`;
       return `<tr><td><a href="model.html?area=${a.id}">${a.m.name}</a></td><td class="muted">${a.sys} <span class="faint">${a.dbms}</span></td><td>${a.L.state === 'review' ? tag('run', '검토') : a.L.state === 'confirmed' ? tag('ok', '확정') : `<span class="muted">${a.stage}</span>`}</td><td class="r"><span class="num">${a.C.rate}%</span><span class="mbar${below ? ' bad' : ''}"><i style="width:${a.C.rate}%"></i><b style="left:${GOAL}%"></b></span></td><td class="r num">${a.C.bad || '—'}</td><td>${next}</td></tr>`; }).join('') || '<tr class="er first"><td colspan="6" class="muted">담당 업무 영역이 없습니다.</td></tr>'}</tbody></table>
-    <div class="ok-line">막대의 세로 눈금은 목표 준수율 ${GOAL}%입니다.</div></section>`;
+    <div class="ok-line">막대의 세로 눈금은 목표 준수율 ${GOAL}%입니다. 준수율은 검수 기준 v${getPolicy().ver}로 계산합니다${offRulesHtml() ? " · " + offRulesHtml() : ""}.</div></section>`;
 
   /* ---- ledger (right): value · basis · gap ---- */
   const lt = live.filter(docLate);

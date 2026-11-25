@@ -8,6 +8,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&display=swap">
 <link rel="stylesheet" href="assets/app.css">
 <script src="assets/app.js"></script>
+<script src="assets/policy-cases.js"></script>
 <style>
   .sg { display:grid; grid-template-columns:minmax(0, 7fr) minmax(0, 5fr); gap:48px; max-width:1560px; }
   .sw { display:grid; grid-template-columns:repeat(6, minmax(0, 1fr)); gap:16px 12px; margin-top:12px; }
@@ -160,6 +161,8 @@ window.pageInit = function () {
   const syncD = () => { const v = document.documentElement.dataset.density || 'default'; document.querySelectorAll('#sg-density button').forEach(b => { b.classList.toggle('on', b.dataset.v === v); b.setAttribute('aria-pressed', b.dataset.v === v); }); };
   document.querySelectorAll('#sg-density button').forEach(b => b.onclick = () => { document.documentElement.dataset.density = b.dataset.v; syncD(); });   // preview only — the saved setting lives in 마이페이지
   syncD();
+  // 31: policy judgement self-check — the same case table the implementation's front end and server must pass
+  { const R = runPolicyCases(), bad = R.filter(r => !r.ok).length; document.querySelector('#sg .sg > div').insertAdjacentHTML('beforeend', `<section class="sec" id="sg-policy"><div class="sec-h"><h2>검수 기준 판정 자체 점검</h2><span class="end muted">31 · policy-cases.js · ${R.length - bad}/${R.length} 통과</span></div><table class="tbl box"><thead><tr><th>경우</th><th>기대</th><th>결과</th><th>판정</th></tr></thead><tbody>${R.map(r => `<tr><td>${r.n}</td><td class="mono">${JSON.stringify(r.want)}</td><td class="mono">${JSON.stringify(r.got)}</td><td>${r.ok ? '<span class="badge b-success">통과</span>' : '<span class="badge b-danger">실패</span>'}</td></tr>`).join('')}</tbody></table></section>`); }
 };
 </script>
 </body>

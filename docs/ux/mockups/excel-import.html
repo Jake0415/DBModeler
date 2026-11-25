@@ -287,7 +287,7 @@ window.pageInit = function () {
   const RULES = { 'D-NOTFOUND': '도메인 없음', 'T-SPACE': '이름 공백', 'X-ZERO': '엑셀이 앞자리 0 제거', 'X-DUPID': '항목 ID 중복', 'X-NAMEDUP': '이름 중복',
     'W-DUPABBR': '영문약어명 중복', 'W-SIMABBR': '비슷한 약어(경고)', 'W-ABBRLEN': '약어 길이 초과', 'D-BADTYPE': '데이터 타입 오류', 'D-NAMERULE': '도메인명 규칙', 'CV-DUP': '코드값 중복', 'CV-LEN': '코드값 길이',
     // E-01: rules the shared approval check reports (checkItem · checkDictDoc)
-    'T-UNKWORD': '미등록 단어', 'T-ABBR': '약어 ≠ 단어 조합', 'T-ABBRLEN': '약어 30자 초과', 'W-ABBRFMT': '영문약어명 형식', 'X-EMPTY': '빈 이름', 'X-COMMON': '공통 표준 변경 불가', 'X-FORBID': '금칙어', 'X-OPEN': '다른 신청과 겹침', 'X-CHECK': '결재 재검사' };
+    'T-UNKWORD': '미등록 단어', 'T-ABBR': '약어 ≠ 단어 조합', 'T-ABBRLEN': '약어 30자 초과', 'W-ABBRFMT': '영문약어명 형식', 'X-EMPTY': '빈 이름', 'X-COMMON': '공통 표준 변경 불가', 'X-FORBID': '금칙어', 'X-OPEN': '다른 신청과 겹침', 'X-CHECK': '결재 재검사', 'P-CHARS': '허용 글자 · 기호(검수 기준)', 'P-FORM': '이름 형식(검수 기준)' };
   // how to fix, per rule — the same text goes into the downloaded error guide (DX-08)
   const GUIDE = { 'D-NOTFOUND': '사전에 있는 도메인명으로 바꾸세요(예: 연월일C8). 새 도메인이면 도메인 양식으로 먼저 신청합니다',
     'T-SPACE': '용어명의 공백을 지우세요(예: 산출물 검수 일자 → 산출물검수일자)', 'X-ZERO': '셀 서식을 텍스트로 바꾸고 앞자리 0을 살려 다시 입력하세요',
@@ -299,12 +299,13 @@ window.pageInit = function () {
     'T-UNKWORD': '사전에 없는 단어가 들어 있습니다 — 표준단어 양식으로 단어부터 신청하거나 있는 단어로 이름을 고치세요', 'T-ABBR': '용어 영문약어명은 구성 단어 약어를 이어 계산합니다 — 용어명을 고치면 다시 계산합니다',
     'T-ABBRLEN': '용어 영문약어명이 30자를 넘습니다 — 더 짧은 단어로 이름을 구성하세요', 'W-ABBRFMT': '영문약어명은 대문자·숫자만, 숫자로 시작할 수 없습니다', 'X-EMPTY': '이름 칸을 채우세요',
     'X-COMMON': '공통 표준 항목은 기관에서 바꿀 수 없습니다 — 공통표준 관리의 새 판 신청으로 요청하세요', 'X-FORBID': '금칙어 대신 안내된 표준 단어를 쓰세요',
-    'X-OPEN': '같은 항목을 다른 신청이 처리 중입니다 — 그 신청이 끝난 뒤 다시 검증하세요', 'X-CHECK': '결재 재검사 문구를 확인하고 해당 칸을 고치세요' };
+    'X-OPEN': '같은 항목을 다른 신청이 처리 중입니다 — 그 신청이 끝난 뒤 다시 검증하세요', 'X-CHECK': '결재 재검사 문구를 확인하고 해당 칸을 고치세요',
+    'P-CHARS': '검수 기준이 허용하지 않는 글자나 기호가 있습니다 — 문구의 허용 글자로 고치세요. 기준은 표준 사전 › 검수 기준에서 봅니다', 'P-FORM': '검수 기준의 이름 형식(숫자로 시작 · 기호 연속 · DB가 쓰는 낱말)에 걸렸습니다 — 이름을 고치세요' };
   /* ---- E-01 · ONE re-judge for every edit path (seed · cell edit · 제안 적용 · 자동 수정 · 찾아 바꾸기 · 다시 검증):
      the approval re-check itself (checkDictDoc on the row's request item) + the shared item check (checkItem: which field, warnings, rows of this file)
      + the term decomposition (a renamed term is split again; unknown word → error, word still in another request → 선행 승인 보류).
      A row only becomes 신규/변경 when it passes; otherwise it is 오류 with the real reason and rule. */
-  const RULE_OF = [[/미등록 단어/, 'T-UNKWORD'], [/공백/, 'T-SPACE'], [/30자 초과/, 'T-ABBRLEN'], [/단어 약어 조합/, 'T-ABBR'], [/이름이 비어/, 'X-EMPTY'], [/같은 이름|새 이름 '|이름과 겹침|이름이 겹침/, 'X-NAMEDUP'],
+  const RULE_OF = [[/쓸 수 없는 글자/, 'P-CHARS'], [/숫자로 시작할 수 없음|기호 \S+ 연속|쓰는 낱말/, 'P-FORM'], [/미등록 단어/, 'T-UNKWORD'], [/공백/, 'T-SPACE'], [/용어 영문약어명 \d+자 — \d+자 초과/, 'T-ABBRLEN'], [/단어 약어 조합/, 'T-ABBR'], [/이름이 비어/, 'X-EMPTY'], [/같은 이름|새 이름 '|이름과 겹침|이름이 겹침/, 'X-NAMEDUP'],
     [/^약어 .+ 씀$/, 'W-DUPABBR'], [/자 초과/, 'W-ABBRLEN'], [/영문약어명이 비어|대문자/, 'W-ABBRFMT'], [/도메인 '.+'이 사전에 없음|도메인이 비어/, 'D-NOTFOUND'],
     [/도메인명은|타입은|소수점|도메인분류|그룹은/, 'D-NAMERULE'], [/공통 표준은/, 'X-COMMON'], [/금칙어/, 'X-FORBID'], [/신청 중/, 'X-OPEN']];
   const RULE_FIELD = { 'T-UNKWORD': 'name', 'T-SPACE': 'name', 'T-ABBRLEN': 'name', 'T-ABBR': 'name', 'X-EMPTY': 'name', 'X-NAMEDUP': 'name', 'W-DUPABBR': 'abbr', 'W-ABBRLEN': 'abbr', 'W-ABBRFMT': 'abbr', 'D-NOTFOUND': 'dom', 'D-NAMERULE': 'name', 'X-FORBID': 'name' };
@@ -391,7 +392,6 @@ window.pageInit = function () {
   ];
   // ---- DX-07: every kind walks the same six steps — columns, header mapping, seed rows and rules differ per kind
   const TYPES = { N: 'NUMERIC', C: 'CHAR', V: 'VARCHAR', D: 'DATE', T: 'TIMESTAMP' };
-  const wordLim = () => getPolicy().wordAbbr || 6;   // the same limit the approval check uses
   const CG = { 요구사항상태: { id: 'C-0006', dom: '코드C1' }, 산출물상태: { abbr: 'DLVRBL_STTS', dom: '코드C1', eng: '산출물 진행 상태' } };   // code groups the sample rows belong to
   const W_ROWS = [
     // E-02: every new word here is absent from the full common standard (검수 · 점검 · 정비 · 납품 · 수령자 are common words now); warnings come from the shared check
@@ -525,7 +525,7 @@ window.pageInit = function () {
   }
   if (!canWrite && !B && !demo && !missingB && !window.__pgRo) { $('resume-banner').hidden = false; $('resume-banner').innerHTML = `<div class="banner info"><i data-ic=info></i><div class="grow"><b>조회 전용</b> — ${ME.name}님 역할은 ${roReason}. 파일을 올려 오류를 확인하고 가이드를 내려받을 수는 있지만, 고치기와 신청은 할 수 없습니다. 신청은 DA·모델러에게 요청하세요.</div><a class="btn sm" href="uploads.html">업로드 이력</a></div>`; }
   if (stale) { $('resume-banner').hidden = false; $('resume-banner').insertAdjacentHTML('beforeend', `<div class="banner warning u-mt-8"><i data-ic=warn></i><div class="grow"><b>다시 검증해야 합니다</b> — 이 묶음을 검증한 뒤 ${B.token.policy !== getPolicy().ver ? `검수 기준이 v${B.token.policy} → v${getPolicy().ver}로` : '사전이'} 바뀌었습니다. 화면에서 고친 값은 그대로 두고 현재 기준으로 다시 검증합니다.</div><button class="btn sm primary" id="revalidate">다시 검증</button></div>`);
-    setTimeout(() => { const b = $('revalidate'); if (b) b.onclick = () => { ROWS.forEach(r => { if (['new', 'chg', 'pre'].includes(r.st)) rejudge(r, '다시 검증 통과(현재 기준)'); }); /* E-01: the same re-judge */ stale = false; if (B) B.token = tokenNow(); persist(); toast('현재 기준으로 다시 검증했습니다 — 고친 값은 유지', 'success'); $('resume-banner').querySelectorAll('.banner.warning').forEach(x => { if (x.querySelector('#revalidate')) x.remove(); }); render(); }; }, 0); }
+    setTimeout(() => { const b = $('revalidate'); if (b) b.onclick = () => { ROWS.forEach(r => { if (['new', 'chg', 'pre', 'err'].includes(r.st)) rejudge(r, '다시 검증 통과(현재 기준)'); });   /* 31 · Codex-4: error rows too — a changed policy may let them pass */ /* E-01: the same re-judge */ stale = false; if (B) B.token = tokenNow(); persist(); toast('현재 기준으로 다시 검증했습니다 — 고친 값은 유지', 'success'); $('resume-banner').querySelectorAll('.banner.warning').forEach(x => { if (x.querySelector('#revalidate')) x.remove(); }); render(); }; }, 0); }
   const counts = () => { const c = { new: 0, chg: 0, same: 0, waitSame: 0, waitDiff: 0, conflict: 0, dup: 0, pre: 0, err: 0, missing: 0, pick: 0 }; ROWS.forEach(r => { c[r.st === 'pick' ? 'pick' : r.st]++; }); return c; };
   function persist() {
     if (!canWrite) { $('saved').innerHTML = `<span class="sdot"></span>${demo ? '예시 · 저장 안 함' : '조회 전용'}`; return; }
@@ -670,7 +670,7 @@ window.pageInit = function () {
     if (r.st === 'pre') { const w = r.word || '—', d0 = r.doc || ''; body += `<div class="banner warning u-mt-12"><i data-ic=warn></i><div class="grow">${d0 ? `다른 신청(${d0})의 ` : ''}새 단어 ‘${w}’가 아직 승인 전입니다. 이 행은 <b>보류</b>되고, 단어가 승인되면 업로드 이력에서 다시 검증해 이어서 신청합니다.</div>${d0 ? `<a class="btn sm" href="approvals.html?doc=${d0}">결재 보기</a>` : ''}</div>`; }
     if (r.st === 'err') {
       const where = r.rule === 'X-DUPID' ? '한 항목 ID는 한 행에만 있어야 합니다. 복사한 행이면 ID를 지우고 새 항목으로 처리하세요.'
-        : `<b>고치는 법</b> · ${GUIDE[r.rule] || '규칙을 확인하세요'}.<br>${r.bad ? `표에서 붉은 칸(${K.lbl[r.bad] || r.bad})을 바로 고치면 즉시 다시 검증합니다(Enter 확인 · Esc 파일 값).` : '칸 하나를 고쳐서 풀리는 문제가 아닙니다 — 아래 조치나 다른 신청의 결과를 기다리세요.'}`;
+        : `<b>고치는 법</b> · ${GUIDE[r.rule] || '규칙을 확인하세요'}${['P-CHARS', 'P-FORM', 'W-ABBRLEN', 'T-ABBRLEN', 'T-ABBR', 'W-ABBRFMT', 'T-SPACE'].includes(r.rule) ? ` <a class="rule-ref" href="rules.html?k=${({ 단어: 'word', 용어: 'term', 도메인: 'domain', 코드: 'code' })[kind] || 'word'}&f=${r.rule === 'T-ABBR' ? '' : (r.bad === 'name' && /ABBR/.test(r.rule) ? 'abbr' : r.bad || 'name')}${r.rule === 'T-ABBR' ? '&sec=naming' : ''}">기준 보기 · v${getPolicy().ver}</a>` : ''}.<br>${r.bad ? `표에서 붉은 칸(${K.lbl[r.bad] || r.bad})을 바로 고치면 즉시 다시 검증합니다(Enter 확인 · Esc 파일 값).` : '칸 하나를 고쳐서 풀리는 문제가 아닙니다 — 아래 조치나 다른 신청의 결과를 기다리세요.'}`;
       const sim = r.fix ? simRow(r, effFix(r)) : null;   // E-01: the suggestion is judged the same way before it is offered
       body += `<div class="section-t">무엇이 틀렸나 · <span class="rule">${r.rule}</span></div><div class="caption u-lh-20">${esc5(r.why)}.${r.probs ? `<ul class="prob-list">${r.probs.map(m => `<li>${esc5(m)}</li>`).join('')}</ul>` : ''}<br>${where}</div>
       ${r.fix ? `<div class="card u-mt-8"><div class="caption muted">수정 제안</div><div>${Object.entries(effFix(r)).map(([k, v]) => `<span class="old-v" aria-hidden="true">${esc5(r.shown && k === 'desc' ? r.shown : r[k])}</span><span class="sr-only">${esc5(K.lbl[k] || k)} ${esc5(r.shown && k === 'desc' ? r.shown : r[k])}에서 </span>${esc5(v)}`).join(' · ')}</div><div class="chk-line ${sim.st === 'err' ? 'u-danger' : 'u-success'}">검사: ${esc5(verdict(sim))}</div><div class="flex u-mt-8"><span class="grow"></span><button class="btn sm primary" id="apply-fix">제안 적용</button></div></div>` : ''}
@@ -724,10 +724,10 @@ window.pageInit = function () {
   // format-only checks a typed value must pass before the shared re-judge (rules the approval check does not know: file traces, domain parts)
   function preOk(r, f, val) {
     if (!String(val).trim()) return '빈 값은 쓸 수 없습니다';
-    if (f === 'name' && /\s/.test(val)) return '이름에 공백이 있습니다';
+    { const PK = { 단어: 'word', 용어: 'term' }[kind]; if (PK && f === 'name') { const rp = ruleProblems(PK, 'name', val).filter(p => p.lvl === 'block'); if (rp.length) return rp[0].msg; } else if (f === 'name' && /\s/.test(val)) return '이름에 공백이 있습니다'; }   // 31: name rule from the policy
     if (r.st === 'err' && r.rule === 'X-ZERO' && f === 'desc' && !/^0\d+/.test(val)) return '앞자리 0이 없습니다 — 0012처럼 0을 살려 입력하세요';
     if (kind === '도메인') { if (f === 'type' && !TYPES[val]) return '데이터 타입은 N·C·V·D·T 중 하나'; if (f === 'len' && !/^\d+(,\d+)?$/.test(val)) return '길이는 숫자 또는 숫자,숫자(예: 18,2)'; if (f === 'name' && val !== `${r.dg}${r.type}${r.len}`) return `도메인명은 분류+타입+길이(${r.dg}${r.type}${r.len})로 계산합니다`; }
-    if (kind === '단어' && f === 'abbr' && !/^[A-Z][A-Z0-9]*$/.test(val)) return '영문약어명은 대문자·숫자, 숫자로 시작할 수 없습니다';
+    if (kind === '단어' && f === 'abbr') { const rp = ruleProblems('word', 'abbr', val).filter(p => p.lvl === 'block'); if (rp.length) return rp[0].msg; }   // 31: the policy field rule
     return '';
   }
   const showCellMsg = t => { const m = $('cellmsg'); m.textContent = t; m.hidden = !t; };

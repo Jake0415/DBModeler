@@ -157,7 +157,7 @@ window.pageInit = function () {
   const RO = !can('dict.request');
   const KINDS = ['class', 'word', 'domain', 'term', 'entity', 'code'];   // the officer's flow: class → word(format word) → domain → term → code (decision Q5)
   const KN = { class: '도메인분류', word: '단어', domain: '도메인', term: '용어', entity: '엔터티 용어', code: '코드 · 코드값' };
-  const SUF = { 기본: '_M', 내역: '_D', 이력: '_H', 관계: '_R', 정보: '_I' }, SUFRE = /(기본|내역|이력|관계|정보)$/;
+  const SUF = () => Object.fromEntries(entitySuffixes().map(x => [x.w, polSep() + x.a])), SUFRE = { [Symbol.match]: n => n.match(entitySuffixRe()) };   // 31: entity class words · suffixes from the policy
   const PHYS = { C: 'CHAR', V: 'VARCHAR2', N: 'NUMBER', D: 'DATE', T: 'TIMESTAMP' };
   const SEC = ['', '개인정보', '민감정보', '암호화 대상'];
   const CTYPES = ['자체', '기관', '법정'];
@@ -215,7 +215,8 @@ window.pageInit = function () {
   const grpId = n => (G().groups.find(g => g.id === n || g.name === n) || {}).id || '';
   const liveClasses = () => G().classes.filter(c => c.st === '사용');
   const newClasses = () => R().class.filter(r => t(r.v.name));
-  const batchWords = () => { const m = {}; R().word.forEach(r => { const n = t(r.v.name); if (n) m[n] = t(r.v.abbr).toUpperCase(); }); return m; };
+  const batchWords = () => { const m = {}; R().word.forEach(r => { const n = t(r.v.name); if (n) m[n] = UP(t(r.v.abbr), 'word'); }); return m; };
+  const UP = (v, k) => abbrCase(v, k === 'entity' || k === 'term' ? 'term' : k === 'code' ? 'code' : 'word');   // 31: upper-case only when the policy does not allow lower case
   const batchFmt = () => new Set(R().word.filter(r => t(r.v.name) && r.v.fmt === 'Y').map(r => t(r.v.name)));
   // decomposition that also knows the words written in this session — decompose(name, extra) only takes words that already have an abbreviation,
   // so the page keeps its own split: a word written without its abbreviation still splits out (and is reported as '약어 미입력')
@@ -230,8 +231,8 @@ window.pageInit = function () {
     });
     return parts;
   }
-  const abbrOf = parts => parts.map(p => p.abbr || '?').join('_');
-  const entAbbr = name => { const n = t(name); if (!n) return ''; const m = n.match(SUFRE); return abbrOf(decomp(m ? n.slice(0, -m[1].length) : n)) + (m ? SUF[m[1]] : ''); };
+  const abbrOf = parts => parts.map(p => p.abbr || '?').join(polSep());   // 31: the policy separator
+  const entAbbr = name => { const n = t(name); if (!n) return ''; const m = n.match(SUFRE); return abbrOf(decomp(m ? n.slice(0, -m[1].length) : n)) + (m ? SUF()[m[1]] : ''); };
   const domName = r => { const v = r.v; if (!t(v.cls) && !v.ty) return ''; return t(v.cls) + (v.ty || '') + ('CVN'.includes(v.ty || 'x') || !v.ty ? t(v.len) : '') + (v.ty === 'N' && t(v.sc) ? ',' + t(v.sc) : ''); };
   const physOf = r => { const v = r.v, ty = v.ty; if (!ty) return ''; if (ty === 'D' || ty === 'T') return PHYS[ty]; return `${PHYS[ty]}(${t(v.len) || '?'}${ty === 'N' && t(v.sc) ? ',' + t(v.sc) : ''})`; };
   // B4: classes · domains already in my basket (added, not yet requested) are known here too — not when the basket itself is open as the table
@@ -343,12 +344,12 @@ window.pageInit = function () {
   function itemOf(k, r) {
     const v = r.v, base = { k, name: t(v.name), desc: t(v.desc), act: '추가' };
     if (k !== 'class' && k !== 'code') base.scope = v.scope || '공통';
-    if (k === 'word') return Object.assign(base, { abbr: t(v.abbr).toUpperCase(), eng: t(v.eng), fmt: v.fmt || 'N', syn: split(v.syn), forbid: split(v.forbid) });
-    if (k === 'term') return Object.assign(base, { abbr: t(v.abbr).toUpperCase(), dom: t(v.dom) || r.dsug || '', eng: t(v.eng) });   // an empty domain takes the suggestion (C4)
+    if (k === 'word') return Object.assign(base, { abbr: UP(t(v.abbr), 'word'), eng: t(v.eng), fmt: v.fmt || 'N', syn: split(v.syn), forbid: split(v.forbid) });
+    if (k === 'term') return Object.assign(base, { abbr: UP(t(v.abbr), 'term'), dom: t(v.dom) || r.dsug || '', eng: t(v.eng) });   // an empty domain takes the suggestion (C4)
     if (k === 'entity') return Object.assign(base, { abbr: entAbbr(v.name), dom: '엔터티 용어' });
     if (k === 'domain') return Object.assign(base, { name: domName(r), dg: dgOf(r), dom: physOf(r), allow: t(v.allow), sec: v.sec || '' });
     if (k === 'class') return Object.assign(base, { group: v.group || '', fw: v.fw || '' });
-    if (k === 'code') return Object.assign(base, { abbr: t(v.abbr).toUpperCase(), dom: t(v.dom), dg: '코드', scope: v.scope || '공통', sys: v.scope === '시스템' ? (v.sys || '') : undefined, ctype: v.ctype || '자체', vals: normVals(r.vals) });
+    if (k === 'code') return Object.assign(base, { abbr: UP(t(v.abbr), 'code'), dom: t(v.dom), dg: '코드', scope: v.scope || '공통', sys: v.scope === '시스템' ? (v.sys || '') : undefined, ctype: v.ctype || '자체', vals: normVals(r.vals) });
   }
   function curVal(d, l) {
     if (l === '코드값') return JSON.stringify(normVals(valRows(d.vals)));
@@ -358,7 +359,7 @@ window.pageInit = function () {
     return Array.isArray(v) ? v.join(', ') : v == null ? '' : String(v);
   }
   const changed = r => (EDIT_FIELDS[r.k] || []).filter(l => (r.cur[l] ?? '') !== (r.orig[l] ?? ''));
-  const chgOf = r => { const c = {}; changed(r).forEach(l => { c[l] = l === '코드값' ? [JSON.parse(r.orig[l] || '[]'), JSON.parse(r.cur[l] || '[]')] : [r.orig[l] ?? '', l === '영문약어명' ? t(r.cur[l]).toUpperCase() : t(r.cur[l])]; }); return c; };
+  const chgOf = r => { const c = {}; changed(r).forEach(l => { c[l] = l === '코드값' ? [JSON.parse(r.orig[l] || '[]'), JSON.parse(r.cur[l] || '[]')] : [r.orig[l] ?? '', l === '영문약어명' ? UP(t(r.cur[l]), r.k) : t(r.cur[l])]; }); return c; };
   const KEDIT = ['word', 'term', 'entity', 'domain', 'code'];
   const commonCode = d => d && d.k === 'code' && d.src === '공통';
   const editable = d => d.src === '기관' && d.ver > 0 && !d.pending && d.st !== '삭제 보관' && KEDIT.includes(kindKey(d));
@@ -375,9 +376,9 @@ window.pageInit = function () {
     const n = it.name, m = k === 'entity' ? n.match(SUFRE) : null, base = m ? n.slice(0, -m[1].length) : n, parts = decomp(base), unk = parts.filter(p => p.unknown);
     ps = ps.filter(p => !/^(미등록 단어|영문약어명은 단어 약어 조합|형식단어로 끝나지 않음)/.test(p.msg));
     if (unk.length) ps.unshift({ f: 'name', lvl: 'block', msg: `미등록 단어: ${unk.map(p => p.w).join(', ')} — 단어 탭에 같이 작성하세요` });
-    else { const want = abbrOf(parts) + (m ? SUF[m[1]] : ''); if (it.abbr && it.abbr !== want) ps.push({ f: 'abbr', lvl: 'block', msg: `영문약어명은 단어 약어 조합 ${want}여야 함` }); }
-    const last = parts[parts.length - 1];
-    if (k === 'term' && last && !last.unknown && !formatWords().includes(last.w) && !batchFmt().has(last.w)) ps.push({ f: 'name', lvl: 'warn', msg: `형식단어로 끝나지 않음(끝 단어 '${last.w}')` });
+    else { const NL = getPolicy().naming, want = abbrOf(parts) + (m ? SUF()[m[1]] : ''); if (NL.composeLvl !== 'off' && it.abbr && it.abbr !== want) ps.push({ f: 'abbr', lvl: NL.composeLvl, rule: 'naming.compose', ver: getPolicy().ver, msg: `영문약어명은 단어 약어 조합 ${want}여야 함` }); }
+    const last = parts[parts.length - 1], fwl = getPolicy().naming.endsWithFormatWordLvl;
+    if (k === 'term' && fwl !== 'off' && last && !last.unknown && !formatWords().includes(last.w) && !batchFmt().has(last.w)) ps.push({ f: 'name', lvl: fwl, rule: 'naming.endsWithFormatWord', ver: getPolicy().ver, msg: `형식단어로 끝나지 않음(끝 단어 '${last.w}')` });
     if (parts.some(p => p.nw && !p.abbr)) ps.push({ f: 'name', lvl: 'warn', msg: `작성 중인 단어의 영문약어명이 비어 있음: ${parts.filter(p => p.nw && !p.abbr).map(p => p.w).join(', ')}` });
     return ps;
   }
@@ -396,7 +397,7 @@ window.pageInit = function () {
     const ch = changed(r); if (!ch.length) return [];
     const c = r.cur, k = r.k, nameL = EDIT_FIELDS[k][0], out = [];
     const it = k === 'code' ? { k, name: t(c[nameL]), abbr: r.abbr, dom: r.dom, eng: c['영문명'], scope: c['적용 범위'], sys: r.sys, ctype: r.ctype, vals: normVals(r.vals), desc: c['설명'] }
-      : { k, name: t(c[nameL]), abbr: t(c['영문약어명']).toUpperCase(), eng: c['영문명'], dom: k === 'entity' ? '엔터티 용어' : k === 'domain' ? c['물리 타입'] : t(c['도메인']), fmt: c['형식단어'], syn: split(c['이음동의어']), forbid: split(c['금칙어']), dg: c['도메인그룹'], scope: c['적용 범위'], desc: c['설명'] };
+      : { k, name: t(c[nameL]), abbr: UP(t(c['영문약어명']), k), eng: c['영문명'], dom: k === 'entity' ? '엔터티 용어' : k === 'domain' ? c['물리 타입'] : t(c['도메인']), fmt: c['형식단어'], syn: split(c['이음동의어']), forbid: split(c['금칙어']), dg: c['도메인그룹'], scope: c['적용 범위'], desc: c['설명'] };
     const fset = new Set(ch.map(l => l === nameL ? 'name' : (FIELD_KEY[l] || l)));
     if (ch.includes(nameL) && (k === 'term' || k === 'entity')) fset.add('abbr');
     if (fset.has('forbid')) fset.add('syn');   // checkItem reports synonym and forbidden-word clashes under 'syn'
@@ -538,11 +539,11 @@ window.pageInit = function () {
         if (!edit && k === 'term' && col.f === 'dom') { const ph = r.dsug || ''; if (inp.placeholder !== ph) inp.placeholder = ph; }
       });
       tr.querySelector('[data-st]').innerHTML = statusHTML(r, k, edit);
-      const mr = gb.querySelector(`tr.mrow[data-m="${i}"]`), msgs = r.sent ? '' : ps.map(p => { const ci = colOf(cols, p.f); return `<span class="msg ${p.lvl === 'block' ? 'er' : 'wn'}"><span class="ml">${esc(ci >= 0 ? cols[ci].l : '행')}</span>${esc(p.msg)}</span>`; }).join('');
+      const mr = gb.querySelector(`tr.mrow[data-m="${i}"]`), msgs = r.sent ? '' : ps.map(p => { const ci = colOf(cols, p.f); return `<span class="msg ${p.lvl === 'block' ? 'er' : 'wn'}"><span class="ml">${esc(ci >= 0 ? cols[ci].l : '행')}</span>${esc(p.msg)}${p.rule ? " " + ruleLink(p) : ""}</span>`; }).join('');
       let an = '';
       if (!edit && !r.sent && (k === 'term' || k === 'entity') && r.an && r.an === t(r.v.name)) {
         const n = t(r.v.name), m = k === 'entity' ? n.match(SUFRE) : null, parts = decomp(m ? n.slice(0, -m[1].length) : n);
-        an = `<div class="anl"><span class="muted">단어 분석</span>${parts.map(p => p.unknown ? `<span class="wchip unk">${esc(p.w)} · 미등록</span>${RO ? '' : `<button class="btn sm ghost" data-addw="${esc(p.w)}"><i data-ic=plus></i>단어 탭에 추가</button>`}` : `<span class="wchip${p.nw ? ' nw' : ''}">${esc(p.w)}<span class="mono">${esc(p.abbr || '약어 미입력')}</span>${p.nw ? '· 작성 중' : !p.ok ? '· 승인 전' : ''}</span>`).join('')}${m ? `<span class="wchip">${m[1]}<span class="mono">${SUF[m[1]]}</span></span>` : ''}</div>`;
+        an = `<div class="anl"><span class="muted">단어 분석</span>${parts.map(p => p.unknown ? `<span class="wchip unk">${esc(p.w)} · 미등록</span>${RO ? '' : `<button class="btn sm ghost" data-addw="${esc(p.w)}"><i data-ic=plus></i>단어 탭에 추가</button>`}` : `<span class="wchip${p.nw ? ' nw' : ''}">${esc(p.w)}<span class="mono">${esc(p.abbr || '약어 미입력')}</span>${p.nw ? '· 작성 중' : !p.ok ? '· 승인 전' : ''}</span>`).join('')}${m ? `<span class="wchip">${m[1]}<span class="mono">${SUF()[m[1]]}</span></span>` : ''}</div>`;
       }
       if (edit && k === 'word') an = cascHTML(r);
       const html = (msgs ? `<div>${msgs}</div>` : '') + an;
@@ -654,7 +655,7 @@ window.pageInit = function () {
   gb.addEventListener('change', e => {
     const el = e.target; if (!el.classList.contains('gi')) return;
     const col = curCols()[+el.dataset.c]; if (!col || !(col.up || col.f === '영문약어명')) return;
-    const r = curRows()[+el.dataset.r]; el.value = el.value.toUpperCase(); if (isEdit()) r.cur[col.f] = el.value; else r.v[col.f] = el.value; refresh();
+    const r = curRows()[+el.dataset.r]; el.value = col.f === '영문약어명' || col.f === 'abbr' ? UP(el.value, r.k || S.tab) : el.value.toUpperCase(); if (isEdit()) r.cur[col.f] = el.value; else r.v[col.f] = el.value; refresh();
   });
   // paste: tab-separated lines fill rows/columns from this cell (a convenience — not an excel upload)
   // returns true when a list cell got text that is none of its options (kept as typed, reported as an error — C1)
@@ -668,7 +669,7 @@ window.pageInit = function () {
       else { const o = resolveOpt(col, r, v); if (o !== null) v = o; }   // value · name · label
       if (v && !optsOf(col, r).some(x => x[0] === v)) bad = true;
     }
-    if (col.up || col.f === '영문약어명') v = v.toUpperCase();
+    if (col.up || col.f === '영문약어명') v = col.f === '영문약어명' || col.f === 'abbr' ? UP(v, r.k || k) : v.toUpperCase();
     if (isEdit()) { r.cur[col.f] = v; return bad; }
     r.v[col.f] = v; afterSet(k, r, col.f, false);
     return bad;
@@ -783,7 +784,7 @@ window.pageInit = function () {
         td.classList.toggle('er', bl); td.classList.toggle('wn', !bl && mine.length > 0);
         if (mine.length) td.title = mine.map(p => p.msg).join('\n'); else td.removeAttribute('title');
         const inp = td.querySelector('.gi'); if (inp) { inp.setAttribute('aria-invalid', bl ? 'true' : 'false'); if (document.activeElement !== inp && inp.value !== x[c.f]) inp.value = x[c.f]; } });
-      ps.forEach(p => msgs.push(`<span class="msg ${p.lvl === 'block' ? 'er' : 'wn'}"><span class="ml">${i + 1}행 ${VC.find(c => c.f === p.f).l}</span>${esc(p.msg)}</span>`)); });
+      ps.forEach(p => msgs.push(`<span class="msg ${p.lvl === 'block' ? 'er' : 'wn'}"><span class="ml">${i + 1}행 ${VC.find(c => c.f === p.f).l}</span>${esc(p.msg)}${p.rule ? " " + ruleLink(p) : ""}</span>`)); });
     const n = r.vals.filter(vFilled).length;
     $('vmsg').innerHTML = msgs.length ? msgs.join('') : `<span class="caption muted">${n ? `값 ${n}개 · 길이 · 중복 · 이름 정상` : '값을 쓰거나 "01⇥문서" 줄을 붙여 넣으세요'}${r.orig && r.cur['코드값'] !== r.orig['코드값'] ? ' · 바뀐 값은 코드값 변경(전후 목록)으로 신청됩니다' : ''}</span>`;
   }
