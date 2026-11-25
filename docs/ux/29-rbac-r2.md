@@ -111,3 +111,16 @@
 - `datatypes.html`: 요청 탭.
 - `dict-history.html`: 영구 삭제 버튼 권한.
 - `import-excel.html`: 취소 때 다시 확인.
+
+## 7. 변경 기록 — 목업을 권한표에 맞춤 (2026-11-25, 사람 확인: 권한표 기준)
+> 요구사항 추적 점검(`docs/impl/trace/mockup-findings.md` F-26 · F-39 · F-40)에서 목업과 권한표(`packages/rules` PERMS · `docs/impl/rbac-matrix.md`)가 다른 곳을 찾았다. 사용자가 **권한표 기준**으로 정해 목업을 고쳤다. 권한표는 바꾸지 않았다.
+
+| 항목 | 무엇 | 왜 | 화면 |
+|---|---|---|---|
+| F-26 | 임시 비밀번호 DA의 후보 처리: 숨김 → **[반려] · [신청으로 전환] 흐리게 + 이유**(‘임시 비밀번호를 바꾼 뒤 처리할 수 있습니다’, 마이페이지 보안 탭 링크) | 역할은 있고 지금만 못 함 = 흐리게 + 이유(rbac-matrix `cand.decide` 임시PW) | `candidates.html` |
+| F-39 | 영구 삭제 · 도메인 그룹 직접 관리 안내 문구 ‘DA · Admin’ → **‘DA’** | PERMS `dict.purge` · `dict.group` = DA만(15-rbac: Admin은 표준 내용을 바꾸지 않는다). 버튼 표시는 원래 권한으로 정해져 동작 변화 없음 | `dictionary.html` · `domain-groups.html` · `assets/app.js`(화면 안내) · `dict-history.html`(주석) |
+| F-40 | 역할이 없을 때 흐리게 → **숨김**: 사전 [바구니 · 신청] · 일괄 처리 막대 · 바구니 패널 버튼, 도메인 그룹 [그룹 추가] · [분류 추가 신청] · 그룹 [수정] · [미사용] · 분류 [변경 담기] · [미사용 담기], 공통표준 [코드값 보완 담기] · 새 판 [신청하기] — 대신 ‘조회 전용 — …’ 안내 | R-17: 역할상 할 일이 없으면 숨긴다(흐린 버튼을 낭독기가 켜진 버튼으로 읽음) | `dictionary.html` · `domain-groups.html` · `std-common.html` |
+
+- 동작 목록 갱신: BH-candidates-022, BH-dictionary-077 · 101 · 192, BH-domain-groups-003 · 004 · 018 · 032 · 039 · 062, BH-std-common-015 · 030.
+- 확인: 목업 서버에서 hyun(기관 담당자) · park(모델러) · kim(모델러 · DA) · lee(DA · Admin, 임시 비밀번호 켠 상태 포함)로 바꿔 가며 표시 확인, 콘솔 오류 없음.
+- 기준 스크린샷(`node scripts/mockup-baseline.mjs`)은 P1 E2E 틀(T-P1-11) 전에 다시 만든다.

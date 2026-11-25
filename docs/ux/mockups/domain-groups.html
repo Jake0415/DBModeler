@@ -125,9 +125,9 @@ window.pageInit = function () {
   const $ = id => document.getElementById(id);
   const jo = (w, pair) => `‘${esc(w)}’${josa(String(w), pair).slice(String(w).length)}`;
   const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-  const CAN_GROUP = can('dict.group');   // decision Q7: group management stays direct, by permission (DA · Admin)
+  const CAN_GROUP = can('dict.group');   // decision Q7: group management stays direct, by permission (DA only — 15-rbac dict.group)
   const CAN_REQ = can('dict.request');
-  const NOT_DA = '도메인 그룹 직접 관리 권한(DA · Admin)이 필요합니다';
+  const NOT_DA = '도메인 그룹 직접 관리 권한(DA)이 필요합니다';
   const COMMON_RO = '공통(행안부) 표준은 조회 전용입니다';
   const COMMON_CLS = '공통표준 원문 — 공통표준 관리에서 새 판 신청';
   const NO_REQ = '사전 신청 권한이 없습니다 — 모델러 · DA만 신청할 수 있습니다';
@@ -240,9 +240,10 @@ window.pageInit = function () {
         <div class="section-t">도메인 <span class="badge">${B.doms.length}</span></div>${domList(B.doms, B.items, '이 그룹에 속한 도메인이 아직 없습니다.')}
         <div class="section-t">변경 기록 <span class="caption muted">결재 없이 반영 · 사유 필수</span></div>${logList(log)}
       </div>
-      <div class="rp-foot">${blk.edit || blk.unuse ? `<span class="why grow">${esc(blk.edit || blk.unuse)}</span>` : '<span class="grow"></span>'}
+      <div class="rp-foot">${!CAN_GROUP ? '<span class="caption muted grow">조회 전용 — 도메인 그룹 직접 관리는 DA만 할 수 있습니다</span>'   // 29 R-17: 역할이 없으면 버튼을 숨긴다
+        : `${blk.edit || blk.unuse ? `<span class="why grow">${esc(blk.edit || blk.unuse)}</span>` : '<span class="grow"></span>'}
         <span title="${esc(blk.edit || '')}"><button class="btn sm" id="g-edit"${blk.edit ? ' disabled' : ''}><i data-ic=pen data-s=12></i>수정</button></span>
-        ${gr.st === '사용' ? `<span title="${esc(blk.unuse || '')}"><button class="btn sm danger" id="g-unuse"${blk.unuse ? ' disabled' : ''}>미사용</button></span>` : `<span title="${esc(blk.edit || '')}"><button class="btn sm" id="g-reuse"${blk.edit ? ' disabled' : ''}>다시 사용</button></span>`}</div>`;
+        ${gr.st === '사용' ? `<span title="${esc(blk.unuse || '')}"><button class="btn sm danger" id="g-unuse"${blk.unuse ? ' disabled' : ''}>미사용</button></span>` : `<span title="${esc(blk.edit || '')}"><button class="btn sm" id="g-reuse"${blk.edit ? ' disabled' : ''}>다시 사용</button></span>`}`}</div>`;
       const e = $('g-edit'); if (e) e.onclick = () => openGroup(gr);
       const u = $('g-unuse'); if (u) u.onclick = () => openGst(gr, '미사용');
       const r = $('g-reuse'); if (r) r.onclick = () => openGst(gr, '사용');
@@ -315,6 +316,8 @@ window.pageInit = function () {
       foot = `<span class="grow"></span><button class="btn sm" id="cf-x">취소</button><button class="btn sm danger" id="cu-go" data-needs="cu-why" data-needs-msg="미사용 사유를 입력해야 담을 수 있습니다"><i data-ic=basket data-s=12></i>미사용 담기</button>`;
     } else if (c.src === '공통') {
       foot = `<span class="why grow">${esc(COMMON_CLS)}</span>`;
+    } else if (!CAN_REQ) {   // 29 R-17: 역할이 없으면 버튼을 숨긴다
+      foot = '<span class="caption muted grow">조회 전용 — 분류 변경 · 미사용 신청은 모델러 · DA만 할 수 있습니다</span>';
     } else {
       const why = S.chg || (S.unuse ? `미사용: ${S.unuse}` : '');
       foot = `<span class="why grow">${esc(why || '')}</span>
@@ -520,7 +523,9 @@ window.pageInit = function () {
 
   /* ---- wiring ---- */
   const gaddWhy = CAN_GROUP ? '' : NOT_DA;
-  $('b-gadd').disabled = !CAN_GROUP; $('gadd-w').title = gaddWhy;
+  // 29 R-17 · 권한표: 역할이 없으면 숨김
+  $('gadd-w').hidden = !CAN_GROUP; $('gadd-w').title = gaddWhy;
+  $('cadd-w').hidden = !CAN_REQ;
   $('b-gadd').onclick = () => { if (CAN_GROUP) openGroup(null); };
   $('b-cadd').disabled = !CAN_REQ; $('cadd-w').title = CAN_REQ ? '' : NO_REQ;
   $('b-cadd').onclick = () => { const s = sel && sel.t === 'g' ? sel.id : sel && sel.t === 'c' ? (getGroups().classes.find(c => c.id === sel.id) || {}).group : null; openClass(s); };

@@ -385,7 +385,7 @@ window.pageInit = function () {
       </div>
       <div class="rp-foot">${!can('dict.request') && it.st !== '삭제 보관' ? '<span class="caption muted">조회 전용 — 사전 품의(변경 · 미사용 · 삭제 · 복사해서 신규)는 모델러 · DA만 올릴 수 있습니다</span>'   // review: the footer actions used to stay live for read-only roles
         : common ? `<span class="caption muted">공통 표준은 신청할 수 없습니다</span><span class="grow"></span><button class="btn sm" id="copy-new" title="이 항목 값으로 새 기관 항목 신청을 시작합니다"><i data-ic=copy data-s=12></i>복사해서 신규</button>`
-        : it.st === '삭제 보관' ? (can('dict.purge') ? `<span class="caption muted">V0 삭제 보관 — 복원 없음</span><span class="grow"></span><button class="btn sm danger" id="purge">영구 삭제</button>` : '<span class="caption muted">V0 삭제 보관 — 영구 삭제는 DA · Admin</span>')
+        : it.st === '삭제 보관' ? (can('dict.purge') ? `<span class="caption muted">V0 삭제 보관 — 복원 없음</span><span class="grow"></span><button class="btn sm danger" id="purge">영구 삭제</button>` : '<span class="caption muted">V0 삭제 보관 — 영구 삭제는 DA만</span>')
         : it.pending ? `<span class="caption muted">${it.pending} 진행 중이라 새 신청 불가</span><span class="grow"></span><button class="btn sm" id="copy-new"><i data-ic=copy data-s=12></i>복사해서 신규</button>`
         : `<button class="btn sm" id="del-req"${usageOf(it).n > 0 ? ` disabled title="모델 ${usageOf(it).n}곳에서 쓰는 중 — 삭제할 수 없습니다(미사용을 쓰세요)"` : ''}>삭제 담기</button><button class="btn sm" id="copy-new"><i data-ic=copy data-s=12></i>복사해서 신규</button><span class="grow"></span>${it.st === '사용' ? '<button class="btn sm" id="unuse-req">미사용 담기</button>' : ''}<button class="btn primary sm" id="chg-req">변경 담기</button>`}</div>`;
     const ur = $('unuse-req'); if (ur) ur.onclick = () => basketAct([it], '미사용');
@@ -767,8 +767,9 @@ window.pageInit = function () {
   drawQueue();
   // review fix: without request rights the basket is read-only (the reason is on the panel and the header button)
   if (!can('dict.request')) { panel.querySelector('.rp-body').insertAdjacentHTML('afterbegin', '<div class="banner u-mb-12"><i data-ic=info></i><div>조회 전용 — 사전 신청은 모델러 · DA만 올릴 수 있습니다.</div></div>');
-    panel.querySelectorAll('.rp-body button, .rp-foot button:not([data-close]), #dr-save, #dr-open').forEach(b => { b.disabled = true; b.title = '사전 신청 권한이 없습니다'; });
-    ['bk-grid', 'bk-chg', 'bk-same', 'bk-unuse', 'bk-del'].forEach(id => { $(id).disabled = true; $(id).title = '사전 신청 권한이 없습니다'; }); }
+    panel.querySelectorAll('.rp-body button, .rp-foot button:not([data-close]), #dr-save, #dr-open').forEach(b => { b.hidden = true; });
+    // 29 R-17 · 권한표: 역할이 없으면 신청 도구를 숨긴다(흐리게는 역할이 있는데 지금만 못 할 때)
+    ['b-req', 'bk-grid', 'bk-chg', 'bk-same', 'bk-unuse', 'bk-del'].forEach(id => { $(id).hidden = true; }); }
   /* 27: logical types come from 표준 사전 › 데이터 타입 · 축약명 — common types plus the current system's own (그 시스템 전용 도메인이 됨) */
   const DSYS = curSys().code, DTYPES = typesFor(DSYS);
   $('dm-type').innerHTML = DTYPES.map(t => `<option value="${t.ab}">${t.n} · ${t.ab}${t.kind !== 'std' ? ` (${TYPE_KIND[t.kind]}${t.scope !== '공통' ? ' · ' + sysNameOf(t.scope) + ' 전용' : ''})` : ''}</option>`).join('');
@@ -836,7 +837,7 @@ window.pageInit = function () {
   let candId = null;
   if (q0.get('cand')) { const c = getCands().find(x => x.id === q0.get('cand')); if (c) { candId = c.id; $('pn-detail').classList.remove('open'); panel.classList.add('open'); if (c.t === '단어') { panel.querySelector('[data-rq="word"].chip').click(); $('wd-name').value = c.name; $('wd-abbr').value = c.abbr || ''; } else { $('tm-name').value = c.name; analyse(); }
     panel.querySelector('.rp-body').insertAdjacentHTML('afterbegin', `<div class="banner info u-mb-12"><i data-ic=flag></i><div><b>후보 ‘${c.name}’${jo(c.name, '을/를')} ${c.t} 신청으로 전환</b> — 발생 위치 ${c.loc.length}곳. 값을 확인하고 [바구니에 담기] 후 신청하면 후보가 이 신청에 연결됩니다.</div></div>`); $('rq-why').value = `후보 큐 ${c.loc.length}곳 발생 — ${c.name}`; } }
-  // V0 permanent delete (30 v1.2 ⑦): DA · Admin, references block it, the exact name and a reason confirm it, a separate log records it
+  // V0 permanent delete (30 v1.2 ⑦): DA only (15-rbac dict.purge), references block it, the exact name and a reason confirm it, a separate log records it
   function purge(it) {
     if (liveRoleChanged()) { staleRoleToast(); return; }
     if (it.use > 0) { toast(`‘${it.name}’${jo(it.name, '은/는')} 아직 ${it.use}곳에서 참조 중이라 영구 삭제할 수 없습니다 — 참조를 먼저 정리하세요`, 'danger'); return; }

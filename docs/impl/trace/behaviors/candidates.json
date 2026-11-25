@@ -217,7 +217,7 @@
       "id": "BH-candidates-022",
       "where": "상세 패널 · 하단",
       "trigger": "임시 비밀번호 상태의 DA가 후보 선택",
-      "expected": "cand.decide가 잠겨 처리 버튼 없이 DA 전용 안내 문구가 보임. 권한표는 ‘흐리게 + 이유’를 요구하나 목업은 숨김 문구로 처리(목업에서 확인 필요)",
+      "expected": "[반려] · [{종류} 신청으로 전환]이 흐려지고(aria-disabled) ‘임시 비밀번호를 바꾼 뒤 처리할 수 있습니다 — 마이페이지에서 바꾸기’(마이페이지 보안 탭 링크). 역할이 없는 계정은 버튼 없이 ‘후보 처리는 DA만 할 수 있습니다’ 안내(권한표 cand.decide 임시PW = 흐리게 + 이유, F-26)",
       "roles": "임시 비밀번호 DA(tdatmp)",
       "refs": ["cand.decide", "RP-R04"],
       "states": ["candidates.html?as=lee"],

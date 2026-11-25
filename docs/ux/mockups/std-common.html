@@ -252,8 +252,9 @@ window.pageInit = function () {
         <div class="section-t">연결 용어 <span class="badge">${(c.terms || []).length}</span></div>
         ${(c.terms || []).length ? `<ul class="tlist">${c.terms.map(t => `<li><a href="dictionary.html?q=${encodeURIComponent(t.name)}">${esc(t.name)}</a><span class="mono">${esc(t.abbr)}</span><span class="mono">${esc(t.dom)}</span></li>`).join('')}</ul>` : '<div class="caption muted">연결된 용어가 없습니다.</div>'}
       </div>
-      <div class="rp-foot">${btnWhy ? `<span class="why grow">${esc(btnWhy)}</span>` : '<span class="grow"></span>'}
-        <span title="${esc(btnWhy)}"><button class="btn sm" id="b-sv"${btnWhy ? ' disabled' : ''}><i data-ic=plus data-s=12></i>코드값 보완 담기</button></span></div>`;
+      <div class="rp-foot">${!CAN_COMMON ? '<span class="caption muted grow">조회 전용 — 공통표준 보완은 DA · Admin만 담을 수 있습니다</span>'   // 29 R-17 · 권한표: 역할이 없으면 버튼을 숨긴다
+        : `${btnWhy ? `<span class="why grow">${esc(btnWhy)}</span>` : '<span class="grow"></span>'}
+        <span title="${esc(btnWhy)}"><button class="btn sm" id="b-sv"${btnWhy ? ' disabled' : ''}><i data-ic=plus data-s=12></i>코드값 보완 담기</button></span>`}</div>`;
     p.classList.add('open');
     const b = $('b-sv'); if (b) b.onclick = () => openSv(c);
     const g = $('go-new'); if (g) g.onclick = () => showTab('new');
@@ -344,7 +345,7 @@ window.pageInit = function () {
     const blk = blockedWhy(), rows = loaded ? buildRows() : [];
     if (loaded && !picked) picked = new Set(rows.filter(r => !r.conflict).map(r => r.key));
     if (picked) rows.forEach(r => { if (r.conflict) picked.delete(r.key); });
-    $('nv-block').innerHTML = blk ? `<div class="banner ${blk.kind === 'ro' ? 'violet' : 'warning'}"><i data-ic=${blk.kind === 'ro' ? 'lock' : 'warn'}></i><div class="grow">${esc(blk.msg)}${blk.kind === 'ro' ? ' 원본 비교는 볼 수 있지만 항목 고르기와 신청하기는 막혀 있습니다.' : ''}</div>${blk.kind === 'open' ? `<a class="btn sm" href="approvals.html?doc=${esc(blk.doc.id)}">신청 보기</a>` : ''}</div>` : '';
+    $('nv-block').innerHTML = blk ? `<div class="banner ${blk.kind === 'ro' ? 'violet' : 'warning'}"><i data-ic=${blk.kind === 'ro' ? 'lock' : 'warn'}></i><div class="grow">${esc(blk.msg)}${blk.kind === 'ro' ? ' 원본 비교는 볼 수 있지만 항목 고르기와 신청은 할 수 없습니다.' : ''}</div>${blk.kind === 'open' ? `<a class="btn sm" href="approvals.html?doc=${esc(blk.doc.id)}">신청 보기</a>` : ''}</div>` : '';
     const nSel = picked ? rows.filter(r => picked.has(r.key)).length : 0;
     const stepN = !loaded ? 1 : nSel ? 3 : 2;
     $('nv-steps').innerHTML = [['원본 올리기', 1], ['판 비교', 2], ['신청하기', 3]].map(([t, n], i) => `${i ? '<span class="step-sep"></span>' : ''}<span class="step${n < stepN ? ' done' : n === stepN ? ' cur' : ''}"><span class="n">${n}</span>${t}</span>`).join('');
@@ -413,8 +414,9 @@ window.pageInit = function () {
       ${bad.length ? `<div class="banner danger u-mt-8"><i data-ic=warn></i><div class="grow"><b>검사에서 막힌 항목 ${bad.length}건</b><ul class="probs">${bad.map(r => `<li class="blk">${esc(r.name)} · ${r.problems.map(esc).join(' · ')}</li>`).join('')}</ul></div></div>` : items.length && !blk ? '<ul class="probs"><li class="okk">검사 통과 — 신청을 올릴 수 있습니다</li></ul>' : ''}
       <div class="u-flex u-gap-8 u-mt-12">
         <span class="grow"></span>${why ? `<span class="why">${esc(why)}</span>` : ''}
-        <span title="${esc(why)}"><button class="btn primary" id="b-submit" data-needs="nv-reason" data-needs-msg="신청 사유를 입력해야 올릴 수 있습니다"${why ? ' disabled' : ''}>신청하기</button></span>
+        ${blk && blk.kind === 'ro' ? '' /* 29 R-17: 역할이 없으면 신청하기를 숨김 */ : `<span title="${esc(why)}"><button class="btn primary" id="b-submit" data-needs="nv-reason" data-needs-msg="신청 사유를 입력해야 올릴 수 있습니다"${why ? ' disabled' : ''}>신청하기</button></span>`}
       </div>`;
+    if (!$('b-submit')) return;   // 역할 없음 = 숨김
     if (why) setBlock($('b-submit'), why);
     $('nv-reason').addEventListener('input', e => { reason = e.target.value; });
     $('b-submit').onclick = submit;
