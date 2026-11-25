@@ -223,8 +223,10 @@ orca orchestration check --wait --types worker_done,escalation,question --timeou
 
 ### 9.3 데이터
 - 시나리오 시작마다 DB를 초기화하고 시드를 넣는다(결재 상태가 다음 시나리오를 깨뜨리지 않게).
-- 권한 감사관의 검사 표는 `packages/rules` PERMS에서 **자동 생성**한다. 권한표가 바뀌면 검사도 같이 바뀐다.
-- 권한표 변경은 사람 승인(결정 게이트).
+- 권한 감사관의 검사 표는 `packages/rules` PERMS에서 **자동 생성**한다(`buildPermMatrix` = 계정 × 권한 × 대상, `buildActMatrix` = 결재 행위: 자기 승인 · 최종 승인 독립성 · 단계). 권한표가 바뀌면 검사도 같이 바뀐다.
+  - 사람이 보는 표: [`rbac-matrix.md`](rbac-matrix.md) · E2E용: `e2e/rbac/perm-matrix.json` — 둘 다 기준 파일이고 `npm test`가 비교한다(다르거나 없으면 실패, `vitest -u`로도 덮어쓰지 않음).
+  - 거부 이유 → 화면 처리: 역할 = 숨김, 중지 · 기한 · 임시PW · 범위 = 흐리게 + 이유, API = 403.
+- 권한표 변경은 사람 승인(결정 게이트). 승인 뒤에만 `npm run rbac:matrix`로 기준 파일을 갱신하고, 그 차이를 결정 기록에 붙인다.
 
 ## 10. 작업 순서
 

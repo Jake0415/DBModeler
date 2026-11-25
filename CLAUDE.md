@@ -46,6 +46,7 @@
 
 ## 자체 결정 금지 (보류 + 사람 확인)
 - 권한표(PERMS) 변경 · 데이터를 지우는 마이그레이션 · 목업의 화면 동작 변경 · 보안 약화(인증 · 세션 · 감사) · 설계 문서와 다른 구조.
+- `docs/impl/rbac-matrix.md` · `e2e/rbac/perm-matrix.json`이 바뀌는 변경 = 권한표 변경. `npm run rbac:matrix`는 사람 승인 뒤에만 실행한다.
 
 ## 브랜치 · 커밋
 - 작업 브랜치 `impl/<작업ID>-<요약>`. 병합은 조정자만(`--no-ff`, main, push). PR 없음.

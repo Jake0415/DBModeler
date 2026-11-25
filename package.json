@@ -8,6 +8,7 @@
   "scripts": {
     "build": "tsc -b packages/domain packages/rules packages/db apps/api",
     "test": "vitest run",
+    "rbac:matrix": "node scripts/rbac-matrix.mjs",
     "typecheck": "tsc -b packages/domain packages/rules packages/db apps/api --dry --verbose",
     "db:up": "docker compose -f infra/docker-compose.dev.yml up -d",
     "db:down": "docker compose -f infra/docker-compose.dev.yml down",

@@ -88,3 +88,5 @@ export interface OrgPolicy {
   /** 자기 승인 — false면 비허용, 그 외 허용 + 최종 승인 자동 부착 (29 R-02) */
   selfAppr?: boolean;
 }
+
+export * from './test-accounts';

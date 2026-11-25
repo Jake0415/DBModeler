@@ -1,0 +1,4655 @@
+{
+ "today": "2026-12-01",
+ "perms": [
+  {
+   "account": "tadm",
+   "perm": "model.view",
+   "target": "-",
+   "allow": true
+  },
+  {
+   "account": "tda",
+   "perm": "model.view",
+   "target": "-",
+   "allow": true
+  },
+  {
+   "account": "tda2",
+   "perm": "model.view",
+   "target": "-",
+   "allow": true
+  },
+  {
+   "account": "tmod",
+   "perm": "model.view",
+   "target": "-",
+   "allow": true
+  },
+  {
+   "account": "tmodin",
+   "perm": "model.view",
+   "target": "-",
+   "allow": true
+  },
+  {
+   "account": "town",
+   "perm": "model.view",
+   "target": "-",
+   "allow": true
+  },
+  {
+   "account": "town2",
+   "perm": "model.view",
+   "target": "-",
+   "allow": true
+  },
+  {
+   "account": "taud",
+   "perm": "model.view",
+   "target": "-",
+   "allow": true
+  },
+  {
+   "account": "tview",
+   "perm": "model.view",
+   "target": "-",
+   "allow": true
+  },
+  {
+   "account": "texp",
+   "perm": "model.view",
+   "target": "-",
+   "allow": false,
+   "reason": "expired"
+  },
+  {
+   "account": "tdatmp",
+   "perm": "model.view",
+   "target": "-",
+   "allow": true
+  },
+  {
+   "account": "tstop",
+   "perm": "model.view",
+   "target": "-",
+   "allow": false,
+   "reason": "stopped"
+  },
+  {
+   "account": "tmulti",
+   "perm": "model.view",
+   "target": "-",
+   "allow": true
+  },
+  {
+   "account": "tadm",
+   "perm": "model.view",
+   "target": "sys:ERP",
+   "allow": true
+  },
+  {
+   "account": "tda",
+   "perm": "model.view",
+   "target": "sys:ERP",
+   "allow": true
+  },
+  {
+   "account": "tda2",
+   "perm": "model.view",
+   "target": "sys:ERP",
+   "allow": true
+  },
+  {
+   "account": "tmod",
+   "perm": "model.view",
+   "target": "sys:ERP",
+   "allow": true
+  },
+  {
+   "account": "tmodin",
+   "perm": "model.view",
+   "target": "sys:ERP",
+   "allow": true
+  },
+  {
+   "account": "town",
+   "perm": "model.view",
+   "target": "sys:ERP",
+   "allow": true
+  },
+  {
+   "account": "town2",
+   "perm": "model.view",
+   "target": "sys:ERP",
+   "allow": true
+  },
+  {
+   "account": "taud",
+   "perm": "model.view",
+   "target": "sys:ERP",
+   "allow": true
+  },
+  {
+   "account": "tview",
+   "perm": "model.view",
+   "target": "sys:ERP",
+   "allow": true
+  },
+  {
+   "account": "texp",
+   "perm": "model.view",
+   "target": "sys:ERP",
+   "allow": false,
+   "reason": "expired"
+  },
+  {
+   "account": "tdatmp",
+   "perm": "model.view",
+   "target": "sys:ERP",
+   "allow": true
+  },
+  {
+   "account": "tstop",
+   "perm": "model.view",
+   "target": "sys:ERP",
+   "allow": false,
+   "reason": "stopped"
+  },
+  {
+   "account": "tmulti",
+   "perm": "model.view",
+   "target": "sys:ERP",
+   "allow": true
+  },
+  {
+   "account": "tadm",
+   "perm": "model.view",
+   "target": "sys:RQMS",
+   "allow": true
+  },
+  {
+   "account": "tda",
+   "perm": "model.view",
+   "target": "sys:RQMS",
+   "allow": true
+  },
+  {
+   "account": "tda2",
+   "perm": "model.view",
+   "target": "sys:RQMS",
+   "allow": true
+  },
+  {
+   "account": "tmod",
+   "perm": "model.view",
+   "target": "sys:RQMS",
+   "allow": false,
+   "reason": "scope"
+  },
+  {
+   "account": "tmodin",
+   "perm": "model.view",
+   "target": "sys:RQMS",
+   "allow": true
+  },
+  {
+   "account": "town",
+   "perm": "model.view",
+   "target": "sys:RQMS",
+   "allow": true
+  },
+  {
+   "account": "town2",
+   "perm": "model.view",
+   "target": "sys:RQMS",
+   "allow": true
+  },
+  {
+   "account": "taud",
+   "perm": "model.view",
+   "target": "sys:RQMS",
+   "allow": false,
+   "reason": "scope"
+  },
+  {
+   "account": "tview",
+   "perm": "model.view",
+   "target": "sys:RQMS",
+   "allow": true
+  },
+  {
+   "account": "texp",
+   "perm": "model.view",
+   "target": "sys:RQMS",
+   "allow": false,
+   "reason": "expired"
+  },
+  {
+   "account": "tdatmp",
+   "perm": "model.view",
+   "target": "sys:RQMS",
+   "allow": true
+  },
+  {
+   "account": "tstop",
+   "perm": "model.view",
+   "target": "sys:RQMS",
+   "allow": false,
+   "reason": "stopped"
+  },
+  {
+   "account": "tmulti",
+   "perm": "model.view",
+   "target": "sys:RQMS",
+   "allow": true
+  },
+  {
+   "account": "tadm",
+   "perm": "model.edit",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tda",
+   "perm": "model.edit",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tda2",
+   "perm": "model.edit",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tmod",
+   "perm": "model.edit",
+   "target": "-",
+   "allow": true
+  },
+  {
+   "account": "tmodin",
+   "perm": "model.edit",
+   "target": "-",
+   "allow": true
+  },
+  {
+   "account": "town",
+   "perm": "model.edit",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "town2",
+   "perm": "model.edit",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "taud",
+   "perm": "model.edit",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tview",
+   "perm": "model.edit",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "texp",
+   "perm": "model.edit",
+   "target": "-",
+   "allow": false,
+   "reason": "expired"
+  },
+  {
+   "account": "tdatmp",
+   "perm": "model.edit",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tstop",
+   "perm": "model.edit",
+   "target": "-",
+   "allow": false,
+   "reason": "stopped"
+  },
+  {
+   "account": "tmulti",
+   "perm": "model.edit",
+   "target": "-",
+   "allow": true
+  },
+  {
+   "account": "tadm",
+   "perm": "model.edit",
+   "target": "sys:ERP",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tda",
+   "perm": "model.edit",
+   "target": "sys:ERP",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tda2",
+   "perm": "model.edit",
+   "target": "sys:ERP",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tmod",
+   "perm": "model.edit",
+   "target": "sys:ERP",
+   "allow": true
+  },
+  {
+   "account": "tmodin",
+   "perm": "model.edit",
+   "target": "sys:ERP",
+   "allow": true
+  },
+  {
+   "account": "town",
+   "perm": "model.edit",
+   "target": "sys:ERP",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "town2",
+   "perm": "model.edit",
+   "target": "sys:ERP",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "taud",
+   "perm": "model.edit",
+   "target": "sys:ERP",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tview",
+   "perm": "model.edit",
+   "target": "sys:ERP",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "texp",
+   "perm": "model.edit",
+   "target": "sys:ERP",
+   "allow": false,
+   "reason": "expired"
+  },
+  {
+   "account": "tdatmp",
+   "perm": "model.edit",
+   "target": "sys:ERP",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tstop",
+   "perm": "model.edit",
+   "target": "sys:ERP",
+   "allow": false,
+   "reason": "stopped"
+  },
+  {
+   "account": "tmulti",
+   "perm": "model.edit",
+   "target": "sys:ERP",
+   "allow": true
+  },
+  {
+   "account": "tadm",
+   "perm": "model.edit",
+   "target": "sys:RQMS",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tda",
+   "perm": "model.edit",
+   "target": "sys:RQMS",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tda2",
+   "perm": "model.edit",
+   "target": "sys:RQMS",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tmod",
+   "perm": "model.edit",
+   "target": "sys:RQMS",
+   "allow": false,
+   "reason": "scope"
+  },
+  {
+   "account": "tmodin",
+   "perm": "model.edit",
+   "target": "sys:RQMS",
+   "allow": false,
+   "reason": "scope"
+  },
+  {
+   "account": "town",
+   "perm": "model.edit",
+   "target": "sys:RQMS",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "town2",
+   "perm": "model.edit",
+   "target": "sys:RQMS",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "taud",
+   "perm": "model.edit",
+   "target": "sys:RQMS",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tview",
+   "perm": "model.edit",
+   "target": "sys:RQMS",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "texp",
+   "perm": "model.edit",
+   "target": "sys:RQMS",
+   "allow": false,
+   "reason": "expired"
+  },
+  {
+   "account": "tdatmp",
+   "perm": "model.edit",
+   "target": "sys:RQMS",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tstop",
+   "perm": "model.edit",
+   "target": "sys:RQMS",
+   "allow": false,
+   "reason": "stopped"
+  },
+  {
+   "account": "tmulti",
+   "perm": "model.edit",
+   "target": "sys:RQMS",
+   "allow": false,
+   "reason": "scope"
+  },
+  {
+   "account": "tadm",
+   "perm": "area.create",
+   "target": "-",
+   "allow": true
+  },
+  {
+   "account": "tda",
+   "perm": "area.create",
+   "target": "-",
+   "allow": true
+  },
+  {
+   "account": "tda2",
+   "perm": "area.create",
+   "target": "-",
+   "allow": true
+  },
+  {
+   "account": "tmod",
+   "perm": "area.create",
+   "target": "-",
+   "allow": true
+  },
+  {
+   "account": "tmodin",
+   "perm": "area.create",
+   "target": "-",
+   "allow": true
+  },
+  {
+   "account": "town",
+   "perm": "area.create",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "town2",
+   "perm": "area.create",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "taud",
+   "perm": "area.create",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tview",
+   "perm": "area.create",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "texp",
+   "perm": "area.create",
+   "target": "-",
+   "allow": false,
+   "reason": "expired"
+  },
+  {
+   "account": "tdatmp",
+   "perm": "area.create",
+   "target": "-",
+   "allow": true
+  },
+  {
+   "account": "tstop",
+   "perm": "area.create",
+   "target": "-",
+   "allow": false,
+   "reason": "stopped"
+  },
+  {
+   "account": "tmulti",
+   "perm": "area.create",
+   "target": "-",
+   "allow": true
+  },
+  {
+   "account": "tadm",
+   "perm": "area.create",
+   "target": "sys:ERP",
+   "allow": true
+  },
+  {
+   "account": "tda",
+   "perm": "area.create",
+   "target": "sys:ERP",
+   "allow": true
+  },
+  {
+   "account": "tda2",
+   "perm": "area.create",
+   "target": "sys:ERP",
+   "allow": false,
+   "reason": "scope"
+  },
+  {
+   "account": "tmod",
+   "perm": "area.create",
+   "target": "sys:ERP",
+   "allow": true
+  },
+  {
+   "account": "tmodin",
+   "perm": "area.create",
+   "target": "sys:ERP",
+   "allow": true
+  },
+  {
+   "account": "town",
+   "perm": "area.create",
+   "target": "sys:ERP",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "town2",
+   "perm": "area.create",
+   "target": "sys:ERP",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "taud",
+   "perm": "area.create",
+   "target": "sys:ERP",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tview",
+   "perm": "area.create",
+   "target": "sys:ERP",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "texp",
+   "perm": "area.create",
+   "target": "sys:ERP",
+   "allow": false,
+   "reason": "expired"
+  },
+  {
+   "account": "tdatmp",
+   "perm": "area.create",
+   "target": "sys:ERP",
+   "allow": true
+  },
+  {
+   "account": "tstop",
+   "perm": "area.create",
+   "target": "sys:ERP",
+   "allow": false,
+   "reason": "stopped"
+  },
+  {
+   "account": "tmulti",
+   "perm": "area.create",
+   "target": "sys:ERP",
+   "allow": true
+  },
+  {
+   "account": "tadm",
+   "perm": "area.create",
+   "target": "sys:RQMS",
+   "allow": true
+  },
+  {
+   "account": "tda",
+   "perm": "area.create",
+   "target": "sys:RQMS",
+   "allow": false,
+   "reason": "scope"
+  },
+  {
+   "account": "tda2",
+   "perm": "area.create",
+   "target": "sys:RQMS",
+   "allow": true
+  },
+  {
+   "account": "tmod",
+   "perm": "area.create",
+   "target": "sys:RQMS",
+   "allow": false,
+   "reason": "scope"
+  },
+  {
+   "account": "tmodin",
+   "perm": "area.create",
+   "target": "sys:RQMS",
+   "allow": false,
+   "reason": "scope"
+  },
+  {
+   "account": "town",
+   "perm": "area.create",
+   "target": "sys:RQMS",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "town2",
+   "perm": "area.create",
+   "target": "sys:RQMS",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "taud",
+   "perm": "area.create",
+   "target": "sys:RQMS",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tview",
+   "perm": "area.create",
+   "target": "sys:RQMS",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "texp",
+   "perm": "area.create",
+   "target": "sys:RQMS",
+   "allow": false,
+   "reason": "expired"
+  },
+  {
+   "account": "tdatmp",
+   "perm": "area.create",
+   "target": "sys:RQMS",
+   "allow": false,
+   "reason": "scope"
+  },
+  {
+   "account": "tstop",
+   "perm": "area.create",
+   "target": "sys:RQMS",
+   "allow": false,
+   "reason": "stopped"
+  },
+  {
+   "account": "tmulti",
+   "perm": "area.create",
+   "target": "sys:RQMS",
+   "allow": false,
+   "reason": "scope"
+  },
+  {
+   "account": "tadm",
+   "perm": "area.info",
+   "target": "-",
+   "allow": true
+  },
+  {
+   "account": "tda",
+   "perm": "area.info",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tda2",
+   "perm": "area.info",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tmod",
+   "perm": "area.info",
+   "target": "-",
+   "allow": true
+  },
+  {
+   "account": "tmodin",
+   "perm": "area.info",
+   "target": "-",
+   "allow": true
+  },
+  {
+   "account": "town",
+   "perm": "area.info",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "town2",
+   "perm": "area.info",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "taud",
+   "perm": "area.info",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tview",
+   "perm": "area.info",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "texp",
+   "perm": "area.info",
+   "target": "-",
+   "allow": false,
+   "reason": "expired"
+  },
+  {
+   "account": "tdatmp",
+   "perm": "area.info",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tstop",
+   "perm": "area.info",
+   "target": "-",
+   "allow": false,
+   "reason": "stopped"
+  },
+  {
+   "account": "tmulti",
+   "perm": "area.info",
+   "target": "-",
+   "allow": true
+  },
+  {
+   "account": "tadm",
+   "perm": "area.info",
+   "target": "sys:ERP",
+   "allow": true
+  },
+  {
+   "account": "tda",
+   "perm": "area.info",
+   "target": "sys:ERP",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tda2",
+   "perm": "area.info",
+   "target": "sys:ERP",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tmod",
+   "perm": "area.info",
+   "target": "sys:ERP",
+   "allow": true
+  },
+  {
+   "account": "tmodin",
+   "perm": "area.info",
+   "target": "sys:ERP",
+   "allow": true
+  },
+  {
+   "account": "town",
+   "perm": "area.info",
+   "target": "sys:ERP",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "town2",
+   "perm": "area.info",
+   "target": "sys:ERP",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "taud",
+   "perm": "area.info",
+   "target": "sys:ERP",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tview",
+   "perm": "area.info",
+   "target": "sys:ERP",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "texp",
+   "perm": "area.info",
+   "target": "sys:ERP",
+   "allow": false,
+   "reason": "expired"
+  },
+  {
+   "account": "tdatmp",
+   "perm": "area.info",
+   "target": "sys:ERP",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tstop",
+   "perm": "area.info",
+   "target": "sys:ERP",
+   "allow": false,
+   "reason": "stopped"
+  },
+  {
+   "account": "tmulti",
+   "perm": "area.info",
+   "target": "sys:ERP",
+   "allow": true
+  },
+  {
+   "account": "tadm",
+   "perm": "area.info",
+   "target": "sys:RQMS",
+   "allow": true
+  },
+  {
+   "account": "tda",
+   "perm": "area.info",
+   "target": "sys:RQMS",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tda2",
+   "perm": "area.info",
+   "target": "sys:RQMS",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tmod",
+   "perm": "area.info",
+   "target": "sys:RQMS",
+   "allow": false,
+   "reason": "scope"
+  },
+  {
+   "account": "tmodin",
+   "perm": "area.info",
+   "target": "sys:RQMS",
+   "allow": false,
+   "reason": "scope"
+  },
+  {
+   "account": "town",
+   "perm": "area.info",
+   "target": "sys:RQMS",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "town2",
+   "perm": "area.info",
+   "target": "sys:RQMS",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "taud",
+   "perm": "area.info",
+   "target": "sys:RQMS",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tview",
+   "perm": "area.info",
+   "target": "sys:RQMS",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "texp",
+   "perm": "area.info",
+   "target": "sys:RQMS",
+   "allow": false,
+   "reason": "expired"
+  },
+  {
+   "account": "tdatmp",
+   "perm": "area.info",
+   "target": "sys:RQMS",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tstop",
+   "perm": "area.info",
+   "target": "sys:RQMS",
+   "allow": false,
+   "reason": "stopped"
+  },
+  {
+   "account": "tmulti",
+   "perm": "area.info",
+   "target": "sys:RQMS",
+   "allow": false,
+   "reason": "scope"
+  },
+  {
+   "account": "tadm",
+   "perm": "area.manage",
+   "target": "-",
+   "allow": true
+  },
+  {
+   "account": "tda",
+   "perm": "area.manage",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tda2",
+   "perm": "area.manage",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tmod",
+   "perm": "area.manage",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tmodin",
+   "perm": "area.manage",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "town",
+   "perm": "area.manage",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "town2",
+   "perm": "area.manage",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "taud",
+   "perm": "area.manage",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tview",
+   "perm": "area.manage",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "texp",
+   "perm": "area.manage",
+   "target": "-",
+   "allow": false,
+   "reason": "expired"
+  },
+  {
+   "account": "tdatmp",
+   "perm": "area.manage",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tstop",
+   "perm": "area.manage",
+   "target": "-",
+   "allow": false,
+   "reason": "stopped"
+  },
+  {
+   "account": "tmulti",
+   "perm": "area.manage",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tadm",
+   "perm": "model.submit",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tda",
+   "perm": "model.submit",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tda2",
+   "perm": "model.submit",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tmod",
+   "perm": "model.submit",
+   "target": "-",
+   "allow": true
+  },
+  {
+   "account": "tmodin",
+   "perm": "model.submit",
+   "target": "-",
+   "allow": true
+  },
+  {
+   "account": "town",
+   "perm": "model.submit",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "town2",
+   "perm": "model.submit",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "taud",
+   "perm": "model.submit",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tview",
+   "perm": "model.submit",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "texp",
+   "perm": "model.submit",
+   "target": "-",
+   "allow": false,
+   "reason": "expired"
+  },
+  {
+   "account": "tdatmp",
+   "perm": "model.submit",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tstop",
+   "perm": "model.submit",
+   "target": "-",
+   "allow": false,
+   "reason": "stopped"
+  },
+  {
+   "account": "tmulti",
+   "perm": "model.submit",
+   "target": "-",
+   "allow": true
+  },
+  {
+   "account": "tadm",
+   "perm": "model.submit",
+   "target": "sys:ERP",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tda",
+   "perm": "model.submit",
+   "target": "sys:ERP",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tda2",
+   "perm": "model.submit",
+   "target": "sys:ERP",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tmod",
+   "perm": "model.submit",
+   "target": "sys:ERP",
+   "allow": true
+  },
+  {
+   "account": "tmodin",
+   "perm": "model.submit",
+   "target": "sys:ERP",
+   "allow": true
+  },
+  {
+   "account": "town",
+   "perm": "model.submit",
+   "target": "sys:ERP",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "town2",
+   "perm": "model.submit",
+   "target": "sys:ERP",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "taud",
+   "perm": "model.submit",
+   "target": "sys:ERP",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tview",
+   "perm": "model.submit",
+   "target": "sys:ERP",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "texp",
+   "perm": "model.submit",
+   "target": "sys:ERP",
+   "allow": false,
+   "reason": "expired"
+  },
+  {
+   "account": "tdatmp",
+   "perm": "model.submit",
+   "target": "sys:ERP",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tstop",
+   "perm": "model.submit",
+   "target": "sys:ERP",
+   "allow": false,
+   "reason": "stopped"
+  },
+  {
+   "account": "tmulti",
+   "perm": "model.submit",
+   "target": "sys:ERP",
+   "allow": true
+  },
+  {
+   "account": "tadm",
+   "perm": "model.submit",
+   "target": "sys:RQMS",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tda",
+   "perm": "model.submit",
+   "target": "sys:RQMS",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tda2",
+   "perm": "model.submit",
+   "target": "sys:RQMS",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tmod",
+   "perm": "model.submit",
+   "target": "sys:RQMS",
+   "allow": false,
+   "reason": "scope"
+  },
+  {
+   "account": "tmodin",
+   "perm": "model.submit",
+   "target": "sys:RQMS",
+   "allow": false,
+   "reason": "scope"
+  },
+  {
+   "account": "town",
+   "perm": "model.submit",
+   "target": "sys:RQMS",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "town2",
+   "perm": "model.submit",
+   "target": "sys:RQMS",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "taud",
+   "perm": "model.submit",
+   "target": "sys:RQMS",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tview",
+   "perm": "model.submit",
+   "target": "sys:RQMS",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "texp",
+   "perm": "model.submit",
+   "target": "sys:RQMS",
+   "allow": false,
+   "reason": "expired"
+  },
+  {
+   "account": "tdatmp",
+   "perm": "model.submit",
+   "target": "sys:RQMS",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tstop",
+   "perm": "model.submit",
+   "target": "sys:RQMS",
+   "allow": false,
+   "reason": "stopped"
+  },
+  {
+   "account": "tmulti",
+   "perm": "model.submit",
+   "target": "sys:RQMS",
+   "allow": false,
+   "reason": "scope"
+  },
+  {
+   "account": "tadm",
+   "perm": "out.export",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tda",
+   "perm": "out.export",
+   "target": "-",
+   "allow": true
+  },
+  {
+   "account": "tda2",
+   "perm": "out.export",
+   "target": "-",
+   "allow": true
+  },
+  {
+   "account": "tmod",
+   "perm": "out.export",
+   "target": "-",
+   "allow": true
+  },
+  {
+   "account": "tmodin",
+   "perm": "out.export",
+   "target": "-",
+   "allow": true
+  },
+  {
+   "account": "town",
+   "perm": "out.export",
+   "target": "-",
+   "allow": true
+  },
+  {
+   "account": "town2",
+   "perm": "out.export",
+   "target": "-",
+   "allow": true
+  },
+  {
+   "account": "taud",
+   "perm": "out.export",
+   "target": "-",
+   "allow": true
+  },
+  {
+   "account": "tview",
+   "perm": "out.export",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "texp",
+   "perm": "out.export",
+   "target": "-",
+   "allow": false,
+   "reason": "expired"
+  },
+  {
+   "account": "tdatmp",
+   "perm": "out.export",
+   "target": "-",
+   "allow": true
+  },
+  {
+   "account": "tstop",
+   "perm": "out.export",
+   "target": "-",
+   "allow": false,
+   "reason": "stopped"
+  },
+  {
+   "account": "tmulti",
+   "perm": "out.export",
+   "target": "-",
+   "allow": true
+  },
+  {
+   "account": "tadm",
+   "perm": "out.export",
+   "target": "sys:ERP",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tda",
+   "perm": "out.export",
+   "target": "sys:ERP",
+   "allow": true
+  },
+  {
+   "account": "tda2",
+   "perm": "out.export",
+   "target": "sys:ERP",
+   "allow": true
+  },
+  {
+   "account": "tmod",
+   "perm": "out.export",
+   "target": "sys:ERP",
+   "allow": true
+  },
+  {
+   "account": "tmodin",
+   "perm": "out.export",
+   "target": "sys:ERP",
+   "allow": true
+  },
+  {
+   "account": "town",
+   "perm": "out.export",
+   "target": "sys:ERP",
+   "allow": true
+  },
+  {
+   "account": "town2",
+   "perm": "out.export",
+   "target": "sys:ERP",
+   "allow": true
+  },
+  {
+   "account": "taud",
+   "perm": "out.export",
+   "target": "sys:ERP",
+   "allow": true
+  },
+  {
+   "account": "tview",
+   "perm": "out.export",
+   "target": "sys:ERP",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "texp",
+   "perm": "out.export",
+   "target": "sys:ERP",
+   "allow": false,
+   "reason": "expired"
+  },
+  {
+   "account": "tdatmp",
+   "perm": "out.export",
+   "target": "sys:ERP",
+   "allow": true
+  },
+  {
+   "account": "tstop",
+   "perm": "out.export",
+   "target": "sys:ERP",
+   "allow": false,
+   "reason": "stopped"
+  },
+  {
+   "account": "tmulti",
+   "perm": "out.export",
+   "target": "sys:ERP",
+   "allow": true
+  },
+  {
+   "account": "tadm",
+   "perm": "out.export",
+   "target": "sys:RQMS",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tda",
+   "perm": "out.export",
+   "target": "sys:RQMS",
+   "allow": true
+  },
+  {
+   "account": "tda2",
+   "perm": "out.export",
+   "target": "sys:RQMS",
+   "allow": true
+  },
+  {
+   "account": "tmod",
+   "perm": "out.export",
+   "target": "sys:RQMS",
+   "allow": false,
+   "reason": "scope"
+  },
+  {
+   "account": "tmodin",
+   "perm": "out.export",
+   "target": "sys:RQMS",
+   "allow": false,
+   "reason": "scope"
+  },
+  {
+   "account": "town",
+   "perm": "out.export",
+   "target": "sys:RQMS",
+   "allow": true
+  },
+  {
+   "account": "town2",
+   "perm": "out.export",
+   "target": "sys:RQMS",
+   "allow": true
+  },
+  {
+   "account": "taud",
+   "perm": "out.export",
+   "target": "sys:RQMS",
+   "allow": false,
+   "reason": "scope"
+  },
+  {
+   "account": "tview",
+   "perm": "out.export",
+   "target": "sys:RQMS",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "texp",
+   "perm": "out.export",
+   "target": "sys:RQMS",
+   "allow": false,
+   "reason": "expired"
+  },
+  {
+   "account": "tdatmp",
+   "perm": "out.export",
+   "target": "sys:RQMS",
+   "allow": true
+  },
+  {
+   "account": "tstop",
+   "perm": "out.export",
+   "target": "sys:RQMS",
+   "allow": false,
+   "reason": "stopped"
+  },
+  {
+   "account": "tmulti",
+   "perm": "out.export",
+   "target": "sys:RQMS",
+   "allow": true
+  },
+  {
+   "account": "tadm",
+   "perm": "dict.view",
+   "target": "-",
+   "allow": true
+  },
+  {
+   "account": "tda",
+   "perm": "dict.view",
+   "target": "-",
+   "allow": true
+  },
+  {
+   "account": "tda2",
+   "perm": "dict.view",
+   "target": "-",
+   "allow": true
+  },
+  {
+   "account": "tmod",
+   "perm": "dict.view",
+   "target": "-",
+   "allow": true
+  },
+  {
+   "account": "tmodin",
+   "perm": "dict.view",
+   "target": "-",
+   "allow": true
+  },
+  {
+   "account": "town",
+   "perm": "dict.view",
+   "target": "-",
+   "allow": true
+  },
+  {
+   "account": "town2",
+   "perm": "dict.view",
+   "target": "-",
+   "allow": true
+  },
+  {
+   "account": "taud",
+   "perm": "dict.view",
+   "target": "-",
+   "allow": true
+  },
+  {
+   "account": "tview",
+   "perm": "dict.view",
+   "target": "-",
+   "allow": true
+  },
+  {
+   "account": "texp",
+   "perm": "dict.view",
+   "target": "-",
+   "allow": false,
+   "reason": "expired"
+  },
+  {
+   "account": "tdatmp",
+   "perm": "dict.view",
+   "target": "-",
+   "allow": true
+  },
+  {
+   "account": "tstop",
+   "perm": "dict.view",
+   "target": "-",
+   "allow": false,
+   "reason": "stopped"
+  },
+  {
+   "account": "tmulti",
+   "perm": "dict.view",
+   "target": "-",
+   "allow": true
+  },
+  {
+   "account": "tadm",
+   "perm": "dict.request",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tda",
+   "perm": "dict.request",
+   "target": "-",
+   "allow": true
+  },
+  {
+   "account": "tda2",
+   "perm": "dict.request",
+   "target": "-",
+   "allow": true
+  },
+  {
+   "account": "tmod",
+   "perm": "dict.request",
+   "target": "-",
+   "allow": true
+  },
+  {
+   "account": "tmodin",
+   "perm": "dict.request",
+   "target": "-",
+   "allow": true
+  },
+  {
+   "account": "town",
+   "perm": "dict.request",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "town2",
+   "perm": "dict.request",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "taud",
+   "perm": "dict.request",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tview",
+   "perm": "dict.request",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "texp",
+   "perm": "dict.request",
+   "target": "-",
+   "allow": false,
+   "reason": "expired"
+  },
+  {
+   "account": "tdatmp",
+   "perm": "dict.request",
+   "target": "-",
+   "allow": true
+  },
+  {
+   "account": "tstop",
+   "perm": "dict.request",
+   "target": "-",
+   "allow": false,
+   "reason": "stopped"
+  },
+  {
+   "account": "tmulti",
+   "perm": "dict.request",
+   "target": "-",
+   "allow": true
+  },
+  {
+   "account": "tadm",
+   "perm": "cand.decide",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tda",
+   "perm": "cand.decide",
+   "target": "-",
+   "allow": true
+  },
+  {
+   "account": "tda2",
+   "perm": "cand.decide",
+   "target": "-",
+   "allow": true
+  },
+  {
+   "account": "tmod",
+   "perm": "cand.decide",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tmodin",
+   "perm": "cand.decide",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "town",
+   "perm": "cand.decide",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "town2",
+   "perm": "cand.decide",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "taud",
+   "perm": "cand.decide",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tview",
+   "perm": "cand.decide",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "texp",
+   "perm": "cand.decide",
+   "target": "-",
+   "allow": false,
+   "reason": "expired"
+  },
+  {
+   "account": "tdatmp",
+   "perm": "cand.decide",
+   "target": "-",
+   "allow": false,
+   "reason": "pwTemp"
+  },
+  {
+   "account": "tstop",
+   "perm": "cand.decide",
+   "target": "-",
+   "allow": false,
+   "reason": "stopped"
+  },
+  {
+   "account": "tmulti",
+   "perm": "cand.decide",
+   "target": "-",
+   "allow": true
+  },
+  {
+   "account": "tadm",
+   "perm": "dict.publish",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tda",
+   "perm": "dict.publish",
+   "target": "-",
+   "allow": true
+  },
+  {
+   "account": "tda2",
+   "perm": "dict.publish",
+   "target": "-",
+   "allow": true
+  },
+  {
+   "account": "tmod",
+   "perm": "dict.publish",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tmodin",
+   "perm": "dict.publish",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "town",
+   "perm": "dict.publish",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "town2",
+   "perm": "dict.publish",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "taud",
+   "perm": "dict.publish",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tview",
+   "perm": "dict.publish",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "texp",
+   "perm": "dict.publish",
+   "target": "-",
+   "allow": false,
+   "reason": "expired"
+  },
+  {
+   "account": "tdatmp",
+   "perm": "dict.publish",
+   "target": "-",
+   "allow": false,
+   "reason": "pwTemp"
+  },
+  {
+   "account": "tstop",
+   "perm": "dict.publish",
+   "target": "-",
+   "allow": false,
+   "reason": "stopped"
+  },
+  {
+   "account": "tmulti",
+   "perm": "dict.publish",
+   "target": "-",
+   "allow": true
+  },
+  {
+   "account": "tadm",
+   "perm": "dict.purge",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tda",
+   "perm": "dict.purge",
+   "target": "-",
+   "allow": true
+  },
+  {
+   "account": "tda2",
+   "perm": "dict.purge",
+   "target": "-",
+   "allow": true
+  },
+  {
+   "account": "tmod",
+   "perm": "dict.purge",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tmodin",
+   "perm": "dict.purge",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "town",
+   "perm": "dict.purge",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "town2",
+   "perm": "dict.purge",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "taud",
+   "perm": "dict.purge",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tview",
+   "perm": "dict.purge",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "texp",
+   "perm": "dict.purge",
+   "target": "-",
+   "allow": false,
+   "reason": "expired"
+  },
+  {
+   "account": "tdatmp",
+   "perm": "dict.purge",
+   "target": "-",
+   "allow": true
+  },
+  {
+   "account": "tstop",
+   "perm": "dict.purge",
+   "target": "-",
+   "allow": false,
+   "reason": "stopped"
+  },
+  {
+   "account": "tmulti",
+   "perm": "dict.purge",
+   "target": "-",
+   "allow": true
+  },
+  {
+   "account": "tadm",
+   "perm": "dict.group",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tda",
+   "perm": "dict.group",
+   "target": "-",
+   "allow": true
+  },
+  {
+   "account": "tda2",
+   "perm": "dict.group",
+   "target": "-",
+   "allow": true
+  },
+  {
+   "account": "tmod",
+   "perm": "dict.group",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tmodin",
+   "perm": "dict.group",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "town",
+   "perm": "dict.group",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "town2",
+   "perm": "dict.group",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "taud",
+   "perm": "dict.group",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tview",
+   "perm": "dict.group",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "texp",
+   "perm": "dict.group",
+   "target": "-",
+   "allow": false,
+   "reason": "expired"
+  },
+  {
+   "account": "tdatmp",
+   "perm": "dict.group",
+   "target": "-",
+   "allow": true
+  },
+  {
+   "account": "tstop",
+   "perm": "dict.group",
+   "target": "-",
+   "allow": false,
+   "reason": "stopped"
+  },
+  {
+   "account": "tmulti",
+   "perm": "dict.group",
+   "target": "-",
+   "allow": true
+  },
+  {
+   "account": "tadm",
+   "perm": "dict.common",
+   "target": "-",
+   "allow": true
+  },
+  {
+   "account": "tda",
+   "perm": "dict.common",
+   "target": "-",
+   "allow": true
+  },
+  {
+   "account": "tda2",
+   "perm": "dict.common",
+   "target": "-",
+   "allow": true
+  },
+  {
+   "account": "tmod",
+   "perm": "dict.common",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tmodin",
+   "perm": "dict.common",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "town",
+   "perm": "dict.common",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "town2",
+   "perm": "dict.common",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "taud",
+   "perm": "dict.common",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tview",
+   "perm": "dict.common",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "texp",
+   "perm": "dict.common",
+   "target": "-",
+   "allow": false,
+   "reason": "expired"
+  },
+  {
+   "account": "tdatmp",
+   "perm": "dict.common",
+   "target": "-",
+   "allow": true
+  },
+  {
+   "account": "tstop",
+   "perm": "dict.common",
+   "target": "-",
+   "allow": false,
+   "reason": "stopped"
+  },
+  {
+   "account": "tmulti",
+   "perm": "dict.common",
+   "target": "-",
+   "allow": true
+  },
+  {
+   "account": "tadm",
+   "perm": "excel.viewall",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tda",
+   "perm": "excel.viewall",
+   "target": "-",
+   "allow": true
+  },
+  {
+   "account": "tda2",
+   "perm": "excel.viewall",
+   "target": "-",
+   "allow": true
+  },
+  {
+   "account": "tmod",
+   "perm": "excel.viewall",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tmodin",
+   "perm": "excel.viewall",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "town",
+   "perm": "excel.viewall",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "town2",
+   "perm": "excel.viewall",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "taud",
+   "perm": "excel.viewall",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tview",
+   "perm": "excel.viewall",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "texp",
+   "perm": "excel.viewall",
+   "target": "-",
+   "allow": false,
+   "reason": "expired"
+  },
+  {
+   "account": "tdatmp",
+   "perm": "excel.viewall",
+   "target": "-",
+   "allow": true
+  },
+  {
+   "account": "tstop",
+   "perm": "excel.viewall",
+   "target": "-",
+   "allow": false,
+   "reason": "stopped"
+  },
+  {
+   "account": "tmulti",
+   "perm": "excel.viewall",
+   "target": "-",
+   "allow": true
+  },
+  {
+   "account": "tadm",
+   "perm": "type.std",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tda",
+   "perm": "type.std",
+   "target": "-",
+   "allow": true
+  },
+  {
+   "account": "tda2",
+   "perm": "type.std",
+   "target": "-",
+   "allow": true
+  },
+  {
+   "account": "tmod",
+   "perm": "type.std",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tmodin",
+   "perm": "type.std",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "town",
+   "perm": "type.std",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "town2",
+   "perm": "type.std",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "taud",
+   "perm": "type.std",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tview",
+   "perm": "type.std",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "texp",
+   "perm": "type.std",
+   "target": "-",
+   "allow": false,
+   "reason": "expired"
+  },
+  {
+   "account": "tdatmp",
+   "perm": "type.std",
+   "target": "-",
+   "allow": true
+  },
+  {
+   "account": "tstop",
+   "perm": "type.std",
+   "target": "-",
+   "allow": false,
+   "reason": "stopped"
+  },
+  {
+   "account": "tmulti",
+   "perm": "type.std",
+   "target": "-",
+   "allow": true
+  },
+  {
+   "account": "tadm",
+   "perm": "type.add",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tda",
+   "perm": "type.add",
+   "target": "-",
+   "allow": true
+  },
+  {
+   "account": "tda2",
+   "perm": "type.add",
+   "target": "-",
+   "allow": true
+  },
+  {
+   "account": "tmod",
+   "perm": "type.add",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tmodin",
+   "perm": "type.add",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "town",
+   "perm": "type.add",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "town2",
+   "perm": "type.add",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "taud",
+   "perm": "type.add",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tview",
+   "perm": "type.add",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "texp",
+   "perm": "type.add",
+   "target": "-",
+   "allow": false,
+   "reason": "expired"
+  },
+  {
+   "account": "tdatmp",
+   "perm": "type.add",
+   "target": "-",
+   "allow": true
+  },
+  {
+   "account": "tstop",
+   "perm": "type.add",
+   "target": "-",
+   "allow": false,
+   "reason": "stopped"
+  },
+  {
+   "account": "tmulti",
+   "perm": "type.add",
+   "target": "-",
+   "allow": true
+  },
+  {
+   "account": "tadm",
+   "perm": "type.map",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tda",
+   "perm": "type.map",
+   "target": "-",
+   "allow": true
+  },
+  {
+   "account": "tda2",
+   "perm": "type.map",
+   "target": "-",
+   "allow": true
+  },
+  {
+   "account": "tmod",
+   "perm": "type.map",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tmodin",
+   "perm": "type.map",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "town",
+   "perm": "type.map",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "town2",
+   "perm": "type.map",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "taud",
+   "perm": "type.map",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tview",
+   "perm": "type.map",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "texp",
+   "perm": "type.map",
+   "target": "-",
+   "allow": false,
+   "reason": "expired"
+  },
+  {
+   "account": "tdatmp",
+   "perm": "type.map",
+   "target": "-",
+   "allow": true
+  },
+  {
+   "account": "tstop",
+   "perm": "type.map",
+   "target": "-",
+   "allow": false,
+   "reason": "stopped"
+  },
+  {
+   "account": "tmulti",
+   "perm": "type.map",
+   "target": "-",
+   "allow": true
+  },
+  {
+   "account": "tadm",
+   "perm": "type.map",
+   "target": "sys:ERP",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tda",
+   "perm": "type.map",
+   "target": "sys:ERP",
+   "allow": true
+  },
+  {
+   "account": "tda2",
+   "perm": "type.map",
+   "target": "sys:ERP",
+   "allow": false,
+   "reason": "scope"
+  },
+  {
+   "account": "tmod",
+   "perm": "type.map",
+   "target": "sys:ERP",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tmodin",
+   "perm": "type.map",
+   "target": "sys:ERP",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "town",
+   "perm": "type.map",
+   "target": "sys:ERP",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "town2",
+   "perm": "type.map",
+   "target": "sys:ERP",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "taud",
+   "perm": "type.map",
+   "target": "sys:ERP",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tview",
+   "perm": "type.map",
+   "target": "sys:ERP",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "texp",
+   "perm": "type.map",
+   "target": "sys:ERP",
+   "allow": false,
+   "reason": "expired"
+  },
+  {
+   "account": "tdatmp",
+   "perm": "type.map",
+   "target": "sys:ERP",
+   "allow": true
+  },
+  {
+   "account": "tstop",
+   "perm": "type.map",
+   "target": "sys:ERP",
+   "allow": false,
+   "reason": "stopped"
+  },
+  {
+   "account": "tmulti",
+   "perm": "type.map",
+   "target": "sys:ERP",
+   "allow": true
+  },
+  {
+   "account": "tadm",
+   "perm": "type.map",
+   "target": "sys:RQMS",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tda",
+   "perm": "type.map",
+   "target": "sys:RQMS",
+   "allow": false,
+   "reason": "scope"
+  },
+  {
+   "account": "tda2",
+   "perm": "type.map",
+   "target": "sys:RQMS",
+   "allow": true
+  },
+  {
+   "account": "tmod",
+   "perm": "type.map",
+   "target": "sys:RQMS",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tmodin",
+   "perm": "type.map",
+   "target": "sys:RQMS",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "town",
+   "perm": "type.map",
+   "target": "sys:RQMS",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "town2",
+   "perm": "type.map",
+   "target": "sys:RQMS",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "taud",
+   "perm": "type.map",
+   "target": "sys:RQMS",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tview",
+   "perm": "type.map",
+   "target": "sys:RQMS",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "texp",
+   "perm": "type.map",
+   "target": "sys:RQMS",
+   "allow": false,
+   "reason": "expired"
+  },
+  {
+   "account": "tdatmp",
+   "perm": "type.map",
+   "target": "sys:RQMS",
+   "allow": false,
+   "reason": "scope"
+  },
+  {
+   "account": "tstop",
+   "perm": "type.map",
+   "target": "sys:RQMS",
+   "allow": false,
+   "reason": "stopped"
+  },
+  {
+   "account": "tmulti",
+   "perm": "type.map",
+   "target": "sys:RQMS",
+   "allow": false,
+   "reason": "scope"
+  },
+  {
+   "account": "tadm",
+   "perm": "type.request",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tda",
+   "perm": "type.request",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tda2",
+   "perm": "type.request",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tmod",
+   "perm": "type.request",
+   "target": "-",
+   "allow": true
+  },
+  {
+   "account": "tmodin",
+   "perm": "type.request",
+   "target": "-",
+   "allow": true
+  },
+  {
+   "account": "town",
+   "perm": "type.request",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "town2",
+   "perm": "type.request",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "taud",
+   "perm": "type.request",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tview",
+   "perm": "type.request",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "texp",
+   "perm": "type.request",
+   "target": "-",
+   "allow": false,
+   "reason": "expired"
+  },
+  {
+   "account": "tdatmp",
+   "perm": "type.request",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tstop",
+   "perm": "type.request",
+   "target": "-",
+   "allow": false,
+   "reason": "stopped"
+  },
+  {
+   "account": "tmulti",
+   "perm": "type.request",
+   "target": "-",
+   "allow": true
+  },
+  {
+   "account": "tadm",
+   "perm": "type.request",
+   "target": "sys:ERP",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tda",
+   "perm": "type.request",
+   "target": "sys:ERP",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tda2",
+   "perm": "type.request",
+   "target": "sys:ERP",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tmod",
+   "perm": "type.request",
+   "target": "sys:ERP",
+   "allow": true
+  },
+  {
+   "account": "tmodin",
+   "perm": "type.request",
+   "target": "sys:ERP",
+   "allow": true
+  },
+  {
+   "account": "town",
+   "perm": "type.request",
+   "target": "sys:ERP",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "town2",
+   "perm": "type.request",
+   "target": "sys:ERP",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "taud",
+   "perm": "type.request",
+   "target": "sys:ERP",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tview",
+   "perm": "type.request",
+   "target": "sys:ERP",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "texp",
+   "perm": "type.request",
+   "target": "sys:ERP",
+   "allow": false,
+   "reason": "expired"
+  },
+  {
+   "account": "tdatmp",
+   "perm": "type.request",
+   "target": "sys:ERP",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tstop",
+   "perm": "type.request",
+   "target": "sys:ERP",
+   "allow": false,
+   "reason": "stopped"
+  },
+  {
+   "account": "tmulti",
+   "perm": "type.request",
+   "target": "sys:ERP",
+   "allow": true
+  },
+  {
+   "account": "tadm",
+   "perm": "type.request",
+   "target": "sys:RQMS",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tda",
+   "perm": "type.request",
+   "target": "sys:RQMS",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tda2",
+   "perm": "type.request",
+   "target": "sys:RQMS",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tmod",
+   "perm": "type.request",
+   "target": "sys:RQMS",
+   "allow": false,
+   "reason": "scope"
+  },
+  {
+   "account": "tmodin",
+   "perm": "type.request",
+   "target": "sys:RQMS",
+   "allow": false,
+   "reason": "scope"
+  },
+  {
+   "account": "town",
+   "perm": "type.request",
+   "target": "sys:RQMS",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "town2",
+   "perm": "type.request",
+   "target": "sys:RQMS",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "taud",
+   "perm": "type.request",
+   "target": "sys:RQMS",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tview",
+   "perm": "type.request",
+   "target": "sys:RQMS",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "texp",
+   "perm": "type.request",
+   "target": "sys:RQMS",
+   "allow": false,
+   "reason": "expired"
+  },
+  {
+   "account": "tdatmp",
+   "perm": "type.request",
+   "target": "sys:RQMS",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tstop",
+   "perm": "type.request",
+   "target": "sys:RQMS",
+   "allow": false,
+   "reason": "stopped"
+  },
+  {
+   "account": "tmulti",
+   "perm": "type.request",
+   "target": "sys:RQMS",
+   "allow": false,
+   "reason": "scope"
+  },
+  {
+   "account": "tadm",
+   "perm": "appr.da",
+   "target": "doc:dict",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tda",
+   "perm": "appr.da",
+   "target": "doc:dict",
+   "allow": true
+  },
+  {
+   "account": "tda2",
+   "perm": "appr.da",
+   "target": "doc:dict",
+   "allow": true
+  },
+  {
+   "account": "tmod",
+   "perm": "appr.da",
+   "target": "doc:dict",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tmodin",
+   "perm": "appr.da",
+   "target": "doc:dict",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "town",
+   "perm": "appr.da",
+   "target": "doc:dict",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "town2",
+   "perm": "appr.da",
+   "target": "doc:dict",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "taud",
+   "perm": "appr.da",
+   "target": "doc:dict",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tview",
+   "perm": "appr.da",
+   "target": "doc:dict",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "texp",
+   "perm": "appr.da",
+   "target": "doc:dict",
+   "allow": false,
+   "reason": "expired"
+  },
+  {
+   "account": "tdatmp",
+   "perm": "appr.da",
+   "target": "doc:dict",
+   "allow": false,
+   "reason": "pwTemp"
+  },
+  {
+   "account": "tstop",
+   "perm": "appr.da",
+   "target": "doc:dict",
+   "allow": false,
+   "reason": "stopped"
+  },
+  {
+   "account": "tmulti",
+   "perm": "appr.da",
+   "target": "doc:dict",
+   "allow": true
+  },
+  {
+   "account": "tadm",
+   "perm": "appr.da",
+   "target": "doc:model:ERP",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tda",
+   "perm": "appr.da",
+   "target": "doc:model:ERP",
+   "allow": true
+  },
+  {
+   "account": "tda2",
+   "perm": "appr.da",
+   "target": "doc:model:ERP",
+   "allow": false,
+   "reason": "scope"
+  },
+  {
+   "account": "tmod",
+   "perm": "appr.da",
+   "target": "doc:model:ERP",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tmodin",
+   "perm": "appr.da",
+   "target": "doc:model:ERP",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "town",
+   "perm": "appr.da",
+   "target": "doc:model:ERP",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "town2",
+   "perm": "appr.da",
+   "target": "doc:model:ERP",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "taud",
+   "perm": "appr.da",
+   "target": "doc:model:ERP",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tview",
+   "perm": "appr.da",
+   "target": "doc:model:ERP",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "texp",
+   "perm": "appr.da",
+   "target": "doc:model:ERP",
+   "allow": false,
+   "reason": "expired"
+  },
+  {
+   "account": "tdatmp",
+   "perm": "appr.da",
+   "target": "doc:model:ERP",
+   "allow": false,
+   "reason": "pwTemp"
+  },
+  {
+   "account": "tstop",
+   "perm": "appr.da",
+   "target": "doc:model:ERP",
+   "allow": false,
+   "reason": "stopped"
+  },
+  {
+   "account": "tmulti",
+   "perm": "appr.da",
+   "target": "doc:model:ERP",
+   "allow": true
+  },
+  {
+   "account": "tadm",
+   "perm": "appr.da",
+   "target": "doc:model:RQMS",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tda",
+   "perm": "appr.da",
+   "target": "doc:model:RQMS",
+   "allow": false,
+   "reason": "scope"
+  },
+  {
+   "account": "tda2",
+   "perm": "appr.da",
+   "target": "doc:model:RQMS",
+   "allow": true
+  },
+  {
+   "account": "tmod",
+   "perm": "appr.da",
+   "target": "doc:model:RQMS",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tmodin",
+   "perm": "appr.da",
+   "target": "doc:model:RQMS",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "town",
+   "perm": "appr.da",
+   "target": "doc:model:RQMS",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "town2",
+   "perm": "appr.da",
+   "target": "doc:model:RQMS",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "taud",
+   "perm": "appr.da",
+   "target": "doc:model:RQMS",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tview",
+   "perm": "appr.da",
+   "target": "doc:model:RQMS",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "texp",
+   "perm": "appr.da",
+   "target": "doc:model:RQMS",
+   "allow": false,
+   "reason": "expired"
+  },
+  {
+   "account": "tdatmp",
+   "perm": "appr.da",
+   "target": "doc:model:RQMS",
+   "allow": false,
+   "reason": "pwTemp"
+  },
+  {
+   "account": "tstop",
+   "perm": "appr.da",
+   "target": "doc:model:RQMS",
+   "allow": false,
+   "reason": "stopped"
+  },
+  {
+   "account": "tmulti",
+   "perm": "appr.da",
+   "target": "doc:model:RQMS",
+   "allow": false,
+   "reason": "scope"
+  },
+  {
+   "account": "tadm",
+   "perm": "appr.final",
+   "target": "doc:dict",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tda",
+   "perm": "appr.final",
+   "target": "doc:dict",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tda2",
+   "perm": "appr.final",
+   "target": "doc:dict",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tmod",
+   "perm": "appr.final",
+   "target": "doc:dict",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tmodin",
+   "perm": "appr.final",
+   "target": "doc:dict",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "town",
+   "perm": "appr.final",
+   "target": "doc:dict",
+   "allow": true
+  },
+  {
+   "account": "town2",
+   "perm": "appr.final",
+   "target": "doc:dict",
+   "allow": true
+  },
+  {
+   "account": "taud",
+   "perm": "appr.final",
+   "target": "doc:dict",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tview",
+   "perm": "appr.final",
+   "target": "doc:dict",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "texp",
+   "perm": "appr.final",
+   "target": "doc:dict",
+   "allow": false,
+   "reason": "expired"
+  },
+  {
+   "account": "tdatmp",
+   "perm": "appr.final",
+   "target": "doc:dict",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tstop",
+   "perm": "appr.final",
+   "target": "doc:dict",
+   "allow": false,
+   "reason": "stopped"
+  },
+  {
+   "account": "tmulti",
+   "perm": "appr.final",
+   "target": "doc:dict",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tadm",
+   "perm": "appr.final",
+   "target": "doc:model:ERP",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tda",
+   "perm": "appr.final",
+   "target": "doc:model:ERP",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tda2",
+   "perm": "appr.final",
+   "target": "doc:model:ERP",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tmod",
+   "perm": "appr.final",
+   "target": "doc:model:ERP",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tmodin",
+   "perm": "appr.final",
+   "target": "doc:model:ERP",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "town",
+   "perm": "appr.final",
+   "target": "doc:model:ERP",
+   "allow": true
+  },
+  {
+   "account": "town2",
+   "perm": "appr.final",
+   "target": "doc:model:ERP",
+   "allow": true
+  },
+  {
+   "account": "taud",
+   "perm": "appr.final",
+   "target": "doc:model:ERP",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tview",
+   "perm": "appr.final",
+   "target": "doc:model:ERP",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "texp",
+   "perm": "appr.final",
+   "target": "doc:model:ERP",
+   "allow": false,
+   "reason": "expired"
+  },
+  {
+   "account": "tdatmp",
+   "perm": "appr.final",
+   "target": "doc:model:ERP",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tstop",
+   "perm": "appr.final",
+   "target": "doc:model:ERP",
+   "allow": false,
+   "reason": "stopped"
+  },
+  {
+   "account": "tmulti",
+   "perm": "appr.final",
+   "target": "doc:model:ERP",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tadm",
+   "perm": "appr.final",
+   "target": "doc:model:RQMS",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tda",
+   "perm": "appr.final",
+   "target": "doc:model:RQMS",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tda2",
+   "perm": "appr.final",
+   "target": "doc:model:RQMS",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tmod",
+   "perm": "appr.final",
+   "target": "doc:model:RQMS",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tmodin",
+   "perm": "appr.final",
+   "target": "doc:model:RQMS",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "town",
+   "perm": "appr.final",
+   "target": "doc:model:RQMS",
+   "allow": false,
+   "reason": "scope"
+  },
+  {
+   "account": "town2",
+   "perm": "appr.final",
+   "target": "doc:model:RQMS",
+   "allow": false,
+   "reason": "scope"
+  },
+  {
+   "account": "taud",
+   "perm": "appr.final",
+   "target": "doc:model:RQMS",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tview",
+   "perm": "appr.final",
+   "target": "doc:model:RQMS",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "texp",
+   "perm": "appr.final",
+   "target": "doc:model:RQMS",
+   "allow": false,
+   "reason": "expired"
+  },
+  {
+   "account": "tdatmp",
+   "perm": "appr.final",
+   "target": "doc:model:RQMS",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tstop",
+   "perm": "appr.final",
+   "target": "doc:model:RQMS",
+   "allow": false,
+   "reason": "stopped"
+  },
+  {
+   "account": "tmulti",
+   "perm": "appr.final",
+   "target": "doc:model:RQMS",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tadm",
+   "perm": "appr.viewall",
+   "target": "done:dict",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tda",
+   "perm": "appr.viewall",
+   "target": "done:dict",
+   "allow": true
+  },
+  {
+   "account": "tda2",
+   "perm": "appr.viewall",
+   "target": "done:dict",
+   "allow": true
+  },
+  {
+   "account": "tmod",
+   "perm": "appr.viewall",
+   "target": "done:dict",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tmodin",
+   "perm": "appr.viewall",
+   "target": "done:dict",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "town",
+   "perm": "appr.viewall",
+   "target": "done:dict",
+   "allow": true
+  },
+  {
+   "account": "town2",
+   "perm": "appr.viewall",
+   "target": "done:dict",
+   "allow": true
+  },
+  {
+   "account": "taud",
+   "perm": "appr.viewall",
+   "target": "done:dict",
+   "allow": true
+  },
+  {
+   "account": "tview",
+   "perm": "appr.viewall",
+   "target": "done:dict",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "texp",
+   "perm": "appr.viewall",
+   "target": "done:dict",
+   "allow": false,
+   "reason": "expired"
+  },
+  {
+   "account": "tdatmp",
+   "perm": "appr.viewall",
+   "target": "done:dict",
+   "allow": true
+  },
+  {
+   "account": "tstop",
+   "perm": "appr.viewall",
+   "target": "done:dict",
+   "allow": false,
+   "reason": "stopped"
+  },
+  {
+   "account": "tmulti",
+   "perm": "appr.viewall",
+   "target": "done:dict",
+   "allow": true
+  },
+  {
+   "account": "tadm",
+   "perm": "appr.viewall",
+   "target": "done:model:ERP",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tda",
+   "perm": "appr.viewall",
+   "target": "done:model:ERP",
+   "allow": true
+  },
+  {
+   "account": "tda2",
+   "perm": "appr.viewall",
+   "target": "done:model:ERP",
+   "allow": true
+  },
+  {
+   "account": "tmod",
+   "perm": "appr.viewall",
+   "target": "done:model:ERP",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tmodin",
+   "perm": "appr.viewall",
+   "target": "done:model:ERP",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "town",
+   "perm": "appr.viewall",
+   "target": "done:model:ERP",
+   "allow": true
+  },
+  {
+   "account": "town2",
+   "perm": "appr.viewall",
+   "target": "done:model:ERP",
+   "allow": true
+  },
+  {
+   "account": "taud",
+   "perm": "appr.viewall",
+   "target": "done:model:ERP",
+   "allow": true
+  },
+  {
+   "account": "tview",
+   "perm": "appr.viewall",
+   "target": "done:model:ERP",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "texp",
+   "perm": "appr.viewall",
+   "target": "done:model:ERP",
+   "allow": false,
+   "reason": "expired"
+  },
+  {
+   "account": "tdatmp",
+   "perm": "appr.viewall",
+   "target": "done:model:ERP",
+   "allow": true
+  },
+  {
+   "account": "tstop",
+   "perm": "appr.viewall",
+   "target": "done:model:ERP",
+   "allow": false,
+   "reason": "stopped"
+  },
+  {
+   "account": "tmulti",
+   "perm": "appr.viewall",
+   "target": "done:model:ERP",
+   "allow": true
+  },
+  {
+   "account": "tadm",
+   "perm": "appr.viewall",
+   "target": "done:model:RQMS",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tda",
+   "perm": "appr.viewall",
+   "target": "done:model:RQMS",
+   "allow": true
+  },
+  {
+   "account": "tda2",
+   "perm": "appr.viewall",
+   "target": "done:model:RQMS",
+   "allow": true
+  },
+  {
+   "account": "tmod",
+   "perm": "appr.viewall",
+   "target": "done:model:RQMS",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tmodin",
+   "perm": "appr.viewall",
+   "target": "done:model:RQMS",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "town",
+   "perm": "appr.viewall",
+   "target": "done:model:RQMS",
+   "allow": true
+  },
+  {
+   "account": "town2",
+   "perm": "appr.viewall",
+   "target": "done:model:RQMS",
+   "allow": true
+  },
+  {
+   "account": "taud",
+   "perm": "appr.viewall",
+   "target": "done:model:RQMS",
+   "allow": false,
+   "reason": "scope"
+  },
+  {
+   "account": "tview",
+   "perm": "appr.viewall",
+   "target": "done:model:RQMS",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "texp",
+   "perm": "appr.viewall",
+   "target": "done:model:RQMS",
+   "allow": false,
+   "reason": "expired"
+  },
+  {
+   "account": "tdatmp",
+   "perm": "appr.viewall",
+   "target": "done:model:RQMS",
+   "allow": true
+  },
+  {
+   "account": "tstop",
+   "perm": "appr.viewall",
+   "target": "done:model:RQMS",
+   "allow": false,
+   "reason": "stopped"
+  },
+  {
+   "account": "tmulti",
+   "perm": "appr.viewall",
+   "target": "done:model:RQMS",
+   "allow": true
+  },
+  {
+   "account": "tadm",
+   "perm": "admin.confirm",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tda",
+   "perm": "admin.confirm",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tda2",
+   "perm": "admin.confirm",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tmod",
+   "perm": "admin.confirm",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tmodin",
+   "perm": "admin.confirm",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "town",
+   "perm": "admin.confirm",
+   "target": "-",
+   "allow": true
+  },
+  {
+   "account": "town2",
+   "perm": "admin.confirm",
+   "target": "-",
+   "allow": true
+  },
+  {
+   "account": "taud",
+   "perm": "admin.confirm",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tview",
+   "perm": "admin.confirm",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "texp",
+   "perm": "admin.confirm",
+   "target": "-",
+   "allow": false,
+   "reason": "expired"
+  },
+  {
+   "account": "tdatmp",
+   "perm": "admin.confirm",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tstop",
+   "perm": "admin.confirm",
+   "target": "-",
+   "allow": false,
+   "reason": "stopped"
+  },
+  {
+   "account": "tmulti",
+   "perm": "admin.confirm",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tadm",
+   "perm": "audit.view",
+   "target": "-",
+   "allow": true
+  },
+  {
+   "account": "tda",
+   "perm": "audit.view",
+   "target": "-",
+   "allow": true
+  },
+  {
+   "account": "tda2",
+   "perm": "audit.view",
+   "target": "-",
+   "allow": true
+  },
+  {
+   "account": "tmod",
+   "perm": "audit.view",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tmodin",
+   "perm": "audit.view",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "town",
+   "perm": "audit.view",
+   "target": "-",
+   "allow": true
+  },
+  {
+   "account": "town2",
+   "perm": "audit.view",
+   "target": "-",
+   "allow": true
+  },
+  {
+   "account": "taud",
+   "perm": "audit.view",
+   "target": "-",
+   "allow": true
+  },
+  {
+   "account": "tview",
+   "perm": "audit.view",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "texp",
+   "perm": "audit.view",
+   "target": "-",
+   "allow": false,
+   "reason": "expired"
+  },
+  {
+   "account": "tdatmp",
+   "perm": "audit.view",
+   "target": "-",
+   "allow": true
+  },
+  {
+   "account": "tstop",
+   "perm": "audit.view",
+   "target": "-",
+   "allow": false,
+   "reason": "stopped"
+  },
+  {
+   "account": "tmulti",
+   "perm": "audit.view",
+   "target": "-",
+   "allow": true
+  },
+  {
+   "account": "tadm",
+   "perm": "settings",
+   "target": "-",
+   "allow": true
+  },
+  {
+   "account": "tda",
+   "perm": "settings",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tda2",
+   "perm": "settings",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tmod",
+   "perm": "settings",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tmodin",
+   "perm": "settings",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "town",
+   "perm": "settings",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "town2",
+   "perm": "settings",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "taud",
+   "perm": "settings",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tview",
+   "perm": "settings",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "texp",
+   "perm": "settings",
+   "target": "-",
+   "allow": false,
+   "reason": "expired"
+  },
+  {
+   "account": "tdatmp",
+   "perm": "settings",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tstop",
+   "perm": "settings",
+   "target": "-",
+   "allow": false,
+   "reason": "stopped"
+  },
+  {
+   "account": "tmulti",
+   "perm": "settings",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tadm",
+   "perm": "rules.edit",
+   "target": "-",
+   "allow": true
+  },
+  {
+   "account": "tda",
+   "perm": "rules.edit",
+   "target": "-",
+   "allow": true
+  },
+  {
+   "account": "tda2",
+   "perm": "rules.edit",
+   "target": "-",
+   "allow": true
+  },
+  {
+   "account": "tmod",
+   "perm": "rules.edit",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tmodin",
+   "perm": "rules.edit",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "town",
+   "perm": "rules.edit",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "town2",
+   "perm": "rules.edit",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "taud",
+   "perm": "rules.edit",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tview",
+   "perm": "rules.edit",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "texp",
+   "perm": "rules.edit",
+   "target": "-",
+   "allow": false,
+   "reason": "expired"
+  },
+  {
+   "account": "tdatmp",
+   "perm": "rules.edit",
+   "target": "-",
+   "allow": true
+  },
+  {
+   "account": "tstop",
+   "perm": "rules.edit",
+   "target": "-",
+   "allow": false,
+   "reason": "stopped"
+  },
+  {
+   "account": "tmulti",
+   "perm": "rules.edit",
+   "target": "-",
+   "allow": true
+  },
+  {
+   "account": "tadm",
+   "perm": "users",
+   "target": "-",
+   "allow": true
+  },
+  {
+   "account": "tda",
+   "perm": "users",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tda2",
+   "perm": "users",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tmod",
+   "perm": "users",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tmodin",
+   "perm": "users",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "town",
+   "perm": "users",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "town2",
+   "perm": "users",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "taud",
+   "perm": "users",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tview",
+   "perm": "users",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "texp",
+   "perm": "users",
+   "target": "-",
+   "allow": false,
+   "reason": "expired"
+  },
+  {
+   "account": "tdatmp",
+   "perm": "users",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  },
+  {
+   "account": "tstop",
+   "perm": "users",
+   "target": "-",
+   "allow": false,
+   "reason": "stopped"
+  },
+  {
+   "account": "tmulti",
+   "perm": "users",
+   "target": "-",
+   "allow": false,
+   "reason": "role"
+  }
+ ],
+ "acts": [
+  {
+   "account": "tadm",
+   "case": "da:model:ERP:req=tmod",
+   "allow": false
+  },
+  {
+   "account": "tda",
+   "case": "da:model:ERP:req=tmod",
+   "allow": true
+  },
+  {
+   "account": "tda2",
+   "case": "da:model:ERP:req=tmod",
+   "allow": false
+  },
+  {
+   "account": "tmod",
+   "case": "da:model:ERP:req=tmod",
+   "allow": false
+  },
+  {
+   "account": "tmodin",
+   "case": "da:model:ERP:req=tmod",
+   "allow": false
+  },
+  {
+   "account": "town",
+   "case": "da:model:ERP:req=tmod",
+   "allow": false
+  },
+  {
+   "account": "town2",
+   "case": "da:model:ERP:req=tmod",
+   "allow": false
+  },
+  {
+   "account": "taud",
+   "case": "da:model:ERP:req=tmod",
+   "allow": false
+  },
+  {
+   "account": "tview",
+   "case": "da:model:ERP:req=tmod",
+   "allow": false
+  },
+  {
+   "account": "texp",
+   "case": "da:model:ERP:req=tmod",
+   "allow": false
+  },
+  {
+   "account": "tdatmp",
+   "case": "da:model:ERP:req=tmod",
+   "allow": false
+  },
+  {
+   "account": "tstop",
+   "case": "da:model:ERP:req=tmod",
+   "allow": false
+  },
+  {
+   "account": "tmulti",
+   "case": "da:model:ERP:req=tmod",
+   "allow": true
+  },
+  {
+   "account": "tadm",
+   "case": "da:model:ERP:req=tmulti",
+   "allow": false
+  },
+  {
+   "account": "tda",
+   "case": "da:model:ERP:req=tmulti",
+   "allow": true
+  },
+  {
+   "account": "tda2",
+   "case": "da:model:ERP:req=tmulti",
+   "allow": false
+  },
+  {
+   "account": "tmod",
+   "case": "da:model:ERP:req=tmulti",
+   "allow": false
+  },
+  {
+   "account": "tmodin",
+   "case": "da:model:ERP:req=tmulti",
+   "allow": false
+  },
+  {
+   "account": "town",
+   "case": "da:model:ERP:req=tmulti",
+   "allow": false
+  },
+  {
+   "account": "town2",
+   "case": "da:model:ERP:req=tmulti",
+   "allow": false
+  },
+  {
+   "account": "taud",
+   "case": "da:model:ERP:req=tmulti",
+   "allow": false
+  },
+  {
+   "account": "tview",
+   "case": "da:model:ERP:req=tmulti",
+   "allow": false
+  },
+  {
+   "account": "texp",
+   "case": "da:model:ERP:req=tmulti",
+   "allow": false
+  },
+  {
+   "account": "tdatmp",
+   "case": "da:model:ERP:req=tmulti",
+   "allow": false
+  },
+  {
+   "account": "tstop",
+   "case": "da:model:ERP:req=tmulti",
+   "allow": false
+  },
+  {
+   "account": "tmulti",
+   "case": "da:model:ERP:req=tmulti",
+   "allow": true
+  },
+  {
+   "account": "tadm",
+   "case": "da:model:ERP:req=tmulti:selfOff",
+   "allow": false
+  },
+  {
+   "account": "tda",
+   "case": "da:model:ERP:req=tmulti:selfOff",
+   "allow": true
+  },
+  {
+   "account": "tda2",
+   "case": "da:model:ERP:req=tmulti:selfOff",
+   "allow": false
+  },
+  {
+   "account": "tmod",
+   "case": "da:model:ERP:req=tmulti:selfOff",
+   "allow": false
+  },
+  {
+   "account": "tmodin",
+   "case": "da:model:ERP:req=tmulti:selfOff",
+   "allow": false
+  },
+  {
+   "account": "town",
+   "case": "da:model:ERP:req=tmulti:selfOff",
+   "allow": false
+  },
+  {
+   "account": "town2",
+   "case": "da:model:ERP:req=tmulti:selfOff",
+   "allow": false
+  },
+  {
+   "account": "taud",
+   "case": "da:model:ERP:req=tmulti:selfOff",
+   "allow": false
+  },
+  {
+   "account": "tview",
+   "case": "da:model:ERP:req=tmulti:selfOff",
+   "allow": false
+  },
+  {
+   "account": "texp",
+   "case": "da:model:ERP:req=tmulti:selfOff",
+   "allow": false
+  },
+  {
+   "account": "tdatmp",
+   "case": "da:model:ERP:req=tmulti:selfOff",
+   "allow": false
+  },
+  {
+   "account": "tstop",
+   "case": "da:model:ERP:req=tmulti:selfOff",
+   "allow": false
+  },
+  {
+   "account": "tmulti",
+   "case": "da:model:ERP:req=tmulti:selfOff",
+   "allow": false
+  },
+  {
+   "account": "tadm",
+   "case": "final:model:ERP:req=tmod,da=tda",
+   "allow": false
+  },
+  {
+   "account": "tda",
+   "case": "final:model:ERP:req=tmod,da=tda",
+   "allow": false
+  },
+  {
+   "account": "tda2",
+   "case": "final:model:ERP:req=tmod,da=tda",
+   "allow": false
+  },
+  {
+   "account": "tmod",
+   "case": "final:model:ERP:req=tmod,da=tda",
+   "allow": false
+  },
+  {
+   "account": "tmodin",
+   "case": "final:model:ERP:req=tmod,da=tda",
+   "allow": false
+  },
+  {
+   "account": "town",
+   "case": "final:model:ERP:req=tmod,da=tda",
+   "allow": true
+  },
+  {
+   "account": "town2",
+   "case": "final:model:ERP:req=tmod,da=tda",
+   "allow": true
+  },
+  {
+   "account": "taud",
+   "case": "final:model:ERP:req=tmod,da=tda",
+   "allow": false
+  },
+  {
+   "account": "tview",
+   "case": "final:model:ERP:req=tmod,da=tda",
+   "allow": false
+  },
+  {
+   "account": "texp",
+   "case": "final:model:ERP:req=tmod,da=tda",
+   "allow": false
+  },
+  {
+   "account": "tdatmp",
+   "case": "final:model:ERP:req=tmod,da=tda",
+   "allow": false
+  },
+  {
+   "account": "tstop",
+   "case": "final:model:ERP:req=tmod,da=tda",
+   "allow": false
+  },
+  {
+   "account": "tmulti",
+   "case": "final:model:ERP:req=tmod,da=tda",
+   "allow": false
+  },
+  {
+   "account": "tadm",
+   "case": "final:dict:req=town2,da=tda",
+   "allow": false
+  },
+  {
+   "account": "tda",
+   "case": "final:dict:req=town2,da=tda",
+   "allow": false
+  },
+  {
+   "account": "tda2",
+   "case": "final:dict:req=town2,da=tda",
+   "allow": false
+  },
+  {
+   "account": "tmod",
+   "case": "final:dict:req=town2,da=tda",
+   "allow": false
+  },
+  {
+   "account": "tmodin",
+   "case": "final:dict:req=town2,da=tda",
+   "allow": false
+  },
+  {
+   "account": "town",
+   "case": "final:dict:req=town2,da=tda",
+   "allow": true
+  },
+  {
+   "account": "town2",
+   "case": "final:dict:req=town2,da=tda",
+   "allow": false
+  },
+  {
+   "account": "taud",
+   "case": "final:dict:req=town2,da=tda",
+   "allow": false
+  },
+  {
+   "account": "tview",
+   "case": "final:dict:req=town2,da=tda",
+   "allow": false
+  },
+  {
+   "account": "texp",
+   "case": "final:dict:req=town2,da=tda",
+   "allow": false
+  },
+  {
+   "account": "tdatmp",
+   "case": "final:dict:req=town2,da=tda",
+   "allow": false
+  },
+  {
+   "account": "tstop",
+   "case": "final:dict:req=town2,da=tda",
+   "allow": false
+  },
+  {
+   "account": "tmulti",
+   "case": "final:dict:req=town2,da=tda",
+   "allow": false
+  },
+  {
+   "account": "tadm",
+   "case": "final:model:RQMS:req=tmodin,da=tda2",
+   "allow": false
+  },
+  {
+   "account": "tda",
+   "case": "final:model:RQMS:req=tmodin,da=tda2",
+   "allow": false
+  },
+  {
+   "account": "tda2",
+   "case": "final:model:RQMS:req=tmodin,da=tda2",
+   "allow": false
+  },
+  {
+   "account": "tmod",
+   "case": "final:model:RQMS:req=tmodin,da=tda2",
+   "allow": false
+  },
+  {
+   "account": "tmodin",
+   "case": "final:model:RQMS:req=tmodin,da=tda2",
+   "allow": false
+  },
+  {
+   "account": "town",
+   "case": "final:model:RQMS:req=tmodin,da=tda2",
+   "allow": false
+  },
+  {
+   "account": "town2",
+   "case": "final:model:RQMS:req=tmodin,da=tda2",
+   "allow": false
+  },
+  {
+   "account": "taud",
+   "case": "final:model:RQMS:req=tmodin,da=tda2",
+   "allow": false
+  },
+  {
+   "account": "tview",
+   "case": "final:model:RQMS:req=tmodin,da=tda2",
+   "allow": false
+  },
+  {
+   "account": "texp",
+   "case": "final:model:RQMS:req=tmodin,da=tda2",
+   "allow": false
+  },
+  {
+   "account": "tdatmp",
+   "case": "final:model:RQMS:req=tmodin,da=tda2",
+   "allow": false
+  },
+  {
+   "account": "tstop",
+   "case": "final:model:RQMS:req=tmodin,da=tda2",
+   "allow": false
+  },
+  {
+   "account": "tmulti",
+   "case": "final:model:RQMS:req=tmodin,da=tda2",
+   "allow": false
+  }
+ ]
+}

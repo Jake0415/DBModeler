@@ -38,7 +38,7 @@
 - [x] worktree 준비 스크립트(DB 이름 · API 포트) — `scripts/worktree-env.ps1`, Codex Sol 리뷰 4회(수정 3회 + 후속 2건 반영, 기각 1건: `-Drop` 뒤 기록 저장 실패 시 기록 잔존 — 다음 실행이 DB를 다시 만들 뿐 해가 없음)
 - [x] 시험 계정 시드 · DB 초기화 — `npm run db:seed:test` · `scripts/worktree-env.ps1 -Reset -Seed -TestAccounts`, 13개 계정(계획 §9.1). API 로그인 확인: 정상 4 · 임시 비밀번호 변경 요구(tdatmp) · 기한 만료(texp) · 사용 중지(tstop) 401 + 이유. Codex Sol 리뷰 3회(R-01~07: 수정 2회, 후속 F-001 · F-002, 기각 1건 — 빈 `?`/`#` 주소는 접속지가 같아 해 없음)
 - [ ] 역할별 로그인 상태 저장 틀(Playwright storageState) — web · E2E 틀이 생기는 P1로 이동. 시나리오별 빠른 초기화(시드가 끝난 DB를 TEMPLATE으로 복제)도 P1 E2E 틀에서
-- [ ] PERMS → 권한 검사 표 생성기
+- [x] PERMS → 권한 검사 표 생성기 — `packages/rules/src/matrix.ts`(권한 판정 637칸 + 결재 행위 6사례), 기준 파일 [rbac-matrix.md](rbac-matrix.md) · `e2e/rbac/perm-matrix.json`, 갱신 `npm run rbac:matrix`(사람 승인 뒤). 시험 계정 정의를 `@neodb/domain` TEST_ACCOUNTS로 옮겨 시드와 같이 씀. 문서 기대값 테스트 22개. Codex Sol 리뷰 3회(RBAC-01~07: 수정 2회, 보류 → 후속 F-003 감리 감사 로그 범위)
 - [ ] 작업 목록(기능 → 목업 → API → 테스트 대응표)
 - [ ] 목업 기준 스크린샷
 - [ ] Orca 브라우저 탭 쿠키 공유 여부, `--effort max` 전달 여부 확인
