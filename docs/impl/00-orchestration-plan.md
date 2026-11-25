@@ -26,7 +26,7 @@
 | 3 | Heartbeat | Settings → Agent Orchestration → 15분(기본 5분 — 토큰 절약). |
 | 4 | Codex CLI | `gpt-6.2-sol` · `gpt-6.2-astra`는 **Codex CLI 0.171.0 이상**. 업데이트(`npm i -g @openai/codex`) 뒤 Windows 샌드박스 셔임(`-c windows.sandbox=unelevated`)을 다시 적용한다. DBModeler를 Codex 신뢰 프로젝트로 등록해야 `.codex/config.toml`이 읽힌다. |
 | 5 | 미커밋 정리 | worktree는 커밋된 상태에서 시작한다. 목업 · 검토 문서 변경을 먼저 커밋한다. |
-| 6 | DB · 포트 분리 | worktree마다 `DATABASE_URL`의 DB 이름(`neodb_<작업ID>`)과 `API_PORT`를 다르게 한다. `.env`는 `.worktreeinclude`로 복사되므로 worktree 준비 스크립트가 값을 바꾼다(P0 작업). 마이그레이션 파일은 계약 담당만 만든다. |
+| 6 | DB · 포트 분리 | `scripts/worktree-env.ps1`(작업 worktree에서 실행): DB `neodb_<작업>_<해시 12자리>` · `API_PORT` 4400~4899 · `WEB_PORT` = API+1000을 배정하고 `.env`를 맞춘 뒤 마이그레이션(`-Seed` · `-Reset` · `-Drop` · `-Adopt`). 배정 기록은 `.git/neodb-worktrees.json`, 동시 실행은 파일 잠금. 기본 체크아웃에서는 실행되지 않는다. 개발 DB 컨테이너는 main 체크아웃에서만 `npm run db:up`. 마이그레이션 파일은 계약 담당만 만든다. |
 | 7 | 모델 확인 | §3.3 절차를 통과해야 첫 작업을 배정한다. |
 
 ## 2. 에이전트 구성

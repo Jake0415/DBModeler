@@ -32,10 +32,10 @@
 - [ ] Orca 에이전트 권한 확인 — 리뷰어 · 권한 감사관 읽기 전용
 - [ ] Orca 오케스트레이션 · CLI 켜기, `orca status --json`, 스킬 설치
 - [ ] Heartbeat 15분
-- [ ] Codex CLI ≥ 0.171.0 + Windows 샌드박스 셔임 재적용 + DBModeler 신뢰 등록
-- [ ] 모델 확인(계획 §3.3) — Opus 5.5 · Fable 5.2 · Sol · Astra
-- [ ] 미커밋 목업 · 검토 문서 커밋
-- [ ] worktree 준비 스크립트(DB 이름 · API 포트)
+- [x] Codex CLI ≥ 0.171.0 + Windows 샌드박스 셔임 재적용 + DBModeler 신뢰 등록 — 2026-11-25: 0.172.0, 셔임 재적용, 신뢰 등록. Claude Code 2.1.290 → 2.1.331(Fable 5.2 인식)
+- [x] 모델 확인(계획 §3.3) — 2026-11-25: `gpt-6.2-sol` · `gpt-6.2-astra` · `claude-opus-5-5` · `claude-fable-5-2` 모두 경고 없이 응답, Codex 프로젝트 기본값 Sol · medium 적용 확인
+- [x] 미커밋 목업 · 검토 문서 커밋 — 이미 커밋돼 있음(남은 것: `NeoDB-mockups-20261120.zip`·폴더, 빈 `model.html` — 사용자 판단)
+- [x] worktree 준비 스크립트(DB 이름 · API 포트) — `scripts/worktree-env.ps1`, Codex Sol 리뷰 4회(수정 3회 + 후속 2건 반영, 기각 1건: `-Drop` 뒤 기록 저장 실패 시 기록 잔존 — 다음 실행이 DB를 다시 만들 뿐 해가 없음)
 - [ ] 시험 계정 시드 · 역할별 로그인 저장 틀 · DB 초기화
 - [ ] PERMS → 권한 검사 표 생성기
 - [ ] 작업 목록(기능 → 목업 → API → 테스트 대응표)

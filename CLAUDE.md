@@ -59,5 +59,6 @@ npm run build
 npm test
 npm run dev:api
 ```
-- worktree마다 `.env`의 `DATABASE_URL` DB 이름과 `API_PORT`를 다르게 둔다(계획 §1-6).
+- **작업 worktree를 받으면 먼저** `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/worktree-env.ps1` 을 실행한다 — 이 worktree 전용 DB(`neodb_<작업>_<해시>`)와 `API_PORT`·`WEB_PORT`를 배정하고 `.env`를 맞춘 뒤 마이그레이션한다. 시드는 `-Seed`, 초기화는 `-Reset`, 작업이 끝나 worktree를 지울 때는 `-Drop`.
+- worktree에서 `npm run db:up`을 실행하지 않는다(개발 DB 컨테이너는 main 체크아웃에서만 띄운다).
 - 개발 환경 세부: `docs/arch/02-dev-setup.md`.
