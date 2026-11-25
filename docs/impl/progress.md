@@ -28,6 +28,12 @@
 
 상태: 준비됨 · 계약 · 구현 · 리뷰 · 수정 · E2E · 병합됨 · 보류 · 대기(의존)
 
+## Orca 실행 준비 (2026-11-25)
+- [x] 역할 지시서 — [roles/](roles/): 공통 규칙 `_common.md` · 지시서 양식 `_spec-template.md` · 역할 10개(조정자 · 계약 · BE · FE · 공동 편집 · UX · 역할 시나리오 QA · 리뷰어 · QA · 권한 감사관), 조정자 시작 프롬프트 [coordinator-kickoff.md](coordinator-kickoff.md), 실행 안내 [02-orca-runbook.md](02-orca-runbook.md)
+- 주요 결정: 리뷰어는 `codex -s read-only -a never …` 읽기 전용 터미널, 의존 = 계약은 main 병합 뒤 · 검증은 리뷰 통과 뒤, BE · FE 묶음은 통합 worktree에서 QA → 시나리오 → 권한 감사 차례로, 수정은 같은 worktree에 새 수정 Task(모델 상향), worktree 정리는 `orca worktree rm --run-hooks --delete-branch`(예비: `worktree-env.ps1 -Prune -Target <절대 경로>`), 브랜치는 Orca 기본 이름 기록, T-P1-02 → 02b(BE) → 02c, T-P1-01에 lint
+- 실측: Orca 새 worktree 준비(node_modules 공유 · DB · 시험 계정) 성공, `--run-hooks` 정리 성공, `--run-hooks` 없으면 DB 남음
+- 리뷰: Codex Sol 4회(REV-01 ~ 24, 수정 4회, 기각 2: REV-02 실측 근거 · REV-16 UX 모델은 계획 §3.2)
+
 ## P0 준비 점검표
 - [x] Orca 에이전트 권한 — 2026-11-25 설정: **Codex = ‘대신 승인’**(`--approve-for-me` = workspace-write 샌드박스 + 승인 자동 검토, 리뷰어는 지시로 읽기 전용 · QA/권한 감사관은 `e2e/`만 씀) + 인수 `-c windows.sandbox=unelevated`(관리자 샌드박스 팝업 방지) · 실행 확인. **Claude = 전체 액세스 유지**(구현 에이전트, worktree 안에서 작업) · 기본 모델 Opus 4.8 → **Opus 5.5**
 - [x] Orca 오케스트레이션 · CLI 켜기, `orca status --json`, 스킬 설치 — 앱 1.4.274 · 런타임 ready · `orca` 사용자 PATH 등록(새 셸부터) · `orchestration worker-list` 응답 · Claude 상태 훅 설치됨 · 스킬 orca-cli · orchestration 사용 가능

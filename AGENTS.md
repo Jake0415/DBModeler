@@ -2,6 +2,7 @@
 
 > 기준 문서: [docs/impl/00-orchestration-plan.md](docs/impl/00-orchestration-plan.md). 다르면 계획 문서가 우선한다.
 > 모든 보고 · 기록은 **한국어**.
+> Orca 작업 에이전트는 [docs/impl/roles/_common.md](docs/impl/roles/_common.md)와 역할 지시서(`reviewer.md` · `qa.md` · `rbac-auditor.md`)를 먼저 읽는다.
 
 ## 모델 (임의 변경 금지)
 | 난이도 | 모델 · effort |

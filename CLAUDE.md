@@ -1,6 +1,7 @@
 # NeoDB (DBModeler) — Claude 에이전트 규칙
 
 > 기준 문서: [docs/impl/00-orchestration-plan.md](docs/impl/00-orchestration-plan.md). 이 파일은 요약이며, 다르면 계획 문서가 우선한다.
+> Orca 작업 에이전트는 [docs/impl/roles/_common.md](docs/impl/roles/_common.md)와 지시서가 가리킨 역할 지시서(`docs/impl/roles/<역할>.md`)를 먼저 읽는다. 실행 방법: [docs/impl/02-orca-runbook.md](docs/impl/02-orca-runbook.md).
 
 ## 언어
 - 사용자에게 보이는 모든 글(보고 · 기록 · 커밋 메시지 본문 · 문서)은 **한국어**.
@@ -49,7 +50,7 @@
 - `docs/impl/rbac-matrix.md` · `e2e/rbac/perm-matrix.json`이 바뀌는 변경 = 권한표 변경. `npm run rbac:matrix`는 사람 승인 뒤에만 실행한다.
 
 ## 브랜치 · 커밋
-- 작업 브랜치 `impl/<작업ID>-<요약>`. 병합은 조정자만(`--no-ff`, main, push). PR 없음.
+- 작업 브랜치는 Orca 기본 이름(`Jake0415/<작업ID 소문자>`). 병합은 조정자만(`--no-ff`, main, push). PR 없음.
 - 커밋 메시지: 기존 형식(이모지 + 범위 + 요약) + 사용 모델 · 회차 · 리뷰 결과.
 
 ## 개발 명령

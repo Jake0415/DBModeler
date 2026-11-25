@@ -24,7 +24,9 @@ param(
   [switch]$NoMigrate,     # 마이그레이션을 건너뛴다
   [switch]$Drop,          # 이 worktree의 DB와 배정 기록을 지우고 끝낸다 (worktree 정리 때)
   [switch]$Adopt,         # 배정 기록 없이 남아 있는 같은 이름의 DB를 이 worktree가 넘겨받는다
-  [switch]$TestAccounts   # 시험 계정(계획 §9.1)도 다시 만든다 — npm run db:seed:test
+  [switch]$TestAccounts,  # 시험 계정(계획 §9.1)도 다시 만든다 — npm run db:seed:test
+  [switch]$Prune,         # (어느 체크아웃에서든) -Target 으로 지정한, 폴더가 이미 사라진 worktree 하나의 DB와 배정 기록을 지운다
+  [string]$Target         # -Prune 대상 worktree 경로 (orca worktree rm --run-hooks 가 실패했을 때의 예비 수단)
 )
 
 $ErrorActionPreference = 'Stop'
@@ -66,7 +68,7 @@ $root = $r.Out
 $r = Invoke-Native 'git' @('worktree', 'list', '--porcelain')
 if ($r.Code -ne 0) { throw "git worktree 목록 조회 실패: $($r.Err)" }
 $mainPath = (($r.Out -split "`r?`n") | Where-Object { $_ -like 'worktree *' } | Select-Object -First 1) -replace '^worktree ', ''
-if ((Get-NormPath $mainPath) -eq (Get-NormPath $root)) {
+if (-not $Prune -and (Get-NormPath $mainPath) -eq (Get-NormPath $root)) {
   throw "기본 체크아웃($mainPath)에서는 실행하지 않습니다. main 은 기본 DB 'neodb' 와 .env 그대로 둡니다. 작업 worktree에서 실행하세요."
 }
 $r = Invoke-Native 'git' @('rev-parse', '--git-common-dir')
@@ -76,7 +78,7 @@ if (-not [System.IO.Path]::IsPathRooted($commonDir)) { $commonDir = Join-Path $r
 $registryPath = Join-Path $commonDir 'neodb-worktrees.json'
 $rootKey = Get-NormPath $root
 
-if (-not $Name) {
+if (-not $Name -and -not $Prune) {
   $r = Invoke-Native 'git' @('rev-parse', '--abbrev-ref', 'HEAD')
   if ($r.Code -ne 0) { throw "현재 브랜치 조회 실패: $($r.Err)" }
   if ($r.Out -eq 'HEAD') { throw "분리된 HEAD입니다. -Name 으로 작업 이름을 주세요." }
@@ -131,6 +133,26 @@ while (-not $lock) {
 }
 try {
   $reg = Read-Registry
+
+  # 정리(예비 수단): 지정한 worktree 하나 — 폴더가 이미 사라졌을 때만 그 DB · 배정 기록을 지운다
+  #   기본은 orca worktree rm --run-hooks (아카이브 스크립트가 그 worktree 안에서 -Drop)
+  if ($Prune) {
+    if (-not $Target) { throw "-Prune 은 -Target <지운 worktree 경로> 와 함께만 실행합니다(한 번에 하나)." }
+    # 상대 경로는 받지 않는다 — 기록 조회와 폴더 확인이 같은 절대 경로를 쓰게(경로 해석 기준 차이로 살아 있는 worktree DB를 지우지 않게)
+    # 드라이브 문자 + \ (예: C:\...) 또는 UNC(\\서버\...)만 — 'D:worktree' · '\worktree' 처럼 현재 위치에 따라 바뀌는 경로는 거부
+    if ($Target -notmatch '^[A-Za-z]:[\\/]' -and $Target -notmatch '^\\\\[^\\]+\\') { throw "-Target 은 완전한 절대 경로(C:\... 또는 \\서버\...)로 주세요: $Target" }
+    $abs = [System.IO.Path]::GetFullPath($Target)
+    $k = Get-NormPath $abs
+    if (-not $reg.ContainsKey($k)) { Write-Host "배정 기록에 없는 경로입니다: $abs"; return }
+    if (Test-Path -LiteralPath $abs) { throw "worktree 폴더가 아직 있습니다($abs). 먼저 orca worktree rm --run-hooks 로 지우세요." }
+    $old = [string]$reg[$k].db
+    if ($old -match '^neodb_[a-z0-9_]+$') { Invoke-Psql "DROP DATABASE IF EXISTS `"$old`" WITH (FORCE)" | Out-Null }
+    $reg.Remove($k)
+    Write-Registry $reg
+    Write-Host "정리: $k → DB $old 삭제 · 배정 해제"
+    return
+  }
+
   $mine = $reg[$rootKey]
 
   # 이미 배정된 worktree: 작업 이름이 같아야 하고, 기록된 DB 이름을 그대로 쓴다

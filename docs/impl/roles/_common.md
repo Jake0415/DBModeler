@@ -1,0 +1,48 @@
+# 작업 에이전트 공통 규칙
+
+> 모든 작업 에이전트(worker)가 먼저 읽는다. 기준: [00-orchestration-plan.md](../00-orchestration-plan.md) · Claude는 [CLAUDE.md](../../../CLAUDE.md), Codex는 [AGENTS.md](../../../AGENTS.md).
+> 이 문서와 역할 지시서가 다르면 역할 지시서가, 역할 지시서와 계획 문서가 다르면 계획 문서가 우선한다.
+
+## 1. 시작할 때
+1. 프롬프트 맨 앞의 **Task ID · Dispatch ID**를 확인한다(보고에 쓴다).
+2. 작업 지시서(spec)의 **역할 · 난이도 · 기준 문서 · 쓰기 범위 · 완료 기준**을 읽는다. 하나라도 비어 있으면 작업을 시작하지 말고 조정자에게 묻는다(§4).
+3. 자기 worktree에 있는지 확인한다: `git rev-parse --abbrev-ref HEAD`가 `main`이면 멈추고 묻는다.
+4. worktree 준비는 Orca 설정 스크립트가 이미 했다(`scripts/worktree-env.ps1 -Seed -TestAccounts`). `.env`에 `neodb_` DB와 `API_PORT`가 있는지 확인하고, 없거나 DB 연결이 안 되면 `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/worktree-env.ps1 -Seed -TestAccounts`를 한 번 실행한다. **`npm run db:up`은 실행하지 않는다**(개발 DB 컨테이너는 main에서만).
+5. 기준 문서는 **지시서가 가리킨 절만** 읽는다. 저장소 전체를 훑지 않는다(토큰).
+
+## 2. 작업하는 동안
+- **쓰기 범위 밖 파일은 고치지 않는다.** 필요하면 조정자에게 묻는다. 특히 `packages/*`(계약 담당 전용) · `docs/ux/mockups`(UX 담당 전용) · `docs/impl/*`(조정자 전용).
+- 목업 = 화면 · 동작 기준, 설계 §13 = 구조 기준, 권한 = `packages/rules` PERMS. 다르게 해야 할 것 같으면 바꾸지 말고 묻는다.
+- 자체 결정 금지 영역(권한표 · 데이터 삭제 마이그레이션 · 목업 동작 · 보안 약화 · 설계 이탈)은 손대지 않는다.
+- 커밋은 자기 브랜치에만. 메시지: `이모지 type(범위): 요약` + 본문(무엇 · 왜 · 검증) + 마지막 줄 `작업: <Task ID> · 모델: <모델 · effort> · 회차: <처음|수정 n>`. main에 병합하거나 push하지 않는다(조정자가 한다).
+- 사용자에게 보이는 글 · 문서 · 커밋 본문은 한국어.
+
+## 3. 끝낼 때 — 완료 보고
+1. 자체 검사: 역할 지시서의 ‘완료 기준’을 실제로 돌린다(빌드 · 테스트 · 화면 등). **제출 전 자체 시도는 3번 · 30분 안에서.** 넘으면 그 상태로 실패 보고한다.
+2. 변경을 커밋한다(검증 역할은 커밋할 것이 없을 수 있다).
+3. `worker_done`으로 보고한다. 본문을 파일로 쓴 뒤(아래 형식) — Windows에서는 **`orca.exe`**로(`orca.cmd`는 send를 거부한다):
+
+```
+orca.exe orchestration send --type worker_done --task-id <Task ID> --dispatch-id <Dispatch ID> --outcome succeeded|failed --files-modified "<파일1,파일2>" --subject "<작업ID> 완료" --body-file <보고 파일> --json
+```
+
+본문 형식:
+
+```
+요약: (한 줄)
+결과: succeeded | failed
+브랜치 · 커밋: <브랜치> <커밋 해시들>
+바꾼 파일: (목록)
+검증: (돌린 명령과 결과 — 숫자로)
+남은 것 · 위험: (없으면 없음)
+조정자에게: (판단이 필요한 것)
+```
+
+- 불안정한 테스트 · 환경 오류는 실패 원인과 구분해 ‘환경’으로 적는다(회차로 세지 않음).
+- 보고 뒤에는 기다린다. 후속 작업은 조정자가 메일로 보낸다.
+
+## 4. 막혔을 때
+- 판단이 필요하면 `orca.exe orchestration ask`로 조정자에게 묻고 턴을 끝낸다(Orca가 답을 가져다 준다). 질문에는 선택지와 추천을 함께 적는다.
+- DB를 초기화하는 검증(QA · 역할 시나리오 · 권한 감사)은 같은 worktree에서 동시에 돌리지 않는다 — 조정자가 차례로 배정한다.
+- 다른 에이전트의 터미널에 입력하거나, 다른 에이전트를 띄우지 않는다(하위 에이전트 단계 = 1, 조정자만 띄운다).
+- 폴링 · 감시 스크립트를 돌리지 않는다.
