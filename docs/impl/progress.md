@@ -33,7 +33,7 @@
 - [x] Orca 오케스트레이션 · CLI 켜기, `orca status --json`, 스킬 설치 — 앱 1.4.274 · 런타임 ready · `orca` 사용자 PATH 등록(새 셸부터) · `orchestration worker-list` 응답 · Claude 상태 훅 설치됨 · 스킬 orca-cli · orchestration 사용 가능
 - [x] Codex 감지 — Orca가 설치한 Codex 0.172.0, 기본 에이전트, 모델 GPT-6.2-Sol · medium. `orca agent launch --agent codex` 실행 · 응답 확인
 - [x] Orca 저장소 설정(DBModeler › 작업트리 후크) — 설정 스크립트 `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/worktree-env.ps1 -Seed -TestAccounts`(기존 `npm install` 대체), 아카이브 스크립트 `… worktree-env.ps1 -Drop`, **에이전트는 설정 완료 뒤 시작**(`wait-for-setup`), 기준 참조 `origin/main`, worktree 위치 `C:\Users\ysh\orca\workspaces`
-- [x] Heartbeat — Orca 1.4.274 설정 화면에 항목 없음(오케스트레이션 화면: 하위 에이전트 최대 단계 10 · 완료된 워커 자동 닫기 · 코디네이터가 워커 권한 요청 승인 허용). 조정자가 `check --wait`로 기다리므로 영향 적음
+- [x] Heartbeat — Orca 1.4.274 설정 화면에 항목 없음(오케스트레이션 화면: **하위 에이전트 최대 단계 10 → 1**(조정자만 작업 에이전트를 띄움, 2026-11-25 변경) · 완료된 워커 자동 닫기 · 코디네이터가 워커 권한 요청 승인 허용). 조정자가 `check --wait`로 기다리므로 영향 적음
 - [ ] Claude Code CLI(`Documents\Codex\Tools\ClaudeCode`) — 2.1.331 업데이트 중 다른 Claude Code 세션이 실행 파일을 잡고 있어 실행 파일 설치 실패 → 패키지 안 2.1.290 실행 파일을 `bin\claude.exe`로 복구(동작 확인). 2.1.290은 Fable 5.2를 ‘알 수 없는 모델’로 보고 컨텍스트 200k로 제한 → **Claude Code CLI 세션을 모두 닫은 뒤** `npm install -g --prefix "C:\Users\ysh\Documents\Codex\Tools\ClaudeCode" --allow-scripts=@anthropic-ai/claude-code @anthropic-ai/claude-code@2.1.331` 다시 실행
 - [x] Orca 실행 인자 확인 — `orca agent launch --agent claude --model claude-opus-5-5 --effort max` → Claude Code가 ‘Opus 5.5 with max effort’로 실행 · 응답(모델 · effort 그대로 전달)
 - [x] Orca 브라우저 — 같은 프로필의 탭끼리 쿠키 · localStorage 공유(역할 동시 로그인 불가), **브라우저 프로필을 나누면 완전히 분리**(임시 프로필로 확인 후 삭제) → 역할별 화면 확인은 역할마다 프로필(`orca tab profile create` · `tab create --profile`)
