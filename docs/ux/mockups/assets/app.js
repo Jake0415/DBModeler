@@ -1678,11 +1678,7 @@
           when: '사람이 오거나 떠날 때 · 담당 업무가 바뀔 때', note: '권한을 빼면 그 사람의 열린 세션이 끝납니다 · 바꾼 기록은 감사 로그 ‘역할 · 권한’에' },
         perms: { n: '설정 · 권한표', d: '역할마다 할 수 있는 일을 한눈에 보는 조회 전용 표입니다. 바꾸려면 [사용자 · 역할]에서 사람의 역할을 바꿉니다.',
           s: ['행(할 수 있는 일)과 열(역할)이 만나는 칸에서 허용 여부를 봅니다', '‘담당 시스템’ 표시가 있는 일은 그 사람의 담당 시스템에서만 됩니다', '아래 ‘함께 지키는 규칙’에서 역할 겸임 · 자기 승인 규칙을 확인합니다'],
-          when: '누가 무엇을 할 수 있는지 설명하거나 점검할 때', note: '자기 승인 허용 여부는 [기관] 탭에서 정합니다', l: [['audit.html', '역할 변경 기록 → 감사 로그']] },
-        rules: { n: '설정 · 검수 기준', d: '표준 사전 신청을 검사하는 규칙(이름 길이 · 글자 종류)과 준수율 계산에서 빼는 대상을 정합니다.',
-          s: ['단어명 · 영문약어명 · 영문명 · 설명의 길이와 허용 문자를 정합니다', '‘표준 제외 규칙’에서 자동으로 비대상이 되는 엔터티 · 속성 유형과 이름을 정합니다', '[저장] — 검수 기준 버전이 올라가고 다음 신청부터 적용됩니다'],
-          x: [{ h: '이 탭의 항목', items: [['검사 규칙', '항목별 길이 · 허용 문자 — 위반 시 차단 또는 경고'], ['엔터티 제외', '가상 · 외부 · 공통 참조 · 삭제 예정 유형은 자동 비대상'], ['속성 · 컬럼 제외', '유형 · 이름 규칙으로 자동 비대상'], ['직접 지정', '모델의 [표 보기] · [표준 맞추기]에서 비대상으로 바꾼 것(사유 필수)']] }],
-          when: '검사가 너무 엄격하거나 느슨할 때 · 제외 대상이 바뀔 때', note: '이전 기준으로 검사한 엑셀 묶음은 업로드 이력에 ‘재검증 필요’로 표시됩니다', l: [['uploads.html', '재검증할 묶음 → 업로드 이력']] }
+          when: '누가 무엇을 할 수 있는지 설명하거나 점검할 때', note: '자기 승인 허용 여부는 [기관] 탭에서 정합니다', l: [['audit.html', '역할 변경 기록 → 감사 로그']] }
       } },
     'mypage.html': { n: '마이페이지', d: '내 계정 · 내 신청과 작업 · 알림 · 보안 · 화면 환경을 한곳에서 봅니다. 바꾼 값은 나에게만 적용됩니다.',
       s: ['위 탭에서 볼 곳을 고릅니다', '프로필 · 알림 설정의 값을 바꾸면 탭에 점이 붙고 아래 [저장] 막대가 나타납니다(Ctrl+S)', '[저장]으로 반영하거나 [되돌리기]로 마지막 저장값으로 돌립니다'],
@@ -1747,7 +1743,7 @@
     box.addEventListener('keydown', e => { if (e.key === 'Escape') { set(false, true); btn.focus(); } });
     document.addEventListener('keydown', e => { if (e.key !== '?' || e.ctrlKey || e.metaKey || e.altKey || (e.target.closest && e.target.closest('input,textarea,select,[contenteditable="true"]'))) return; e.preventDefault(); set(box.hidden, true); if (!box.hidden) box.querySelector('.pg-x').focus(); });
   }
-  const DICT_TABS = [['dictionary.html', '통합 검색'], ['excel-import.html', '엑셀 가져오기', ['uploads.html']], 0, ['dict-grid.html', '직접 등록'], 0, ['candidates.html', '후보 큐'], ['dict-history.html', '변경 내역'], 0, ['domain-groups.html', '도메인 그룹 · 분류'], ['datatypes.html', '데이터 타입 · 축약명'], ['rules.html', '검수 기준'], ['std-common.html', '공통표준 · 행정표준코드']];
+  const DICT_TABS = [['dictionary.html', '통합 검색'], ['excel-import.html', '엑셀 가져오기', ['uploads.html']], 0, ['dict-grid.html', '직접 등록'], 0, ['candidates.html', '후보 큐'], ['dict-history.html', '변경 내역'], 0, ['domain-groups.html', '도메인 그룹 · 분류'], ['datatypes.html', '데이터 타입 · 축약명'], ['std-common.html', '공통표준 · 행정표준코드'], ['rules.html', '검수 기준']];
   const SCREENS = [
     { file: 'home.html', ids: 'SC-55', name: '홈', menu: '홈', docs: [['02 §1 화면 목록', D.flows], ['06 §3 새 화면 명세', D.plan]], states: [['김모델(모델러 · DA)', 'home.html?as=kim'], ['박설계(모델러)', 'home.html?as=park'], ['이현업(기관 담당자)', 'home.html?as=hyun']] },
     { file: 'dictionary.html', ids: 'SC-10 · PN-11 · PN-12', name: '표준 사전 통합 검색 · 상세 · 등록 신청', menu: '표준 사전', docs: [['02 §3.1~3.2', D.flows], ['30 MD-01~12 사전 규칙', D.meta], ['07 E6 검색', D.excel], ['23 §6-1 검색 숫자', D.perf]], states: [['기본(최근 변경)', 'dictionary.html'], ['도메인 신청', 'dictionary.html?req=domain'], ['편집용 내려받기', 'dictionary.html#download'], ['검색: 산출', 'dictionary.html?q=산출']] },
@@ -1769,7 +1765,7 @@
     { file: 'import.html', ids: 'SC-36', name: '가져오기(DDL → 모델)', menu: '시스템', docs: [['02 §5.6', D.flows]], states: [['기본', 'import.html']] },
     { file: 'ddl.html', ids: 'SC-37 · PN-37', name: 'DDL 출력 · 게이트 B · DBMS 비교', menu: '시스템', docs: [['02 §5.5', D.flows]], states: [['기본', 'ddl.html']] },
     { file: 'outputs.html', ids: 'SC-38', name: '산출물', menu: '시스템', docs: [['05 §8 DA# 비교', D.da]], states: [['테이블 정의서', 'outputs.html?k=tbl']] },
-    { file: 'settings.html', ids: 'SC-40 · SC-41 · SC-42', name: '설정(기관 · 사업 · 시스템 · 사용자 · 역할)', menu: '관리', docs: [['02 §6 설정 흐름', D.flows], ['30 §4 검수 기준', D.meta]], states: [['기관(이데이터 Admin)', 'settings.html?as=lee'], ['시스템', 'settings.html?as=lee#sys'], ['검수 기준', 'settings.html?as=lee#rules'], ['Admin 아님 → 403', 'settings.html?as=kim']] },
+    { file: 'settings.html', ids: 'SC-40 · SC-41 · SC-42', name: '설정(기관 · 사업 · 시스템 · 사용자 · 역할)', menu: '관리', docs: [['02 §6 설정 흐름', D.flows]], states: [['기관(이데이터 Admin)', 'settings.html?as=lee'], ['시스템', 'settings.html?as=lee#sys'], ['Admin 아님 → 403', 'settings.html?as=kim']] },
     { file: 'audit.html', ids: 'SC-58', name: '감사 로그', menu: '관리', docs: [['06 §3', D.plan]], states: [['DA로 보기', 'audit.html?as=lee']] },
     { file: 'ops-status.html', ids: 'SC-OPS', name: '시스템 상태', menu: '관리', docs: [['arch 04 §3.7', '../../arch/04-ops-self-check-plan.md']], states: [['정상', 'ops-status.html?state=ok'], ['주의', 'ops-status.html?state=warn'], ['장애', 'ops-status.html?state=fail'], ['확인 안 됨', 'ops-status.html?state=stale'], ['점검 중(정적 페이지)', 'maintenance.html']] },
     { file: 'mypage.html', ids: 'SC-51 · PN-50', name: '마이페이지 · 사용자 메뉴', menu: '사용자', docs: [['06 §3', D.plan]], states: [['프로필', 'mypage.html'], ['내 신청', 'mypage.html#mine'], ['알림 설정', 'mypage.html#notify']] },

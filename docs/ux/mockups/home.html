@@ -194,7 +194,7 @@ window.pageInit = function () {
       return `<li>${esc(k)} <span class="num muted">${n}건</span><ul class="rx">${inst.slice(0, 3).map(x => `<li>${esc(x.t)} ${docA(x.id)}</li>`).join('')}${inst.length > 3 ? `<li><a href="approvals.html?box=all">외 ${inst.length - 3}건 — 결재함에서 보기</a></li>` : ''}</ul></li>`; };
     stats = `<section class="sec"><div class="sec-h"><h2>결재 흐름</h2>${worst ? `<span class="end">${tag('err', `병목 ${worst.l.replace(' 대기', '')} ${worst.a.toFixed(1)}일`)}</span>` : ''}</div>
       <div class="hbars">${F.map(f => `<div class="hbar"><span>${f.l}</span><span class="t"><i class="${f === worst ? 'hi' : ''}" style="width:${f.n / fmax * 100}%"></i></span><span class="v">${f.n}${f.a != null && f.n ? ' · ' + f.a.toFixed(1) + '일' : ''}</span></div>`).join('')}</div></section>
-      <section class="sec"><div class="sec-h"><h2>막힘 사유</h2><a class="end" href="settings.html#rules">검수 기준</a></div>
+      <section class="sec"><div class="sec-h"><h2>막힘 사유</h2><a class="end" href="rules.html">검수 기준</a></div>
       ${top.length ? `<ol class="reasons">${top.map(reasonLi).join('')}</ol>` : '<div class="ok-line">막힌 신청이 없습니다.</div>'}</section>`;
     const stale = live.slice().sort((a, b) => docAge(b) - docAge(a)).slice(0, 5);
     staleS = `<section class="sec" id="stale"><div class="sec-h"><h2>오래 머무는 결재</h2><a class="end" href="approvals.html">결재함</a></div>

@@ -50,7 +50,6 @@
     <button data-tab="sys">시스템<span class="tabdot" aria-hidden="true"></span></button>
     <button data-tab="users">사용자 · 역할</button>
     <button data-tab="perms">권한표</button>
-    <a class="tablink" href="rules.html" title="검수 기준은 표준 사전 › 검수 기준으로 옮겼습니다 — DA · Admin이 고치고 모두 읽습니다">검수 기준<i data-ic=ext data-s=12></i></a>
   </div>
   <div class="scroll"><div class="pad">
 
@@ -158,11 +157,10 @@
     </ul>
   </div>
 
-  <!-- SC-43 rules -->
-  <!-- 검수 기준은 rules.html(표준 사전 › 검수 기준)로 옮겼다 — R-19 -->
+  <!-- 검수 기준은 표준 사전 › 검수 기준(rules.html) 하나에만 둔다 — R-19 · 2026-11-25 설정에서 삭제 -->
 
   </div></div>
-  <!-- unsaved-changes bar (개선 #9): one save for 기관·시스템·검수 기준, names the changed tabs -->
+  <!-- unsaved-changes bar (개선 #9): one save for 기관 · 시스템, names the changed tabs -->
   <!-- 25 C-3: system registration (the DBMS is chosen here and never changes) · system info -->
   <div class="overlay" id="mo-sysreg" role="dialog" aria-modal="true" aria-labelledby="sr-t"><div class="modal"><div class="m-head"><h3 id="sr-t">시스템 등록</h3></div>
     <div class="m-body"><div class="usum" id="sr-sum" role="alert"></div>
@@ -199,7 +197,7 @@ window.pageInit = function () {
   if (!can('settings')) { location.replace('error.html?code=403&need=Admin&what=설정' + auQ); return; }
   // every incoming hash opens its tab — callers use #rules · #sys (also #system · #perms · #users · #org · #auth) (E4)
   const HASH_TAB = { org: 'org', sys: 'sys', system: 'sys', users: 'users', user: 'users', auth: 'users', perms: 'perms', rules: 'rules', policy: 'rules', exclude: 'rules' };
-  if (['rules', 'policy', 'exclude'].includes(location.hash.slice(1))) { location.replace('rules.html'); return; }   /* R-19 */
+  if (['rules', 'policy', 'exclude'].includes(location.hash.slice(1))) { location.replace('rules.html'); return; }   /* R-19: an old link to 설정 › 검수 기준 opens 표준 사전 › 검수 기준 */
   { const t0 = new URLSearchParams(location.search).get('tab'); if (t0 && !location.hash) history.replaceState(null, '', '#' + t0); }   /* UI-17: ?tab=users */
   const openHash = () => { const t = HASH_TAB[location.hash.slice(1)]; const b = t && document.querySelector(`.tabs button[data-tab="${t}"]`); if (b && !b.classList.contains('on')) b.click(); };
   openHash(); window.addEventListener('hashchange', openHash);
@@ -282,8 +280,8 @@ window.pageInit = function () {
       if (!all.length) { updateSystems(list => { const i = list.findIndex(y => y.code === s.code); if (i < 0) return false; list.splice(i, 1); }); pushAudit({ act: '시스템 삭제', target: `${s.name} (${s.code})`, why: '업무 영역 없음' }); $('mo-sysinfo').classList.remove('open'); fillPick(curSys().code); toast(`‘${s.name}’ 시스템을 삭제했습니다`, 'info'); return; }
       updateSystems(list => { const x = list.find(y => y.code === s.code); if (x) x.off = true; }); pushAudit({ act: '시스템 사용 중지', target: `${s.name} (${s.code})`, why: '남은 업무 영역 모두 사용 중지' }); $('mo-sysinfo').classList.remove('open'); fillPick(s.code); toast(`‘${s.name}’을(를) 사용 중지했습니다 — 상단 시스템 목록에서 빠집니다`, 'info'); };
   }
-  // dirty tracking for the tabs saved together (기관·시스템·검수 기준); 사용자·역할 saves per user in its panel
-  const DT = { org: '기관', sys: '시스템', rules: '검수 기준' };
+  // dirty tracking for the tabs saved together (기관 · 시스템); 사용자·역할 saves per user in its panel
+  const DT = { org: '기관', sys: '시스템' };
   // R-03: what can be edited is what is saved — fields with their own store (결재선 · 운영 목표 · 자기 승인 · 단어 약어 길이) plus every other editable field, kept in dbm-set-extra
   const SAVED = '#fin-dict, [data-fm], #org-goal, #org-sla, #self-on';   // the 자기 승인 pair counts as one field (its 허용 radio)
   const isExtra = f => !f.matches(SAVED) && f.type !== 'radio' && f.id !== 'sys-pick' && !f.readOnly && !f.disabled && !f.hasAttribute('data-nodirty');
