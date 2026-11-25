@@ -16,8 +16,8 @@
     { n: "기호 'all': 하이픈 통과, 공백은 여전히 막힘", run: () => [lv('term', 'abbr', 'CUST-NO', P(p => { p.fields.term.abbr.special = 'all'; })), lv('term', 'abbr', 'CUST NO', P(p => { p.fields.term.abbr.special = 'all'; }))].join(','), want: 'ok,block' },
     { n: '기호 고른 것만 [_ -]: / 는 막힘', run: () => lv('term', 'abbr', 'CUST/NO', P(p => { p.fields.term.abbr.special = ['_', '-']; })), want: 'block' },
     { n: '추가 조건: 기호 연속 · 숫자 시작 · 예약어', run: () => ['RISK__GRD', '1ST_DT', 'TABLE'].map(v => lv('term', 'abbr', v, P())).join(','), want: 'block,block,block' },
-    { n: '어기면 경고만: 막지 않고 경고', run: () => lv('word', 'abbr', 'TOOLONGWORD', P(p => { p.fields.word.abbr.lvl = 'warn'; })), want: 'warn' },
-    { n: '검사 안 함: 아무 말도 하지 않음', run: () => lv('word', 'abbr', 'toolong-word', P(p => { p.fields.word.abbr.lvl = 'off'; })), want: 'ok' },
+    { n: '위반 시 경고: 차단하지 않고 경고', run: () => lv('word', 'abbr', 'TOOLONGWORD', P(p => { p.fields.word.abbr.lvl = 'warn'; })), want: 'warn' },
+    { n: '미적용: 판정하지 않음', run: () => lv('word', 'abbr', 'toolong-word', P(p => { p.fields.word.abbr.lvl = 'off'; })), want: 'ok' },
     // conflicts (UX-01)
     { n: '어긋남: 기본값은 없음', run: () => policyConflicts(P()).filter(c => c.lvl === 'block').length, want: 0 },
     { n: "어긋남: 구분자 '-'인데 용어 약어가 '-'를 막음 → 막기", run: () => policyConflicts(P(p => { p.naming.sep = '-'; })).some(c => c.lvl === 'block' && c.k === 'term'), want: true },
@@ -25,8 +25,8 @@
     { n: '어긋남: 단어 약어 소문자 허용 · 용어 약어 막음 → 막기', run: () => policyConflicts(P(p => { p.fields.word.abbr.chars = ['upper', 'lower', 'digit']; })).some(c => c.lvl === 'block'), want: true },
     { n: '어긋남: 꺼진 규칙은 따지지 않음', run: () => policyConflicts(P(p => { p.fields.word.abbr.chars = ['upper', 'lower', 'digit']; p.fields.term.abbr.lvl = 'off'; })).some(c => c.lvl === 'block'), want: false },
     // Q2 — compliance counts items; an off rule is only left out of the judgement
-    { n: 'Q2: 컬럼명 10자 · 막기 → 긴 컬럼은 미준수', run: () => { const m = { E: [{ n: '고객기본', p: 'CUST_M', a: [{ n: '고객번호', p: 'CUST_NO', s: 'ok' }, { n: '고객등급코드', p: 'CUST_GRADE_CODE', s: 'ok' }] }] }; const keep = getPolicy(); try { savePolicy(P(p => { p.model.attr.phys.max = 10; })); const c = compOf(m); return `${c.tot}/${c.bad}/${c.rate}`; } finally { savePolicy(JSON.parse(JSON.stringify(keep))); } }, want: '3/1/66' },
-    { n: 'Q2: 같은 규칙 검사 안 함 → 분모 그대로 · 통과 · 검사 안 함 1개', run: () => { const m = { E: [{ n: '고객기본', p: 'CUST_M', a: [{ n: '고객번호', p: 'CUST_NO', s: 'ok' }, { n: '고객등급코드', p: 'CUST_GRADE_CODE', s: 'ok' }] }] }; const keep = getPolicy(); try { savePolicy(P(p => { p.model.attr.phys.max = 10; p.model.attr.phys.lvl = 'off'; })); const c = compOf(m); return `${c.tot}/${c.bad}/${c.rate}/${c.off}`; } finally { savePolicy(JSON.parse(JSON.stringify(keep))); } }, want: '3/0/100/1' },
+    { n: 'Q2: 컬럼명 10자 · 차단 → 긴 컬럼은 미준수', run: () => { const m = { E: [{ n: '고객기본', p: 'CUST_M', a: [{ n: '고객번호', p: 'CUST_NO', s: 'ok' }, { n: '고객등급코드', p: 'CUST_GRADE_CODE', s: 'ok' }] }] }; const keep = getPolicy(); try { savePolicy(P(p => { p.model.attr.phys.max = 10; })); const c = compOf(m); return `${c.tot}/${c.bad}/${c.rate}`; } finally { savePolicy(JSON.parse(JSON.stringify(keep))); } }, want: '3/1/66' },
+    { n: 'Q2: 같은 규칙 미적용 → 대상 수 유지 · 통과 · 미적용 1개', run: () => { const m = { E: [{ n: '고객기본', p: 'CUST_M', a: [{ n: '고객번호', p: 'CUST_NO', s: 'ok' }, { n: '고객등급코드', p: 'CUST_GRADE_CODE', s: 'ok' }] }] }; const keep = getPolicy(); try { savePolicy(P(p => { p.model.attr.phys.max = 10; p.model.attr.phys.lvl = 'off'; })); const c = compOf(m); return `${c.tot}/${c.bad}/${c.rate}/${c.off}`; } finally { savePolicy(JSON.parse(JSON.stringify(keep))); } }, want: '3/0/100/1' },
     // separators · DB upper-case
     { n: "구분자 '' : 조합은 이어 붙임", run: () => joinAbbr(['CUST', 'NO'], P(p => { p.naming.sep = ''; })), want: 'CUSTNO' },
     { n: '소문자 허용 필드는 대문자로 바꾸지 않음', run: () => { const keep = getPolicy(); try { savePolicy(P(p => { p.fields.word.abbr.chars = ['upper', 'lower', 'digit']; })); return abbrCase('custNo', 'word'); } finally { savePolicy(JSON.parse(JSON.stringify(keep))); } }, want: 'custNo' },

@@ -287,7 +287,7 @@ window.pageInit = function () {
   const RULES = { 'D-NOTFOUND': '도메인 없음', 'T-SPACE': '이름 공백', 'X-ZERO': '엑셀이 앞자리 0 제거', 'X-DUPID': '항목 ID 중복', 'X-NAMEDUP': '이름 중복',
     'W-DUPABBR': '영문약어명 중복', 'W-SIMABBR': '비슷한 약어(경고)', 'W-ABBRLEN': '약어 길이 초과', 'D-BADTYPE': '데이터 타입 오류', 'D-NAMERULE': '도메인명 규칙', 'CV-DUP': '코드값 중복', 'CV-LEN': '코드값 길이',
     // E-01: rules the shared approval check reports (checkItem · checkDictDoc)
-    'T-UNKWORD': '미등록 단어', 'T-ABBR': '약어 ≠ 단어 조합', 'T-ABBRLEN': '약어 30자 초과', 'W-ABBRFMT': '영문약어명 형식', 'X-EMPTY': '빈 이름', 'X-COMMON': '공통 표준 변경 불가', 'X-FORBID': '금칙어', 'X-OPEN': '다른 신청과 겹침', 'X-CHECK': '결재 재검사', 'P-CHARS': '허용 글자 · 기호(검수 기준)', 'P-FORM': '이름 형식(검수 기준)' };
+    'T-UNKWORD': '미등록 단어', 'T-ABBR': '약어 ≠ 단어 조합', 'T-ABBRLEN': '약어 30자 초과', 'W-ABBRFMT': '영문약어명 형식', 'X-EMPTY': '빈 이름', 'X-COMMON': '공통 표준 변경 불가', 'X-FORBID': '금칙어', 'X-OPEN': '다른 신청과 겹침', 'X-CHECK': '결재 재검사', 'P-CHARS': '허용 문자(검수 기준)', 'P-FORM': '이름 형식(검수 기준)' };
   // how to fix, per rule — the same text goes into the downloaded error guide (DX-08)
   const GUIDE = { 'D-NOTFOUND': '사전에 있는 도메인명으로 바꾸세요(예: 연월일C8). 새 도메인이면 도메인 양식으로 먼저 신청합니다',
     'T-SPACE': '용어명의 공백을 지우세요(예: 산출물 검수 일자 → 산출물검수일자)', 'X-ZERO': '셀 서식을 텍스트로 바꾸고 앞자리 0을 살려 다시 입력하세요',
@@ -300,12 +300,12 @@ window.pageInit = function () {
     'T-ABBRLEN': '용어 영문약어명이 30자를 넘습니다 — 더 짧은 단어로 이름을 구성하세요', 'W-ABBRFMT': '영문약어명은 대문자·숫자만, 숫자로 시작할 수 없습니다', 'X-EMPTY': '이름 칸을 채우세요',
     'X-COMMON': '공통 표준 항목은 기관에서 바꿀 수 없습니다 — 공통표준 관리의 새 판 신청으로 요청하세요', 'X-FORBID': '금칙어 대신 안내된 표준 단어를 쓰세요',
     'X-OPEN': '같은 항목을 다른 신청이 처리 중입니다 — 그 신청이 끝난 뒤 다시 검증하세요', 'X-CHECK': '결재 재검사 문구를 확인하고 해당 칸을 고치세요',
-    'P-CHARS': '검수 기준이 허용하지 않는 글자나 기호가 있습니다 — 문구의 허용 글자로 고치세요. 기준은 표준 사전 › 검수 기준에서 봅니다', 'P-FORM': '검수 기준의 이름 형식(숫자로 시작 · 기호 연속 · DB가 쓰는 낱말)에 걸렸습니다 — 이름을 고치세요' };
+    'P-CHARS': '검수 기준이 허용하지 않는 문자가 있습니다 — 안내된 허용 문자로 고치세요. 기준은 표준 사전 › 검수 기준에서 확인합니다', 'P-FORM': '검수 기준의 이름 형식(숫자 시작 · 특수문자 연속 · 예약어)에 맞지 않습니다 — 이름을 고치세요' };
   /* ---- E-01 · ONE re-judge for every edit path (seed · cell edit · 제안 적용 · 자동 수정 · 찾아 바꾸기 · 다시 검증):
      the approval re-check itself (checkDictDoc on the row's request item) + the shared item check (checkItem: which field, warnings, rows of this file)
      + the term decomposition (a renamed term is split again; unknown word → error, word still in another request → 선행 승인 보류).
      A row only becomes 신규/변경 when it passes; otherwise it is 오류 with the real reason and rule. */
-  const RULE_OF = [[/쓸 수 없는 글자/, 'P-CHARS'], [/숫자로 시작할 수 없음|기호 \S+ 연속|쓰는 낱말/, 'P-FORM'], [/미등록 단어/, 'T-UNKWORD'], [/공백/, 'T-SPACE'], [/용어 영문약어명 \d+자 — \d+자 초과/, 'T-ABBRLEN'], [/단어 약어 조합/, 'T-ABBR'], [/이름이 비어/, 'X-EMPTY'], [/같은 이름|새 이름 '|이름과 겹침|이름이 겹침/, 'X-NAMEDUP'],
+  const RULE_OF = [[/허용되지 않은 문자/, 'P-CHARS'], [/숫자로 시작할 수 없음|특수문자 \S+ 연속|예약어/, 'P-FORM'], [/미등록 단어/, 'T-UNKWORD'], [/공백/, 'T-SPACE'], [/용어 영문약어명 \d+자 — \d+자 초과/, 'T-ABBRLEN'], [/단어 약어 조합/, 'T-ABBR'], [/이름이 비어/, 'X-EMPTY'], [/같은 이름|새 이름 '|이름과 겹침|이름이 겹침/, 'X-NAMEDUP'],
     [/^약어 .+ 씀$/, 'W-DUPABBR'], [/자 초과/, 'W-ABBRLEN'], [/영문약어명이 비어|대문자/, 'W-ABBRFMT'], [/도메인 '.+'이 사전에 없음|도메인이 비어/, 'D-NOTFOUND'],
     [/도메인명은|타입은|소수점|도메인분류|그룹은/, 'D-NAMERULE'], [/공통 표준은/, 'X-COMMON'], [/금칙어/, 'X-FORBID'], [/신청 중/, 'X-OPEN']];
   const RULE_FIELD = { 'T-UNKWORD': 'name', 'T-SPACE': 'name', 'T-ABBRLEN': 'name', 'T-ABBR': 'name', 'X-EMPTY': 'name', 'X-NAMEDUP': 'name', 'W-DUPABBR': 'abbr', 'W-ABBRLEN': 'abbr', 'W-ABBRFMT': 'abbr', 'D-NOTFOUND': 'dom', 'D-NAMERULE': 'name', 'X-FORBID': 'name' };
