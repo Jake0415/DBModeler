@@ -1,6 +1,6 @@
 {
  "note": "자동 생성 — node scripts/trace-extract.mjs. 직접 고치지 말고 출처 문서 · assign.json · behaviors/*.json 을 고친다.",
- "inputsHash": "49e0c53d1c2a1b3a9153954336602b3758209d8ed909322c3b59c3c15ef3cc85",
+ "inputsHash": "9559adc7cca37a63a454cef841e0255da7d170d598fd4ff678908d18cb034b49",
  "rows": [
   {
    "id": "DG-R01",
