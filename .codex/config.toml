@@ -1,0 +1,5 @@
+# NeoDB Codex 프로젝트 설정 — docs/impl/00-orchestration-plan.md §3
+# 기본은 GPT-6.2 Sol. L3 · L4는 조정자가 실행 때 -m gpt-6.2-astra 로 지정한다.
+# 필요: Codex CLI 0.171.0 이상, 이 프로젝트를 Codex 신뢰 프로젝트로 등록해야 읽힌다.
+model = "gpt-6.2-sol"
+model_reasoning_effort = "medium"

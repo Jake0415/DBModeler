@@ -1,0 +1,5 @@
+# Orca 저장소 설정 — docs/impl/00-orchestration-plan.md §1
+# 새 worktree가 루트 node_modules를 복사하지 않고 공유한다(gitignore된 디렉터리만 가능).
+worktree:
+  sharedDirectories:
+    - node_modules
