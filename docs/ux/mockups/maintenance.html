@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>서비스 점검 중 · NeoDB</title>
+<!-- 정적 점검 페이지 — neodb-web(nginx)가 api · erd-collab에 닿지 못할 때(502 · 503 · 504) 직접 내보낸다.
+     앱 스크립트 · 외부 글꼴 · 외부 요청 없이 이 파일 하나로 보여야 한다(04 §3.7). 목업에서도 app.js를 쓰지 않는다. -->
+<style>
+  :root { --fg:#171717; --fg-2:#5c5c5c; --bg:#fafafa; --surface:#fff; --border:#e2e2e2; --ink:#171717; }
+  @media (prefers-color-scheme: dark) { :root { --fg:#ededed; --fg-2:#a1a1a1; --bg:#0a0a0a; --surface:#141414; --border:#2e2e2e; --ink:#ededed; } }
+  * { box-sizing:border-box; }
+  body { margin:0; min-height:100vh; display:grid; place-items:center; background:var(--bg); color:var(--fg);
+         font-family:"Pretendard Variable", Pretendard, -apple-system, "Malgun Gothic", "Apple SD Gothic Neo", sans-serif; font-size:14px; line-height:22px; padding:16px; }
+  .box { width:100%; max-width:480px; background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:32px; }
+  .logo { font-weight:700; font-size:15px; letter-spacing:-.2px; display:flex; align-items:center; gap:8px; margin-bottom:24px; }
+  .logo i { width:20px; height:20px; border-radius:5px; background:var(--ink); display:inline-block; }
+  h1 { font-size:20px; line-height:28px; margin:0 0 8px; letter-spacing:-.3px; }
+  p { margin:0 0 12px; color:var(--fg-2); }
+  .kv { display:grid; grid-template-columns:96px 1fr; gap:6px 12px; margin:20px 0; padding:12px 16px; border:1px solid var(--border); border-radius:8px; }
+  .kv dt { color:var(--fg-2); } .kv dd { margin:0; }
+  button { font:inherit; height:32px; padding:0 14px; border-radius:6px; border:1px solid var(--ink); background:var(--ink); color:var(--bg); cursor:pointer; }
+  button:focus-visible { outline:2px solid #2563eb; outline-offset:2px; }
+  .cap { font-size:12px; color:var(--fg-2); margin-top:16px; }
+</style>
+</head>
+<body>
+<main class="box">
+  <div class="logo"><i aria-hidden="true"></i>NeoDB</div>
+  <h1>서비스 점검 중입니다</h1>
+  <p>지금은 NeoDB에 연결할 수 없습니다. 업그레이드나 점검이 끝나면 다시 쓸 수 있어요.</p>
+  <p>작성 중이던 ERD는 마지막으로 저장된 상태까지 보관되어 있습니다. 이 창을 닫지 말고 잠시 뒤 다시 시도해 주세요.</p>
+  <dl class="kv">
+    <dt>예정 종료</dt><dd>공지된 시각을 확인해 주세요</dd>
+    <dt>문의</dt><dd>기관 NeoDB 담당자</dd>
+  </dl>
+  <button type="button" onclick="location.reload()">다시 시도</button>
+  <p class="cap">오류 코드 503 · 이 화면은 서버가 직접 보여 주는 안내입니다.</p>
+</main>
+</body>
+</html>

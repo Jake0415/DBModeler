@@ -1710,7 +1710,11 @@
     'audit.html': { n: '감사 로그', d: '누가 · 언제 · 무엇을 했는지 남는 기록입니다. 고치거나 지울 수 없고 5년 동안 보관합니다.',
       s: ['검색창과 종류 칩으로 찾을 기록을 좁힙니다', '기간(최근 30일 · 1년 · 전체)을 고릅니다', '점검 자료가 필요하면 [엑셀]로 내려받습니다'],
       x: [{ h: '종류 칩', items: [['자기 승인', '신청자가 자기 문서를 직접 승인한 경우(설정에서 허용했을 때)'], ['영구 삭제', '사전 항목을 지운 기록 — 사유와 함께'], ['결재', '승인 · 반려 · 회수'], ['역할 · 권한', '역할 부여 · 회수, 담당 시스템 변경'], ['설정', '설정 화면에서 바꾼 값'], ['더보기', '표준 사전 반영 · 모델 확정']] }],
-      when: '변경의 책임자를 확인하거나 감사 · 점검 자료를 낼 때', who: 'DA · Admin 등 감사 권한이 있는 사람', l: [['dict-history.html', '사전 내용 변화 → 표준 사전 변경 내역'], ['approvals.html', '결재 문서 → 결재함']] }
+      when: '변경의 책임자를 확인하거나 감사 · 점검 자료를 낼 때', who: 'DA · Admin 등 감사 권한이 있는 사람', l: [['dict-history.html', '사전 내용 변화 → 표준 사전 변경 내역'], ['approvals.html', '결재 문서 → 결재함']] },
+    'ops-status.html': { n: '시스템 상태', d: '서비스가 5분마다 스스로 확인한 결과입니다 — 서비스 응답 · 백업 · 저장 공간 · 작업 대기열 · 인증서. 관제 시스템이 아니며, 서버 전체가 멈추면 이 화면도 열리지 않습니다.',
+      s: ['맨 위 한 줄로 지금 할 일이 있는지 봅니다', '열린 알림에서 무엇을 해야 하는지 읽고 [확인]을 누르면 24시간 다시 알림이 멈춥니다', '원인이 해결되면 알림은 자동으로 닫힙니다'],
+      x: [{ h: '표시', items: [['오래됨', '마지막 확인이 15분보다 오래됨 — 확인 작업이 멈췄을 수 있음'], ['확인 안 됨', '값을 읽지 못했거나 아직 검증되지 않음(복구 가능 시점은 복구 시험으로 확인된 경우에만 시각으로 표시)'], ['주의 · 장애', '저장 공간 70% · 80%, 인증서 60일 · 30일 전, 1시간 재시작 3번 초과 등']] }],
+      when: '백업 실패 · 저장 공간 부족 알림을 받았거나 정기 점검할 때', who: 'Admin(설정 권한)', l: [['settings.html', '메일 · 알림 받는 사람 → 설정'], ['audit.html', '알림 확인 기록 → 감사 로그']] }
   };
   // folded by default and costs no height: a [ⓘ 화면 안내] button at the right end of the 사전 tab bar opens the panel under it.
   // the panel stays open only where the user opened it (dbm-guide-<id>[file] = 1) · ? key toggles (outside text fields)
@@ -1767,6 +1771,7 @@
     { file: 'outputs.html', ids: 'SC-38', name: '산출물', menu: '시스템', docs: [['05 §8 DA# 비교', D.da]], states: [['테이블 정의서', 'outputs.html?k=tbl']] },
     { file: 'settings.html', ids: 'SC-40 · SC-41 · SC-42', name: '설정(기관 · 사업 · 시스템 · 사용자 · 역할)', menu: '관리', docs: [['02 §6 설정 흐름', D.flows], ['30 §4 검수 기준', D.meta]], states: [['기관(이데이터 Admin)', 'settings.html?as=lee'], ['시스템', 'settings.html?as=lee#sys'], ['검수 기준', 'settings.html?as=lee#rules'], ['Admin 아님 → 403', 'settings.html?as=kim']] },
     { file: 'audit.html', ids: 'SC-58', name: '감사 로그', menu: '관리', docs: [['06 §3', D.plan]], states: [['DA로 보기', 'audit.html?as=lee']] },
+    { file: 'ops-status.html', ids: 'SC-OPS', name: '시스템 상태', menu: '관리', docs: [['arch 04 §3.7', '../../arch/04-ops-self-check-plan.md']], states: [['정상', 'ops-status.html?state=ok'], ['주의', 'ops-status.html?state=warn'], ['장애', 'ops-status.html?state=fail'], ['확인 안 됨', 'ops-status.html?state=stale'], ['점검 중(정적 페이지)', 'maintenance.html']] },
     { file: 'mypage.html', ids: 'SC-51 · PN-50', name: '마이페이지 · 사용자 메뉴', menu: '사용자', docs: [['06 §3', D.plan]], states: [['프로필', 'mypage.html'], ['내 신청', 'mypage.html#mine'], ['알림 설정', 'mypage.html#notify']] },
     { file: 'login.html', ids: 'SC-56', name: '로그인', menu: '공통', docs: [['06 §3', D.plan]], states: [['처음 로그인', 'login.html'], ['세션 만료 후 복귀', 'login.html?from=model.html%3Farea%3Drq&expired=1'], ['SSO 실패', 'login.html?fail=1']] },
     { file: 'error.html', ids: 'SC-57', name: '오류·안내', menu: '공통', docs: [['06 §3', D.plan]], states: [['403', 'error.html?code=403&need=Admin&what=설정'], ['404', 'error.html?code=404'], ['500', 'error.html?code=500'], ['점검', 'error.html?code=maint'], ['로그아웃', 'error.html?code=logout'], ['세션 만료', 'error.html?code=expired&from=model.html%3Farea%3Drq'], ['500 오류 ID 복사', 'error.html?code=500']] }
@@ -2412,7 +2417,7 @@
     const nUnread = unread();
     const page = document.body.dataset.page;
     // v17 (11 §2.1): top menu = global moves; the active tab follows the screen family
-    const TAB = { system: 'model', model: 'model', dictionary: 'dict', excel: 'dict', candidates: 'dict', 'dict-grid': 'dict', 'domain-groups': 'dict', datatypes: 'dict', rules: 'dict', 'std-common': 'dict', approvals: 'appr', settings: 'admin', audit: 'admin' }[page] || '';
+    const TAB = { system: 'model', model: 'model', dictionary: 'dict', excel: 'dict', candidates: 'dict', 'dict-grid': 'dict', 'domain-groups': 'dict', datatypes: 'dict', rules: 'dict', 'std-common': 'dict', approvals: 'appr', settings: 'admin', audit: 'admin', 'ops-status': 'admin' }[page] || '';
     const here = f => curFile() === f ? ' on" aria-current="page' : '';
     const cur = (on, f) => on ? (curFile() === f ? ' aria-current="page"' : ' aria-current="true"') : '';
     const qn0 = queueCount(), late = myQueue(getDocs()).some(d => docLate(d)), cq = candOpenCount();
@@ -2427,7 +2432,7 @@
         <a class="tm${TAB === 'appr' ? ' on' : ''}" href="approvals.html" id="tm-appr"${cur(TAB === 'appr', 'approvals.html')} aria-label="결재함${qn0 ? ` 내 차례 ${qn0}건` : ''}${late ? ', 기한 넘김 있음' : ''}">결재함${qn0 ? `<span class="tcount">${qn0}</span>` : ''}${late ? '<span class="tlate" title="기한을 넘긴 결재가 있습니다"></span>' : ''}</a>
         ${canAdmin ? `<span class="tmw"><button class="tm${TAB === 'admin' ? ' on' : ''}" type="button" data-menu-btn aria-expanded="false" aria-controls="mn-admin"${TAB === 'admin' ? ' aria-current="true"' : ''}>관리<i data-ic=down data-s=12></i></button><div class="menu" data-auto id="mn-admin">
           <a class="mi${here('settings.html')}" href="settings.html">설정</a>
-          <a class="mi${here('audit.html')}" href="audit.html">감사 로그</a></div></span>` : canAudit ? `<a class="tm${TAB === 'admin' ? ' on' : ''}" href="audit.html"${cur(TAB === 'admin', 'audit.html')}>감사 로그</a>` : ''}
+          <a class="mi${here('audit.html')}" href="audit.html">감사 로그</a>${can('settings') ? `<a class="mi${here('ops-status.html')}" href="ops-status.html">시스템 상태</a>` : ''}</div></span>` : canAudit ? `<a class="tm${TAB === 'admin' ? ' on' : ''}" href="audit.html"${cur(TAB === 'admin', 'audit.html')}>감사 로그</a>` : ''}
       </nav>
       <div class="spacer"></div>
       <button class="gsearch" id="gsearch" type="button" aria-haspopup="dialog" aria-label="전체 검색 (Ctrl+K)">${ICON.search}<span>검색</span><kbd>Ctrl K</kbd></button>
