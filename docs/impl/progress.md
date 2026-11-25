@@ -28,6 +28,11 @@
 
 상태: 준비됨 · 계약 · 구현 · 리뷰 · 수정 · E2E · 병합됨 · 보류 · 대기(의존)
 
+## 모델 · CLI 최신 확인 (2026-11-25 13:15)
+- 모델은 모두 최신: **Opus 5.5**(2026-09-22) · **Fable 5.2**(2026-11-09) · **GPT-6.2 Sol · Astra**(2026-11-17). Orca Codex 모델 목록(더 보기 포함)에도 6.2보다 새 모델 없음
+- Claude Code CLI 2.1.331 → **2.1.332**(오늘 배포, 공식 win32 실행 파일 · Anthropic 서명) — Opus 5.5 · Fable 5.2 호출 · 실행 뒤 파일 유지 확인. Codex 0.172.0 = 최신
+- 새 모델이 나오면: 계획 §3.2 표 · coordinator §4 표 · AGENTS.md/CLAUDE.md 모델 표 · `.codex/config.toml` · Orca 기본 모델을 함께 바꾼다(사용자 승인 뒤)
+
 ## Orca 실행 준비 (2026-11-25)
 - [x] 역할 지시서 — [roles/](roles/): 공통 규칙 `_common.md` · 지시서 양식 `_spec-template.md` · 역할 10개(조정자 · 계약 · BE · FE · 공동 편집 · UX · 역할 시나리오 QA · 리뷰어 · QA · 권한 감사관), 조정자 시작 프롬프트 [coordinator-kickoff.md](coordinator-kickoff.md), 실행 안내 [02-orca-runbook.md](02-orca-runbook.md)
 - 주요 결정: 리뷰어는 `codex -s read-only -a never …` 읽기 전용 터미널, 의존 = 계약은 main 병합 뒤 · 검증은 리뷰 통과 뒤, BE · FE 묶음은 통합 worktree에서 QA → 시나리오 → 권한 감사 차례로, 수정은 같은 worktree에 새 수정 Task(모델 상향), worktree 정리는 `orca worktree rm --run-hooks --delete-branch`(예비: `worktree-env.ps1 -Prune -Target <절대 경로>`), 브랜치는 Orca 기본 이름 기록, T-P1-02 → 02b(BE) → 02c, T-P1-01에 lint

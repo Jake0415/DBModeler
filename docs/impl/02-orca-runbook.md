@@ -28,7 +28,7 @@
 | Orca 에이전트 | Claude(기본 모델 Opus 5.5, 권한 전체 액세스) · Codex(기본, GPT-6.2-Sol, 권한 ‘대신 승인’, 인수 `-c windows.sandbox=unelevated`) |
 | 오케스트레이션 | 켜짐 · 스킬 설치됨 · 하위 에이전트 최대 단계 1 |
 | DBModeler 저장소 | 설정 스크립트 `worktree-env.ps1 -Seed -TestAccounts` · 아카이브 스크립트 `worktree-env.ps1 -Drop` · 설정 완료 뒤 에이전트 시작 · 기준 `origin/main` |
-| CLI | Claude Code 2.1.331 · Codex 0.172.0 · `orca` 사용자 PATH |
+| CLI | Claude Code 2.1.332 · Codex 0.172.0 · `orca` 사용자 PATH |
 
 ## 3. 실행할 때마다
 0. **지시서가 main에 커밋 · push됐는지**: 새 worktree는 `origin/main`에서 만들어진다. `docs/impl/*`를 고쳤으면 먼저 커밋 · push(조정자도 시작할 때 확인한다).

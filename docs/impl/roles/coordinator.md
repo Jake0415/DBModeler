@@ -14,7 +14,7 @@
 2. `progress.md`에서 이어 갈 곳을 찾는다: 단계 · **Run ID** · 진행 중 작업(Task · Dispatch ID · worktree · 브랜치) · 보류 · ‘확인 필요’ 응답. 응답이 있으면 먼저 반영한다(확인 · 뒤집기 · 방향 제시 → 새 작업).
 3. **모델 확인**(계획 §3.3) — 버전만이 아니라 실제 응답 모델:
    - `codex --version` ≥ 0.171, `codex exec -m gpt-6.2-sol --sandbox read-only "ping"` · `-m gpt-6.2-astra`의 `model:` 줄이 그 이름이고 경고가 없다.
-   - `claude --version` ≥ 2.1.331, `claude -p --model claude-opus-5-5 --output-format json "ping"` · `--model claude-fable-5-2`의 `modelUsage` 키가 그 이름이다.
+   - `claude --version` ≥ 2.1.332, `claude -p --model claude-opus-5-5 --output-format json "ping"` · `--model claude-fable-5-2`의 `modelUsage` 키가 그 이름이다.
    - 하나라도 다르면 **배정하지 말고** 사람에게 알리고 멈춘다.
 4. 개발 DB 컨테이너(`neodb-dev-postgres`)가 떠 있는지 `docker ps`. 없으면 사람에게 main에서 `npm run db:up`을 부탁하고 멈춘다.
 5. 사용량(Orca 사용량 표시)이 80% 이상이면 새 배정 없이 진행 중인 작업만 마무리한다.
