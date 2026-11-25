@@ -45,7 +45,7 @@
     <a class="stat" href="standardize.html?f=ex"><span class="dot-i s-ex"></span>예외 <b id="c-ex">2</b></a>
     <a class="stat" href="standardize.html?f=na"><span class="dot-i s-na"></span>비대상 <b id="c-na">1</b></a>
     <a class="stat" href="candidates.html"><span class="dot-i" style="background:var(--violet);opacity:.5"></span>후보 대기 <b id="c-cand">0</b></a>
-    <a class="stat" href="#" id="b-review"><span class="dot-i" style="background:var(--fg-3)"></span>검토 <b id="c-rev">5</b></a>
+    <a class="stat" href="#" id="b-review" title="모델 검증 — 표준 · 이름/설명 · 구조를 한곳에서 점검합니다. 막음이 0건이어야 확정 신청할 수 있습니다"><span class="dot-i" style="background:var(--fg-3)"></span>모델 검증 <span class="mc-w">막음</span> <b id="c-rev">0</b><span class="mc-w" id="c-warn"> · 경고 0</span></a>
     <span class="grow"></span><span class="caption faint" id="sel-info">선택 없음</span>
   </div>
   <div class="page-body">
@@ -71,7 +71,7 @@
           <div class="menu" id="relmenu">
             <div class="mi on" data-rt="nonid">1:N 비식별 <span class="faint">점선</span></div>
             <div class="mi" data-rt="id">1:N 식별 <span class="faint">실선</span></div>
-            <div class="mi" data-rt="one">1:1</div>
+            <div class="mi" data-rt="one">1:1 <span class="faint">비식별 · 점선</span></div>
             <div class="mi" data-rt="mn">M:N <span class="faint">해소 필요</span></div>
             <div class="msep"></div>
             <div class="mi" data-rt="xor">배타 관계 묶기 <span class="faint">관계선 2개</span></div>
@@ -118,9 +118,9 @@
       <div id="grid"></div>
       <!-- bottom controls: always inside the window (pinCtl), legend · minimap can be folded and the choice is remembered -->
       <!-- ERD P3-20: one row at the bottom — the legend is a popover from [ⓘ] in the zoom bar (open on first use, then only on request) -->
-      <div class="legend" id="cv-legend" role="region" aria-label="범례"><span class="lg-row lg-introw" id="lg-int" hidden>통합 한 줄 = 논리명 │ <span class="mono">물리명</span> │ 타입 <span class="lg-sep" aria-hidden="true"></span><i>— 미매핑</i> 물리 이름 없음 · <i>— 타입 미정</i> 도메인 없음</span><span class="lg-body" id="lg-body"><span class="lg-row">상태 <span class="dot-i s-ok"></span>표준 <span class="dot-i s-comb"></span>조합 가능 <span class="dot-i s-unreg"></span>미등록 단어 <span class="dot-i s-ex"></span>예외 <span class="dot-i s-na"></span>비대상 <span class="lg-sep" aria-hidden="true"></span>미니맵 <span class="lg-sw lg-w"></span>미준수 있음 <span class="lg-sw lg-p"></span>함께 편집 중</span><span class="lg-row lg-rel">관계 <svg class="lg-ln" width="26" height="12" viewBox="0 0 26 12" aria-hidden="true" fill="none" stroke="var(--fg-2)" stroke-width="1.3"><path d="M1 6H25"/></svg>식별 <svg class="lg-ln" width="26" height="12" viewBox="0 0 26 12" aria-hidden="true" fill="none" stroke="var(--fg-2)" stroke-width="1.3"><path d="M1 6H25" stroke-dasharray="4 3"/></svg>비식별 <svg class="lg-ln" width="26" height="12" viewBox="0 0 26 12" aria-hidden="true" fill="none" stroke="var(--fg-2)" stroke-width="1.3"><path d="M1 6H25M25 1L17 6L25 11"/></svg>다수 <svg class="lg-ln" width="26" height="12" viewBox="0 0 26 12" aria-hidden="true" fill="none" stroke="var(--fg-2)" stroke-width="1.3"><path d="M1 6H25M19 1V11"/></svg>하나 <svg class="lg-ln" width="26" height="12" viewBox="0 0 26 12" aria-hidden="true" fill="none" stroke="var(--fg-2)" stroke-width="1.3"><path d="M1 6H13M21 6H25"/><circle cx="17" cy="6" r="3.2"/></svg>없을 수 있음 <svg class="lg-ln" width="26" height="12" viewBox="0 0 26 12" aria-hidden="true" fill="none" stroke="var(--fg-2)" stroke-width="1.3"><rect x="1" y="5" width="10" height="6" rx="1"/><path d="M11 7H17V1H6V5"/></svg>재귀 <svg class="lg-ln" width="26" height="12" viewBox="0 0 26 12" aria-hidden="true" fill="none" stroke="var(--fg-2)" stroke-width="1.3" style="stroke:var(--violet)"><path d="M2 11Q13 -3 24 11"/></svg>배타</span></span><button class="iconbtn u-w-28 u-h-28" id="lg-fold" aria-expanded="true" aria-controls="cv-legend" aria-label="범례 닫기" title="범례 닫기"><i data-ic=x></i></button></div>
+      <div class="legend" id="cv-legend" role="region" aria-label="범례"><span class="lg-row lg-introw" id="lg-int" hidden>통합 한 줄 = 논리명 │ <span class="mono">물리명</span> │ 타입 <span class="lg-sep" aria-hidden="true"></span><i>— 미매핑</i> 물리 이름 없음 · <i>— 타입 미정</i> 도메인 없음</span><span class="lg-row lg-physrow" id="lg-phys" hidden>테이블 ERD 한 줄 = <span class="mono">PK/FK</span> │ <span class="mono">컬럼명</span> │ 타입 │ 길이 │ 소수점 │ 속성명 <span class="lg-sep" aria-hidden="true"></span>표시 ‘키만’에서는 타입 ~ 속성명을 숨깁니다</span><span class="lg-body" id="lg-body"><span class="lg-row">상태 <span class="dot-i s-ok"></span>표준 <span class="dot-i s-comb"></span>조합 가능 <span class="dot-i s-unreg"></span>미등록 단어 <span class="dot-i s-ex"></span>예외 <span class="dot-i s-na"></span>비대상 <span class="lg-sep" aria-hidden="true"></span>미니맵 <span class="lg-sw lg-w"></span>미준수 있음 <span class="lg-sw lg-p"></span>함께 편집 중</span><span class="lg-row lg-rel">관계 끝 <svg class="lg-ln" width="30" height="12" viewBox="0 0 30 12" aria-hidden="true" fill="none" stroke="var(--fg-2)" stroke-width="1.3"><path d="M1 6H29M20 1V11M25 1V11"/></svg>정확히 1 <svg class="lg-ln" width="30" height="12" viewBox="0 0 30 12" aria-hidden="true" fill="none" stroke="var(--fg-2)" stroke-width="1.3"><path d="M1 6H13M21 6H29M25 1V11"/><circle cx="17" cy="6" r="3.5"/></svg>0~1 <svg class="lg-ln" width="30" height="12" viewBox="0 0 30 12" aria-hidden="true" fill="none" stroke="var(--fg-2)" stroke-width="1.3"><path d="M1 6H29M29 1L19 6L29 11M16 1V11"/></svg>1 이상 <svg class="lg-ln" width="30" height="12" viewBox="0 0 30 12" aria-hidden="true" fill="none" stroke="var(--fg-2)" stroke-width="1.3"><path d="M1 6H9M17 6H29M29 1L17 6L29 11"/><circle cx="13" cy="6" r="3.5"/></svg>0 이상 <span class="lg-sep" aria-hidden="true"></span><svg class="lg-ln" width="26" height="12" viewBox="0 0 26 12" aria-hidden="true" fill="none" stroke="var(--fg-2)" stroke-width="1.3"><path d="M1 6H25"/></svg>식별 <svg class="lg-ln" width="26" height="12" viewBox="0 0 26 12" aria-hidden="true" fill="none" stroke="var(--fg-2)" stroke-width="1.3"><path d="M1 6H25" stroke-dasharray="4 3"/></svg>비식별 <span class="lg-sep" aria-hidden="true"></span><span class="lg-k">PK</span>키 구역 = 식별자 <span class="lg-fk">이름 (FK)</span>부모에서 받은 키</span><span class="lg-row lg-rel2"><svg class="lg-ln" width="26" height="12" viewBox="0 0 26 12" aria-hidden="true" fill="none" stroke="var(--fg-2)" stroke-width="1.3"><rect x="1" y="5" width="10" height="6" rx="1"/><path d="M11 7H17V1H6V5"/></svg>재귀 <svg class="lg-ln" width="26" height="12" viewBox="0 0 26 12" aria-hidden="true" fill="none" stroke="var(--fg-2)" stroke-width="1.3" style="stroke:var(--violet)"><path d="M2 11Q13 -3 24 11"/></svg>배타</span></span><button class="iconbtn u-w-28 u-h-28" id="lg-fold" aria-expanded="true" aria-controls="cv-legend" aria-label="범례 닫기" title="범례 닫기"><i data-ic=x></i></button></div>
       <div class="cv-zoom" role="group" aria-label="확대 · 축소"><button id="zo" aria-label="축소 (Ctrl+-)" title="축소 (Ctrl+-)">−</button><button type="button" id="zl" class="mono" title="100%로 (Ctrl+0)" aria-label="지금 배율 — 눌러서 100%로 (Ctrl+0)">100%</button><button id="zi" aria-label="확대 (Ctrl++)" title="확대 (Ctrl++)">+</button><button id="zfit" title="전체 맞춤 (Shift+1)">맞춤</button>
-        <select class="input" id="lodsel" aria-label="캔버스 표시 단계"><option value="auto" title="글자가 11px 이상이면 전체 속성, 9~11px이면 키만, 9px 미만이면 이름만">표시: 자동</option><option value="full">전체 속성</option><option value="mid">키만</option><option value="low">요약(이름만)</option></select><button type="button" id="lg-open" class="lg-i" aria-expanded="false" aria-controls="cv-legend" aria-label="범례" title="범례 — 상태 점 · 미니맵 색"><i data-ic=info data-s=14></i></button></div>
+        <select class="input" id="lodsel" aria-label="캔버스 표시 단계"><option value="auto" title="글자가 11px 이상이면 전체 속성, 9~11px이면 키만, 9px 미만이면 이름만">표시: 자동</option><option value="full">전체 속성</option><option value="mid">키만</option><option value="low">요약(이름만)</option></select><button type="button" id="lg-open" class="lg-i" aria-expanded="false" aria-controls="cv-legend" aria-label="범례" title="범례 — 상태 점 · 관계 끝 · 키 표시"><i data-ic=info data-s=14></i></button></div>
       <div class="cv-mini" id="cv-mini"><svg id="mini" width="180" height="120" role="img" aria-label="미니맵 — 전체 중 지금 보이는 범위"></svg><button class="iconbtn u-w-28 u-h-28 mini-x" id="mini-x" aria-expanded="true" aria-controls="cv-mini" aria-label="미니맵 접기" title="미니맵 접기"><i data-ic=x></i></button></div>
       <button class="btn sm mini-open" id="mini-open" aria-expanded="false" aria-controls="cv-mini">미니맵</button>
     </div>
@@ -131,31 +131,13 @@
       <div class="sr-only" id="ag-live" aria-live="polite"></div>
     </aside>
 
-    <!-- PN-39 model review -->
-    <aside class="rpanel" id="pn-review">
-      <div class="rp-head"><div class="t"><h2>모델 검토</h2><span class="badge">자동 점검</span><button class="iconbtn close u-w-28 u-h-28" id="rev-x" aria-label="닫기"><i data-ic=x></i></button></div>
-        <div class="caption muted u-mt-4">명칭 중복·미입력·관계·물리 정보를 점검합니다. 표준 준수는 상단 준수율에서 봅니다.</div></div>
-      <div class="rp-body" id="rev-body"></div>
-      <div class="rp-foot"><button class="btn" id="rev-xls" data-toast="모델 검토 결과를 엑셀로 내려받았습니다">엑셀로 내려받기</button><span class="grow"></span><button class="btn primary" id="rev-run">다시 점검</button></div>
-    </aside>
-
-    <!-- PN-35 gate A -->
-    <aside class="rpanel" id="pn-gate">
-      <div class="rp-head"><div class="t"><h2>물리 반영 전 점검</h2><span class="badge b-warning">게이트 A</span><button class="iconbtn close u-w-28 u-h-28" id="gate-x" aria-label="닫기"><i data-ic=x></i></button></div>
-        <div class="caption muted u-mt-4">논리 → 물리(Oracle) 반영 직전에 확인합니다. 진행을 막지는 않습니다.</div></div>
-      <div class="rp-body">
-        <div id="gate-body"></div>
-        <div class="caption muted u-mt-8">물리 반영 때 시스템 컬럼 4개(<span class="mono">REG_DT · REGR_ID · MDFCN_DT · MDFR_ID</span>)가 모든 테이블에 붙습니다 — <a href="settings.html#sys">시스템 설정</a></div>
-      </div>
-      <div class="rp-foot"><a class="btn" href="standardize.html?f=todo">표준 맞추기로 이동</a><span class="grow"></span><button class="btn primary" id="gate-go">경고 확인 후 계속</button></div>
-    </aside>
-
-    <!-- ERD P2-10: 확정 전 점검 — what still stands between the model and [확정 신청], fixed in place (no round trip to 표준 맞추기) -->
+    <!-- M-6 (고객 모델 요청 2026-11-25): 모델 검증 — ONE panel for what used to be 모델 검토(PN-39) · 물리 반영 전 점검(게이트 A, PN-35) · 확정 전 점검:
+         표준 · 이름/설명 · 구조, every item 막음 or 경고. 막음 0건이어야 [확정 신청]. The judgement is app.js modelCheck -->
     <aside class="rpanel" id="pn-check" aria-labelledby="ck-t">
-      <div class="rp-head"><div class="t"><h2 id="ck-t">확정 전 점검</h2><span class="badge b-warning" id="ck-n">0</span><button class="iconbtn close u-w-28 u-h-28" id="ck-x" aria-label="닫기"><i data-ic=x></i></button></div>
-        <div class="caption muted u-mt-4">아래 항목을 표준에 맞추거나 사유를 남겨 예외로 두면 확정 신청할 수 있습니다.</div></div>
+      <div class="rp-head"><div class="t"><h2 id="ck-t">모델 검증</h2><span class="badge b-danger" id="ck-n">막음 0</span><span class="badge b-warning" id="ck-w">경고 0</span><button class="iconbtn close u-w-28 u-h-28" id="ck-x" aria-label="닫기"><i data-ic=x></i></button></div>
+        <div class="caption muted u-mt-4">표준 · 이름/설명 · 구조를 한곳에서 점검합니다. <b>막음</b>이 0건이어야 확정 신청할 수 있고, <b>경고</b>는 확인만 하면 됩니다.</div></div>
       <div class="rp-body" id="ck-body"></div>
-      <div class="rp-foot"><a class="btn" id="ck-std" href="standardize.html?f=todo">표준 맞추기에서 한꺼번에</a><span class="grow"></span><button class="btn primary" id="ck-go">확정 신청 계속</button></div>
+      <div class="rp-foot"><button class="btn" id="rev-xls" data-toast="모델 검증 결과를 엑셀로 내려받았습니다">엑셀로 내려받기</button><span class="grow"></span><span class="caption muted" id="ck-go-why" hidden></span><button class="btn" id="gate-go" hidden>경고 확인 후 계속</button><button class="btn primary" id="ck-go">확정 신청 계속</button></div>
     </aside>
 
     <!-- PN-38 confirm -->
@@ -256,6 +238,7 @@ window.pageInit = function () {
   const cv = $('cv'), world = $('world'), nodes = $('nodes'), eg = $('eg'), preview = $('preview');
   let lodTimer = null, lodHinted = false;
   let SX = 1, SY = 1, LW = 240, LH = 220, spreadBusy = false, needSpread = true, needL = true, aKey = '', lKey = '';
+  let PX = 1, needP = true, pKey = '';   /* M-8: 테이블 ERD 노드는 넓다(최대 약 560) — the saved physical layout (made for 320) is shown spread sideways by PX, measured like the 통합 spread; saved positions stay as they are */
   const spreadKey = () => curView + ':' + E.length + ':' + E.reduce((n, e) => n + e.a.length + (e.n || '').length, 0);   /* 28 §7-1: 통합 spreads the logical layout by SX · SY, measured per area */
   let mode = 'L', tool = 'select', relType = 'nonid', zoom = 1, panX = 40, panY = 50, sel = null, relSrc = null, lodForce = 'auto', kbNode = false;
   let gateSeen = false, offline = false, remoteSel = 'rqrm', renaming = null, xorPick = [];
@@ -282,9 +265,9 @@ window.pageInit = function () {
   const singleKeys = () => dbmStore.get('dbm-single-keys', '1') === '1';
   // a view other than 전체 keeps its own positions ([x, y, px, py]); without one the entity's own position is used
   const pos = e => { const v = curView !== 'all' && vCur(), p = v && v.pos && v.pos[e.id]; const l = p ? { x: p[0], y: p[1] } : { x: e.x, y: e.y };
-    if (mode === 'A') return { x: Math.round(l.x * SX), y: Math.round(l.y * SY) }; if (p) return mode === 'L' ? l : { x: p[2], y: p[3] }; return mode === 'L' ? l : { x: e.px, y: e.py }; };
+    if (mode === 'A') return { x: Math.round(l.x * SX), y: Math.round(l.y * SY) }; if (p) return mode === 'L' ? l : { x: Math.round(p[2] * PX), y: p[3] }; return mode === 'L' ? l : { x: Math.round(e.px * PX), y: e.py }; };
   let aMoveTold = dbmStore.get(`dbm-amove-${ME.id}`, '') === '1';
-  const setPos = (e, x, y) => { const v = curView !== 'all' && vCur();
+  const setPos = (e, x, y) => { const v = curView !== 'all' && vCur(); if (mode === 'P') x = Math.round(x / PX / 8) * 8;
     if (mode === 'A') { x = Math.round(x / SX / 8) * 8; y = Math.round(y / SY / 8) * 8; if (!aMoveTold) { aMoveTold = true; dbmStore.set(`dbm-amove-${ME.id}`, '1'); setTimeout(() => toast('통합에서 옮긴 위치는 논리 배치에도 반영됩니다 · 물리 배치는 그대로입니다', 'info'), 0); } }   /* stored in the logical slots */
     if (v) { v.pos = v.pos || {}; const p = v.pos[e.id] || [e.x, e.y, e.px, e.py]; if (mode !== 'P') { p[0] = x; p[1] = y; } else { p[2] = x; p[3] = y; } v.pos[e.id] = p; return; }
     if (mode !== 'P') { e.x = x; e.y = y; } else { e.px = x; e.py = y; } };
@@ -306,10 +289,10 @@ window.pageInit = function () {
   };
   const canEdit = () => !(confirmed || review || viewOnly || DEMO || revConflict || cv.dataset.sys === '1') && modelLock(AREA).state === LOCK.state && getModel(AREA).ver === VER && !liveRoleChanged() && liveCanEdit(AREA);   // silent check for drag/memo (R5)
   // optimistic revision per area+version: a tab that loaded an older revision may not overwrite a newer save (CL9-03)
-  let myRev = 0, revConflict = false, holdSave = false;
+  let myRev = 0, revConflict = false, holdSave = false, savePending = false;   // savePending: a save was asked for while the 중복 속성 해소 창 held it
   function saveData() {
     if (locked || viewOnly || DEMO || !dataReady || revConflict) return;
-    if (holdSave) { setSave('run', '저장 대기 · 역할명 확정 전'); return; }
+    if (holdSave) { savePending = true; setSave('run', '저장 대기 · 중복 속성 확인 중'); return; }   // M-1: nothing is written while the 중복 속성 해소 창 is open — 확정 saves everything at once
     if (PERF) { setSave('run', '속도 측정 · 저장 안 함'); return; }   // the role box saves everything at once when it closes
     if (!liveCanEdit(AREA)) { revConflict = true; setSave('err', '저장 안 됨 · 권한 변경'); toast('편집 권한이 회수되어 이 탭의 편집은 저장하지 않았습니다 — 새로고침하세요', 'danger', { label: '새로고침', fn: () => location.reload() }); return; }
     // this version may have been submitted / confirmed in another tab meanwhile — never write into it then (CL11-01)
@@ -318,7 +301,7 @@ window.pageInit = function () {
     const cur = getModelData(AREA, VER);
     if (cur && (cur.rev || 0) !== myRev) { revConflict = true; setSave('err', '저장 안 됨 · 최신본 확인'); toast('다른 탭에서 이 버전을 먼저 저장했습니다 — 이 탭의 편집은 저장하지 않았습니다. 새로고침해서 최신 내용으로 이어가세요', 'danger', { label: '새로고침', fn: () => location.reload() }); return; }
     // the saved copy never carries an open inline edit: no edit/orig marks, no unnamed new attribute, no unnamed new entity (other screens read it)
-    const E2 = E.filter(e => !e.fresh).map(e => Object.assign({}, e, { a: e.a.filter(a => !(a.edit && !a.n)).map(a => { const c = Object.assign({}, a); delete c.edit; delete c.orig; return c; }) }));
+    const E2 = E.filter(e => !e.fresh).map(e => Object.assign({}, e, { a: e.a.filter(a => !(a.edit && !a.n)).map(a => { const c = Object.assign({}, a); delete c.edit; delete c.orig; return typeSplit(c); }) }));   // R2-12: the saved copy keeps t = type name only, len · scale apart (this screen edits the joined string in memory)
     // ERD P1-7: the revision and '저장됨' move only after the write landed — a failed write keeps the edit on screen and offers a retry
     const wrote = !window.__failSave && setModelData(AREA, VER, { E: E2, R, M, V, moves: MOVES, rev: myRev + 1 });
     if (!wrote) { saveFailed = true; setSave('err', '저장 안 됨', true); agLive('저장하지 못했습니다'); if (!saveFailToast) { saveFailToast = true; toast('저장하지 못했습니다(브라우저 저장 공간 부족 등) — 편집 내용은 화면에 남아 있습니다. [다시 시도]를 누르세요', 'danger', { label: '다시 시도', fn: retrySave }); } return; }
@@ -379,18 +362,21 @@ window.pageInit = function () {
     if (!locked && !DEMO && !viewOnly && !PERF) setComp(AREA, lastComp);          // home / system badges read this; approvals re-check the submitted copy
     if (!SNAP && window.areaNavBad) areaNavBad(bad);                     // ERD P1-4: the '영역 화면' badge shows the same live count as the main button
     const b = $('confirm-btn');
+    // M-6: 모델 검증 — one judgement (app.js modelCheck). The head link and the goal button both carry its 막음 count
+    const mc = mcRun(), blk = mc.block; $('c-rev').textContent = blk; $('c-warn').textContent = ` · 경고 ${mc.warn}`;
+    $('b-review').setAttribute('aria-label', `모델 검증 열기 — 막음 ${blk}건 · 경고 ${mc.warn}건`);
+    if ($('pn-check').classList.contains('open')) drawCheck();
     if (locked) return;
     if (DEMO) { b.classList.add('disabled', 'has-tip'); b.classList.remove('primary'); b.dataset.tip = '예시 화면에서는 확정 신청할 수 없습니다'; b.setAttribute('aria-disabled', 'true'); b.onclick = () => toast(b.dataset.tip, 'info'); return; }
-    // ERD P2-10: the goal action is always [확정 신청] in the same place — with open items it carries their count and opens '확정 전 점검' in the right panel
-    const can = bad === 0 && !viewOnly, fix = bad > 0 && !viewOnly;
-    b.innerHTML = `확정 신청${fix ? ` <span class="cb-n">${bad}</span>` : ''}`;
+    // ERD P2-10 → M-6: the goal action is always [확정 신청] in the same place — with 막음 left it carries their count and opens 모델 검증
+    const fix = blk > 0 && !viewOnly;
+    b.innerHTML = `확정 신청${fix ? ` <span class="cb-n">${blk}</span>` : ''}`;
     b.classList.toggle('disabled', viewOnly); b.classList.toggle('has-tip', viewOnly); b.classList.toggle('primary', !viewOnly);
     b.dataset.tip = viewOnly ? (outOfScope ? '담당 시스템이 아니라 확정 신청할 수 없습니다' : '확정 신청은 모델러 역할만 할 수 있습니다') : '';
     if (viewOnly) { b.setAttribute('aria-disabled', 'true'); b.setAttribute('aria-label', '확정 신청 (불가: ' + b.dataset.tip + ')'); }
-    else { b.removeAttribute('aria-disabled'); b.setAttribute('aria-label', fix ? `확정 신청 — 먼저 고칠 항목 ${bad}건, 확정 전 점검 열기` : '확정 신청'); }
-    b.title = fix ? `확정 전에 고칠 항목 ${bad}건 — 눌러서 점검 목록을 엽니다` : '';
-    b.onclick = () => { if (viewOnly) { toast(b.dataset.tip, 'info'); return; } if (bad > 0) { openCheck(); return; } fillConfirm(); openPanel('pn-confirm'); };
-    if ($('pn-check').classList.contains('open')) drawCheck();
+    else { b.removeAttribute('aria-disabled'); b.setAttribute('aria-label', fix ? `확정 신청 — 먼저 풀 막음 ${blk}건, 모델 검증 열기` : '확정 신청'); }
+    b.title = fix ? `확정 전에 풀어야 할 막음 ${blk}건 — 눌러서 모델 검증을 엽니다` : '';
+    b.onclick = () => { if (viewOnly) { toast(b.dataset.tip, 'info'); return; } if (mcLast.block > 0) { openCheck(); return; } fillConfirm(); openPanel('pn-confirm'); };
     // remaining-unregistered banner from the current attributes and the candidate's real state (CX12-22)
     // ERD P1-4: the strip names only attributes that wait on a word candidate, grouped by that word — each one gets its own reason (no blanket exception);
     // any other unregistered attribute is counted in the main button and handled in 표준 맞추기
@@ -446,14 +432,19 @@ window.pageInit = function () {
   }
 
   function nodeHTML(e) {
-    const pk = e.a.filter(a => a.pk), rest = e.a.filter(a => !a.pk);
+    const pk = e.a.filter(a => a.pk), rest = e.a.filter(a => !a.pk), TBL = mode === 'P';
     const row = a => {
       const idx = e.a.indexOf(a);
       const name = mode !== 'P' ? a.n : a.p, right = mode === 'L' ? a.p : a.t;
       if (a.edit) return `<div class="ar"><span class="dot-i s-na"></span><input data-e="${e.id}" data-i="${idx}" class="attr-in" placeholder="속성명 입력 · Enter" value="${a.n}">${mode === 'A' ? `<span class="pv mono" aria-live="polite">${a.n ? '물리 → ' + hx(decompose(a.n).abbr) : '물리명은 이름에서 만듭니다'}</span>` : ''}</div>`;   /* 28 §7-2: the canvas name is the logical name — the physical one is previewed */
       const um = a.s !== 'na' && a.p === '—', tm = a.s !== 'na' && a.t === '—';
       const mid = mode === 'A' ? `<span class="pp${um ? ' um' : ''}" title="${um ? '물리명 없음' : hx(a.p)}"><span class="sr-only">물리 </span>${um ? '— 미매핑' : hx(a.p)}</span>` : '', rt = mode === 'A' ? (tm ? '<span class="um">— 타입 미정</span>' : hx(right)) : right;
-      return `<div class="ar ${a.pk ? 'pkr' : ''} ${a.fk ? 'fk' : ''} ${a.remote ? 'new' : ''} ${a.s === 'na' ? 'excl' : ''}" data-e="${e.id}" data-i="${idx}"><span class="dot-i s-${a.s}" title="${({ ok: '표준', comb: '조합 가능', unreg: '미등록 단어', ex: '예외', na: '비대상', req: '용어 신청 중' })[a.s]}"></span><span class="n">${a.pk ? '<span aria-hidden="true"># </span>' : ''}${name}${a.fk ? ' (FK)' : ''}${a.pk && mode === 'A' ? '<span class="sr-only">, PK</span>' : ''}</span>${['comb', 'unreg', 'ex', 'req'].includes(a.s) ? `<span class="stw ${a.s}">${({ comb: '조합', unreg: '미등록', ex: '예외', req: '신청 중' })[a.s]}</span>` : ''}${a.sec ? LOCKI : ''}${mid}<span class="p">${rt}</span></div>`;
+      // M-8: the key column says 'PK' in small mono letters (the Barker '#' is gone) — the table ERD also says 'FK' there
+      const head = `<div class="ar ${a.pk ? 'pkr' : ''} ${a.fk ? 'fk' : ''} ${a.remote ? 'new' : ''} ${a.s === 'na' ? 'excl' : ''}" data-e="${e.id}" data-i="${idx}"><span class="dot-i s-${a.s}" title="${({ ok: '표준', comb: '조합 가능', unreg: '미등록 단어', ex: '예외', na: '비대상', req: '용어 신청 중' })[a.s]}"></span><span class="kc"${a.pk ? ' title="식별자(Primary Key)"' : a.fk && TBL ? ' title="외래 키(Foreign Key)"' : ''}>${a.pk ? 'PK' : a.fk && TBL ? 'FK' : ''}</span>`;
+      const stw = ['comb', 'unreg', 'ex', 'req'].includes(a.s) ? `<span class="stw ${a.s}">${({ comb: '조합', unreg: '미등록', ex: '예외', req: '신청 중' })[a.s]}</span>` : '';
+      // M-8 테이블 ERD (물리): PK/FK │ 컬럼명 │ 타입 │ 길이 │ 소수점 │ 속성명 — the type is read in parts (app.js typeParts)
+      if (TBL) { const tp = typeParts(a.t); return `${head}<span class="n" title="${hx(a.p)}">${hx(a.p)}${a.fk ? ' (FK)' : ''}</span><span class="c3" title="타입">${hx(tp.t)}</span><span class="c4" title="길이">${hx(tp.len)}</span><span class="c5" title="소수점">${hx(tp.scale)}</span><span class="c6" title="속성명 ${hx(a.n)}"><span class="ln">${hx(a.n)}</span>${stw}${a.sec ? LOCKI : ''}</span></div>`; }
+      return `${head}<span class="n">${name}${a.fk ? ' (FK)' : ''}</span>${stw}${a.sec ? LOCKI : ''}${mid}<span class="p">${rt}</span></div>`;
     };
     const b = bad(e);
     const title = renaming === e.id ? `<input class="ren-in" data-e="${e.id}" value="${e.fresh ? '' : e.n}" list="ent-terms" autocomplete="off" aria-label="엔터티 이름" placeholder="엔터티 이름 · 예: 산출물검수기본">${mode === 'A' ? `<span class="pv mono" aria-live="polite">${e.fresh || !e.n ? '물리명은 이름에서 만듭니다' : '물리 → ' + hx(decompose(e.n).abbr)}</span>` : ''}` : `<span class="title" data-e="${e.id}">${mode !== 'P' ? e.n : e.p}</span>`;
@@ -468,10 +459,12 @@ window.pageInit = function () {
       <div class="pk">${pk.map(row).join('')}</div>${rest.map(row).join('')}<div class="more">+ ${rest.length}개 속성</div>${subt}${sysc}`;
   }
   function spreadAfter() {
-    if (spreadBusy || !nodes || !((mode === 'L' && needL) || (mode === 'A' && needSpread))) return; const w = $('world'); const ns = [...nodes.querySelectorAll('.node')]; if (!ns.length) return;
+    if (spreadBusy || !nodes || !((mode === 'L' && needL) || (mode === 'A' && needSpread) || (mode === 'P' && needP))) return; const w = $('world'); const ns = [...nodes.querySelectorAll('.node')]; if (!ns.length) return;
     const lod = w ? (w.className.match(/lod-(mid|low)/) || [])[0] : null; if (lod) w.classList.remove(lod);   // measured at full detail even when zoomed out
     const mw = Math.max(...ns.map(n => n.offsetWidth)), mh = Math.max(...ns.map(n => n.offsetHeight)); if (lod) w.classList.add(lod); if (!mw) return;
-    if (mode === 'L') { LW = mw; LH = mh; needL = false; return; } needSpread = false;
+    if (mode === 'L') { LW = mw; LH = mh; needL = false; return; }
+    if (mode === 'P') { needP = false; const px = Math.min(2, Math.max(1, (mw + 48) / 368)); if (Math.abs(px - PX) > 0.04) { PX = px; spreadBusy = true; try { render(); } finally { spreadBusy = false; } } return; }
+    needSpread = false;
     const sx = Math.min(2.4, Math.max(1, (mw + 48) / (LW + 48))), sy = Math.min(1.8, Math.max(1, (mh + 40) / (LH + 40)));
     if (Math.abs(sx - SX) > 0.04 || Math.abs(sy - SY) > 0.04) { SX = sx; SY = sy; spreadBusy = true; try { render(); } finally { spreadBusy = false; } }
   }
@@ -491,6 +484,7 @@ window.pageInit = function () {
   };
   function render() {
     queueMicrotask(treeSync);
+    E.forEach(e => e.a.forEach(a => { typeSync(a); if (!a.id) a.id = newId('a'); }));   // M-8: len · scale follow the type string (the string is what every edit path writes) · R2-13: a new attribute gets its id once, here
     if (!V.some(v => v.id === curView)) curView = 'all';
     syncViewSel();
     // speed: the visible list and the selection are looked up once (they were recomputed for every node — 300 × 300), and the nodes go in as one string
@@ -498,7 +492,7 @@ window.pageInit = function () {
     // speed (300 entities): nodes are kept and only the ones whose markup changed are swapped — laying out all 300 again cost ≈150ms per edit
     const have = new Map([...nodes.children].map(n => [n.id, n])), tpl = document.createElement('template');
     list.forEach(e => {
-      const p = pos(e), nb = bad(e), cls = 'node' + (mode === 'A' ? ' int' : '') + (sel === e.id ? ' sel' : '') + (relSrc === e.id ? ' relsrc' : '') + (remoteSel === e.id && !offline ? ' remote' : '') + (e.ref ? ' ref' : '');
+      const p = pos(e), nb = bad(e), cls = 'node' + (mode === 'A' ? ' int' : mode === 'P' ? ' tbl' : '') + (sel === e.id ? ' sel' : '') + (relSrc === e.id ? ' relsrc' : '') + (remoteSel === e.id && !offline ? ' remote' : '') + (e.ref ? ' ref' : '');
       // ERD P2-16: nodes are reachable from the keyboard — one Tab stop (the selected node, else the first), arrows walk between nodes
       const ti = (sel === e.id || (!selOk && e === first)) ? 0 : -1;
       const h = `<div class="${cls}" id="n-${e.id}" tabindex="${ti}" role="group" aria-roledescription="엔터티" aria-label="${hx(e.n)}${mode === 'A' && e.p !== '—' ? ', 물리 ' + hx(e.p) : ''}${e.ref ? ' (참조)' : ''}, 속성 ${e.a.length}개${nb ? `, 미준수 ${nb}` : ''}${sel === e.id ? ', 선택됨' : ''}" style="left:${p.x}px;top:${p.y}px">${nodeHTML(e)}</div>`;
@@ -563,7 +557,7 @@ window.pageInit = function () {
       let p;
       if (r.f === r.t) { const a = box(r.f); p = { d: `M${a.x + a.w},${a.y + 30} H${a.x + a.w + 30} V${a.y - 20} H${a.x + a.w - 30} V${a.y}`, lx: a.x + a.w + 34, ly: a.y - 8 }; }
       else p = edgePath(box(r.f), box(r.t));
-      const dash = r.k === 'id' || r.k === 'one' ? '' : 'stroke-dasharray="5 4"';
+      const dash = r.k === 'id' ? '' : 'stroke-dasharray="5 4"';   // M-8: solid = identifying, nothing else (a 1:1 that is not identifying is dashed)
       // IE ends from the relation's own facts (18): child side = cardinality, parent side = must / may
       const rs = relOf(r);
       const endM = r.k === 'mn' ? 'url(#m-many)' : ({ '0n': 'url(#m-many0)', '1n': 'url(#m-many)', '01': 'url(#m-one0)', '1': 'url(#m-one)' })[rs.card];
@@ -612,7 +606,7 @@ window.pageInit = function () {
     const nb = VE().filter(e => bad(e)).length, lbl = `미니맵 — 엔터티 ${VE().length}개 중 미준수 있음 ${nb}개(호박색)${remoteSel && !offline && ent(remoteSel) ? ` · ${ent(remoteSel).n} 함께 편집 중` : ''} · 테두리 = 지금 보이는 범위`;
     m.setAttribute('aria-label', lbl); m.parentElement.title = lbl;
   }
-  const PANELS = ['rp', 'pn-gate', 'pn-confirm', 'pn-review', 'pn-check'];
+  const PANELS = ['rp', 'pn-confirm', 'pn-check'];
   function syncTab() { $('rp-tab').style.display = PANELS.some(p => $(p).classList.contains('open')) ? 'none' : 'flex'; }
   function openPanel(id) { PANELS.forEach(p => $(p).classList.toggle('open', p === id)); syncTab(); }
   // ERD P2-12: below 1920 the right panel follows the selection — nothing selected = folded (canvas ≈1,200 at 1600), a selection opens it.
@@ -666,8 +660,6 @@ window.pageInit = function () {
     return out;
   }
   // PK columns stay together at the top: the array order is the canvas · DDL · definition-sheet order
-  // a role column name that no other column of the entity already uses (원고객번호 → 원고객번호2 · ORG_X → ORG_X_2)
-  function uniqCol(e, n, p) { let i = 1, nn = n, pp = p; while (e.a.some(x => x.n === nn || x.p === pp)) { i++; nn = n + i; pp = p + '_' + i; } return [nn, pp]; }
   function placeAttr(e, a, atEnd) { const i = e.a.indexOf(a); if (i >= 0) e.a.splice(i, 1); const k = e.a.filter(x => x.pk).length; e.a.splice(a.pk || !atEnd ? k : e.a.length, 0, a); }
   // a relation whose FK must be role-named (name clash, or a second relation into the same child) gets a group,
   // so the shared FK rule (fkOf) pairs its columns by fkp instead of by name
@@ -675,22 +667,150 @@ window.pageInit = function () {
     if (r.g) return; r.g = 'g' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
     p.a.filter(k => k.pk && k !== except).forEach(k => { const x = c.a.find(y => y.fk && !y.fkg && (y.fkp ? y.fkp === k.p : y.p === k.p)); if (x) { x.fkg = r.g; x.fkp = k.p; } });
   }
-  // a new parent PK column → an FK column in every child (identifying → PK there too, and onward)
-  function pkSpread(e, a, seen = new Set()) {
-    let n = 0;
-    childRels(e).forEach(r => { if (r.f === r.t) return;   // a recursive relation needs a role name the modeler chooses
-      const key = R.indexOf(r) + ':' + a.p; if (seen.has(key)) return; seen.add(key);
-      const c = ent(r.t); if (!c || c.ref) return;
-      const multi = childRels(e).filter(x => x.t === r.t).length > 1;
-      if (!r.g && multi) ensureGroup(r, e, c, a);
-      if (c.a.some(fkMatch(r, a))) return;
-      const clash = c.a.some(x => x.n === a.n), idr = r.k === 'id';
-      if (clash && !r.g) ensureGroup(r, e, c, a);
-      const [un, up] = clash ? uniqCol(c, '원' + a.n, 'ORG_' + a.p) : [a.n, a.p];
-      const x = { n: un, p: up, t: a.t, dom: domOf(a), fk: 1, fkp: a.p, pk: idr ? 1 : 0, nn: idr || relOf(r).opt === 'must' ? 1 : 0, s: clash ? 'comb' : a.s };   // a waiting FK follows the relation's optionality (post-review C9)
-      if (r.g) x.fkg = r.g; placeAttr(c, x, true); n++; syncUk(r); if (idr) n += pkSpread(c, x, seen); });
-    return n;
+  // ---- M-1 (고객 모델 요청 2026-11-25): 중복 속성 해소 — ONE plan → ONE window → ONE apply for every path that puts a parent key into a child:
+  //      관계 생성(재귀 포함) · PK 추가 · 식별 전환 · FK 짝 · M:N 해소 · FK 복구. 겹침 = 논리명 또는 물리명이 같음(대소문자 무시).
+  //      Nothing is written while the window is open (holdSave); 확정 applies everything under one undo entry and one save.
+  const eqi = (x, y) => String(x == null ? '' : x).trim().toLowerCase() === String(y == null ? '' : y).trim().toLowerCase();
+  const tFam = t => { const b = typeParts(t).t.toUpperCase(); return !b || b === '—' ? '' : /CHAR|CLOB|TEXT|STRING/.test(b) ? 'C' : /NUM|DEC|INT|FLOAT|DOUBLE|REAL/.test(b) ? 'N' : /DATE|TIME/.test(b) ? 'D' : b; };
+  const relId = r => r.g || 'r' + R.indexOf(r);
+  // seeds = [{ r, k }]: relation r must carry the parent key column k. ch = the choices made in the window (row key → { choice, newN }).
+  // o.ents = entities that are not in E yet (the M:N cross entity) · o.rels = the child relations of an entity (default: childRels)
+  // 수정 2회차: an identifying relation f → t lies on a loop when t reaches f again through identifying relations — whether or not a key would actually be carried round it
+  const idLoop = (f, t, rels = childRels, get = ent) => { const seen = new Set(), st = [t]; while (st.length) { const id = st.pop(); if (id === f) return true; if (seen.has(id)) continue; seen.add(id); const e = get(id); if (e) rels(e).forEach(x => { if (x.k === 'id' && x.f !== x.t) st.push(x.t); }); } return false; };
+  const loopMsg = (p, c, g) => `식별 관계가 돌아옵니다(${[p && p.n, c && c.n, g ? g.n : p && p.n].filter(Boolean).join(' → ')} …) — 키를 끝없이 내려보내게 되어 계획을 만들지 못했습니다. 아무것도 바꾸지 않았습니다 — 순환하는 관계 하나를 비식별로 바꾼 뒤 다시 하세요`;
+  function fkPlan(seeds, ch, o = {}) {
+    const get = id => (o.ents && o.ents[id]) || ent(id), kidsOf = o.rels || childRels;
+    const rows = [], q = seeds.map(x => ({ r: x.r, k: x.k, depth: 0, up: null, path: [relId(x.r)] })), seen = new Set(), taken = new Map(), usedX = new Map();   // usedX: child attribute → the row that takes it (R2-03)
+    while (q.length) {
+      const { r, k, depth, up, path } = q.shift(), c = get(r.t), p = get(r.f); if (!c || !p || c.ref) continue;
+      if (rows.length >= 2000) { rows.fail = 'FK를 내려보낼 곳이 너무 많아(2,000개 초과) 계획을 만들지 못했습니다 — 아무것도 바꾸지 않았습니다'; break; }
+      const kp = !!k.p && k.p !== '—', key = relId(r) + '|' + (up ? up.key : '') + '|' + (kp ? k.p : k.n); if (seen.has(key)) continue; seen.add(key);
+      const self = r.f === r.t, idr = r.k === 'id' && !self, kr = k.real || (k.virtual ? null : k);
+      if (kr && c.a.some(fkMatch(r, kr))) continue;   // this relation already carries the key
+      if (!taken.has(c.id)) taken.set(c.id, []); const mine = taken.get(c.id);
+      // 겹침: 논리명 또는 물리명 (the old PK path looked at the logical name only). The physical name is looked at first — it is the stronger match
+      const x = self ? null : (kp && c.a.find(a => !a.edit && a !== kr && eqi(a.p, k.p))) || c.a.find(a => !a.edit && a !== kr && eqi(a.n, k.n)) || null;
+      const twin = !x && !self && mine.some(t => eqi(t.n, k.n) || (kp && eqi(t.p, k.p)));   // a column this same window is about to make
+      const clash = self || !!x || twin, held = x ? usedX.get(x) : null;   // R2-03: another row of this window already takes this attribute (복합 PK — 한 속성은 부모 키 하나만 받는다)
+      const owner = x && x.fk ? R.find(y => y !== r && y.t === c.id && y.k !== 'mn' && (y.g ? x.fkg === y.g : (get(y.f) || { a: [] }).a.some(kk => kk.pk && fkMatch(y, kk)(x)))) : null;
+      const mate = x && x.fk ? p.a.find(kk => kk.pk && kk !== kr && fkMatch(r, kk)(x)) : null;   // 수정 2회차: already this relation's FK for another parent key (FK 복구에서 fkp를 덮어쓰던 경로)
+      if (idr && idLoop(r.f, r.t, kidsOf, get)) rows.fail = rows.fail || loopMsg(p, c);   // 수정 2회차: an identifying relation on a loop is refused even when the key is not carried any further (기존 PK 재사용)
+      const why = self ? '재귀 관계는 자기 식별자를 그대로 쓸 수 없습니다 — 역할명(상위○○)이 필요합니다' : twin ? '이 창의 다른 관계가 같은 이름의 컬럼을 만듭니다 — 역할명이 필요합니다'
+        : mate ? `이 관계에서 이미 부모 키 ‘${mate.n}’의 짝입니다 — 한 속성은 부모 키 하나만 받습니다`
+        : held ? `이 창에서 부모 키 ‘${held.k.n}’이(가) 이미 이 속성을 쓰기로 했습니다 — 한 속성은 부모 키 하나만 받습니다`
+        : owner ? `${(get(owner.f) || {}).n || '다른'} → ${c.n} 관계의 FK입니다 — 한 컬럼은 관계 하나의 FK만 됩니다` : x && x.pk && !idr ? `${c.n}의 식별자(PK)입니다 — 비식별 관계의 FK로 쓸 수 없습니다` : '';
+      const canUse = !!x && !why;
+      // default: same physical name + same type family + not another relation's FK → 기존 속성 사용; otherwise 새 이름
+      const def = canUse && kp && eqi(x.p, k.p) && (!tFam(x.t) || !tFam(k.t) || tFam(x.t) === tFam(k.t)) ? 'use' : 'new';
+      const usedN = n => c.a.some(a => !a.edit && eqi(a.n, n)) || mine.some(t => eqi(t.n, n)), usedP = pn => pn !== '—' && (c.a.some(a => eqi(a.p, pn)) || mine.some(t => eqi(t.p, pn)));
+      const sug = (bn, bp) => { let i = 1, nn = bn, pp = bp; while (usedN(nn) || usedP(pp)) { i++; nn = bn + i; pp = bp === '—' ? bp : bp + '_' + i; } return [nn, pp]; };   // 원고객번호 → 원고객번호2 · ORG_X → ORG_X_2
+      const [sn, sp] = clash ? sug((self ? '상위' : '원') + k.n, kp ? (self ? 'UPR_' : 'ORG_') + k.p : '—') : [k.n, kp ? k.p : '—'];
+      const st = ch.get(key) || {}, choice = !clash ? 'auto' : st.choice === 'use' && canUse ? 'use' : st.choice === 'new' ? 'new' : def;
+      const newN = st.newN != null ? st.newN : sn; let err = '';
+      if (choice === 'new') { const v = newN.trim(); err = !v ? '이름을 입력하세요' : c.a.some(a => !a.edit && eqi(a.n, v)) ? `${c.n}에 이미 있는 이름입니다` : mine.some(t => eqi(t.n, v)) ? '이 창의 다른 새 이름과 겹칩니다' : ''; }
+      const res = choice === 'use' ? { n: x.n, p: x.p, t: k.t, dom: domOf(k), s: x.s, desc: k.desc, real: x } : { n: choice === 'auto' ? k.n : newN.trim(), p: choice === 'auto' ? (kp ? k.p : '—') : sp, t: k.t, dom: domOf(k), s: k.s, desc: k.desc, virtual: 1 };
+      if (choice !== 'use') mine.push({ n: res.n, p: res.p });
+      const row = { key, r, p, c, k, x, self, idr, twin, clash, canUse, why, def, choice, newN, newP: sp, err, depth, up, res };
+      if (choice === 'use') usedX.set(x, row);
+      rows.push(row);
+      // an identifying relation puts the column into the child's key — it travels on to that child's children (and to its recursive relation).
+      // R2-04: no depth limit — a chain ends when a relation comes round again (식별 관계 순환), and then the whole plan is refused with the reason
+      if (idr) { const had = choice === 'use' && x.pk; kidsOf(c).forEach(r2 => { if (r2 === r) return; const g = get(r2.t); if (had && g && g.a.some(fkMatch(r2, x))) return;
+        if (path.includes(relId(r2))) { rows.fail = rows.fail || loopMsg(p, c, g); return; }
+        q.push({ r: r2, k: res, depth: depth + 1, up: row, path: path.concat(relId(r2)) }); }); }
+    }
+    return rows;
   }
+  // the plan carried out — call it inside ONE snap(). 기존 속성 사용 = 이름 · 정의 · 예외 사유는 그대로, 타입 · 길이 · 도메인 · 필수는 부모 키에 맞춤
+  function fkApply(rows) {
+    const st = { n: 0, use: 0, neu: 0, auto: 0 };
+    rows.forEach(w => { const r = w.r, c = w.c, kA = w.up ? w.up.out : w.k; if (!kA || !c) return;
+      if (!r.g) ensureGroup(r, w.p, c, kA);
+      const must = w.self ? 0 : w.idr || relOf(r).opt === 'must' ? 1 : 0; let x;
+      if (w.choice === 'use') { x = w.x; if (!c.a.includes(x)) return;
+        Object.assign(x, { fk: 1, fkg: r.g, fkp: kA.p, t: kA.t, dom: domOf(kA), nn: must }); delete x.d; delete x.xt; delete x.xlen; delete x.fkCand; delete x.fkAuto; typeSync(x);
+        if (w.idr && !x.pk) { x.pk = 1; x.nn = 1; placeAttr(c, x); } st.use++; }
+      else { const role = w.choice === 'new';
+        x = typeSync({ n: role ? w.newN.trim() : kA.n, p: role ? w.newP : kA.p, t: kA.t, dom: domOf(kA), fk: 1, fkg: r.g, fkp: kA.p, pk: w.idr ? 1 : 0, nn: must, s: role ? 'comb' : (kA.s === 'ex' ? 'ok' : kA.s || 'ok'), fkAuto: 1 });   // fkAuto: made by the relation (FK 짝을 바꾸면 함께 지움)
+        if (kA.desc) x.desc = kA.desc;   // the definition travels with the key — a new FK is not an empty definition in 모델 검증
+        placeAttr(c, x, true); role ? st.neu++ : st.auto++; }
+      w.out = x; st.n++; syncUk(r); });
+    return st;
+  }
+  let dupPending = null;   // the open window's cancel — Esc from anywhere, and anything that clears the popovers, goes through it
+  const closePops = () => { if (dupPending) dupPending(true); document.querySelectorAll('.pop').forEach(p => p.remove()); };
+  /* o = { seeds, done(rows), cancelLabel, cancelMsg, cancel(), before(), twin, anchor · back (entity ids: where the popover sits · where focus returns), ents, rels }
+     no clash → done(rows) at once (연결은 묻지 않는다). 1건 = 팝오버, 2건 이상 = 모달(640). Enter 확정 · Esc 취소 */
+  function dupFlow(o) {
+    const ch = new Map(); let rows = fkPlan(o.seeds, ch, o), shown = new Set(); const need = () => rows.filter(w => w.clash);
+    if (rows.fail) { toast(rows.fail, 'danger'); agLive(rows.fail); if (o.cancel) o.cancel(); else render(); return; }   // R2-04: a plan that cannot be made whole is refused before anything is applied — with the reason
+    if (!need().length) { o.done(rows); return; }
+    closePops(); if (o.before) o.before();
+    const sv0 = (s => [s.className, s.title, s.innerHTML])($('savest')); holdSave = true; savePending = false; setSave('run', '저장 대기 · 중복 속성 확인 중');
+    const N0 = need(), modal = N0.length > 1, lab = o.cancelLabel || '취소'; let host, box;
+    if (modal) { host = document.createElement('div'); host.className = 'overlay open'; host.innerHTML = '<div class="modal wide dw" role="dialog" aria-modal="true" aria-labelledby="dw-t"><div class="m-body"></div></div>'; document.body.appendChild(host); box = host.querySelector('.m-body'); }
+    else { host = box = document.createElement('div'); host.className = 'pop dw'; host.setAttribute('role', 'dialog'); host.setAttribute('aria-labelledby', 'dw-t');
+      const node = $('n-' + (o.anchor || N0[0].c.id)), cr = cv.getBoundingClientRect(), b = node ? node.getBoundingClientRect() : null;
+      host.style.left = (b ? Math.max(8, Math.min(b.right - cr.left + 8, cv.clientWidth - 416)) : 16) + 'px'; host.style.top = (b ? Math.max(Math.min(b.top - cr.top, cv.clientHeight - 340), 56) : 56) + 'px'; cv.appendChild(host); }
+    const chg = w => { const x = w.x, k = w.k, L = [];
+      if (x.t !== k.t) L.push(`타입 · 길이 <s class="mono">${hx(x.t === '—' ? '미정' : x.t)}</s> → <span class="mono">${hx(k.t)}</span>`);
+      if (domOf(x) !== domOf(k)) L.push(`도메인 <s>${hx(domOf(x) || '없음')}</s> → ${hx(domOf(k) || '없음')}`);
+      const nb = x.nn || x.pk ? 1 : 0, na = w.idr || relOf(w.r).opt === 'must' ? 1 : 0; if (nb !== na) L.push(`필수 <s>${nb ? '예' : '아니오'}</s> → ${na ? '예' : '아니오'}`);
+      if (w.idr && !x.pk) L.push('식별자(PK)에 들어감');
+      return L.length ? L.join(' · ') : '바뀌는 값 없음 — FK 표시만 붙습니다'; };
+    const rowHtml = (w, i) => `<div class="dw-row" data-key="${hx(w.key)}" role="group" aria-label="${hx(w.c.n)} · 부모 키 ${hx(w.k.n)}">
+        <div class="dw-h"><b>${hx(w.c.n)}</b><span class="faint">←</span><span>${hx(w.k.n)}</span><span class="mono faint">${hx(w.k.p)}</span><span class="caption muted">${hx(w.p.n)}의 키${w.self ? ' · 재귀' : ''}${w.depth ? ' · 식별 관계로 이어짐' : ''}${w.r.name ? ' · ' + hx(w.r.name) : ''}</span></div>
+        <label class="dw-opt${w.canUse ? '' : ' dis'}"><input type="radio" name="dw-${i}" value="use"${w.choice === 'use' ? ' checked' : ''}${w.canUse ? '' : ' disabled'}><span class="dw-b">기존 속성을 FK로 사용${w.x ? ` — <b>${hx(w.x.n)}</b> <span class="mono faint">${hx(w.x.p)}</span>` : ''}
+          ${w.canUse ? `<span class="dw-chg">이름 · 정의는 그대로 · ${chg(w)}</span>` : `<span class="dw-why">${hx(w.why)}</span>`}</span></label>
+        <label class="dw-opt"><input type="radio" name="dw-${i}" value="new"${w.choice === 'new' ? ' checked' : ''}><span class="dw-b">새 이름으로 만들기
+          <span class="dw-new"><input class="input" type="text" data-newn aria-label="${hx(w.c.n)}에 만들 새 컬럼 이름" value="${hx(w.newN)}"><span class="mono faint">${hx(w.newP)}</span></span><span class="dw-err" data-err></span></span></label></div>`;
+    const rowEl = key => [...box.querySelectorAll('.dw-row')].find(el => el.dataset.key === key);
+    const sync = () => { const N = need(); box.querySelector('[data-ok]').disabled = N.some(w => w.err);
+      N.forEach(w => { const el = rowEl(w.key); if (!el) return; el.querySelector('[data-err]').textContent = w.choice === 'new' ? w.err : ''; const inp = el.querySelector('[data-newn]'); if (w.choice === 'new' && w.err) inp.setAttribute('aria-invalid', 'true'); else inp.removeAttribute('aria-invalid'); }); };
+    const draw = foc => { const N = need(), autoN = rows.length - N.length, allSelf = N.every(w => w.self); shown = new Set(N.map(w => w.key));
+      box.innerHTML = `<b id="dw-t">${allSelf ? '재귀 관계 — 역할명을 정하세요' : o.twin ? '같은 두 엔터티의 두 번째 관계 — 역할명을 정하세요' : `자식 엔터티에 같은 이름의 속성이 있습니다 (${N.length}건)`}</b>
+        <div class="caption muted u-mt-4">${allSelf ? '예: 상위부서 · 최상위 행은 상위가 없어 FK를 비워 둘 수 있습니다.' : '기존 속성을 FK로 쓰거나 새 이름(역할명)으로 따로 만듭니다.'} 확정하기 전에는 모델이 바뀌지 않습니다.</div>
+        ${o.twin ? `<div class="caption u-mt-4">이미 ${o.twin.f === o.twin.t ? '재귀 관계' : '같은 방향의 관계'}가 있습니다${o.twin.name ? ` (${hx(o.twin.name)})` : ''}. 다른 역할일 때만 확정하세요. <a href="#" data-twin>기존 관계 열기</a></div>` : ''}
+        ${N.length > 1 ? `<div class="dw-bulk u-mt-8"><span class="caption muted">한꺼번에</span><button type="button" class="btn sm" data-all="use"${N.some(w => w.canUse) ? '' : ' disabled'}>모두 기존 속성 사용</button><button type="button" class="btn sm" data-all="new">모두 새 이름</button></div>` : ''}
+        <div class="dw-rows">${N.map(rowHtml).join('')}</div>
+        ${autoN ? `<div class="caption muted">겹치지 않는 FK ${autoN}개는 부모 키와 같은 이름으로 추가합니다.</div>` : ''}
+        <div class="dw-err" id="dw-msg" role="status" aria-live="polite"></div>
+        <div class="dw-foot u-mt-8"><button type="button" class="btn sm ghost" data-no>${hx(lab)} (Esc)</button><span class="grow"></span><button type="button" class="btn sm primary" data-ok>확정 (Enter)</button></div>`;
+      sync(); const el = foc && rowEl(foc[0]), t = (el && el.querySelector(foc[1])) || box.querySelector('.dw-row input[type=radio]:checked'); if (t) t.focus(); };
+    const replan = () => { rows = fkPlan(o.seeds, ch, o); };
+    const pick = (key, v) => { const st = ch.get(key) || {}; Object.assign(st, v); ch.set(key, st); replan(); };
+    const close = () => { host.remove(); dupPending = null; holdSave = false; const s = $('savest'); [s.className, s.title, s.innerHTML] = sv0; const rb = $('save-retry'); if (rb) rb.onclick = retrySave; if (savePending) { savePending = false; dirty = true; } };   // the save state goes back; only an edit that really waited is saved
+    const cancel = silent => { close(); if (o.cancel) o.cancel(); else render();   // 수정 2회차: 취소는 아무것도 바꾸지 않는다 — no dirty flag, no new revision
+      if (silent === true) return; toast(o.cancelMsg || '취소했습니다 — 모델은 그대로입니다', 'info'); agLive(lab); const back = o.back && $('n-' + o.back); if (back) { back.tabIndex = -1; back.focus(); } };
+    const ok = () => { replan(); const N = need();
+      if (rows.fail) { $('dw-msg').textContent = rows.fail; return; }
+      if (!N.length) { close(); o.done(rows); return; }
+      if (N.length !== shown.size || N.some(w => !shown.has(w.key))) { draw(); $('dw-msg').textContent = '모델이 바뀌어 항목을 다시 보여 드립니다 — 확인하고 확정하세요'; return; }
+      const bad = N.find(w => w.err); if (bad) { sync(); const el = rowEl(bad.key); if (el) el.querySelector('[data-newn]').focus(); $('dw-msg').textContent = '새 이름을 확인하세요 — 겹치는 이름이 있습니다'; return; }
+      close(); o.done(rows); };
+    dupPending = cancel;
+    box.addEventListener('change', ev => { const el = ev.target.closest('.dw-row'); if (!el) return; const key = el.dataset.key;
+      if (ev.target.type === 'radio') { pick(key, { choice: ev.target.value }); draw([key, `input[value="${ev.target.value}"]`]); }
+      else if (ev.target.matches('[data-newn]')) { pick(key, { choice: 'new', newN: ev.target.value }); const N = need(); if (N.length !== shown.size || N.some(w => !shown.has(w.key))) draw([key, '[data-newn]']); else sync(); } });
+    // new names are checked as they are typed (against the child's attributes and the other new names in this window)
+    box.addEventListener('input', ev => { if (!ev.target.matches('[data-newn]')) return; const el = ev.target.closest('.dw-row'); el.querySelector('input[value="new"]').checked = true; pick(el.dataset.key, { choice: 'new', newN: ev.target.value }); sync(); });
+    box.addEventListener('click', ev => { const t = ev.target.closest('[data-all],[data-ok],[data-no],[data-twin]'); if (!t) return;
+      if (t.dataset.all) { for (let i = 0; i < 4; i++) need().forEach(w => pick(w.key, { choice: t.dataset.all === 'use' && w.canUse ? 'use' : 'new' })); draw(); const b = box.querySelector(`[data-all="${t.dataset.all}"]`); if (b) b.focus(); return; }
+      if (t.hasAttribute('data-ok')) ok(); else if (t.hasAttribute('data-no')) cancel();
+      else { ev.preventDefault(); const tw = o.twin; cancel(true); if (R.includes(tw)) { selRel = tw; sel = null; render(); showRP(); } } });
+    host.addEventListener('keydown', ev => { ev.stopPropagation(); if (ev.isComposing || ev.keyCode === 229) return;
+      if (ev.key === 'Enter' && ev.target.tagName === 'INPUT') { ev.preventDefault(); ok(); } else if (ev.key === 'Escape') { ev.preventDefault(); cancel(); } });
+    draw(); agLive(`같은 이름의 속성 ${N0.length}건 — 기존 속성을 FK로 쓸지 새 이름으로 만들지 고르세요`);
+  }
+  // M-5: the child columns that carry this PK column directly — one step only (an identifying child keeps the column in its own key, so nothing below it moves)
+  const pkKids = (e, a) => { const out = []; childRels(e).forEach(r => { const c = ent(r.t); if (!c || c.ref) return; c.a.filter(fkMatch(r, a)).forEach(x => { if (!out.some(o => o[1] === x)) out.push([c, x, r]); }); }); return out; };
+  const unFk = kids => { kids.forEach(([, x]) => { delete x.fk; delete x.fkg; delete x.fkp; delete x.fkAuto; }); new Set(kids.map(k => k[2])).forEach(syncUk); };   // the relation stays (FK 누락 · FK 대기); only the FK mark goes
+  const kidsNote = kids => { const idn = kids.filter(([, x]) => x.pk).length; return kids.length ? ` · 자식 FK ${kids.length}개는 일반 속성으로 남김${idn ? `(식별 관계 ${idn}개는 자식 식별자로)` : ''} · 관계 유지` : ''; };
+  // R2-05 · U-10: [이 컬럼도 지우기] checks again at click time — a kept column that has meanwhile become a PK or an FK (or is gone) is not deleted
+  function dropPlain(L) { if (guard()) return; const ok = L.filter(([c, x]) => c.a.includes(x) && !x.pk && !x.fk), skip = L.length - ok.length;
+    if (!ok.length) { toast('남긴 컬럼이 그사이 PK · FK가 됐거나 이미 없어져 지우지 않았습니다', 'info'); return; }
+    snap(); ok.forEach(([c, x]) => c.a.splice(c.a.indexOf(x), 1)); render(); toast(`남긴 컬럼 ${ok.length}개를 지웠습니다${skip ? ` · ${skip}개는 그사이 PK · FK가 됐거나 없어져 그대로 둡니다` : ''}`, 'info', undoAction()); }
+  const alsoDel = kids => { const L = kids.filter(([, x]) => !x.pk); return L.length ? { label: '이 컬럼도 지우기', fn: () => dropPlain(L) } : null; };
   // a child FK kept as a plain column: it no longer carries the parent's key — out of the PK as well, into the plain group
   function toPlain(c, x) { delete x.fk; delete x.fkg; delete x.fkp; if (x.pk) { x.pk = 0; placeAttr(c, x); } }
   const pendAttr = () => { const e = gPend && ent(gPend.e); const i = e ? e.a.indexOf(gPend.a) : -1; return i >= 0 ? [e, i, gPend.a] : [e, -1, null]; };
@@ -717,20 +837,24 @@ window.pageInit = function () {
     return table + (ro ? '<button id="rp-add" hidden></button>' : add) + agPend(e) + agDetail(e, ro);
   }
   // confirmation for changes that reach other entities or relations
+  // M-5 (고객 모델 요청 2026-11-25): taking a PK away (끄기 · 삭제) does ONE thing — the child FK columns stay as ordinary attributes and the relation stays
+  //      (no parent key left → FK 대기). An identifying child keeps the column in its own key, so nothing below it changes — the same as 관계 삭제 (18 §3).
+  //      The band only confirms the list; [자식 FK도 삭제] is gone (the toast offers [이 컬럼도 지우기]).
   function agPend(e) {
     if (!gPend || gPend.e !== e.id) return '';
     const a = gPend.a; if (e.a.indexOf(a) < 0) { gPend = null; return ''; }   // the attribute itself, not its position — a reorder meanwhile never retargets the confirmation
-    const reach = a.pk ? pkReach(e, a) : [], rels = a.fk ? fkRels(e, a) : [];
-    const lastPk = a.pk && e.a.filter(x => x.pk).length === 1;
-    const imp = reach.map(([c, x]) => `<li>${hx(c.n)}.${hx(x.n)} <span class="mono faint">${hx(x.p)}</span>${x.pk ? ' <span class="badge">PK</span>' : ''}</li>`).join('');
-    if (gPend.k === 'pkoff') return `<div class="banner warning ag-pend" role="alert"><i data-ic=warn></i><div class="grow"><b>‘${hx(a.n)}’${jr(a.n, '을/를')} 식별자에서 뺄까요?</b><div class="caption">이 PK를 받아 간 자식 FK ${reach.length}개도 함께 정리합니다.</div><ul class="ag-imp">${imp}</ul>
-      <div class="flex u-mt-8 u-gap-8 u-wrap"><button class="btn sm ghost" data-pend="cancel">취소 (Esc)</button><span class="grow"></span><button class="btn sm" data-pend="pkoff-keep">자식 FK는 일반 속성으로</button><button class="btn sm danger" data-pend="pkoff-del">자식 FK도 삭제</button></div></div></div>`;
+    const kids = a.pk ? pkKids(e, a) : [], rels = a.fk ? fkRels(e, a) : [];
+    const lastPk = a.pk && e.a.filter(x => x.pk).length === 1, idn = kids.filter(([, x]) => x.pk).length;
+    const imp = kids.map(([c, x]) => `<li>${hx(c.n)}.${hx(x.n)} <span class="mono faint">${hx(x.p)}</span> <span class="faint">→ ${x.pk ? '자식 식별자(PK)로 남음' : '일반 속성으로 남음'}</span></li>`).join('');
+    const keep = kids.length ? `<div class="caption">이 PK를 받은 자식 FK ${kids.length}개는 <b>FK만 풀리고 속성은 남습니다</b>. 관계는 그대로입니다${lastPk ? ' — 식별자가 없어져 <b>FK 대기</b>가 됩니다' : ''}.${idn ? ` 식별 관계의 자식 ${idn}개는 자식 식별자(PK)에 그대로 남아 손자는 바뀌지 않습니다.` : ''}</div><ul class="ag-imp">${imp}</ul>` : '';
+    if (gPend.k === 'pkoff') return `<div class="banner warning ag-pend" role="alert"><i data-ic=warn></i><div class="grow"><b>‘${hx(a.n)}’${jr(a.n, '을/를')} 식별자에서 뺄까요?</b>${keep}
+      <div class="flex u-mt-8 u-gap-8 u-wrap"><button class="btn sm ghost" data-pend="cancel">취소 (Esc)</button><span class="grow"></span><button class="btn sm primary" data-pend="pkoff">확인</button></div></div></div>`;
     const relTxt = rels.map(r => `${hx((ent(r.f) || {}).n || r.f)} → ${hx(e.n)}`).join(', ');
-    const btns = reach.length ? `<button class="btn sm" data-pend="keep">자식 FK는 일반 속성으로</button><button class="btn sm danger" data-pend="del">자식 FK도 삭제</button>`
+    const btns = kids.length ? `<button class="btn sm primary" data-pend="del">확인</button>`
       : rels.length ? `<button class="btn sm" data-pend="del">속성만 삭제 (관계 유지)</button><button class="btn sm danger" data-pend="rel">관계까지 삭제</button>`
       : `<button class="btn sm danger" data-pend="del">삭제</button>`;
     return `<div class="banner warning ag-pend" role="alert"><i data-ic=warn></i><div class="grow"><b>‘${hx(a.n)}’${jr(a.n, '을/를')} 삭제할까요?</b>
-      ${reach.length ? `<div class="caption">이 PK를 받아 간 자식 FK ${reach.length}개가 있습니다.</div><ul class="ag-imp">${imp}</ul>` : ''}
+      ${keep}
       ${rels.length ? `<div class="caption">관계 <b>${relTxt}</b>의 FK입니다. 속성만 지우면 관계는 남고 <b>FK 누락</b>으로 표시됩니다.</div>` : ''}
       ${lastPk ? '<div class="caption">마지막 식별자입니다 — 지우면 이 엔터티는 <b>식별자 없음</b>이 되고, 자식 관계의 FK를 만들 수 없습니다.</div>' : ''}
       <div class="flex u-mt-8 u-gap-8 u-wrap"><button class="btn sm ghost" data-pend="cancel">취소 (Esc)</button><span class="grow"></span>${btns}</div></div></div>`;
@@ -740,7 +864,7 @@ window.pageInit = function () {
     const [, a, ai] = curAttr();
     const keys = `<div class="ag-keys">행을 고르면 순서 · 이름 · 정의를 고칠 수 있습니다. <kbd>↑</kbd><kbd>↓</kbd> 행 이동 · <kbd>Alt</kbd>+<kbd>↑↓</kbd> 순서 · <kbd>Space</kbd> PK · <kbd>N</kbd> 필수 · <kbd>Enter</kbd> 상세로 · <kbd>F2</kbd> 이름 · <kbd>Delete</kbd> 삭제 · <kbd>Alt</kbd>+<kbd>Enter</kbd> 추가</div>`;
     if (!a || gPend) return a ? '' : keys;
-    const L = mode !== 'P', grp = e.a.filter(x => !!x.pk === !!a.pk), gi = grp.indexOf(a);
+    const L = mode !== 'P', grp = e.a.filter(x => !!x.pk === !!a.pk), gi = grp.indexOf(a), tp = typeParts(a.t), dash = '<span class="faint">—</span>';
     const st = a.s === 'ok' ? '사전의 표준 용어와 같습니다' : a.s === 'req' ? `용어 신청 중${a.reqDoc ? ` — <a class="mono" href="approvals.html?doc=${a.reqDoc}">${a.reqDoc}</a>` : ''}` : a.s === 'ex' ? `예외 — ${hx(a.exReason || '사유 없음')}` : a.s === 'na' ? `표준 비대상${a.naReason ? ' — ' + hx(a.naReason) : ''}` : a.s === 'comb' ? '단어를 조합하면 표준이 됩니다 — 용어로 등록하거나 맞추세요' : '사전에 없는 단어가 있습니다 — 후보로 올리거나 예외로 남기세요';
     const fix = !ro && (a.s === 'unreg' || a.s === 'comb') ? `<div class="flex u-gap-8 u-mt-4 u-wrap"><a class="btn sm" href="${stdUrl(e, a)}">표준 맞추기</a><a class="btn sm ghost" href="${wizUrl(e, a)}">용어 자동분석</a><button class="btn sm ghost" data-f="ex">예외로 유지</button></div>` : '';
     const field = (id, f, lab, ph, tag) => ro ? (a[f] ? `<dt>${lab}</dt><dd>${hx(a[f])}</dd>` : '')
@@ -748,7 +872,7 @@ window.pageInit = function () {
     return `<div class="ag-det" aria-label="선택한 ${L ? '속성' : '컬럼'}">
       <div class="ag-h">${a.pk ? icon('key', 12) : a.fk ? icon('link', 12) : icon('col', 12)}<span>${hx(L ? a.n : a.p)}</span><span class="grow"></span>
         ${ro ? '' : `<button class="btn sm ghost" data-f="up" title="위로 (Alt+↑)" aria-label="위로"${gi <= 0 ? ' disabled' : ''}><i data-ic=up data-s=12></i></button><button class="btn sm ghost" data-f="down" title="아래로 (Alt+↓)" aria-label="아래로"${gi >= grp.length - 1 ? ' disabled' : ''}><i data-ic=down data-s=12></i></button><button class="btn sm ghost" data-f="ren" title="이름 바꾸기 (F2)"><i data-ic=pen data-s=12></i>이름</button><button class="btn sm ghost u-danger" data-f="del" title="삭제 (Delete)"><i data-ic=trash data-s=12></i>삭제</button>`}</div>
-      <dl class="kv"><dt>${L ? '물리명' : '논리명'}</dt><dd class="${L ? 'mono' : ''}">${hx(L ? a.p : a.n)}</dd><dt>타입</dt><dd class="mono">${hx(a.t)}${domOf(a) ? ` <span class="faint">· ${hx(domOf(a))}</span>` : ''}${a.xt ? ` <span class="badge b-warning" title="추가 · DBMS 전용 타입을 직접 골랐습니다 — 위반은 아니고 검수 보고서에서 따로 셉니다">표준 외 타입 · ${hx(a.xt)}</span>` : ''}</dd><dt>표준</dt><dd>${st}${fix}</dd>${a.fk ? `<dt>관계</dt><dd>${fkRels(e, a).map(r => hx((ent(r.f) || {}).n || r.f) + '에서 받은 FK').join(', ') || '<span class="faint">연결된 관계 없음</span>'}</dd>` : ''}${a.sec ? `<dt>보안</dt><dd>${hx(a.sec)}${a.enc && a.enc !== '없음' ? ' · ' + hx(a.enc) : ''}</dd>` : ''}
+      <dl class="kv"><dt>${L ? '물리명' : '논리명'}</dt><dd class="${L ? 'mono' : ''}">${hx(L ? a.p : a.n)}</dd><dt>타입</dt><dd class="mono">${hx(tp.t)}${domOf(a) ? ` <span class="faint">· ${hx(domOf(a))}</span>` : ''}${a.xt ? ` <span class="badge b-warning" title="추가 · DBMS 전용 타입을 직접 골랐습니다 — 위반은 아니고 검수 보고서에서 따로 셉니다">표준 외 타입 · ${hx(a.xt)}</span>` : ''}</dd><dt>길이 · 소수점</dt><dd class="mono">${tp.len !== '' ? hx(tp.len) : dash} · ${tp.scale !== '' ? hx(tp.scale) : dash}</dd><dt>표준</dt><dd>${st}${fix}</dd>${a.fk ? `<dt>관계</dt><dd>${fkRels(e, a).map(r => hx((ent(r.f) || {}).n || r.f) + '에서 받은 FK').join(', ') || '<span class="faint">연결된 관계 없음</span>'}</dd>` : ''}${a.sec ? `<dt>보안</dt><dd>${hx(a.sec)}${a.enc && a.enc !== '없음' ? ' · ' + hx(a.enc) : ''}</dd>` : ''}
       ${ro ? field('', 'desc', '정의') + field('', 'def', '기본값') : ''}</dl>
       ${ro ? '' : (() => { const ld = lockWhy(a, 'dom'), ln = lockWhy(a, 'nn'), d = domOf(a);   // the row's 필수 · 도메인 again, reachable with Tab (the row cells are mouse shortcuts)
         return `<div class="ag-two"><div class="field"><label for="ag-dom">도메인</label>${ld ? `<div class="ag-fix" id="ag-dom-why">${hx(d || '—')} ${icon('lock', 12)} <span class="caption muted">${hx(ld)}</span></div>` : `<select class="input mono" id="ag-dom" data-f="dom"><option value="">${d || a.xt ? '(없음)' : '선택'}</option><optgroup label="표준 도메인">${domList().map(x => `<option${x === d ? ' selected' : ''}>${hx(x)}</option>`).join('')}</optgroup>${XTYPES.length ? `<optgroup label="추가 · DBMS 전용 타입 — 표준 외">${XTYPES.map(t => `<option value="@${t.ab}"${a.xt === t.ab ? ' selected' : ''}>${t.ab} · ${hx(t.n)}${t.kind === 'dbms' ? ' (' + dbmsKey(t.dbms) + ' 전용)' : t.scope !== '공통' ? ' (시스템 전용)' : ''}</option>`).join('')}</optgroup>` : ''}</select>
@@ -768,13 +892,18 @@ window.pageInit = function () {
     const a = e && e.a[ai]; if (!a) return;
     if (guard() || refGuard(e)) { render(); return; }
     const why = lockWhy(a, f); if (why) { toast(why, 'info'); render(); return; }
-    if (f === 'pk' && !v && pkReach(e, a).length) { gPend = { k: 'pkoff', e: e.id, a }; gFocus = { e: e.id, ai, f: 'pend' }; render(); return; }
+    if (f === 'pk' && !v && pkKids(e, a).length) { gPend = { k: 'pkoff', e: e.id, a }; gFocus = { e: e.id, ai, f: 'pend' }; render(); return; }
+    if (f === 'pk' && v) {   // M-1: a new parent key travels to the children — the 중복 속성 해소 창 asks when a child already has that name; [PK 지정 취소] leaves everything as it was
+      dupFlow({ seeds: childRels(e).map(r => ({ r, k: a })), back: e.id, cancelLabel: 'PK 지정 취소', cancelMsg: `‘${a.n}’ PK 지정을 취소했습니다 — 모델은 그대로입니다`,
+        before: () => { gFocus = null; render(); }, cancel: () => { gFocus = { e: e.id, ai: e.a.indexOf(a), f: 'pk' }; render(); },
+        done: rows => { if (guard() || !e.a.includes(a)) { render(); return; } snap(); a.pk = 1; a.nn = 1; placeAttr(e, a); treeOrigin = true; treeAttr = e.a.indexOf(a); gFocus = { e: e.id, ai: treeAttr, f: 'pk' };
+          const st = fkApply(rows); render(); toast(`‘${a.n}’${jr(a.n, '을/를')} 식별자(PK)로 지정했습니다 — 필수가 켜졌습니다${st.n ? ` · 자식 엔터티 FK ${st.n}개${st.use ? `(기존 속성 사용 ${st.use})` : ' 추가'}${st.neu ? ` · 새 이름 ${st.neu}개` : ''}` : ''}`, 'info', undoAction()); } });
+      return; }
     if (f === 'def') { const chk = defCheck(a, String(v).trim()); if (chk.err) { toast(chk.err, 'danger'); const i = $('ag-def'); if (i) { i.value = a.def || ''; i.setAttribute('aria-invalid', 'true'); i.focus(); } return; } if (chk.v !== String(v).trim()) { v = chk.v; toast(chk.note, 'info'); } }
     snap();
     if (f === 'pk') {
-      a.pk = v ? 1 : 0; if (v) a.nn = 1; placeAttr(e, a); treeOrigin = true; treeAttr = e.a.indexOf(a); gFocus = { e: e.id, ai: treeAttr, f: 'pk' };
-      const n = v ? pkSpread(e, a) : 0;
-      render(); toast(v ? `‘${a.n}’${jr(a.n, '을/를')} 식별자(PK)로 지정했습니다 — 필수가 켜졌습니다${n ? ` · 자식 엔터티에 FK ${n}개를 추가했습니다` : ''}` : `‘${a.n}’${jr(a.n, '을/를')} 식별자에서 뺐습니다`, 'info', undoAction()); return;
+      a.pk = 0; placeAttr(e, a); treeOrigin = true; treeAttr = e.a.indexOf(a); gFocus = { e: e.id, ai: treeAttr, f: 'pk' };   // PK 끄기 without child FKs (with them: the band → agPkOff · PK 켜기: the plan above)
+      render(); toast(`‘${a.n}’${jr(a.n, '을/를')} 식별자에서 뺐습니다`, 'info', undoAction()); return;
     }
     if (f === 'nn') { a.nn = v ? 1 : 0; agLive(`${a.n} 필수 ${v ? '켬' : '끔'}`); }
     if (f === 'dom' && String(v).startsWith('@')) {   /* 27: an added / DBMS-only type picked directly → 표준 외 타입 */
@@ -785,7 +914,7 @@ window.pageInit = function () {
     if (f === 'desc' || f === 'def') {   // saved in place: no redraw, so the click that took the focus away (a row, [삭제]) still lands
       const s = String(v).trim(); if (s) a[f] = s; else delete a[f];
       const inp = $(f === 'desc' ? 'ag-desc' : 'ag-def'); if (inp) { inp.value = a[f] || ''; inp.removeAttribute('aria-invalid'); }
-      dirty = false; saveData(); agLive(`${f === 'desc' ? '정의' : '기본값'} 저장됨`); return;
+      dirty = false; saveData(); if (f === 'desc') updateComp(); agLive(`${f === 'desc' ? '정의' : '기본값'} 저장됨`); return;   // M-6: a definition changes the 모델 검증 count
     }
     gFocus = gFocus || { e: e.id, ai, f }; render();
   }
@@ -800,29 +929,27 @@ window.pageInit = function () {
   }
   function agDelAsk(e, ai) {
     const a = e && e.a[ai]; if (!a || guard() || refGuard(e)) return;
-    const risky = (a.pk && (pkReach(e, a).length || e.a.filter(x => x.pk).length === 1)) || (a.fk && fkRels(e, a).length);
+    const risky = (a.pk && (pkKids(e, a).length || e.a.filter(x => x.pk).length === 1)) || (a.fk && fkRels(e, a).length);
     if (!risky) { agDel(e, ai, 'del'); return; }
     gPend = { k: 'del', e: e.id, a }; gFocus = { e: e.id, ai, f: 'pend' }; render();
   }
-  // opt: del (child FKs go too) · keep (child FKs stay as plain columns) · rel (the relation this FK belongs to goes too)
+  // opt: del (the attribute only — child FKs of a PK stay as plain columns, M-5) · rel (the relation this FK belongs to goes too)
   function agDel(e, ai, opt) {
     const a = e && e.a[ai]; gPend = null; if (!a || guard()) { render(); return; }
-    const reach = a.pk ? pkReach(e, a) : [], rels = a.fk && opt === 'rel' ? fkRels(e, a) : [];
-    snap();
-    reach.forEach(([c, x]) => { const i = c.a.indexOf(x); if (i < 0) return; if (opt === 'keep') toPlain(c, x); else c.a.splice(i, 1); });
+    const kids = a.pk ? pkKids(e, a) : [], rels = a.fk && opt === 'rel' ? fkRels(e, a) : [];
+    snap(); unFk(kids);
     let freed = 0;
     rels.forEach(r => { const p = ent(r.f); e.a.slice().forEach(x => { if (x !== a && x.fk && (r.g ? x.fkg === r.g : p && p.a.some(k => k.pk && fkMatch(r, k)(x)))) { toPlain(e, x); freed++; } }); R.splice(R.indexOf(r), 1); });
     e.a.splice(e.a.indexOf(a), 1);
     treeOrigin = true; treeAttr = e.a.length ? Math.min(ai, e.a.length - 1) : null; gFocus = { e: e.id, ai: treeAttr, f: 'row' };
     render();
-    toast(`‘${a.n}’${jr(a.n, '을/를')} 삭제했습니다${reach.length ? ` · 자식 FK ${reach.length}개 ${opt === 'keep' ? '일반 속성으로 유지' : '삭제'}` : ''}${rels.length ? ` · 관계 ${rels.length}개 삭제${freed ? `(남은 FK ${freed}개는 일반 속성)` : ''}` : a.fk ? ' · 관계는 FK 누락으로 남습니다' : ''}`, 'info', undoAction());
+    toast(`‘${a.n}’${jr(a.n, '을/를')} 삭제했습니다${kidsNote(kids)}${rels.length ? ` · 관계 ${rels.length}개 삭제${freed ? `(남은 FK ${freed}개는 일반 속성)` : ''}` : a.fk ? ' · 관계는 FK 누락으로 남습니다' : ''}`, 'info', [undoAction(), alsoDel(kids)]);
   }
-  function agPkOff(keep) {
+  function agPkOff() {
     const [e, ai, a] = pendAttr(); gPend = null; if (!a) { toast('확인하던 속성을 찾지 못했습니다 — 이미 바뀌었거나 삭제됐습니다', 'danger'); render(); return; } if (guard()) { render(); return; }
-    const reach = pkReach(e, a); snap();
-    reach.forEach(([c, x]) => { const i = c.a.indexOf(x); if (i < 0) return; if (keep) toPlain(c, x); else c.a.splice(i, 1); });
+    const kids = pkKids(e, a); snap(); unFk(kids);
     a.pk = 0; placeAttr(e, a); treeOrigin = true; treeAttr = e.a.indexOf(a); gFocus = { e: e.id, ai: treeAttr, f: 'pk' };
-    render(); toast(`‘${a.n}’${jr(a.n, '을/를')} 식별자에서 뺐습니다 · 자식 FK ${reach.length}개 ${keep ? '일반 속성으로 유지' : '삭제'}`, 'info', undoAction());
+    render(); toast(`‘${a.n}’${jr(a.n, '을/를')} 식별자에서 뺐습니다${kidsNote(kids)}`, 'info', [undoAction(), alsoDel(kids)]);
   }
   // order within the same group: PK columns among PK columns, the rest among the rest
   function agMove(e, ai, dir, f) {
@@ -840,7 +967,7 @@ window.pageInit = function () {
   rpb.addEventListener('click', ev => {
     const pend = ev.target.closest('[data-pend]');
     if (pend) { const k = pend.dataset.pend, [pe, pai] = pendAttr(); if (k === 'cancel') { gPend = null; gFocus = { e: sel, ai: pai, f: 'row' }; render(); return; }
-      if (k === 'pkoff-del' || k === 'pkoff-keep') agPkOff(k === 'pkoff-keep');
+      if (k === 'pkoff') agPkOff();
       else if (pai < 0) { gPend = null; toast('확인하던 속성을 찾지 못했습니다 — 이미 바뀌었거나 삭제됐습니다', 'danger'); render(); }
       else agDel(pe, pai, k); return; }
     const [e, a, ai] = curAttr();
@@ -916,7 +1043,7 @@ window.pageInit = function () {
         <div class="caption u-lh-22"><span class="dot-i" style="background:var(--ink)"></span> 김모델 (나) · ${locked ? '조회' : '편집'}<br><span class="dot-i" style="background:var(--p-1)"></span> 홍설계 · ${locked ? '조회' : '편집 — ' + (remoteSel ? ent(remoteSel).n : '—')}<br><span class="dot-i" style="background:var(--p-2)"></span> 박설계 · 조회</div>
         <div class="flex" style="margin-top:8px;gap:6px;${locked ? 'display:none' : ''}"><button class="btn sm" id="demo-conflict">동시 수정 충돌 보기</button><button class="btn sm" id="demo-off">연결 끊김 보기</button></div>
         <div class="section-t">이 화면에서 해 보기</div>
-        <div class="caption u-lh-20">· 엔터티 제목을 끌어 이동 · <b>R</b> → 부모 → 자식 (같은 엔터티면 재귀)<br>· <b>R → 관계 종류 메뉴에서 배타 관계 묶기</b> → 같은 부모의 관계선 2개 클릭<br>· 엔터티 선택 후 <b>Enter</b> → 속성 추가 + 자동완성 · 사전 용어 <b>끌어 놓기</b><br>· <b>M</b> → 메모 · 제목 <b>더블클릭</b> → 이름 수정<br>· <b>Ctrl+Z / Ctrl+Y</b> → 내 편집 되돌리기·다시 실행<br>· <b>표 보기 (Ctrl+F)</b> → 일괄편집·찾기/바꾸기·비대상 지정<br>· 상단 <b>검토</b> → 명칭 중복·미입력·관계 점검<br>· <b>[물리]</b> → 게이트 A → 제약·인덱스·시스템 컬럼<br>· <b>[시스템 전체]</b> → 공통 엔터티를 참조로 가져오기</div>`;
+        <div class="caption u-lh-20">· 엔터티 제목을 끌어 이동 · <b>R</b> → 부모 → 자식 (같은 엔터티면 재귀)<br>· <b>R → 관계 종류 메뉴에서 배타 관계 묶기</b> → 같은 부모의 관계선 2개 클릭<br>· 엔터티 선택 후 <b>Enter</b> → 속성 추가 + 자동완성 · 사전 용어 <b>끌어 놓기</b><br>· <b>M</b> → 메모 · 제목 <b>더블클릭</b> → 이름 수정<br>· <b>Ctrl+Z / Ctrl+Y</b> → 내 편집 되돌리기·다시 실행<br>· <b>표 보기 (Ctrl+F)</b> → 일괄편집·찾기/바꾸기·비대상 지정<br>· 상단 <b>모델 검증</b> → 표준 · 이름/설명 · 구조 점검(막음 · 경고)<br>· <b>[물리]</b> → 게이트 A → 제약·인덱스·시스템 컬럼<br>· <b>[시스템 전체]</b> → 공통 엔터티를 참조로 가져오기</div>`;
       $('demo-conflict').onclick = demoConflict; $('demo-off').onclick = () => setOffline(true);
       body.querySelectorAll('[data-goto]').forEach(c => c.onclick = () => focusEnt(c.dataset.goto));
       return;
@@ -934,38 +1061,19 @@ window.pageInit = function () {
       <div class="pane on" data-pane="attrs">${attrGrid(e, sysRows)}</div>
       ${mode !== 'L' ? `<div class="pane" data-pane="cons">${consRows(e)}</div>` : ''}
       <div class="pane" data-pane="sec">${secRows(e)}</div>
-      <div class="pane" data-pane="ent"><dl class="kv"><dt>엔터티명</dt><dd>${e.n}</dd><dt>테이블명</dt><dd class="mono">${e.p}</dd><dt>분류</dt><dd>${e.c}</dd><dt>표준화</dt><dd>대상</dd>${e.sub ? `<dt>서브타입</dt><dd>${e.sub.kind} · 구분 ${e.sub.disc} · ${e.sub.kids.join(', ')}<br><span class="caption muted">물리 변환: 한 테이블로 합침(기본) · <a href="#" data-toast="서브타입별 테이블로 분할하는 변환을 미리 봅니다(목업)" data-toast-type="info">분할 미리보기</a></span></dd>` : ''}</dl></div>
+      <div class="pane" data-pane="ent"><dl class="kv"><dt>엔터티명</dt><dd>${e.n}</dd><dt>테이블명</dt><dd class="mono">${e.p}</dd><dt>분류</dt><dd>${e.c}</dd><dt>표준화</dt><dd>대상</dd>${e.sub ? `<dt>서브타입</dt><dd>${e.sub.kind} · 구분 ${e.sub.disc} · ${e.sub.kids.join(', ')}<br><span class="caption muted">물리 변환: 한 테이블로 합침(기본) · <a href="#" data-toast="서브타입별 테이블로 분할하는 변환을 미리 봅니다(목업)" data-toast-type="info">분할 미리보기</a></span></dd>` : ''}${!canEdit() || e.ref ? `<dt>정의</dt><dd class="wrap">${e.desc ? hx(e.desc) : '<span class="faint">없음</span>'}</dd>` : ''}</dl>
+        ${!canEdit() || e.ref ? '' : `<div class="field u-mt-8"><label for="ent-desc">정의 <span class="faint">— 테이블 정의서와 테이블 주석(COMMENT)에 들어갑니다</span></label><textarea class="input" id="ent-desc" rows="3" placeholder="예: 프로젝트의 기본 정보를 관리한다" aria-describedby="ent-desc-h">${hx(e.desc || '')}</textarea><span class="help" id="ent-desc-h">엑셀 정의서로 가져온 테이블 설명도 여기에 들어옵니다 · 비어 있으면 모델 검증에서 ${mcLast.rules.defEmpty === 'block' ? '막음' : '경고'}</span></div>`}</div>
       <div class="pane" data-pane="rel"><div class="caption u-lh-22">${rels.join('<br>') || '관계 없음'}</div></div>`;
     $('rp-add').onclick = () => addAttr();
+    { const ed = $('ent-desc');   // M-6: 엔터티 정의 — saved in place like an attribute's 정의 (no redraw); Esc = back to the saved value
+      if (ed) { ed.onchange = () => { const v = ed.value.trim(); if (v === (e.desc || '')) return; if (guard()) { ed.value = e.desc || ''; return; } snap(); if (v) e.desc = v; else delete e.desc; ed.value = e.desc || ''; dirty = false; saveData(); updateComp(); agLive('정의 저장됨'); };
+        ed.onkeydown = ev => { if (ev.isComposing || ev.keyCode === 229) return; if (ev.key === 'Escape') { ev.stopPropagation(); ed.value = e.desc || ''; ed.blur(); } }; } }
     agRestore(body);
     const ru = $('ref-up'); if (ru) ru.onclick = () => refreshRef(e);
     const ix = $('ix-add'); if (ix) ix.onclick = () => { if (guard() || refGuard(e)) return; snap(); (e.ix = e.ix || []).push({ n: `${e.p}_IX${String(90 + (e.ix.length)).padStart(2, '0')}`, c: e.a[1] ? e.a[1].p : e.a[0].p }); render(); document.querySelector('#rp [data-tab="cons"]').click(); toast('인덱스를 추가했습니다 · 이름은 명명 템플릿을 따릅니다'); };
     const uk = $('uk-add'); if (uk) uk.onclick = () => toast('UK로 묶을 컬럼을 고르세요(목업)', 'info');
   }
 
-  // ---- model review (PN-39)
-  function renderReview() {
-    const noRel = E.filter(e => !R.some(r => r.f === e.id || r.t === e.id));
-    const mn = R.filter(r => r.k === 'mn');
-    const typeless = []; E.forEach(e => e.a.forEach(a => { if (a.t === '—') typeless.push([e, a]); }));
-    const nameDup = []; E.forEach(e => e.a.forEach(a => { if (!a.fk && E.some(o => o !== e && o.a.some(b => !b.fk && b.n === a.n))) nameDup.push([e, a]); }));
-    const noPk = E.filter(e => !e.a.some(a => a.pk));
-    const noDef = E.filter(e => ['hist', 'risk', 'emp'].includes(e.id));
-    const sec = (title, items, lvl, render) => `<div class="section-t">${title} <span class="badge ${items.length ? lvl : 'b-success'}">${items.length}</span></div>${items.length ? `<table class="tbl"><tbody>${items.map(render).join('')}</tbody></table>` : '<div class="caption faint">문제 없음</div>'}`;
-    const total = noRel.length + mn.length + typeless.length + nameDup.length + noPk.length + noDef.length;
-    $('c-rev').textContent = total;
-    $('rev-body').innerHTML = `<div class="mline"><span><b>6</b>점검 항목</span><span><b>${total}</b>확인 필요</span></div>` +
-      sec('관계 · M:N 미해소', mn, 'b-warning', r => `<tr data-goto="${r.f}" class="click"><td>${ent(r.f).n} ↔ ${ent(r.t).n}</td><td class="caption">교차 엔터티 필요</td></tr>`) +
-      sec('물리 정보 · 타입 미정', typeless, 'b-warning', ([e, a]) => `<tr data-goto="${e.id}" class="click"><td>${e.n}.${a.n}</td><td class="caption">표준 맞추기</td></tr>`) +
-      (() => { const xt = []; E.forEach(e => e.a.forEach(a => { if (a.xt) xt.push([e, a]); })); return sec('표준 외 타입 <span class="caption muted">— 위반 아님 · 검수 보고서에서 따로 셈</span>', xt, 'b-info', ([e, a]) => `<tr data-goto="${e.id}" class="click"><td>${e.n}.${a.n}</td><td class="caption mono">${hx(a.xt)} · ${hx(a.t)}</td></tr>`); })() +
-      sec('명칭 중복 · 같은 이름 다른 엔터티', nameDup, 'b-info', ([e, a]) => `<tr data-goto="${e.id}" class="click"><td>${e.n}.${a.n}</td><td class="caption">FK가 아닌데 이름이 같음</td></tr>`) +
-      sec('식별자 없음', noPk, 'b-danger', e => `<tr data-goto="${e.id}" class="click"><td>${e.n}</td><td class="caption">PK 지정 필요</td></tr>`) +
-      sec('참조 없는 엔터티', noRel, 'b-info', e => `<tr data-goto="${e.id}" class="click"><td>${e.n}</td><td class="caption">관계 없음</td></tr>`) +
-      sec('미입력 · 엔터티 정의', noDef, 'b-info', e => `<tr data-goto="${e.id}" class="click"><td>${e.n}</td><td class="caption">정의 비어 있음</td></tr>`);
-    $('rev-body').querySelectorAll('[data-goto]').forEach(r => r.onclick = () => { focusEnt(r.dataset.goto); openPanel('pn-review'); });
-  }
-  $('b-review').onclick = ev => { ev.preventDefault(); renderReview(); openPanel('pn-review'); };
-  $('rev-x').onclick = showRP;
   $('exr-go').onclick = () => {   // was 'ex-go' — collided with the export button's id, so this dialog did nothing
     if (guard()) return;
     const e = exTarget && ent(exTarget.e), a = e && e.a.find(x => x.n === exTarget.a || x.orig === exTarget.a);
@@ -974,26 +1082,75 @@ window.pageInit = function () {
     $('mo-ex').classList.remove('open'); $('ex-why').value = ''; render();
     toast(`‘${e.n}.${a.n}’을 예외로 기록했습니다 — 남은 미준수 ${lastComp ? lastComp.bad : '?'}건 · 확정 결재에서 DA가 검토합니다`, 'violet', undoAction());
   };
-  // ---- ERD P2-10: 확정 전 점검 — the same count as the main button (entity without a table name + attributes not yet standard)
-  function checkRows() {
-    const L = [];
-    E.forEach(e => { if (e.ref) return; if (e.p === '—') L.push({ e, a: null, why: e.st ? '엔터티 용어 신청 중' : '엔터티 용어 미정', cls: 'b-warning' });
-      e.a.forEach(a => { if (a.edit || !(a.s === 'comb' || a.s === 'unreg')) return; L.push({ e, a, why: a.s === 'comb' ? '조합 가능 — 용어 신청' : a.cand ? `단어 ‘${candWordOf(a)}’ 승인 대기` : '미등록 단어', cls: a.s === 'comb' ? 'b-info' : 'b-warning' }); }); });
-    return L;
-  }
+  // ---- M-6 (고객 모델 요청 2026-11-25): 모델 검증 — one panel for 표준 · 이름/설명 · 구조 (was 모델 검토 PN-39 · 확정 전 점검 · 게이트 A PN-35).
+  //      The judgement is app.js modelCheck({ E, R }) with 정책 › 모델 입력 규칙 — the same call the submit re-check and the approval re-check use.
+  let mcLast = { items: [], block: 0, warn: 0, rules: getModelInputRules() }, mcFlt = 'all', mcGate = false, mcEdit = null;   // mcEdit = { e, ai, v } — the one definition being typed in the list
+  const mcRun = () => (mcLast = modelCheck({ E, R }));
+  const LVL = { block: ['b-danger', '막음'], warn: ['b-warning', '경고'] };
+  const MC_DEF = ['entDef', 'entDefShort', 'attrDef', 'attrDefShort'], MC_STD = ['entPhys', 'entRule', 'attrStd', 'attrRule'];
+  const mcEditing = x => !!mcEdit && MC_DEF.includes(x.code) && mcEdit.e === x.e && mcEdit.ai === x.ai;
   function drawCheck() {
-    const L = checkRows(); $('ck-n').textContent = L.length; $('ck-std').href = `standardize.html?area=${AREA}&f=todo`;
-    $('ck-body').innerHTML = L.length ? `<table class="tbl ck-tbl"><thead><tr><th>항목</th><th>남은 이유</th><th><span class="sr-only">처리</span></th></tr></thead><tbody>${L.map((r, i) => `<tr><td><button type="button" class="linkbtn" data-ckgo="${r.e.id}" title="캔버스에서 보기">${hx(r.e.n)}${r.a ? '.' + hx(r.a.n) : ''}</button>${r.a ? '' : ' <span class="caption muted">(테이블명)</span>'}</td><td><span class="badge ${r.cls}">${hx(r.why)}</span></td>
-        <td class="ck-act"><a class="btn sm" href="${stdUrl(r.e, r.a)}">고치기</a>${r.a ? `<button type="button" class="btn sm ghost" data-ckex="${i}">예외…</button>` : ''}</td></tr>`).join('')}</tbody></table>
-        <div class="caption muted u-mt-8">[고치기]는 표준 맞추기의 그 항목으로 갑니다. 예외는 건마다 사유를 남기고, 확정 결재에서 DA가 검토합니다.</div>`
-      : '<div class="banner success"><i data-ic=check></i><div><b>남은 항목이 없습니다</b> — 확정 신청을 이어서 할 수 있습니다.</div></div>';
-    $('ck-go').disabled = L.length > 0; $('ck-go').textContent = L.length ? `확정 신청 계속 (${L.length}건 남음)` : '확정 신청 계속';
-    $('ck-body').querySelectorAll('[data-ckex]').forEach(x => x.onclick = () => { const r = L[+x.dataset.ckex]; if (guard()) return; window.__openEx(r.e.id, r.a.n); });
-    $('ck-body').querySelectorAll('[data-ckgo]').forEach(x => x.onclick = () => { const id = x.dataset.ckgo; if (ent(id) && !inView(ent(id))) { curView = 'all'; } sel = id; render(); const bx = box(id); panX = cv.clientWidth / 2 - (bx.x + bx.w / 2) * zoom; panY = cv.clientHeight / 2 - (bx.y + bx.h / 2) * zoom; applyView(); });   // the check list stays open
+    const mc = mcLast, ro = !canEdit(), ir = mc.rules || getModelInputRules();
+    { const cur = $('mc-def'); if (cur && mcEdit) mcEdit.v = cur.value; }   // a redraw (someone else's edit) keeps what is being typed
+    $('ck-n').textContent = `막음 ${mc.block}`; $('ck-n').className = 'badge ' + (mc.block ? 'b-danger' : 'b-success'); $('ck-w').textContent = `경고 ${mc.warn}`; $('ck-w').className = 'badge' + (mc.warn ? ' b-warning' : '');
+    const L = mc.items.map((x, i) => Object.assign({ i }, x)).filter(x => mcFlt === 'all' || x.lvl === mcFlt);
+    const nm = x => `<button type="button" class="linkbtn" data-ckgo="${hx(x.e)}"${x.ai != null ? ` data-ckai="${x.ai}"` : ''} title="캔버스에서 보기">${hx(x.en)}${x.a ? '.' + hx(x.a) : ''}</button>`;
+    const act = x => { const e = ent(x.e), a = e && x.ai != null ? e.a[x.ai] : null; if (!e) return '';
+      if (MC_STD.includes(x.code)) return `<a class="btn sm" href="${stdUrl(e, a)}">고치기</a>${a && x.code === 'attrStd' && !ro ? `<button type="button" class="btn sm ghost" data-ckex="${x.i}">예외…</button>` : ''}`;
+      if (MC_DEF.includes(x.code)) return ro ? '' : `<button type="button" class="btn sm" data-ckin="${x.i}" aria-expanded="${mcEditing(x)}">입력</button>`;
+      if (x.code === 'phys') return `<a class="btn sm" href="${stdUrl(e, a)}">맞추기</a>${a && a.s === 'unreg' && !ro ? `<button type="button" class="btn sm ghost" data-ckex="${x.i}">예외…</button>` : ''}`;
+      if (x.code === 'mn' || x.code === 'fkMiss') return `<button type="button" class="btn sm" data-ckrel="${x.rel}">관계 열기</button>`;
+      return ''; };
+    const editRow = x => { if (!mcEditing(x)) return ''; const o = x.ai != null ? (ent(x.e) || { a: [] }).a[x.ai] : ent(x.e), what = x.a ? '설명' : '정의';
+      return `<tr class="mc-edit"><td colspan="3"><div class="mc-in"><input class="input" type="text" id="mc-def" aria-label="${hx(x.en)}${x.a ? '.' + hx(x.a) : ''} ${what}" placeholder="${x.a ? '예: 이 자금이 들어오거나 나간 날짜' : '예: 프로젝트의 기본 정보를 관리한다'}" value="${hx(mcEdit.v != null ? mcEdit.v : (o || {}).desc || '')}"><button type="button" class="btn sm primary" data-cksave="${x.i}">저장</button></div><div class="caption muted">Enter 저장 · Esc 취소 · ${ir.minLen}자 이상, 이름과 다르게 — 테이블 정의서와 주석(COMMENT)에 들어갑니다</div></td></tr>`; };
+    const grp = g => { const GI = L.filter(x => x.grp === g), all = mc.items.filter(x => x.grp === g), nb = all.filter(x => x.lvl === 'block').length, nw = all.length - nb;
+      const ORD = Object.keys(MODEL_CHECK_CODES), codes = [...new Set(GI.map(x => x.code))].sort((p, q) => (GI.find(x => x.code === p).lvl === 'block' ? 0 : 1) - (GI.find(x => x.code === q).lvl === 'block' ? 0 : 1) || ORD.indexOf(p) - ORD.indexOf(q));   // 막음 first, then the fixed order
+      return `<details class="mc-g" data-g="${g}" open><summary>${MODEL_CHECK_GROUPS[g]} <span class="badge${nb ? ' b-danger' : ''}">막음 ${nb}</span><span class="badge${nw ? ' b-warning' : ''}">경고 ${nw}</span></summary>
+        ${g === 'std' && nb ? `<div class="caption"><a href="standardize.html?area=${AREA}&f=todo">표준 맞추기에서 한꺼번에</a></div>` : ''}
+        ${codes.length ? codes.map(c => { const R1 = GI.filter(x => x.code === c), show = R1.slice(0, 50), lv = LVL[R1[0].lvl];
+          return `<div class="mc-c"><span class="badge ${lv[0]}">${lv[1]}</span>${MODEL_CHECK_CODES[c] || c} <span class="faint">${R1.length}</span></div><table class="tbl ck-tbl" aria-label="${MODEL_CHECK_CODES[c] || c}"><tbody>${show.map(x => `<tr><td>${nm(x)}</td><td class="caption">${hx(x.msg)}</td><td class="ck-act">${act(x)}</td></tr>${editRow(x)}`).join('')}</tbody></table>${R1.length > show.length ? `<div class="caption muted">외 ${R1.length - show.length}건 — 위 항목을 풀면 이어서 보입니다</div>` : ''}`; }).join('') : `<div class="caption faint">${all.length ? '이 등급에는 항목이 없습니다' : '문제 없음'}</div>`}
+        ${g === 'struct' && (mcGate || mode !== 'L') ? `<div class="caption muted u-mt-8">물리 반영 때 시스템 컬럼 4개(<span class="mono">REG_DT · REGR_ID · MDFCN_DT · MDFR_ID</span>)가 모든 테이블에 붙습니다 — <a href="settings.html#sys">시스템 설정</a></div>` : ''}</details>`; };
+    const gn = mcGate ? gateRows().length : 0;
+    $('ck-body').innerHTML = `${mcGate ? `<div class="banner ${gn ? 'warning' : 'success'} u-mb-8"><i data-ic=${gn ? 'warn' : 'check'}></i><div class="grow"><b>물리 반영 전 점검(게이트 A)</b> — ${gn ? `테이블명 · 미매핑 · 타입 미정 경고 ${gn}건이 아래 표준 · 구조에 있습니다. 진행은 막지 않습니다.` : '남은 경고가 없습니다.'}</div></div>` : ''}
+      <div class="mc-flt" role="group" aria-label="등급 거르기">${[['all', '전체', mc.items.length], ['block', '막음', mc.block], ['warn', '경고', mc.warn]].map(([k, l, n]) => `<button type="button" class="chip${mcFlt === k ? ' on' : ''}" data-mcf="${k}" aria-pressed="${mcFlt === k}">${l} <span class="n">${n}</span></button>`).join('')}<span class="grow"></span><button type="button" class="btn sm ghost" id="rev-run">다시 검사</button></div>
+      ${!mc.block ? '<div class="banner success u-mt-8"><i data-ic=check></i><div><b>막음이 없습니다</b> — 확정 신청을 이어서 할 수 있습니다.</div></div>' : ''}
+      ${['std', 'name', 'struct'].map(grp).join('')}
+      <div class="caption muted u-mt-12">정의 · 설명 기준: 비어 있음 = <b>${LVL[ir.defEmpty][1]}</b> · 이름과 같음 · ${ir.minLen}자 미만 = <b>${ir.defShort === 'off' ? '검사 안 함' : LVL[ir.defShort][1]}</b> — <a href="rules.html#model-input">정책 › 모델 입력 규칙</a>에서 기관이 정합니다. [고치기]는 표준 맞추기의 그 항목으로 갑니다. 예외는 건마다 사유를 남기고 확정 결재에서 DA가 검토합니다.</div>`;
+    // R2-17 · U-4 (29 R-17): no 확정 신청 role → the button is not there; a modeler who only can't right now sees it dimmed with the reason tied to it (aria-describedby)
+    const go = $('ck-go'), gw = $('ck-go-why'), noRole = !can('model.submit', { area: AREA }) || AREA_OFF;
+    const why = mc.block ? `막음 ${mc.block}건이 남아 있습니다 — 모두 풀면 신청할 수 있습니다` : review ? '검토 중이라 다시 신청할 수 없습니다' : confirmed ? '확정본입니다 — 다음 작업 버전에서 신청합니다' : DEMO ? '예시 화면에서는 확정 신청할 수 없습니다' : ro ? '지금은 이 영역을 편집할 수 없습니다' : '';
+    go.hidden = mcGate || noRole; go.disabled = false; go.classList.toggle('disabled', !!why); go.textContent = mc.block ? `확정 신청 계속 (막음 ${mc.block}건)` : '확정 신청 계속';
+    if (why) { go.setAttribute('aria-disabled', 'true'); go.setAttribute('aria-describedby', 'ck-go-why'); } else { go.removeAttribute('aria-disabled'); go.removeAttribute('aria-describedby'); }
+    gw.textContent = why; gw.hidden = go.hidden || !why;
+    $('gate-go').hidden = !mcGate;
+    const inp = $('mc-def'); if (inp) { inp.focus(); const n = inp.value.length; inp.setSelectionRange(n, n); }
   }
-  function openCheck() { drawCheck(); openPanel('pn-check'); const f = $('ck-body').querySelector('button, a'); if (f) f.focus(); }
-  $('ck-x').onclick = () => { if (narrowW() && !sel && !selRel) { openPanel(null); relayout(); } else showRP(); };   // below 1920 with nothing selected, closing leaves the canvas wide (P2-12)
-  $('ck-go').onclick = () => { if (checkRows().length) return; fillConfirm(); openPanel('pn-confirm'); };
+  function saveDef(x) { const e = ent(x.e), o = e && (x.ai != null ? e.a[x.ai] : e), inp = $('mc-def'); if (!o || !inp) return; if (guard() || refGuard(e)) return;
+    const v = inp.value.trim(), what = x.a ? '설명' : '정의'; if (!v) { toast(`${what}${jr(what, '을/를')} 입력하세요`, 'info'); inp.focus(); return; }
+    snap(); o.desc = v; mcEdit = null; render(); toast(`‘${x.en}${x.a ? '.' + x.a : ''}’ ${what}${jr(what, '을/를')} 저장했습니다`, 'info', undoAction());
+    const b = $('ck-body').querySelector('[data-ckin]') || $('ck-body').querySelector('[data-mcf]'); if (b) b.focus(); }
+  $('ck-body').addEventListener('click', ev => {
+    const t = ev.target.closest('[data-mcf],[data-ckgo],[data-ckex],[data-ckin],[data-cksave],[data-ckrel],#rev-run'); if (!t) return;
+    if (t.dataset.mcf) { mcFlt = t.dataset.mcf; mcEdit = null; drawCheck(); const b = $('ck-body').querySelector(`[data-mcf="${mcFlt}"]`); if (b) b.focus(); return; }
+    if (t.id === 'rev-run') { mcEdit = null; mcRun(); updateComp(); drawCheck(); toast(`모델 검증을 다시 실행했습니다 — 막음 ${mcLast.block} · 경고 ${mcLast.warn}`, 'info'); const b = $('rev-run'); if (b) b.focus(); return; }
+    if (t.dataset.ckgo) { const id = t.dataset.ckgo; if (!ent(id)) return; if (!inView(ent(id))) curView = 'all'; treeOrigin = true; treeAttr = t.dataset.ckai != null ? +t.dataset.ckai : null; sel = id; selRel = null; render();
+      const bx = box(id); panX = cv.clientWidth / 2 - (bx.x + bx.w / 2) * zoom; panY = cv.clientHeight / 2 - (bx.y + bx.h / 2) * zoom; applyView(); return; }   // the list stays open
+    if (t.dataset.ckrel != null) { const r = R[+t.dataset.ckrel]; if (r) { sel = null; selRel = r; render(); showRP(); } return; }
+    const x = mcLast.items[+(t.dataset.ckex || t.dataset.ckin || t.dataset.cksave)]; if (!x) return;
+    if (t.dataset.ckex != null) { if (guard()) return; window.__openEx(x.e, x.a); return; }
+    if (t.dataset.ckin != null) { if (guard() || refGuard(ent(x.e))) return; mcEdit = mcEditing(x) ? null : { e: x.e, ai: x.ai, v: null }; drawCheck(); return; }
+    if (t.dataset.cksave != null) saveDef(x);
+  });
+  $('ck-body').addEventListener('keydown', ev => { if (ev.target.id !== 'mc-def' || ev.isComposing || ev.keyCode === 229) return;
+    if (ev.key === 'Enter') { ev.preventDefault(); ev.stopPropagation(); const x = mcLast.items.find(mcEditing); if (x) saveDef(x); }
+    else if (ev.key === 'Escape') { ev.stopPropagation(); const k = mcEdit; mcEdit = null; ev.target.remove(); drawCheck(); const i = mcLast.items.findIndex(x => MC_DEF.includes(x.code) && x.e === k.e && x.ai === k.ai), b = $('ck-body').querySelector(`[data-ckin="${i}"]`); if (b) b.focus(); } });
+  // o.gate = opened on the way to the physical view (게이트 A): the same list, with [경고 확인 후 계속] instead of [확정 신청 계속]
+  function openCheck(o) { mcGate = !!(o && o.gate); if (o && o.label) $('gate-go').textContent = o.label; mcFlt = 'all'; mcEdit = null; mcRun(); drawCheck(); openPanel('pn-check');
+    const g = mcGate && $('ck-body').querySelector('.mc-g[data-g="struct"]'); if (g) g.scrollIntoView({ block: 'start' });
+    const f = $('ck-body').querySelector('.ck-tbl button, .ck-tbl a') || $('ck-body').querySelector('[data-mcf]'); if (f) f.focus({ preventScroll: !!g }); }
+  $('b-review').onclick = ev => { ev.preventDefault(); openCheck(); };
+  $('ck-x').onclick = () => { mcGate = false; mcEdit = null; if (narrowW() && !sel && !selRel) { openPanel(null); relayout(); } else showRP(); };   // below 1920 with nothing selected, closing leaves the canvas wide (P2-12)
+  $('ck-go').onclick = () => { mcRun(); drawCheck(); const g = $('ck-go'); if (g.getAttribute('aria-disabled') === 'true') { toast($('ck-go-why').textContent, 'info'); return; } if (viewOnly) return; fillConfirm(); openPanel('pn-confirm'); };
   // ERD P1-4: one attribute, one reason — the strip's attribute names open the single-exception dialog (the blanket 'n건 예외로 유지' is gone)
   $('ban-left-t').addEventListener('click', ev => { const b = ev.target.closest('[data-exone]'); if (!b) return; if (guard()) return; window.__openEx(b.dataset.exone, b.dataset.exa); });
   // 참조자 (CC): was a button with no action and a fixed ['hyun'] on the document — now picked here, the 기관 담당자 first by default
@@ -1008,7 +1165,7 @@ window.pageInit = function () {
   $('cf-go').onclick = () => {
     if (guard()) return;
     updateComp();
-    if (lastComp.bad > 0) { toast(`제출 직전 재검사: 미준수 ${lastComp.bad}건 — 확정 신청할 수 없습니다`, 'danger'); return; }   // re-check at submit (R4)
+    if (mcLast.block > 0) { toast(`제출 직전 재검사: 막음 ${mcLast.block}건${lastComp.bad ? `(미준수 ${lastComp.bad}건 포함)` : ''} — 확정 신청할 수 없습니다. 모델 검증에서 확인하세요`, 'danger', { label: '모델 검증 열기', fn: () => openCheck() }); return; }   // re-check at submit (R4) — M-6: the same modelCheck as the panel
     // the copy being submitted must be the latest saved revision — an older tab may not submit over newer work (CX11-05)
     const saved = getModelData(AREA, VER);
     if (saved && (saved.rev || 0) !== myRev) { revConflict = true; toast('다른 탭에서 이 버전이 더 최근에 저장됐습니다 — 이 탭의 내용으로는 확정 신청하지 않았습니다. 새로고침해서 최신 내용을 확인하세요', 'danger', { label: '새로고침', fn: () => location.reload() }); return; }
@@ -1018,7 +1175,9 @@ window.pageInit = function () {
     if (!can('model.submit', { area: AREA })) { toast('확정 신청 권한이 없습니다 — 담당 시스템의 모델러만 신청합니다', 'danger'); return; }
     { const gaps = lineGaps({ type: 'model', area: AREA, req: ME.id }); if (gaps.length) { toast(`${sysOfArea(AREA)} 모델을 처리할 ${gaps.map(s => STEP_NAME[s]).join(' · ')} 담당자가 없습니다 — 신청하면 결재가 멈춥니다. Admin에게 담당 지정을 요청하세요`, 'danger'); return; } }
     // always a NEW document (requester = current user); same area+version in progress → no duplicate (R2)
-    const r = createDoc({ type: 'model', area: AREA, ver: VER, title: `${curSys().name} › ${LOCK.model.name} v${VER} 확정`, n: E.length, reason: $('cf-why').value.trim(), cc: ccList.slice(), key: `model:${AREA}:v${VER}`, snap: lastComp, model: JSON.parse(JSON.stringify({ E, R, M, V, moves: MOVES })), sysAt: { code: curSys().code, db: curSys().db, schema: curSys().schema } });   // the document keeps the model as submitted
+    // R2-10 · R2-12 · R2-15: the document keeps the copy in the stored shape (t = type name), the shared check result as it was at submit, and the hash of the copy
+    const copy = JSON.parse(JSON.stringify({ E, R, M, V, moves: MOVES })); copy.E.forEach(e => e.a.forEach(typeSplit));
+    const r = createDoc({ type: 'model', area: AREA, ver: VER, title: `${curSys().name} › ${LOCK.model.name} v${VER} 확정`, n: E.length, reason: $('cf-why').value.trim(), cc: ccList.slice(), key: `model:${AREA}:v${VER}`, snap: lastComp, inputRules: mcLast.rules, check: { block: mcLast.block, warn: mcLast.warn, rulesVer: getPolicy().ver }, hash: snapHash(copy), model: copy, sysAt: { code: curSys().code, db: curSys().db, schema: curSys().schema } });   // the document keeps the model as submitted
     flash(r.dup ? `이미 진행 중인 확정 신청 ${r.doc.id}이 있습니다` : `확정 신청 ${r.doc.id} — 1단계 담당 ${approversFor(r.doc, 'da').length}명에게 알렸습니다. 결재가 끝날 때까지 이 업무 영역은 조회 전용입니다`, 'info');
     go(`model.html?area=${AREA}`);
   };
@@ -1030,7 +1189,6 @@ window.pageInit = function () {
     flash(`${d.id} 확정 신청을 회수했습니다 — 다시 편집할 수 있습니다`, 'info');
     go(`model.html?area=${AREA}`);
   };
-  $('rev-run').onclick = () => { renderReview(); toast('모델 검토를 다시 실행했습니다', 'info'); };
 
   // ---- grid mode (bulk edit · find/replace)
   let gRepOpen = false;
@@ -1071,8 +1229,8 @@ window.pageInit = function () {
         <span class="caption muted">표준</span><select class="input" id="g-std"><option value="">유지</option><option value="in" ${gstd === 'in' ? 'selected' : ''}>대상</option><option value="na" ${gstd === 'na' ? 'selected' : ''}>비대상</option></select>
         <input class="input" id="g-why" placeholder="비대상 사유 *" aria-label="비대상 사유" value="${esc(gwhy)}"${gstd === 'na' ? '' : ' hidden'}>
         <span class="grow"></span><button class="btn sm" id="g-clear">선택 해제</button>${selHid ? `<button class="btn sm" id="g-apply-all">${gAllArm ? `한 번 더 눌러 숨겨진 ${selHid}개 포함 적용` : `숨겨진 ${selHid}개 포함…`}</button>` : ''}<button class="btn sm primary" id="g-apply" ${selVis ? '' : 'disabled'}>표시된 ${selVis}개 적용</button></div>
-      <div class="gbody"><table class="tbl"><thead><tr><th class="u-w-32"><input type="checkbox" id="g-all" class="edit-only" aria-label="보이는 행 모두 선택" ${rows.length && rows.every(r => gsel.has(r.k)) ? 'checked' : ''}></th><th></th><th>엔터티</th><th>속성명</th><th>물리명</th><th>타입</th><th>필수</th><th>보안</th></tr></thead><tbody>
-      ${rows.map(r => `<tr><td><input type="checkbox" class="edit-only" data-k="${r.k}" aria-label="${esc(r.e.n + '.' + r.a.n)} 선택" ${gsel.has(r.k) ? 'checked' : ''}></td><td>${stBadge(r.a.s)}</td><td>${r.e.n}${r.e.ref ? ' <span class="muted">· 참조</span>' : ''}</td><td>${r.a.pk ? '# ' : ''}${hl(r.a.n)}${r.a.fk ? ' <span class="faint">(FK)</span>' : ''}</td><td class="mono">${mode === 'A' && fv ? esc(r.a.p).split(esc(fv.toUpperCase())).join(`<mark>${esc(fv.toUpperCase())}</mark>`) : r.a.p}</td><td class="mono">${r.a.t}</td><td>${r.a.nn || r.a.pk ? '예' : '<span class="faint">아니오</span>'}</td><td>${r.a.sec ? `<span class="badge b-danger">${r.a.sec}</span>` : ''}</td></tr>`).join('') || `<tr class="none"><td colspan="8" class="caption muted">조건에 맞는 속성이 없습니다. <button type="button" class="linkbtn" data-gf="all">거르기 해제</button></td></tr>`}</tbody></table>${more ? `<div class="g-more"><button type="button" class="btn sm" id="g-more">다음 ${Math.min(300, more)}개 보기</button><span class="caption muted">남은 ${more}개 · 찾기나 거르기로 좁히면 빠릅니다</span></div>` : ''}</div>`;
+      <div class="gbody"><table class="tbl"><thead><tr><th class="u-w-32"><input type="checkbox" id="g-all" class="edit-only" aria-label="보이는 행 모두 선택" ${rows.length && rows.every(r => gsel.has(r.k)) ? 'checked' : ''}></th><th></th><th>엔터티</th><th>속성명</th><th>물리명</th><th>타입</th><th>길이</th><th>소수점</th><th>필수</th><th>보안</th></tr></thead><tbody>
+      ${rows.map(r => `<tr><td><input type="checkbox" class="edit-only" data-k="${r.k}" aria-label="${esc(r.e.n + '.' + r.a.n)} 선택" ${gsel.has(r.k) ? 'checked' : ''}></td><td>${stBadge(r.a.s)}</td><td>${r.e.n}${r.e.ref ? ' <span class="muted">· 참조</span>' : ''}</td><td>${r.a.pk ? '<span class="kc">PK</span>' : ''}${hl(r.a.n)}${r.a.fk ? ' <span class="faint">(FK)</span>' : ''}</td><td class="mono">${mode === 'A' && fv ? esc(r.a.p).split(esc(fv.toUpperCase())).join(`<mark>${esc(fv.toUpperCase())}</mark>`) : r.a.p}</td>${(tp => `<td class="mono">${esc(tp.t)}</td><td class="mono">${esc(tp.len)}</td><td class="mono">${esc(tp.scale)}</td>`)(typeParts(r.a.t))}<td>${r.a.nn || r.a.pk ? '예' : '<span class="faint">아니오</span>'}</td><td>${r.a.sec ? `<span class="badge b-danger">${r.a.sec}</span>` : ''}</td></tr>`).join('') || `<tr class="none"><td colspan="10" class="caption muted">조건에 맞는 속성이 없습니다. <button type="button" class="linkbtn" data-gf="all">거르기 해제</button></td></tr>`}</tbody></table>${more ? `<div class="g-more"><button type="button" class="btn sm" id="g-more">다음 ${Math.min(300, more)}개 보기</button><span class="caption muted">남은 ${more}개 · 찾기나 거르기로 좁히면 빠릅니다</span></div>` : ''}</div>`;
     const all = g.querySelector('#g-all'); if (all) { const n = rows.filter(r => gsel.has(r.k)).length; all.indeterminate = n > 0 && n < rows.length; }   // part of the visible rows selected
     if (gdom && g.querySelector('#g-dom')) g.querySelector('#g-dom').value = gdom; if (gnn && g.querySelector('#g-nn')) g.querySelector('#g-nn').value = gnn;
     const gb = g.querySelector('.gbody'); if (gb) gb.scrollTop = gscroll;
@@ -1210,7 +1368,7 @@ window.pageInit = function () {
       delete e.fresh; e.n = v;
       const t = getDict().find(x => x.kn === '엔터티 용어' && x.name === v && ['사용', '신청 중'].includes(x.st));
       if (t && t.st === '사용' && t.ver > 0 && t.abbr) e.p = t.abbr;
-      e.a.forEach(a => delete a.edit); e.a.push({ n: '', p: '—', t: '—', s: 'na', pk: 1, edit: 1 }); sel = e.id; dirty = true; render();
+      e.a.forEach(a => delete a.edit); e.a.push({ n: '', p: '—', t: '—', s: 'na', pk: 1, nn: 1, edit: 1 }); sel = e.id; dirty = true; render();
       toast(t ? (t.st === '사용' ? `엔터티 용어 ‘${v}’를 적용했습니다 · ${t.abbr} — 식별자를 입력하세요` : `‘${v}’는 엔터티 용어 신청 중입니다(${t.pending || '결재 중'}) — 식별자를 입력하세요`) : `‘${v}’ 엔터티를 만들었습니다 — 식별자를 입력하세요 · 엔터티 용어는 [표준 맞추기]에서 신청합니다`, 'info');
       return;
     }
@@ -1251,7 +1409,7 @@ window.pageInit = function () {
     if (offline || !canEdit()) return;   // the simulated co-editor stops if the area got locked meanwhile
     // only the area that has 요구사항내역 gets this co-edit — other areas never hear about an entity they don't have
     let added = false;
-    remoteApply(es => { const r = es.find(x => x.id === 'rqrm'); if (r && !r.a.some(a => a.n === '요구사항상태코드')) { r.a.push({ n: '요구사항상태코드', p: 'DEMND_MATER_STTS_CD', t: 'CHAR(2)', s: 'ok', remote: 1 }); added = true; } });
+    remoteApply(es => { const r = es.find(x => x.id === 'rqrm'); if (r && !r.a.some(a => a.n === '요구사항상태코드')) { r.a.push({ n: '요구사항상태코드', p: 'DEMND_MATER_STTS_CD', t: 'CHAR(2)', s: 'ok', remote: 1, desc: '요구사항의 진행 상태를 나타내는 코드' }); added = true; } });
     if (!added) return;
     render(); toast('홍설계가 ‘요구사항내역’에 ‘요구사항상태코드’를 추가했습니다', 'info');
   }, 7000);
@@ -1271,7 +1429,7 @@ window.pageInit = function () {
 
   // ---- delete with impact preview (CX-25 · CL-24)
   function askDelete(id) {
-    document.querySelectorAll('.pop').forEach(p => p.remove());
+    closePops();
     const e = ent(id), rels = R.filter(r => r.f === id || r.t === id);
     const pk = e.a.filter(a => a.pk).map(a => a.p);
     const kids = R.filter(r => r.f === id && r.t !== id).map(r => ent(r.t)).filter(Boolean);
@@ -1347,9 +1505,9 @@ window.pageInit = function () {
   }
   function placeEntity(w) {
     if (guard()) { setTool('select'); return; }
-    const id = 'e' + Date.now(); snap(); if (mode === 'A') w = { x: w.x / SX, y: w.y / SY };   /* 28 §7-1: 통합 shows logical × spread */
+    const id = newId('e'); snap(); if (mode === 'A') w = { x: w.x / SX, y: w.y / SY };   /* 28 §7-1: 통합 shows logical × spread */
     // D3: the name comes first (like F2, with entity-term suggestions); Enter goes on to the identifier — no '새엔터티' left behind
-    E.push({ id, n: '새엔터티', p: '—', c: 'M', x: Math.round(w.x), y: Math.round(w.y), px: Math.round(w.x), py: Math.round(w.y), a: [], fresh: 1 });
+    E.push({ id, n: '새엔터티', p: '—', c: 'M', x: Math.round(w.x), y: Math.round(w.y), px: Math.round(mode === 'P' ? w.x / PX : w.x), py: Math.round(w.y), a: [], fresh: 1 });
     if (curView !== 'all') { const v = vCur(); (v.ents = v.ents || []).push(id); }   // made in a view → placed in it (and always in 전체)
     sel = id; renaming = id; setTool('select'); render(); hint('엔터티 이름을 입력하세요 · Enter 다음(식별자) · Esc 취소'); setTimeout(() => hint(''), 2500);
   }
@@ -1463,8 +1621,8 @@ window.pageInit = function () {
     const inCanvas = singleKeys() && (document.activeElement === document.body || cv.contains(document.activeElement));
     if (inCanvas && k === 'v') setTool('select'); else if (inCanvas && k === 'e') setTool('entity'); else if (inCanvas && k === 'r') { ev.preventDefault(); if (!canEdit()) guard(); else if (typeof sel === 'string' && ent(sel)) childPicker(sel); else setTool('rel'); }   // preventDefault: the 'r' must not land in the picker's filter box   // read-only: the reason, never the tool mode (post-review CL10)   // keyboard path: a selected entity is the parent
     else if (inCanvas && k === 'm') setTool('memo');
-    else if (ev.key === 'Escape' && rolePending && document.querySelector('.pop[aria-label="역할명"]')) { rolePending(); }
-    else if (ev.key === 'Escape') { document.querySelectorAll('.pop').forEach(p => p.remove()); $('expmenu').classList.remove('open'); closeGrid(); setTool('select'); }
+    else if (ev.key === 'Escape' && dupPending) { dupPending(); }   // M-1: Esc = 연결 취소 · PK 지정 취소 (nothing was written)
+    else if (ev.key === 'Escape') { closePops(); $('expmenu').classList.remove('open'); closeGrid(); setTool('select'); }
     else if (ev.key === 'Enter' && tool === 'entity' && (document.activeElement === document.body || cv.contains(document.activeElement))) { ev.preventDefault(); placeEntityKeyboard(); }
     else if (ev.key === 'Enter' && sel && (document.activeElement === document.body || cv.contains(document.activeElement))) { addAttr(); ev.preventDefault(); }
     else if (ev.key === 'Delete' && sel) { if (!guard()) askDelete(sel); }
@@ -1612,13 +1770,14 @@ window.pageInit = function () {
     const go = $('mn-go'); if (go) go.onclick = () => {
       if (guard()) return; const pl = mnPlan(r); if (!pl) return;
       if (pl.wait.length) { toast(`${pl.wait.join(', ')}에 식별자가 없어 해소할 수 없습니다 — 식별자를 먼저 정하세요`, 'info'); return; }
-      snap(); R.splice(R.indexOf(r), 1); const a = box(r.f), b = box(r.t), id = 'x' + Date.now().toString(36);
+      const a = box(r.f), b = box(r.t), id = newId('e');
       const x = { id, n: pl.n, p: pl.p, c: 'A', x: (a.x + b.x) / 2 + 300, y: (a.y + b.y) / 2, px: (a.x + b.x) / 2 + 320, py: (a.y + b.y) / 2, a: [] };
-      const rels = [r.f, r.t].map((pid, j) => { const g = 'g' + id + j; ent(pid).a.filter(k => k.pk).forEach(k => { const [n, p] = x.a.some(y => y.n === k.n || y.p === k.p) ? uniqCol(x, '원' + k.n, 'ORG_' + k.p) : [k.n, k.p]; x.a.push({ n, p, t: k.t, dom: domOf(k), pk: 1, fk: 1, fkg: g, fkp: k.p, nn: 1, s: k.s === 'ex' ? 'ok' : k.s || 'ok' }); });
-        return { f: pid, t: id, k: 'id', name: '', g, card: '0n', opt: 'must', del: 'none' }; });
-      E.push(x); R.push(...rels);
-      if (curView !== 'all') { const v = vCur(); (v.ents = v.ents || []).push(id); }
-      selRel = null; sel = id; render(); showRP(); toast(`M:N을 해소했습니다 — 교차 엔터티 ‘${hx(pl.n)}’ · 식별 관계 2개 · PK ${x.a.length}개`, 'success', undoAction()); agLive('M:N 해소');
+      const rels = [r.f, r.t].map((pid, j) => ({ f: pid, t: id, k: 'id', name: '', g: 'g' + id + j, card: '0n', opt: 'must', del: 'none' }));
+      // M-1: both parents' keys go into the cross entity through the same plan — when the two keys share a name the 중복 속성 해소 창 asks for the role name (it used to take 원○○ without asking)
+      dupFlow({ seeds: rels.flatMap(nr => ent(nr.f).a.filter(k => k.pk).map(k => ({ r: nr, k }))), ents: { [id]: x }, rels: e => e === x ? [] : childRels(e), cancelLabel: '해소 취소', cancelMsg: 'M:N 해소를 취소했습니다 — 관계는 그대로입니다', cancel: () => { render(); showRP(); },
+        done: rows => { if (guard() || !R.includes(r)) { render(); return; } snap(); R.splice(R.indexOf(r), 1); E.push(x); R.push(...rels); fkApply(rows);
+          if (curView !== 'all') { const v = vCur(); (v.ents = v.ents || []).push(id); }
+          selRel = null; sel = id; render(); showRP(); toast(`M:N을 해소했습니다 — 교차 엔터티 ‘${hx(pl.n)}’ · 식별 관계 2개 · PK ${x.a.length}개`, 'success', undoAction()); agLive('M:N 해소'); } });
     };
   }
   $('b-layout').onclick = async () => {
@@ -1629,7 +1788,7 @@ window.pageInit = function () {
       $('b-layout').disabled = false; $('b-layout').textContent = '자동 배치';
       if (cancelled) { toast('자동 배치를 취소했습니다 — 위치는 그대로입니다', 'info'); return; }
       if (mode !== m0 || curView !== v0) { toast('보기가 바뀌어 자동 배치를 취소했습니다 — 위치는 그대로입니다', 'info'); return; }
-      const kx = mode === 'A' ? SX : 1, ky = mode === 'A' ? SY : 1; if (mode === 'A') { aMoveTold = true; }
+      const kx = mode === 'A' ? SX : mode === 'P' ? PX : 1, ky = mode === 'A' ? SY : 1; if (mode === 'A') { aMoveTold = true; }
       if (guard()) return;
       snap(); const cols = { prj: [0, 0], emp: [1, 0], dept: [2, 0], mbr: [1, 1], code: [2, 1], rqrm: [0, 1], dlv: [1, 2], hist: [2, 2], risk: [0, 2], rr: [0.5, 3] };
       // entities without a fixed slot (every ERP area) go on a 4-column grid after the fixed ones — never one tall column
@@ -1643,10 +1802,10 @@ window.pageInit = function () {
   let quietMode = false;
   function setMode(v) {
     const keep = typeof sel === 'string' && ent(sel) ? sel : null, b0 = keep && $('n-' + keep) ? $('n-' + keep).getBoundingClientRect() : null, vr = viewRect(), scx = (vr.left + vr.right) / 2, scy = (vr.top + vr.bottom) / 2 - world.offsetTop;   /* 28 §7-1: the selection (or the canvas centre) stays where it is */
-    const k0x = mode === 'A' ? SX : 1, k0y = mode === 'A' ? SY : 1, lc = { x: (scx - panX) / zoom / k0x, y: (scy - panY) / zoom / k0y }, was = mode; const sk = spreadKey(); if (v === 'A' && sk !== aKey) { needSpread = true; aKey = sk; } if (v === 'L' && sk !== lKey) { needL = true; lKey = sk; }   /* re-measured only when the content or view changed */
+    const k0x = mode === 'A' ? SX : 1, k0y = mode === 'A' ? SY : 1, lc = { x: (scx - panX) / zoom / k0x, y: (scy - panY) / zoom / k0y }, was = mode; const sk = spreadKey(); if (v === 'A' && sk !== aKey) { needSpread = true; aKey = sk; } if (v === 'L' && sk !== lKey) { needL = true; lKey = sk; } if (v === 'P' && sk !== pKey) { needP = true; pKey = sk; }   /* re-measured only when the content or view changed */
     mode = v; document.querySelectorAll('#lp button').forEach(b => { b.classList.toggle('on', b.dataset.v === v); b.setAttribute('aria-pressed', b.dataset.v === v); });
     try { dbmStore.set(`dbm-mode-${ME.id}-${AREA}`, v); } catch (er) {}
-    $('world').classList.toggle('int', v === 'A'); $('lg-int').hidden = v !== 'A' || cv.dataset.sys === '1'; $('b-nextum').hidden = v !== 'A';   // ERD P3-21 groundwork: pressed state is announced
+    $('world').classList.toggle('int', v === 'A'); $('lg-int').hidden = v !== 'A' || cv.dataset.sys === '1'; $('lg-phys').hidden = v !== 'P' || cv.dataset.sys === '1'; $('b-nextum').hidden = v !== 'A';   // ERD P3-21 groundwork: pressed state is announced
     $('ban-gate').style.display = $('ban-sync').style.display = v !== 'L' ? 'flex' : 'none'; if (v !== 'L') drawGate();
     sel = keep; showRP(); render();
     if (keep && b0 && $('n-' + keep)) { const b1 = $('n-' + keep).getBoundingClientRect(); panX += b0.left + b0.width / 2 - b1.left - b1.width / 2; panY += b0.top + b0.height / 2 - b1.top - b1.height / 2; applyView(); setTimeout(() => { const d = $('n-' + keep); if (!d) return; const b2 = d.getBoundingClientRect(); panX += b0.left + b0.width / 2 - b2.left - b2.width / 2; panY += b0.top + b0.height / 2 - b2.top - b2.height / 2; applyView(); }, 30); }   /* screen centre — the banner stack differs per view and settles a moment later */
@@ -1656,7 +1815,7 @@ window.pageInit = function () {
   }
   // 28 §7-5: Alt+1 · 2 · 3 = 논리 · 물리 · 통합 (Shift+1 · 2 are fit-all / fit-selection)
   document.addEventListener('keydown', ev => { const dk = ({ Digit1: '1', Digit2: '2', Digit3: '3' })[ev.code]; if (!ev.altKey || ev.ctrlKey || ev.metaKey || !dk || cv.dataset.sys === '1') return; const t = ev.target; if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return; const b = document.querySelector(`#lp button[data-v="${({ 1: 'L', 2: 'P', 3: 'A' })[dk]}"]`); if (b) { ev.preventDefault(); b.click(); } });
-  function enterMode(v) { if (!v || v === mode) return; if (v === 'P' && !gateSeen) { if (drawGate()) { $('gate-go').textContent = '경고 확인 후 계속'; openPanel('pn-gate'); return; } gateSeen = true; } setMode(v); }   // nothing to check → straight to physical; 통합 never opens the window (28 §6-4)
+  function enterMode(v) { if (!v || v === mode) return; if (v === 'P' && !gateSeen) { if (drawGate()) { openCheck({ gate: true, label: '경고 확인 후 계속' }); return; } gateSeen = true; } setMode(v); }   // nothing to check → straight to physical; 통합 never opens the window (28 §6-4)
   $('lp').addEventListener('click', ev => { if (cv.dataset.sys === '1') return; enterMode(ev.target.dataset.v); });
   setTimeout(() => { let m0 = new URLSearchParams(location.search).get('mode'); if (!m0) { try { m0 = dbmStore.get(`dbm-mode-${ME.id}-${AREA}`, 'L'); } catch (er) { m0 = 'L'; } }
     if (['P', 'A'].includes(m0) && cv.dataset.sys !== '1') { quietMode = true; enterMode(m0); quietMode = false; } }, 0);
@@ -1671,16 +1830,12 @@ window.pageInit = function () {
     const rows = gateRows(), um = rows.filter(r => r[2].includes('미매핑') || r[2].includes('테이블명')).length, tn = rows.filter(r => r[2].includes('타입')).length;
     $('ban-gate-t').innerHTML = rows.length ? `<b>게이트 A · 경고 ${rows.length}</b> — 미매핑 ${um} · 타입 미정 ${tn}. ${mode === 'A' ? '물리에 반영하기 전에 고칠 항목입니다 — [다음 미매핑으로]로 차례로 보세요.' : '진행은 막지 않습니다.'}` : '<b>게이트 A · 통과</b> — 물리 반영 전 점검에서 남은 경고가 없습니다.';
     $('ban-gate').className = 'banner ' + (rows.length ? 'warning' : 'success');
-    $('gate-body').innerHTML = `<div class="mline"><span><b>${um}</b>미매핑</span><span><b>${tn}</b>타입 미정</span></div>` +
-      (rows.length ? `<table class="tbl"><thead><tr><th>위치</th><th>문제</th><th></th></tr></thead><tbody>${rows.map(([e, a, w, act]) => `<tr><td>${e.n}${a ? '.' + a.n : ' (테이블명)'}</td><td><span class="badge ${w.includes('미등록') ? 'b-warning' : 'b-info'}">${w}</span></td><td>${act === 'ex' && a && a.s !== 'ex' ? `<a href="#" data-gex="${e.id}|${a.n}">예외</a>` : act === '엔터티 용어 신청 중' ? '<span class="faint">대기</span>' : `<a href="${stdUrl(e, a)}">맞추기</a>`}</td></tr>`).join('')}</tbody></table>` : '<div class="banner success"><i data-ic=check></i><div>점검할 항목이 없습니다.</div></div>');
-    $('gate-body').querySelectorAll('[data-gex]').forEach(x => x.onclick = ev => { ev.preventDefault(); const [eid, an] = x.dataset.gex.split('|'); window.__openEx(eid, an); });
-    return rows.length;
+    return rows.length;   // M-6: the rows themselves are listed in 모델 검증 (표준 › 테이블명 · 구조 › 물리 정보)
   }
-  $('gate-go').onclick = () => { gateSeen = true;  const n = gateRows().length; setMode('P'); toast(n ? `경고 ${n}건을 남긴 채 물리 모델을 열었습니다` : '점검 통과 — 물리 모델을 열었습니다', 'info'); };
-  $('gate-x').onclick = showRP;
+  $('gate-go').onclick = () => { gateSeen = true; mcGate = false; const n = gateRows().length; setMode('P'); toast(n ? `경고 ${n}건을 남긴 채 물리 모델을 열었습니다` : '점검 통과 — 물리 모델을 열었습니다', 'info'); };
   $('b-nextum').onclick = () => { const um = e => !e.ref && (e.p === '—' || e.a.some(a => !a.edit && a.s !== 'na' && (a.p === '—' || a.t === '—'))); const list = E.filter(um).sort((p, q) => (p.y - q.y) || (p.x - q.x)); if (!list.length) { toast('미매핑 항목이 없습니다', 'info'); return; }
     const i = list.findIndex(e => e.id === sel); const t = list[(i + 1) % list.length]; focusEnt(t.id); toast(`‘${t.n}’ — 미매핑 ${(t.p === '—' ? 1 : 0) + t.a.filter(a => !a.edit && a.s !== 'na' && (a.p === '—' || a.t === '—')).length}개 · ${i + 2 > list.length ? 1 : i + 2}/${list.length}`, 'info'); };
-  $('b-gate').onclick = () => { drawGate(); $('gate-go').textContent = mode === 'A' ? '물리 보기로 열기' : '경고 확인 후 계속'; openPanel('pn-gate'); };
+  $('b-gate').onclick = () => { drawGate(); openCheck({ gate: true, label: mode === 'A' ? '물리 보기로 열기' : '경고 확인 후 계속' }); };
   $('b-reconnect').onclick = () => setOffline(false);
   $('b-export').onclick = ev => { ev.stopPropagation(); $('expmenu').classList.toggle('open'); };
   const moreM = $('moremenu'), moreB = $('b-more');
@@ -1717,7 +1872,7 @@ window.pageInit = function () {
     else { $('ex-official').disabled = true; $('ex-official-t').textContent = '이 업무 영역에는 아직 확정본이 없어 공식 산출물을 만들 수 없습니다'; } })();
   $('ex-official').onchange = ev => { $('ex-title').style.display = ev.target.checked ? 'block' : 'none'; if (ev.target.checked) $('ex-scope').children[1].click(); };
   function expBase() { return `${curSys().name}_${String(LOCK.model.name || AREA).replace(/\s*·\s*|\s+/g, '_')}`; }
-  $('rev-xls').dataset.toast = `모델 검토 결과를 엑셀로 내려받았습니다 — ${expBase()}_검토_v${VER}.xlsx`;
+  $('rev-xls').dataset.toast = `모델 검증 결과를 엑셀로 내려받았습니다 — ${expBase()}_모델검증_v${VER}.xlsx`;
   $('ex-cancel').onclick = () => $('expmenu').classList.remove('open');
   $('ex-go').onclick = () => {
     if (!can('out.export', { area: AREA })) { $('expmenu').classList.remove('open'); toast(ME.has('modeler') ? '담당 시스템의 ERD만 내보낼 수 있습니다' : 'ERD 내보내기는 모델러 · DA · 기관 담당자 · 감리만 할 수 있습니다', 'info'); return; }   /* R-14 · CI-16 */
@@ -1737,7 +1892,7 @@ window.pageInit = function () {
     // the legend says what the system view shows; leaving it brings the status legend back
     if (!window.__lgCanvas) window.__lgCanvas = $('lg-body').innerHTML;
     $('lg-body').innerHTML = on ? '영역 묶음 보기 <span class="dot-i s-cur"></span>지금 영역 <span class="dot-i s-na"></span>다른 영역 · 카드를 두 번 누르면 그 업무 영역을 엽니다' : window.__lgCanvas;
-    $('lg-int').hidden = on || mode !== 'A';
+    $('lg-int').hidden = on || mode !== 'A'; $('lg-phys').hidden = on || mode !== 'P';
     if (!on) { applyView(); }
     if (on) sv.innerHTML = `<div class="banner info sys-ban"><i data-ic=info></i><div class="grow"><b>시스템 전체 ERD · 조회 전용</b> — ${curSys().name}의 모든 업무 영역. 공통 영역의 엔터티는 <b>참조로 가져와</b> 관계를 맺을 수 있습니다.</div></div>
       <div id="sysworld">${Object.entries(getModels()).map(([id, m], i) => { const mo = id === AREA && VER === m.ver && !snapDoc ? { E } : modelOf(id, m.ver); const es = mo.E.filter(x => !x.ref); const bad = compOf(mo).bad; const lk = modelLock(id); const st = lk.state === 'review' ? '검토 중' : lk.state === 'confirmed' ? '확정' : `v${m.ver} 작업 중`; const col = i % 3, row = Math.floor(i / 3); return `<div class="grp sys-area" style="left:${60 + col * 300}px;top:${130 + row * 200}px" ondblclick="__go('model.html?area=${id}')" title="더블클릭하면 이 업무 영역을 엽니다"><h4>${m.name}${id === AREA ? ' <span class="badge">지금 영역</span>' : ''}</h4><div class="caption muted">엔터티 ${es.length} · 미준수 ${bad} · ${st}</div><div class="u-flex u-wrap u-gap-4 u-mt-12">${'<span class="sys-chip"></span>'.repeat(Math.min(es.length, 18))}</div><div class="caption faint u-mt-8"><a href="model.html?area=${id}">열기</a> · 더블클릭해도 열립니다</div></div>`; }).join('')}
@@ -1776,6 +1931,16 @@ window.pageInit = function () {
   else { const saved = getModelData(AREA, VER); if (loadData(saved)) myRev = saved.rev || 0; else if (locked || (AREA === 'rq' && VER > 5)) { applyStd(); keepRecipientAsEx(RECIP_WHY); } }
   var dataReady = true;
   normalizeGroups();   // every relation works on its own FK group (18)
+  E.forEach(e => e.a.forEach(a => { if (a.t != null) { a.t = typeStr(a); typeSync(a); } }));   // M-8: { t:'NUMBER', len, scale } (새 형식) → the joined string this screen edits; len · scale stay beside it
+  // R2-16 · R2-13 · R2-08: fixes that change the copy happen HERE, on an editable working copy the model screen opened — and are saved like any other edit (reading a copy never writes)
+  { const edit = !locked && !DEMO && !viewOnly && !PERF && !SNAP; let chg = 0;
+    if (edit) { const fk = `dbm-descfill-${AREA}-v${VER}`;   // a working copy saved before the seed had definitions: filled once from the seed (same entity id · same attribute)
+      if (getModelData(AREA, VER) && !getModelData(AREA, VER).seedCopy && !dbmStore.get(fk, '')) { const n = seedDescFill(AREA, { E }); if (n) { chg += n; setTimeout(() => toast(`예전에 저장한 작업본에 기본 정의 · 설명 ${n}건을 채웠습니다 — 모델 검증에서 확인하세요`, 'info'), 500); } }
+      dbmStore.set(fk, '1');
+      E.forEach(e => { if (!e.ref) e.a.forEach(a => { if (a.pk && !a.nn) { a.nn = 1; chg++; } }); }); }   // a PK is always required (the 필수 box is locked for PKs — an old copy with it off could not be fixed by hand)
+    { const sd = new Map(modelSeed(AREA).E.map(e => [e.id, e]));   // 안정 ID: an old copy without ids takes the seed's fixed id where it is the same attribute (so it pairs with the confirmed copy), else a new one — kept from here on
+      E.forEach(e => { const o = sd.get(e.id); e.a.forEach(a => { if (a.id) return; const y = o && (o.a.find(z => z.n === a.n) || o.a.find(z => a.p !== '—' && z.p === a.p)); a.id = y && y.id && !e.a.some(z => z.id === y.id) ? y.id : newId('a'); chg++; }); }); }
+    if (chg && edit) dirty = true; }
   // a half-typed attribute left by a closed tab is not part of the model: a new row is dropped, a renamed one gets its old value back
   E.forEach(e => { for (let i = e.a.length - 1; i >= 0; i--) { const a = e.a[i]; if (!a.edit) continue; if (a.orig) { const o = JSON.parse(a.orig); Object.keys(a).forEach(k => delete a[k]); Object.assign(a, o); delete a.edit; delete a.orig; } else e.a.splice(i, 1); if (!locked && !DEMO && !viewOnly) dirty = true; } });
   // term requests made from standardize: once the document ends, the attribute follows it (approved → standard, rejected → back to unresolved)
@@ -1827,7 +1992,7 @@ window.pageInit = function () {
       cmp.removeAttribute('data-toast'); cmp.onclick = () => { setMore(false); let b = null; try { b = modelOf(AREA, BASE); } catch (x) { b = null; } if (!b || !b.E) { toast(`v${BASE} 확정본을 읽을 수 없습니다`, 'info'); return; }
         const be = new Map(b.E.filter(e => !e.ref).map(e => [e.id, e])), mine = E.filter(e => !e.ref);
         let addE = 0, delE = 0, addA = 0, delA = 0, chg = 0;
-        mine.forEach(e => { const o = be.get(e.id); if (!o) { addE++; addA += e.a.length; return; } const om = new Map(o.a.map(a => [a.n, a])); e.a.forEach(a => { const x = om.get(a.n); if (!x) addA++; else if (x.p !== a.p || x.t !== a.t || !!x.pk !== !!a.pk) chg++; }); o.a.forEach(a => { if (!e.a.some(y => y.n === a.n)) delA++; }); if (o.n !== e.n) chg++; });
+        mine.forEach(e => { const o = be.get(e.id); if (!o) { addE++; addA += e.a.length; return; } const om = new Map(o.a.map(a => [a.n, a])); e.a.forEach(a => { const x = om.get(a.n); if (!x) addA++; else if (x.p !== a.p || typeStr(x) !== typeStr(a) || !!x.pk !== !!a.pk) chg++; }); o.a.forEach(a => { if (!e.a.some(y => y.n === a.n)) delA++; }); if (o.n !== e.n) chg++; });
         be.forEach((o, id) => { if (!mine.some(e => e.id === id)) delE++; });
         toast(addE + delE + addA + delA + chg ? `v${BASE} 확정본 대비: 엔터티 +${addE}${delE ? ` −${delE}` : ''}, 속성 +${addA}${delA ? ` −${delA}` : ''}, 변경 ${chg}` : `v${BASE} 확정본과 같습니다 — 바뀐 곳이 없습니다`, 'info'); }; }
     else cmp.remove(); }
@@ -1932,7 +2097,6 @@ window.pageInit = function () {
   });
   // ---- relations (18): connect without asking · set in the panel · delete by condition — FE mockup behaviour
   let selRel = null;   // the relation shown in the right panel (an entity selection clears it)
-  let rolePending = null;   // an open role popover's cancel — a global Esc goes there too
   const KCARD = { '0n': '0개 이상', '1n': '1개 이상', '01': '0~1개', '1': '정확히 1개' };
   const KOPT = { must: '반드시 있다', may: '없어도 된다' };
   const DELS = { none: '자식이 있으면 막기 (기본 · NO ACTION)', cascade: '자식 행도 지우기 (CASCADE)', setnull: '자식의 FK를 비우기 (SET NULL)' };
@@ -1963,60 +2127,28 @@ window.pageInit = function () {
   function cascadeBlockers(r) { const ids = new Set(cascadeChain(r)), under = [], sib = [];
     R.forEach(x => { if (x === r || !liveFk(x) || (x.del || 'none') !== 'none') return; if (ids.has(x.f)) under.push(x.t); else if (x.f === r.f) sib.push(x.t); });
     return { under: [...new Set(under)], sib: [...new Set(sib)] }; }
-  // connect: no questions — the parent key becomes the child FK; ask only for a role name when names clash
+  // connect: no questions — the parent key becomes the child FK. Only when the child already has an attribute of that name (논리명 또는 물리명)
+  // or the relation needs a role name (재귀 · 같은 두 엔터티의 두 번째 관계) the 중복 속성 해소 창 asks (M-1). Nothing exists until 확정 — [연결 취소] leaves the model as it was.
   function makeRel(fId, tId, kind) {
     const parent = ent(fId), child = ent(tId); if (!parent || !child || guard()) return;
     if (child.ref) { toast('다른 영역에서 참조한 엔터티는 자식이 될 수 없습니다 — 원본 영역에서 수정하세요', 'info'); return; }
     const self = fId === tId, idr = kind === 'id' && !self, one = kind === 'one';
-    const g = 'g' + Date.now().toString(36); snap();
+    const g = 'g' + Date.now().toString(36);
     const r = { f: fId, t: tId, k: self ? 'nonid' : kind, name: self ? '상위' : '', g, card: one ? '1' : '0n', opt: self ? 'may' : 'must', del: 'none' };   // resolution R4: child needs its parent (FK NOT NULL) by default · recursive top rows have none
-    R.push(r); selRel = r; sel = null;
-    if (kind === 'mn') { render(); showRP(); toast(`${parent.n} ↔ ${child.n} M:N 관계를 만들었습니다 — 관계 패널의 [M:N 해소]로 교차 엔터티를 만드세요`, 'info', undoAction()); agLive('M:N 관계 생성 · 해소 필요'); return; }
+    const add = () => { snap(); R.push(r); selRel = r; sel = null; };
+    if (kind === 'mn') { add(); render(); showRP(); toast(`${parent.n} ↔ ${child.n} M:N 관계를 만들었습니다 — 관계 패널의 [M:N 해소]로 교차 엔터티를 만드세요`, 'info', undoAction()); agLive('M:N 관계 생성 · 해소 필요'); return; }
+    // 수정 3회차: an identifying relation that closes a loop is refused whether or not the parent has a key yet (FK 대기도 마찬가지 — 키가 생기는 순간 끝없이 내려가게 된다)
+    if (idr && idLoop(fId, tId)) { toast(loopMsg(parent, child), 'danger'); agLive('식별 관계 순환 — 연결하지 않았습니다'); return; }
     const pk = parent.a.filter(a => a.pk);
-    if (!pk.length) { render(); showRP(); toast(`‘${parent.n}’에 식별자가 없어 FK를 만들지 않았습니다(FK 대기) — 식별자를 정하면 FK가 채워집니다`, 'info', [undoAction(), { label: '식별자 지정', fn: () => { selRel = null; focusEnt(parent.id); } }]); agLive('관계 생성 · FK 대기'); return; }
-    const added = [], clashes = [], keyName = new Map();   // keyName: the parent key's own name, for the role box label
-    pk.forEach(k => { const kp = k.p && k.p !== '—';   // an unmapped key ('—') never clashes by its physical name and never becomes ORG_—
-      const clash = self || child.a.some(a => a.n === k.n || (kp && a.p === k.p));
-      let [un, up] = self ? uniqCol(child, '상위' + k.n, kp ? 'UPR_' + k.p : '\u0000') : clash ? uniqCol(child, '원' + k.n, kp ? 'ORG_' + k.p : '\u0000') : [k.n, k.p];   // post-review C6: a third role gets ORG_X_3, never a duplicate
-      if (!kp) up = '—';
-      const x = { n: un, p: up, t: k.t, dom: domOf(k), fk: 1, fkg: g, fkp: k.p, pk: idr ? 1 : 0, nn: self ? 0 : 1, s: clash ? 'comb' : (k.s === 'ex' ? 'ok' : k.s || 'ok') };
-      placeAttr(child, x, true); added.push(x); if (clash) { clashes.push(x); keyName.set(x, k.n); } if (idr) pkSpread(child, x); });
-    if (one && !idr) syncUk(r);
-    if (clashes.length) holdSave = true;   // ERD P1-8: a relation that still needs its role names is not saved yet — a reload while the box is open leaves nothing behind
-    render(); showRP();
-    const msg = `${parent.n} → ${child.n} 관계 · FK ${added.length}개 추가${idr ? ' (자식 식별자)' : ''}${r.uk ? ' · 1:1 보장 UK' : ''}`;
-    if (clashes.length) { agLive('관계 미리 만듦 · 역할명을 정하세요'); rolePop(r, clashes, msg, keyName); return; }   // post-review C5: the success toast waits for the role confirmation
-    toast(msg, 'success', undoAction()); agLive(`관계 생성 · FK ${added.length}개 추가`);
-  }
-  // role names: suggested and selected — Enter keeps what is in the box, typing replaces it · Esc / 취소 takes the new relation back (resolution R2)
-  function rolePop(r, cols, msg, keyName) {
-    const hid = histIds[histIds.length - 1];   // the snapshot taken just before this relation — renaming joins it, cancelling drops it
-    const c = ent(r.t), node = $('n-' + r.t); if (!c || !node) return;
-    const b = node.getBoundingClientRect(), cr = cv.getBoundingClientRect();
-    const p = document.createElement('div'); p.className = 'pop'; p.setAttribute('role', 'dialog'); p.setAttribute('aria-label', '역할명');
-    p.style.left = Math.min(b.right - cr.left + 8, cv.clientWidth - 300) + 'px'; p.style.top = Math.max(b.top - cr.top, 56) + 'px';
-    const self = r.f === r.t, twin = R.find(x => x !== r && x.f === r.f && x.t === r.t), second = !self && !!twin;
-    p.innerHTML = `<b>${self ? '재귀 관계 — 역할을 정하세요' : second ? '같은 두 엔터티의 두 번째 관계 — 역할을 정하세요' : '이름이 겹쳐 역할명을 제안했습니다'}</b><div class="caption muted u-mt-4">${self ? '예: 상위부서 · 최상위 행은 상위가 없어 FK를 비워 둘 수 있습니다.' : second ? '예: 출발창고 · 도착창고.' : hx(c.n) + '에 이미 같은 이름이 있습니다.'} 제안대로 두려면 Enter.</div>${twin ? `<div class="caption u-mt-4">이미 ${self ? '재귀 관계' : '같은 방향의 관계'}가 있습니다${twin.name ? ` (${hx(twin.name)})` : ''}. 다른 역할일 때만 확정하세요. <a href="#" data-twin>기존 관계 열기</a></div>` : ''}` +
-      cols.map((x, i) => `<div class="field u-mt-8"><label for="role-${i}">부모 ${x.fkp && x.fkp !== '—' ? hx(x.fkp) + '을' : hx(josa((keyName && keyName.get(x)) || x.n, '을/를'))} 받는 컬럼</label><input class="input" id="role-${i}" value="${hx(x.n)}"><span class="help mono">${hx(x.p)}</span></div>`).join('') +
-      `<div class="flex"><button class="btn sm ghost" data-no>연결 취소 (Esc)</button><span class="grow"></span><button class="btn sm primary" data-ok>확정 (Enter)</button></div>`;
-    cv.appendChild(p); const first = p.querySelector('input'); first.focus(); first.select();
-    const fresh = () => histIds[histIds.length - 1] === hid && R.includes(r);   // nothing else was edited since the relation was made
-    rolePending = () => cancel();
-    const done = () => { p.remove(); rolePending = null; holdSave = false; const vals = cols.map((x, i) => p.querySelector('#role-' + i).value.trim()); let named = 0;
-      vals.forEach((v, i) => { if (v && v !== cols[i].n && !cols.some((y, j) => j !== i && y.n === v) && !ent(r.t).a.some(y => y !== cols[i] && y.n === v)) { cols[i].n = v; cols[i].s = 'comb'; named++; } });
-      dirty = true; render(); showRP(); toast(msg + (named ? ' · 역할명 ' + named + '개 — 표준 맞추기에서 용어를 확인하세요' : ''), 'success', undoAction()); agLive('관계 생성 · 역할명 확정'); };   // one snapshot: Ctrl+Z takes back the relation and its names together
-    const cancel = () => { p.remove(); rolePending = null; holdSave = false; dirty = true;
-      if (fresh()) { const s = hist.pop(); histIds.pop(); restore(JSON.parse(s)); }   // drop only this relation's own snapshot — never redo-able, never someone else's edit
-      else if (R.includes(r) && r.k !== 'id') { snap(); const ch = ent(r.t); if (ch) for (let i = ch.a.length - 1; i >= 0; i--) if (ch.a[i].fkg === r.g) ch.a.splice(i, 1); if (r.uk && ch) ch.uk = (ch.uk || []).filter(x => x !== r.uk); R.splice(R.indexOf(r), 1); }   // other edits came after it: take out just this relation and its FK columns, keep the rest
-      selRel = null; render(); showRP(); toast(R.includes(r) ? '역할명 창을 닫았습니다 — 관계는 남아 있습니다(Ctrl+Z로 되돌리기)' : '연결을 취소했습니다 — 모델은 그대로입니다', 'info'); agLive('관계 연결 취소');
-      const back = $('n-' + r.f); if (back) { back.tabIndex = -1; back.focus(); } };
-    p.addEventListener('keydown', ev => { ev.stopPropagation(); if (ev.isComposing || ev.keyCode === 229) return; if (ev.key === 'Enter' && ev.target.tagName === 'INPUT') { ev.preventDefault(); done(); } else if (ev.key === 'Escape') { ev.preventDefault(); cancel(); } });
-    p.querySelector('[data-ok]').onclick = done; p.querySelector('[data-no]').onclick = cancel;
-    const tw = p.querySelector('[data-twin]'); if (tw) tw.onclick = ev => { ev.preventDefault(); const keep = twin; cancel(); const again = R.find(x => x.f === keep.f && x.t === keep.t && x.name === keep.name); if (again) { selRel = again; sel = null; render(); showRP(); } };
+    if (!pk.length) { add(); render(); showRP(); toast(`‘${parent.n}’에 식별자가 없어 FK를 만들지 않았습니다(FK 대기) — 식별자를 정하면 FK가 채워집니다`, 'info', [undoAction(), { label: '식별자 지정', fn: () => { selRel = null; focusEnt(parent.id); } }]); agLive('관계 생성 · FK 대기'); return; }
+    // R2-04: the relation being made counts as one of its parent's relations while the plan is built — a key that would come back round through it (식별 관계 순환) is caught before anything is made
+    dupFlow({ seeds: pk.map(k => ({ r, k })), rels: e => childRels(e).concat(e.id === fId && !self && !R.includes(r) ? [r] : []), twin: R.find(x => x.f === fId && x.t === tId) || null, anchor: tId, back: fId, cancelLabel: '연결 취소', cancelMsg: '연결을 취소했습니다 — 모델은 그대로입니다',
+      done: rows => { if (guard()) return; add(); const st = fkApply(rows); if (one && !idr) syncUk(r); render(); showRP();   // one snapshot: Ctrl+Z takes back the relation, its FK columns and their names together
+        toast(`${parent.n} → ${child.n} 관계 · FK ${st.n}개${st.use ? `(기존 속성 사용 ${st.use})` : ' 추가'}${idr ? ' (자식 식별자)' : ''}${st.neu ? ` · 새 이름 ${st.neu}개 — 표준 맞추기에서 용어를 확인하세요` : ''}${r.uk ? ' · 1:1 보장 UK' : ''}`, 'success', undoAction()); agLive(`관계 생성 · FK ${st.n}개`); } });
   }
   // keyboard path: an entity is selected → R → pick the child from a list
   function childPicker(fId) {
-    const parent = ent(fId); if (!parent || guard()) return; document.querySelectorAll('.pop').forEach(x => x.remove());
+    const parent = ent(fId); if (!parent || guard()) return; closePops();
     const p = document.createElement('div'); p.className = 'pop'; p.setAttribute('role', 'dialog'); p.setAttribute('aria-label', '관계 만들기'); p.style.left = '16px'; p.style.top = '52px'; p.style.width = '320px';
     // ERD P3-19: the relation type is chosen here, on top of the picker (1 · 2 · 3) — no trip back to the toolbar menu
     const RT = [['nonid', '비식별', '1:N 비식별 — 자식 FK는 일반 속성'], ['id', '식별', '1:N 식별 — 자식 FK가 식별자에 들어감'], ['one', '1:1', '1:1 — 자식 FK에 UK']];
@@ -2054,7 +2186,7 @@ window.pageInit = function () {
     const eNm = id => hx((ent(id) || {}).n || id);
     const chain = st.del === 'cascade' ? cascadeChain(r) : [], bl = st.del === 'cascade' ? cascadeBlockers(r) : { under: [], sib: [] };
     $('rp-body').innerHTML = `
-      <div class="relhd"><b>${hx(p.n)}</b><svg width="96" height="14" aria-hidden="true"><path d="M2,7 H94" stroke="var(--fg-2)" stroke-width="1.2" ${ident || r.k === 'one' ? '' : 'stroke-dasharray="5 4"'} marker-start="${st.opt === 'may' ? 'url(#m-one0)' : 'url(#m-one)'}" marker-end="${r.k === 'mn' ? 'url(#m-many)' : ({ '0n': 'url(#m-many0)', '1n': 'url(#m-many)', '01': 'url(#m-one0)', '1': 'url(#m-one)' })[st.card]}"/></svg><b>${hx(c.n)}</b>${r.xg ? '<span class="badge">배타</span>' : ''}</div>
+      <div class="relhd"><b>${hx(p.n)}</b><svg width="96" height="14" aria-hidden="true"><path d="M2,7 H94" stroke="var(--fg-2)" stroke-width="1.2" ${ident ? '' : 'stroke-dasharray="5 4"'} marker-start="${st.opt === 'may' ? 'url(#m-one0)' : 'url(#m-one)'}" marker-end="${r.k === 'mn' ? 'url(#m-many)' : ({ '0n': 'url(#m-many0)', '1n': 'url(#m-many)', '01': 'url(#m-one0)', '1': 'url(#m-one)' })[st.card]}"/></svg><b>${hx(c.n)}</b>${r.xg ? '<span class="badge">배타</span>' : ''}</div>
       ${ro ? `<div class="caption muted u-mb-8">조회 전용 — ${c.ref ? '참조 엔터티의 관계는 원본 영역에서 고칩니다' : review ? '결재 중인 제출본이라 고칠 수 없습니다' : confirmed ? '확정본이라 고칠 수 없습니다 · 새 버전에서 고치세요' : '이 영역을 고칠 권한이 없습니다'}.</div>` : ''}
       <div class="section-t">모델</div>
       <div class="field"><label for="rel-name">관계명</label><input class="input" id="rel-name" value="${hx(r.name || '')}" placeholder="예: 소속 · 담당 · 포함 · 주문" aria-describedby="rel-name-h"${D}><span class="help" id="rel-name-h">명사로 짧게 — 두 엔터티가 어떤 관계인지(소속 · 담당 · 포함). 같은 두 엔터티 사이 관계가 둘 이상이면 역할로 구분(출발 · 도착)</span></div>
@@ -2090,6 +2222,7 @@ window.pageInit = function () {
   // the identifying switch reshapes the child key and its grandchildren — preview first, [적용] applies (resolution R3)
   function relSetKind(r, k, go) {
     if (guard() || (k === 'id') === (r.k === 'id')) return; const c = ent(r.t); if (r.f === r.t) { toast('재귀 관계는 비식별입니다', 'info'); return; }
+    if (k === 'id' && idLoop(r.f, r.t)) { toast(loopMsg(ent(r.f), c), 'danger'); return; }   // 수정 2회차: turning this relation identifying would close a loop
     if (!go) {
       if (selRel !== r || !$('rel-pend')) { selRel = r; sel = null; render(); showRP(); }
       const box = $('rel-pend'); if (!box) return; const toId = k === 'id', cols = relCols(r);
@@ -2107,11 +2240,14 @@ window.pageInit = function () {
       box.onkeydown = ev => { if (ev.key === 'Escape') { ev.stopPropagation(); back(); } };
       const go = box.querySelector('[data-rk-go]'); go.disabled = true; setTimeout(() => { go.disabled = false; }, 300); box.querySelector('[data-rk-no]').focus(); return;   // post-review CL8: same safety as the delete band
     }
-    snap(); const toId = k === 'id', cols = relCols(r); let down = 0;
-    cols.forEach(a => { if (!toId) pkReach(c, a).forEach(([g, x]) => { const i = g.a.indexOf(x); if (i >= 0) { g.a.splice(i, 1); down++; } });
-      a.pk = toId ? 1 : 0; a.nn = toId || relOf(r).opt === 'must' ? 1 : 0; placeAttr(c, a, true); if (toId) down += pkSpread(c, a); });
-    r.k = toId ? 'id' : (relOf(r).card === '1' ? 'one' : 'nonid'); if (toId) { r.opt = 'must'; if (r.del === 'setnull') r.del = 'none'; } syncUk(r);
-    relAfter(r, toId ? `식별 관계로 바꿨습니다 — FK ${cols.length}개가 식별자 · 필수가 됐습니다${down ? ` · 손자 엔터티에 FK ${down}개 추가` : ''}` : `비식별 관계로 바꿨습니다 — FK ${cols.length}개를 식별자에서 뺐습니다${down ? ` · 손자 엔터티의 FK ${down}개 정리` : ''}`);
+    const toId = k === 'id', cols = relCols(r);
+    const run = rows => { if (guard() || !R.includes(r)) { render(); return; } snap(); let down = 0;
+      cols.forEach(a => { if (!toId) pkReach(c, a).forEach(([g, x]) => { const i = g.a.indexOf(x); if (i >= 0) { g.a.splice(i, 1); down++; } });
+        a.pk = toId ? 1 : 0; a.nn = toId || relOf(r).opt === 'must' ? 1 : 0; placeAttr(c, a, true); });
+      r.k = toId ? 'id' : (relOf(r).card === '1' ? 'one' : 'nonid'); if (toId) { r.opt = 'must'; if (r.del === 'setnull') r.del = 'none'; down += fkApply(rows).n; } syncUk(r);
+      relAfter(r, toId ? `식별 관계로 바꿨습니다 — FK ${cols.length}개가 식별자 · 필수가 됐습니다${down ? ` · 손자 엔터티에 FK ${down}개` : ''}` : `비식별 관계로 바꿨습니다 — FK ${cols.length}개를 식별자에서 뺐습니다${down ? ` · 손자 엔터티의 FK ${down}개 정리` : ''}`); };
+    // M-1: turning identifying sends the key on to the grandchildren — the same 중복 속성 해소 창 asks when one of them already has that name
+    dupFlow({ seeds: toId ? cols.flatMap(a => childRels(c).filter(r2 => r2 !== r).map(r2 => ({ r: r2, k: a }))) : [], cancelLabel: '유형 변경 취소', cancelMsg: '유형 변경을 취소했습니다 — 관계는 그대로입니다', cancel: () => { render(); showRP(); }, done: run });
   }
   function relSetCard(r, v) {
     if (guard()) return; snap(); r.card = v; if (v === '1') { if (r.k !== 'id') r.k = 'one'; } else if (r.k === 'one') r.k = 'nonid';
@@ -2132,14 +2268,24 @@ window.pageInit = function () {
     // post-review C2 · CL5: a column that belongs to another relation, or already pairs another key of this one, is not taken silently
     if (x && x.fk && x.fkg && x.fkg !== r.g) { const o = R.find(y => y.g === x.fkg); toast(`${x.n}은(는) ${o ? ent(o.f).n + ' → ' + ent(o.t).n : '다른'} 관계의 FK입니다 — 그 관계에서 짝을 먼저 푸세요`, 'info'); render(); return; }
     if (x && x.fkg === r.g && x.fkp && x.fkp !== pkP) { toast(`${x.n}은(는) 이미 ${x.fkp}의 짝입니다 — 한 컬럼은 부모 키 하나만 받습니다`, 'info'); render(); return; }
-    snap(); let gn = 0;
-    if (!r.g) ensureGroup(r, p, c, null);
-    const pkL = p.a.filter(a => a.pk), gc = c.a.filter(a => a.fk && a.fkg === r.g); if (gc.length === pkL.length) gc.forEach((a, i) => { if (!a.fkp) a.fkp = pkL[i].p; });   // older group columns learn their pair first
-    const prev = c.a.find(a => a.fk && a.fkg === r.g && a.fkp === pkP);
-    if (prev && prev !== x) { if (prev.pk && r.k === 'id') { pkReach(c, prev).forEach(([g, y]) => { const i = g.a.indexOf(y); if (i >= 0) { g.a.splice(i, 1); gn++; } }); prev.pk = 0; placeAttr(c, prev, true); } delete prev.fk; delete prev.fkg; delete prev.fkp; }
-    if (x && x !== prev) { x.fk = 1; x.fkg = r.g; x.fkp = pkP; if (r.k === 'id') { const was = x.pk; x.pk = 1; x.nn = 1; placeAttr(c, x); if (!was) gn += pkSpread(c, x); } else x.nn = relOf(r).opt === 'must' ? 1 : 0; }
-    syncUk(r); if (r.del === 'setnull' && !nullable(r)) r.del = 'none'; const f = fkOf(r, E);
-    if (gn) toast(`손자 엔터티의 FK ${gn}개도 함께 맞췄습니다`, 'info'); relAfter(r, f.st === 'ok' ? `FK 짝을 맞췄습니다 · ${f.cols.join(', ')} → ${p.p}` : `FK 짝을 바꿨습니다 — 아직 ${f.why || '누락'}`);
+    const run = rows => { if (guard() || !R.includes(r) || (x && !c.a.includes(x))) { render(); return; }
+      snap(); let gn = 0, dropped = null, fit = false;
+      if (!r.g) ensureGroup(r, p, c, null);
+      const pkL = p.a.filter(a => a.pk), gc = c.a.filter(a => a.fk && a.fkg === r.g); if (gc.length === pkL.length) gc.forEach((a, i) => { if (!a.fkp) a.fkp = pkL[i].p; });   // older group columns learn their pair first
+      const prev = c.a.find(a => a.fk && a.fkg === r.g && a.fkp === pkP), k = pkL.find(a => a.p === pkP);
+      if (prev && prev !== x) { if (prev.pk && r.k === 'id') { pkReach(c, prev).forEach(([g, y]) => { const i = g.a.indexOf(y); if (i >= 0) { g.a.splice(i, 1); gn++; } }); prev.pk = 0; placeAttr(c, prev, true); } delete prev.fk; delete prev.fkg; delete prev.fkp;
+        // M-1 defect fix: the column the relation made for itself (원○○ · ORG_ · 상위○○) is not left behind as an unused attribute once another column takes its place
+        const bare = String(prev.p).replace(/^(ORG_|UPR_)/, ''), auto = prev.fkAuto || (bare !== prev.p && (bare === pkP || bare.replace(/_\d+$/, '') === pkP));
+        if (x && auto) { c.a.splice(c.a.indexOf(prev), 1); dropped = prev; } else delete prev.fkAuto; }
+      if (x && x !== prev) { x.fk = 1; x.fkg = r.g; x.fkp = pkP; delete x.fkCand; delete x.fkAuto;
+        if (k && (x.t !== k.t || domOf(x) !== domOf(k))) { x.t = k.t; x.dom = domOf(k); delete x.d; delete x.xt; delete x.xlen; typeSync(x); fit = true; }   // 기존 속성을 FK로 사용 = 타입 · 길이 · 도메인은 부모 키에 맞춤 (M-1)
+        if (r.k === 'id') { x.pk = 1; x.nn = 1; placeAttr(c, x); } else x.nn = relOf(r).opt === 'must' ? 1 : 0; }
+      gn += fkApply(rows).n;
+      syncUk(r); if (r.del === 'setnull' && !nullable(r)) r.del = 'none'; const f = fkOf(r, E);
+      if (gn) toast(`손자 엔터티의 FK ${gn}개도 함께 맞췄습니다`, 'info');
+      relAfter(r, (f.st === 'ok' ? `FK 짝을 맞췄습니다 · ${f.cols.join(', ')} → ${p.p}` : `FK 짝을 바꿨습니다 — 아직 ${f.why || '누락'}`) + (fit ? ' · 타입 · 도메인을 부모 키에 맞춤' : '') + (dropped ? ` · 자동으로 만든 ${dropped.p !== '—' ? dropped.p : dropped.n} 컬럼은 지웠습니다` : '')); };
+    // an identifying relation puts the newly paired column into the key → on to the grandchildren through the shared plan (M-1)
+    dupFlow({ seeds: x && r.k === 'id' && !x.pk ? childRels(c).filter(r2 => r2 !== r).map(r2 => ({ r: r2, k: x })) : [], cancelLabel: 'FK 짝 변경 취소', cancelMsg: 'FK 짝 변경을 취소했습니다 — 모델은 그대로입니다', cancel: () => { render(); showRP(); }, done: run });
   }
   // delete by condition (18 · condition table): ask only when columns are involved; the buttons say what happens
   function relDelete(r) {
@@ -2174,7 +2320,7 @@ window.pageInit = function () {
     R.splice(R.indexOf(r), 1); selRel = null; render(); showRP();
     touched.forEach(id => { const el = $('n-' + id); if (el) { el.classList.add('thl'); setTimeout(() => el.classList.remove('thl'), 2000); } });
     toast(`${p.n} → ${c.n} 관계를 삭제했습니다${cols.length ? opt === 'del' ? ` · 컬럼 ${n + gn}개 정리${gn ? `(손자 ${gn}개 포함)` : ''}` : ident && opt === 'keep' ? ` · 컬럼 ${cols.length}개는 자식의 식별자로 남김` : ` · 컬럼 ${cols.length}개는 일반 컬럼으로 남김` : ''}`, 'info',
-      [undoAction(), cols.length && opt !== 'del' && !(ident && opt === 'keep') ? { label: '이 컬럼도 지우기', fn: () => { if (guard()) return; snap(); cols.forEach(a => { const i = c.a.indexOf(a); if (i >= 0) c.a.splice(i, 1); }); render(); toast(`남긴 컬럼 ${cols.length}개를 지웠습니다`, 'info', undoAction()); } } : null]);   // post-review CL9: the kept columns are one click from gone
+      [undoAction(), cols.length && opt !== 'del' && !(ident && opt === 'keep') ? { label: '이 컬럼도 지우기', fn: () => dropPlain(cols.map(a => [c, a])) } : null]);   // post-review CL9: the kept columns are one click from gone
     agLive('관계 삭제됨');
   }
 
@@ -2188,7 +2334,7 @@ window.pageInit = function () {
   $('viewsel').addEventListener('change', ev => { const v = ev.target.value; if (v === '__new') { syncViewSel(); vNew(); return; } setView(v); });
   // a small form on the canvas (name a view · choose views · confirm) — Esc closes, Enter in the text field confirms
   function askPop(html, onOk, at) {
-    document.querySelectorAll('.pop').forEach(p => p.remove());
+    closePops();
     const p = document.createElement('div'); p.className = 'pop'; p.setAttribute('role', 'dialog'); p.style.width = '300px'; p.style.left = (at ? at.x : 16) + 'px'; p.style.top = (at ? at.y : 52) + 'px';
     p.innerHTML = html; cv.appendChild(p);
     const back = document.activeElement;
@@ -2235,7 +2381,7 @@ window.pageInit = function () {
   // references: another area's entity, read-only, from that area's LATEST CONFIRMED copy (12 §3.2)
   const refFrom = (srcArea, id) => { const m = getModels()[srcArea]; if (!m || !m.base) return { why: `${(m || {}).name || '원본 영역'}에는 아직 확정본이 없어 참조할 수 없습니다 — 원본이 확정된 뒤 참조합니다` };
     const c = confirmedCopy(srcArea); const o = c && c.E.find(x => x.id === id && !x.ref); return o ? { m, o } : { why: `${m.name} v${m.base} 확정본에 이 엔터티가 없습니다 — 작업 중에 새로 만든 엔터티는 확정된 뒤 참조할 수 있습니다` }; };
-  const refAttrs = o => o.a.filter(a => a.pk || /명$/.test(a.n)).slice(0, 6).map(a => { const x = Object.assign({}, a); delete x.fk; delete x.fkg; delete x.fkp; delete x.edit; delete x.orig; return x; });
+  const refAttrs = o => o.a.filter(a => a.pk || /명$/.test(a.n)).slice(0, 6).map(a => { const x = Object.assign({}, a); delete x.fk; delete x.fkg; delete x.fkp; delete x.edit; delete x.orig; x.t = typeStr(x); return x; });   // a confirmed copy is stored in parts — joined for this screen
   function addRef(srcArea, id, at) {
     if (srcArea === AREA) return placeHere(id, at || { x: 80, y: 80 });
     if (guard()) return;
@@ -2267,19 +2413,10 @@ window.pageInit = function () {
     if (refGuard(c)) return;
     if (p.p === '—' || c.p === '—') { toast(`게이트 A: ${p.p === '—' ? p.n : c.n} 테이블 물리명이 없습니다 — 표준 맞추기에서 먼저 정하세요`, 'danger'); return; }
     const pk = p.a.filter(a => a.pk); if (!pk.length) { toast(`게이트 A: ${p.n}에 PK가 없습니다 — 부모의 식별자를 먼저 정하세요`, 'danger'); return; }
-    const self = r.f === r.t, multi = R.filter(x => x.f === r.f && x.t === r.t && x.k !== 'mn').length > 1;
-    const plan = pk.filter(k => !c.a.some(fkMatch(r, k))).map(k => { const adopt = !self && !r.g && c.a.find(x => !x.fk && x.p === k.p); const clash = !adopt && (self || c.a.some(x => x.n === k.n)); return { k, adopt, clash }; });
-    const name = `${c.p}_${p.p}_FK`;
-    askPop(`<b>FK 만들기 · 게이트 A</b><div class="caption u-my-8">${hx(p.n)} → ${hx(c.n)} 관계의 FK <span class="mono">${hx(name)}</span>를 만듭니다. 자식 ${hx(c.n)}에:</div>
-      <ul class="caption" style="margin:0 0 8px;padding-left:16px">${plan.map(x => `<li>${x.adopt ? `기존 컬럼 <span class="mono">${hx(x.k.p)}</span>을 FK로 지정` : `컬럼 추가 <span class="mono">${hx((self ? 'UPR_' : x.clash ? 'ORG_' : '') + x.k.p)}</span> ${hx(x.k.t)}${x.clash ? ' (역할명 — 이름을 확인하세요)' : ''}`}</li>`).join('') || '<li>추가할 컬럼은 없고, 짝만 맞춥니다</li>'}</ul>
-      <div class="flex"><button class="btn sm" data-no>취소</button><span class="grow"></span><button class="btn sm primary" data-ok>FK 만들기</button></div>`, () => {
-      if (guard()) return; snap(); const idr = r.k === 'id';
-      if (!r.g && (self || multi || plan.some(x => x.clash))) ensureGroup(r, p, c, null);
-      plan.forEach(({ k, adopt, clash }) => {
-        if (adopt) { adopt.fk = 1; adopt.fkp = k.p; if (r.g) adopt.fkg = r.g; if (idr) { adopt.pk = 1; adopt.nn = 1; placeAttr(c, adopt); } return; }
-        const x = { n: (self ? '상위' : clash ? '원' : '') + k.n, p: (self ? 'UPR_' : clash ? 'ORG_' : '') + k.p, t: k.t, dom: domOf(k), fk: 1, fkp: k.p, pk: idr && !self ? 1 : 0, nn: idr && !self ? 1 : 0, s: clash || self ? 'comb' : k.s };
-        if (r.g) x.fkg = r.g; placeAttr(c, x, true); });
-      render(); const now = fkOf(r, E); toast(now.st === 'ok' ? `FK ${now.name}를 만들었습니다 · ${now.cols.join(', ')} → ${p.p}` : `FK를 아직 만들 수 없습니다 — ${now.why}`, now.st === 'ok' ? 'success' : 'danger', undoAction()); });
+    // M-1: FK 복구 goes through the same plan — a child column of the same name is offered as 기존 속성을 FK로 사용 (it used to be taken without asking), the rest are added
+    dupFlow({ seeds: pk.filter(k => !c.a.some(fkMatch(r, k))).map(k => ({ r, k })), anchor: c.id, back: c.id, cancelLabel: 'FK 만들기 취소', cancelMsg: 'FK 만들기를 취소했습니다 — 모델은 그대로입니다',
+      done: rows => { if (guard() || !R.includes(r)) return; snap(); if (!r.g) ensureGroup(r, p, c, null); const st = fkApply(rows); render(); const now = fkOf(r, E);
+        toast(now.st === 'ok' ? `FK ${now.name}를 만들었습니다 · ${now.cols.join(', ')} → ${p.p}${st.use ? ` · 기존 속성 사용 ${st.use}개` : ''}${st.neu ? ` · 새 이름 ${st.neu}개` : ''}` : `FK를 아직 만들 수 없습니다 — ${now.why}`, now.st === 'ok' ? 'success' : 'danger', undoAction()); } });
   }
   // a tree entity dropped on the canvas: same area → place in this view · another area → reference (12 §3.2)
   window.addEventListener('dbm-tree-drag', ev => cv.classList.toggle('placing', !!(ev.detail && ev.detail.on) && cv.dataset.sys !== '1'));
@@ -2417,7 +2554,7 @@ window.pageInit = function () {
   if (q.get('sys')) setTimeout(() => $('b-sys').click(), 150);
   // DDL / outputs open for THIS area (and this submitted copy when viewing one) — CX12-30
   document.querySelectorAll('a[href="ddl.html"], a[href^="outputs.html"]').forEach(a => { const u = new URL(a.getAttribute('href'), location.href); u.searchParams.set('area', AREA); if (SNAP && SNAPDOC) u.searchParams.set('snap', SNAPDOC.id); a.setAttribute('href', u.pathname.split('/').pop() + u.search); });   // system home → whole-system ERD (area group view)
-  setTool('select'); applyView(); render(); renderReview(); setTimeout(() => { if (!viewTouched) home(); moveCursors(); }, 60);
+  setTool('select'); applyView(); render(); setTimeout(() => { if (!viewTouched) home(); moveCursors(); }, 60);
 };
 </script>
 </body>

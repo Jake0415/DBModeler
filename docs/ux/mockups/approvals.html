@@ -44,6 +44,15 @@
   .rej-why { color:var(--danger-deep); }
   .dep-ban { margin:8px 0 0 40px; }
   .dep-ban .btn { flex:0 0 auto; }
+  /* E (고객 모델 요청 2026-11-25): 제출 사본 항목 — entity group rows + attribute rows, horizontal scroll inside the table only */
+  .si-wrap { overflow-x:auto; }
+  .si-tbl :is(th, td) { white-space:nowrap; vertical-align:top; }
+  .si-tbl td.si-d { white-space:normal; min-width:140px; }
+  .si-tbl tr.si-e td { background:var(--surface-2); font-size:13px; }
+  .si-tbl td.si-chg { background:var(--ds-amber-100); }
+  .si-tbl .si-old { display:block; font-size:12px; }
+  .si-tbl tr.si-del td { color:var(--fg-3); text-decoration:line-through; }
+  .si-tbl tr.si-del td .badge { text-decoration:none; }
   /* A5: item filter row */
   #mo-diff .modal { width:720px; }   /* fixed widths live in the page style, not inline (17 §6.2) */
   .itf { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:8px; }
@@ -448,8 +457,11 @@ window.pageInit = function () {
   // check tab: same judgement as the final-approval re-check (checkDictDoc)
   function checks(d) {
     if (d.type === 'model') {
-      const bad = modelBad(d.model); const s = d.snap || {}; const ended = reqEnded(d.model);
-      return `<table class="tbl"><thead><tr><th>검사</th><th>신청 시점</th><th>제출 모델 재검사</th></tr></thead><tbody><tr><td>미준수 (조합 가능·미등록)</td><td>${s.bad != null ? s.bad + '건' : '—'}</td><td>${bad == null ? `<span class="caption muted">제출 사본 없음(목업 시드). 신청 시점 값 ${s.bad != null ? s.bad + '건' : '0건'}으로 판정</span>` : bad ? tag('err', bad + '건') : tag('ok', '통과')}</td></tr><tr><td>연결된 용어 신청</td><td>—</td><td>${ended.length ? tag('err', '반려·회수 ' + ended.length + '건') + ` <span class="caption">${ended.join(', ')}</span>` : tag('ok', '통과')}</td></tr><tr><td>표준 예외 (사유 기록)</td><td>${(s.exList || []).length}건</td><td>${d.model ? d.model.E.reduce((n, e) => n + e.a.filter(a => a.s === 'ex').length, 0) + '건' : '—'}</td></tr></tbody></table><div class="caption muted u-mt-8">승인은 <b>제출된 모델 사본</b>으로 다시 검사합니다(지금 작업 중인 모델이 아님).</div>`;
+      const bad = subBad(d.model), wn = subWarn(d.model); const s = d.snap || {}; const ended = reqEnded(d.model);
+      // R2-10: 신청 시점 = the shared check kept on the document (d.check: block · warn · rulesVer); older documents fall back to the old count (snap.bad)
+      const ck = d.check || null, atB = ck && ck.block != null ? ck.block : s.bad, curV = getPolicy().ver, atV = ck && ck.rulesVer != null ? ck.rulesVer : d.policyVer;
+      const pv = `<div class="caption muted u-mb-8">검수 기준: 신청 시점 ${atV ? 'v' + atV : '기록 없음'} · 현재 v${curV}${atV && atV !== curV ? '. <b class="u-warning">신청 뒤 기준이 바뀌어 현재 기준으로 다시 검사합니다</b>' : ''}${ck ? '' : ' · 신청 시점 모델 검증 기록이 없어 기존 미준수 집계로 보입니다'}</div>`;
+      return pv + `<table class="tbl"><thead><tr><th>검사</th><th>신청 시점${atV ? ' (v' + atV + ')' : ''}</th><th>제출 모델 재검사 (현재 v${curV})</th></tr></thead><tbody><tr><td>${BAD_LABEL()}</td><td>${atB != null ? atB + '건' : '—'}</td><td>${bad == null ? `<span class="caption muted">제출 사본 없음(목업 시드). 신청 시점 값 ${atB != null ? atB + '건' : '0건'}으로 판정</span>` : bad ? tag('err', bad + '건') : tag('ok', '통과')}</td></tr>${wn != null || (ck && ck.warn != null) ? `<tr><td>모델 검증 경고</td><td>${ck && ck.warn != null ? ck.warn + '건' : '—'}</td><td>${wn == null ? '—' : wn ? tag('warn', wn + '건') : tag('ok', '없음')}</td></tr>` : ''}<tr><td>연결된 용어 신청</td><td>—</td><td>${ended.length ? tag('err', '반려·회수 ' + ended.length + '건') + ` <span class="caption">${ended.join(', ')}</span>` : tag('ok', '통과')}</td></tr><tr><td>표준 예외 (사유 기록)</td><td>${(s.exList || []).length}건</td><td>${d.model ? d.model.E.reduce((n, e) => n + e.a.filter(a => a.s === 'ex').length, 0) + '건' : '—'}</td></tr></tbody></table><div class="caption muted u-mt-8">승인은 <b>제출된 모델 사본</b>으로 다시 검사합니다(지금 작업 중인 모델이 아님).</div>`;
     }
     // finished documents show what the approval applied. re-checking them against today's dictionary would only report themselves as duplicates
     if (d.step === 'done') { const a = d.applied || {}; return `<div class="banner">${icon('check')}<div>최종 승인 때 검사를 통과해 반영했습니다. 반영 ${a.applied != null ? a.applied : (d.items || []).length}건${a.failed && a.failed.length ? ` · 실패 ${a.failed.length}건(${a.failed.map(f => f.join(': ')).join(', ')})` : ''}. 반영 뒤 바뀐 내용은 <a href="dict-history.html">표준 사전 변경 내역</a>에서 확인하세요.</div></div>`; }
@@ -500,7 +512,7 @@ window.pageInit = function () {
       const df = diffOf(d);
       return `<div class="mline"><span><b>${snap.rate}%</b>준수율(신청 시점)</span><span><b>${snap.bad}</b>미준수</span><span><b>${(snap.exList || []).length}</b>예외</span><span><b>${df.rows ? df.rows.length : '없음'}</b>v${d.ver - 1} 대비 변경</span></div>
       ${linkedHtml(d)}
-      <div class="caption muted" style="margin:6px 0 8px">승인은 제출 사본(${d.submittedAt || d.date})으로 판정합니다. ${d.model ? `<a href="model.html?area=${d.area}&snap=${d.id}">제출 사본 보기</a>` : '제출 사본 없음(목업 시드)'}<span hidden>내용 해시 <span class="mono">${(() => { let h = 0; const s = d.id + d.area + d.ver + (d.submittedAt || d.date); for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0; return 'sha256:' + h.toString(16).padStart(8, '0') + '…'; })()}</span></span></div>
+      <div class="caption muted" style="margin:6px 0 8px">승인은 제출 사본(${d.submittedAt || d.date})으로 판정합니다. ${d.model ? `<a href="model.html?area=${d.area}&snap=${d.id}">제출 사본 보기</a>` : '제출 사본 없음(목업 시드)'}<span hidden>내용 해시 <span class="mono">${docHash(d) || '—'}</span></span></div>
       <div class="section-t">표준 예외 목록 ${tag('ex', '예외 ' + (snap.exList || []).length)}</div>
       <table class="tbl"><thead><tr><th>위치</th><th>항목</th><th>사유</th></tr></thead><tbody>${(snap.exList || []).map(x => `<tr><td>${x[0]}</td><td class="mono">${x[1]}</td><td class="wrap">${x[2]}</td></tr>`).join('') || '<tr class="er"><td colspan="3" class="caption muted">예외 없음</td></tr>'}</tbody></table>`;
     }
@@ -510,6 +522,65 @@ window.pageInit = function () {
   const linkedReqs = d => { if (!d.model) return []; const out = []; d.model.E.forEach(e => { if (e.st && !e.ref) { const x = e.reqDoc && docs.find(y => y.id === e.reqDoc); out.push({ at: `${e.n} (엔터티)`, doc: x, live: !x || ['da', 'final'].includes(x.step), ended: x && ['rejected', 'withdrawn'].includes(x.step) }); } }); d.model.E.forEach(e => e.a.forEach(a => { if (a.s === 'req') { const x = a.reqDoc && docs.find(y => y.id === a.reqDoc); out.push({ at: `${e.n}.${a.n}`, doc: x, live: x && ['da', 'final'].includes(x.step), ended: x && ['rejected', 'withdrawn'].includes(x.step) }); } })); return out; };
   function linkedHtml(d) { const L = linkedReqs(d); if (!L.length) return '';
     return `<div class="section-t">연결된 용어 신청 <span class="mono muted">${L.length}</span></div><table class="tbl"><thead><tr><th>속성</th><th>용어 신청</th><th>단계</th></tr></thead><tbody>${L.map(x => `<tr><td>${x.at}</td><td>${x.doc ? `<a class="mono" href="approvals.html?doc=${x.doc.id}">${x.doc.id}</a>` : '<span class="faint">연결 없음</span>'}</td><td>${x.doc ? `${docTag(x.doc)}` : '—'}</td></tr>`).join('')}</tbody></table>${L.some(x => x.live) ? `<div class="caption u-mt-4">진행 중인 용어 신청이 있습니다. ${d.step === 'da' && hasFinal(d) ? 'DA 단계는 확인 표시 후 넘길 수 있지만, <b>최종 승인(확정)은 연결 신청이 모두 완료돼야</b> 합니다.' : '<b>연결 신청이 모두 완료돼야 확정할 수 있습니다.</b>'} 반려·회수된 신청이 있으면 승인할 수 없습니다.</div>` : ''}`; }
+  /* R2-05: modelCheck(m) with no policy argument = today's naming rules + the model input rules from app.js getModelInputRules() — the same reading the model screen uses (never the rules read here directly) */
+  /* M-6 · P-6: the approval re-check uses the shared model check (window.modelCheck, its 'block' results) when the model screen provides it, else the old count */
+  const mcBlocks = m => { if (!m || typeof window.modelCheck !== 'function') return null;
+    try { const r = window.modelCheck(m); if (!r) return null; if (typeof r.block === 'number') return r.block; if (Array.isArray(r.block)) return r.block.length;
+      const L = Array.isArray(r) ? r : r.items || r.list || null; return Array.isArray(L) ? L.filter(x => x && (x.lvl || x.level) === 'block').length : null; } catch (e) { return null; } };
+  const subBad = m => { if (!m) return null; const b = mcBlocks(m); return b != null ? b : modelBad(m); };
+  const subWarn = m => { if (!m || typeof window.modelCheck !== 'function') return null; try { const r = window.modelCheck(m); return r && typeof r.warn === 'number' ? r.warn : r && Array.isArray(r.items) ? r.items.filter(x => x.lvl === 'warn').length : null; } catch (e) { return null; } };
+  // R2-15: the snapshot hash = sha256 of the copy's content, kept on the document at submit (d.hash); a seed document without one is hashed here from the copy shown
+  const fmtHash = h => !h ? '' : /^sha256:/.test(h) ? h : 'sha256:' + h;
+  const docHash = d => fmtHash(d.hash || (typeof window.snapHash === 'function' ? window.snapHash(siModel(d)) : ''));
+  const BAD_LABEL = () => typeof window.modelCheck === 'function' ? '모델 검증 막음' : '미준수 (조합 가능·미등록)';
+  /* E · M-7: 제출 사본 항목 — the submitted copy as a read-only table. pairing with the previous confirmed copy:
+     entity id → table name, attribute stable id (both sides) → column name → logical name (only when ids are missing) */
+  const SI = { id: null, q: '', only: false };
+  // R2-11 · U-1: the one shared type reading (app.js typeParts — the model screen's table ERD uses the same) → 타입 · 길이 · 소수점
+  const siCells = a => { const tp = typeParts(a); return { n: a.n || '', p: a.p === '—' ? '' : (a.p || ''), t: tp.t === '—' ? '' : tp.t, len: tp.len, sc: tp.scale, desc: a.desc || '' }; };
+  const siModel = d => d.model || getModelData(d.area, d.ver) || modelSeed(d.area);   // a seed document without a copy shows the area's version (said so in the tab)
+  function siRows(d) {
+    const df = diffOf(d), prev = df.hasPrev ? (df.prevDoc ? df.prevDoc.model : getModelData(d.area, d.ver - 1)) : null, PU = x => String(x.p || '').toUpperCase();
+    const cur = siModel(d).E.filter(e => !e.ref), old = prev ? prev.E.filter(e => !e.ref) : [], usedE = new Set(), groups = [];
+    const pe = new Map(); cur.forEach(e => { const o = old.find(x => x.id && x.id === e.id); if (o) { pe.set(e, o); usedE.add(o); } });
+    cur.forEach(e => { if (pe.has(e) || e.p === '—') return; const o = old.find(x => !usedE.has(x) && x.p !== '—' && PU(x) === PU(e)); if (o) { pe.set(e, o); usedE.add(o); } });
+    const pairA = (C, O) => { const m = new Map(), used = new Set(); const step = t => C.forEach(a => { if (m.has(a)) return; const o = O.find(x => !used.has(x) && t(a, x)); if (o) { m.set(a, o); used.add(o); } });
+      step((a, x) => !!a.id && a.id === x.id); step((a, x) => a.p !== '—' && x.p !== '—' && PU(a) === PU(x)); step((a, x) => !(a.id && x.id) && (x.n === a.n || x.n === a.orig)); return { m, left: O.filter(x => !used.has(x)) }; };
+    cur.forEach(e => { const o = pe.get(e), C = e.a.filter(a => !a.edit), P = pairA(C, o ? o.a || [] : []);
+      const rows = C.map(a => { const c = siCells(a), y = P.m.get(a), oc = y ? siCells(y) : null; const chg = oc ? Object.keys(c).filter(k => c[k] !== oc[k]) : [];
+        return { c, oc, st: !prev ? 'same' : !o || !y ? 'add' : chg.length ? 'chg' : 'same', chg }; });
+      if (o) P.left.forEach(y => rows.push({ c: siCells(y), oc: null, st: 'del', chg: [] }));
+      const eChg = prev && o ? ['n', 'p', 'desc'].filter(k => (e[k] || '') !== (o[k] || '')) : [];
+      groups.push({ e, o, st: !prev ? 'same' : !o ? 'add' : eChg.length ? 'chg' : 'same', eChg, rows }); });
+    old.filter(x => !usedE.has(x)).forEach(o => groups.push({ e: o, o, st: 'del', eChg: [], rows: o.a.map(y => ({ c: siCells(y), oc: null, st: 'del', chg: [] })) }));
+    return { groups, prev, df };
+  }
+  function snapItems(d) {
+    if (SI.id !== d.id) Object.assign(SI, { id: d.id, q: '', only: false });
+    const R = siRows(d), nE = R.groups.filter(g => g.st !== 'del').length, nA = R.groups.filter(g => g.st !== 'del').reduce((n, g) => n + g.rows.filter(r => r.st !== 'del').length, 0);
+    const nC = R.groups.reduce((n, g) => n + (g.st !== 'same' ? 1 : 0) + g.rows.filter(r => r.st !== 'same').length, 0);
+    const ST = { add: ['b-success', '추가'], chg: ['b-info', '변경'], del: ['b-danger', '삭제'] }, stb = s => ST[s] ? `<span class="badge ${ST[s][0]}">${ST[s][1]}</span> ` : '';
+    const cell = (r, k, cls = '') => { const ch = r.st === 'chg' && r.chg.includes(k), v = r.c[k], ov = r.oc ? r.oc[k] : '';
+      return `<td class="${cls}${ch ? ' si-chg' : ''}"${ch ? ` title="v${d.ver - 1}: ${esc(ov) || '(빈 값)'}"` : ''}>${ch ? `<b class="diff-new">${esc(v) || '(빈 값)'}</b><span class="si-old diff-old">${esc(ov) || '(빈 값)'}</span><span class="sr-only"> — v${d.ver - 1} 값</span>` : esc(v) || '<span class="faint">—</span>'}</td>`; };
+    const body = R.groups.map(g => { const e = g.e, key = esc(`${e.n} ${e.p}`.toLowerCase());
+      return `<tbody data-si-g="${g.st}" data-k="${key}"><tr class="si-e${g.st === 'del' ? ' si-del' : ''}" data-st="${g.st}"><td colspan="6">${stb(g.st)}<b>${esc(e.n)}</b> <span class="mono">${esc(e.p)}</span>${g.eChg.length ? ` <span class="caption u-warning">${g.eChg.map(k => ({ n: '엔터티명', p: '테이블명', desc: '정의' })[k]).join(' · ')} 바뀜 (v${d.ver - 1}: ${esc(g.eChg.map(k => g.o[k] || '(빈 값)').join(' · '))})</span>` : ''}${e.desc ? `<div class="caption muted">${esc(e.desc)}</div>` : ''}</td></tr>
+        ${g.rows.map(r => `<tr class="${r.st === 'del' ? 'si-del' : ''}" data-st="${r.st}" data-k="${esc(`${r.c.n} ${r.c.p}`.toLowerCase())}">${(() => { const c = cell(r, 'n'); return c.replace(/^<td([^>]*)>/, `<td$1>${stb(r.st)}`); })()}${cell(r, 'p', 'mono')}${cell(r, 't', 'mono')}${cell(r, 'len', 'num')}${cell(r, 'sc', 'num')}${cell(r, 'desc', 'si-d')}</tr>`).join('')}</tbody>`; }).join('');
+    return `${d.model ? '' : `<div class="banner warning u-mb-8">${icon('warn')}<div>목업 시드: 이 문서에는 제출 사본이 없어 영역 v${d.ver} 모델로 보여 줍니다. 실제로는 신청 때 고정한 사본만 보여 줍니다.</div></div>`}<div class="caption muted u-mb-8">${d.step === 'done' ? '확정본' : '제출 사본'}(${d.submittedAt || d.date})의 항목입니다 — 조회 전용. ${R.prev ? `바뀐 칸은 강조하고 아래에 v${d.ver - 1} 확정본 값을 보입니다.` : `v${d.ver - 1} 확정본 사본이 없어 변경 표시는 하지 않습니다.`}</div>
+      <div class="itf"><div class="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input class="input" id="si-q" placeholder="엔터티 · 테이블 · 속성 · 컬럼 찾기" aria-label="엔터티, 테이블, 속성, 컬럼으로 찾기" value="${esc(SI.q)}"></div>
+        <button type="button" class="chip ${SI.only ? 'on' : ''}" id="si-only" aria-pressed="${SI.only}" ${R.prev ? '' : `disabled title="v${d.ver - 1} 확정본 사본이 없어 비교할 수 없습니다"`}>변경분만 <span class="n">${nC}</span></button></div>
+      <div class="listhead u-p-0 u-mb-8" id="si-m"></div>
+      <div class="si-wrap"><table class="tbl si-tbl" aria-label="제출 사본 항목"><thead><tr><th>속성</th><th>컬럼</th><th>타입</th><th class="r">길이</th><th class="r">소수점</th><th>설명</th></tr></thead>${body}</table></div>
+      <div class="caption muted u-mt-8 u-tc" id="si-empty" hidden>조건에 맞는 항목이 없습니다</div>
+      <span hidden id="si-tot" data-e="${nE}" data-a="${nA}" data-c="${nC}"></span>`;
+  }
+  function applySI(p) {
+    const q = SI.q.trim().toLowerCase(); let shown = 0;
+    p.querySelectorAll('[data-si-g]').forEach(g => { const gHit = !q || g.dataset.k.includes(q); let any = false;
+      g.querySelectorAll('tr:not(.si-e)').forEach(tr => { const ok = (!SI.only || tr.dataset.st !== 'same') && (gHit || tr.dataset.k.includes(q)); tr.hidden = !ok; if (ok) { any = true; shown++; } });
+      const head = g.querySelector('.si-e'); const eOk = (!SI.only || head.dataset.st !== 'same') && gHit; g.hidden = !(any || eOk); });
+    const t = p.querySelector('#si-tot'); if (!t) return; const m = p.querySelector('#si-m'), e = p.querySelector('#si-empty');
+    m.innerHTML = `엔터티 <b>${t.dataset.e}</b> · 속성 <b>${t.dataset.a}</b> · 변경 <b>${t.dataset.c}</b>${q || SI.only ? ` · 보이는 행 <b>${shown}</b>${q ? ` · 검색: ${esc(SI.q)}` : ''}${SI.only ? ' · 변경분만' : ''}` : ''}`;
+    if (e) e.hidden = !!p.querySelector('[data-si-g]:not([hidden])'); }
   // diff of a model document against the previous confirmed version (stored copies only. no fixed sample rows)
   function diffOf(d) {
     const prevDoc = docs.filter(x => x.type === 'model' && x.area === d.area && x.ver === d.ver - 1 && x.step === 'done' && x.model).slice(-1)[0];
@@ -535,7 +606,7 @@ window.pageInit = function () {
     if (d.type === 'model') {
       const df = diffOf(d), lay = df.rows ? df.rows.filter(r => r[4] === 'layout').length : 0; parts.push(`<span>확인할 변경 <b>${df.rows ? df.rows.length - lay : 0}</b>건${lay ? ` <span class="muted">· 배치만 ${lay}</span>` : ''}</span>`);
       const completes = !(d.step === 'da' && hasFinal(d)); const lv = [...new Set(linkedReqs(d).filter(x => x.live).map(x => x.doc ? x.doc.id : x.at))].length;
-      const fail = (d.model ? modelBad(d.model) : 0) + reqEnded(d.model).length;
+      const fail = (d.model ? subBad(d.model) : 0) + reqEnded(d.model).length;
       if (completes && lv) parts.push(`<button class="sumlink err" data-go="items">확정 차단 ${lv}건</button>`);
       else if (lv) parts.push(`<button class="sumlink" data-go="items">진행 중 연결 신청 ${lv}건</button>`);
       parts.push(fail ? `<button class="sumlink err" data-go="check">검사 실패 ${fail}건</button>` : '<span>검사 통과</span>');
@@ -574,7 +645,7 @@ window.pageInit = function () {
     const p = $('pn-doc'); const d = docs.find(x => x.id === sel);
     // a link to a document that does not exist says so instead of silently showing nothing
     if (!d && sel && sel === (q.get('doc') || q.get('sel'))) { p.classList.add('open'); deadEnd(p, sel, '문서를 찾을 수 없습니다', `${sel} 결재 문서가 없거나 삭제됐습니다. 신청번호로 다시 찾거나 목록으로 돌아가세요.`); return; }
-    p.classList.toggle('dictw', !!d && d.type === 'dict' && (d.items || []).length > 0 && canView(d));   // A1: wide panel for item-by-item review
+    p.classList.toggle('dictw', !!d && ((d.type === 'dict' && (d.items || []).length > 0) || d.type === 'model') && canView(d));   // A1: wide panel for item-by-item review (E: model documents too — 제출 사본 항목 table)
     if (!d) { p.classList.remove('open'); return; }
     p.classList.add('open');
     if (markable(d) && !MARKS[d.id] && ASK[d.id] === undefined && storedMarks(d)) ASK[d.id] = true;   // A3
@@ -594,7 +665,7 @@ window.pageInit = function () {
     else if (inQueue(d) && allRejected(d)) right = `<div class="foot-zone"><span class="caption muted">모든 항목을 반려해 문서 반려로 처리합니다</span><button class="btn danger" data-open="mo-reject" id="btn-rejall">문서 반려 (항목 ${d.items.length}건)</button></div>`;
     else if (inQueue(d)) right = `<div class="foot-zone"><span class="zl">${stepRole(d.step)}로서</span>${depN ? `<span class="caption u-warning" id="dep-warn">${icon('warn', 12)} 의존 미처리 ${depN}</span>` : ''}<button class="btn danger" data-open="mo-reject">${nm ? '문서 전체 반려' : '반려'}</button>${mine && !selfOK() ? `<span class="has-tip" data-tip="자기 승인이 비허용으로 설정돼 있습니다 — 같은 단계의 다른 결재자가 승인합니다(설정 › 기관 › 자기 승인)"><button class="btn primary" id="btn-apr" disabled aria-describedby="self-off-t">자기 승인</button></span><span class="sr-only" id="self-off-t">자기 승인 비허용 — 다른 결재자가 승인합니다</span>` : `<button class="btn primary" id="btn-apr">${nm ? (mine ? `자기 승인 ${okN}건 · ${nm}건 반려` : `${okN}건 승인 · ${nm}건 반려`) : (mine ? '자기 승인' : '승인')}</button>`}</div>`;
     else if (ro) right = `<span class="caption muted">조회 전용 · 지금은 <b>${stepRole(d.step)}</b> 차례입니다</span>`;
-    else if (d.step === 'done') right = `<div class="foot-zone"><span class="caption muted">완료${(d.hist || []).length ? ' · ' + d.hist[d.hist.length - 1].at + ' ' + d.hist[d.hist.length - 1].who : ''}</span>${d.type === 'model' ? `<a class="btn primary" href="model.html?area=${d.area}&snap=${d.id}">v${d.ver} 확정본 보기</a>` : ''}</div>`;
+    else if (d.step === 'done') right = `<div class="foot-zone"><span class="caption muted">완료${(d.hist || []).length ? ' · ' + d.hist[d.hist.length - 1].at + ' ' + d.hist[d.hist.length - 1].who : ''}</span>${d.type === 'model' ? `<a class="btn" href="ddl.html?area=${d.area}&snap=${d.id}">이 확정본으로 DDL</a><a class="btn primary" href="model.html?area=${d.area}&snap=${d.id}">v${d.ver} 확정본 보기</a>` : ''}</div>`;
     else if (live) right = `<span class="caption muted">지금은 <b>${stepRole(d.step)}</b> 차례입니다${ME.has(d.step === 'da' ? 'da' : 'owner') ? '' : ' · 내 역할로는 조회만 가능'}</span>`;
     else right = `<span class="caption muted">${STEP_NAME[d.step]}. 더 처리할 일이 없습니다</span>`;
     // re-request starts from what was submitted (items, reason). not an empty screen (CL10-03)
@@ -604,14 +675,15 @@ window.pageInit = function () {
         <div class="t"><span class="mono">${d.id}</span><span class="muted">${d.type === 'model' ? '모델 확정' : '사전 신청'}</span>${stBadge(d)}<button class="iconbtn close u-w-28 u-h-28 u-r-md" id="pn-x" aria-label="닫기">${icon('x')}</button></div>
         <h2 class="u-mt-8">${d.title}</h2>${sumLine(d)}
         <div class="caption muted">신청 ${nameOf(d.req)} · ${d.date}${(d.cc || []).length ? ' · 참조 ' + d.cc.map(nameOf).join(', ') : ''}</div>
-        ${d.type === 'model' ? `<div class="linkrow"><a href="model.html?area=${d.area}&snap=${d.id}">${icon('ext')}v${d.ver} 모델 보기</a><button data-open="mo-diff">${icon('compare')}v${d.ver - 1} 대비 변경</button><a href="outputs.html?k=tbl&area=${d.area}${d.step === 'done' ? '&snap=' + d.id : ''}">${icon('file')}산출물</a></div>` : d.batch ? `<div class="linkrow">${canSeeBatch(batchOf(d.batch)) ? `<a href="uploads.html?b=${d.batch}">${icon('upload')}업로드 ${d.batch}</a>` : `<span class="caption muted">업로드 ${d.batch}: 원본 파일은 올린 사람과 DA만 볼 수 있습니다</span>`}</div>` : ''}
+        ${d.type === 'model' ? `<div class="linkrow"><a href="model.html?area=${d.area}&snap=${d.id}">${icon('ext')}v${d.ver} 모델 보기</a><button data-open="mo-diff">${icon('compare')}v${d.ver - 1} 대비 변경</button><a href="outputs.html?k=tbl&area=${d.area}&snap=${d.id}">${icon('file')}산출물</a>${d.step === 'done' ? '' : `<a href="ddl.html?area=${d.area}&snap=${d.id}">${icon('file')}DDL${inReview(d) ? ' (검토용)' : ''}</a>`}</div>` : d.batch ? `<div class="linkrow">${canSeeBatch(batchOf(d.batch)) ? `<a href="uploads.html?b=${d.batch}">${icon('upload')}업로드 ${d.batch}</a>` : `<span class="caption muted">업로드 ${d.batch}: 원본 파일은 올린 사람과 DA만 볼 수 있습니다</span>`}</div>` : ''}
       </div>
       <div class="rp-body">
         ${ro ? `<div class="banner info u-mb-12">${icon('info')}<div><b>다른 사람의 신청 — 조회 전용</b> · 같은 항목은 이 결재가 끝난 뒤 신청할 수 있습니다. 의견은 [처리 이력]에서 남길 수 있습니다.</div></div>` : ''}
         ${line(d)}
         <div class="section-t">신청 사유</div><div>${d.reason}</div>
-        <div class="tabs u-mt-12"><button class="on" data-tab="items">항목 <span class="n">${d.n}</span></button><button data-tab="check">검사 결과</button>${d.type === 'dict' && (d.items || []).length ? '<button data-tab="impact">영향</button>' : ''}<button data-tab="hist">처리 이력 <span class="n">${hist.length}</span></button></div>
+        <div class="tabs u-mt-12"><button class="on" data-tab="items">항목 <span class="n">${d.n}</span></button>${d.type === 'model' ? '<button data-tab="snapitems">제출 사본 항목</button>' : ''}<button data-tab="check">검사 결과</button>${d.type === 'dict' && (d.items || []).length ? '<button data-tab="impact">영향</button>' : ''}<button data-tab="hist">처리 이력 <span class="n">${hist.length}</span></button></div>
         <div class="pane on" data-pane="items">${items(d)}</div>
+        ${d.type === 'model' ? `<div class="pane" data-pane="snapitems"></div>` : ''}
         <div class="pane" data-pane="check">${checks(d)}</div>
         ${d.type === 'dict' && (d.items || []).length ? `<div class="pane" data-pane="impact"></div>` : ''}
         <div class="pane" data-pane="hist"><table class="tbl"><tbody>${hist.map(h => `<tr><td class="mono u-nowrap">${h.at}</td><td>${h.who}</td><td>${h.cm ? `${icon('pen', 12)} 의견` : h.act}${h.self ? ' <span class="muted">(자기 승인)</span>' : ''}</td><td class="caption">${h.why || ''}</td></tr>`).join('')}</tbody></table>
@@ -621,6 +693,10 @@ window.pageInit = function () {
     p.querySelectorAll('[data-go]').forEach(b => b.onclick = () => { const tb = p.querySelector(`.tabs [data-tab="${b.dataset.go}"]`); if (tb) { tb.click(); tb.focus(); } });
     // A2: the impact pane is computed when first opened (usage lookups walk every saved model)
     const itb = p.querySelector('.tabs [data-tab="impact"]'); if (itb) itb.addEventListener('click', () => { const pn = p.querySelector('[data-pane="impact"]'); if (pn && !pn.innerHTML) pn.innerHTML = impact(d); });
+    // E: the submitted-copy table is built when its tab is first opened; search keeps focus, '변경분만' toggles (aria-pressed)
+    const stb = p.querySelector('.tabs [data-tab="snapitems"]'); if (stb) stb.addEventListener('click', () => { const pn = p.querySelector('[data-pane="snapitems"]'); if (!pn || pn.innerHTML) return; pn.innerHTML = snapItems(d); applySI(pn);
+      const sq = pn.querySelector('#si-q'); if (sq) { sq.oninput = () => { SI.q = sq.value; applySI(pn); }; sq.addEventListener('keydown', e => { if (e.key === 'Escape' && sq.value) { e.stopPropagation(); sq.value = ''; SI.q = ''; applySI(pn); } }); }
+      const so = pn.querySelector('#si-only'); if (so) so.onclick = () => { SI.only = !SI.only; so.classList.toggle('on', SI.only); so.setAttribute('aria-pressed', SI.only); applySI(pn); }; });
     // A5: item filter (chips + name search) works on the rendered rows, so typing keeps focus
     p.querySelectorAll('[data-itf]').forEach(b => b.onclick = () => { IF.f = b.dataset.itf; applyIF(); });
     const iq = $('itf-q'); if (iq) { iq.oninput = () => { IF.q = iq.value; applyIF(); }; iq.addEventListener('keydown', e => { if (e.key === 'Escape' && iq.value) { e.stopPropagation(); iq.value = ''; IF.q = ''; applyIF(); } }); }    if (p.querySelector('.it-row')) applyIF();
@@ -717,7 +793,7 @@ window.pageInit = function () {
   };
   // queue decisions show ONE toast: the result message is captured and merged into the "next document" toast
   let captured = null, realToast = null;
-  const captureToast = () => { captured = null; realToast = window.toast; window.toast = (m, type) => { if (!captured || type === 'danger') captured = [m, type]; }; };
+  const captureToast = () => { captured = null; realToast = window.toast; window.toast = (m, type, act) => { if (!captured || type === 'danger') captured = [m, type, act]; }; };   // M-7: the result's own actions (이 확정본으로 DDL) ride along
   const releaseToast = () => { if (realToast) { window.toast = realToast; realToast = null; } };
   // DX-12: write the page marks into the document (it.rej · rejWhy · rejBy · rejStep) and record one history line
   function markRejected(d) {
@@ -772,7 +848,7 @@ window.pageInit = function () {
         if (!(self ? $('self-ack') : $('apr-ack')).checked) { toast('진행 중인 연결 용어 신청을 확인했다고 표시해야 승인할 수 있습니다', 'danger'); return; }
       }
       // re-check the SUBMITTED snapshot (not the area's shared cache) before approving a model confirmation (MD-20)
-      if (d.type === 'model') { const bad = (d.model ? modelBad(d.model) : (d.snap ? d.snap.bad : 0)) + reqEnded(d.model).length; if (bad > 0) { addHist(d, { act: '재검사 실패. 승인 취소', why: `제출 모델 미준수 ${bad}건`, step: d.step }); saveDocs(docs); toast(`재검사 실패. 제출된 모델에 미준수 ${bad}건이 있어 승인하지 않았습니다. 이력에 남겼습니다`, 'danger'); drawRows(); panel(); return; } }
+      if (d.type === 'model') { const bad = (d.model ? subBad(d.model) : (d.snap ? d.snap.bad : 0)) + reqEnded(d.model).length;   /* M-6: modelCheck 'block' when available */ if (bad > 0) { addHist(d, { act: '재검사 실패. 승인 취소', why: `제출 모델 미준수 ${bad}건`, step: d.step }); saveDocs(docs); toast(`재검사 실패. 제출된 모델에 미준수 ${bad}건이 있어 승인하지 않았습니다. 이력에 남겼습니다`, 'danger'); drawRows(); panel(); return; } }
       // dictionary documents: same checks before the final step applies anything
       if (d.type === 'dict' && allRejected(d)) { toast('모든 항목이 반려돼 승인할 수 없습니다. 문서 반려로 처리하세요', 'danger'); panel(); return; }
       if (d.type === 'dict' && ['da', 'final'].includes(d.step)) { const bad = checkDictDoc(withMarks(d)).filter(r => r.problems.length); if (bad.length) { addHist(d, { act: '재검사 실패. 승인 취소', why: bad.map(r => `${r.name}: ${r.problems[0]}`).join(' · '), step: d.step }); saveDocs(docs); toast(`재검사 실패 ${bad.length}건. 사전에 반영하지 않았습니다. [검사 결과] 탭과 이력을 확인하고 반려하세요`, 'danger'); drawRows(); panel(); return; } }
@@ -793,7 +869,7 @@ window.pageInit = function () {
         toast(fin.length ? `DA 승인. 최종 승인 담당자 ${fin.length}명에게 알렸습니다${backTxt}` : 'DA 승인. 이 시스템을 맡은 최종 승인자가 없어 결재가 멈춰 있습니다 — Admin에게 담당 지정을 요청하세요', fin.length ? 'info' : 'danger');
       } else if (d.type === 'model') {
         notifyReq(`${d.id} 최종 승인. v${d.ver} 확정본`, d.title);
-        toast(`${was === 'da' ? 'DA 승인으로 완료' : '최종 승인'}. 확정본(v${d.ver})이 만들어졌습니다. 모델 화면에서 다음 작업 버전을 시작할 수 있습니다`, 'success', { label: '확정본 보기', fn: () => go(`model.html?area=${d.area}&snap=${d.id}`) });
+        toast(`${was === 'da' ? 'DA 승인으로 완료' : '최종 승인'}. 확정본(v${d.ver})이 만들어졌습니다. 모델 화면에서 다음 작업 버전을 시작할 수 있습니다`, 'success', [{ label: '확정본 보기', fn: () => go(`model.html?area=${d.area}&snap=${d.id}`) }, { label: '이 확정본으로 DDL', fn: () => go(`ddl.html?area=${d.area}&snap=${d.id}`) }]);   /* M-7 */
       } else {
         // each submitted item is applied to the dictionary (new V1 / version +1, pending cleared, one change row per item)
         const res = applyDictDoc(d);
@@ -827,7 +903,7 @@ window.pageInit = function () {
       sel = next ? next.id : null;
       const tail = next ? `다음 문서(${next.id})를 열었습니다` : left ? `필터에 맞는 대기 문서가 없습니다 · 남은 대기 ${left}건` : '대기함을 모두 처리했습니다';
       const tok = ++undoTok; const after = snapStore();
-      toast(`${captured ? captured[0].replace(/[.。]?$/, '') : did + ' 처리'} · ${tail}`, captured && captured[1] === 'danger' ? 'danger' : 'info', { label: '실행 취소', fn: undoFn(before, after, tok, did) });
+      toast(`${captured ? captured[0].replace(/[.。]?$/, '') : did + ' 처리'} · ${tail}`, captured && captured[1] === 'danger' ? 'danger' : 'info', [{ label: '실행 취소', fn: undoFn(before, after, tok, did) }].concat(captured && captured[2] ? [].concat(captured[2]).filter(a => a && /DDL/.test(a.label)) : []));
       captured = null;
     }
     pending = null; drawBoxes(); drawRows(); panel();

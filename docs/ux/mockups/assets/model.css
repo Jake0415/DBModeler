@@ -280,3 +280,65 @@ body.gridmode .cv-banner, body.gridmode .legend, body.gridmode .cv-zoom, body.gr
 /* 캔버스 안 끌기는 화면 이동 — 글자 선택이 머리 · 도구 막대까지 번지지 않게 (메모 · 입력은 그대로 선택) */
 #cv { user-select:none; -webkit-user-select:none; } #cv input, #cv textarea, #cv .memo .mb, #cv [contenteditable="true"] { user-select:text; -webkit-user-select:text; }
 body:has(#cv.panning) { user-select:none; -webkit-user-select:none; }
+
+/* ================= 고객 모델 요청 반영 (2026-11-25) — M-1 · M-5 · M-6 · M-8 ================= */
+/* M-8: key column — small mono 'PK' (key zone) / 'FK' letters instead of the Barker '#' (23 §1 · 부록 E4) */
+.node .ar .kc { flex:none; width:18px; font:500 12px/16px var(--font-mono); color:var(--fg-2); text-align:center; }
+#grid .kc, #rp-body .kc, .dw .kc { font:500 12px var(--font-mono); color:var(--fg-2); margin-right:4px; }
+/* M-8: canvas density (마이페이지 › 환경 · 캔버스 밀도, 01 §6.4-1) — the row height only; text stays 12px */
+:root[data-cv-density="compact"] .node .ar { min-height:16px; padding-top:0; padding-bottom:0; line-height:16px; }
+:root[data-cv-density="compact"] .node .ar:hover { background:var(--surface-2); }
+:root[data-cv-density="compact"] .node .ar .stw { background:none; box-shadow:none; padding:0; }   /* 촘촘: 상태는 글자색만 */
+#nodes .node .ar, #nodes .node .ar * { line-height:16px; }   /* every row part, in 논리 · 물리 · 통합 alike (later font shorthands cannot reset it) */   /* U-2: 기본 = 16 + 위아래 2 = 20px (font shorthands had reset the line height) */
+:root[data-cv-density="comfy"] .node .ar { min-height:24px; }
+/* M-8: 테이블 ERD (물리 캔버스) — one row = PK/FK │ 컬럼명 │ 타입 │ 길이 │ 소수점 │ 속성명. Columns line up through the node (subgrid) */
+.node.tbl { width:max-content; max-width:568px; display:grid; column-gap:4px; grid-template-columns:auto 24px max-content 72px 36px 28px max-content; }   /* 물리 노드 최대 약 560 (칸 폭 합) */
+.node.tbl > * { grid-column:1 / -1; }
+.node.tbl > .pk, .node.tbl .ar { display:grid; grid-template-columns:subgrid; grid-column:1 / -1; column-gap:4px; }
+.node.tbl .ar .kc { width:auto; }
+.node.tbl .ar .n { max-width:180px; min-width:0; overflow:hidden; text-overflow:ellipsis; font-family:var(--font-mono); }
+.node.tbl .ar .c3 { font:400 12px var(--font-mono); color:var(--fg-2); overflow:hidden; text-overflow:ellipsis; }
+.node.tbl .ar .c4, .node.tbl .ar .c5 { font:400 12px var(--font-mono); color:var(--fg-2); text-align:right; font-variant-numeric:tabular-nums; }
+.node.tbl .ar .c6 { max-width:160px; overflow:hidden; text-overflow:ellipsis; color:var(--fg-3); font-family:var(--font-sans); display:flex; align-items:center; gap:4px; }
+.node.tbl .ar .c6 .ln { overflow:hidden; text-overflow:ellipsis; }
+.node.tbl .ar > input { grid-column:2 / -1; width:auto; }
+#world.lod-mid .node.tbl { grid-template-columns:auto 24px max-content; }   /* 키만: 3~6칸 숨김 */
+#world.lod-mid .node.tbl .ar > .c3, #world.lod-mid .node.tbl .ar > .c4, #world.lod-mid .node.tbl .ar > .c5, #world.lod-mid .node.tbl .ar > .c6 { display:none; }
+.legend .lg-physrow:not([hidden]) { display:flex; }
+.legend .lg-k { font:500 12px var(--font-mono); color:var(--fg-2); box-shadow:inset 0 0 0 1px var(--border-strong); border-radius:3px; padding:0 3px; }
+.legend .lg-fk { font-style:italic; color:var(--info-deep); }
+/* M-1: 중복 속성 해소 창 — one window for 관계 생성 · PK 추가 · 유형/짝 변경 · M:N 해소 · FK 복구 (18 §2-1) */
+.pop.dw { width:400px; max-width:calc(100% - 24px); }
+.dw .dw-rows { display:flex; flex-direction:column; gap:8px; margin:10px 0; max-height:52vh; overflow:auto; }
+.dw .dw-row { border:1px solid var(--border); border-radius:var(--r-lg); padding:8px 10px; }
+.dw .dw-h { font-size:13px; margin-bottom:2px; display:flex; gap:6px; flex-wrap:wrap; align-items:baseline; }
+.dw .dw-opt { display:flex; gap:8px; align-items:flex-start; padding:4px 0; font-size:13px; line-height:18px; cursor:pointer; }
+.dw .dw-opt input[type=radio] { margin:2px 0 0; width:15px; height:15px; accent-color:var(--ink); flex:none; }
+.dw .dw-opt.dis { color:var(--fg-3); cursor:not-allowed; }
+.dw .dw-opt .dw-b { flex:1; min-width:0; }
+.dw .dw-chg, .dw .dw-why { display:block; font-size:12px; color:var(--fg-2); }
+.dw .dw-chg s { color:var(--fg-3); }
+.dw .dw-new { display:flex; gap:6px; align-items:center; margin-top:4px; flex-wrap:wrap; }
+.dw .dw-new input.input { width:170px; height:28px; margin:0; font-size:13px; }
+.dw .dw-err { display:block; font-size:12px; color:var(--danger-deep); }
+.dw .dw-bulk { display:flex; gap:6px; align-items:center; flex-wrap:wrap; }
+.dw .dw-foot { display:flex; gap:8px; align-items:center; }
+/* M-6: 모델 검증 패널 — 표준 · 이름/설명 · 구조, 막음/경고 */
+#pn-check .mc-flt { display:flex; gap:6px; margin-bottom:4px; }
+#pn-check .mc-flt .chip { height:28px; font-size:12px; }
+#pn-check .mc-g { margin-top:12px; }
+#pn-check .mc-g > summary { cursor:pointer; display:flex; align-items:center; gap:8px; font-size:14px; font-weight:600; list-style:none; padding:4px 0; }
+#pn-check .mc-g > summary::-webkit-details-marker { display:none; }
+#pn-check .mc-g > summary::before { content:'›'; display:inline-block; transition:transform .15s; color:var(--fg-2); font-weight:400; }
+#pn-check .mc-g[open] > summary::before { transform:rotate(90deg); }
+#pn-check .mc-c { font-size:13px; color:var(--fg-2); margin:8px 0 2px; display:flex; align-items:center; gap:6px; }
+#pn-check .ck-tbl td { white-space:normal; }
+#pn-check .mc-in { display:flex; gap:6px; margin:4px 0; }
+#pn-check .mc-in input.input { flex:1; height:28px; font-size:13px; }
+#b-review .mc-w { color:var(--fg-3); font-weight:400; }
+#ent-desc { min-height:64px; resize:vertical; font-size:14px; }
+#pn-check .rp-foot { flex-wrap:wrap; }
+#ck-go-why { flex-basis:100%; text-align:right; }
+#ck-go.disabled { pointer-events:auto; cursor:not-allowed; }
+#pn-check .ck-tbl .linkbtn { text-align:left; }
+#pn-check .ck-tbl td:first-child { width:44%; }

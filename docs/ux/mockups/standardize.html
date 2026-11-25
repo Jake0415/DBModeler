@@ -119,7 +119,7 @@ window.pageInit = function () {
       rows.push({ key, e: e.id, ent: e.n, a: e.n, entRow: true, cur: '—', st: ot ? 'req' : 'comb', toWait: !!ot && !e.st, pr, wait: ot && ot.doc, dx: ot ? ['T-WAIT', `${ot.doc} ${STEP_NAME[docsNow.find(d => d.id === ot.doc).step]}`] : ['E-NAME', '테이블명 미정 — 엔터티 용어 신청'] }); }
     e.a.forEach(a => {
       if (a.edit) return;
-      const key = `${e.n}.${a.orig || a.n}`, base = { key, e: e.id, ent: e.n, a: a.orig || a.n, now: a.n, cur: a.p, curT: a.t, pk: a.pk };
+      const key = `${e.n}.${a.orig || a.n}`, base = { key, e: e.id, ent: e.n, a: a.orig || a.n, now: a.n, cur: a.p, curT: typeStr(a), pk: a.pk };   /* R2-12: stored t = type name only */
       if (a.s === 'ok' || a.s === 'req') { const rp = attrRuleProblems(a).filter(p => p.lvl === 'block');   /* 31 · Codex-1: a stored 'ok' is judged again by the policy (검수 기준) */
         if (rp.length) { rows.push(Object.assign(base, { st: 'rule', rp, dx: ['P-RULE', rp[0].msg] })); return; } }
       if (a.s === 'ok') { rows.push(Object.assign(base, { st: 'ok', dx: ['OK', '표준'] })); return; }

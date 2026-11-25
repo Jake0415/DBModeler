@@ -63,10 +63,10 @@
             <span class="caption" id="xi-reading" role="status"></span>
           </div>
           <input type="file" id="xi-file" accept=".xlsx" hidden>
-          <div class="flex u-gap-8 u-mt-12 u-wrap"><span class="caption muted">파일 없이 시험:</span><button class="btn sm" data-ex="ok">정상 예시</button><button class="btn sm" data-ex="bad">오류가 있는 예시</button><button class="btn sm" data-ex="ref" id="xi-ex-ref">다른 영역 참조 예시</button></div>
+          <div class="flex u-gap-8 u-mt-12 u-wrap"><span class="caption muted">파일 없이 시험:</span><button class="btn sm" data-ex="ok">정상 예시</button><button class="btn sm" data-ex="bad">오류가 있는 예시</button><button class="btn sm" data-ex="ref" id="xi-ex-ref">다른 영역 참조 예시</button><button class="btn sm" data-ex="add" id="xi-ex-add">엔티티 추가 예시</button></div>
         </div>
       </div>
-      <div class="banner u-mt-16"><i data-ic=info></i><div>순서: <b>파일 → 가져올 위치 → 검사 · 미리보기 → 완료</b>. 검사는 고른 위치를 기준으로 합니다. 업로드 때는 파일 · 구조 오류(빈 칸 · 중복 · 참조 오류)만 막고, 원본 이름 · 타입은 고치지 않습니다. 표준 사전 판정 · 구조 점검은 가져온 뒤 모델에서 합니다.</div></div>
+      <div class="banner u-mt-16"><i data-ic=info></i><div>순서: <b>파일 → 가져올 위치 → 검사 · 미리보기 → 완료</b>. 검사는 고른 위치를 기준으로 합니다. 업로드 때는 <b>빈 칸 · 이름 중복</b>만 막고, 참조 오류 · 타입 같은 나머지는 경고로 알린 뒤 가져옵니다. 원본 이름 · 타입은 고치지 않습니다. 표준 맞추기 · 모델 검증은 가져온 뒤 모델에서 합니다.</div></div>
     </section>
 
     <!-- ② 가져올 위치 -->
@@ -78,7 +78,7 @@
           <div class="xi-sub" id="xi-new-f"><label class="caption" for="xi-new">업무 영역 이름 *</label><input class="input" id="xi-new" style="max-width:360px" aria-describedby="xi-new-e"><div class="caption u-danger" id="xi-new-e"></div></div></div></div>
         <div class="xi-opt"><input type="radio" name="xi-dst" value="cur" id="xi-dst-cur"><div class="grow"><label for="xi-dst-cur"><b>기존 업무 영역</b></label><div class="caption muted">작업 중이고 편집 권한이 있는 영역에만 올릴 수 있습니다</div>
           <div class="xi-sub" id="xi-cur-f"><label class="caption" for="xi-area">업무 영역</label><select class="input" id="xi-area" style="max-width:360px" aria-describedby="xi-area-e"></select><div class="caption u-danger" id="xi-area-e"></div>
-            <div class="flex u-gap-16 u-wrap" role="radiogroup" aria-label="올리는 방식"><label class="flex caption"><input type="radio" name="xi-mode" value="merge" checked> <b>병합(기본)</b> — 같은 물리명은 갱신, 새 것은 추가, 엑셀에 없는 기존 테이블 · 관계는 그대로</label><label class="flex caption"><input type="radio" name="xi-mode" value="over"> <b>덮어쓰기</b> — 엑셀 기준으로 바꿉니다(빠지는 테이블 · 컬럼 · 관계가 생김)</label></div></div></div></div>
+            <div class="caption" id="xi-mode-add"><b>추가만</b> — 엑셀의 새 테이블만 추가합니다. 같은 시스템에 논리명 또는 물리명이 같은 테이블이 이미 있으면 그 테이블은 추가하지 않고, 기존 테이블 · 관계는 바꾸지 않습니다. 기존 테이블을 바꾸려면 모델에서 고치거나 삭제한 뒤 다시 올리세요.</div></div></div></div>
       </div>
     </section>
 
@@ -87,6 +87,7 @@
       <div class="flex u-gap-8 u-mb-12"><h2 class="xi-h u-fs-16 u-m-0" tabindex="-1" id="xi-h3">검사 · 미리보기</h2><span id="xi-state"></span><span class="grow"></span><button class="btn sm" id="xi-errx"><i data-ic=download></i>검사 결과 표시된 엑셀 내려받기</button><button class="btn sm" id="xi-again">다른 파일 올리기</button></div>
       <div class="caption muted u-mb-8" id="xi-dst-line"></div>
       <div class="xi-card xi-sum" id="xi-sum" aria-live="polite"></div>
+      <div class="banner warning u-mt-12" id="xi-exist" hidden><i data-ic=warn></i><div class="grow" id="xi-exist-t"></div></div>
       <div class="tabs" style="margin:16px 0 12px;padding:0" role="tablist" aria-label="미리보기" id="xi-tabs"></div>
       <div role="tabpanel" id="xp-iss" aria-labelledby="xt-iss"><table class="tbl xi-tbl"><thead><tr><th>구분</th><th>시트</th><th class="num">행</th><th>열</th><th>내용</th><th></th></tr></thead><tbody id="xi-iss"></tbody></table></div>
       <div role="tabpanel" id="xp-tbl" aria-labelledby="xt-tbl" hidden><table class="tbl xi-tbl"><thead><tr><th>테이블 물리명</th><th>논리명</th><th class="num">컬럼</th><th>PK</th><th class="num">참조</th><th>점검</th></tr></thead><tbody id="xi-tbl"></tbody></table></div>
@@ -113,6 +114,7 @@ window.pageInit = function () {
   $('to-ddl').onclick = () => { location.href = 'import.html' + (FROM ? `?area=${FROM}` : ''); };
   const canImport = can('model.edit', { system: SYS.code });
   const XL = window.XLSX || null;
+  const lockWhy = id => { const L = modelLock(id); return L.state === 'review' ? '결재 중' : L.state === 'confirmed' ? '확정본 — 새 작업 버전을 먼저 시작' : !can('model.edit', { area: id }) ? '편집 권한 없음' : ''; };
 
   /* ---- template: SWS table design → '테이블 설계', 14 columns; example types follow this system's type map ---- */
   const KEYS = ['table_name', 'table_logical_name', 'table_description', 'column_name', 'column_logical_name', 'data_type', 'length', 'scale', 'pk_yn', 'required', 'default_value', 'description', 'fk_ref_table', 'fk_ref_column'];
@@ -123,6 +125,7 @@ window.pageInit = function () {
   /* 27: the system map is {abbr: [range rules]} — every physical type in it counts as mapped; examples take each type's first rule */
   const TMAP = typeMapOf(SYS.code), TM = Object.values(TMAP).flat().map(r => r.t), base = t => String(t || '').replace(/\(.*$/, '').trim().toUpperCase();
   const first = ab => ((TMAP[ab] || [])[0] || {}).t;
+  const lenOf = a => a.len != null ? a.len : (String(a.t || '').match(/\((\d+)/) || [])[1] || '';   // M-2: attributes keep t · len · scale apart; older 'T(n)' strings are still read
   const tV = base(first('V')), tN = base(first('N')), tT = base(first('T')), tC = base(first('C'));
   const row = (...a) => a;
   const SAMPLE_OK = () => [
@@ -142,27 +145,39 @@ window.pageInit = function () {
     row('DEPT_M', '부서', '조직 부서', 'DEPT_NM', '부서명', tV, 100, '', '', '예', '', '', '', ''),
     row('EMP_M', '사원기본', '', 'EMP_NO', '사원번호', tV, 10, '', 'Y', 'Y', '', '', '', ''),
     row('EMP_M', '사원기본', '', 'EMP_NO', '사원번호', tV, 10, '', '', 'Y', '', '', '', ''),
+    row('EMP_M', '사원기본', '', 'EMP_NM', '사원번호', tV, 100, '', '', 'Y', '', '', '', ''),
     row('EMP_M', '사원기본', '', 'DEPT_CD', '부서코드', tN, 10, '', '', '', '', '', 'DEPT_M', 'DEPT_CD'),
     row('EMP_M', '사원기본', '', 'JOB_CD', '직무코드', tV, 10, '', '', '', '', '', 'JOB_M', 'JOB_CD'),
     row('EMP_M', '사원기본', '', 'DEPT_NM2', '부서명', tV, '', '', '', 'v', '', '', 'DEPT_M', 'DEPT_NM'),
     row('EMP_M', '사원기본', '', 'MGR_NO', '관리자사원번호', tV, 10, '', '', '', '', '', 'EMP_M', ''),
     row('', '', '', 'TEL_NO', '전화번호', tV, 20, '', '', '', '', '', '', ''),
-    row('LOG_T', '이력로그', '', 'LOG_TEXT', '로그내용', 'TEXT', '', '', '', '', '', '', '', '')];
+    row('LOG_T', '이력로그', '', 'LOG_TEXT', '로그내용', 'TEXT', '', '', '', '', '', '', '', ''),
+    row('EMP_H', '사원기본', '', 'EMP_NO', '사원번호', tV, 10, '', 'Y', 'Y', '', '', '', ''),
+    row('DEPT_M', '부서기본', '조직 부서', 'LOC_CD', '위치코드', tV, 10, '', '', '', '', '', '', '')];
   // a table of another area in this system that has a confirmed copy — for the reference example
   const otherArea = (() => { for (const [k, m] of Object.entries(getModels())) { if (k === FROM || !m.base) continue; const c = confirmedCopy(k); const e = c && c.E.find(x => !x.ref && x.a.filter(a => a.pk).length === 1); if (e) return { area: k, m, e, pk: e.a.find(a => a.pk) }; } return null; })();
   const SAMPLE_REF = () => { if (!otherArea) return SAMPLE_OK(); const o = otherArea, pk = o.pk; return [
     row('REQ_D', '신청내역', '', 'REQ_NO', '신청번호', tV, 12, '', 'Y', 'Y', '', '', '', ''),
     row('REQ_D', '신청내역', '', 'REQ_NM', '신청명', tV, 100, '', '', 'Y', '', '', '', ''),
-    row('REQ_D', '신청내역', '', pk.p, pk.n, base(pk.t) || tV, (String(pk.t).match(/\((\d+)/) || [])[1] || 10, '', '', 'Y', '', `${o.m.name}의 ${o.e.n} 참조`, o.e.p, pk.p)]; };
+    row('REQ_D', '신청내역', '', pk.p, pk.n, base(pk.t) || tV, lenOf(pk) || 10, '', '', 'Y', '', `${o.m.name}의 ${o.e.n} 참조`, o.e.p, pk.p)]; };
   if (!otherArea) { $('xi-ex-ref').disabled = true; $('xi-ex-ref').title = '같은 시스템에 확정본이 있는 다른 업무 영역이 없습니다'; }
+  /* M-4: entity-add example — built from the area this screen would pick: one table that is already there + one new child of an existing parent */
+  const ADDX = (() => { const ids = Object.keys(getModels()); const k = FROM && ids.includes(FROM) && !lockWhy(FROM) ? FROM : ids.find(x => !lockWhy(x)); if (!k) return null; const st = modelOf(k, getModel(k).ver);
+    const named = st.E.filter(e => !e.ref && e.p && e.p !== '—'), par = named.find(e => e.a.filter(a => a.pk).length === 1 && e.a.find(a => a.pk).p !== '—'); return par ? { area: k, dupE: named.find(e => e !== par) || par, par, pk: par.a.find(a => a.pk) } : null; })();
+  const SAMPLE_ADD = () => { if (!ADDX) return SAMPLE_OK(); const { dupE, par, pk } = ADDX, stem = par.p.replace(/_[A-Z]$/, ''), memo = `${stem}_MEMO_D`;
+    return dupE.a.filter(a => a.p && a.p !== '—').slice(0, 2).map(a => row(dupE.p, dupE.n, '', a.p, a.n, base(a.t) || tV, lenOf(a), a.scale == null ? '' : a.scale, a.pk ? 'Y' : '', a.nn || a.pk ? 'Y' : '', '', '', '', ''))
+      .concat([row(memo, `${par.n}메모내역`, '', pk.p, pk.n, base(pk.t) || tV, lenOf(pk), '', 'Y', 'Y', '', `${par.n} 참조`, par.p, pk.p),
+        row(memo, `${par.n}메모내역`, '', 'MEMO_SN', '메모순번', tN, 5, '', 'Y', 'Y', '', '', '', ''),
+        row(memo, `${par.n}메모내역`, '', 'MEMO_CN', '메모내용', tV, 1000, '', '', '', '', '', '', '')]); };
+  if (!ADDX) { $('xi-ex-add').disabled = true; $('xi-ex-add').title = '편집할 수 있는 업무 영역이 없습니다'; }
   $('xi-tpl-note').textContent = `예시 타입: ${SYS.db} 매핑(${tV} · ${tN} · ${tT})`;
   $('xi-tpl').onclick = () => {
     if (!XL) { ferr('엑셀 라이브러리를 불러오지 못했습니다 — 네트워크를 확인하세요. [정상 예시]로 시험은 할 수 있습니다'); return; }
     const wb = XL.utils.book_new(), ws = XL.utils.aoa_to_sheet([KEYS.map(k => LABEL[k])].concat(SAMPLE_OK())); ws['!cols'] = [16, 14, 16, 16, 14, 12, 7, 9, 5, 6, 10, 20, 14, 12].map(w => ({ wch: w }));
     XL.utils.book_append_sheet(wb, ws, '테이블 설계');
     XL.utils.book_append_sheet(wb, XL.utils.aoa_to_sheet([['열', '필수', '설명', '예시'],
-      ['테이블 물리명', '필수', '모든 행에 반복합니다', 'EMP_M'], ['테이블 논리명', '', '모든 행에 같은 값으로 반복합니다', '사원기본'], ['테이블 설명', '', '모든 행에 같은 값으로 반복합니다', ''],
-      ['컬럼 물리명', '필수', '같은 테이블 안에서 겹치면 안 됩니다', 'EMP_NO'], ['컬럼 논리명', '필수', '', '사원번호'], ['컬럼 타입', '필수', `이 시스템(${SYS.db}) 매핑의 타입을 권합니다`, tV],
+      ['테이블 물리명', '필수', '모든 행에 반복합니다. 한 테이블의 행은 이어서 씁니다(떨어진 곳에 다시 쓰면 중복)', 'EMP_M'], ['테이블 논리명', '', '모든 행에 같은 값으로 반복합니다. 다른 테이블과 겹치면 안 됩니다', '사원기본'], ['테이블 설명', '', '모든 행에 같은 값으로 반복합니다', ''],
+      ['컬럼 물리명', '필수', '같은 테이블 안에서 겹치면 안 됩니다', 'EMP_NO'], ['컬럼 논리명', '필수', '같은 테이블 안에서 겹치면 안 됩니다', '사원번호'], ['컬럼 타입', '필수', `이 시스템(${SYS.db}) 매핑의 타입을 권합니다`, tV],
       ['길이', '', 'VARCHAR · CHAR · NUMBER 계열은 권장', '10'], ['소수점 자리수', '', '숫자 계열에서', '2'], ['PK', '', 'Y = PK 컬럼(빈칸 = 아님)', 'Y'], ['필수', '', 'Y = 값이 꼭 있어야 함(DB에서는 NOT NULL), 빈칸 = 필수 아님', 'Y'],
       ['기본값', '', '', '0'], ['컬럼 설명', '', '', ''], ['참조 테이블', '', '참조 컬럼과 함께. 이 파일 · 대상 영역 · 같은 시스템 다른 영역(확정본)의 테이블', 'DEPT_M'], ['참조 컬럼', '', '부모의 PK 컬럼. 부모 PK가 여러 개면 모두 한 행씩', 'DEPT_CD'],
       [], ['원칙', '', '한 행 = 한 컬럼. 관계명은 가져온 뒤 ERD에서 입력합니다. 인덱스는 엑셀로 받지 않습니다.', '']]), '작성가이드');
@@ -179,7 +194,7 @@ window.pageInit = function () {
       if (!aoa.length || !aoa.some(r => r.some(v => v !== '' && v != null))) return;
       if (name === '인덱스') { warns.push({ lv: 'warn', sheet: name, row: 1, col: '', msg: '인덱스 시트는 가져오지 않습니다 — 모델 화면에서 편집하세요' }); return; }
       const head = aoa[0].map(v => ALIAS[String(v == null ? '' : v).trim()] || String(v == null ? '' : v).trim());
-      const miss = REQ.filter(k => !head.includes(k)); if (miss.length) { miss.forEach(k => errs.push({ lv: 'err', sheet: name, row: 1, col: LABEL[k], msg: `필수 열 ‘${LABEL[k]}’이 없습니다 — 1행 머리글을 양식대로 두세요` })); return; }
+      const miss = REQ.filter(k => !head.includes(k)); if (miss.length) { miss.forEach(k => errs.push({ lv: 'err', file: true, sheet: name, row: 1, col: LABEL[k], msg: `필수 열 ‘${LABEL[k]}’이 없습니다 — 1행 머리글을 양식대로 두세요` })); return; }
       sh.data = true;
       const legacy = ['std_term', 'std_abbr', 'src_table', 'src_col'].some(k => head.includes(k));   // Z-05: the older template is told by these columns only
       if (legacy) warns.push({ lv: 'warn', sheet: name, row: 1, col: '', msg: '예전 양식으로 읽었습니다 — 테이블 물리명이 빈 행은 바로 위 테이블에 붙습니다. 표준용어 · 원천 열은 가져오지 않습니다' });
@@ -187,7 +202,7 @@ window.pageInit = function () {
         if (head.includes('nullable') && !head.includes('required')) v.required = (v.nullable || '').toUpperCase() === 'N' ? 'Y' : '';
         rows.push({ sheet: name, row: i + 2, v, legacy }); });
     });
-    if (!errs.length && !rows.length) errs.push({ lv: 'err', sheet: '', row: 0, col: '', msg: '테이블 데이터가 없습니다 — ‘테이블 설계’ 시트에 한 행 이상 쓰세요' });
+    if (!errs.length && !rows.length) errs.push({ lv: 'err', file: true, sheet: '', row: 0, col: '', msg: '테이블 데이터가 없습니다 — ‘테이블 설계’ 시트에 한 행 이상 쓰세요' });
     return { rows, errs, warns, sheets };
   };
 
@@ -198,81 +213,107 @@ window.pageInit = function () {
   const RESERVED = new Set(['USER', 'DATE', 'LEVEL', 'SIZE', 'COMMENT', 'ORDER', 'GROUP', 'TABLE', 'NUMBER', 'ROWID', 'UID', 'MODE', 'ACCESS', 'FILE', 'SESSION', 'INDEX', 'VIEW']);
   const termNames = new Set(getDict().filter(x => x.k === 'term' && x.ver > 0).map(x => x.name));
   const stdOf = n => termNames.has(n) ? 'ok' : (window.decompose && decompose(n).ok) ? 'comb' : 'unreg';
-  const TAKE = new Map(), PICK = new Map();   // Z-06 / Z-12: choices survive a re-check
-  const DST = () => { const d = document.querySelector('[name=xi-dst]:checked').value; return { kind: d, area: d === 'cur' ? $('xi-area').value : null, mode: d === 'cur' ? document.querySelector('[name=xi-mode]:checked').value : 'new' }; };
+  const TAKE = new Map();   // Z-06: choices survive a re-check
+  /* M-4: an existing area takes 'add only' — merge · overwrite are W2 */
+  const DST = () => { const d = document.querySelector('[name=xi-dst]:checked').value; return { kind: d, area: d === 'cur' ? $('xi-area').value : null, mode: d === 'cur' ? 'add' : 'new' }; };
+  /* M-2: type · length · scale stay apart ('NUMBER(5,2)' in one cell is split; the 길이 · 소수점 cells win) */
+  const num = x => x === '' || x == null ? undefined : /^\d+$/.test(String(x).trim()) ? +x : String(x).trim();
+  const splitType = (dt, len, sc) => { const m = String(dt || '').match(/^\s*([^(]+?)\s*\(\s*([^,)]*?)\s*(?:,\s*([^)]*?)\s*)?\)\s*$/);
+    return m ? { tn: m[1], len: num(len || m[2]), sc: num(sc || m[3]) } : { tn: String(dt || '').trim(), len: num(len), sc: num(sc) }; };
+  const tStr = c => c.tn ? `${c.tn}${c.len != null ? `(${c.len}${c.sc != null ? ',' + c.sc : ''})` : ''}` : '—';
+  const aT = a => a.len != null ? `${base(a.t)}(${a.len}${a.scale != null ? ',' + a.scale : ''})` : a.t;   // model attribute → display type (old 'T(n)' or new t · len · scale)
+  /* M-4: entities already in this system (every area, working copy names) — R2-01: the match counts everywhere, but names · links show only when the viewer may see that copy (areaView) */
+  const hiddenArea = k => { try { return !!areaView(k).hidden; } catch (e) { return true; } };
+  const sysEnts = () => { const out = []; Object.entries(getModels()).forEach(([k, m]) => { let st = null; try { st = modelOf(k, m.ver); } catch (e) {} const hid = hiddenArea(k); ((st && st.E) || []).forEach(e => { if (!e.ref) out.push({ area: k, areaName: m.name, id: e.id, n: e.n || '', orig: e.orig && e.orig !== e.n ? e.orig : '', p: e.p && e.p !== '—' ? e.p : '', hidden: hid }); }); }); return out; };
+  const HIDDEN_TXT = '열람 권한 밖의 업무 영역에 같은 이름이 있습니다';
+  const exTxt = e => e.hidden ? HIDDEN_TXT : `${e.areaName} › ${e.n}${e.p ? ' ' + e.p : ''}(${e.why})`;
+  /* R2-13: ids are issued, never made from names, so a table deleted and added again is a new one */
+  const nid = pre => window.newId ? newId(pre) : `${pre}_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;   // same form as app.js newId
+  const rowsTxt = rs => { const sh = new Set(rs.map(r => r.sheet)).size > 1; return rs.map(r => `${sh ? r.sheet + ' ' : ''}${r.row}행`).join(' · '); };
+  const NOREL = '관계 없이 컬럼만 가져옵니다(모델 검증에서 ‘관계 없는 FK 후보’로 다시 봅니다)';
   function check() {
-    const dst = DST(), iss = RAW.errs.concat(RAW.warns), T = new Map(), byLow = new Map(); let cur = null, curSheet = null;
-    const E = (r, col, msg) => iss.push({ lv: 'err', sheet: r.sheet, row: r.row, col, msg }), W = (r, col, msg) => iss.push({ lv: 'warn', sheet: r.sheet, row: r.row, col, msg });
+    const dst = DST(), iss = RAW.errs.concat(RAW.warns), T = new Map(), byLow = new Map(); let cur = null, curSheet = null, prevT = null;
+    const isNew = dst.kind === 'new', caseDup = [];
+    const E = (r, col, msg, x) => iss.push(Object.assign({ lv: 'err', sheet: r.sheet, row: r.row, col, msg }, x)), W = (r, col, msg) => iss.push({ lv: 'warn', sheet: r.sheet, row: r.row, col, msg });
     RAW.rows.forEach(r => { const v = r.v;
-      if (r.sheet !== curSheet) { curSheet = r.sheet; cur = null; }   // Z-05: inheritance never crosses sheets
+      if (r.sheet !== curSheet) { curSheet = r.sheet; cur = null; prevT = null; }   // Z-05: inheritance never crosses sheets
       let tn = v.table_name; if (!tn) { if (!r.legacy) { E(r, '테이블 물리명', '테이블 물리명은 모든 행에 반복해서 씁니다'); return; } if (!cur) { E(r, '테이블 물리명', '이 시트 첫 테이블의 물리명이 비어 있습니다'); return; } tn = cur; }
-      const lw = low(tn); if (byLow.has(lw) && byLow.get(lw) !== tn) { E(r, '테이블 물리명', `‘${tn}’과 ‘${byLow.get(lw)}’이 대소문자만 다릅니다`); return; } byLow.set(lw, tn); cur = tn;
-      let t = T.get(tn); if (!t) { t = { p: tn, n0: v.table_logical_name || '', n: v.table_logical_name || tn, d: v.table_description || '', cols: [], first: r }; T.set(tn, t); }
-      else if (v.table_name) { const strict = !r.legacy;   // Z-05: the new template compares the raw text, blanks included
-        if ((strict || v.table_logical_name) && (v.table_logical_name || '') !== t.n0) E(r, '테이블 논리명', `‘${tn}’의 논리명이 ${t.first.row}행(‘${t.n0 || '빈칸'}’)과 다릅니다 — 모든 행에 같은 값을 쓰세요`);
-        if ((strict || v.table_description) && (v.table_description || '') !== t.d) E(r, '테이블 설명', `‘${tn}’의 설명이 ${t.first.row}행과 다릅니다 — 모든 행에 같은 값을 쓰세요`); }
-      if (!v.column_name) { E(r, '컬럼 물리명', '컬럼 물리명이 비어 있습니다'); return; }
-      const dup = t.cols.find(c => low(c.p) === low(v.column_name)); if (dup) { E(r, '컬럼 물리명', `${tn}.${v.column_name}이 두 번 있습니다(${dup.r.row}행 · ${r.row}행)`); return; }
-      if (!v.column_logical_name) E(r, '컬럼 논리명', '컬럼 논리명이 비어 있습니다');
-      if (!v.data_type) E(r, '컬럼 타입', '컬럼 타입이 비어 있습니다');
-      const len = v.length, sc = v.scale, bad = [len, sc].some(x => x && !/^\d+$/.test(x));
-      const typ = v.data_type && !v.data_type.includes('(') && (len || sc) ? `${v.data_type}(${len}${sc ? ',' + sc : ''})` : v.data_type;
+      const lw = low(tn); if (byLow.has(lw) && byLow.get(lw) !== tn) { if (!caseDup.some(x => x[0] === tn)) { caseDup.push([tn, byLow.get(lw)]); E(r, '테이블 물리명', `‘${tn}’과 ‘${byLow.get(lw)}’이 대소문자만 다릅니다`, { dup: true }); } } else byLow.set(lw, tn); cur = tn;
+      let t = T.get(tn); if (!t) { t = { p: tn, n0: v.table_logical_name || '', n: v.table_logical_name || tn, d: v.table_description || '', cols: [], all: [], first: r, blocks: [r] }; T.set(tn, t); }
+      else { if (prevT !== tn) t.blocks.push(r);   // M-2: the same table name again after another table (or on another sheet) = duplicate table
+        if (v.table_name) { const strict = !r.legacy;   // Z-05: the new template compares the raw text, blanks included — M-2: a warning now, the first value is kept
+          if ((strict || v.table_logical_name) && (v.table_logical_name || '') !== t.n0) W(r, '테이블 논리명', `‘${tn}’의 논리명이 ${t.first.row}행(‘${t.n0 || '빈칸'}’)과 다릅니다 — ${t.first.row}행 값으로 가져옵니다`);
+          if ((strict || v.table_description) && (v.table_description || '') !== t.d) W(r, '테이블 설명', `‘${tn}’의 설명이 ${t.first.row}행과 다릅니다 — ${t.first.row}행 값으로 가져옵니다`); } }
+      prevT = tn;
+      if (!v.column_name) { E(r, '컬럼 물리명', '컬럼 물리명이 비어 있습니다', { t: tn }); return; }
+      if (!v.column_logical_name) E(r, '컬럼 논리명', '컬럼 논리명이 비어 있습니다', { t: tn });
+      if (!v.data_type) E(r, '컬럼 타입', '컬럼 타입이 비어 있습니다', { t: tn });
+      const ty = splitType(v.data_type, v.length, v.scale), bad = [ty.len, ty.sc].some(x => typeof x === 'string');
       if (bad) W(r, '길이', '길이 · 소수점 자리수가 숫자가 아닙니다 — 원본 그대로 가져옵니다');
-      else if (v.data_type && LEN_REQ.test(base(v.data_type)) && !len && !v.data_type.includes('(')) W(r, '길이', `${base(v.data_type)}에 길이가 없습니다`);
-      if (v.data_type && !TM.some(x => base(x) === base(v.data_type))) W(r, '컬럼 타입', `‘${base(v.data_type)}’은 이 시스템(${SYS.db})의 데이터타입 매핑에 없는 타입입니다 — 그대로 가져옵니다`);
+      else if (ty.tn && LEN_REQ.test(base(ty.tn)) && ty.len == null) W(r, '길이', `${base(ty.tn)}에 길이가 없습니다`);
+      if (ty.tn && !TM.some(x => base(x) === base(ty.tn))) W(r, '컬럼 타입', `‘${base(ty.tn)}’은 이 시스템(${SYS.db})의 데이터타입 매핑에 없는 타입입니다 — 그대로 가져옵니다`);
       if (v.column_name.length > MAXLEN) W(r, '컬럼 물리명', `${MAXLEN}자를 넘습니다(${SYS.db.split(' ')[0]} 이름 길이)`);
       if (RESERVED.has(v.column_name.toUpperCase())) W(r, '컬럼 물리명', `‘${v.column_name}’은 예약어입니다`);
       const [pk, pkBad] = yn(v.pk_yn), [nn, nnBad] = yn(v.required);   // Z-11
       if (pkBad) W(r, 'PK', `‘${v.pk_yn}’ — PK는 Y 또는 빈칸으로 쓰세요(아님으로 읽었습니다)`); if (nnBad) W(r, '필수', `‘${v.required}’ — 필수는 Y 또는 빈칸으로 쓰세요(아님으로 읽었습니다)`);
-      t.cols.push({ r, p: v.column_name, n: v.column_logical_name || v.column_name, t: typ || '—', pk, nn, def: v.default_value || '', desc: v.description || '', rt: v.fk_ref_table || '', rc: v.fk_ref_column || '' });
+      const col = { r, p: v.column_name, n: v.column_logical_name || v.column_name, ln: v.column_logical_name || '', tn: ty.tn, len: ty.len, sc: ty.sc, pk, nn, def: v.default_value || '', desc: v.description || '', rt: v.fk_ref_table || '', rc: v.fk_ref_column || '' }; col.t = tStr(col);
+      t.all.push(col); if (!t.cols.some(c => low(c.p) === low(col.p))) t.cols.push(col);
     });
     T.forEach(t => { if (t.p.length > MAXLEN) W(t.first, '테이블 물리명', `${MAXLEN}자를 넘습니다`); if (RESERVED.has(t.p.toUpperCase())) W(t.first, '테이블 물리명', `‘${t.p}’은 예약어입니다`); if (!t.cols.some(c => c.pk)) W(t.first, 'PK', `${t.p}에 PK가 없습니다`); });
-    // parents: this file → the target area (merge only; overwrite removes what the file does not have) → a confirmed copy of another area (Z-06)
+    /* M-2: duplicates block — shown as groups with the rows and the ground (논리명 일치 / 물리명 일치) */
+    const DUP = [], dupOf = (label, name, why, rs, col, ts) => { DUP.push({ label, name, why, rs, ts }); ts.forEach(t => { (t.dups = t.dups || []).push(`${label} ${name} — ${rowsTxt(rs)}(${why})`); }); E(rs[0], col, `${label} ${name} — ${rowsTxt(rs)} 중복(${why})`, { dup: true }); };
+    const byKey = (xs, key) => { const m = new Map(); xs.forEach(x => { const k = key(x); if (!k) return; if (!m.has(k)) m.set(k, []); m.get(k).push(x); }); return [...m.values()].filter(g => g.length > 1); };
+    caseDup.forEach(([a, b]) => [a, b].forEach(n => { const t = T.get(n); if (t) (t.dups = t.dups || []).push(`대소문자만 다른 테이블명 ${a} / ${b}`); }));
+    T.forEach(t => { if (t.blocks.length > 1) dupOf('테이블명', t.p, '물리명 일치', t.blocks, '테이블 물리명', [t]); });
+    const subT = g => g.some(t => !t.n0) ? ' — 빈 논리명은 물리명으로 저장' : '', subC = g => g.some(c => !c.ln) ? ' — 빈 논리명은 물리명으로 저장' : '';
+    byKey([...T.values()], t => low(String(t.n).trim())).forEach(g => dupOf('엔티티명', g[0].n, `논리명 일치 · ${g.map(t => t.p).join(' / ')}${subT(g)}`, g.map(t => t.first), '테이블 논리명', g));   // N-04: the saved name (blank → physical)
+    T.forEach(t => { const gp = byKey(t.all, c => low(c.p)), gl = byKey(t.all, c => low(String(c.n).trim())), same = (a, b) => a.length === b.length && a.every(x => b.includes(x));
+      gp.forEach(g => { const twin = gl.find(h => same(g, h)); dupOf(twin ? '컬럼' : '컬럼명', `${t.p}.${g[0].p}${twin ? `(${g[0].n})` : ''}`, twin ? '물리명 · 논리명 일치' : '물리명 일치', g.map(c => c.r), '컬럼 물리명', [t]); });
+      gl.filter(h => !gp.some(g => same(g, h))).forEach(g => dupOf('속성명', `${t.n}.${g[0].n}`, `논리명 일치 · ${g.map(c => c.p).join(' / ')}${subC(g)}`, g.map(c => c.r), '컬럼 논리명', [t])); });
+    /* M-4: entity add — a table whose logical or physical name is already in this system is left out (not an error) */
+    if (dst.kind === 'cur') { const EX = sysEnts();
+      const fin = t => low(String(t.n).trim()), en = x => low(String(x || '').trim());   // N-04: the file table's saved name (blank → physical) against the entity's name now and before standardizing
+      const nameHit = (t, e) => en(e.n) === fin(t) ? (t.n0 ? '논리명 일치' : '논리명 일치 — 빈 논리명은 물리명으로 저장') : e.orig && en(e.orig) === fin(t) ? '원래 논리명 일치' : '';   // R2-04: the working copy name now (after standardizing) or the name it had before
+      T.forEach(t => { const hit = EX.filter(e => (e.p && low(e.p) === low(t.p)) || nameHit(t, e)); if (!hit.length) return;
+        t.exist = hit.map(e => Object.assign({}, e, { why: [e.p && low(e.p) === low(t.p) ? '물리명 일치' : '', nameHit(t, e)].filter(Boolean).join(' · ') }));
+        iss.push({ lv: 'skip', sheet: t.first.sheet, row: t.first.row, col: '테이블', msg: `${t.p}(${t.n}) — 이미 있음 · 추가 안 함: ${[...new Set(t.exist.map(exTxt))].join(', ')}` }); }); }
+    /* R2-06 (M-3): a first upload stops on any error; entity add leaves out only the tables with an error or a duplicate. File errors (header · no data) stop both */
+    T.forEach(t => { t.err = iss.some(x => x.lv === 'err' && !x.dup && x.t === t.p); t.ok = !t.exist && !t.dups && !t.err; });
+    iss.forEach(x => { if (x.lv === 'err') x.stop = isNew || !!x.file; });
+    // parents: this file (tables that are added) → the target area (existing entities, linked) → a confirmed copy of another area (Z-06)
     const tgt = dst.area ? modelOf(dst.area, getModel(dst.area).ver) : null;
-    const findParent = name => { const t = T.get(name) || [...T.values()].find(x => low(x.p) === low(name)); if (t) return { kind: 'file', p: t.p, n: t.n, cols: t.cols.map(c => ({ p: c.p, t: c.t, pk: c.pk })) };
-      if (tgt && dst.mode === 'merge') { const te = tgt.E.find(e => low(e.p) === low(name)); if (te) return { kind: 'target', p: te.p, n: te.n, id: te.id, cols: te.a.map(a => ({ p: a.p, t: a.t, pk: !!a.pk })) }; }
-      if (tgt && dst.mode === 'over' && tgt.E.some(e => !e.ref && low(e.p) === low(name))) return { kind: 'gone', p: name };
+    const findParent = name => { const t = T.get(name) || [...T.values()].find(x => low(x.p) === low(name)); if (t && (t.ok || isNew)) return { kind: 'file', p: t.p, n: t.n, cols: t.cols.map(c => ({ p: c.p, t: c.t, pk: c.pk })) };
+      if (tgt) { const te = tgt.E.find(e => low(e.p) === low(name)); if (te) return { kind: 'target', p: te.p, n: te.n, id: te.id, cols: te.a.map(a => ({ p: a.p, t: aT(a), pk: !!a.pk })) }; }
       let fallback = null;
       for (const [k, m] of Object.entries(getModels())) { if (k === dst.area) continue; const cc = m.base ? confirmedCopy(k) : null; const ce = cc && cc.E.find(e => !e.ref && low(e.p) === low(name));
-        if (ce) return { kind: 'other', area: k, areaName: m.name, p: ce.p, n: ce.n, id: ce.id, ok: true, cols: ce.a.map(a => ({ p: a.p, t: a.t, pk: !!a.pk })), src: ce };
-        if (!fallback) { let st = null; try { st = modelOf(k, m.ver); } catch (e) {} const oe = st && st.E.find(e => !e.ref && low(e.p) === low(name)); if (oe) fallback = { kind: 'other', area: k, areaName: m.name, p: oe.p, n: oe.n, ok: false, why: m.base ? `${m.name} 확정본에 이 테이블이 없습니다(작업 중에 새로 만든 테이블)` : `${m.name}에 확정본이 없어 참조할 수 없습니다`, cols: oe.a.map(a => ({ p: a.p, t: a.t, pk: !!a.pk })) }; } }
+        if (ce) return { kind: 'other', area: k, areaName: m.name, p: ce.p, n: ce.n, id: ce.id, ok: true, cols: ce.a.map(a => ({ p: a.p, t: aT(a), pk: !!a.pk })), src: ce };
+        if (!fallback) { let st = null; try { st = modelOf(k, m.ver); } catch (e) {} const oe = st && st.E.find(e => !e.ref && low(e.p) === low(name)); const hid = hiddenArea(k); if (oe) fallback = { kind: 'other', area: k, areaName: m.name, p: hid ? name : oe.p, n: hid ? name : oe.n, ok: false, why: m.base ? `${m.name} 확정본에 이 테이블이 없습니다(작업 중에 새로 만든 테이블)` : `${m.name}에 확정본이 없어 참조할 수 없습니다`, cols: oe.a.map(a => ({ p: a.p, t: aT(a), pk: !!a.pk })) }; } }
       return fallback; };
+    /* M-2: reference problems are warnings — the column comes in without a relation and keeps fkCand {table, col} for model check */
+    const cand = cs => cs.forEach(c => { c.fkCand = { table: c.rt || '', col: c.rc || '' }; });
     const rels = [];
     T.forEach(t => { const groups = new Map();
       t.cols.forEach(c => { if (!c.rt && !c.rc) return; const r = c.r;
-        if (!c.rt || !c.rc) { E(r, c.rt ? '참조 컬럼' : '참조 테이블', '참조 테이블과 참조 컬럼을 함께 입력하세요'); return; }
+        if (!c.rt || !c.rc) { cand([c]); W(r, c.rt ? '참조 컬럼' : '참조 테이블', `참조 테이블과 참조 컬럼을 함께 입력하세요 — ${NOREL}`); return; }
         const par = findParent(c.rt);
-        if (!par) { E(r, '참조 테이블', `참조 테이블 ‘${c.rt}’이 이 파일에도${dst.area && dst.mode === 'merge' ? ' 대상 영역에도' : ''} 같은 시스템의 다른 영역에도 없습니다`); return; }
-        if (par.kind === 'gone') { E(r, '참조 테이블', `‘${c.rt}’은 덮어쓰기로 대상 영역에서 빠지는 테이블입니다 — 이 파일에 넣거나 병합으로 올리세요`); return; }
-        const pc = par.cols.find(x => low(x.p) === low(c.rc)); if (!pc) { E(r, '참조 컬럼', `참조 컬럼 ‘${c.rc}’이 ‘${par.p}’에 없습니다`); return; }
-        if (!pc.pk) { E(r, '참조 컬럼', `참조 대상 ‘${par.p}.${pc.p}’이 PK가 아닙니다 — 부모의 PK 컬럼을 참조합니다`); return; }
-        if (FAM(c.t) && FAM(pc.t) && FAM(c.t) !== FAM(pc.t)) { E(r, '컬럼 타입', `참조 컬럼과 타입이 맞지 않습니다(${c.t} / ${pc.t})`); return; }
+        if (!par) { cand([c]); W(r, '참조 테이블', `참조 테이블 ‘${c.rt}’이 이 파일에도${dst.area ? ' 대상 영역에도' : ''} 같은 시스템의 다른 영역에도 없습니다 — ${NOREL}`); return; }
+        const pc = par.cols.find(x => low(x.p) === low(c.rc)); if (!pc) { cand([c]); W(r, '참조 컬럼', `참조 컬럼 ‘${c.rc}’이 ‘${par.p}’에 없습니다 — ${NOREL}`); return; }
+        if (!pc.pk) { cand([c]); W(r, '참조 컬럼', `참조 대상 ‘${par.p}.${pc.p}’이 PK가 아닙니다 — ${NOREL}`); return; }
+        if (FAM(c.t) && FAM(pc.t) && FAM(c.t) !== FAM(pc.t)) { cand([c]); W(r, '컬럼 타입', `참조 컬럼과 타입이 맞지 않습니다(${c.t} / ${pc.t}) — ${NOREL}`); return; }
+        if (!FAM(c.t) || !FAM(pc.t)) { cand([c]); W(r, '컬럼 타입', `참조 컬럼과 타입 계열을 판정할 수 없습니다(${c.t} / ${pc.t}) — ${NOREL}`); return; }   // R2-16
         const key = low(par.p) + '|' + (par.area || ''); let gs = groups.get(key); if (!gs) { gs = []; groups.set(key, gs); } let g = gs[gs.length - 1]; if (!g || g.cols.some(x => x.pc === pc.p)) { g = { par, cols: [] }; gs.push(g); } g.cols.push({ c, pc: pc.p });
       });
       groups.forEach(gs => gs.forEach((g, gi) => { const parPk = g.par.cols.filter(x => x.pk).map(x => x.p), missing = parPk.filter(p => !g.cols.some(x => x.pc === p));
-        if (missing.length) { E(g.cols[0].c.r, '참조 컬럼', `‘${g.par.p}’의 PK ${parPk.length}개를 모두 참조하세요 — 빠진 키: ${missing.join(', ')}`); return; }   // Z-07
+        if (missing.length) { cand(g.cols.map(x => x.c)); W(g.cols[0].c.r, '참조 컬럼', `‘${g.par.p}’의 PK ${parPk.length}개 중 일부만 참조합니다(빠진 키: ${missing.join(', ')}) — ${NOREL}`); return; }   // Z-07 → M-2 warning
         const self = g.par.kind === 'file' && g.par.p === t.p, allPk = g.cols.every(x => x.c.pk), allNn = g.cols.every(x => x.c.nn || x.c.pk);
         const key = `${t.p}|${g.par.area || g.par.kind}|${g.par.p}|${g.cols.map(x => x.c.p).join(',')}`;
         const rel = { key, child: t.p, childN: t.n, par: g.par, cols: g.cols, k: self ? 'nonid' : allPk ? 'id' : 'nonid', self, second: gi > 0, opt: self ? 'may' : allNn ? 'must' : 'may',
-          name: self && g.cols.some(x => /^상위/.test(x.c.n)) ? '상위' : '', take: g.par.kind !== 'other' ? true : g.par.ok ? (TAKE.has(key) ? TAKE.get(key) : true) : false, status: 'new' };
-        if (g.par.kind === 'other' && !g.par.ok) W(g.cols[0].c.r, '참조 테이블', `${g.par.why} — FK 컬럼만 일반 컬럼으로 남기고 관계는 만들지 않습니다`);
-        else if (g.par.kind === 'other' && !rel.take) W(g.cols[0].c.r, '참조 테이블', `${g.par.areaName} › ${g.par.p}을(를) 참조로 가져오지 않습니다 — FK 컬럼은 일반 컬럼으로 남습니다`);
+          name: self && g.cols.some(x => /^상위/.test(x.c.n)) ? '상위' : '', take: g.par.kind !== 'other' ? true : g.par.ok ? (TAKE.has(key) ? TAKE.get(key) : true) : false, status: t.ok || isNew ? 'new' : 'skip' };
+        if (rel.status === 'new' && g.par.kind === 'other' && !g.par.ok) { cand(g.cols.map(x => x.c)); W(g.cols[0].c.r, '참조 테이블', `${g.par.why} — ${NOREL}`); }
+        else if (rel.status === 'new' && g.par.kind === 'other' && !rel.take) { cand(g.cols.map(x => x.c)); W(g.cols[0].c.r, '참조 테이블', `${g.par.areaName} › ${g.par.p}을(를) 참조로 가져오지 않습니다 — ${NOREL}`); }
+        if (g.par.kind === 'target') t.link = true;
         rels.push(rel); })); });
-    // merge: relation already there / FK column already in another relation (Z-03); column value conflicts (Z-12)
-    const CF = [];
-    if (tgt && dst.mode === 'merge') {
-      const entOf = p => tgt.E.find(e => !e.ref && low(e.p) === low(p));
-      rels.forEach(rel => { const ce = entOf(rel.child); if (!ce) return; const pe = rel.par.kind === 'file' ? entOf(rel.par.p) : rel.par.kind === 'target' ? tgt.E.find(e => e.id === rel.par.id) : tgt.E.find(e => e.ref && e.refArea === rel.par.area && (e.refId || e.id) === rel.par.id);
-        const pairs = rel.cols.map(x => [low(x.c.p), low(x.pc)]);
-        const same = pe && tgt.R.find(r => r.f === pe.id && r.t === ce.id && (() => { const fk = ce.a.filter(a => a.fk && a.fkg === r.g); return fk.length === pairs.length && pairs.every(([cp, pp]) => fk.some(a => low(a.p) === cp && low(a.fkp || a.p) === pp)); })());
-        if (same) { rel.status = 'dup'; return; }
-        const taken = rel.cols.map(x => ce.a.find(a => low(a.p) === low(x.c.p))).filter(a => a && a.fk && tgt.R.some(r => r.t === ce.id && r.g && r.g === a.fkg));
-        if (taken.length) { rel.status = 'clash'; W(rel.cols[0].c.r, '참조 컬럼', `${rel.child}.${taken.map(a => a.p).join(', ')}은 이미 다른 관계의 FK입니다 — 이 관계는 만들지 않습니다(ERD에서 정리하세요)`); } });
-      T.forEach(t => { const e = entOf(t.p); if (!e) return; if (t.n0 && t.n0 !== e.n) CF.push({ t: e.p, c: '', f: 'tn', l: '테이블 논리명', cur: e.n, xl: t.n0 });
-        t.cols.forEach(c => { const a = e.a.find(x => low(x.p) === low(c.p)); if (!a) return; [['n', '논리명', a.n, c.n], ['t', '타입', a.t, c.t], ['pk', 'PK', !!a.pk, c.pk], ['nn', '필수', !!(a.nn || a.pk), c.nn || c.pk]].forEach(([f, l, cv, xv]) => { if (String(cv).toUpperCase() !== String(xv).toUpperCase()) CF.push({ t: e.p, c: a.p, f, l, cur: cv, xl: xv }); }); }); });
-      CF.forEach(x => { const k = `${x.t}|${x.c}|${x.f}`; x.key = k; x.pick = PICK.get(k) || 'xl'; });
-    }
-    return { dst, iss, T, rels, CF, tgt };
+    return { dst, iss, T, rels, tgt, DUP };
   }
 
   /* ---- steps ---- */
@@ -284,114 +325,117 @@ window.pageInit = function () {
     $('xi-next').textContent = n === 2 ? '다음: 검사 · 미리보기' : '가져오기'; document.querySelector('.scroll').scrollTop = 0; foot();
     if (!noFocus) setTimeout(() => { const h = document.querySelector(`section[data-step="${n}"] .xi-h`); if (h) h.focus(); }, 0); };   // Z-15
   const foot = () => { const f = $('xi-foot'); f.className = 'caption';
-    if (step === 3 && PRE) { const e = PRE.iss.filter(x => x.lv === 'err').length; const why = !canImport ? '모델러가 담당 시스템에서만 가져올 수 있습니다' : e ? `오류 ${e}건을 엑셀에서 고친 뒤 다시 올리세요 — [검사 결과 표시된 엑셀 내려받기]로 위치를 확인할 수 있습니다` : PRE.dst.kind === 'new' && !can('area.create', { system: SYS.code }) ? '업무 영역을 만들 권한이 없습니다' : '';
-      $('xi-next').disabled = !!why; f.textContent = why || (PRE.iss.length ? `경고 ${PRE.iss.length}건은 표시만 하고 가져옵니다` : ''); if (why) f.classList.add('u-danger'); }
+    if (step === 3 && PRE) { const c = counts(), isNew = PRE.dst.kind === 'new';   // M-3: any blocking error stops the whole file (a first upload and an entity add alike); entity add only leaves out what is already there
+      const why = !canImport ? '모델러가 담당 시스템에서만 가져올 수 있습니다' : c.e ? (isNew ? `막는 오류 ${c.e}건 — 처음 올리는 파일은 하나라도 있으면 가져올 수 없습니다. 엑셀에서 고친 뒤 다시 올리세요([검사 결과 표시된 엑셀 내려받기]로 위치 확인)` : `막는 오류 ${c.e}건을 엑셀에서 고친 뒤 다시 올리세요 — [검사 결과 표시된 엑셀 내려받기]로 위치를 확인할 수 있습니다`)
+        : !c.ok ? (isNew ? '가져올 테이블이 없습니다' : c.out ? '추가할 테이블이 없습니다 — 모두 이미 있거나 오류 · 중복으로 빠집니다' : '추가할 테이블이 없습니다 — 모두 이 시스템에 이미 있습니다') : isNew && !can('area.create', { system: SYS.code }) ? '업무 영역을 만들 권한이 없습니다' : '';
+      $('xi-next').disabled = !!why; f.textContent = why || [c.skip || c.out ? `${[c.skip ? `이미 있는 테이블 ${c.skip}개` : '', c.out ? `오류 · 중복 테이블 ${c.out}개` : ''].filter(Boolean).join(' · ')}는 빼고 ${c.ok}개를 추가합니다` : '', c.w ? `경고 ${c.w}건은 표시만 하고 가져옵니다` : ''].filter(Boolean).join(' · '); if (why) f.classList.add('u-danger'); }
     else { f.textContent = ''; $('xi-next').disabled = false; } };
 
   /* ---- ② destination ---- */
   const models = getModels();
-  const lockWhy = id => { const L = modelLock(id); return L.state === 'review' ? '결재 중' : L.state === 'confirmed' ? '확정본 — 새 작업 버전을 먼저 시작' : !can('model.edit', { area: id }) ? '편집 권한 없음' : ''; };
   $('xi-area').innerHTML = Object.entries(models).map(([id, m]) => { const w = lockWhy(id); return `<option value="${id}" ${w ? 'disabled' : ''}>${esc(m.name)} · v${m.ver}${w ? ` (${w})` : ''}</option>`; }).join('');
   { const ok = [...$('xi-area').options].find(o => !o.disabled && (!FROM || o.value === FROM)) || [...$('xi-area').options].find(o => !o.disabled); if (ok) $('xi-area').value = ok.value;
     if (FROM && ok && ok.value === FROM) $('xi-dst-cur').checked = true;
     if (FROM && lockWhy(FROM)) { $('xi-from-lock').hidden = false; $('xi-from-lock-t').textContent = `들어온 영역 ‘${models[FROM].name}’은(는) ${lockWhy(FROM)}이라 올릴 수 없습니다 — 새 업무 영역이나 다른 영역을 고르세요`; }   // Z-14
     if (!ok) { $('xi-dst-cur').disabled = true; $('xi-area-e').textContent = '편집할 수 있는 업무 영역이 없습니다'; } }
   const syncDst = () => { const d = DST(); $('xi-new-f').style.display = d.kind === 'new' ? '' : 'none'; $('xi-cur-f').style.display = d.kind === 'cur' ? '' : 'none'; };
-  document.querySelectorAll('[name=xi-dst], [name=xi-mode]').forEach(r => r.onchange = () => { syncDst(); delete $('xi-next').dataset.armed; foot(); });
+  document.querySelectorAll('[name=xi-dst]').forEach(r => r.onchange = () => { syncDst(); delete $('xi-next').dataset.armed; foot(); });
   syncDst();
 
   /* ---- ③ preview ---- */
   let xt = 'iss';
-  const TABS = () => [['iss', '문제', PRE.iss.length], ['tbl', '테이블', PRE.T.size], ['rel', '관계', PRE.rels.length]].concat(PRE.dst.kind === 'cur' ? [['plan', PRE.dst.mode === 'over' ? '덮어쓰기 계획' : '병합 계획', '']] : []);
+  const counts = () => { const ts = [...PRE.T.values()], e = PRE.iss.filter(x => x.lv === 'err' && x.stop).length;
+    return { e, x: PRE.iss.filter(x => x.lv === 'err' && !x.stop).length, out: ts.filter(t => !t.ok && !t.exist).length, w: PRE.iss.filter(x => x.lv === 'warn').length, ok: ts.filter(t => t.ok).length, no: ts.filter(t => !t.ok).length, dup: ts.filter(t => t.exist || t.dups).length, skip: ts.filter(t => t.exist).length }; };
+  const planSig = () => JSON.stringify({ add: [...PRE.T.values()].filter(t => t.ok).map(t => t.p).sort(), out: [...PRE.T.values()].filter(t => !t.ok).map(t => t.p + ':' + (t.exist ? t.exist.map(e => e.area + '/' + e.id).sort().join(',') : 'bad')).sort(), link: PRE.rels.filter(r => r.status === 'new' && r.take).map(r => r.key + '>' + (r.par.id || '')).sort() });
+  const TABS = () => [['iss', '문제', PRE.iss.length], ['tbl', '테이블', PRE.T.size], ['rel', '관계', PRE.rels.length]].concat(PRE.dst.kind === 'cur' ? [['plan', '추가 계획', '']] : []);
   const drawTabs = () => { $('xi-tabs').innerHTML = TABS().map(([k, l, n]) => `<button role="tab" id="xt-${k}" aria-controls="xp-${k}" aria-selected="${k === xt}" tabindex="${k === xt ? 0 : -1}" class="${k === xt ? 'on' : ''}" data-xt="${k}">${l}${n !== '' ? ` <span class="n">${n}</span>` : ''}</button>`).join('');
     ['iss', 'tbl', 'rel', 'plan'].forEach(k => { $('xp-' + k).hidden = k !== xt; }); };
   $('xi-tabs').addEventListener('click', e => { const b = e.target.closest('[data-xt]'); if (b) { xt = b.dataset.xt; drawTabs(); } });
   $('xi-tabs').addEventListener('keydown', e => { if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key)) return; const ks = TABS().map(x => x[0]); let i = ks.indexOf(xt); i = e.key === 'Home' ? 0 : e.key === 'End' ? ks.length - 1 : (i + (e.key === 'ArrowRight' ? 1 : -1) + ks.length) % ks.length; xt = ks[i]; drawTabs(); $('xt-' + xt).focus(); e.preventDefault(); });
   function preview(openTab) {
     PRE = check();
-    const e = PRE.iss.filter(x => x.lv === 'err').length, w = PRE.iss.length - e, cols = [...PRE.T.values()].reduce((n, t) => n + t.cols.length, 0), others = PRE.rels.filter(r => r.par.kind === 'other');
-    $('xi-state').innerHTML = e ? '<span class="badge b-danger">오류 있음 — 가져올 수 없음</span>' : w ? '<span class="badge b-warning">경고만 있음</span>' : '<span class="badge b-success">문제 없음</span>';
-    $('xi-dst-line').textContent = `${FILE} → ${PRE.dst.kind === 'new' ? `새 업무 영역 ‘${$('xi-new').value.trim() || '(이름 없음)'}’` : `${models[PRE.dst.area].name} · ${PRE.dst.mode === 'over' ? '덮어쓰기' : '병합'}`}`;
+    const c = counts(), cols = [...PRE.T.values()].filter(t => !t.exist).reduce((n, t) => n + t.cols.length, 0), others = PRE.rels.filter(r => r.par.kind === 'other' && r.status === 'new');
+    $('xi-state').innerHTML = c.e ? '<span class="badge b-danger">막는 오류 있음 — 가져올 수 없음</span>' : c.skip || c.out ? `<span class="badge b-warning">등록 불가 ${c.skip + c.out} — 빼고 추가</span>` : c.w ? '<span class="badge b-warning">경고만 있음</span>' : '<span class="badge b-success">문제 없음</span>';
+    $('xi-dst-line').textContent = `${FILE} → ${PRE.dst.kind === 'new' ? `새 업무 영역 ‘${$('xi-new').value.trim() || '(이름 없음)'}’` : `${models[PRE.dst.area].name} · 추가만`}`;
     const made = PRE.rels.filter(r => r.take && r.status === 'new').length;
-    $('xi-sum').innerHTML = [['테이블', PRE.T.size], ['컬럼', cols], ['만들 관계', made], ['오류', e, e ? 'bad' : ''], ['경고', w, w ? 'warn' : '']].map(([k, v, c]) => `<div><div class="k">${k}</div><div class="v ${c || ''}">${v}</div></div>`).join('')
-      + (others.length ? `<div class="grow"></div><button class="btn sm" id="xi-go-rel">다른 영역 참조 ${others.length} — 고르기</button>` : '');
+    /* M-2: '등록 가능 n · 등록 불가 n(중복 n)' / '경고 n — 가져온 뒤 모델 검증에서 다시 봅니다' */
+    $('xi-sum').innerHTML = [['등록 가능', c.ok], ['등록 불가', c.no, c.no ? 'bad' : '', c.dup ? `중복 ${c.dup}` : ''], ['컬럼', cols], ['만들 관계', made], ['막는 오류', c.e, c.e ? 'bad' : ''], ['경고', c.w, c.w ? 'warn' : '']].map(([k, v, cl, sub]) => `<div><div class="k">${k}</div><div class="v ${cl || ''}">${v}${sub ? ` <span class="caption">(${sub})</span>` : ''}</div></div>`).join('')
+      + (others.length ? `<div class="grow"></div><button class="btn sm" id="xi-go-rel">다른 영역 참조 ${others.length} — 고르기</button>` : '')
+      + `<div class="caption u-w-full" style="flex-basis:100%">등록 가능 <b>${c.ok}</b> · 등록 불가 <b>${c.no}</b>${c.dup ? `(중복 ${c.dup})` : ''}${c.w ? ` · <span class="u-warning">경고 ${c.w} — 가져온 뒤 모델 검증에서 다시 봅니다</span>` : ''}</div>`;
     if ($('xi-go-rel')) $('xi-go-rel').onclick = () => { xt = 'rel'; drawTabs(); $('xt-rel').focus(); };
-    if (openTab) xt = openTab; else if (!e && others.length) xt = 'rel';   // Z-06: the choice is not hidden behind '문제 없음'
+    drawExist();
+    if (openTab) xt = openTab; else if (!c.e && others.length) xt = 'rel'; else if (!c.e && (c.skip || c.out)) xt = 'tbl';   // Z-06: the choice is not hidden behind '문제 없음'
     if (!TABS().some(x => x[0] === xt)) xt = 'iss'; drawTabs();
-    const shRow = (s, n) => RAW.rows.find(r => r.sheet === s && r.row === n);
-    $('xi-iss').innerHTML = PRE.iss.length ? PRE.iss.slice().sort((a, b) => (a.lv === 'err' ? 0 : 1) - (b.lv === 'err' ? 0 : 1) || a.row - b.row).map((x, i) => { const rr = shRow(x.sheet, x.row);
-      return `<tr><td>${x.lv === 'err' ? '<span class="badge b-danger">오류</span>' : '<span class="badge b-warning">경고</span>'}</td><td>${esc(x.sheet)}</td><td class="num mono">${x.row || '—'}</td><td>${esc(x.col)}</td><td>${esc(x.msg)}</td><td>${rr ? `<button class="btn sm ghost" data-rowv="${i}" aria-expanded="false" aria-label="${esc(x.sheet)} ${x.row}행 값 보기">행 보기</button>` : ''}</td></tr><tr hidden data-rowd="${i}"><td></td><td colspan="5"><div class="xi-rowv">${rr ? KEYS.filter(k => rr.v[k]).map(k => `<span>${LABEL[k]} <b>${esc(rr.v[k])}</b></span>`).join('') : ''}</div></td></tr>`; }).join('') : '<tr><td colspan="6" class="caption muted u-tc u-p-24">문제가 없습니다</td></tr>';
+    const shRow = (s, n) => RAW.rows.find(r => r.sheet === s && r.row === n), ord = { err: 0, skip: 1, warn: 2 };
+    const LV = { err: '<span class="badge b-danger">오류</span>', out: '<span class="badge b-danger">오류 · 제외</span>', skip: '<span class="badge b-org u-danger">추가 안 함</span>', warn: '<span class="badge b-warning">경고</span>' };
+    $('xi-iss').innerHTML = PRE.iss.length ? PRE.iss.slice().sort((a, b) => ord[a.lv] - ord[b.lv] || a.row - b.row).map((x, i) => { const rr = shRow(x.sheet, x.row);
+      return `<tr><td>${LV[x.lv === 'err' && !x.stop ? 'out' : x.lv]}</td><td>${esc(x.sheet)}</td><td class="num mono">${x.row || '—'}</td><td>${esc(x.col)}</td><td>${esc(x.msg)}</td><td>${rr ? `<button class="btn sm ghost" data-rowv="${i}" aria-expanded="false" aria-label="${esc(x.sheet)} ${x.row}행 값 보기">행 보기</button>` : ''}</td></tr><tr hidden data-rowd="${i}"><td></td><td colspan="5"><div class="xi-rowv">${rr ? KEYS.filter(k => rr.v[k]).map(k => `<span>${LABEL[k]} <b>${esc(rr.v[k])}</b></span>`).join('') : ''}</div></td></tr>`; }).join('') : '<tr><td colspan="6" class="caption muted u-tc u-p-24">문제가 없습니다</td></tr>';
     $('xi-iss').onclick = ev => { const b = ev.target.closest('[data-rowv]'); if (!b) return; const d = document.querySelector(`[data-rowd="${b.dataset.rowv}"]`); d.hidden = !d.hidden; b.setAttribute('aria-expanded', !d.hidden); b.textContent = d.hidden ? '행 보기' : '접기'; };   // Z-10
-    $('xi-tbl').innerHTML = [...PRE.T.values()].map(t => { const pk = t.cols.filter(c => c.pk).map(c => c.p), ri = PRE.rels.filter(r => r.child === t.p).length, te = PRE.iss.filter(x => x.lv === 'err' && t.cols.some(c => c.r.row === x.row && c.r.sheet === x.sheet)).length;
-      return `<tr><td class="mono">${esc(t.p)}</td><td>${esc(t.n)}</td><td class="num">${t.cols.length}</td><td class="mono caption">${pk.length ? esc(pk.join(', ')) : '—'}</td><td class="num">${ri || '—'}</td><td>${te ? '<span class="badge b-danger">오류</span>' : pk.length ? '<span class="badge b-success">정상</span>' : '<span class="badge b-warning">PK 없음</span>'}</td></tr>`; }).join('') || '<tr><td colspan="6" class="caption muted u-tc u-p-24">읽은 테이블이 없습니다</td></tr>';
+    /* M-4: '이미 있음 — 추가 안 함' (red text) + ground · '기존 부모 참조(연결)' is not a duplicate */
+    $('xi-tbl').innerHTML = [...PRE.T.values()].map(t => { const pk = t.cols.filter(c => c.pk).map(c => c.p), ri = PRE.rels.filter(r => r.child === t.p).length;
+      const st = t.exist ? `<span class="badge b-org u-danger">이미 있음 — 추가 안 함</span><div class="caption muted u-mt-4">${[...new Set(t.exist.map(e => e.hidden ? esc(HIDDEN_TXT) : `${esc(e.areaName)} › ${esc(e.n)}${e.p ? ` <span class="mono">${esc(e.p)}</span>` : ''} — ${esc(e.why)}`))].join('<br>')}</div>`
+        : t.dups ? `<span class="badge b-danger">중복 — 등록 불가</span><div class="caption muted u-mt-4">${t.dups.map(esc).join('<br>')}</div>`
+        : t.err ? '<span class="badge b-danger">오류 — 등록 불가</span>' : pk.length ? '<span class="badge b-success">정상</span>' : '<span class="badge b-warning">PK 없음</span>';
+      return `<tr><td class="mono">${esc(t.p)}</td><td>${esc(t.n)}</td><td class="num">${t.cols.length}</td><td class="mono caption">${pk.length ? esc(pk.join(', ')) : '—'}</td><td class="num">${ri || '—'}</td><td>${st}${t.link && !t.exist ? ' <span class="badge b-info">기존 부모 참조(연결)</span>' : ''}</td></tr>`; }).join('') || '<tr><td colspan="6" class="caption muted u-tc u-p-24">읽은 테이블이 없습니다</td></tr>';
     $('xi-rel').innerHTML = PRE.rels.map((r, i) => { const pn = `${r.par.kind === 'other' ? r.par.areaName + ' › ' : ''}${r.par.n}`;
-      const act = r.status === 'dup' ? '<span class="caption muted">이미 있음 — 건너뜀</span>' : r.status === 'clash' ? '<span class="caption u-danger">FK 충돌 — 만들지 않음</span>'
+      const act = r.status === 'skip' ? `<span class="caption muted">${PRE.T.get(r.child).exist ? '자식 테이블이 이미 있음' : '자식 테이블이 오류 · 중복으로 빠짐'} — 만들지 않음</span>`
         : r.par.kind === 'other' ? (r.par.ok ? `<label class="flex caption"><input type="checkbox" data-take="${i}" ${r.take ? 'checked' : ''} aria-label="${esc(pn)} → ${esc(r.childN)} 참조로 가져오기"> 참조로 가져오기</label>` : `<span class="caption u-danger">${esc(r.par.why)}</span>`)
+        : r.par.kind === 'target' ? '<span class="badge b-info">기존 부모 참조(연결)</span>'
         : r.self ? `<span class="caption muted">재귀${r.name ? ` · 역할명 ‘${r.name}’` : ' · 역할명은 ERD에서'}</span>` : r.second ? '<span class="caption muted">두 번째 관계 — 역할명은 ERD에서</span>' : '<span class="caption muted">새로 만듦</span>';
       return `<tr><td>${r.par.kind === 'other' ? `<span class="caption muted">${esc(r.par.areaName)} ›</span> ` : r.par.kind === 'target' ? '<span class="caption muted">대상 영역 ›</span> ' : ''}<b>${esc(r.par.n)}</b> <span class="mono caption">${esc(r.par.p)}</span></td><td aria-hidden="true">→</td><td><b>${esc(r.childN)}</b> <span class="mono caption">${esc(r.child)}</span></td><td class="mono caption">${r.cols.map(x => `${esc(x.c.p)}→${esc(x.pc)}`).join(', ')}</td><td>${r.self ? '재귀' : r.k === 'id' ? '식별' : '비식별'}</td><td>${r.opt === 'must' ? '반드시 있다' : '없어도 된다'}</td><td>${act}</td></tr>`; }).join('') || '<tr><td colspan="7" class="caption muted u-tc u-p-24">참조 테이블 · 참조 컬럼이 적힌 행이 없습니다 — 관계는 가져온 뒤 ERD에서 맺습니다</td></tr>';
     document.querySelectorAll('[data-take]').forEach(c => c.onchange = () => { TAKE.set(PRE.rels[+c.dataset.take].key, c.checked); preview('rel'); setTimeout(() => { const n = document.querySelector(`[data-take="${c.dataset.take}"]`); if (n) n.focus(); }, 0); });
     drawPlan(); foot();
   }
+  /* M-4: tables already in the system — how to change them instead (delete in the model, then upload again) */
+  function drawExist() {
+    const box = $('xi-exist'), ts = [...PRE.T.values()].filter(t => t.exist); box.hidden = !ts.length; if (!ts.length) { $('xi-exist-t').innerHTML = ''; return; }
+    const ents = []; ts.forEach(t => t.exist.forEach(e => { if (!e.hidden && !ents.some(x => x.area === e.area && x.id === e.id)) ents.push(e); }));
+    const hid = ts.filter(t => t.exist.every(e => e.hidden)), nm = ents.map(e => e.n || e.p).join(' · ');
+    $('xi-exist-t').innerHTML = `<b>이미 있는 테이블 ${ts.length}개는 추가하지 않고, 나머지만 추가합니다.</b>${ents.length ? ` 기존 ${esc(nm)}${josa(nm, '을/를').slice(-1)} 바꾸려면 모델에서 삭제한 뒤 다시 올리세요.` : ''}${hid.length ? ` ${hid.map(t => esc(t.p)).join(' · ')} — ${HIDDEN_TXT}(이름은 보이지 않습니다). 그 영역 담당자에게 확인하세요.` : ''}
+      <div class="flex u-gap-8 u-mt-8 u-wrap">${ents.map(e => `<a class="btn sm" href="model.html?area=${encodeURIComponent(e.area)}&focus=${encodeURIComponent(e.id)}" target="_blank" rel="noopener">모델에서 ${esc(e.n || e.p)} 열기<span class="sr-only"> (새 탭)</span></a>`).join('')}<button class="btn sm" id="xi-recheck">다시 검사</button></div>
+      <div class="caption u-mt-8"><b class="u-danger">주의</b> — 삭제한 뒤 다시 추가하면 운영 DB에는 DROP/CREATE로 나갈 수 있습니다(데이터 이관이 필요할 수 있음).</div>`;
+    $('xi-recheck').onclick = () => { preview(xt); toast('같은 파일을 지금 모델 기준으로 다시 검사했습니다', 'info'); setTimeout(() => { const b = $('xi-recheck') || $('xi-h3'); b.focus(); }, 0); };
+  }
   function drawPlan() {
     const box = $('xi-plan'); if (PRE.dst.kind !== 'cur') { box.innerHTML = ''; return; }
-    const tgt = PRE.tgt, ex = tgt.E.filter(e => !e.ref), fileT = [...PRE.T.values()], inFile = e => fileT.some(t => low(t.p) === low(e.p));
-    const add = fileT.filter(t => !ex.some(e => low(e.p) === low(t.p))), upd = ex.filter(inFile), keep = ex.filter(e => !inFile(e));
-    const shw = v => v === true ? 'Y' : v === false ? '—' : esc(v);
-    if (PRE.dst.mode === 'merge') {
-      const nc = upd.reduce((n, e) => n + fileT.find(t => low(t.p) === low(e.p)).cols.filter(c => !e.a.some(a => low(a.p) === low(c.p))).length, 0);
-      const rN = s => PRE.rels.filter(r => r.status === s && r.take).length;
-      box.innerHTML = `<div class="xi-card"><b>병합 계획 — ${esc(getModel(PRE.dst.area).name)} v${getModel(PRE.dst.area).ver}</b><ul class="caption" style="margin:8px 0 0;padding-left:16px;line-height:22px">
-          <li>테이블: 새로 <b>${add.length}</b>${add.length ? ` (${add.map(t => esc(t.p)).join(', ')})` : ''} · 갱신 <b>${upd.length}</b>(컬럼 추가 ${nc} · 값 다름 ${PRE.CF.length}) · 그대로 <b>${keep.length}</b></li>
-          <li>관계: 새로 <b>${rN('new')}</b> · 이미 있음 <b>${rN('dup')}</b> · FK 충돌 <b>${rN('clash')}</b> · 엑셀에 없는 기존 관계는 그대로</li></ul></div>
-        ${PRE.CF.length ? `<div class="flex u-gap-8 u-mt-16 u-mb-8"><h3 class="card-t u-m-0">값이 다른 항목 ${PRE.CF.length}개 — 남길 값을 고르세요</h3><span class="grow"></span><button class="btn sm" data-allpick="xl">모두 엑셀 값</button><button class="btn sm" data-allpick="cur">모두 지금 값</button></div>
-          <table class="tbl"><thead><tr><th>테이블.컬럼</th><th>항목</th><th>지금 값</th><th>엑셀 값</th><th>남길 값</th></tr></thead><tbody>${PRE.CF.map((x, i) => `<tr><td class="mono">${esc(x.t)}${x.c ? '.' + esc(x.c) : ''}</td><td>${x.l}</td><td class="mono">${shw(x.cur)}</td><td class="mono">${shw(x.xl)}</td><td><select class="input" data-cf="${i}" aria-label="${esc(x.t)}${x.c ? '.' + esc(x.c) : ''} ${x.l} 남길 값"><option value="xl"${x.pick === 'xl' ? ' selected' : ''}>엑셀 값</option><option value="cur"${x.pick === 'cur' ? ' selected' : ''}>지금 값</option></select></td></tr>`).join('')}</tbody></table>` : ''}`;
-      box.querySelectorAll('[data-cf]').forEach(s => s.onchange = () => { PICK.set(PRE.CF[+s.dataset.cf].key, s.value); PRE.CF[+s.dataset.cf].pick = s.value; delete $('xi-next').dataset.armed; });
-      box.querySelectorAll('[data-allpick]').forEach(b => b.onclick = () => { PRE.CF.forEach(x => { x.pick = b.dataset.allpick; PICK.set(x.key, x.pick); }); drawPlan(); });
-    } else {   // Z-02: overwrite shows exactly what goes
-      const goneCols = upd.map(e => { const t = fileT.find(x => low(x.p) === low(e.p)); const g = e.a.filter(a => !t.cols.some(c => low(c.p) === low(a.p))); return g.length ? [e.p, g.map(a => a.p)] : null; }).filter(Boolean);
-      box.innerHTML = `<div class="banner warning"><i data-ic=warn></i><div><b>덮어쓰기 계획 — ${esc(getModel(PRE.dst.area).name)}을(를) 엑셀 기준으로 바꿉니다.</b><ul style="margin:6px 0 0;padding-left:16px;line-height:22px">
-        <li>빠지는 테이블 <b>${keep.length}</b>${keep.length ? `: ${keep.map(e => esc(e.p)).join(', ')}` : ''}</li>
-        <li>남는 테이블에서 빠지는 컬럼 <b>${goneCols.reduce((n, x) => n + x[1].length, 0)}</b>${goneCols.length ? ` — ${goneCols.map(([t, cs]) => `${esc(t)}: ${cs.map(esc).join(', ')}`).join(' / ')}` : ''}</li>
-        <li>기존 관계 <b>${tgt.R.length}</b>개는 모두 지우고, 엑셀의 참조로 <b>${PRE.rels.filter(r => r.take).length}</b>개를 다시 만듭니다</li>
-        <li>같은 물리명 테이블은 위치를 유지하고 내용은 엑셀 값으로 바뀝니다 · 작업 버전만 바뀌고 확정본은 그대로 · 완료 화면에서 한 번 되돌릴 수 있습니다</li></ul></div></div>`;
-    }
+    const ts = [...PRE.T.values()], add = ts.filter(t => t.ok), skip = ts.filter(t => t.exist), out = ts.filter(t => !t.ok && !t.exist), rN = PRE.rels.filter(r => r.status === 'new' && r.take), link = rN.filter(r => r.par.kind === 'target').length;
+    box.innerHTML = `<div class="xi-card"><b>추가 계획 — ${esc(getModel(PRE.dst.area).name)} v${getModel(PRE.dst.area).ver}</b><ul class="caption" style="margin:8px 0 0;padding-left:16px;line-height:22px">
+        <li>추가할 테이블 <b>${add.length}</b>${add.length ? ` (${add.map(t => esc(t.p)).join(', ')})` : ''}</li>
+        <li>이미 있음 — 추가 안 함 <b>${skip.length}</b>${skip.length ? ` (${skip.map(t => `${esc(t.p)} — ${esc([...new Set(t.exist.map(e => e.hidden ? '열람 권한 밖' : e.why))].join(' · '))}`).join(', ')})` : ''}</li>${out.length ? `<li>오류 · 중복으로 빠짐 <b>${out.length}</b> (${out.map(t => esc(t.p)).join(', ')}) — 엑셀에서 고쳐 다시 올리면 추가됩니다</li>` : ''}
+        <li>관계: 새로 <b>${rN.length}</b>${link ? `(그중 기존 부모 연결 ${link})` : ''} · 기존 테이블 · 컬럼 · 관계는 바꾸지 않습니다</li></ul></div>`;
   }
 
   /* ---- build (26 §4) ---- */
   const cls = p => /_M$/.test(p) ? 'M' : /_D$/.test(p) ? 'A' : /_R$/.test(p) ? 'R' : 'K';
-  const attrOf = c => ({ n: c.n, p: c.p, t: c.t, pk: c.pk ? 1 : 0, nn: c.nn || c.pk ? 1 : 0, def: c.def || undefined, desc: c.desc || undefined, s: stdOf(c.n) });
-  function build(st, mode) {
-    ['E', 'R', 'M', 'V'].forEach(k => { st[k] = st[k] || []; }); const E = st.E, R = st.R; let n = 0;
-    const uid = p => { let id = 'x' + low(p); while (E.some(e => e.id === id)) id = 'x' + low(p) + (++n); return id; };
-    const idOf = {}, added = [], fileIds = [];
-    if (mode === 'over') { const keepIds = new Set(E.filter(e => e.ref || [...PRE.T.values()].some(t => low(t.p) === low(e.p))).map(e => e.id)); for (let i = E.length - 1; i >= 0; i--) if (!keepIds.has(E[i].id)) E.splice(i, 1); R.splice(0, R.length); st.V.forEach(v => { if (v.ents) v.ents = v.ents.filter(x => keepIds.has(x)); }); }
-    PRE.T.forEach(t => { const e = E.find(x => !x.ref && low(x.p) === low(t.p));
-      if (!e) { const id = uid(t.p); E.push({ id, n: t.n, p: t.p, c: cls(t.p), desc: t.d || undefined, a: t.cols.map(attrOf) }); idOf[t.p] = id; added.push(id); fileIds.push(id); return; }
-      idOf[t.p] = e.id; fileIds.push(e.id); if (t.d) e.desc = t.d;
-      if (mode === 'over') { if (t.n0) e.n = t.n0; e.a = t.cols.map(attrOf); return; }
-      const pick = (c, f) => { const x = PRE.CF.find(y => y.t === e.p && y.c === c && y.f === f); return !x || x.pick === 'xl'; };
-      if (t.n0 && pick('', 'tn')) e.n = t.n0;
-      t.cols.forEach(c => { const a = e.a.find(x => low(x.p) === low(c.p)); if (!a) { e.a.push(attrOf(c)); return; } if (c.def) a.def = c.def; if (c.desc) a.desc = c.desc;
-        if (pick(a.p, 'n') && a.n !== c.n) { a.n = c.n; a.s = stdOf(c.n); }   // Z-12: a renamed attribute is judged again
-        if (pick(a.p, 't')) a.t = c.t; if (pick(a.p, 'pk')) a.pk = c.pk ? 1 : 0; if (pick(a.p, 'nn')) a.nn = c.nn || c.pk ? 1 : 0; }); });
-    let gi = 0, refs = 0, plain = 0, made = 0;
+  /* M-2 (with the model screen): an attribute keeps t (type name) · len · scale apart; fkCand marks a column that referred to a parent but got no relation */
+  const attrOf = c => ({ id: nid('a'), n: c.n, p: c.p, t: c.tn, len: c.len, scale: c.sc, pk: c.pk ? 1 : 0, nn: c.nn || c.pk ? 1 : 0, def: c.def || undefined, desc: c.desc || undefined, s: stdOf(c.n), fkCand: c.fkCand });
+  function build(st) {   // M-4: new area or 'add only' — existing entities are never changed
+    ['E', 'R', 'M', 'V'].forEach(k => { st[k] = st[k] || []; }); const E = st.E, R = st.R;
+    const uid = () => { let id = nid('e'); while (E.some(e => e.id === id)) id = nid('e'); return id; };   // R2-13: never made from the physical name
+    const idOf = {}, added = [], fileIds = [], linked = [];
+    PRE.T.forEach(t => { if (!t.ok) return; const id = uid(); E.push({ id, n: t.n, p: t.p, c: cls(t.p), desc: t.d || undefined, a: t.cols.map(attrOf) }); idOf[t.p] = id; added.push(id); fileIds.push(id); });
+    let gi = 0, refs = 0, made = 0, link = 0;
     PRE.rels.forEach(r => { if (r.status !== 'new') return; const child = E.find(e => e.id === idOf[r.child]); if (!child) return;
       let pid = r.par.kind === 'file' ? idOf[r.par.p] : r.par.kind === 'target' ? r.par.id : null;
-      if (r.par.kind === 'other') { if (!r.take || !r.par.ok) { plain += r.cols.length; return; }
+      if (r.par.kind === 'other') { if (!r.take || !r.par.ok) return;
         const ex = E.find(e => e.ref && e.refArea === r.par.area && (e.refId || e.id) === r.par.id);
         if (ex) pid = ex.id; else { const rid = r.par.area + '_' + r.par.id, o = r.par.src; E.push({ id: rid, refId: r.par.id, n: o.n, p: o.p, c: o.c, ref: 1, refArea: r.par.area, refName: r.par.areaName, refVer: getModel(r.par.area).base, a: o.a.filter(a => a.pk || /명$/.test(a.n)).map(a => { const x = Object.assign({}, a); delete x.fk; delete x.fkg; delete x.fkp; return x; }) }); added.push(rid); refs++; pid = rid; } }   // Z-06: every PK column comes along
       if (!pid) return; const g = 'gx' + Date.now().toString(36) + (gi++);
       r.cols.forEach(cc => { const a = child.a.find(x => low(x.p) === low(cc.c.p)); if (a) { a.fk = 1; a.fkp = cc.pc; a.fkg = g; } });
-      R.push({ f: pid, t: child.id, k: r.k, name: r.name || '', g, card: '0n', opt: r.opt, del: 'none' }); made++; });
+      R.push({ f: pid, t: child.id, k: r.k, name: r.name || '', g, card: '0n', opt: r.opt, del: 'none' }); made++; if (r.par.kind === 'target') { link++; if (!linked.includes(pid)) linked.push(pid); } });
     // Z-13: new entities go below what is already there, parents above children; a view gathers this file's tables
     const lvl = {}; const depth = (id, seen = new Set()) => { if (lvl[id] != null) return lvl[id]; if (seen.has(id)) return 0; seen.add(id); const ps = R.filter(x => x.t === id && x.f !== id).map(x => x.f); return (lvl[id] = ps.length ? 1 + Math.max(...ps.map(p => depth(p, seen))) : 0); };
     const top = Math.max(0, ...E.filter(x => !added.includes(x.id) && x.y != null).map(x => x.y + 260)) || 0, cnt = {};
     added.forEach(id => { const e = E.find(x => x.id === id), L = depth(id), k = cnt[L] = (cnt[L] || 0) + 1; e.x = 60 + (k - 1) * 380; e.y = (top ? top + 40 : 60) + L * 300; e.px = 60 + (k - 1) * 400; e.py = e.y; });
     if (!st.V.some(v => v.id === 'all')) st.V.unshift({ id: 'all', n: '전체' });
-    st.V.push({ id: 'vx' + Date.now().toString(36), n: `가져온 테이블 (${FILE.replace(/\.xlsx$/i, '')})`, ents: fileIds.concat(added.filter(x => !fileIds.includes(x))) });
-    return { added: added.length - refs, refs, plain, made };
+    st.V.push({ id: 'vx' + Date.now().toString(36), n: `가져온 테이블 (${FILE.replace(/\.xlsx$/i, '')})`, ents: fileIds.concat(added.filter(x => !fileIds.includes(x)), linked) });
+    const ts = [...PRE.T.values()]; return { added: added.length - refs, refs, made, link, skip: ts.filter(t => t.exist).map(t => t.p), out: ts.filter(t => !t.ok && !t.exist).map(t => t.p), cand: ts.filter(t => t.ok).reduce((k, t) => k + t.cols.filter(c => c.fkCand).length, 0) };
   }
 
+  /* ---- model invariants (app.js modelInvariants: column physical names in an entity · table / entity names, case ignored) — run on the result just before saving; only what this import adds stops it ---- */
+  const invList = st => { if (typeof window.modelInvariants !== 'function') return []; let v; try { v = modelInvariants(st); } catch (e) { return []; } const a = Array.isArray(v) ? v : (v && (v.list || v.items || v.violations || v.errors)) || []; return a.map(x => typeof x === 'string' ? x : x.msg || x.message || JSON.stringify(x)); };
+  const invStop = (before, after) => { const was = new Set(invList(before)), now = invList(after).filter(m => !was.has(m)); if (!now.length) return false;
+    const f = $('xi-foot'); f.className = 'caption u-danger'; f.textContent = `가져오면 모델 규칙에 어긋납니다 — ${now.slice(0, 3).join(' · ')}${now.length > 3 ? ` 외 ${now.length - 3}건` : ''}. 가져오지 않았습니다`; toast('모델 규칙(이름 중복)에 어긋나 가져오지 않았습니다 — 아래 줄의 이유를 확인하세요', 'danger'); return true; };
   /* ---- apply · done · undo (Z-04) ---- */
   let UNDO = null;
   $('xi-next').onclick = () => {
@@ -400,27 +444,28 @@ window.pageInit = function () {
       else if (!d.area || lockWhy(d.area)) { $('xi-area-e').textContent = '이 업무 영역은 지금 올릴 수 없습니다'; $('xi-area').focus(); return; }
       show(3, true); xt = 'iss'; preview(); setTimeout(() => $('xi-h3').focus(), 0); return; }
     if (step !== 3) return;
-    if (!canImport || PRE.iss.some(x => x.lv === 'err')) return;
+    if (!canImport || counts().e || !counts().ok) return;
     if (liveRoleChanged()) { staleRoleToast(); return; }
     const d = PRE.dst;
     if (d.kind === 'new') { const nm = $('xi-new').value.trim(); if (!can('area.create', { system: SYS.code }) || areaNameTaken(nm, SYS.code)) { show(2); $('xi-new-e').textContent = '이름이 겹치거나 만들 권한이 없습니다'; return; }
-      const st = { E: [], R: [], M: [], V: [] }; const res = build(st, 'new'); const id = addArea(nm, st, { desc: `엑셀 ‘${FILE}’에서 가져옴` });
+      const st = { E: [], R: [], M: [], V: [] }; const res = build(st); if (invStop({ E: [], R: [], M: [], V: [] }, st)) return; const id = addArea(nm, st, { desc: `엑셀 ‘${FILE}’에서 가져옴` });
       const saved = getModelData(id, 1); if (!getAllModels()[id] || !saved) { const all = JSON.parse(dbmStore.get('dbm-model', '{}')); delete all[id]; dbmStore.set('dbm-model', JSON.stringify(all)); toast('저장하지 못했습니다(브라우저 저장 공간 등) — 업무 영역을 만들지 않았습니다', 'danger'); return; }
       UNDO = { area: id, isNew: true, rev: saved.rev || 0, ver: 1 }; done(id, res); return; }
     if (lockWhy(d.area)) { show(2); $('xi-area-e').textContent = `이 업무 영역은 지금 올릴 수 없습니다(${lockWhy(d.area)})`; return; }
-    if (d.mode === 'over' && !$('xi-next').dataset.armed) { $('xi-next').dataset.armed = '1'; $('xi-next').textContent = '덮어쓰기 확인'; $('xi-foot').innerHTML = '<b class="u-danger">한 번 더 누르면 위 덮어쓰기 계획대로 바꿉니다.</b>'; return; }
-    const ver = getModel(d.area).ver, st = modelOf(d.area, ver), before = JSON.parse(JSON.stringify(st)); const res = build(st, d.mode); const rev = (st.rev || 0) + 1;
+    { const sig0 = planSig(); preview(xt); const c = counts(); if (c.e || !c.ok) return; if (planSig() !== sig0) { xt = 'plan'; drawTabs(); toast('그사이 모델이 바뀌어 추가 · 제외 대상이나 부모 연결이 달라졌습니다 — 바뀐 추가 계획을 확인한 뒤 다시 누르세요', 'info'); setTimeout(() => $('xt-plan').focus(), 0); return; } }   // M-4 · R2-07: the plan the user saw is judged again at the moment of adding
+    const ver = getModel(d.area).ver, st = modelOf(d.area, ver), before = JSON.parse(JSON.stringify(st)); const res = build(st); if (invStop(before, st)) return; const rev = (st.rev || 0) + 1;
     if (setModelData(d.area, ver, Object.assign(st, { rev })) === false) { toast('저장하지 못했습니다 — 가져오지 않았습니다', 'danger'); return; }
     UNDO = { area: d.area, isNew: false, ver, rev, before }; done(d.area, res);
   };
   function done(area, res) {
-    const m = getModel(area), mode = UNDO.isNew ? '새 업무 영역' : PRE.dst.mode === 'over' ? '덮어쓰기' : '병합';
-    pushAudit({ act: '엑셀로 모델 가져오기', target: `${m.name} (${area})`, why: `${FILE} · ${mode} · 테이블 ${PRE.T.size} · 관계 ${res.made}${res.refs ? ` · 참조 엔터티 ${res.refs}` : ''}${PRE.iss.length ? ` · 경고 ${PRE.iss.length}` : ''}` });
+    const m = getModel(area), mode = UNDO.isNew ? '새 업무 영역' : '추가만', W = PRE.iss.filter(x => x.lv === 'warn').length;
+    pushAudit({ act: '엑셀로 모델 가져오기', target: `${m.name} (${area})`, why: `${FILE} · ${mode} · 테이블 ${res.added}${res.skip.length ? ` · 추가 안 함 ${res.skip.length}` : ''}${res.out.length ? ` · 오류 · 중복 제외 ${res.out.length}` : ''} · 관계 ${res.made}${res.refs ? ` · 참조 엔터티 ${res.refs}` : ''}${res.cand ? ` · FK 후보 ${res.cand}` : ''}${W ? ` · 경고 ${W}` : ''}` });
     show(4, true);
     $('xi-done').innerHTML = `<div class="xi-card"><h2 class="xi-h u-fs-16 u-mt-0" id="xi-done-t" tabindex="-1">가져왔습니다 — ${esc(m.name)} v${m.ver} 작업 중</h2>
-      <ul class="caption" style="margin:0;padding-left:16px;line-height:22px"><li>${mode} · 테이블 ${PRE.T.size}${res.added ? ` (새로 ${res.added})` : ''} · 만든 관계 ${res.made}${res.refs ? ` · 다른 영역 참조 엔터티 ${res.refs}` : ''} · ‘가져온 테이블’ 보기</li>${res.plain ? `<li class="u-danger">참조로 가져오지 않은 FK 컬럼 ${res.plain}개는 일반 컬럼으로 남겼습니다 — ERD에서 관계를 맺으세요</li>` : ''}${PRE.iss.length ? `<li>경고 ${PRE.iss.length}건 — 모델의 표준 맞추기 · 구조 점검에서 다시 보입니다</li>` : ''}<li>관계명은 비어 있습니다 — ERD 관계 패널에서 명사로 입력하세요(소속 · 담당)</li></ul>
-      <div class="flex u-gap-8 u-mt-16"><a class="btn primary" href="model.html?area=${area}">모델 열기</a><a class="btn" href="standardize.html?area=${area}&from=import">표준 맞추기</a><span class="grow"></span><button class="btn" id="xi-undo">가져오기 취소</button></div>
-      <div class="caption muted u-mt-8" id="xi-undo-t">다음 순서: 모델에서 테이블 · 관계 다듬기 → 표준 맞추기 → 구조 점검 → 확정 신청. [가져오기 취소]는 이 화면에서 한 번, 다른 편집 전에만 됩니다.</div></div>`;
+      <ul class="caption" style="margin:0;padding-left:16px;line-height:22px"><li>${mode} · 테이블 ${res.added}개 추가${res.skip.length ? ` · 이미 있어 추가 안 함 ${res.skip.length}(${res.skip.map(esc).join(', ')})` : ''}${res.out.length ? ` · 오류 · 중복으로 빠짐 ${res.out.length}(${res.out.map(esc).join(', ')})` : ''} · 만든 관계 ${res.made}${res.link ? `(기존 부모 연결 ${res.link})` : ''}${res.refs ? ` · 다른 영역 참조 엔터티 ${res.refs}` : ''} · ‘가져온 테이블’ 보기</li>${res.cand ? `<li class="u-warning">관계 없는 FK 후보 컬럼 ${res.cand}개 — 모델 검증에서 다시 보고 ERD에서 관계를 맺으세요</li>` : ''}${W ? `<li>경고 ${W}건 — 가져온 뒤 모델 검증에서 다시 봅니다</li>` : ''}<li>관계명은 비어 있습니다 — ERD 관계 패널에서 명사로 입력하세요(소속 · 담당)</li></ul>
+      <div class="caption u-mt-12">다음 순서: <b class="u-success">자동 배치 ✓</b> → <b>표준 맞추기</b> → 모델링 → 모델 검증 → 신청</div>
+      <div class="flex u-gap-8 u-mt-16"><a class="btn primary" href="standardize.html?area=${area}&from=import">표준 맞추기</a><a class="btn" href="model.html?area=${area}">모델 열기</a><span class="grow"></span><button class="btn" id="xi-undo">가져오기 취소</button></div>
+      <div class="caption muted u-mt-8" id="xi-undo-t">가져올 때 부모가 위, 자식이 아래로 자동 배치했습니다. [가져오기 취소]는 이 화면에서 한 번, 다른 편집 전에만 됩니다.</div></div>`;
     setTimeout(() => $('xi-done-t').focus(), 0);
     $('xi-undo').onclick = () => {
       if (liveRoleChanged() || !liveCanEdit(area) || modelLock(area).state !== 'edit' || getDocs().some(d => d.area === area && ['da', 'final'].includes(d.step))) { $('xi-undo').disabled = true; $('xi-undo-t').innerHTML = '<b class="u-danger">권한 · 결재 상태가 바뀌어 되돌릴 수 없습니다(편집 권한 회수 · 확정 신청 · 잠금) — 모델에서 직접 고치세요.</b>'; return; }   /* R-26: re-checked at cancel time */
@@ -434,7 +479,7 @@ window.pageInit = function () {
   }
 
   /* ---- ① load ---- */
-  const loadSheets = (name, sheets) => { ferr(''); RAW = fromSheets(sheets); FILE = name; TAKE.clear(); PICK.clear();
+  const loadSheets = (name, sheets) => { ferr(''); RAW = fromSheets(sheets); FILE = name; TAKE.clear();
     if (!$('xi-new').value || $('xi-new').dataset.auto) { $('xi-new').value = q.get('name') || name.replace(/\.xlsx$/i, '').replace(/[_-]?(양식|검사결과).*$/, '').slice(0, 40) || '엑셀 가져오기'; $('xi-new').dataset.auto = '1'; }
     $('xi-file-nm2').textContent = `— ${name}`; show(2); };
   const readFile = f => { if (!f) return; ferr('');
@@ -452,19 +497,20 @@ window.pageInit = function () {
   $('xi-file').onchange = () => { readFile($('xi-file').files[0]); $('xi-file').value = ''; };
   ['dragenter', 'dragover'].forEach(t => $('xi-drop').addEventListener(t, e => { e.preventDefault(); $('xi-drop').classList.add('over'); }));
   ['dragleave', 'drop'].forEach(t => $('xi-drop').addEventListener(t, e => { e.preventDefault(); $('xi-drop').classList.remove('over'); if (t === 'drop') readFile(e.dataTransfer.files[0]); }));
-  document.querySelectorAll('[data-ex]').forEach(b => b.onclick = () => { const k = b.dataset.ex, rows = k === 'bad' ? SAMPLE_BAD() : k === 'ref' ? SAMPLE_REF() : SAMPLE_OK();
+  document.querySelectorAll('[data-ex]').forEach(b => b.onclick = () => { const k = b.dataset.ex, rows = k === 'bad' ? SAMPLE_BAD() : k === 'ref' ? SAMPLE_REF() : k === 'add' ? SAMPLE_ADD() : SAMPLE_OK();
     const sheets = [{ name: '테이블 설계', aoa: [KEYS.map(x => LABEL[x])].concat(rows) }]; if (k === 'bad') sheets.push({ name: '인덱스', aoa: [['인덱스명', '컬럼'], ['EMP_M_IX1', 'DEPT_CD']] });
-    loadSheets(k === 'bad' ? '예시_오류.xlsx' : k === 'ref' ? '예시_다른영역참조.xlsx' : '예시_인사.xlsx', sheets); });
+    loadSheets(k === 'bad' ? '예시_오류.xlsx' : k === 'ref' ? '예시_다른영역참조.xlsx' : k === 'add' ? '예시_엔티티추가.xlsx' : '예시_인사.xlsx', sheets);
+    if (k === 'add' && ADDX) { $('xi-dst-cur').checked = true; $('xi-area').value = ADDX.area; syncDst(); } });   // M-4: the entity-add example goes to the area it was built from
 
   /* ---- result file: every sheet as it was, '검사 결과' added at the end of each data sheet, plus '검사 요약' (skipped on re-upload) — Z-10 ---- */
   $('xi-errx').onclick = () => {
     if (!XL) { toast('엑셀 라이브러리를 불러오지 못했습니다 — 문제 탭의 위치를 보고 고치세요', 'danger'); return; }
-    const by = {}; PRE.iss.forEach(x => { const k = x.sheet + '|' + x.row; (by[k] = by[k] || []).push(`${x.lv === 'err' ? '[오류]' : '[경고]'} ${x.col ? x.col + ': ' : ''}${x.msg}`); });
+    const by = {}; PRE.iss.forEach(x => { const k = x.sheet + '|' + x.row; (by[k] = by[k] || []).push(`${{ err: '[오류]', skip: '[추가 안 함]', warn: '[경고]' }[x.lv]} ${x.col ? x.col + ': ' : ''}${x.msg}`); });
     const wb = XL.utils.book_new();
     RAW.sheets.forEach(sh => { if (sh.name === '검사 요약') return; const aoa = sh.aoa.map(r => r.slice());
       if (sh.data || by[sh.name + '|1']) { const w = Math.max(...aoa.map(r => r.length)); aoa.forEach((r, i) => { while (r.length < w) r.push(''); r.push(i === 0 ? '검사 결과' + (by[sh.name + '|1'] ? ' — ' + by[sh.name + '|1'].join(' / ') : '') : (by[sh.name + '|' + (i + 1)] || []).join(' / ')); }); }
       XL.utils.book_append_sheet(wb, XL.utils.aoa_to_sheet(aoa), sh.name.slice(0, 31)); });
-    XL.utils.book_append_sheet(wb, XL.utils.aoa_to_sheet([['구분', '시트', '행', '열', '내용']].concat(PRE.iss.map(x => [x.lv === 'err' ? '오류' : '경고', x.sheet, x.row, x.col, x.msg]))), '검사 요약');
+    XL.utils.book_append_sheet(wb, XL.utils.aoa_to_sheet([['구분', '시트', '행', '열', '내용']].concat(PRE.iss.map(x => [{ err: '오류', skip: '추가 안 함', warn: '경고' }[x.lv], x.sheet, x.row, x.col, x.msg]))), '검사 요약');
     XL.writeFile(wb, FILE.replace(/\.xlsx$/i, '').replace(/_검사결과$/, '') + '_검사결과.xlsx'); toast('각 시트 끝에 ‘검사 결과’ 열을 붙인 파일을 내려받았습니다 — 고친 뒤 [다른 파일 올리기](검사 결과 열 · 요약 시트는 무시합니다)', 'success');
   };
   $('xi-again').onclick = () => { RAW = null; PRE = null; show(1); setTimeout(() => $('xi-drop').focus(), 0); };

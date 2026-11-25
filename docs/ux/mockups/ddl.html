@@ -12,6 +12,7 @@
   /* fixed widths live in the page style, not inline (17 §6.2) */
   .tb-sep { width:1px; height:20px; background:var(--border); }
   #preset { width:180px; }
+  #basis { width:280px; }   /* M-7 기준 선택 */
 </style>
 </head>
 <body data-page="model">
@@ -24,6 +25,9 @@
     <span class="badge" id="vbadge"></span><div class="actions"><button class="btn sm" data-open="pn-cmp" data-close-others="pn-gateb">DBMS 비교</button></div>
   </div>
   <div class="toolbar">
+    <span class="caption muted">기준</span>
+    <select class="input" id="basis" aria-label="DDL 기준 버전"></select>
+    <span class="tb-sep" aria-hidden="true"></span>
     <span class="caption muted">범위 *</span>
     <span id="scope-chips"></span>
     <span class="tb-sep" aria-hidden="true"></span>
@@ -37,6 +41,7 @@
   <div class="page-body">
     <div class="main">
       <div class="pad" style="padding-bottom:8px">
+        <div class="banner warning u-mb-8" id="src-banner" role="status" hidden><i data-ic=info></i><div class="grow"></div><div class="bx"></div></div>
         <div class="banner warning" id="gb-banner"><i data-ic=warn></i><div class="grow" id="gb-text"></div></div>
       </div>
       <div class="scroll" style="padding:0 20px 20px">
@@ -78,12 +83,55 @@ window.pageInit = function () {
   // area + version (or a submitted copy) come from where the user started (CX12-30 · CL12-42)
   const AREA = getModels()[q.get('area')] ? q.get('area') : defArea();
   if (!can('model.view', { area: AREA })) { location.replace('error.html?code=403&need=' + encodeURIComponent('이 시스템 조회 범위') + '&what=' + encodeURIComponent(sysOfArea(AREA) + ' DDL')); return; }   /* R-11 */
-  const L = modelLock(AREA); const snapDoc = q.get('snap') ? getDocs().find(x => x.id === q.get('snap') && x.type === 'model' && x.area === AREA) : null;
-  const snapHidden = !!snapDoc && inReview(snapDoc) && !canSeeDoc(snapDoc); const view = areaView(AREA);
-  const src = snapHidden ? { E: [], R: [], M: [] } : snapDoc ? (snapDoc.model || modelSeed(AREA)) : view.model;
-  const label = snapHidden ? `${snapDoc.id} 결재 중 · 열람 제한` : !snapDoc && view.hidden ? view.label : snapDoc ? `v${snapDoc.ver} ${snapDoc.step === 'done' ? '확정본' : '제출 사본'} · ${snapDoc.id}` : L.state === 'confirmed' ? `v${L.model.ver} 확정본` : L.state === 'review' ? `v${L.model.ver} 검토 중 사본` : `v${L.model.ver} 작업본(미확정)`;
-  $('crumb-area').textContent = L.model.name; $('vbadge').textContent = label; $('vbadge').className = 'badge ' + (L.state === 'edit' && !snapDoc ? 'b-warning' : 'b-success');
+  /* M-7 (고객 모델 요청 2026-11-25): 공식 DDL = 확정 스냅숏. 기본 기준 = 이 영역의 최신 확정본.
+     작업본은 '미리보기 — 승인 전(비공식)'(내려받기 흐리게), 결재 중 제출 사본은 신청자 · 결재 담당자에게만 '검토용', 그 밖은 열람 제한 */
+  const L = modelLock(AREA), M = getModel(AREA), docs0 = getDocs();
+  const doneDocs = docs0.filter(x => x.type === 'model' && x.area === AREA && x.step === 'done');
+  const confVer = L.state === 'confirmed' ? M.ver : (M.base || 0);   // the latest confirmed version (0 = none yet)
+  const confDoc = confVer ? doneDocs.filter(x => x.ver === confVer).sort((a, b) => b.id.localeCompare(a.id))[0] || null : null;   // null = a seed copy with no approval document
+  const reviewDoc = L.state === 'review' ? L.doc : null;
+  const qSnap = q.get('snap') ? docs0.find(x => x.id === q.get('snap') && x.type === 'model' && x.area === AREA) : null;
+  // N-05: ?ver=N opens a confirmed version by NUMBER (a confirmed copy with no approval document — the outputs [DDL 화면] link passes it); with a document it is that document
+  const qVer = !qSnap && +q.get('ver') >= 1 && +q.get('ver') <= confVer ? +q.get('ver') : 0, qVerDoc = qVer ? doneDocs.filter(x => x.ver === qVer).sort((a, b) => b.id.localeCompare(a.id))[0] || null : null;
+  const qVerOk = qVer && (qVerDoc || getModelData(AREA, qVer)) ? qVer : 0, selConf = qVerOk || confVer;
+  let mode, snapDoc = null;   // mode: conf (official) · review (submitted copy, review only) · old (rejected / withdrawn copy) · work (preview) · hidden
+  if (qSnap) { snapDoc = qSnap; mode = qSnap.step === 'done' ? 'conf' : inReview(qSnap) ? (canSeeDoc(qSnap) ? 'review' : 'hidden') : 'old'; }
+  else if (qVerOk) { snapDoc = qVerDoc; mode = 'conf'; }
+  else if (q.get('src') === 'work' && L.state === 'edit') mode = 'work';
+  else if (q.get('src') === 'work' && reviewDoc && canSeeDoc(reviewDoc)) { snapDoc = reviewDoc; mode = 'review'; }
+  else if (confVer) { snapDoc = confDoc; mode = 'conf'; }
+  else if (L.state === 'edit') mode = 'work';
+  else if (reviewDoc && canSeeDoc(reviewDoc)) { snapDoc = reviewDoc; mode = 'review'; }
+  else { snapDoc = reviewDoc; mode = 'hidden'; }
+  const official = mode === 'conf', snapHidden = mode === 'hidden';
+  const selVer = snapDoc ? snapDoc.ver : mode === 'conf' ? selConf : M.ver;
+  const src = snapHidden ? { E: [], R: [], M: [] } : snapDoc ? (snapDoc.model || getModelData(AREA, snapDoc.ver) || modelSeed(AREA)) : mode === 'conf' ? (getModelData(AREA, selConf) || (selConf === confVer ? modelSeed(AREA) : { E: [], R: [], M: [] })) : modelOf(AREA, M.ver);
+  // R2-15: the snapshot hash = sha256 of the copy's content, kept on the document at submit (d.hash = snapHash(copy)); a seed document without one is hashed here
+  // from the copy this DDL is made from — the same value the approval document and the outputs audit show
+  const fmtHash = h => !h ? '' : /^sha256:/.test(h) ? h : 'sha256:' + h;
+  const docHashV = (snapDoc || mode === 'conf') && !snapHidden ? fmtHash((snapDoc && snapDoc.hash) || (typeof window.snapHash === 'function' ? window.snapHash(src) : '')) || '해시 없음' : '';
+  const label = snapHidden ? (snapDoc ? `${snapDoc.id} 결재 중 · 열람 제한` : `v${M.ver} 결재 중 · 열람 제한`) : mode === 'conf' ? `v${selVer} 확정본${snapDoc ? ' · ' + snapDoc.id : ''}` : mode === 'review' ? `v${selVer} 제출 사본 · ${snapDoc.id} — 검토용` : mode === 'old' ? `v${selVer} 제출 사본 · ${snapDoc.id} (${STEP_NAME[snapDoc.step] || snapDoc.step})` : `v${M.ver} 작업본 — 미리보기 · 승인 전(비공식)`;
+  $('crumb-area').textContent = L.model.name; $('vbadge').textContent = label; $('vbadge').className = 'badge ' + (official ? 'b-success' : 'b-warning');
   $('back').href = `model.html?area=${AREA}${snapDoc ? '&snap=' + snapDoc.id : ''}`;
+  // 기준 선택: confirmed (official) · work preview · the submitted copy (requester / approvers only) · an older snapshot opened by link
+  { const opts = []; if (confVer) opts.push(['conf', `v${confVer} 확정본 (공식)`]);
+    // N-05: older confirmed versions are listed too — with a document as its snapshot, without one by number (ver:N), read the same way as the default basis
+    for (let v = confVer - 1; v >= 1; v--) { const dv = doneDocs.filter(x => x.ver === v).sort((a, b) => b.id.localeCompare(a.id))[0]; if (dv) opts.push(['snap:' + dv.id, `v${v} 확정본 (공식) · ${dv.id}`]); else if (getModelData(AREA, v)) opts.push(['ver:' + v, `v${v} 확정본 (공식) · 결재 문서 기록 없음`]); }
+    if (L.state === 'edit') opts.push(['work', `v${M.ver} 작업본 — 미리보기(승인 전)`]);
+    if (reviewDoc && canSeeDoc(reviewDoc)) opts.push(['snap:' + reviewDoc.id, `v${reviewDoc.ver} 제출 사본 — 검토용(결재 중)`]);
+    const curV = mode === 'conf' && qVerOk && !snapDoc ? 'ver:' + qVerOk : mode === 'conf' && (!snapDoc || snapDoc === confDoc) ? 'conf' : mode === 'work' ? 'work' : snapDoc ? 'snap:' + snapDoc.id : 'conf';
+    if (!opts.some(o => o[0] === curV)) opts.push([curV, label]);
+    $('basis').innerHTML = opts.map(([v, l]) => `<option value="${v}" ${v === curV ? 'selected' : ''}>${l}</option>`).join('');
+    $('basis').onchange = () => { const v = $('basis').value; navKeep(`ddl.html?area=${AREA}${v === 'work' ? '&src=work' : v.startsWith('snap:') ? '&snap=' + v.slice(5) : v.startsWith('ver:') ? '&ver=' + v.slice(4) : ''}`); }; }
+  { const b = $('src-banner'), conf = confVer ? `<a class="btn sm" href="${keepUrl(`ddl.html?area=${AREA}`)}">v${confVer} 확정본으로 보기</a>` : '';
+    const msg = mode === 'work' ? `<b>미리보기 — 승인 전(비공식).</b> 결재를 거치지 않은 작업본의 DDL입니다. ${confVer ? '운영 반영용 DDL은 승인된 확정본에서 내려받으세요.' : '아직 확정본이 없어 작업본 미리보기를 보여 줍니다 — 확정 신청이 승인되면 내려받을 수 있습니다.'}`
+      : mode === 'review' ? `<b>검토용 — 결재 중인 제출 사본(${snapDoc.id}).</b> 신청자와 결재 담당자만 보고 내려받을 수 있습니다. 승인되면 이 사본이 확정본(공식)이 됩니다.`
+      : mode === 'old' ? `<b>${STEP_NAME[snapDoc.step] || snapDoc.step} 제출 사본(${snapDoc.id}) — 공식 DDL이 아닙니다.</b> 미리보기만 할 수 있습니다.`
+      : snapHidden ? `<b>${snapDoc ? snapDoc.id + ' ' : ''}결재 중 · 열람 제한.</b> 결재 중인 제출본은 신청자와 결재 담당자만 볼 수 있습니다.` : '';
+    if (msg) { b.hidden = false; b.className = 'banner ' + (mode === 'review' ? 'info' : 'warning'); b.querySelector('.grow').innerHTML = msg; b.querySelector('.bx').innerHTML = mode === 'conf' ? '' : conf; } }
+  // why the download is not allowed (dimmed + reason): source first, then the export role (R-14 · UI-13)
+  const dlWhy = () => mode === 'work' ? '승인된 확정본만 내려받을 수 있습니다' : snapHidden ? '결재 중인 제출 사본은 신청자와 결재 담당자만 내려받을 수 있습니다' : mode === 'old' ? '반려 · 회수된 제출 사본은 내려받을 수 없습니다 — 미리보기만'
+    : !can('out.export', { area: AREA }) ? (ME.has('modeler') ? '담당 시스템의 DDL만 내려받을 수 있습니다' : '조회 전용 — 내려받기는 모델러 · DA · 기관 담당자 · 감리') : '';
   areaNav(AREA, 'ddl', { snap: snapDoc ? snapDoc.id : '' });   // the head's '영역 화면' menu (resolution-tree-menu)
   { const c = document.querySelector('.crumbs a'); if (c) c.textContent = sysOfArea(AREA) || curSys().name; }   // the area's own system (markup had a fixed ‘요구사항관리’)
   { const sy = SYSLIST.find(s => s.name === sysOfArea(AREA)) || curSys(); document.querySelector('.page-header h1').title = `${sy.db} · 스키마 ${sy.schema}`;
@@ -97,19 +145,22 @@ window.pageInit = function () {
     else { const ab = cmp.querySelector('.rp-foot .btn.primary'); ab.removeAttribute('data-toast');
       ab.onclick = () => { $('preset').value = 'alter'; draw(); $('pn-cmp').classList.remove('open'); $('pn-gateb').classList.add('open'); toast('변경분(ALTER) 프리셋으로 바꿨습니다 — 미리보기에서 확인하고 내려받으세요', 'info'); }; } }
   const ents = src.E.filter(e => !e.ref);
-  if (snapHidden || (!snapDoc && view.hidden)) setTimeout(() => toast(snapHidden ? '결재 중인 제출본은 신청자와 결재 담당자만 볼 수 있습니다' : `${josa('v' + L.model.ver, '은/는')} 결재 중이라 확정본 v${L.model.base}의 DDL을 보여 줍니다`, 'info'), 300);
-  window.treeData = () => ({ area: AREA, E: src.E, R: src.R, mode: 'P', ver: snapDoc ? 'snap:' + snapDoc.id : 'v' + view.ver, label, ro: true, snap: snapDoc ? snapDoc.id : null });
+  if (snapHidden) setTimeout(() => toast('결재 중인 제출본은 신청자와 결재 담당자만 볼 수 있습니다', 'info'), 300);
+  window.treeData = () => ({ area: AREA, E: src.E, R: src.R, mode: 'P', ver: snapDoc ? 'snap:' + snapDoc.id : 'v' + selVer, label, ro: true, snap: snapDoc ? snapDoc.id : null });
   setTimeout(() => window.dispatchEvent(new Event('dbm-tree-refresh')), 0); let scope = 'all', picked = new Set();
   const sysCount = Object.keys(getModels()).reduce((n, a) => n + modelOf(a, getModel(a).ver).E.filter(e => !e.ref).length, 0);
   // ALTER compares with the confirmed copy BEFORE the selected version (a snapshot compares with its own predecessor — CX14-15)
-  const baseVer = snapDoc ? snapDoc.ver - 1 : L.model.base;
+  const baseVer = snapDoc ? snapDoc.ver - 1 : mode === 'conf' ? selConf - 1 : L.model.base;
   const prevDoc0 = getDocs().find(x => x.type === 'model' && x.area === AREA && x.ver === baseVer && x.step === 'done');
-  const prevModel = prevDoc0 ? (prevDoc0.model || getModelData(AREA, baseVer)) : null; const prevDoc = prevModel ? { model: prevModel } : null;
+  // R2-07: a confirmed version with no approval document (seed) is read the same way the default basis reads it (app.js getModelData → the confirmed seed copy)
+  const prevModel = prevDoc0 ? (prevDoc0.model || getModelData(AREA, baseVer)) : baseVer > 0 ? getModelData(AREA, baseVer) : null; const prevDoc = prevModel ? { model: prevModel } : null;
   function chips() { $('scope-chips').innerHTML = [['all', `업무 영역 전체 (${ents.length})`], ['pick', `선택한 테이블 (${picked.size})`], ['sys', `시스템 전체 (${sysCount}) · 조회`]].map(([k, l]) => `<span class="chip ${scope === k ? 'on' : ''}" data-sc="${k}">${l}</span>`).join('') + (scope === 'pick' ? ` <select class="input u-w-200" id="pick-t" multiple size="1" aria-label="테이블 선택">${ents.map(e => `<option value="${e.id}" ${picked.has(e.id) ? 'selected' : ''}>${e.p !== '—' ? e.p : e.n}</option>`).join('')}</select>` : ''); const pt = $('pick-t'); if (pt) pt.onchange = () => { picked = new Set([...pt.selectedOptions].map(o => o.value)); draw(); }; }
   const esc = s => String(s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c]);
   // column comment: name — definition, one SQL literal (quotes doubled for the whole text), then made safe for the page
   const colComment = (e, a) => `<span class="kw">COMMENT ON COLUMN</span> ${SCH}.${esc(e.p)}.${esc(a.p)} <span class="kw">IS</span> <span class="str">'${esc((a.n + (a.desc ? ' — ' + a.desc : '')).replace(/'/g, "''"))}'</span>;`;
   const ascii = s => /^[A-Z][A-Z0-9_]*$/.test(s);
+  // R2-12 · R2-11: a copy may keep the type split ({t, len, scale}) — DDL writes and compares the one shared type string (app.js typeStr)
+  const tS = a => typeof window.typeStr === 'function' ? (window.typeStr(a) || '—') : a.t;
   const nm = x => x.p === '—' ? x.n : x.p;
   const SCH = snapDoc && snapDoc.sysAt ? snapDoc.sysAt.schema : curSys().schema;   /* 25 X-07: a submitted copy's DDL uses the schema of that moment */
   function draw() {
@@ -119,28 +170,82 @@ window.pageInit = function () {
     // gate B from the actual attributes: missing physical name / type blocks, non-standard is a warning (with exception reason) — CX12-31
     // each finding keeps where it is (entity · attribute) so the row can open the model or standardize there (D8)
     const block = [], warn = [], F = (t, e, a, std) => ({ t, e, a, std });
-    target.forEach(e => { if (e.p === '—' || !ascii(e.p)) block.push(F(`${e.n}: 테이블 물리명 ${e.p === '—' ? '없음' : '무효'}`, e, null, true)); e.a.forEach(a => { if (a.edit) return; if (a.p === '—' || !ascii(a.p)) block.push(F(`${e.n}.${a.n}: 물리명 ${a.p === '—' ? '없음' : '무효(' + a.p + ')'}`, e, a, true)); else if (a.t === '—') block.push(F(`${e.n}.${a.n}: 타입 없음`, e, a, false)); else if (a.s === 'ex') warn.push(F(`${e.n}.${a.n}: 비표준 · 예외 사유 있음`, e, a, false)); else if (['comb', 'unreg'].includes(a.s)) warn.push(F(`${e.n}.${a.n}: 미준수`, e, a, true)); }); });
+    target.forEach(e => { if (e.p === '—' || !ascii(e.p)) block.push(F(`${e.n}: 테이블 물리명 ${e.p === '—' ? '없음' : '무효'}`, e, null, true)); e.a.forEach(a => { if (a.edit) return; if (a.p === '—' || !ascii(a.p)) block.push(F(`${e.n}.${a.n}: 물리명 ${a.p === '—' ? '없음' : '무효(' + a.p + ')'}`, e, a, true)); else if (tS(a) === '—') block.push(F(`${e.n}.${a.n}: 타입 없음`, e, a, false)); else if (a.s === 'ex') warn.push(F(`${e.n}.${a.n}: 비표준 · 예외 사유 있음`, e, a, false)); else if (['comb', 'unreg'].includes(a.s)) warn.push(F(`${e.n}.${a.n}: 미준수`, e, a, true)); }); });
     { const DB = /postgre/i.test(String(L.model.dbms || curSys().dbms || curSys().db || '')) ? 'postgresql' : 'oracle';   /* 31 · Codex-6: the same policy judgement + the system DB rules (length · reserved words · upper-case collisions) */
       target.forEach(e => { [...entRuleProblems(e, null, DB), ...e.a.filter(a => !a.edit).flatMap(a => attrRuleProblems(a, null, DB).map(p => Object.assign(p, { at: a })))].forEach(p => { if (p.f !== 'p') return; (p.lvl === 'block' ? block : warn).push(F(`${e.n}${p.at ? '.' + p.at.n : ''}: ${p.msg}`, e, p.at || null, true)); });
-        const seen = {}; e.a.filter(a => !a.edit && a.p !== '—').forEach(a => { const u = a.p.toUpperCase(); if (seen[u] && seen[u] !== a.p) block.push(F(`${e.n}: 컬럼명 ${seen[u]} · ${a.p}는 DB에서 같은 이름(${u})입니다`, e, a, true)); seen[u] = seen[u] || a.p; }); }); }
+        // R2-04: column names within a table compared case-insensitively — the same name twice blocks too (it only caught names differing by case)
+        // (when the shared model invariants are there they report it, below — not twice)
+        if (typeof window.modelInvariants !== 'function') { const seen = {}; e.a.filter(a => !a.edit && a.p !== '—').forEach(a => { const u = a.p.toUpperCase(); if (seen[u]) block.push(F(seen[u] === a.p ? `${e.n}: 컬럼명 ${a.p}가 두 번 있습니다` : `${e.n}: 컬럼명 ${seen[u]} · ${a.p}는 DB에서 같은 이름(${u})입니다`, e, a, true)); seen[u] = seen[u] || a.p; }); } }); }
+    // R2-04: the shared model invariants (app.js modelInvariants — 엔터티 안 컬럼 물리명 중복 등, 대소문자 무시) block the output; only findings in the chosen tables
+    if (typeof window.modelInvariants === 'function') { let inv = []; try { const r = window.modelInvariants(src); inv = Array.isArray(r) ? r : (r && (r.items || r.list)) || []; } catch (err) { inv = []; }
+      inv.forEach(x => { if (!x) return; const eid = x.e && typeof x.e === 'object' ? x.e.id : x.e, ent = eid ? target.find(t => t.id === eid) || (x.en ? target.find(t => t.n === x.en) : null) : null;
+        if (eid && !ent) return; if (!eid && scope === 'sys') return; const an = x.a && typeof x.a === 'object' ? x.a.n : x.a, att = ent && an ? ent.a.find(a => a.n === an || a.p === an) || null : null;
+        if (x.lvl && x.lvl !== 'block') { warn.push(F(`${ent ? ent.n + (att ? '.' + att.n : '') + ': ' : ''}${x.msg || x.message || x.code || '모델 불변식'}`, ent, att, false)); return; }
+        block.push(F(`${ent ? ent.n + (att ? '.' + att.n : '') + ': ' : ''}${x.msg || x.message || x.code || '모델 불변식 위반'}`, ent, att, false)); }); }
     if (scope === 'sys') block.push(F('시스템 전체는 조회용입니다 — 업무 영역별로 출력하세요'));
     if (!target.length && scope !== 'sys') block.push(F('출력할 테이블이 없습니다 — 범위를 고르세요'));
     const lines = [];
     lines.push(`<span class="cm">-- NeoDB · ${curSys().name} / ${L.model.name} · ${label} · ${alter ? `변경분(ALTER) — v${baseVer} 확정본 대비` : '신규 생성(CREATE)'}</span>`);
+    // M-7: the file says which copy it came from — official (approval document · snapshot hash) or not
+    lines.push(`<span class="cm">-- ${official ? `공식 DDL · 기준 v${selVer} 확정본 · ${snapDoc ? `결재 ${snapDoc.id} · 스냅숏 ${docHashV}` : `결재 문서 기록 없음(목업 시드) · 스냅숏 ${docHashV}`}` : mode === 'review' ? `검토용 · 결재 중 제출 사본 ${snapDoc.id} · 스냅숏 ${docHashV} — 승인 전이라 운영에 반영하지 마세요` : mode === 'old' ? `${STEP_NAME[snapDoc.step] || snapDoc.step} 제출 사본 ${snapDoc.id} · 스냅숏 ${docHashV} — 공식 DDL 아님` : snapHidden ? '열람 제한 — 내용 없음' : '미리보기 — 승인 전(비공식) · 결재 문서 없음 — 운영에 반영하지 마세요'}</span>`);
     if (alter && !prevDoc) lines.push(`<span class="cm">-- 비교할 v${baseVer} 확정본 사본이 없어 전체를 CREATE로 냅니다</span>`);
+    // M-7 · ALTER pairing: entity by id, then by physical name (a deleted-and-re-added entity has a new id); attribute by stable id (when both have one),
+    // then physical name, then (no ids) logical name. Same physical name with a different id = re-added → '-- 재추가' comment + gate warning
+    const RE = '<span class="cm">-- 재추가: 운영 데이터 확인 필요', pairs = new Map();
+    if (alter && prevDoc) { const P = prevDoc.model.E.filter(x => !x.ref), used = new Set(), PU = x => String(x.p || '').toUpperCase();
+      ents.forEach(e => { const o = P.find(x => x.id && x.id === e.id); if (o) { pairs.set(e, { o, re: false }); used.add(o); } });
+      ents.forEach(e => { if (pairs.has(e) || e.p === '—') return; const o = P.find(x => !used.has(x) && x.p !== '—' && PU(x) === PU(e)); if (o) { pairs.set(e, { o, re: !!(o.id && e.id && o.id !== e.id) }); used.add(o); } }); }
+    const pairAttrs = (cur, old) => { const m = new Map(), used = new Set(), PU = x => String(x.p || '').toUpperCase();
+      const step = test => cur.forEach(a => { if (m.has(a)) return; const o = old.find(x => !used.has(x) && test(a, x)); if (o) { m.set(a, { o, re: !!(a.id && o.id && a.id !== o.id) }); used.add(o); } });
+      step((a, x) => !!a.id && a.id === x.id);
+      step((a, x) => a.p !== '—' && x.p !== '—' && PU(a) === PU(x));
+      step((a, x) => !(a.id && x.id) && (x.n === a.n || x.n === a.orig));
+      return m; };
+    // N-02: renames in an order that never collides — a rename waits while its target name is still another pending rename's source (chains A→B, B→C go B→C first);
+    // a cycle (A↔B) goes through a temporary name <name>_TMP$n. Used for table names and, per table, for column names.
+    // N-03: the temporary name must be free in the target schema — not a name of the confirmed copy, not a name of this result, not another temporary name
+    // (`taken`); the number goes up until one is free, and if none is (99 tries) the result says so (fail) and gate B blocks
+    const orderRenames = (list, taken) => { const out = [], pend = list.map(r => Object.assign({}, r)), U = s => String(s).toUpperCase(), used = new Set([...(taken || [])].map(U)); let fail = null;
+      list.forEach(r => { used.add(U(r.from)); used.add(U(r.to)); });
+      while (pend.length) { const i = pend.findIndex(r => !pend.some(o => o !== r && U(o.from) === U(r.to)));
+        if (i >= 0) { out.push(pend.splice(i, 1)[0]); continue; }
+        const r = pend[0]; let tmp = null; for (let n = 1; n < 100; n++) { const c = `${String(r.from).slice(0, 23)}_TMP$${n}`; if (!used.has(U(c))) { tmp = c; break; } }
+        if (!tmp) { fail = r.from; break; } used.add(U(tmp)); out.push({ from: r.from, to: tmp, tmp: true }); r.from = tmp; }
+      return Object.assign(out, { fail }); };
+    const renOf = e => { const pr = pairs.get(e); return pr && !pr.re && pr.o.p && pr.o.p !== '—' && e.p !== '—' && pr.o.p.toUpperCase() !== e.p.toUpperCase() ? { e, from: pr.o.p, to: e.p } : null; };
+    if (alter && prevDoc) { const U = s => String(s).toUpperCase(), all = ents.map(renOf).filter(Boolean), mine = all.filter(r => target.includes(r.e)), outside = all.filter(r => !target.includes(r.e));
+      // N-02: in '선택한 테이블', a rename that needs a table OUTSIDE the scope to be renamed first (its new name is still that table's old name — chain or cycle) can't be written alone
+      mine.forEach(r => { const pre = outside.find(o => U(o.from) === U(r.to)); if (pre) block.push(F(`${r.e.n}: ${pre.from} 이름 변경이 먼저 필요합니다 — 범위에 포함하세요(${pre.from} → ${pre.to})`, r.e, null, false)); });
+      const taken = [...prevDoc.model.E.filter(x => !x.ref && x.p && x.p !== '—').map(x => x.p), ...ents.filter(x => x.p && x.p !== '—').map(x => x.p)];
+      // N-03 (review5): the schema is shared by the system's other business areas — their table names (latest confirmed copy · working copy) are taken too
+      { const sysN = sysOfArea(AREA), AM = getAllModels(); Object.keys(AM).filter(a => a !== AREA && sysOfArea(a) === sysN).forEach(a => { const m = AM[a], cv = modelLock(a).state === 'confirmed' ? m.ver : (m.base || 0);
+        const cd = cv ? getDocs().filter(x => x.type === 'model' && x.area === a && x.ver === cv && x.step === 'done').map(x => x.model).find(Boolean) : null;
+        [cv ? (cd || getModelData(a, cv)) : null, modelOf(a, m.ver)].forEach(md => ((md && md.E) || []).forEach(x => { if (!x.ref && x.p && x.p !== '—') taken.push(x.p); })); }); }
+      const TR = orderRenames(mine.map(r => ({ from: r.from, to: r.to })), taken);
+      if (TR.fail) block.push(F(`테이블 ${TR.fail}: 맞바꾸기에 쓸 임시 이름을 고를 수 없습니다(${TR.fail.slice(0, 23)}_TMP$1~99가 모두 쓰임) — 이름을 정리한 뒤 다시 만드세요`));
+      if (TR.length) { lines.push(`<span class="cm">-- 테이블 이름 변경 ${TR.filter(r => !r.tmp).length}건 — 겹치지 않는 순서${TR.some(r => r.tmp) ? ' · 맞바꾸기는 임시 이름을 거침' : ''}</span>`);
+        TR.forEach(r => lines.push(`<span class="kw">ALTER TABLE</span> ${SCH}.${esc(r.from)} <span class="kw">RENAME TO</span> ${esc(r.to)};${r.tmp ? ' <span class="cm">-- 임시 이름</span>' : ''}`)); } }
     target.forEach(e => {
-      const base = alter && prevDoc ? prevDoc.model.E.find(x => x.id === e.id) : null;
+      const pr = pairs.get(e), base = pr ? pr.o : null;
       lines.push(`<span data-e="${e.id}" hidden></span><span class="cm">-- ${esc(e.p)} ${esc(e.n)}</span>`);
       if (alter && base) { const AT = `<span class="kw">ALTER TABLE</span> ${SCH}.${esc(e.p)}`, DF = a => a.def ? ' <span class="kw">DEFAULT</span> ' + esc(a.def) : '';
-        e.a.filter(a => !a.edit).forEach(a => { const o = base.a.find(x => x.n === a.n || x.n === a.orig);
-          if (!o) { lines.push(`${AT} <span class="kw">ADD</span> (${esc(a.p)} ${esc(a.t)}${DF(a)}${a.nn || a.pk ? ' <span class="kw">NOT NULL</span>' : ''});`); if (cm && a.p !== '—') lines.push(colComment(e, a)); return; }
-          if (o.p !== a.p) lines.push(`${AT} <span class="kw">RENAME COLUMN</span> ${esc(o.p)} <span class="kw">TO</span> ${esc(a.p)};`);
-          if (o.t !== a.t) lines.push(`${AT} <span class="kw">MODIFY</span> (${esc(a.p)} ${esc(a.t)});`);
+        if (pr.re) { lines.push(`${RE} (같은 물리명 ${esc(e.p)}을(를) 지우고 다시 만든 엔터티 — 기존 테이블에 맞춰 ALTER로 냅니다)</span>`); warn.push(F(`${e.n}: 같은 테이블명으로 다시 추가됨 — 운영 데이터 확인 필요`, e, null, false)); }
+        // R2-14 · N-02: table renames were all written above, before any table's statements (the operating DB still has the old names);
+        // Oracle and PostgreSQL both take ALTER TABLE <schema>.<old> RENAME TO <new> (the new name unqualified). Column renames of this table: same ordering rule
+        const AP = pairAttrs(e.a.filter(a => !a.edit), base.a || []);
+        const CR = orderRenames(e.a.filter(a => !a.edit).map(a => AP.get(a) && !AP.get(a).re ? { from: AP.get(a).o.p, to: a.p } : null).filter(r => r && r.from && r.from !== '—' && r.to !== '—' && r.from !== r.to),
+          [...(base.a || []).map(x => x.p), ...e.a.filter(a => !a.edit).map(a => a.p)].filter(p => p && p !== '—'));   // N-03: column temp names free in this table
+        if (CR.fail) block.push(F(`${e.n}: 컬럼 ${CR.fail} 맞바꾸기에 쓸 임시 이름을 고를 수 없습니다 — 이름을 정리한 뒤 다시 만드세요`, e, null, false));
+        CR.forEach(r => lines.push(`${AT} <span class="kw">RENAME COLUMN</span> ${esc(r.from)} <span class="kw">TO</span> ${esc(r.to)};${r.tmp ? ' <span class="cm">-- 임시 이름</span>' : ''}`));
+        e.a.filter(a => !a.edit).forEach(a => { const ap = AP.get(a), o = ap ? ap.o : null;
+          if (ap && ap.re) { lines.push(`${RE} (컬럼 ${esc(a.p)}을(를) 지우고 다시 추가함)</span>`); warn.push(F(`${e.n}.${a.n}: 같은 컬럼명으로 다시 추가됨 — 운영 데이터 확인 필요`, e, a, false)); }
+          if (!o) { lines.push(`${AT} <span class="kw">ADD</span> (${esc(a.p)} ${esc(tS(a))}${DF(a)}${a.nn || a.pk ? ' <span class="kw">NOT NULL</span>' : ''});`); if (cm && a.p !== '—') lines.push(colComment(e, a)); return; }
+          if (tS(o) !== tS(a)) lines.push(`${AT} <span class="kw">MODIFY</span> (${esc(a.p)} ${esc(tS(a))});`);
           if ((o.def || '') !== (a.def || '')) lines.push(`${AT} <span class="kw">MODIFY</span> (${esc(a.p)} <span class="kw">DEFAULT</span> ${a.def ? esc(a.def) : '<span class="kw">NULL</span>'});`);   // a removed default is set back to NULL
           if (cm && a.p !== '—' && (o.n !== a.n || (o.desc || '') !== (a.desc || ''))) lines.push(colComment(e, a)); });
         return; }
       lines.push(`<span class="kw">CREATE TABLE</span> ${SCH}.${esc(e.p)} (`);
-      e.a.filter(a => !a.edit).forEach(a => { const bad = a.p === '—' || !ascii(a.p); lines.push(`<span class="${bad ? 'warn' : ''}">  ${esc(a.p)}${' '.repeat(Math.max(1, 20 - a.p.length))}${esc(a.t)}${a.def ? ' <span class="kw">DEFAULT</span> ' + esc(a.def) : ''}${a.nn || a.pk ? ' <span class="kw">NOT NULL</span>' : ''},${bad ? ' <span class="cm">-- 오류: 물리명 없음·무효</span>' : a.s === 'ex' ? ' <span class="cm">-- <i data-ic=warn data-s=12></i> 예외: ' + esc(a.exReason || '') + '</span>' : ''}</span>`); });
+      e.a.filter(a => !a.edit).forEach(a => { const bad = a.p === '—' || !ascii(a.p); lines.push(`<span class="${bad ? 'warn' : ''}">  ${esc(a.p)}${' '.repeat(Math.max(1, 20 - a.p.length))}${esc(tS(a))}${a.def ? ' <span class="kw">DEFAULT</span> ' + esc(a.def) : ''}${a.nn || a.pk ? ' <span class="kw">NOT NULL</span>' : ''},${bad ? ' <span class="cm">-- 오류: 물리명 없음·무효</span>' : a.s === 'ex' ? ' <span class="cm">-- <i data-ic=warn data-s=12></i> 예외: ' + esc(a.exReason || '') + '</span>' : ''}</span>`); });
       const pk = e.a.filter(a => a.pk).map(a => a.p); lines.push(pk.length ? `  <span class="kw">CONSTRAINT</span> ${esc(e.p)}_PK <span class="kw">PRIMARY KEY</span> (${pk.join(', ')})${(e.uk || []).length ? ',' : ''}` : '  <span class="cm">-- <i data-ic=warn data-s=12></i> PK 없음</span>');
       (e.uk || []).forEach((u, i, A) => lines.push(`  <span class="kw">CONSTRAINT</span> ${esc(e.p)}_UK${i + 1} <span class="kw">UNIQUE</span> (${esc(u)})${i < A.length - 1 ? ',' : ''}`));   // UKs (1:1 relations keep theirs here)
       lines.push(');');
@@ -153,28 +258,43 @@ window.pageInit = function () {
       else if (f.st === 'miss') { lines.push(`<span class="cm">-- <i data-ic=warn data-s=12></i> FK 누락: ${esc(nm(c))} → ${esc(nm(p))} · ${esc(f.why)}</span>`); warn.push(F(`${c.n} → ${p.n}: FK 누락 · ${f.why}`, c, null, false)); } });
     $('sql').innerHTML = lines.map((l, i) => `<div class="ln ${l.includes('-- 오류:') ? 'warn' : ''}"><i>${i + 1}</i>${l}</div>`).join('');
     $('gb-banner').className = 'banner ' + (block.length ? 'danger' : warn.length ? 'warning' : 'success');
-    $('gb-text').innerHTML = `<b>출력 전 점검: 차단 ${block.length} · 경고 ${warn.length}.</b> ${block.length ? '물리명·타입이 없는 컬럼이 있어 내려받기가 막힙니다 — 오른쪽 점검 행의 [모델에서 열기] · [표준 맞추기]로 고치세요.' : warn.length ? '표준 위반은 경고로 남고 예외 사유와 함께 출력합니다.' : '문제 없음.'}`;
+    $('gb-text').innerHTML = `<b>출력 전 점검: 차단 ${block.length} · 경고 ${warn.length}.</b> ${block.length ? (mode === 'work' ? '차단 항목(물리명·타입 누락 · 이름 중복 · 이름 변경 순서 등)이 있어 내려받기가 막힙니다 — 오른쪽 점검 행의 [모델에서 열기] · [표준 맞추기]로 고치세요.' : '이 사본에 차단 항목(물리명·타입 누락 · 이름 중복 · 이름 변경 순서 등)이 있어 내려받기가 막힙니다 — 사본은 고칠 수 없으니 작업본에서 고쳐 다시 확정 신청하세요(점검 행의 [모델에서 열기]로 위치 확인).') : warn.length ? '표준 위반은 경고로 남고 예외 사유와 함께 출력합니다.' : '문제 없음.'}`;
     // D8: every finding links to where it is fixed (the model at that entity · standardize at that row); read-only copies (snapshots) link to the model only
-    const fixLinks = x => !x.e ? '' : `<div class="u-flex u-gap-8 u-mt-4"><a class="btn sm" href="model.html?area=${AREA}&focus=${encodeURIComponent(x.e.id)}">모델에서 열기</a>${x.std && !snapDoc ? `<a class="btn sm ghost" href="standardize.html?area=${AREA}&f=todo&from=ddl&e=${encodeURIComponent(x.e.id)}${x.a ? '&a=' + encodeURIComponent(x.a.n) : ''}">표준 맞추기</a>` : ''}</div>`;
+    // M-7: [모델에서 열기] keeps the copy (&snap=) so the confirmed / submitted copy opens at that entity; standardize only for the work copy
+    const fixLinks = x => !x.e ? '' : `<div class="u-flex u-gap-8 u-mt-4"><a class="btn sm" href="model.html?area=${AREA}&focus=${encodeURIComponent(x.e.id)}${snapDoc ? '&snap=' + snapDoc.id : ''}">모델에서 열기</a>${x.std && mode === 'work' ? `<a class="btn sm ghost" href="standardize.html?area=${AREA}&f=todo&from=ddl&e=${encodeURIComponent(x.e.id)}${x.a ? '&a=' + encodeURIComponent(x.a.n) : ''}">표준 맞추기</a>` : ''}</div>`;
     const fRow = (x, cls, lab) => `<tr><td><span class="badge ${cls}">${lab}</span></td><td class="caption wrap">${esc(x.t)}${fixLinks(x)}</td></tr>`;
     $('gb-body').innerHTML = `<div class="mline"><span><b>${target.length}</b>테이블</span><span><b>${src.R.length}</b>관계</span><span><b>${block.length}</b>차단</span><span><b>${warn.length}</b>경고</span></div>
       <table class="tbl"><thead><tr><th>구분</th><th>항목 · 고칠 곳</th></tr></thead><tbody>${block.map(x => fRow(x, 'b-danger', '차단')).join('')}${warn.map(x => fRow(x, 'b-warning', '경고')).join('')}${!block.length && !warn.length ? '<tr class="er"><td colspan="2" class="caption muted">문제 없음</td></tr>' : ''}</tbody></table>
-      <div class="caption muted u-mt-8">문법·물리명 누락은 차단, 표준 위반은 경고 + 예외 사유로 진행합니다.</div>`;
-    ['copy', 'dl'].forEach(id => { $(id).disabled = !!block.length; });
+      <div class="caption muted u-mt-8">문법·물리명 누락은 차단, 표준 위반은 경고 + 예외 사유로 진행합니다.</div>${dlWhy() ? `<div class="caption u-mt-8" id="dl-why"><i data-ic=info data-s=12></i> 내려받기: ${esc(dlWhy())}</div>` : ''}`;
+    $('copy').disabled = !!block.length; const why = dlWhy();   // M-7: a preview can't be downloaded (dimmed + reason); copy keeps the '미리보기 — 승인 전' header line
+    $('dl').disabled = !!block.length || !!why; $('dl').title = why || (block.length ? '차단 항목을 고쳐야 내려받을 수 있습니다' : '');
   }
   $('scope-chips').addEventListener('click', e => { const c = e.target.closest('[data-sc]'); if (!c) return; scope = c.dataset.sc; draw(); });
   ['preset', 'o-cm', 'o-fk'].forEach(id => $(id).onchange = draw);
   const sqlText = () => [...$('sql').querySelectorAll('.ln')].map(l => { const c = l.cloneNode(true); const i = c.querySelector('i'); if (i) i.remove(); return c.textContent; }).join('\n');
   $('copy').onclick = () => { const txt = sqlText(); (navigator.clipboard ? navigator.clipboard.writeText(txt) : Promise.reject()).then(() => toast(`SQL ${txt.split('\n').length}줄을 클립보드에 복사했습니다`, 'success'), () => window.prompt('복사해서 쓰세요', txt)); };
   // D9: a real UTF-8 .sql file made from the preview text (BOM so Windows editors read Korean comments correctly)
-  if (!can('out.export', { area: AREA })) setTimeout(() => { const b = $('dl'); b.disabled = true; b.title = ME.has('modeler') ? '담당 시스템의 DDL만 내려받을 수 있습니다' : '조회 전용 — 내려받기는 모델러 · DA · 기관 담당자 · 감리'; }, 0);   /* UI-13 */
+  /* UI-13 · M-7: the dimmed state + reason is set in draw() (dlWhy) so a redraw never re-enables it */
+  // R2-02: right before a download, re-read the copy (withdrawn · rejected · confirmed in another tab?) and the account as saved now; anything changed → refuse and
+  // reopen the screen in the current state (the reason is shown after the reload)
+  const reopenDl = msg => { flash(msg, 'danger'); location.reload(); return true; };
+  const liveDlBlock = () => {
+    if (window.liveRoleChanged && liveRoleChanged()) { staleRoleToast(); return true; }
+    const u = (window.freshUser && freshUser()) || USERS[ME.id] || ME;
+    if (!u || u.status === 'stopped' || !canUser(u, 'out.export', { area: AREA })) return reopenDl('내려받기 권한이 바뀌어 내려받지 않았습니다 — 지금 권한으로 다시 열었습니다');
+    if (snapDoc) { const f = getDocs().find(x => x.id === snapDoc.id);
+      if (!f || f.step !== snapDoc.step) return reopenDl(`${snapDoc.id}의 상태가 바뀌어(${f ? STEP_NAME[f.step] || f.step : '문서 없음'}) 내려받지 않았습니다 — 지금 상태로 다시 열었습니다`);
+      if (inReview(f) && !canUserSeeDoc(u, f)) return reopenDl('결재 중인 제출 사본은 신청자와 결재 담당자만 내려받을 수 있습니다 — 지금 권한으로 다시 열었습니다'); }
+    return false; };
   $('dl').onclick = () => {
     if ($('dl').disabled) return;
+    if (mode === 'work' || snapHidden || mode === 'old') { toast(`${dlWhy()} — 미리보기는 볼 수 있습니다`, 'info'); return; }   /* M-7 (re-checked at run time) */
+    if (liveDlBlock()) return;   /* R-02 · R2-02 */
     if (!can('out.export', { area: AREA })) { toast(ME.has('modeler') ? '담당 시스템의 DDL만 내려받을 수 있습니다 — 미리보기는 볼 수 있습니다' : 'DDL 내려받기는 모델러 · DA · 기관 담당자 · 감리만 할 수 있습니다 — 조회 전용 계정은 미리보기만', 'info'); return; }   /* R-14 */
-    const txt = sqlText(), name = `${SCH}_${AREA}_${label.split(' ')[0]}${$('preset').value === 'alter' ? '_ALTER' : ''}.sql`;
+    const txt = sqlText(), name = `${SCH}_${AREA}_v${selVer}${mode === 'review' ? '_REVIEW' : ''}${$('preset').value === 'alter' ? '_ALTER' : ''}.sql`;
     const url = URL.createObjectURL(new Blob(['﻿' + txt + '\n'], { type: 'application/sql;charset=utf-8' }));
     const a = document.createElement('a'); a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000);
-    pushAudit({ act: '내려받기 — DDL', target: name, why: `${sysOfArea(AREA)} · ${txt.split('\n').length}줄` });   /* R-14: every export is recorded */
+    pushAudit({ act: '내려받기 — DDL' + (mode === 'review' ? ' (검토용)' : ''), target: name, why: `${sysOfArea(AREA)} · ${txt.split('\n').length}줄 · ${snapDoc ? `결재 ${snapDoc.id} · 스냅숏 ${docHashV}` : `v${selVer} 확정본 · 결재 문서 기록 없음 · 스냅숏 ${docHashV}`}`, doc: snapDoc ? snapDoc.id : null, hash: docHashV || null });   /* R-14: every export is recorded — M-7: with the approval document and snapshot hash */
     toast(`${name}을(를) 내려받았습니다 — ${txt.split('\n').length}줄 · UTF-8 · 감사 로그에 기록`, 'success');
   };
   draw();

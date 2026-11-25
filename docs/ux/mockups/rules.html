@@ -79,6 +79,10 @@
       <div class="flex u-gap-8 u-mt-8" id="sfx-tools"></div>
     </div></div>
 
+    <!-- M-6 (고객 모델 요청 2026-11-25): 엔터티 정의 · 속성 설명 입력 기준 — 모델 화면 [모델 검증] · 확정 신청 · 승인 재검사가 같은 값을 읽는다 -->
+    <h3 class="set-sec" id="sec-input">모델 입력 규칙</h3>
+    <div id="mi"></div>
+
     <h3 class="set-sec" id="sec-naming">명명 규칙</h3>
     <div id="naming"></div>
 
@@ -111,8 +115,23 @@
   const REQ = { word: ['name', 'abbr'], domain: ['name'], term: ['name', 'abbr'], code: ['abbr', 'name', 'value', 'valueName'], entity: ['name', 'phys'], attr: ['name', 'phys'] };
   const viewVer = +q.get('v') || 0, cur = getPolicy(), RO_VER = viewVer && viewVer !== cur.ver;
   const edit = can('rules.edit') && !RO_VER;
-  let base = RO_VER ? policyAt(viewVer) : cur, D = clone(base);
-  const DEF = POLICY_DEFAULT();
+  /* M-6 모델 입력 규칙 — { defEmpty: 'block'|'warn', defShort: 'warn'|'block'|'off', minLen }. 정책 본문(modelInput)에 함께 저장하고,
+     모델 화면(modelCheck)이 읽는 localStorage 'neodb.modelInputRules'에도 같은 값을 쓴다. 정책 본문에 없으면(옛 저장값) 그 키 → 기본값 */
+  const MI_KEY = 'neodb.modelInputRules', MI_DEF = { defEmpty: 'block', defShort: 'warn', minLen: 5 }, MI_LV = { block: '막음', warn: '경고', off: '끔' };
+  const miNorm = o => { const r = Object.assign({}, MI_DEF, o || {}); if (!['block', 'warn'].includes(r.defEmpty)) r.defEmpty = MI_DEF.defEmpty; if (!['warn', 'block', 'off'].includes(r.defShort)) r.defShort = MI_DEF.defShort; const n = parseInt(r.minLen, 10); r.minLen = n >= 1 && n <= 100 ? n : MI_DEF.minLen; return { defEmpty: r.defEmpty, defShort: r.defShort, minLen: r.minLen }; };
+  const miStored = () => { try { return JSON.parse(localStorage.getItem(MI_KEY) || 'null'); } catch (e) { return null; } };
+  // R2-05: the CURRENT rules are read only through app.js getModelInputRules() (the one reading the model screen and the approval re-check use); an old version shows its own body
+  const curMI = () => typeof window.getModelInputRules === 'function' ? window.getModelInputRules() : miStored();
+  const withMI = (P, isCur) => { P.modelInput = miNorm(isCur ? curMI() : (P.modelInput || curMI())); return P; };
+  // R2-09: one definition judged by the SAME function as the model check (app.js descJudge → 'ok' | 'empty' | 'same' | 'short'); the fallback copies modelCheck's
+  // reading (trim · spaces and case ignored for 'same' · code points after trim) until descJudge is there
+  const descKind = (name, def, R) => { if (typeof window.descJudge === 'function') return window.descJudge(name, def, R);
+    const d = String(def == null ? '' : def).trim(); return !d ? 'empty' : d.replace(/\s/g, '').toLowerCase() === String(name == null ? '' : name).replace(/\s/g, '').toLowerCase() ? 'same' : Array.from(d).length < R.minLen ? 'short' : 'ok'; };
+  const miJudge = (name, def, R) => { const k = descKind(name, def, R); if (k === 'empty') return { lvl: R.defEmpty, why: '비어 있음' }; if (k === 'ok' || !k || R.defShort === 'off') return null;
+    return { lvl: R.defShort, why: k === 'same' ? '이름과 같음' : `${R.minLen}자 미만` }; };
+  withMI(cur, true);
+  let base = RO_VER ? withMI(policyAt(viewVer)) : cur, D = clone(base);
+  const DEF = POLICY_DEFAULT(); DEF.modelInput = clone(MI_DEF);
   let tab = DICT_K.includes(q.get('k')) ? q.get('k') : 'word', open = new Set(), onlyDiff = false; const pickOn = new Set();   // rows where '고른 것만' is chosen before any symbol (UX-impl N-01)
   document.body.classList.toggle('ro', !edit); $('r-ro').hidden = can('rules.edit') || RO_VER;
 
@@ -130,6 +149,10 @@
     if (A.model.entitySuffixLvl !== B.model.entitySuffixLvl) out.push({ k: 'naming', f: 'entitySuffixLvl', label: '엔터티 분류어 종결', from: POL_LVL[A.model.entitySuffixLvl], to: POL_LVL[B.model.entitySuffixLvl] });
     if (!sameV(A.model.entitySuffix, B.model.entitySuffix)) out.push({ k: 'sfx', f: '', label: '엔터티 분류어 · 접미어', from: A.model.entitySuffix.map(x => x.w + '→' + x.a).join(' '), to: B.model.entitySuffix.map(x => x.w + '→' + x.a).join(' ') });
     if (A.dbms !== B.dbms) out.push({ k: 'naming', f: 'dbms', label: '대상 DBMS', from: A.dbms, to: B.dbms });
+    if (A.modelInput && B.modelInput) { const a = miNorm(A.modelInput), b = miNorm(B.modelInput);   // M-6 (an old body without it is not compared)
+      if (a.defEmpty !== b.defEmpty) out.push({ k: 'input', f: 'defEmpty', label: '모델 입력 · 정의 비어 있음', from: MI_LV[a.defEmpty], to: MI_LV[b.defEmpty] });
+      if (a.defShort !== b.defShort) out.push({ k: 'input', f: 'defShort', label: '모델 입력 · 이름과 같음 · 짧음', from: MI_LV[a.defShort], to: MI_LV[b.defShort] });
+      if (a.minLen !== b.minLen) out.push({ k: 'input', f: 'minLen', label: '모델 입력 · 최소 글자 수', from: a.minLen + '자', to: b.minLen + '자' }); }
     return out;
   }
   const isChg = (k, f) => { const a = ruleOf(base, k, f), b = ruleOf(D, k, f); return RK.some(x => !sameV(a[x], b[x])); };
@@ -238,8 +261,18 @@
     $('r-ban').innerHTML = h + '<span id="conf"></span>'; }
 
   /* ---- save bar ---- */
+  /* ---- M-6 모델 입력 규칙 ---- */
+  function miHtml() { const R = miNorm(D.modelInput), dis = edit ? '' : 'disabled', B = miNorm(base.modelInput);
+    const seg = (key, opts, label) => `<div class="seg" role="radiogroup" aria-label="${label}">${opts.map(v => `<button type="button" role="radio" aria-checked="${R[key] === v}" class="${R[key] === v ? 'on' : ''}" data-mi="${key}" data-v="${v}" ${dis}>${MI_LV[v]}</button>`).join('')}</div>`;
+    const chg = key => R[key] !== B[key] ? ' <span class="badge b-info">변경</span>' : '';
+    const row = (l, sub, body, aside) => `<div class="set-row"><div class="l"><b>${l}</b>${sub ? `<span>${sub}</span>` : ''}</div><div>${body}</div>${aside ? `<div class="aside">${aside}</div>` : ''}</div>`;
+    const tryL = [['고객', ''], ['고객', '고객'], ['고객', '고객정보'], ['고객', '서비스를 이용하는 개인 · 법인']].map(([n, d]) => { const j = miJudge(n, d, R);
+      return `<span class="muted">${d ? `‘${esc(d)}’` : '(빈 값)'}</span><span class="${!j ? 'ok' : j.lvl === 'block' ? 'no' : 'wn'}">${!j ? '통과' : `${MI_LV[j.lvl]} · ${esc(j.why)}`}</span>`; }).join('');
+    return row(`정의 비어 있음${chg('defEmpty')}`, '엔터티 정의 · 속성 설명이 비었거나 공백뿐', seg('defEmpty', ['block', 'warn'], '정의 비어 있음'), '<span>막음이면 확정 신청 · 승인이 막힙니다. 경고면 신청할 수 있고 결재 문서에 남습니다.</span>')
+      + row(`이름과 같음 · 짧음${chg('defShort')}${chg('minLen')}`, '이름을 그대로 옮겼거나(공백 · 대소문자 무시) 최소 글자 수 미만', `<div class="flex u-wrap u-gap-16">${seg('defShort', ['warn', 'block', 'off'], '이름과 같음 · 짧음')}<label class="flex caption" for="mi-len">최소 글자 수 <input class="input mono w-num" type="number" min="1" max="100" id="mi-len" data-milen value="${R.minLen}" ${dis || (R.defShort === 'off' ? 'disabled' : '')}> 자</label></div>`, '<span>앞뒤 공백을 자른 글자 수로 셉니다(한글 · 영문 모두 1자). 끔이면 이 검사를 하지 않습니다.</span>')
+      + row('예시', `엔터티 ‘고객’의 정의 — 지금 고친 값 기준`, `<div class="tryout u-mt-0">${tryL}</div>`, '<span>모델 화면의 [모델 검증] · 확정 신청 · 승인 재검사가 같은 기준으로 판정합니다.</span>'); }
   function changed() { const ch = diffs(base, D); $('r-bar').hidden = !edit || !ch.length; { const nb = policyConflicts(D).filter(c => c.lvl === 'block').length; $('r-bar-t').innerHTML = nb ? `<b class="u-danger">설정 충돌 ${nb}건</b> — 해결해야 저장할 수 있습니다 <a href="#conf" class="linkbtn">충돌 보기</a>` : `${ch.length}건 변경 — 저장하면 검수 기준 v${base.ver + 1}로 올라갑니다`; } drawHead(); drawConflicts(); drawPreview(); $('r-save').disabled = policyConflicts(D).some(c => c.lvl === 'block'); }
-  function drawAll() { drawHead(); drawTables(); drawSfx(); $('naming').innerHTML = namingHtml(); drawPreview(); drawConflicts(); drawProps(); drawHist(); changed(); }
+  function drawAll() { drawHead(); drawTables(); drawSfx(); $('mi').innerHTML = miHtml(); $('naming').innerHTML = namingHtml(); drawPreview(); drawConflicts(); drawProps(); drawHist(); changed(); }
 
   /* ---- events ---- */
   const content = $('content');
@@ -252,6 +285,7 @@
     if (t.dataset.pdone) { setProp(t.dataset.pdone, '반영'); return; } if (t.dataset.prej) { setProp(t.dataset.prej, '거절'); return; }
     if (t.dataset.sdel != null && edit) { D.model.entitySuffix.splice(+t.dataset.sdel, 1); drawSfx(); changed(); return; }
     if (t.dataset.nlvl && edit) { (t.dataset.nobj === 'model' ? D.model : D.naming)[t.dataset.nlvl] = t.dataset.v; $('naming').innerHTML = namingHtml(); changed(); const b = document.querySelector(`[data-nlvl="${t.dataset.nlvl}"][data-v="${t.dataset.v}"]`); if (b) b.focus(); return; }
+    if (t.dataset.mi && edit) { D.modelInput = Object.assign(miNorm(D.modelInput), { [t.dataset.mi]: t.dataset.v }); $('mi').innerHTML = miHtml(); changed(); const b = document.querySelector(`[data-mi="${t.dataset.mi}"][data-v="${t.dataset.v}"]`); if (b) b.focus(); return; }
     if (t.dataset.ex != null) { const ed = t.closest('[data-ed]'); const inp = ed.querySelector('[data-try]'); inp.value = t.dataset.ex; inp.dispatchEvent(new Event('input', { bubbles: true })); return; }
     const ed = t.closest('[data-ed]'); if (!ed || !edit) return; const [k, f] = ed.dataset.ed.split('-'), r = ruleOf(D, k, f);
     if (t.dataset.lvl) { r.lvl = t.dataset.lvl; refreshRow(k, f, `[data-lvl="${t.dataset.lvl}"]`); return; }
@@ -272,6 +306,7 @@
     if (!edit) return;
     if (t.dataset.sw != null) { D.model.entitySuffix[+t.dataset.sw].w = t.value.trim(); changed(); return; }
     if (t.dataset.sa != null) { D.model.entitySuffix[+t.dataset.sa].a = abbrCase(t.value.trim(), 'term'); changed(); return; }
+    if (t.hasAttribute('data-milen')) { const n = +t.value; if (Number.isInteger(n) && n >= 1 && n <= 100) { t.removeAttribute('aria-invalid'); D.modelInput = Object.assign(miNorm(D.modelInput), { minLen: n }); const pos = t.selectionStart; $('mi').innerHTML = miHtml(); const i2 = $('mi-len'); i2.focus(); try { i2.setSelectionRange(pos, pos); } catch (er) {} changed(); } else t.setAttribute('aria-invalid', 'true'); return; }
     const ed = t.closest('[data-ed]'); if (!ed) return; const [k, f] = ed.dataset.ed.split('-'), r = ruleOf(D, k, f);
     if (t.dataset.max != null) { const n = +t.value; if (Number.isInteger(n) && n >= 1 && n <= 4000) { r.max = n; t.removeAttribute('aria-invalid'); refreshSum(k, f); } else t.setAttribute('aria-invalid', 'true'); return; } });
   content.addEventListener('change', e => { const t = e.target; if (!edit) return;
@@ -305,6 +340,12 @@
     openItems().forEach(o => { const a = blk(o.it, A).some(p => p.lvl === 'block'), b = blk(o.it, B).some(p => p.lvl === 'block'); if (b && !a) res.open++; });
     try { const ms = getModels(); Object.keys(ms).forEach(ar => { const md = modelOf(ar, ms[ar].ver); (md.E || []).forEach(e => { if (e.ref) return; (e.a || []).forEach(x => { const a = attrRuleProblems(x, A).some(p => p.lvl === 'block'), b = attrRuleProblems(x, B).some(p => p.lvl === 'block'); if (b && !a) { res.attrs++; if (res.attrEx.length < 3) res.attrEx.push(`${e.p}.${x.p}`); } }); }); }); } catch (err) {}
     res.bats = (getBatches() || []).filter(b => b.policyVer === A.ver && !/반영됨|취소/.test(b.status || '')).length;
+    // M-6: definitions (entity e.desc · attribute a.desc) newly blocked / warned by the model input rules
+    res.miBlock = 0; res.miWarn = 0; res.miEase = 0; res.miEx = [];
+    if (A.modelInput && B.modelInput && JSON.stringify(miNorm(A.modelInput)) !== JSON.stringify(miNorm(B.modelInput))) try { const ra = miNorm(A.modelInput), rb = miNorm(B.modelInput), ms = getModels();
+      Object.keys(ms).forEach(ar => { const md = modelOf(ar, ms[ar].ver); (md.E || []).forEach(e => { if (e.ref) return; [[e.n, e.desc, e.n], ...(e.a || []).filter(x => !x.edit).map(x => [x.n, x.desc, `${e.n}.${x.n}`])].forEach(([n, d, at]) => {
+        const a = miJudge(n, d, ra), b = miJudge(n, d, rb), la = a ? a.lvl : null, lb = b ? b.lvl : null; if (la === lb) return;
+        if (lb === 'block') { res.miBlock++; if (res.miEx.length < 3) res.miEx.push(at); } else if (lb === 'warn' && la !== 'block') res.miWarn++; else res.miEase++; }); }); }); } catch (err) {}
     return res; }
   $('r-save').onclick = () => {
     if (!can('rules.edit')) { toast('저장하지 않았습니다. 검수 기준은 DA · Admin만 고칠 수 있습니다', 'danger'); return; }
@@ -322,6 +363,7 @@
         <li>진행 중 신청 항목 신규 차단 <span class="imp-n">${I.open}</span>건 — 승인 시 새 기준으로 재검사합니다</li>
         <li>모델 속성 신규 미준수 <span class="imp-n">${I.attrs}</span>개${I.attrEx.length ? ` (예: ${esc(I.attrEx.join(', '))})` : ''}</li>
         <li>재검증 대상 엑셀 묶음 <span class="imp-n">${I.bats}</span>개</li>
+        ${ch.some(c => c.k === 'input') ? `<li>모델 정의 · 설명 신규 막음 <span class="imp-n">${I.miBlock}</span>개${I.miEx.length ? ` (예: ${esc(I.miEx.join(', '))})` : ''} · 신규 경고 <span class="imp-n">${I.miWarn}</span>개 · 완화(막음 → 경고 · 통과) <span class="imp-n">${I.miEase}</span>개 — 막음이 있으면 그 영역은 확정 신청이 막힙니다</li>` : ''}
         ${I.exempt ? `<li>공통표준 항목 ${I.exempt}건은 기관 기준 예외로 판정하지 않습니다</li>` : ''}</ul>
       <p class="u-mb-4"><b>④ 적용 방식</b></p><ul class="caption plist"><li>다음 신청 · 표준 맞추기 · 엑셀 검사 · 모델 검증부터 적용합니다. 기존 사전 · 확정 모델 · 물리명은 변경하지 않습니다.</li><li>진행 중 결재는 신청 시 버전을 기록하고, 승인 시 새 기준으로 재검사합니다.</li><li>이름 변경은 사전에서 별도 변경 신청으로 진행합니다(참조 · PK/FK · DDL 확인).</li><li>감사 로그에 남습니다.</li></ul>
       ${big && !blockC.length ? `<label class="flex u-mt-12"><input type="checkbox" id="rc-ack"> 영향을 확인했습니다(구분자 변경 또는 차단 대상 다수)</label>` : ''}
@@ -339,8 +381,9 @@
     const nv = Object.assign(body(D), { schemaVersion: 2, ver: base.ver + 1, at, by: ME.name, props: getPolicy().props || [],
       hist: [{ ver: base.ver + 1, at, by: ME.name, what, changes: ch.map(c => ({ label: c.label, from: c.from, to: c.to })) }].concat(base.hist),
       bodies: Object.assign({}, base.bodies, { [base.ver]: body(base) }) });   // the old body stays readable (Codex-4)
-    savePolicy(nv); pushAudit({ act: '검수 기준 v' + nv.ver, target: '검수 기준', why: what });
-    base = getPolicy(); D = clone(base); open.clear(); drawAll();
+    savePolicy(nv); try { localStorage.setItem(MI_KEY, JSON.stringify(miNorm(D.modelInput))); } catch (e) {}   // M-6: the model screen reads this key
+    pushAudit({ act: '검수 기준 v' + nv.ver, target: '검수 기준', why: what });
+    base = withMI(getPolicy(), true); D = clone(base); open.clear(); drawAll();
     toast(`검수 기준 v${nv.ver}로 저장했습니다 — 다음 신청 · 검사부터 적용합니다 · 감사 로그에 남았습니다`, 'success'); }
 
   /* ---- start ---- */

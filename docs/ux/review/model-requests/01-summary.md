@@ -148,7 +148,7 @@ IE 표기, 부모 PK → 자식 FK, 신청 시점 스냅샷은 이미 설계돼 
   - 관계선을 FK 행에 붙이는 일도 같은 차수에 한다.
 - 캔버스 밀도 ‘촘촘 16px’을 둔다(글자 12px 유지). 표 밀도 설정과 묶고, 줌 기준은 문서와 목업을 하나로 맞춘다.
 
-## 5. 사람 확인이 필요한 결정 (세 리뷰의 질문을 합침)
+## 5. 사람 확인 결정 — **확정: 9개 모두 권장안대로 (사용자 2026-11-25)**
 
 | # | 결정 | 권장안 |
 |---|---|---|
@@ -176,3 +176,12 @@ IE 표기, 부모 PK → 자식 FK, 신청 시점 스냅샷은 이미 설계돼 
 
 진행 순서: 사람 결정(M-1 ~ M-9) → 목업 · UX 문서 수정 → 리뷰 1회(Codex ‖ UX) → 설계 · 우선순위 · 작업 목록 · 추적표 갱신 → `trace:check` 관문 확인.
 P1(기반 작업)은 이 변경과 겹치지 않으므로 병행할 수 있다.
+
+## 7. 반영 결과 (2026-11-26)
+
+- 구현(Claude): 모델 화면 Fable 5.2 · high, 엑셀 가져오기 · 결재/DDL/규칙/산출물 Opus 5.5 · high — 파일 범위를 나눠 동시에. 지시 [_impl-brief.md](_impl-brief.md).
+- 리뷰: Codex GPT-6.2 Sol ‖ UX 전문가(화면 직접 확인) — [review2-codex.md](review2-codex.md) · [review2-ux.md](review2-ux.md), 이후 수정 검증 [review3](review3-codex.md) · [review4](review4-codex.md) · [review5](review5-codex.md) · [review6](review6-codex.md).
+- 수정 회차(막는 것만): 1회차 치명 1 · 높음 19 → 2회차(검증에서 남은 부분 · 회귀) → 3회차 → 4회차(2건). 회차 상한 5회 안.
+- 조정자 판정: 식별 관계에서 기존 자식 PK 재사용 허용(18 §1-1), 결재 중 사본을 신청자도 검토용 내려받기(M-7 문구대로), 엑셀 저장 직전 불변식은 이번에 새로 생기는 위반만 막음.
+- 후속(중간 · 낮음, 회차에 안 셈): [followups F-007 ~ F-014](../../../impl/followups.md) — 열별 표시 고르기, 용어 id 비교, 등급 용어 통일, 테이블 정의 COMMENT, 접근성 세부, 문구, 새 영역 시스템 이름 중복, 헤더 확정 신청 표시.
+- 반영 범위: 목업 model · import-excel · approvals · ddl · rules · outputs · mypage · styleguide · term-wizard · standardize, `assets/app.js` · `model.css`(공용: `typeParts` · `typeStr` · `typeSplit` · `newId` · `sha256Hex` · `snapHash` · `descJudge` · `modelCheck` · `modelInvariants` · `getModelInputRules`), UX 문서 01 · 02 · 03 · 16 · 18 · 23 · 26 · 28 · 31(각 문서 끝 변경 기록), 설계 §5.5 · §13.1, 우선순위 20 §2.1a, 작업 목록, 추적표(BH 2,284행), 권한표 **변경 없음**.

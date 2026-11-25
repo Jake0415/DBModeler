@@ -168,7 +168,7 @@
     { id: 'REQ-2026-0010', type: 'dict', title: "도메인 '코드C2' 규격 변경", req: 'lee', step: 'final', n: 1, date: '11/16 17:05', cc: [], reason: '2자리 코드 허용 문자 확대', hist: [{ at: '11/16 17:40', who: '김모델', act: 'DA 승인', why: '', step: 'da' }], items: [{ id: 'D-0031', name: '코드C2', act: '변경', chg: { '허용 값': ['[A-Z]{2}', '[A-Z0-9]{2}'] } }] },
     { id: 'REQ-2026-0009', type: 'dict', title: '단어 3건 등록', req: 'park', step: 'da', n: 3, date: '11/16 09:12', cc: ['kim'], reason: '인사시스템 신규 화면', hist: [], items: [{ k: 'word', name: '교재', abbr: 'TXTBK' }, { k: 'word', name: '배부', abbr: 'DSTRB' }, { k: 'word', name: '수강', abbr: 'ATND' }] },
     { id: 'REQ-2026-0005', type: 'dict', title: '엑셀 일괄 — 단어 86건 (기관단어_초기.xlsx)', req: 'kim', step: 'done', n: 86, date: '11/14 17:45', cc: [], reason: '기관 단어 초기 적재', kind: 'excel', batch: 'UP-2026-0006', hist: [{ at: '11/14 18:00', who: '이데이터', act: 'DA 승인', step: 'da' }, { at: '11/15 09:10', who: '이현업', act: '최종 승인', step: 'final' }] },
-    { id: 'REQ-2026-0003', type: 'model', area: 'rq', ver: 4, title: '요구사항관리 › 요구사항·프로젝트 v4 확정', req: 'park', step: 'done', n: 7, date: '11/03 10:00', cc: [], reason: 'v4 확정', hist: [{ at: '11/03 10:05', who: '이데이터', act: 'DA 승인', step: 'da' }, { at: '11/03 10:20', who: '최관리', act: '최종 승인', step: 'final' }] },
+    { id: 'REQ-2026-0003', type: 'model', area: 'rq', ver: 4, title: '요구사항관리 › 요구사항·프로젝트 v4 확정', req: 'park', step: 'done', n: 6, date: '11/03 10:00', cc: [], reason: 'v4 확정', hist: [{ at: '11/03 10:05', who: '이데이터', act: 'DA 승인', step: 'da' }, { at: '11/03 10:20', who: '최관리', act: '최종 승인', step: 'final' }] },
     // past documents referenced by dictionary history (so every history link opens a real document)
     { id: 'REQ-2026-0008', type: 'dict', title: "용어 '수주금액' 설명 변경", req: 'lee', step: 'done', n: 1, date: '11/16 14:40', cc: [], reason: '부가세 포함 명시', applied: { applied: 1, failed: [] }, hist: [{ at: '11/16 15:00', who: '김모델', act: 'DA 승인', step: 'da' }, { at: '11/16 15:10', who: '이현업', act: '최종 승인', step: 'final' }], items: [{ k: 'term', id: 'T-0201', name: '수주금액', act: '변경', chg: { 설명: ['수주한 금액', '계약 수주 금액(부가세 포함)'] } }] },
     { id: 'REQ-2026-0007', type: 'dict', title: "단어 '산출물' 외 용어 2건 등록", req: 'kim', step: 'done', n: 3, date: '11/17 11:40', cc: [], reason: '산출물 테이블 표준화', applied: { applied: 3, failed: [] }, hist: [{ at: '11/17 11:58', who: '김모델', act: 'DA 승인', step: 'da', self: true, why: '겸임 DA — 산출물 테이블 착수 일정' }, { at: '11/17 11:58', who: '시스템', act: '최종 승인 생략(기관 설정: 사전 최종 승인 끔 당시)', step: 'final' }], items: [{ k: 'word', name: '산출물', abbr: 'DLVRBL', act: '추가' }, { k: 'term', name: '산출물ID', abbr: 'DLVRBL_ID', dom: 'ID V10', act: '추가' }, { k: 'term', name: '산출물명', abbr: 'DLVRBL_NM', dom: '명V100', act: '추가' }] },
@@ -349,6 +349,38 @@
     if (!ab) return null; const cls = (m[1] + run.slice(0, run.length - ab.length)).trim(); return cls ? { cls, ab, len: m[3] || '', sc: m[4] || '' } : null; };
   window.domName = (cls, ab, len, sc) => { const t = typeOf(ab); const a = t ? t.arg : ''; return cls + ab + (a === 'n' ? len : a === 'p,s' ? len + (sc ? getPolicy().naming.scaleSep + sc : '') : a === 'f' ? (+len > 0 ? len : '') : ''); };
   window.domPhys = (dom, code) => { const p = parseDomName(dom); if (!p) return { t: null, warn: '도메인 이름을 해석할 수 없음' }; return Object.assign({ ab: p.ab }, physOf(code, p.ab, p.len, p.sc)); };
+  /* M-8 (고객 모델 요청 2026-11-25): an attribute's type is read in three parts — type name · length · scale (테이블 ERD 6칸 · 제출 사본 항목 표).
+     typeParts reads both shapes: new { t:'NUMBER', len:15, scale:2 } and old { t:'NUMBER(15,2)' } — when t still carries '(…)' the string wins (an older writer changed it).
+     typeStr joins the parts back into the one string DDL · 정의서 · 비교 use. Screens read a type through these two, never by cutting a.t themselves. */
+  window.typeParts = a => { const o = a && typeof a === 'object' ? a : { t: a }; const s0 = String(o.t == null ? '' : o.t).trim(), m = /^([^()]+?)\s*\(\s*([^,()]*?)\s*(?:,\s*([^()]*?)\s*)?\)\s*(.*)$/.exec(s0);
+    if (m) return { t: (m[1] + (m[4] ? ' ' + m[4] : '')).trim(), len: m[2], scale: m[3] == null ? '' : m[3] };
+    return { t: s0, len: o.len == null ? '' : String(o.len), scale: o.scale == null ? '' : String(o.scale) }; };
+  window.typeStr = a => { const p = typeParts(a); if (!p.t || p.t === '—' || p.len === '') return p.t; const arg = `(${p.len}${p.scale !== '' ? ',' + p.scale : ''})`, m = /^(\S+)(\s+(?:WITH|WITHOUT)\b.*)$/i.exec(p.t); return m ? m[1] + arg + m[2] : p.t + arg; };   /* the precision goes right after the first word of a multi-word type — TIMESTAMP(6) WITHOUT TIME ZONE (R2-12) */
+  /* the mockup keeps a.t as the joined string (other screens still read it) and len · scale beside it — typeSync refreshes the two from the string after a.t changed */
+  window.typeSync = a => { if (!a) return a; const p = typeParts(a.t); if (p.len !== '') a.len = p.len; else delete a.len; if (p.scale !== '') a.scale = p.scale; else delete a.scale; return a; };
+  /* R2-12 (계약): a stored attribute keeps t = the type NAME only, len · scale apart. typeSplit turns either shape into that one; every stored copy goes through it (typeNorm).
+     Screens put the pieces back together with typeStr(a) — never a.t on its own. (The model screen edits the joined string in memory and splits on save.) */
+  window.typeSplit = a => { if (!a || a.t == null) return a; const p = typeParts(a); a.t = p.t; if (p.len !== '') a.len = p.len; else delete a.len; if (p.scale !== '') a.scale = p.scale; else delete a.scale; return a; };
+  /* R2-13 안정 ID: every entity · attribute keeps an id that is never used again (seed = a fixed id per seed position, new ones = newId). Kept through edits and submitted copies */
+  let idSeq = 0;
+  window.newId = prefix => `${prefix || 'id'}_${Date.now().toString(36)}${(idSeq++).toString(36)}${Math.random().toString(36).slice(2, 6)}`;
+  /* R2-15 스냅숏 해시: a synchronous SHA-256 (UTF-8) and the hash of a model copy — its normalised JSON (keys sorted, types split, no transient edit marks).
+     sha256Hex(str) → 64 hex · snapHash(model) → 'sha256:' + 64 hex. 확정 신청이 문서에 저장하고 DDL · 결재 · 산출물이 같은 값을 쓴다 */
+  window.sha256Hex = str => { const pw = Math.pow, mw = pw(2, 32), h = [], k = [], comp = {}; let pc = 0;
+    for (let c = 2; pc < 64; c++) if (!comp[c]) { for (let i = 0; i < 313; i += c) comp[i] = c; h[pc] = (pw(c, .5) * mw) | 0; k[pc++] = (pw(c, 1 / 3) * mw) | 0; }
+    const bytes = Array.from(new TextEncoder().encode(String(str))), bl = bytes.length * 8; bytes.push(0x80); while (bytes.length % 64 !== 56) bytes.push(0);
+    const words = []; for (let i = 0; i < bytes.length; i += 4) words.push((bytes[i] << 24) | (bytes[i + 1] << 16) | (bytes[i + 2] << 8) | bytes[i + 3]); words.push((bl / mw) | 0); words.push(bl | 0);
+    const rr = (v, n) => (v >>> n) | (v << (32 - n)); let H = h.slice(0, 8);
+    for (let j = 0; j < words.length; j += 16) { const w = words.slice(j, j + 16), o = H.slice(0);
+      for (let i = 0; i < 64; i++) { if (i >= 16) { const a15 = w[i - 15], a2 = w[i - 2]; w[i] = (w[i - 16] + (rr(a15, 7) ^ rr(a15, 18) ^ (a15 >>> 3)) + w[i - 7] + (rr(a2, 17) ^ rr(a2, 19) ^ (a2 >>> 10))) | 0; }
+        const a = H[0], e = H[4], t1 = (H[7] + (rr(e, 6) ^ rr(e, 11) ^ rr(e, 25)) + ((e & H[5]) ^ (~e & H[6])) + k[i] + w[i]) | 0, t2 = ((rr(a, 2) ^ rr(a, 13) ^ rr(a, 22)) + ((a & H[1]) ^ (a & H[2]) ^ (H[1] & H[2]))) | 0;
+        H = [(t1 + t2) | 0, a, H[1], H[2], (H[3] + t1) | 0, e, H[5], H[6]]; }
+      H = H.map((v, i) => (v + o[i]) | 0); }
+    return H.map(v => (v >>> 0).toString(16).padStart(8, '0')).join(''); };
+  window.snapHash = model => { const DROP = { edit: 1, orig: 1, rev: 1, seedCopy: 1, fresh: 1 };
+    const norm = v => Array.isArray(v) ? v.map(norm) : v && typeof v === 'object' ? Object.keys(v).filter(x => !DROP[x] && v[x] !== undefined).sort().reduce((o, x) => { o[x] = norm(v[x]); return o; }, {}) : v;
+    const m = JSON.parse(JSON.stringify(model || {})); (m.E || []).forEach(e => (e.a || []).forEach(typeSplit));
+    return 'sha256:' + sha256Hex(JSON.stringify(norm({ E: m.E || [], R: m.R || [], M: m.M || [], V: m.V || [], moves: m.moves || [] }))); };
   // usage: domains named with the abbreviation, attributes that picked the type directly (표준 외 타입)
   window.typeUsage = ab => { const doms = [...knownDomains()].filter(n => { const p = parseDomName(n); return p && p.ab === ab; }); let attrs = 0, direct = [];
     Object.entries(getAllModels()).forEach(([id, m]) => { const d = getModelData(id, m.ver) || {}; (d.E || []).forEach(e => (e.a || []).forEach(a => { const p = parseDomName(a.dom || a.d || ''); if (a.xt === ab) { attrs++; direct.push(`${m.name} · ${e.n}.${a.n}`); } else if (p && p.ab === ab) attrs++; })); });
@@ -370,8 +402,8 @@
   // types the target system cannot take (DBMS-only · system-only · no rule) — the move preview lists them as 변환 불가
   window.typeConvBlocked = (t, fromCode, toCode) => { if (!t || t === '—' || fromCode === toCode) return null; const m = matchType(t, fromCode); if (!m) return null; const r = physOf(toCode, m.ab, m.len, m.sc); return r.t ? null : { ab: m.ab, t }; };
   window.convertType = (t, from, to) => { if (!t || t === '—' || from === to) return t; let x = String(t); TO_ORA.forEach(([re, r]) => { x = x.replace(re, r); }); (FROM_ORA[to] || []).forEach(([re, r]) => { x = x.replace(re, r); }); return x; };
-  window.convertStructure = (st, fromCode, toCode) => { let n = 0; if (fromCode === toCode) return 0; (st.E || []).forEach(e => (e.a || []).forEach(a => { const v = convertTypeByMap(a.t, fromCode, toCode); if (v !== a.t) { a.t = v; n++; } })); return n; };   /* by the two systems' type maps (25 §7) */
-  window.areaTypeBlocked = (id, toCode) => { const m = getModel(id), from = m.system || 'RQMS', out = []; try { (modelOf(id, m.ver).E || []).forEach(e => (e.a || []).forEach(a => { const b = typeConvBlocked(a.t, from, toCode); if (b) out.push(`${e.n}.${a.n} ${a.t}`); })); } catch (er) {} return out; };   /* 27: 변환 불가 */
+  window.convertStructure = (st, fromCode, toCode) => { let n = 0; if (fromCode === toCode) return 0; (st.E || []).forEach(e => (e.a || []).forEach(a => { const t0 = typeStr(a), v = convertTypeByMap(t0, fromCode, toCode); if (v !== t0) { a.t = v; delete a.len; delete a.scale; typeSplit(a); n++; } })); return n; };   /* by the two systems' type maps (25 §7) */
+  window.areaTypeBlocked = (id, toCode) => { const m = getModel(id), from = m.system || 'RQMS', out = []; try { (modelOf(id, m.ver).E || []).forEach(e => (e.a || []).forEach(a => { const b = typeConvBlocked(typeStr(a), from, toCode); if (b) out.push(`${e.n}.${a.n} ${a.t}`); })); } catch (er) {} return out; };   /* 27: 변환 불가 */
   window.areaTypeChanges = (id, toCode) => { const m = getModel(id); try { return convertStructure(clone(modelOf(id, m.ver)), m.system || 'RQMS', toCode); } catch (er) { return 0; } };
   /* move: only without a confirmed copy or documents; the working structure's types follow the target DBMS */
   window.moveAreaToSystem = (id, code) => {
@@ -447,7 +479,7 @@
     { id: 'dlv', n: '산출물기본', p: 'DLVRBL_M', c: 'M', x: 420, y: 450, px: 460, py: 500, st: 1, reqDoc: 'REQ-2026-0013', uk: ['DLVRBL_NM'], sub: { disc: '산출물유형코드', kind: '배타', kids: ['문서산출물', '모델산출물'] }, a: [
       { n: '산출물ID', p: 'DLVRBL_ID', t: 'VARCHAR2(10)', pk: 1, nn: 1, s: 'ok' }, { n: '산출물명', p: 'DLVRBL_NM', t: 'VARCHAR2(100)', nn: 1, s: 'ok' }, { n: '산출물제출일', p: '—', t: '—', s: 'comb' }, { n: '산출물수령자명', p: '—', t: '—', s: 'unreg', cand: 1 }, { n: '요구사항ID', p: 'DEMND_MATER_ID', t: 'VARCHAR2(10)', fk: 1, s: 'ok' }] },
     { id: 'hist', n: '산출물이력', p: '—', c: 'H', x: 800, y: 470, px: 860, py: 520, a: [
-      { n: '산출물ID', p: 'DLVRBL_ID', t: 'VARCHAR2(10)', pk: 1, fk: 1, nn: 1, s: 'ok' }, { n: '이력순번', p: '—', t: '—', pk: 1, s: 'unreg' }, { n: '수령자ID', p: '—', t: '—', s: 'unreg' }] },
+      { n: '산출물ID', p: 'DLVRBL_ID', t: 'VARCHAR2(10)', pk: 1, fk: 1, nn: 1, s: 'ok' }, { n: '이력순번', p: '—', t: '—', pk: 1, nn: 1, s: 'unreg' }, { n: '수령자ID', p: '—', t: '—', s: 'unreg' }] },
     { id: 'risk', n: '리스크기본', p: 'RISK_M', c: 'M', x: 60, y: 640, px: 60, py: 700, a: [
       { n: '리스크ID', p: 'RISK_ID', t: 'VARCHAR2(10)', pk: 1, nn: 1, s: 'ok' }, { n: '리스크명', p: 'RISK_NM', t: 'VARCHAR2(100)', s: 'ok' }, { n: '리스크등급코드', p: 'RISK_GRD_CD', t: 'CHAR(1)', s: 'ok' }] }
   ], R: [
@@ -633,7 +665,7 @@
       const r = { f, t, k, name }; if (noFk) r.noFk = noFk; R.push(r);
       const pk = p.a.filter(a => a.pk);
       if (role) { r.g = 'g' + (i + 1); pk.forEach(k0 => c.a.push({ n: role[0] + k0.n, p: role[1] + '_' + k0.p, t: k0.t, dom: k0.dom, s: 'ok', fk: 1, fkg: r.g, pk: k === 'id' ? 1 : undefined, nn: k === 'id' ? 1 : undefined })); order(c); return; }
-      if (f === t) { pk.forEach(k0 => c.a.push({ n: '상위' + k0.n, p: 'UP_' + k0.p, t: k0.t, dom: k0.dom, s: 'ok' })); return; }   // recursive without role mapping → stays 누락 (one example)
+      if (f === t) { r.g = 'gs' + (i + 1); pk.forEach(k0 => c.a.push({ n: '상위' + k0.n, p: 'UPR_' + k0.p, t: k0.t, dom: k0.dom, s: 'ok', fk: 1, fkg: r.g, fkp: k0.p })); return; }   // recursive without a role: 상위○○ · UPR_ columns paired to the key (the FK 누락 sample is the 요구사항 area's 사원 → 팀원구성 — one is enough, 2026-11-26)
       pk.forEach(k0 => { const ex0 = c.a.find(a => a.p === k0.p && a.p !== '—' && !a.fkg); if (ex0) { ex0.fk = 1; if (k === 'id') { ex0.pk = 1; ex0.nn = 1; } return; } c.a.push({ n: k0.n, p: k0.p, t: k0.t, dom: k0.dom, s: k0.s === 'ex' ? 'ok' : k0.s, fk: 1, pk: k === 'id' ? 1 : undefined, nn: k === 'id' ? 1 : undefined }); });
       order(c);
     }); return R; };
@@ -650,6 +682,7 @@
         if (role) r.g = 'g' + (i + 1);
         if (inner) {   // FK columns already made in the shared pass — recover the role group number from the made columns
           const c = E.find(e => e.id === t); if (role) { const g = c.a.find(a => a.fkg && a.p.startsWith(role[1] + '_')); if (g) r.g = g.fkg; }
+          else if (f === t) { const g = c.a.find(a => a.fk && a.fkg && a.fkp && a.p === 'UPR_' + a.fkp); if (g) r.g = g.fkg; }   // the recursive relation's own group
           R.push(r); return;
         }
         R.push(r); const p = E.find(e => e.id === f), c = E.find(e => e.id === t); if (!p || !c) return;
@@ -670,6 +703,17 @@
   const ERP_BUILT = buildErp();
   Object.assign(MODEL_SEED, ERP_BUILT.seeds);
   Object.assign(VIEWS0, ERP_BUILT.views);
+  /* M-6 (고객 모델 요청 2026-11-25): seed definitions — 모델 검증 judges real data (엔터티 정의 · 속성 설명), no fixed id list.
+     Every seeded entity · attribute gets a plain definition; a few are left empty or weak on purpose in the 요구사항 area so the check has something to show:
+     막음 3건(산출물이력 정의 · 속성 설명 2개) · 경고 2건(리스크기본 정의 = 이름 · 발주처명 설명 5자 미만) */
+  { const SUF = [['기본', '기본 정보'], ['내역', '내역'], ['이력', '변경 이력'], ['정보', '정보'], ['관계', '관계']];
+    const NO_DEF = { rq: ['hist'] }, WEAK_DEF = { rq: { risk: '리스크기본' } }, NO_ATTR = { rq: ['dlv.산출물수령자명', 'hist.수령자ID'] }, WEAK_ATTR = { rq: { 'prj.발주처명': '발주처' } };
+    Object.entries(MODEL_SEED).forEach(([area, sd]) => (sd.E || []).forEach(e => { if (e.ref) return; const hit = SUF.find(x => e.n.endsWith(x[0])), stem = (hit ? e.n.slice(0, -hit[0].length) : e.n) || e.n;
+      if (!e.desc && !(NO_DEF[area] || []).includes(e.id)) e.desc = (WEAK_DEF[area] || {})[e.id] || `${stem}의 ${hit ? hit[1] : '정보'}를 관리한다`;
+      (e.a || []).forEach(a => { const k = e.id + '.' + a.n; if (a.desc || (NO_ATTR[area] || []).includes(k)) return; a.desc = (WEAK_ATTR[area] || {})[k] || (a.fk ? `${a.n} — 부모 엔터티의 식별자를 받은 값` : `${stem}의 ${a.n}`); }); })); }
+  Object.values(MODEL_SEED).forEach(sd => (sd.E || []).forEach(e => {
+      (e.a || []).forEach((a, i) => { if (!a.id) a.id = `a_${e.id}_${i}`; typeSplit(a); });   // R2-13 · R2-12: a fixed id per seed position (never reassigned) · seeds keep the stored shape (t = type name, len · scale apart)
+  }));
 
   ['e_hr', 'e_tr', 'e_fi', 'e_sd', 'e_mm', 'e_wm', 'e_pp'].forEach(k => { if (ERP_BUILT.meta[k]) MODEL0[k] = ERP_BUILT.meta[k]; });
   // the address decides the system: ?system=ERP, or an area / snapshot that belongs to another system
@@ -1172,7 +1216,8 @@
     },
     model: { entity: { name: RULE({ chars: ['hangul', 'upper', 'lower', 'digit'] }), phys: PHYS() }, attr: { name: RULE({ chars: ['hangul', 'upper', 'lower', 'digit'] }), phys: PHYS() },
       entitySuffix: [{ w: '기본', a: 'M' }, { w: '내역', a: 'D' }, { w: '이력', a: 'H' }, { w: '관계', a: 'R' }, { w: '정보', a: 'I' }], entitySuffixLvl: 'warn' },
-    naming: { sep: '_', composeLvl: 'block', endsWithFormatWordLvl: 'warn', splitSuspectLvl: 'warn', scaleSep: ',' }
+    naming: { sep: '_', composeLvl: 'block', endsWithFormatWordLvl: 'warn', splitSuspectLvl: 'warn', scaleSep: ',' },
+    modelInput: { defEmpty: 'block', defShort: 'warn', minLen: 5 }   /* M-6 모델 입력 규칙: 정의 · 설명 비어 있음 / 이름과 같음 · minLen자 미만 — 모델 검증(modelCheck)의 등급 */
   });
   const POL_HIST0 = [{ ver: 3, at: '2026-11-10 09:00', by: '이데이터', what: '용어 영문약어명 상한 30자(Oracle 기준)' }, { ver: 2, at: '2026-10-20 14:00', by: '이데이터', what: '단어 영문약어명 6자 이내' }];
   // old stored values (v1 shape: { ver, wordAbbr?, hist }) are read into v2: no value → defaults · no wordAbbr → 6 · wordAbbr → fields.word.abbr.max
@@ -1180,6 +1225,8 @@
     base[k] = b && typeof b === 'object' && !Array.isArray(b) && v && typeof v === 'object' && !Array.isArray(v) ? polMerge(b, v) : v; }); return base; };
   window.policyFrom = raw => { raw = raw || {}; const p = POLICY_DEFAULT();
     if (raw.schemaVersion === 2) polMerge(p, raw); else if (raw.wordAbbr) p.fields.word.abbr.max = +raw.wordAbbr;
+    // 모델 입력 규칙 — one source everywhere: the policy body; a policy saved before the body carried it takes the key rules.html also writes (neodb.modelInputRules); else the defaults
+    if (!(raw.modelInput && typeof raw.modelInput === 'object')) { try { const k = JSON.parse(store.get('neodb.modelInputRules', 'null')); if (k && typeof k === 'object') ['defEmpty', 'defShort', 'minLen'].forEach(f => { if (k[f] != null) p.modelInput[f] = k[f]; }); } catch (e) {} }
     p.ver = raw.ver || 3; p.at = raw.at || '2026-11-10 09:00'; p.by = raw.by || '이데이터'; p.hist = raw.hist || POL_HIST0; p.bodies = raw.bodies || {}; p.props = raw.props || [];
     Object.defineProperty(p, 'wordAbbr', { get() { return p.fields.word.abbr.max || 0; }, enumerable: false });   // old readers
     return p; };
@@ -1347,15 +1394,19 @@
   window.confirmedCopy = area => { const m = getModel(area); if (!m.base) return null; const d = getDocs().find(x => x.type === 'model' && x.area === area && x.ver === m.base && x.step === 'done'); return (d && d.model) || getModelData(area, m.base) || modelSeed(area); };
   window.areaView = area => { const L = modelLock(area), m = getModel(area); if (L.state === 'review' && L.doc && !canSeeDoc(L.doc)) { const c = confirmedCopy(area); return { model: c || { E: [], R: [], M: [] }, hidden: true, ver: m.base, label: m.base ? `v${m.base} 확정본 (v${m.ver} 결재 중)` : `v${m.ver} 결재 중 · 열람 제한` }; } if (L.state !== 'edit' && L.doc && L.doc.model) return { model: L.doc.model, hidden: false, ver: m.ver }; return { model: modelOf(area, m.ver), hidden: false, ver: m.ver }; };
   window.canSeeBatch = b => !!b && (b.by === ME.id || can('excel.viewall'));
-  /* model diff between two stored structures (by entity id / attribute logical name) */
+  /* model diff between two stored structures — entities and attributes are paired like the DDL (ddl.html): 안정 id → 물리명 → 논리명.
+     A table deleted and added again (새 id · 같은 물리명) is one '재추가' row with its column changes, not 삭제 + 추가 */
   window.modelDiff = (a, b) => {
     const out = []; if (!a || !b) return null;
     const ea = new Map(a.E.map(e => [e.id, e])), eb = new Map(b.E.map(e => [e.id, e]));
+    const pairE = new Map(), usedA = new Set(), PU = e => String(e.p || '').toUpperCase();   // b entity → a entity
+    { const step = test => b.E.forEach(e => { if (pairE.has(e)) return; const o = a.E.find(x => !usedA.has(x) && !!x.ref === !!e.ref && test(e, x)); if (o) { pairE.set(e, o); usedA.add(o); } });
+      step((e, x) => x.id === e.id); step((e, x) => !e.ref && e.p !== '—' && x.p !== '—' && !!e.p && PU(e) === PU(x)); step((e, x) => !e.ref && !!e.n && e.n === x.n && !(e.id && x.id)); }   // the logical name pairs only when an id is missing
     const refTxt = e => `${e.refName || e.refArea || '다른 영역'} v${e.refVer || '?'} 확정본`;
     const aName = x => (getAllModels()[x] || {}).name || x, mv = moveLog();   /* 25 §3-4: moved entities show as 이동 (→ / ←) */
-    b.E.forEach(e => { if (!ea.has(e.id)) out.push(e.ref ? ['참조 추가', `${e.n} ${e.p}`, '—', refTxt(e)] : e.movedFrom ? ['이동', `${e.n} ${e.p}`, `← ${((b.moves || []).find(x => x.id === e.id && x.from) || {}).fromName || aName(e.movedFrom)}`, `엔터티 · 속성 ${e.a.length}`] : ['추가', `${e.n} ${e.p}`, '—', `엔터티 · 속성 ${e.a.length}`]); });
-    a.E.forEach(e => { if (!eb.has(e.id)) { const m2 = !e.ref && (Array.isArray(b.moves) ? b.moves.find(x => x.id === e.id && x.to) : mv.find(x => x.id === e.id && x.n === e.n));   /* the copy's own move list first (25 §7) */ out.push(e.ref ? ['참조 해제', `${e.n} ${e.p}`, refTxt(e), '—'] : m2 ? ['이동', `${e.n} ${e.p}`, `엔터티 · 속성 ${e.a.length}`, `→ ${m2.toName || aName(m2.to)}`] : ['삭제', `${e.n} ${e.p}`, `엔터티 · 속성 ${e.a.length}`, '—']); } });
-    b.E.forEach(e => { const o = ea.get(e.id); if (!o || !e.ref) return; if ((o.refVer || 0) !== (e.refVer || 0)) out.push(['참조 갱신', `${e.n} ${e.p}`, refTxt(o), refTxt(e)]); });
+    b.E.forEach(e => { if (!pairE.has(e)) out.push(e.ref ? ['참조 추가', `${e.n} ${e.p}`, '—', refTxt(e)] : e.movedFrom ? ['이동', `${e.n} ${e.p}`, `← ${((b.moves || []).find(x => x.id === e.id && x.from) || {}).fromName || aName(e.movedFrom)}`, `엔터티 · 속성 ${e.a.length}`] : ['추가', `${e.n} ${e.p}`, '—', `엔터티 · 속성 ${e.a.length}`]); });
+    a.E.forEach(e => { if (!usedA.has(e)) { const m2 = !e.ref && (Array.isArray(b.moves) ? b.moves.find(x => x.id === e.id && x.to) : mv.find(x => x.id === e.id && x.n === e.n));   /* the copy's own move list first (25 §7) */ out.push(e.ref ? ['참조 해제', `${e.n} ${e.p}`, refTxt(e), '—'] : m2 ? ['이동', `${e.n} ${e.p}`, `엔터티 · 속성 ${e.a.length}`, `→ ${m2.toName || aName(m2.to)}`] : ['삭제', `${e.n} ${e.p}`, `엔터티 · 속성 ${e.a.length}`, '—']); } });
+    b.E.forEach(e => { const o = pairE.get(e); if (!o || !e.ref) return; if ((o.refVer || 0) !== (e.refVer || 0)) out.push(['참조 갱신', `${e.n} ${e.p}`, refTxt(o), refTxt(e)]); });
     // relations (18): structure changes are rows of the main table; ON DELETE / 1:1 UK change how the operating DB behaves — flagged 'db'
     // a relation is the same one by its FK group; copies saved before groups existed fall back to parent › child › name, then parent › child when only one is left
     const eN = id => (eb.get(id) || ea.get(id) || {}).n || id;
@@ -1383,7 +1434,7 @@
       if ((o.uk || '') !== (r.uk || '')) out.push(['DB 동작', `${nm} · 보장 UK`, o.uk || '—', r.uk || '—', 'db']); });
     left.forEach(r => { const nm = `${eN(r.f)} → ${eN(r.t)}`; out.push(['관계 삭제', nm, KN[r.k] || r.k, '—']); if (r.uk) out.push(['DB 동작', `${nm} · 보장 UK`, r.uk, '—', 'db']); });
     // layout only (12 §3.2): positions · views · placement · hidden lines — listed apart, flagged with a 5th field
-    const moved = b.E.filter(e => { const o = ea.get(e.id); return o && (o.x !== e.x || o.y !== e.y || o.px !== e.px || o.py !== e.py); });
+    const moved = b.E.filter(e => { const o = pairE.get(e); return o && (o.x !== e.x || o.y !== e.y || o.px !== e.px || o.py !== e.py); });
     if (moved.length) out.push(['배치', '위치 이동', '—', `${moved.length}개 · ${moved.slice(0, 4).map(e => e.n).join(', ')}${moved.length > 4 ? ' …' : ''}`, 'layout']);
     const va = new Map((a.V || []).map(v => [v.id, v])), vb = new Map((b.V || []).map(v => [v.id, v]));
     if (a.V && b.V) {
@@ -1399,10 +1450,17 @@
         if (ha.length || hd.length) out.push(['배치', `보기 ‘${v.n}’ 관계선`, hd.length ? `숨김 ${hd.length}` : '—', ha.length ? `숨김 ${ha.length}` : '다시 보임', 'layout']); });
       a.V.forEach(v => { if (!vb.has(v.id)) out.push(['배치', `보기 삭제 · ${v.n}`, `엔터티 ${(v.ents || []).length}`, '—', 'layout']); });
     }
-    b.E.forEach(e => { const o = ea.get(e.id); if (!o || e.ref) return;
+    // attributes of an entity that exists on both sides — paired like the DDL (안정 id → 물리명 → 논리명), so a renamed or re-added column is one row, not 삭제 + 추가
+    const PUa = x => String(x.p || '').toUpperCase(), tyS = x => typeStr(x) || '';
+    const pairAttrs = (cur, old) => { const m = new Map(), used = new Set(); const step = test => cur.forEach(x => { if (m.has(x)) return; const y = old.find(z => !used.has(z) && test(x, z)); if (y) { m.set(x, y); used.add(y); } });
+      step((x, z) => !!x.id && x.id === z.id); step((x, z) => x.p !== '—' && z.p !== '—' && !!x.p && PUa(x) === PUa(z)); step((x, z) => !(x.id && z.id) && (z.n === x.n || z.n === x.orig)); return { m, used }; };
+    b.E.forEach(e => { const o = pairE.get(e); if (!o || e.ref) return;
+      if (o.id !== e.id) out.push(['재추가', `${e.n} ${e.p}`, `${o.n} · 지우고 다시 만듦`, '같은 테이블 — 운영 데이터 확인 필요']);
+      if (o.n !== e.n) out.push(['변경', `${e.n} (엔터티명)`, o.n, e.n]);
       if (o.p !== e.p) out.push(['변경', `${e.n} (물리명)`, o.p, e.p]);
-      e.a.forEach(x => { const y = o.a.find(z => z.n === x.n); if (!y) out.push(['추가', `${e.n}.${x.n}`, '—', `${x.p} ${x.t || ''}`]); else { if (y.p !== x.p || (y.t || '') !== (x.t || '')) out.push(['변경', `${e.n}.${x.n}`, `${y.p} ${y.t || ''}`, `${x.p} ${x.t || ''}`]); if (x.s === 'ex' && y.s !== 'ex') out.push(['예외', `${e.n}.${x.n}`, '—', x.exReason || '사유']); if (x.s === 'na' && y.s !== 'na') out.push(['비대상', `${e.n}.${x.n}`, '—', x.naReason || '사유']); } });
-      o.a.forEach(y => { if (!e.a.find(z => z.n === y.n)) out.push(['삭제', `${e.n}.${y.n}`, `${y.p} ${y.t || ''}`, '—']); }); });
+      const AP = pairAttrs(e.a, o.a);
+      e.a.forEach(x => { const y = AP.m.get(x); if (!y) out.push(['추가', `${e.n}.${x.n}`, '—', `${x.p} ${tyS(x)}`]); else { if (x.id && y.id && x.id !== y.id) out.push(['재추가', `${e.n}.${x.n}`, `${y.p} ${tyS(y)} · 지우고 다시 추가`, '같은 컬럼명 — 운영 데이터 확인 필요']);   /* 안정 id가 양쪽에 있고 다르면 같은 속성이 아니다 — DDL의 ‘재추가’와 같은 규칙 */ if (y.n !== x.n) out.push(['변경', `${e.n}.${x.n} (논리명)`, y.n, x.n]); if (y.p !== x.p || tyS(y) !== tyS(x)) out.push(['변경', `${e.n}.${x.n}`, `${y.p} ${tyS(y)}`, `${x.p} ${tyS(x)}`]); if (x.s === 'ex' && y.s !== 'ex') out.push(['예외', `${e.n}.${x.n}`, '—', x.exReason || '사유']); if (x.s === 'na' && y.s !== 'na') out.push(['비대상', `${e.n}.${x.n}`, '—', x.naReason || '사유']); } });
+      o.a.forEach(y => { if (!AP.used.has(y)) out.push(['삭제', `${e.n}.${y.n}`, `${y.p} ${tyS(y)}`, '—']); }); });
     return out;
   };
   /* compliance counted from a stored structure (so approval re-checks the SUBMITTED model, not the shared cache) */
@@ -1448,19 +1506,102 @@
   };
   window.modelBad = m => { if (!m) return null; const pol = getPolicy(), RB = ps => ps.some(p => p.lvl === 'block');   /* 31 · Codex-impl-1: the approval re-check uses today's policy too */
     return m.E.reduce((n, e) => n + (e.ref ? 0 : (e.p === '—' || RB(entRuleProblems(e, pol)) ? 1 : 0) + e.a.filter(a => !a.edit && (a.s === 'comb' || a.s === 'unreg' || ((a.s === 'ok' || a.s === 'req') && RB(attrRuleProblems(a, pol))))).length), 0); };
+  /* M-6 (고객 모델 요청 2026-11-25): 모델 검증 — ONE judgement for the model screen (live count · panel), 확정 신청 (submit re-check) and the approval re-check.
+     model = { E, R }. policy = 모델 입력 규칙 { defEmpty:'block'|'warn', defShort:'warn'|'block'|'off', minLen } — rules.html saves it under neodb.modelInputRules; defaults when absent
+     (policy.pol = the naming policy to judge by, default today's). Returns { items, block, warn, ok, rules };
+     item = { grp:'std'|'name'|'struct', code, lvl:'block'|'warn', e, en, a, ai, msg }. 막음(block) 0건 = 확정 신청 가능. */
+  window.MODEL_INPUT_RULES0 = { defEmpty: 'block', defShort: 'warn', minLen: 5 };
+  const mirNorm = (o, d) => { o = o && typeof o === 'object' ? o : {}; const n = parseInt(o.minLen, 10);
+    return { defEmpty: ['block', 'warn'].includes(o.defEmpty) ? o.defEmpty : d.defEmpty, defShort: ['warn', 'block', 'off'].includes(o.defShort) ? o.defShort : d.defShort, minLen: Number.isFinite(n) && n > 0 ? n : d.minLen }; };
+  // today's rules: the key rules.html writes (neodb.modelInputRules) → the policy body (modelInput) → defaults
+  /* R2-09: ONE judgement of a definition · description — 모델 검증 · 정책 예시/영향 미리보기 · 신청 · 승인이 모두 이 함수를 쓴다.
+     descJudge(name, desc, rules) → 'empty' (빈칸 · 공백뿐) · 'same' (이름과 같음 — 공백 · 대소문자는 무시) · 'short' (rules.minLen자 미만, 앞뒤 공백 빼고 센다) · 'ok' */
+  window.descJudge = (name, desc, rules) => { const r = mirNorm(rules, getModelInputRules()), d = String(desc == null ? '' : desc).trim(), sq = s => String(s == null ? '' : s).replace(/\s/g, '').toLowerCase();
+    return !d ? 'empty' : sq(d) === sq(name) ? 'same' : Array.from(d).length < r.minLen ? 'short' : 'ok'; };
+  /* 수정 2회차: ONE source for 모델 입력 규칙, the same on every screen — the saved policy body (dbm-policy.modelInput) → the key rules.html also writes
+     (neodb.modelInputRules, for a policy saved before the body carried it) → defaults. modelCheck(model) and modelCheck(model, getPolicy()) now agree. */
+  window.getModelInputRules = () => { let pm = null; try { pm = getPolicy().modelInput; } catch (e) {} return mirNorm(pm, MODEL_INPUT_RULES0); };   // getPolicy() already resolves body → key → defaults (policyFrom)
+  /* 수정 2회차 (설계 §13.1 불변식): what a model may never hold — the same list for 모델 검증 · 확정 신청 · 승인 재검사 (modelCheck) and 게이트 B (DDL).
+     modelInvariants(model) → [{ code:'dupCol'|'dupTable'|'dupEnt', e, en, a, ai, msg }]: 엔터티 안 컬럼 물리명 중복 · 같은 영역 안 테이블 물리명 중복(둘 다 대소문자 무시) · 엔터티명 중복 */
+  window.modelInvariants = model => { const out = [], E = ((model && model.E) || []).filter(e => e && !e.ref && !e.fresh), up = x => String(x == null ? '' : x).trim().toUpperCase();
+    E.forEach(e => { const seen = new Map(); (e.a || []).forEach((a, i) => { if (a.edit || !a.p || a.p === '—') return; const k = up(a.p);
+      if (seen.has(k)) out.push({ code: 'dupCol', e: e.id, en: e.n, a: a.n, ai: i, msg: `컬럼 물리명 ${a.p} — ‘${seen.get(k).n}’(${seen.get(k).p})과 같음(대소문자 무시)` }); else seen.set(k, a); }); });
+    const byP = new Map(), byN = new Map();
+    E.forEach(e => { if (e.p && e.p !== '—') { const k = up(e.p); if (byP.has(k)) out.push({ code: 'dupTable', e: e.id, en: e.n, a: null, ai: null, msg: `테이블 물리명 ${e.p} — ‘${byP.get(k).n}’과 같음(대소문자 무시)` }); else byP.set(k, e); }
+      const n = String(e.n || '').trim(); if (n) { if (byN.has(n)) out.push({ code: 'dupEnt', e: e.id, en: e.n, a: null, ai: null, msg: '같은 이름의 엔터티가 이 영역에 또 있음' }); else byN.set(n, e); } });
+    return out; };
+  window.MODEL_CHECK_GROUPS = { std: '표준', name: '이름 · 설명', struct: '구조' };
+  window.MODEL_CHECK_CODES = { entPhys: '테이블명 미정', entRule: '엔터티 이름 규칙', attrStd: '표준이 아닌 속성', attrRule: '속성 이름 규칙', xtype: '표준 외 타입',
+    entDef: '엔터티 정의 없음', entDefShort: '엔터티 정의 부족', attrDef: '속성 설명 없음', attrDefShort: '속성 설명 부족', nameDup: '명칭 중복 · 같은 이름 다른 엔터티',
+    dupEnt: '엔터티명 중복', dupTable: '테이블 물리명 중복', dupCol: '컬럼 물리명 중복', noPk: '식별자 없음', pkNn: 'PK 필수 꺼짐', fkMiss: '관계의 FK 누락', mn: 'M:N 미해소', fkCand: '관계 없는 FK 후보 컬럼', phys: '물리 정보 · 미매핑 · 타입 미정', noRel: '관계 없는 엔터티' };
+  window.modelCheck = (model, policy) => {
+    // policy: nothing (today's rules) · { defEmpty, defShort, minLen } · or a whole policy object (its modelInput + its naming rules — the approval re-check passes getPolicy() / policyAt(ver))
+    const whole = policy && policy.fields ? policy : null, ir = mirNorm(whole ? whole.modelInput : policy, getModelInputRules()), pol = whole || (policy && policy.pol) || getPolicy(), RB = ps => ps.find(p => p.lvl === 'block');
+    const E = (model && model.E) || [], R = (model && model.R) || [], items = [];
+    const add = (grp, code, lvl, e, a, msg, extra) => items.push(Object.assign({ grp, code, lvl, e: e.id, en: e.n, a: a ? a.n : null, ai: a ? e.a.indexOf(a) : null, msg }, extra || {}));
+    const eq = (x, y) => String(x == null ? '' : x).trim().toLowerCase() === String(y == null ? '' : y).trim().toLowerCase();
+    const defOf = (o, name) => { const v = descJudge(name, o.desc, ir); return v === 'ok' ? '' : v; };   // R2-09: the shared judgement
+    const nameCnt = new Map(); E.forEach(e => { const seen = new Set(); (e.a || []).forEach(a => { if (a.edit || a.fk || seen.has(a.n)) return; seen.add(a.n); nameCnt.set(a.n, (nameCnt.get(a.n) || 0) + 1); }); });
+    const linked = new Set(); R.forEach(r => { linked.add(r.f); linked.add(r.t); });
+    E.forEach(e => { if (e.ref || e.fresh) return;
+      if (e.p === '—') add('std', 'entPhys', 'block', e, null, e.st ? '엔터티 용어 신청 중' : '엔터티 용어 미정');
+      else { const rp = RB(entRuleProblems(e, pol)); if (rp) add('std', 'entRule', 'block', e, null, rp.msg); }
+      const ed = defOf(e, e.n);
+      if (ed === 'empty') add('name', 'entDef', ir.defEmpty, e, null, '정의가 비어 있음');
+      else if (ed && ir.defShort !== 'off') add('name', 'entDefShort', ir.defShort, e, null, ed === 'same' ? '정의가 이름과 같음' : `정의가 ${ir.minLen}자 미만`);
+      if (!(e.a || []).some(a => a.pk && !a.edit)) add('struct', 'noPk', 'block', e, null, 'PK 지정 필요');
+      if (!linked.has(e.id)) add('struct', 'noRel', 'warn', e, null, '다른 엔터티와 관계 없음');
+      (e.a || []).forEach(a => { if (a.edit) return;
+        if (a.s === 'comb' || a.s === 'unreg') add('std', 'attrStd', 'block', e, a, a.s === 'comb' ? '조합 가능 — 용어 신청' : a.cand ? `단어 ‘${a.candWord || (/수령자/.test(a.n) ? '수령자' : a.n)}’ 승인 대기` : '미등록 단어');
+        else if (a.s === 'ok' || a.s === 'req') { const rp = RB(attrRuleProblems(a, pol)); if (rp) add('std', 'attrRule', 'block', e, a, rp.msg); }
+        if (a.xt) add('std', 'xtype', 'warn', e, a, `${a.xt} · ${typeStr(a)} — 위반 아님 · 검수 보고서에서 따로 셈`);
+        const ad = defOf(a, a.n);
+        if (ad === 'empty') add('name', 'attrDef', ir.defEmpty, e, a, '설명이 비어 있음');
+        else if (ad && ir.defShort !== 'off') add('name', 'attrDefShort', ir.defShort, e, a, ad === 'same' ? '설명이 이름과 같음' : `설명이 ${ir.minLen}자 미만`);
+        if (!a.fk && nameCnt.get(a.n) > 1) add('name', 'nameDup', 'warn', e, a, 'FK가 아닌데 이름이 같음');
+        if (a.s !== 'na') { const um = a.p === '—', tn = typeParts(a).t === '—' || !typeParts(a).t; if (um || tn) add('struct', 'phys', 'warn', e, a, [um ? '미매핑(물리명 없음)' : '', tn ? '타입 미정' : ''].filter(Boolean).join(' · ')); }
+        if (a.pk && !a.nn) add('struct', 'pkNn', 'block', e, a, 'PK인데 필수(NOT NULL)가 꺼져 있음');   // R2-08
+        if (a.fkCand && !a.fk) add('struct', 'fkCand', 'warn', e, a, `참조 ${a.fkCand.table || '?'}.${a.fkCand.col || '?'} — 관계가 없어 FK가 아님`); }); });
+    // R2-08: a relation that exists but has no working FK (fkOf, the same judgement as the relation panel · DDL) blocks — 테이블명 없음 · 부모 식별자 없음은 위 항목(테이블명 미정 · 식별자 없음)이 이미 센다
+    R.forEach((r, i) => { if (r.k === 'mn') return; const p = E.find(x => x.id === r.f), c = E.find(x => x.id === r.t); if (!p || !c || c.ref) return; const f = fkOf(r, E);
+      if (f.st === 'miss' && p.p !== '—' && c.p !== '—' && p.a.some(a => a.pk && !a.edit)) add('struct', 'fkMiss', 'block', c, null, `${p.n} → ${c.n}${r.name ? ` (${r.name})` : ''} — ${f.why}`, { rel: i }); });
+    R.forEach((r, i) => { if (r.k !== 'mn') return; const p = E.find(x => x.id === r.f), c = E.find(x => x.id === r.t); if (p && c) add('struct', 'mn', 'warn', p, null, `${p.n} ↔ ${c.n} — 교차 엔터티 필요`, { rel: i }); });
+    modelInvariants({ E }).forEach(v => items.push({ grp: 'struct', code: v.code, lvl: 'block', e: v.e, en: v.en, a: v.a, ai: v.ai, msg: v.msg }));   // 설계 §13.1 불변식 — 게이트 B(DDL)도 같은 함수
+    const block = items.filter(x => x.lvl === 'block').length;
+    return { items, block, warn: items.length - block, ok: block === 0, rules: ir };
+  };
   /* baselines: every editable download is recorded (range, item ids, versions) — round-trip judgement uses this, not the file alone */
   window.recordBaseline = (scope, ids) => { const all = J('dbm-baselines', []); const t = new Date(); const id = `BL-${today().replace(/-/g, '')}-${String(t.getHours()).padStart(2, '0')}${String(t.getMinutes()).padStart(2, '0')}`; all.unshift({ id, at: now(), by: ME.id, scope, n: ids.length, ids }); S('dbm-baselines', all.slice(0, 20)); return id; };
   window.latestBaseline = () => (J('dbm-baselines', [])).find(b => b.by === ME.id) || { id: 'BL-20261116-0905', at: '11/16 09:05', by: 'kim', scope: '용어 · 필터: 요구사항', n: 13 };
   /* per-version model data (S5): edits persist per area+version; a confirmation stores its own snapshot */
   // an inline edit left open when the screen was left (rename · new attribute) is not part of the model: drop the flag, and a new attribute that never got a name
+  /* M-8: one shape in storage whichever screen wrote it ({ t:'VARCHAR2', len:100 } from 엑셀 가져오기, or 'VARCHAR2(100)') — a.t = the joined type string (typeStr), a.len · a.scale beside it (typeParts) */
+  const typeNorm = d => { if (d && Array.isArray(d.E)) d.E.forEach(e => (e.a || []).forEach(a => { if (a && a.t != null) typeSplit(a); })); return d; };   // R2-12: t = type name only, len · scale apart
   const tidyModel = d => { if (d && Array.isArray(d.E)) { d.E = d.E.filter(e => !(e && e.fresh)); }   // an entity made but never named
-    if (d && Array.isArray(d.E)) d.E.forEach(e => { if (!Array.isArray(e.a)) return; e.a = e.a.filter(a => !(a && a.edit && !String(a.n || '').trim())); e.a.forEach(a => { if (a && a.edit) delete a.edit; }); if (e.renaming) delete e.renaming; }); return d; };
+    if (d && Array.isArray(d.E)) d.E.forEach(e => { if (!Array.isArray(e.a)) return; e.a = e.a.filter(a => !(a && a.edit && !String(a.n || '').trim())); e.a.forEach(a => { if (a && a.edit) delete a.edit; }); if (e.renaming) delete e.renaming; }); return typeNorm(d); };
   // review mode (&audit=1&as=…) keeps its role on script moves too: navKeep(url) for pages, keepUrl(url) for building links
   function keepUrl(h) { const q0 = new URLSearchParams(location.search); if (!q0.has('audit') || !q0.get('as') || !/^[a-z-]+\.html/.test(h) || /[?&]as=/.test(h)) return h;
     const [p, hash] = h.split('#'); return p + (p.includes('?') ? '&' : '?') + 'audit=1&as=' + q0.get('as') + (hash ? '#' + hash : ''); }
   window.keepUrl = keepUrl; window.navKeep = h => { location.href = keepUrl(h); };
-  window.getModelData = (area, ver) => tidyModel(J(`dbm-mdata-${area}-v${ver}`, null));
-  window.setModelData = (area, ver, data) => S(`dbm-mdata-${area}-v${ver}`, data);   /* returns false when the write did not land */
+  /* M-7 follow-up (2026-11-25): a seeded area's confirmed base version has no stored copy. It used to be read as the working seed — whose unmapped items
+     (테이블명 없는 엔터티 · 물리명/타입 없는 속성) could never have been confirmed and blocked the official DDL. The base version is now read as the seed
+     WITHOUT those items (and without pending entity-term marks): 공식 DDL(확정본 기준) · 확정본 대비 비교 · 결재 비교 read this copy. A stored copy always wins. */
+  // R2-07 · R2-11 (review4): the seed's confirmed version is a fixed version NUMBER — the seed definition's own base (MODEL0), not the area's current base,
+  // so it keeps reading after v5 is confirmed / v6 starts (v5's ALTER still compares with v4; the outputs list keeps v4)
+  const confSeed = (area, ver) => { const m = getAllModels()[area], s0 = MODEL0[area]; if (!m || !s0 || !MODEL_SEED[area] || s0.base !== ver || !(m.ver > ver)) return null;
+    const sd = modelSeed(area), E = sd.E.filter(e => e.ref || e.p !== '—');
+    E.forEach(e => { if (e.ref) return; delete e.st; delete e.reqDoc; e.a = e.a.filter(a => a.p !== '—' && a.t !== '—' && a.s !== 'comb' && a.s !== 'unreg'); e.a.forEach(a => { delete a.cand; }); });
+    const ids = new Set(E.map(e => e.id));
+    return typeNorm({ E, R: (sd.R || []).filter(r => ids.has(r.f) && ids.has(r.t)), M: [], V: (sd.V || []).map(v => v.ents ? Object.assign(v, { ents: v.ents.filter(id => ids.has(id)) }) : v), rev: 0, seedCopy: 1 }); };
+  /* R2-16: reading never writes. A working copy saved before the seed had definitions can be filled from the seed — but only by the model screen, on an editable working copy,
+     as an edit it then saves (seedDescFill changes the given model in memory and returns how many it filled; the caller decides whether to save). */
+  window.seedDescFill = (area, d) => { if (!d || !MODEL_SEED[area]) return 0; let n = 0; const SE = new Map(MODEL_SEED[area].E.map(e => [e.id, e]));
+    (d.E || []).forEach(e => { const o = SE.get(e.id); if (!o || e.ref) return; if (!e.desc && o.desc) { e.desc = o.desc; n++; }
+      (e.a || []).forEach(a => { const y = o.a.find(z => z.n === a.n) || o.a.find(z => a.p && a.p !== '—' && z.p === a.p); if (!y) return; if (!a.id && y.id) a.id = y.id; if (!a.desc && y.desc) { a.desc = y.desc; n++; } }); });
+    return n; };
+  window.getModelData = (area, ver) => tidyModel(J(`dbm-mdata-${area}-v${ver}`, null)) || confSeed(area, ver);
+
+  window.setModelData = (area, ver, data) => S(`dbm-mdata-${area}-v${ver}`, typeNorm(data));   /* returns false when the write did not land */
 
   /* ---- notifications: addressed to people, created by events ---- */
   window.NOTIFY_KINDS = [['appr', '결재 요청 (내 차례)', 'must'], ['res', '내 신청 결과 (승인·반려·회수)', 'opt'], ['cc', '참조', ''], ['cand', '후보 등록·처리 결과', ''], ['job', '긴 작업 완료 (엑셀 검증·산출물)', ''], ['rev', '표준 재검토 가능 · 공동 편집 충돌', '']];
@@ -1563,6 +1704,10 @@
   window.DENSITY = { compact: '촘촘 32px', default: '기본 36px', comfy: '넓게 44px' };
   window.setDensity = v => { store.set('dbm-density', v); document.documentElement.dataset.density = v; };
   document.documentElement.dataset.density = store.get('dbm-density', 'default');
+  /* M-8: canvas density (01 §6.4-1) — the ERD node row height, set next to 표 밀도 in 마이페이지 › 환경. 글자는 12px 그대로 */
+  window.CV_DENSITY = { compact: '촘촘 16px', default: '기본 20px', comfy: '넓게 24px' };
+  window.setCvDensity = v => { store.set('dbm-cv-density', v); document.documentElement.dataset.cvDensity = v; };
+  document.documentElement.dataset.cvDensity = store.get('dbm-cv-density', 'default');
   /* the mock's reference day and the age of a document in its current step (home · approvals use the same count) */
   window.MOCK_TODAY = new Date(2026, 10, 19);
   const toDay = s => { if (!s) return null; let m = /(\d{4})-(\d{2})-(\d{2})/.exec(s); if (m) return new Date(+m[1], m[2] - 1, +m[3]); m = /(\d{1,2})\/(\d{1,2})/.exec(s); return m ? new Date(2026, m[1] - 1, +m[2]) : null; };
@@ -1944,8 +2089,8 @@
           const attrs = eOpen ? e.a.map((a, i) => ({ a, i })).filter(x => !qq || areaHit || eh || ah.includes(x.i)) : [];
           const kids = attrs.map(({ a, i }) => N('a:' + e.id + ':' + i, P ? 'col' : 'attr', {
             ent: e.id, ai: i, selectable: true, pk: !!a.pk, fk: !!a.fk,
-            html: P ? (a.p === '—' ? `<span class="tn1">${mark(a.n)}</span><span class="tmeta ts-miss">물리명 없음</span>` : `<span class="tn1 mono">${mark(a.p)}</span><span class="tmeta">${esc(a.t)}${a.pk ? ' · PK' : ''}${a.fk ? ' · FK' : ''}</span>`) : `<span class="tn1">${mark(a.n)}</span>${INT ? `<span class="tmeta mono${a.p === '—' ? ' ts-miss' : ''}">${a.p === '—' ? '미매핑' : mark(a.p)}</span>` : ''}<span class="tmeta">${a.pk ? 'PK' : ''}${a.fk ? (a.pk ? ' · ' : '') + 'FK' : ''}${STC[a.s] ? `${a.pk || a.fk ? ' · ' : ''}<span class="ts-${a.s}">${STC[a.s]}</span>` : ''}</span>`,
-            aria: `${P ? a.p : a.n}${INT ? (a.p === '—' ? ', 미매핑' : `, 물리 ${a.p}`) : ''}${a.pk ? ', PK' : ''}${a.fk ? ', FK' : ''}${STC[a.s] ? ', ' + STC[a.s] : ''}`, title: P ? a.n : `${a.p} · ${a.t}` }));
+            html: P ? (a.p === '—' ? `<span class="tn1">${mark(a.n)}</span><span class="tmeta ts-miss">물리명 없음</span>` : `<span class="tn1 mono">${mark(a.p)}</span><span class="tmeta">${esc(typeStr(a))}${a.pk ? ' · PK' : ''}${a.fk ? ' · FK' : ''}</span>`) : `<span class="tn1">${mark(a.n)}</span>${INT ? `<span class="tmeta mono${a.p === '—' ? ' ts-miss' : ''}">${a.p === '—' ? '미매핑' : mark(a.p)}</span>` : ''}<span class="tmeta">${a.pk ? 'PK' : ''}${a.fk ? (a.pk ? ' · ' : '') + 'FK' : ''}${STC[a.s] ? `${a.pk || a.fk ? ' · ' : ''}<span class="ts-${a.s}">${STC[a.s]}</span>` : ''}</span>`,
+            aria: `${P ? a.p : a.n}${INT ? (a.p === '—' ? ', 미매핑' : `, 물리 ${a.p}`) : ''}${a.pk ? ', PK' : ''}${a.fk ? ', FK' : ''}${STC[a.s] ? ', ' + STC[a.s] : ''}`, title: P ? a.n : `${a.p} · ${typeStr(a)}` }));
           const ahNote = qq && !eh && ah.length ? `<span class="tmeta">${P ? '컬럼' : '속성'} ${ah.length}</span>` : '';
           return N('e:' + e.id, P ? 'table' : 'ent', {
             ent: e.id, selectable: true, st: e.ref ? 'ref' : entBad(e) ? 'bad' : e.a.some(a => a.s === 'ex') ? 'ex' : 'ok', gray: (P && !e.ref && (e.px == null || e.py == null)) || (!!cvV && !(cvV.ents || []).includes(e.id)), drag: true,

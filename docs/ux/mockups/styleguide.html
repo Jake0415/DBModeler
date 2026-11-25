@@ -135,15 +135,16 @@ window.pageInit = function () {
       <div class="approval-line u-mt-12"><div class="al-step done"><span class="pt">${icon('check', 12)}</span><div><b>신청</b><div class="caption muted">김모델 · 11/17</div></div></div><div class="al-step cur"><span class="pt"></span><div><b>DA 승인</b><div class="caption muted">내 차례</div></div></div><div class="al-step rej"><span class="pt">${icon('x', 12)}</span><div><b>반려 예</b><div class="caption muted">반려된 단계</div></div></div><div class="al-step skip"><span class="pt"></span><div><b>최종 승인 · 사용 안 함</b><div class="caption muted">설정으로 생략된 단계</div></div></div></div></section>
 
     <section class="sec"><div class="sec-h"><h2>ERD 표기 · 범례</h2><span class="end muted">IE(까마귀발) — 23-erd-notation</span></div>
-      <div class="sg-lg caption"><span>관계</span>
-        <span><svg width="26" height="12" viewBox="0 0 26 12" fill="none" stroke="var(--fg-2)" stroke-width="1.3" aria-hidden="true"><path d="M1 6H25"/></svg>식별</span>
-        <span><svg width="26" height="12" viewBox="0 0 26 12" fill="none" stroke="var(--fg-2)" stroke-width="1.3" aria-hidden="true"><path d="M1 6H25" stroke-dasharray="4 3"/></svg>비식별</span>
-        <span><svg width="26" height="12" viewBox="0 0 26 12" fill="none" stroke="var(--fg-2)" stroke-width="1.3" aria-hidden="true"><path d="M1 6H25M25 1L17 6L25 11"/></svg>다수</span>
-        <span><svg width="26" height="12" viewBox="0 0 26 12" fill="none" stroke="var(--fg-2)" stroke-width="1.3" aria-hidden="true"><path d="M1 6H25M19 1V11"/></svg>하나</span>
-        <span><svg width="26" height="12" viewBox="0 0 26 12" fill="none" stroke="var(--fg-2)" stroke-width="1.3" aria-hidden="true"><path d="M1 6H13M21 6H25"/><circle cx="17" cy="6" r="3.2"/></svg>없을 수 있음</span>
+      <div class="sg-lg caption"><span>관계 끝</span>
+        <span><svg width="30" height="12" viewBox="0 0 30 12" fill="none" stroke="var(--fg-2)" stroke-width="1.3" aria-hidden="true"><path d="M1 6H29M20 1V11M25 1V11"/></svg>정확히 1</span>
+        <span><svg width="30" height="12" viewBox="0 0 30 12" fill="none" stroke="var(--fg-2)" stroke-width="1.3" aria-hidden="true"><path d="M1 6H13M21 6H29M25 1V11"/><circle cx="17" cy="6" r="3.5"/></svg>0~1</span>
+        <span><svg width="30" height="12" viewBox="0 0 30 12" fill="none" stroke="var(--fg-2)" stroke-width="1.3" aria-hidden="true"><path d="M1 6H29M29 1L19 6L29 11M16 1V11"/></svg>1 이상</span>
+        <span><svg width="30" height="12" viewBox="0 0 30 12" fill="none" stroke="var(--fg-2)" stroke-width="1.3" aria-hidden="true"><path d="M1 6H9M17 6H29M29 1L17 6L29 11"/><circle cx="13" cy="6" r="3.5"/></svg>0 이상</span>
+        <span><svg width="26" height="12" viewBox="0 0 26 12" fill="none" stroke="var(--fg-2)" stroke-width="1.3" aria-hidden="true"><path d="M1 6H25"/></svg>식별(실선)</span>
+        <span><svg width="26" height="12" viewBox="0 0 26 12" fill="none" stroke="var(--fg-2)" stroke-width="1.3" aria-hidden="true"><path d="M1 6H25" stroke-dasharray="4 3"/></svg>비식별(점선)</span>
         <span><svg width="26" height="12" viewBox="0 0 26 12" fill="none" stroke="var(--fg-2)" stroke-width="1.3" aria-hidden="true"><rect x="1" y="5" width="10" height="6" rx="1"/><path d="M11 7H17V1H6V5"/></svg>재귀</span>
         <span><svg width="26" height="12" viewBox="0 0 26 12" fill="none" stroke="var(--violet)" stroke-width="1.3" aria-hidden="true"><path d="M2 11Q13 -3 24 11"/></svg>배타</span></div>
-      <div class="caption muted u-mt-8">관계명은 명사형(소속 · 담당 · 포함), 같은 두 엔터티 사이 여러 관계 · 재귀는 역할명(출발 · 도착 · 상위). PK는 # + 키 구역, FK는 파란 이탤릭 + (FK). 업무 영역 아이콘 = 가방, 시스템 = DB 원통</div></section>
+      <div class="caption muted u-mt-8">관계명은 명사형(소속 · 담당 · 포함), 같은 두 엔터티 사이 여러 관계 · 재귀는 역할명(출발 · 도착 · 상위). PK는 키 구역 + 작은 고정폭 ‘PK’ 글자(‘#’는 쓰지 않음), FK는 파란 이탤릭 + (FK). 실선 = 식별, 점선 = 비식별(1:1도 같음). 테이블 ERD(물리) 한 줄 = PK/FK │ 컬럼명 │ 타입 │ 길이 │ 소수점 │ 속성명. 캔버스 밀도 = 촘촘 16 · 기본 20 · 넓게 24(마이페이지 › 환경). 업무 영역 아이콘 = 가방, 시스템 = DB 원통</div></section>
 
     <section class="sec"><div class="sec-h"><h2>아이콘</h2><span class="end muted">Lucide 한 세트 · 문자 아이콘 금지</span></div>
       <div class="icons">${['check', 'clock', 'warn', 'err', 'info', 'flag', 'x', 'search', 'right', 'down', 'up', 'ext', 'compare', 'filter', 'download', 'upload', 'history', 'lock', 'file', 'table', 'user', 'pen', 'plus', 'more', 'trash', 'pointer', 'moveh', 'db', 'area', 'col', 'key', 'link', 'flow', 'layers', 'term', 'tag', 'shield', 'list', 'help'].map(n => `<span>${icon(n)}${n}</span>`).join('')}</div></section>

@@ -311,7 +311,7 @@ window.pageInit = function () {
   }
   // the area's own convention wins: standard attributes ending in the same 분류어 → their domain/type (ERP 코드 → 코드V10)
   const AREA_DOM = {}, AREA_T = {};
-  model.E.forEach(e => (e.a || []).forEach(a => { if (a.s !== 'ok' || !a.dom) return; const hit = DOM_BY_LAST.find(([w]) => a.n.endsWith(w)); if (hit) { const m = AREA_DOM[hit[0]] = AREA_DOM[hit[0]] || {}; m[a.dom] = (m[a.dom] || 0) + 1; } if (a.t && a.t !== '—') AREA_T[a.dom] = AREA_T[a.dom] || a.t; }));
+  model.E.forEach(e => (e.a || []).forEach(a => { if (a.s !== 'ok' || !a.dom) return; const hit = DOM_BY_LAST.find(([w]) => a.n.endsWith(w)); if (hit) { const m = AREA_DOM[hit[0]] = AREA_DOM[hit[0]] || {}; m[a.dom] = (m[a.dom] || 0) + 1; } if (a.t && a.t !== '—') AREA_T[a.dom] = AREA_T[a.dom] || typeStr(a); }));   /* stored t = type name only — the area's usual type is the joined string (길이 · 소수점 포함) */
   const domGuess = (term, r) => { const hit = DOM_BY_LAST.find(([w]) => term.endsWith(w)); if (r.cur.s === 'ok' && r.cur.dom) return { dom: r.cur.dom, w: hit ? hit[0] : '' };
     if (hit && AREA_DOM[hit[0]]) { const [d, n] = Object.entries(AREA_DOM[hit[0]]).sort((a, b) => b[1] - a[1])[0]; return { dom: d, w: hit[0], conv: n }; }
     return hit ? { dom: hit[1], w: hit[0] } : { dom: '', w: '' }; };
@@ -411,7 +411,7 @@ window.pageInit = function () {
     model.E.forEach(e => {
       if (e.ref || !O.ents.includes(e.id)) return;
       if (O.entRows) out.push({ key: `${e.n}.${e.n}`, e: e.id, ent: e.n, a: e.n, entRow: true, cur: { n: e.n, p: e.p, t: '', dom: '', s: e.p === '—' ? 'comb' : e.st ? 'req' : 'ok', reqDoc: e.reqDoc } });
-      e.a.forEach(a => { if (a.edit) return; out.push({ key: `${e.n}.${a.orig || a.n}`, e: e.id, ent: e.n, a: a.orig || a.n, cur: { n: a.n, p: a.p, t: a.t, dom: a.dom || '', s: a.s, why: a.exReason || a.naReason, reqDoc: a.reqDoc } }); });
+      e.a.forEach(a => { if (a.edit) return; out.push({ key: `${e.n}.${a.orig || a.n}`, e: e.id, ent: e.n, a: a.orig || a.n, cur: { n: a.n, p: a.p, t: typeStr(a), dom: a.dom || '', s: a.s, why: a.exReason || a.naReason, reqDoc: a.reqDoc } }); });
     });
     rows = out.filter(r => O.range === 'all' || !['ok', 'ex', 'na'].includes(r.cur.s) || !!ruleOf(r, O));
     rows.forEach(r => { r.rule = r.entRow ? null : ruleOf(r, O); r.alts = altsOf(r, O); r.choice = r.alts[0] || null; judge(r); r.inc = actionable(r) && (r.st !== 'std' || r.needApply); });
