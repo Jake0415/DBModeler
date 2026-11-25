@@ -1,0 +1,515 @@
+{
+ "source": "docs/ux/mockups/assets/app.js",
+ "mockUsers": [
+  {
+   "id": "kim",
+   "label": "김모델 · 모델러+DA"
+  },
+  {
+   "id": "park",
+   "label": "박설계 · 외주 모델러"
+  },
+  {
+   "id": "lee",
+   "label": "이데이터 · DA+Admin"
+  },
+  {
+   "id": "hyun",
+   "label": "이현업 · 기관 담당자"
+  },
+  {
+   "id": "choi",
+   "label": "최담당 · 기관 담당자+모델러"
+  }
+ ],
+ "screens": [
+  {
+   "file": "home.html",
+   "ids": "SC-55",
+   "name": "홈",
+   "menu": "홈",
+   "states": [
+    {
+     "label": "김모델(모델러 · DA)",
+     "url": "home.html?as=kim"
+    },
+    {
+     "label": "박설계(모델러)",
+     "url": "home.html?as=park"
+    },
+    {
+     "label": "이현업(기관 담당자)",
+     "url": "home.html?as=hyun"
+    }
+   ]
+  },
+  {
+   "file": "dictionary.html",
+   "ids": "SC-10 · PN-11 · PN-12",
+   "name": "표준 사전 통합 검색 · 상세 · 등록 신청",
+   "menu": "표준 사전",
+   "states": [
+    {
+     "label": "기본(최근 변경)",
+     "url": "dictionary.html"
+    },
+    {
+     "label": "도메인 신청",
+     "url": "dictionary.html?req=domain"
+    },
+    {
+     "label": "편집용 내려받기",
+     "url": "dictionary.html#download"
+    },
+    {
+     "label": "검색: 산출",
+     "url": "dictionary.html?q=산출"
+    }
+   ]
+  },
+  {
+   "file": "dict-history.html",
+   "ids": "SC-16",
+   "name": "표준 사전 변경 내역 · 공표",
+   "menu": "표준 사전",
+   "states": [
+    {
+     "label": "전체",
+     "url": "dict-history.html"
+    },
+    {
+     "label": "미공표만",
+     "url": "dict-history.html?unpub=1"
+    }
+   ]
+  },
+  {
+   "file": "excel-import.html",
+   "ids": "SC-13",
+   "name": "엑셀 가져오기(왕복 편집)",
+   "menu": "표준 사전",
+   "states": [
+    {
+     "label": "1단계부터(실제 작업)",
+     "url": "excel-import.html"
+    },
+    {
+     "label": "5단계 예시(저장 안 함)",
+     "url": "excel-import.html?step=5"
+    },
+    {
+     "label": "신청된 묶음 열람",
+     "url": "excel-import.html?resume=UP-2026-0007"
+    },
+    {
+     "label": "반영본 확인",
+     "url": "excel-import.html?verify=UP-2026-0007"
+    }
+   ]
+  },
+  {
+   "file": "dict-grid.html",
+   "ids": "SC-11",
+   "name": "직접 등록",
+   "menu": "표준 사전",
+   "states": [
+    {
+     "label": "단어 탭",
+     "url": "dict-grid.html"
+    },
+    {
+     "label": "바구니 고치기",
+     "url": "dict-grid.html?mode=basket"
+    }
+   ]
+  },
+  {
+   "file": "domain-groups.html",
+   "ids": "SC-17",
+   "name": "도메인 그룹 · 분류",
+   "menu": "표준 사전",
+   "states": [
+    {
+     "label": "DA(이데이터)",
+     "url": "domain-groups.html?as=lee"
+    },
+    {
+     "label": "모델러(조회)",
+     "url": "domain-groups.html?as=park"
+    }
+   ]
+  },
+  {
+   "file": "rules.html",
+   "ids": "SC-43",
+   "name": "검수 기준",
+   "menu": "표준 사전",
+   "states": [
+    {
+     "label": "DA(이데이터) — 고침",
+     "url": "rules.html?as=lee"
+    },
+    {
+     "label": "모델러(박설계) — 읽기",
+     "url": "rules.html?as=park"
+    }
+   ]
+  },
+  {
+   "file": "datatypes.html",
+   "ids": "SC-19",
+   "name": "데이터 타입 · 축약명",
+   "menu": "표준 사전",
+   "states": [
+    {
+     "label": "DA(이데이터)",
+     "url": "datatypes.html?as=lee"
+    },
+    {
+     "label": "모델러(요청)",
+     "url": "datatypes.html?as=park"
+    },
+    {
+     "label": "요청 처리",
+     "url": "datatypes.html?as=lee#reqs"
+    }
+   ]
+  },
+  {
+   "file": "std-common.html",
+   "ids": "SC-18",
+   "name": "공통표준 · 행정표준코드",
+   "menu": "표준 사전",
+   "states": [
+    {
+     "label": "DA(이데이터)",
+     "url": "std-common.html?as=lee"
+    }
+   ]
+  },
+  {
+   "file": "uploads.html",
+   "ids": "SC-15",
+   "name": "업로드 이력",
+   "menu": "표준 사전",
+   "states": [
+    {
+     "label": "전체",
+     "url": "uploads.html"
+    },
+    {
+     "label": "UP-2026-0007",
+     "url": "uploads.html?b=UP-2026-0007"
+    }
+   ]
+  },
+  {
+   "file": "candidates.html",
+   "ids": "SC-14",
+   "name": "후보 큐",
+   "menu": "표준 사전",
+   "states": [
+    {
+     "label": "DA로 보기",
+     "url": "candidates.html?as=lee"
+    },
+    {
+     "label": "모델러로 보기",
+     "url": "candidates.html?as=park"
+    }
+   ]
+  },
+  {
+   "file": "approvals.html",
+   "ids": "SC-20 · PN-21 · MO-22 · MO-23",
+   "name": "결재함 · 문서 상세 · 자기 승인 · 반려",
+   "menu": "결재",
+   "states": [
+    {
+     "label": "대기함(김모델)",
+     "url": "approvals.html"
+    },
+    {
+     "label": "엑셀 문서",
+     "url": "approvals.html?doc=REQ-2026-0016"
+    },
+    {
+     "label": "모델 확정(리스크 v2)",
+     "url": "approvals.html?doc=REQ-2026-0011"
+    },
+    {
+     "label": "최종 승인 차례(이현업)",
+     "url": "approvals.html?doc=REQ-2026-0010&as=hyun"
+    },
+    {
+     "label": "완료 문서",
+     "url": "approvals.html?doc=REQ-2026-0007"
+    }
+   ]
+  },
+  {
+   "file": "system.html",
+   "ids": "SC-30",
+   "name": "시스템 홈",
+   "menu": "시스템",
+   "states": [
+    {
+     "label": "요구사항관리",
+     "url": "system.html"
+    }
+   ]
+  },
+  {
+   "file": "model.html",
+   "ids": "SC-31 · PN-32 · PN-33 · PN-31G · PN-39 · PN-35 · PN-38",
+   "name": "모델(ERD 캔버스 · 사전 패널 · 엔터티 패널 · 표 보기 · 모델 검토 · 게이트 A · 확정 신청)",
+   "menu": "시스템",
+   "states": [
+    {
+     "label": "요구사항·프로젝트(편집)",
+     "url": "model.html"
+    },
+    {
+     "label": "리스크(검토 중)",
+     "url": "model.html?area=risk"
+    },
+    {
+     "label": "v4 확정본 사본",
+     "url": "model.html?area=rq&snap=REQ-2026-0003"
+    },
+    {
+     "label": "예시: 미준수 해결 후(조회 전용)",
+     "url": "model.html?state=resolved"
+    }
+   ]
+  },
+  {
+   "file": "standardize.html",
+   "ids": "SC-34",
+   "name": "표준 맞추기",
+   "menu": "시스템",
+   "states": [
+    {
+     "label": "요구사항·프로젝트",
+     "url": "standardize.html"
+    },
+    {
+     "label": "예외만",
+     "url": "standardize.html?f=ex"
+    },
+    {
+     "label": "DDL 가져오기 직후",
+     "url": "standardize.html?from=import"
+    },
+    {
+     "label": "리스크(대상 없음)",
+     "url": "standardize.html?area=risk"
+    }
+   ]
+  },
+  {
+   "file": "term-wizard.html",
+   "ids": "SC-35",
+   "name": "용어 자동분석(모델 → 용어 → 모델)",
+   "menu": "시스템",
+   "states": [
+    {
+     "label": "요구사항·프로젝트",
+     "url": "term-wizard.html?area=rq"
+    },
+    {
+     "label": "인사관리",
+     "url": "term-wizard.html?area=e_hr"
+    }
+   ]
+  },
+  {
+   "file": "import-excel.html",
+   "ids": "SC-36a",
+   "name": "엑셀 정의서 가져오기(테이블 설계 → 모델)",
+   "menu": "시스템",
+   "states": [
+    {
+     "label": "기본",
+     "url": "import-excel.html"
+    },
+    {
+     "label": "오류 예시",
+     "url": "import-excel.html"
+    }
+   ]
+  },
+  {
+   "file": "import.html",
+   "ids": "SC-36",
+   "name": "가져오기(DDL → 모델)",
+   "menu": "시스템",
+   "states": [
+    {
+     "label": "기본",
+     "url": "import.html"
+    }
+   ]
+  },
+  {
+   "file": "ddl.html",
+   "ids": "SC-37 · PN-37",
+   "name": "DDL 출력 · 게이트 B · DBMS 비교",
+   "menu": "시스템",
+   "states": [
+    {
+     "label": "기본",
+     "url": "ddl.html"
+    }
+   ]
+  },
+  {
+   "file": "outputs.html",
+   "ids": "SC-38",
+   "name": "산출물",
+   "menu": "시스템",
+   "states": [
+    {
+     "label": "테이블 정의서",
+     "url": "outputs.html?k=tbl"
+    }
+   ]
+  },
+  {
+   "file": "settings.html",
+   "ids": "SC-40 · SC-41 · SC-42",
+   "name": "설정(기관 · 사업 · 시스템 · 사용자 · 역할)",
+   "menu": "관리",
+   "states": [
+    {
+     "label": "기관(이데이터 Admin)",
+     "url": "settings.html?as=lee"
+    },
+    {
+     "label": "시스템",
+     "url": "settings.html?as=lee#sys"
+    },
+    {
+     "label": "Admin 아님 → 403",
+     "url": "settings.html?as=kim"
+    }
+   ]
+  },
+  {
+   "file": "audit.html",
+   "ids": "SC-58",
+   "name": "감사 로그",
+   "menu": "관리",
+   "states": [
+    {
+     "label": "DA로 보기",
+     "url": "audit.html?as=lee"
+    }
+   ]
+  },
+  {
+   "file": "ops-status.html",
+   "ids": "SC-OPS",
+   "name": "시스템 상태",
+   "menu": "관리",
+   "states": [
+    {
+     "label": "정상",
+     "url": "ops-status.html?state=ok"
+    },
+    {
+     "label": "주의",
+     "url": "ops-status.html?state=warn"
+    },
+    {
+     "label": "장애",
+     "url": "ops-status.html?state=fail"
+    },
+    {
+     "label": "확인 안 됨",
+     "url": "ops-status.html?state=stale"
+    },
+    {
+     "label": "점검 중(정적 페이지)",
+     "url": "maintenance.html"
+    }
+   ]
+  },
+  {
+   "file": "mypage.html",
+   "ids": "SC-51 · PN-50",
+   "name": "마이페이지 · 사용자 메뉴",
+   "menu": "사용자",
+   "states": [
+    {
+     "label": "프로필",
+     "url": "mypage.html"
+    },
+    {
+     "label": "내 신청",
+     "url": "mypage.html#mine"
+    },
+    {
+     "label": "알림 설정",
+     "url": "mypage.html#notify"
+    }
+   ]
+  },
+  {
+   "file": "login.html",
+   "ids": "SC-56",
+   "name": "로그인",
+   "menu": "공통",
+   "states": [
+    {
+     "label": "처음 로그인",
+     "url": "login.html"
+    },
+    {
+     "label": "세션 만료 후 복귀",
+     "url": "login.html?from=model.html%3Farea%3Drq&expired=1"
+    },
+    {
+     "label": "SSO 실패",
+     "url": "login.html?fail=1"
+    }
+   ]
+  },
+  {
+   "file": "error.html",
+   "ids": "SC-57",
+   "name": "오류·안내",
+   "menu": "공통",
+   "states": [
+    {
+     "label": "403",
+     "url": "error.html?code=403&need=Admin&what=설정"
+    },
+    {
+     "label": "404",
+     "url": "error.html?code=404"
+    },
+    {
+     "label": "500",
+     "url": "error.html?code=500"
+    },
+    {
+     "label": "점검",
+     "url": "error.html?code=maint"
+    },
+    {
+     "label": "로그아웃",
+     "url": "error.html?code=logout"
+    },
+    {
+     "label": "세션 만료",
+     "url": "error.html?code=expired&from=model.html%3Farea%3Drq"
+    },
+    {
+     "label": "500 오류 ID 복사",
+     "url": "error.html?code=500"
+    }
+   ]
+  }
+ ]
+}

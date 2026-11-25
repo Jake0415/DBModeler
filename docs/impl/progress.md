@@ -7,7 +7,7 @@
 
 | 결정 | 작업 | 결정 종류 | W1 경로 막음 | 상태 | 응답 |
 |---|---|---|---|---|---|
-| — | — | — | — | — | — |
+| [01-task-list §6 Q-1](01-task-list.md) | DDL 가져오기(SC-36) W1/W2 | 문서 충돌 — 우선순위 20 §2.0(W1) ↔ 백엔드 설계 §13.9(W2). 지금은 P5(W2) | 아니오(엑셀 정의서 경로로 W1 완주 가능) | 확인 대기 | |
 
 ## 현재 단계
 - 단계: **P0 준비**
@@ -39,6 +39,6 @@
 - [x] 시험 계정 시드 · DB 초기화 — `npm run db:seed:test` · `scripts/worktree-env.ps1 -Reset -Seed -TestAccounts`, 13개 계정(계획 §9.1). API 로그인 확인: 정상 4 · 임시 비밀번호 변경 요구(tdatmp) · 기한 만료(texp) · 사용 중지(tstop) 401 + 이유. Codex Sol 리뷰 3회(R-01~07: 수정 2회, 후속 F-001 · F-002, 기각 1건 — 빈 `?`/`#` 주소는 접속지가 같아 해 없음)
 - [ ] 역할별 로그인 상태 저장 틀(Playwright storageState) — web · E2E 틀이 생기는 P1로 이동. 시나리오별 빠른 초기화(시드가 끝난 DB를 TEMPLATE으로 복제)도 P1 E2E 틀에서
 - [x] PERMS → 권한 검사 표 생성기 — `packages/rules/src/matrix.ts`(권한 판정 637칸 + 결재 행위 6사례), 기준 파일 [rbac-matrix.md](rbac-matrix.md) · `e2e/rbac/perm-matrix.json`, 갱신 `npm run rbac:matrix`(사람 승인 뒤). 시험 계정 정의를 `@neodb/domain` TEST_ACCOUNTS로 옮겨 시드와 같이 씀. 문서 기대값 테스트 22개. Codex Sol 리뷰 3회(RBAC-01~07: 수정 2회, 보류 → 후속 F-003 감리 감사 로그 범위)
-- [ ] 작업 목록(기능 → 목업 → API → 테스트 대응표)
-- [ ] 목업 기준 스크린샷
+- [x] 작업 목록(기능 → 목업 → API → 테스트 대응표) — [01-task-list.md](01-task-list.md) v1.1: 화면 26개 대응표 · 다중 계정 시나리오 17개 · P1 작업 15개 · P2 묶음 7개(작업 35개, 의존 열) · P3 ~ P6 묶음. Codex Sol 리뷰 2회(REV-01 ~ 15 반영, Q-1 사람 확인)
+- [x] 목업 기준 스크린샷 — `node scripts/mockup-baseline.mjs --shots`: 화면 목록 [screen-manifest.json](screen-manifest.json)(26개 · 상태 70개) + 상태별 · 목업 사용자 5명별 1920×1080, `e2e/baseline/mockups/`(저장소 제외, 목업에서 다시 만듦). 후속 F-004
 - [ ] Orca 브라우저 탭 쿠키 공유 여부, `--effort max` 전달 여부 확인
