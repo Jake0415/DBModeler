@@ -218,7 +218,7 @@ orca orchestration check --wait --types worker_done,escalation,question --timeou
 |---|---|
 | 역할별 로그인 상태 저장(Playwright storageState) + 브라우저 컨텍스트 여러 개 | E2E — 한 시나리오 안에서 모델러 창 → DA 창 → 기관 담당자 창 |
 | 실제 로그인 화면 | 시나리오마다 1회 — 로그인 · 임시 비밀번호 · 잠금 자체 검사 |
-| Orca 브라우저 탭 | UX 담당 · 사람의 역할별 화면 확인 |
+| Orca 브라우저 탭 — **역할마다 브라우저 프로필**(`orca tab profile create --label <계정>` → `orca tab create --profile <id>`) | UX 담당 · 사람의 역할별 화면 확인. 같은 프로필의 탭은 쿠키 · 저장소를 공유하므로(2026-11-25 확인) 프로필 없이 여러 역할을 동시에 열지 않는다 |
 | ✕ 개발용 ‘역할 바로 바꾸기’ | 쓰지 않는다. 꼭 필요하면 개발 빌드에서만, 감사 로그와 함께 |
 
 ### 9.3 데이터
@@ -271,5 +271,6 @@ ID: T-<단계>-<번호>   제목:
 
 ## 14. 남은 확인
 - `gpt-6.2-sol` · `gpt-6.2-astra` 이름은 Codex CLI 업데이트 뒤 실제 호출로 확인한다(§3.3).
-- Orca 브라우저 탭끼리 로그인 쿠키를 공유하는지 P0에서 확인한다(공유하면 역할별 화면 확인은 Playwright 컨텍스트로).
-- Orca `--effort` 값이 Claude `max`를 그대로 넘기는지 P0에서 확인한다.
+- ~~Orca 브라우저 탭 쿠키 공유~~ — 확인(2026-11-25): 같은 프로필은 공유, 프로필을 나누면 분리 → §9.2.
+- ~~Orca `--effort max` 전달~~ — 확인(2026-11-25): `--model` · `--effort max` 그대로 전달.
+- Orca 기본 브랜치 이름은 `<GitHub 사용자>/<이름>`(예: `Jake0415/neoDB-Modeler`)이고 worktree는 `C:\Users\ysh\orca\workspaces\DBModeler\` 아래에 생긴다. §13의 `impl/<작업ID>`는 Orca 작업에서 `--branch`로 지정하거나 Orca 기본 이름을 받아들인다(worktree-env.ps1은 어느 이름이든 처리).
