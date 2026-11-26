@@ -279,7 +279,7 @@
       "id": "BH-dictionary-020",
       "where": "머리 · 더 보기",
       "trigger": "[⋯ 더 보기] 클릭",
-      "expected": "메뉴에 ‘엑셀 가져오기’(excel-import.html) · ‘변경 내역’(dict-history.html) · ‘업로드 이력’(uploads.html) 링크. 바깥 클릭 · Esc로 닫힘",
+      "expected": "메뉴에 ‘사전 엑셀 일괄’(excel-import.html) · ‘변경 내역’(dict-history.html) · ‘업로드 이력’(uploads.html) 링크. 바깥 클릭 · Esc로 닫힘",
       "roles": "전체",
       "refs": [
         "dict.view"

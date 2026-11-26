@@ -1279,7 +1279,7 @@
       "id": "BH-excel-import-128",
       "where": "이어서 작업 배너",
       "trigger": "주소 ?resume={결재 중 · 반영 완료 묶음}",
-      "expected": "배너 ‘{ID} · {파일} — {신청} {단계}. 신청된 묶음은 조회 전용입니다(결재 문서 내용을 바꾸지 않음). 보완하려면 반려·회수 뒤에 다시 여세요.’ 고치기 · 신청 불가",
+      "expected": "배너 ‘{ID} · {파일} — {신청} {단계}. 신청된 묶음은 조회 전용입니다(결재 문서 내용을 바꾸지 않음). 보완하려면 반려·회수 뒤에 다시 여세요.’ 고치기 · 신청 불가. 모델 편집 권한(model.edit)이 있으면 배너에 다음 단계 안내를 더한다(BH-excel-import-139)",
       "roles": "올린 사람 · excel.viewall",
       "refs": [],
       "states": ["excel-import.html?resume=UP-2026-0007"],
@@ -1386,6 +1386,26 @@
       "states": ["excel-import.html?resume=UP-2026-0007"],
       "verify": "exempt",
       "exemptReason": "목업 시드 데이터 처리(행 상세 없는 시드 묶음)"
+    },
+    {
+      "id": "BH-excel-import-139",
+      "where": "이어서 작업 배너 · 다음 단계",
+      "trigger": "주소 ?resume={결재 중 · 반영 완료 묶음} 또는 ?verify={반영 완료 묶음} — 이 시스템 model.edit가 있는 사용자",
+      "expected": "배너 안에 결재 중이면 ‘사전이 준비되면(승인 뒤) 모델을 가져오세요.’, 반영 완료면 ‘사전이 준비됐습니다 — 이제 모델을 가져오세요.’ + [모델 엑셀 가져오기](import-excel.html). model.edit가 없으면 이 줄은 숨김",
+      "roles": "model.edit 가진 담당 시스템 모델러",
+      "refs": ["A-6", "model.edit", "SC-36a"],
+      "states": ["excel-import.html?as=kim&resume=UP-2026-0007", "excel-import.html?as=kim&resume=UP-2026-0006"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-excel-import-140",
+      "where": "머리",
+      "trigger": "화면 열기",
+      "expected": "화면 제목 · 탭 제목 ‘사전 엑셀 일괄’(모델 엑셀 가져오기(정의서)와 구분 — B-4)",
+      "roles": "전체",
+      "refs": ["B-4", "SC-13"],
+      "states": ["excel-import.html"],
+      "verify": "e2e"
     }
   ]
 }

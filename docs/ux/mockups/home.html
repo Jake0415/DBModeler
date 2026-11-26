@@ -62,6 +62,7 @@
 // only while the viewer has not chosen (the tree's own [접기] keeps their choice in dbm-tree-min-<id>)
 if (!can('model.edit') && dbmStore.get('dbm-tree-min-' + ME.id, '') === '') document.getElementById('app').classList.add('treemin');
 window.pageInit = function () {
+  const escH = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);   // R-01: names people type (area · system · title · candidate) are text, never HTML
   const $ = id => document.getElementById(id);
   const docs = getDocs(), org = getOrg(), models = getModels();
   const GOAL = org.goal || 90, SLA = org.sla || 3;
@@ -102,10 +103,10 @@ window.pageInit = function () {
   }
   if (ME.has('admin')) {
     const rq = Object.values(USERS).map(u => { try { const r = JSON.parse(dbmStore.get('dbm-rolereq-' + u.id) || 'null'); return r ? Object.assign({ u }, r) : null; } catch (e) { return null; } }).filter(Boolean);
-    T.push({ w: 92, t: '역할 요청', n: rq.length, old: null, st: '', go: rq.length ? [rq[0].u.name, `settings.html?user=${rq[0].u.id}`] : ['사용자·역할', 'settings.html'] });
-    const soon = Object.values(USERS).filter(u => u.status !== 'stopped' && daysLeft(u) !== null && daysLeft(u) >= 0 && daysLeft(u) <= 7); T.push({ w: 93, t: '7일 안 만료 계정', n: soon.length, old: null, st: soon.length ? tag('warn', soon.map(u => `${u.name} D-${daysLeft(u)}`).join(' · ')) : '', go: ['사용자 · 역할', 'settings.html?tab=users'] });
+    T.push({ w: 92, t: '역할 요청', n: rq.length, old: null, st: '', go: rq.length ? [escH(rq[0].u.name), `settings.html?user=${rq[0].u.id}`] : ['사용자·역할', 'settings.html'] });
+    const soon = Object.values(USERS).filter(u => u.status !== 'stopped' && daysLeft(u) !== null && daysLeft(u) >= 0 && daysLeft(u) <= 7); T.push({ w: 93, t: '7일 안 만료 계정', n: soon.length, old: null, st: soon.length ? tag('warn', soon.map(u => `${escH(u.name)} D-${daysLeft(u)}`).join(' · ')) : '', go: ['사용자 · 역할', 'settings.html?tab=users'] });
     const myAR = getAdminReqs().filter(r => r.status === 'wait' && r.req === ME.id); if (myAR.length) T.push({ w: 91, t: '기관 담당자 확인 대기 · 내 신청', n: myAR.length, old: null, st: '', go: ['확인 요청', 'approvals.html?box=confirm'] });
-    const gaps = SYSLIST.filter(s => !s.off).map(s => { const a = Object.keys(getAllModels()).find(k => (getAllModels()[k].system || 'RQMS') === s.code); return a && lineGaps({ type: 'model', area: a, req: '_none' }).length ? s.name : null; }).filter(Boolean); if (gaps.length) T.push({ w: 96, t: '결재 공백 — 처리할 사람이 없는 시스템', n: gaps.length, old: null, st: tag('err', gaps.join(' · ')), go: ['사용자 · 역할', 'settings.html?tab=users'] });
+    const gaps = SYSLIST.filter(s => !s.off).map(s => { const a = Object.keys(getAllModels()).find(k => (getAllModels()[k].system || 'RQMS') === s.code); return a && lineGaps({ type: 'model', area: a, req: '_none' }).length ? escH(s.name) : null; }).filter(Boolean); if (gaps.length) T.push({ w: 96, t: '결재 공백 — 처리할 사람이 없는 시스템', n: gaps.length, old: null, st: tag('err', gaps.join(' · ')), go: ['사용자 · 역할', 'settings.html?tab=users'] });
     const al = live.filter(docLate); T.push({ w: 80 + al.length, t: '기한 넘긴 결재 · 기관 전체', n: al.length, old: oldest(al), st: al.length ? tag('err', `${SLA}일 넘김`) : '', go: ['오래 머무는 결재', '#stale'] });
   }
   { const me0 = USERS[ME.id] || ME; if (me0.until && daysLeft(me0) !== null && daysLeft(me0) <= 14) { const mine0 = docs.filter(d => ['da', 'final'].includes(d.step) && d.req === ME.id).length; T.push({ w: 120, t: `내 계정 사용 기한 D-${daysLeft(me0)} (${me0.until})`, n: mine0, old: null, st: tag('warn', '남은 일: 진행 중 신청'), go: ['내 신청', 'approvals.html?box=mine'] }); } }   /* N-04 */
@@ -139,10 +140,10 @@ window.pageInit = function () {
       const below = a.C.rate < GOAL;
       const next = a.L.state === 'review' ? `<a href="approvals.html?doc=${a.L.doc.id}">${a.L.doc.id}</a> ${docLate(a.L.doc) ? tag('err', docAge(a.L.doc) + '일') : `<span class="muted">${STEP_NAME[a.L.doc.step]} ${docAge(a.L.doc)}일</span>`}`
         : a.L.state === 'confirmed' ? `<a href="model.html?area=${a.id}">다음 버전 시작</a>`
-        : !a.ents ? `<a href="model.html?area=${a.id}">모델 시작</a>`
+        : !a.ents ? (can('model.edit', { area: a.id }) ? `<a href="import-excel.html?area=${a.id}">모델 엑셀 가져오기</a> · <a href="model.html?area=${a.id}">모델 시작</a>` : '<span class="muted">모델 없음</span>')   /* A-6: an empty area starts from the model excel or by drawing — hidden without the edit role */
         : a.C.bad ? `<a href="standardize.html?area=${a.id}&f=todo">표준 맞추기</a>`
         : a.open.length ? `<span class="muted">${a.open.join(', ')} 완료 후 확정</span>` : `<a href="model.html?area=${a.id}">확정 신청</a>`;
-      return `<tr><td><a href="model.html?area=${a.id}">${a.m.name}</a></td><td class="muted">${a.sys} <span class="faint">${a.dbms}</span></td><td>${a.L.state === 'review' ? tag('run', '검토') : a.L.state === 'confirmed' ? tag('ok', '확정') : `<span class="muted">${a.stage}</span>`}</td><td class="r"><span class="num">${a.C.rate}%</span><span class="mbar${below ? ' bad' : ''}"><i style="width:${a.C.rate}%"></i><b style="left:${GOAL}%"></b></span></td><td class="r num">${a.C.bad || '—'}</td><td>${next}</td></tr>`; }).join('') || '<tr class="er first"><td colspan="6" class="muted">담당 업무 영역이 없습니다.</td></tr>'}</tbody></table>
+      return `<tr><td><a href="model.html?area=${encodeURIComponent(a.id)}">${escH(a.m.name)}</a></td><td class="muted">${escH(a.sys)} <span class="faint">${escH(a.dbms)}</span></td><td>${a.L.state === 'review' ? tag('run', '검토') : a.L.state === 'confirmed' ? tag('ok', '확정') : `<span class="muted">${a.stage}</span>`}</td><td class="r"><span class="num">${a.C.rate}%</span><span class="mbar${below ? ' bad' : ''}"><i style="width:${a.C.rate}%"></i><b style="left:${GOAL}%"></b></span></td><td class="r num">${a.C.bad || '—'}</td><td>${next}</td></tr>`; }).join('') || '<tr class="er first"><td colspan="6" class="muted">담당 업무 영역이 없습니다.</td></tr>'}</tbody></table>
     <div class="ok-line">막대의 세로 눈금은 목표 준수율 ${GOAL}%입니다. 준수율은 검수 기준 v${getPolicy().ver}로 계산합니다${offRulesHtml() ? " · " + offRulesHtml() : ""}.</div></section>`;
 
   /* ---- ledger (right): value · basis · gap ---- */
@@ -170,12 +171,12 @@ window.pageInit = function () {
   const mineOpen = mineAll.filter(d => docGroup(d) !== 'done').sort((a, b) => (docGroup(a) === 'fix' ? -1 : 0) - (docGroup(b) === 'fix' ? -1 : 0));
   const mineDone = mineAll.filter(d => docGroup(d) === 'done');
   const mine = `<section class="sec" id="mine"><div class="sec-h"><h2>내 신청</h2><a class="end" href="approvals.html?box=mine">전체</a></div>
-    ${mineOpen.length ? `<table class="tbl box"><thead><tr><th>신청번호</th><th>단계</th><th class="r">머문 일</th></tr></thead><tbody>${mineOpen.map(d => `<tr><td><a class="mono" href="approvals.html?doc=${d.id}" title="${d.title}">${d.id}</a></td><td>${docTag(d)}</td><td class="r num">${docGroup(d) === 'live' ? docAge(d) + '일' : '—'}</td></tr>`).join('')}</tbody></table>` : '<div class="ok-line" style="padding:12px 0">진행 중인 신청이 없습니다.</div>'}
+    ${mineOpen.length ? `<table class="tbl box"><thead><tr><th>신청번호</th><th>단계</th><th class="r">머문 일</th></tr></thead><tbody>${mineOpen.map(d => `<tr><td><a class="mono" href="approvals.html?doc=${d.id}" title="${escH(d.title)}">${d.id}</a></td><td>${docTag(d)}</td><td class="r num">${docGroup(d) === 'live' ? docAge(d) + '일' : '—'}</td></tr>`).join('')}</tbody></table>` : '<div class="ok-line" style="padding:12px 0">진행 중인 신청이 없습니다.</div>'}
     ${mineDone.length ? `<div class="ok-line">완료 ${mineDone.length}건: ${mineDone.slice(0, 3).map(d => `<a class="mono" href="approvals.html?doc=${d.id}">${d.id.slice(-4)}</a>`).join(', ')}</div>` : ''}</section>`;
 
   /* ---- my candidates (modeler) ---- */
   const myC = getCands().filter(c => c.loc.some(l => l.by === ME.id));
-  const cand = ME.has('modeler') && myC.length ? `<section class="sec"><div class="sec-h"><h2>내 후보</h2><a class="end" href="candidates.html">후보 큐</a></div><table class="tbl box"><tbody>${myC.map(c => { const s = candState(c); return `<tr><td><a href="candidates.html?c=${c.id}">${c.name}</a> <span class="muted">${c.t}</span></td><td class="r">${s === '등록 완료' ? tag('ok', s) : s === '대기' ? `<span class="muted">판단 대기</span>` : tag('run', s)}</td></tr>`; }).join('')}</tbody></table></section>` : '';
+  const cand = ME.has('modeler') && myC.length ? `<section class="sec"><div class="sec-h"><h2>내 후보</h2><a class="end" href="candidates.html">후보 큐</a></div><table class="tbl box"><tbody>${myC.map(c => { const s = candState(c); return `<tr><td><a href="candidates.html?c=${encodeURIComponent(c.id)}">${escH(c.name)}</a> <span class="muted">${escH(c.t)}</span></td><td class="r">${s === '등록 완료' ? tag('ok', s) : s === '대기' ? `<span class="muted">판단 대기</span>` : tag('run', s)}</td></tr>`; }).join('')}</tbody></table></section>` : '';
 
   /* ---- statistics (DA · owner · Admin) ---- */
   let stats = '', staleS = '', weeksS = '';
@@ -198,7 +199,7 @@ window.pageInit = function () {
       ${top.length ? `<ol class="reasons">${top.map(reasonLi).join('')}</ol>` : '<div class="ok-line">막힌 신청이 없습니다.</div>'}</section>`;
     const stale = live.slice().sort((a, b) => docAge(b) - docAge(a)).slice(0, 5);
     staleS = `<section class="sec" id="stale"><div class="sec-h"><h2>오래 머무는 결재</h2><a class="end" href="approvals.html">결재함</a></div>
-      <table class="tbl box"><tbody>${stale.map(d => `<tr><td><a class="mono" href="approvals.html?doc=${d.id}" title="${d.title}">${d.id}</a></td><td class="muted">${STEP_NAME[d.step]}</td><td class="r">${docLate(d) ? tag('err', docAge(d) + '일') : `<span class="num muted">${docAge(d)}일</span>`}</td></tr>`).join('') || '<tr class="er done"><td colspan="3" class="caption muted u-tc">진행 중인 결재가 없습니다</td></tr>'}</tbody></table></section>`;   // list standard L-6: the shared empty row
+      <table class="tbl box"><tbody>${stale.map(d => `<tr><td><a class="mono" href="approvals.html?doc=${d.id}" title="${escH(d.title)}">${d.id}</a></td><td class="muted">${STEP_NAME[d.step]}</td><td class="r">${docLate(d) ? tag('err', docAge(d) + '일') : `<span class="num muted">${docAge(d)}일</span>`}</td></tr>`).join('') || '<tr class="er done"><td colspan="3" class="caption muted u-tc">진행 중인 결재가 없습니다</td></tr>'}</tbody></table></section>`;   // list standard L-6: the shared empty row
     const weeks = []; for (let i = 5; i >= 0; i--) { const end = new Date(T0 - i * 7 * 864e5), start = new Date(end - 6 * 864e5); weeks.push({ start, end, n: 0 }); }
     getDict().forEach(x => { const d = toDay(x.dt); if (!d) return; const w = weeks.find(w => d >= w.start && d <= w.end); if (w) w.n++; });
     const pubD = toDay(getPub().at); const wmax = Math.max(...weeks.map(w => w.n), 1);

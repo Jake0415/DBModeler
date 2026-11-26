@@ -516,7 +516,7 @@
       const have = cc ? cc.filter(x => x && x.p !== '—').length : 0;
       return { st: 'miss', why: r.f === r.t ? '재귀 관계 — 역할명 FK 컬럼 지정 필요' : !c.a.some(a => a.fk) ? 'FK 컬럼 없음' : have ? `부모 PK ${pk.length}개 중 ${have}개만 대응 — 나머지 컬럼 지정 필요` : 'FK 컬럼 이름이 부모 PK와 다름(역할명) — 대응 컬럼 지정 필요' };
     }
-    return { st: 'ok', cols: cc.map(a => a.p), pcols: pk.map(a => a.p), ref: !!p.ref, name: `${c.p}_${p.p}_FK${r.g && !r.gAuto && cc.some((a, i) => a.p !== pk[i].p) ? '_' + String(r.g).slice(-2).toUpperCase() : ''}` };   // only a role-named FK (a second relation into the same child) needs a suffix · a tidy-up group (gAuto) never renames
+    return { st: 'ok', cols: cc.map(a => a.p), pcols: pk.map(a => a.p), ca: cc, pa: pk, /* ca · pa = the very column objects paired (흐름 리뷰2 F-03 — never looked up again by name) */ ref: !!p.ref, name: `${c.p}_${p.p}_FK${r.g && !r.gAuto && cc.some((a, i) => a.p !== pk[i].p) ? '_' + String(r.g).slice(-2).toUpperCase() : ''}` };   // only a role-named FK (a second relation into the same child) needs a suffix · a tidy-up group (gAuto) never renames
   };
   /* constraints and indexes of a table (PK · UK · FK · FK index · explicit index) */
   window.consOf = (e, E, R) => {
@@ -1510,6 +1510,77 @@
      model = { E, R }. policy = 모델 입력 규칙 { defEmpty:'block'|'warn', defShort:'warn'|'block'|'off', minLen } — rules.html saves it under neodb.modelInputRules; defaults when absent
      (policy.pol = the naming policy to judge by, default today's). Returns { items, block, warn, ok, rules };
      item = { grp:'std'|'name'|'struct', code, lvl:'block'|'warn', e, en, a, ai, msg }. 막음(block) 0건 = 확정 신청 가능. */
+  /* ---- 처음 표준화 흐름 (02-flow-plan A-2 · A-4 · B-5, 2026-11-26) ----
+     stdJudge(model, proposal) — the 표준 맞추기 judgement of every entity-name / attribute row, in one place (was inline in standardize.html):
+       → [{ key, e, ent, a, entRow, st, code }]  st = ok · okapply(사전에 있음 — 바로 적용) · comb(조합 가능) · req(신청 중) · unreg(사전에 없음) · rule(검수 기준 위반) · ex · na
+       code = OK · T-DONE(신청 승인 — 반영 가능) · T-HAVE · T-WAIT · T-ENDED · T-COMB · T-SUS · E-NAME · W-PEND · W-CAND · W-UNREG · P-RULE · X-EX · X-NA
+     flowCounts(area, model?) — the numbers the 진행 띠 shows, counted from the working copy (or the model passed in):
+       → { ents, attrs, apply, unreg, comb, req, rule, done, left, block, warn, state, ver, base }  left = unreg + comb + rule (신청 중은 기다리는 것이라 뺀다)
+     flowBand(area, here, target?, opts?) — here = 'model' | 'std' | 'wiz'. Returns the band's HTML ('' when it is not shown) and, with a target element, draws it there and wires [닫기].
+       Shown for an area that has never been confirmed (가져오기로 막 만든 영역 포함) until its first confirmation; closed per area (flowBandOff / flowBandReset — 마이페이지에서 다시 켜기). */
+  window.STD_PROPOSAL = { '산출물기본.산출물제출일': { term: '산출물제출일자', phys: 'DLVRBL_SBMT_DATE', dom: '연월일C8' }, '산출물이력.산출물이력': { term: '산출물이력', phys: 'DLVRBL_HIST_D', dom: '엔터티' }, '산출물이력.이력순번': { term: '이력순번', phys: 'HIST_SN', dom: '일련번호N10' } };
+  /* 비대상 규칙(흐름 리뷰): 물리명 · 논리명 패턴(* = 아무 글자) — 맞는 미준수 속성은 표준 비대상으로 본다. 용어 자동분석의 기본 규칙과 같은 목록 하나.
+     STD_NA_RULES = 기본 목록 · stdNaMatch(attr, rules?) → 맞는 규칙(없으면 null) · stdJudge(model, proposal?, naRules?) — naRules에 []를 주면 규칙 없이 판정 */
+  window.STD_NA_RULES = ['*_TMP', 'FILLER*', 'REG_DT', 'REG_ID', 'MDFCN_DT', 'MDFCN_ID', '등록일시', '수정일시'];
+  window.stdNaMatch = (a, rules) => { const hit = v => (rules || STD_NA_RULES).find(r => { const p = String(r || '').trim(); if (!p) return false; const re = new RegExp('^' + p.split('*').map(x => x.replace(/[.+?^${}()|[\]\\]/g, '\\$&')).join('.*') + '$', 'i'); return re.test(String(v == null ? '' : v).trim()); }); return (a && (hit(a.p) || hit(a.n))) || null; };
+  window.stdJudge = (model, proposal, naRules) => { const P = proposal || STD_PROPOSAL, NR = naRules || STD_NA_RULES, dict = getDict(), open = openItems(), rows = [];
+    const termIn = name => dict.find(x => x.k === 'term' && x.name === name && x.ver > 0 && x.st === '사용'), openTerm = name => open.find(x => x.it.name === name && (x.it.act || '추가') === '추가');
+    ((model && model.E) || []).forEach(e => { if (e.ref) return; const push = (o, a) => rows.push(Object.assign({ e: e.id, ent: e.n }, o, a ? { key: `${e.n}.${a.orig || a.n}`, a: a.orig || a.n } : { key: `${e.n}.${e.n}`, a: e.n, entRow: true }));
+      { const pr = P[`${e.n}.${e.n}`] || { term: e.n }, L = e.st && e.reqDoc ? linkState(e.reqDoc, e.n) : null;   // 흐름 리뷰 F-06: the entity name is judged like an attribute — its own request first, then the dictionary, then a request in flight
+        // a linked request makes a row whether or not the table name is already filled in (신청하면서 테이블명이 채워진 엔터티도 승인 · 반려 · 진행이 잡힌다 — B-5 · flowCounts.done)
+        if (L && L.d) push(L.s === 'done' ? { st: 'ok', code: 'T-DONE' } : L.s === 'ended' ? { st: 'comb', code: 'T-ENDED' } : { st: 'req', code: 'T-WAIT' });
+        else if (e.p === '—') push(termIn(pr.term) ? { st: 'okapply', code: 'T-HAVE' } : openTerm(pr.term) ? { st: 'req', code: 'T-WAIT' } : { st: 'comb', code: 'E-NAME' }); }
+      (e.a || []).forEach(a => { if (a.edit) return;
+        if ((a.s === 'ok' || a.s === 'req') && attrRuleProblems(a).some(p => p.lvl === 'block')) { push({ st: 'rule', code: 'P-RULE' }, a); return; }
+        if (a.s === 'ok') { push({ st: 'ok', code: 'OK' }, a); return; } if (a.s === 'ex') { push({ st: 'ex', code: 'X-EX' }, a); return; } if (a.s === 'na') { push({ st: 'na', code: 'X-NA' }, a); return; }
+        if (a.s === 'req') { const L = linkState(a.reqDoc, a.n); push(L.s === 'done' ? { st: 'ok', code: 'T-DONE' } : L.s === 'ended' ? { st: 'comb', code: 'T-ENDED' } : { st: 'req', code: 'T-WAIT' }, a); return; }
+        if (stdNaMatch(a, NR)) { push({ st: 'na', code: 'X-NA-RULE' }, a); return; }   // 비대상 규칙에 맞는 미준수 속성
+        const dc = decompose(a.n), pr = P[`${e.n}.${a.orig || a.n}`] || { term: a.n };
+        if (dc.ok || a.s === 'comb') { push(termIn(pr.term) ? { st: 'okapply', code: 'T-HAVE' } : openTerm(pr.term) ? { st: 'req', code: 'T-WAIT' } : { st: 'comb', code: dc.sus ? 'T-SUS' : 'T-COMB' }, a); return; }
+        const w = (dc.unknown[0] || dc.pending[0] || {}).w || a.n, c = getCands().find(x => x.name === w || (dc.pending[0] && x.name === dc.pending[0].w));
+        push({ st: 'unreg', code: dc.pending[0] ? 'W-PEND' : c ? 'W-CAND' : 'W-UNREG' }, a); }); });
+    return rows; };
+  window.flowCounts = (area, model) => { const m = getAllModels()[area]; if (!m) return null; const lk = modelLock(area);
+    // 흐름 리뷰 F-01: the same visibility judgement as every other screen (areaView → canSeeDoc) — a submitted copy the viewer may not see is never counted
+    let av = null; try { av = areaView(area); } catch (e) {} if (av && av.hidden) return { hidden: true, state: lk.state, ver: m.ver, base: m.base || 0 };
+    const md = model || (av && av.model) || { E: [], R: [] };
+    const rows = stdJudge(md), n = st => rows.filter(r => r.st === st).length, own = (md.E || []).filter(e => !e.ref); let mc = { block: 0, warn: 0 }; try { mc = modelCheck(md); } catch (e) {}
+    const c = { ents: own.length, attrs: own.reduce((k, e) => k + (e.a || []).filter(a => !a.edit).length, 0), apply: n('okapply'), unreg: n('unreg'), comb: n('comb'), req: n('req'), rule: n('rule'), done: rows.filter(r => r.code === 'T-DONE').length, block: mc.block, warn: mc.warn, state: lk.state, ver: m.ver, base: m.base || 0 };
+    c.left = c.unreg + c.comb + c.rule; return c; };
+  const flowKey = () => 'dbm-flow-off-' + ((window.ME && ME.id) || 'kim'), flowOffMap = () => J(flowKey(), {});
+  window.flowBandOff = area => { const o = flowOffMap(); o[area] = 1; S(flowKey(), o); };
+  window.flowBandReset = () => { const n = Object.keys(flowOffMap()).length; store.del(flowKey()); return n; };
+  window.flowBandShown = area => { const m = getAllModels()[area]; return !!m && !m.off && (!m.base || qs.get('flow') === '1') && !flowOffMap()[area]; };   // ?flow=1 — mockup switch: show the band on a confirmed sample area too
+  // 흐름 리뷰2 U-05: after [닫기] the focus goes to the first VISIBLE focusable element after the band in document order — a hidden banner or an empty slot is skipped
+  const flowNextFocus = band => { const sel = 'a[href],button:not([disabled]),input:not([disabled]):not([type=hidden]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])';
+    return [...document.querySelectorAll(sel)].find(el => !band.contains(el) && (band.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_FOLLOWING) && !el.closest('[hidden],[inert],[aria-hidden="true"]') && el.getClientRects().length && getComputedStyle(el).visibility !== 'hidden') || null; };
+  window.flowNextFocus = flowNextFocus;
+  window.flowBand = (area, here, target, opts) => { const done = () => { if (target) { target.innerHTML = ''; target.hidden = true; } return ''; };
+    if (!flowBandShown(area) || (qs.get('snap') && here === 'model')) return done(); const c = (opts && opts.counts) || flowCounts(area, opts && opts.model); if (!c || c.hidden) return done();
+    if (!document.getElementById('flowband-css')) { const st = document.createElement('style'); st.id = 'flowband-css';
+      st.textContent = '.flowband{display:flex;align-items:center;gap:12px;padding:6px 16px;border-bottom:1px solid var(--border);background:var(--surface);font-size:13px;flex-wrap:wrap}.flowband>b{white-space:nowrap}.flowband ol{display:flex;align-items:center;gap:6px;margin:0;padding:0;list-style:none;flex:1;flex-wrap:wrap}.flowband li{display:flex;align-items:center;gap:6px;padding:2px 10px 2px 4px;border-radius:9999px;color:var(--fg-2);white-space:nowrap}.flowband li+li::before{content:"→";color:var(--fg-3);margin-right:6px}.flowband .fb-n{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;box-shadow:inset 0 0 0 1px var(--border-strong);font:600 12px var(--font-mono);color:var(--fg-2)}.flowband li.done .fb-n{background:var(--ds-green-200,var(--surface-2));color:var(--ds-green-900,var(--fg));box-shadow:none}.flowband li.cur{color:var(--fg);font-weight:500;background:var(--ds-gray-100)}.flowband li.cur .fb-n{background:var(--ink);color:var(--on-ink);box-shadow:none}.flowband .fb-c{font-size:12px;color:var(--fg-3);font-weight:400}.flowband .btn.sm{height:24px}.flowband .btn.disabled{pointer-events:auto;cursor:not-allowed}';
+      document.head.appendChild(st); }
+    const A = encodeURIComponent(area), kq = h => (window.keepUrl ? keepUrl(h) : h), std = kq(`standardize.html?area=${A}&f=todo`), wiz = kq(`term-wizard.html?area=${A}&from=${here === 'std' ? 'standardize' : 'model'}`), chk = kq(`model.html?area=${A}&check=1`), imp = kq(`import-excel.html?area=${A}`), rul = kq(`standardize.html?area=${A}&f=rule`);
+    // 흐름 리뷰 F-10 (29 R-17): no editing role → the actions that change something are not there; a modeler who only can't right now sees them dimmed with the reason
+    const noRole = !can('model.edit', { area }), locked = c.state !== 'edit', why = locked ? (c.state === 'review' ? '확정 결재 중이라 지금은 바꿀 수 없습니다' : '확정본입니다 — 다음 작업 버전에서 이어갑니다') : '', cur = !c.ents ? 1 : c.apply ? 2 : c.left ? 3 : 4;
+    // 흐름 리뷰2 U-07: opts.noPrimary — the screen already has its own primary action (SC-34 [반영]), so the band's button is drawn as a secondary one
+    const noPri = !!(opts && opts.noPrimary), noSubmit = noRole || !can('model.submit', { area });
+    const act = (href, label, a, primary) => noRole ? '<span class="fb-c">모델러가 처리할 단계</span>' : why ? `<a class="btn sm disabled" role="link" aria-disabled="true" aria-describedby="fb-why" data-flow-no tabindex="0">${label}</a>` : `<a class="btn sm${primary === false || noPri ? '' : ' primary'}" href="${href}"${a ? ` data-flow-act="${a}"` : ''}>${label}</a>`;
+    const lnk = (href, label, a) => `<a href="${href}"${a ? ` data-flow-act="${a}"` : ''}>${label}</a>`;
+    // the numbers carry the names 표준 맞추기 (SC-34) uses for its chips — 사전에 있음 · 조합 가능 · 미등록 단어 · 기준 위반 · 신청 중 (F-13)
+    const steps = [
+      ['모델 등록', c.ents ? `엔터티 ${c.ents} · 속성 ${c.attrs}` : '아직 엔터티가 없습니다', cur === 1 ? (here === 'model' ? (noRole ? '<span class="fb-c">모델러가 처리할 단계</span>' : '<span class="fb-c">캔버스 가운데 [모델 엑셀로 시작]에서 시작합니다</span>') : act(imp, '모델 엑셀로 시작', '', false)) : ''],
+      ['표준 입히기', c.apply ? `사전에 있음 ${c.apply}` : '사전에 있음 0', cur === 2 ? (here === 'std' && !noRole && !why ? '<span class="fb-c">아래 목록에서 [사전에 있음]을 골라 [선택 적용]</span>' : act(std, '표준 맞추기', 'std')) : ''],
+      ['남은 용어', [c.comb ? `조합 가능 ${c.comb}` : '', c.unreg + c.rule ? `미등록 단어 · 기준 위반 ${c.unreg + c.rule}` : '', c.req ? `신청 중 ${c.req}` : ''].filter(Boolean).join(' · ') || '남은 용어 없음',
+        (c.done && !noRole && !why ? `<span class="fb-c">승인 ${c.done}건 반영 가능 — ${lnk(std, '표준 맞추기에서 반영', 'std')}</span>` : c.done ? `<span class="fb-c">승인 ${c.done}건 반영 가능</span>` : '') + (cur === 3 ? (c.rule && c.rule === c.left ? act(rul, '검수 기준 위반 보기', 'rule') : here === 'wiz' && !noRole && !why ? '<span class="fb-c">아래에서 용어를 만들어 신청합니다</span>' : act(wiz, '용어 자동분석', 'wiz')) : '')],   // 흐름 리뷰3 F-05: only 검수 기준 위반 left → 이름을 고치거나 예외로, at SC-34's 기준 위반 filter — not the wizard
+      ['검증 · 신청', locked ? (c.state === 'review' ? '확정 결재 중' : '확정됨') : c.block ? `모델 검증 막음 ${c.block}` : `막음 0${c.warn ? ` · 경고 ${c.warn}` : ''}`, cur === 4 ? (noRole ? `<span class="fb-c">${lnk(chk, '모델 검증 보기', 'check')}</span>` : locked ? `<span class="fb-c">${lnk(chk, '모델 검증 보기', 'check')}</span>${noSubmit ? '' : act(chk, '확정 신청', 'check')}` : act(chk, c.block || noSubmit ? '모델 검증' : '모델 검증 · 확정 신청', 'check')) : '']];   // 흐름 리뷰2 F-10: a locked modeler sees [확정 신청] dimmed with its reason tied to it (aria-describedby fb-why), beside the 검증 보기 link
+    const html = `<div class="flowband" role="group" aria-label="처음 표준화 진행 — 지금 ${cur}단계 ${steps[cur - 1][0]}"><b>처음 표준화</b><ol>${steps.map(([n, t, b], i) => { const k = i + 1, cls = k < cur ? 'done' : k === cur ? 'cur' : 'todo';
+      return `<li class="${cls}"${k === cur ? ' aria-current="step"' : ''}><span class="fb-n" aria-hidden="true">${k < cur ? '✓' : k}</span><span>${n}${k < cur ? '<span class="sr-only"> 끝남</span>' : ''}</span><span class="fb-c">${t}</span>${b}</li>`; }).join('')}</ol>${why && !noRole ? `<span class="fb-c" id="fb-why">${why}</span>` : ''}<button type="button" class="btn sm ghost" data-flow-x title="이 영역에서는 다시 보이지 않습니다 — 마이페이지 › 환경에서 다시 켤 수 있습니다">닫기</button></div>`;
+    if (target) { target.hidden = false; target.innerHTML = html; const x = target.querySelector('[data-flow-x]');
+      target.querySelectorAll('[data-flow-no]').forEach(b => { b.onclick = ev => { ev.preventDefault(); if (window.toast) toast(why, 'info'); }; });
+      if (x) x.onclick = () => { flowBandOff(area); done(); if (window.toast) toast('‘처음 표준화’ 진행 띠를 닫았습니다 — 이 영역에서는 다시 보이지 않습니다. 마이페이지 › 환경에서 다시 켤 수 있습니다', 'info');
+        if (opts && opts.onClose) opts.onClose(); else { const f = flowNextFocus(target); if (f) f.focus(); } }; }   // U-05: focus goes on to what follows the band
+    return html; };
   window.MODEL_INPUT_RULES0 = { defEmpty: 'block', defShort: 'warn', minLen: 5 };
   const mirNorm = (o, d) => { o = o && typeof o === 'object' ? o : {}; const n = parseInt(o.minLen, 10);
     return { defEmpty: ['block', 'warn'].includes(o.defEmpty) ? o.defEmpty : d.defEmpty, defShort: ['warn', 'block', 'off'].includes(o.defShort) ? o.defShort : d.defShort, minLen: Number.isFinite(n) && n > 0 ? n : d.minLen }; };
@@ -1533,7 +1604,7 @@
   window.MODEL_CHECK_GROUPS = { std: '표준', name: '이름 · 설명', struct: '구조' };
   window.MODEL_CHECK_CODES = { entPhys: '테이블명 미정', entRule: '엔터티 이름 규칙', attrStd: '표준이 아닌 속성', attrRule: '속성 이름 규칙', xtype: '표준 외 타입',
     entDef: '엔터티 정의 없음', entDefShort: '엔터티 정의 부족', attrDef: '속성 설명 없음', attrDefShort: '속성 설명 부족', nameDup: '명칭 중복 · 같은 이름 다른 엔터티',
-    dupEnt: '엔터티명 중복', dupTable: '테이블 물리명 중복', dupCol: '컬럼 물리명 중복', noPk: '식별자 없음', pkNn: 'PK 필수 꺼짐', fkMiss: '관계의 FK 누락', mn: 'M:N 미해소', fkCand: '관계 없는 FK 후보 컬럼', phys: '물리 정보 · 미매핑 · 타입 미정', noRel: '관계 없는 엔터티' };
+    dupEnt: '엔터티명 중복', dupTable: '테이블 물리명 중복', dupCol: '컬럼 물리명 중복', noPk: '식별자 없음', pkNn: 'PK 필수 꺼짐', fkMiss: '관계의 FK 누락', mn: 'M:N 미해소', fkType: 'FK 타입이 부모 키와 다름', xDiff: '엑셀 논리명 · 설명 불일치', fkCand: '관계 없는 FK 후보 컬럼', phys: '물리 정보 · 미매핑 · 타입 미정', noRel: '관계 없는 엔터티' };
   window.modelCheck = (model, policy) => {
     // policy: nothing (today's rules) · { defEmpty, defShort, minLen } · or a whole policy object (its modelInput + its naming rules — the approval re-check passes getPolicy() / policyAt(ver))
     const whole = policy && policy.fields ? policy : null, ir = mirNorm(whole ? whole.modelInput : policy, getModelInputRules()), pol = whole || (policy && policy.pol) || getPolicy(), RB = ps => ps.find(p => p.lvl === 'block');
@@ -1550,21 +1621,27 @@
       if (ed === 'empty') add('name', 'entDef', ir.defEmpty, e, null, '정의가 비어 있음');
       else if (ed && ir.defShort !== 'off') add('name', 'entDefShort', ir.defShort, e, null, ed === 'same' ? '정의가 이름과 같음' : `정의가 ${ir.minLen}자 미만`);
       if (!(e.a || []).some(a => a.pk && !a.edit)) add('struct', 'noPk', 'block', e, null, 'PK 지정 필요');
+      if (e.xDiff && ((e.xDiff.n || []).length || (e.xDiff.d || []).length)) add('name', 'xDiff', 'warn', e, null, [(e.xDiff.n || []).length ? `엔터티명 ${e.xDiff.n.join(' / ')}` : '', (e.xDiff.d || []).length ? `설명 ${e.xDiff.d.length}가지` : ''].filter(Boolean).join(' · ') + ' — 엑셀 행마다 달랐음');
       if (!linked.has(e.id)) add('struct', 'noRel', 'warn', e, null, '다른 엔터티와 관계 없음');
       (e.a || []).forEach(a => { if (a.edit) return;
-        if (a.s === 'comb' || a.s === 'unreg') add('std', 'attrStd', 'block', e, a, a.s === 'comb' ? '조합 가능 — 용어 신청' : a.cand ? `단어 ‘${a.candWord || (/수령자/.test(a.n) ? '수령자' : a.n)}’ 승인 대기` : '미등록 단어');
+        // 흐름 리뷰2 U-04 · R-05: the same 비대상 rule stdJudge uses (stdNaMatch — *_TMP · FILLER* · REG_DT …) — a matching 미준수 attribute is 비대상 here too, so ③ of the band, 표준 맞추기 and this check agree
+        const naR = (a.s === 'comb' || a.s === 'unreg') && window.stdNaMatch ? stdNaMatch(a) : null;
+        if ((a.s === 'comb' || a.s === 'unreg') && !naR) add('std', 'attrStd', 'block', e, a, a.s === 'comb' ? '조합 가능 — 용어 신청' : a.cand ? `단어 ‘${a.candWord || (/수령자/.test(a.n) ? '수령자' : a.n)}’ 승인 대기` : '미등록 단어');
         else if (a.s === 'ok' || a.s === 'req') { const rp = RB(attrRuleProblems(a, pol)); if (rp) add('std', 'attrRule', 'block', e, a, rp.msg); }
         if (a.xt) add('std', 'xtype', 'warn', e, a, `${a.xt} · ${typeStr(a)} — 위반 아님 · 검수 보고서에서 따로 셈`);
         const ad = defOf(a, a.n);
         if (ad === 'empty') add('name', 'attrDef', ir.defEmpty, e, a, '설명이 비어 있음');
         else if (ad && ir.defShort !== 'off') add('name', 'attrDefShort', ir.defShort, e, a, ad === 'same' ? '설명이 이름과 같음' : `설명이 ${ir.minLen}자 미만`);
         if (!a.fk && nameCnt.get(a.n) > 1) add('name', 'nameDup', 'warn', e, a, 'FK가 아닌데 이름이 같음');
-        if (a.s !== 'na') { const um = a.p === '—', tn = typeParts(a).t === '—' || !typeParts(a).t; if (um || tn) add('struct', 'phys', 'warn', e, a, [um ? '미매핑(물리명 없음)' : '', tn ? '타입 미정' : ''].filter(Boolean).join(' · ')); }
+        if (a.s !== 'na' && !naR) { const um = a.p === '—', tn = typeParts(a).t === '—' || !typeParts(a).t; if (um || tn) add('struct', 'phys', 'warn', e, a, [um ? '미매핑(물리명 없음)' : '', tn ? '타입 미정' : ''].filter(Boolean).join(' · ')); }
         if (a.pk && !a.nn) add('struct', 'pkNn', 'block', e, a, 'PK인데 필수(NOT NULL)가 꺼져 있음');   // R2-08
+        if (a.xDiff && ((a.xDiff.n || []).length || (a.xDiff.d || []).length)) add('name', 'xDiff', 'warn', e, a, [(a.xDiff.n || []).length ? `논리명 ${a.xDiff.n.join(' / ')}` : '', (a.xDiff.d || []).length ? `설명 ${a.xDiff.d.length}가지` : ''].filter(Boolean).join(' · ') + ' — 엑셀 행마다 달랐음');
         if (a.fkCand && !a.fk) add('struct', 'fkCand', 'warn', e, a, `참조 ${a.fkCand.table || '?'}.${a.fkCand.col || '?'} — 관계가 없어 FK가 아님`); }); });
     // R2-08: a relation that exists but has no working FK (fkOf, the same judgement as the relation panel · DDL) blocks — 테이블명 없음 · 부모 식별자 없음은 위 항목(테이블명 미정 · 식별자 없음)이 이미 센다
     R.forEach((r, i) => { if (r.k === 'mn') return; const p = E.find(x => x.id === r.f), c = E.find(x => x.id === r.t); if (!p || !c || c.ref) return; const f = fkOf(r, E);
       if (f.st === 'miss' && p.p !== '—' && c.p !== '—' && p.a.some(a => a.pk && !a.edit)) add('struct', 'fkMiss', 'block', c, null, `${p.n} → ${c.n}${r.name ? ` (${r.name})` : ''} — ${f.why}`, { rel: i }); });
+    R.forEach((r, i) => { if (r.k === 'mn') return; const p = E.find(x => x.id === r.f), c = E.find(x => x.id === r.t); if (!p || !c || c.ref) return; const f = fkOf(r, E); if (f.st !== 'ok') return;   // A-5 ② · 흐름 리뷰 F-03: the very pairs fkOf makes (the relation panel · DDL), nothing guessed by name
+      f.ca.forEach((x, j) => { const k = f.pa[j], tk = k && typeStr(k); if (x && tk && tk !== '—' && typeStr(x) !== tk) add('struct', 'fkType', 'warn', c, x, `${typeStr(x) || '타입 없음'} — 부모 키 ${p.n}.${k.n}은(는) ${tk}`, { rel: i, pk: k.p, pki: p.a.indexOf(k) }); }); });   // 흐름 리뷰2 F-03: the column objects fkOf paired (ca · pa), not a second look-up by physical name
     R.forEach((r, i) => { if (r.k !== 'mn') return; const p = E.find(x => x.id === r.f), c = E.find(x => x.id === r.t); if (p && c) add('struct', 'mn', 'warn', p, null, `${p.n} ↔ ${c.n} — 교차 엔터티 필요`, { rel: i }); });
     modelInvariants({ E }).forEach(v => items.push({ grp: 'struct', code: v.code, lvl: 'block', e: v.e, en: v.en, a: v.a, ai: v.ai, msg: v.msg }));   // 설계 §13.1 불변식 — 게이트 B(DDL)도 같은 함수
     const block = items.filter(x => x.lvl === 'block').length;
@@ -1581,7 +1658,7 @@
     if (d && Array.isArray(d.E)) d.E.forEach(e => { if (!Array.isArray(e.a)) return; e.a = e.a.filter(a => !(a && a.edit && !String(a.n || '').trim())); e.a.forEach(a => { if (a && a.edit) delete a.edit; }); if (e.renaming) delete e.renaming; }); return typeNorm(d); };
   // review mode (&audit=1&as=…) keeps its role on script moves too: navKeep(url) for pages, keepUrl(url) for building links
   function keepUrl(h) { const q0 = new URLSearchParams(location.search); if (!q0.has('audit') || !q0.get('as') || !/^[a-z-]+\.html/.test(h) || /[?&]as=/.test(h)) return h;
-    const [p, hash] = h.split('#'); return p + (p.includes('?') ? '&' : '?') + 'audit=1&as=' + q0.get('as') + (hash ? '#' + hash : ''); }
+    const [p, hash] = h.split('#'); return p + (p.includes('?') ? '&' : '?') + 'audit=1&as=' + encodeURIComponent(q0.get('as')) + (hash ? '#' + hash : ''); }
   window.keepUrl = keepUrl; window.navKeep = h => { location.href = keepUrl(h); };
   /* M-7 follow-up (2026-11-25): a seeded area's confirmed base version has no stored copy. It used to be read as the working seed — whose unmapped items
      (테이블명 없는 엔터티 · 물리명/타입 없는 속성) could never have been confirmed and blocked the official DDL. The base version is now read as the seed
@@ -1753,19 +1830,19 @@
   const PAGE_GUIDE = {
     'dictionary.html': { n: '통합 검색', d: '표준 단어 · 용어 · 도메인 · 코드를 찾아보고, 고칠 항목을 바구니에 모아 신청합니다.',
       s: ['이름 · 영문약어 · 동의어 · 금칙어 · 초성으로 찾습니다', '행을 열어 정의 · 사용처 · 변경 이력을 봅니다', '[바구니에 담기] 후 [바구니 · 신청]에서 한 번에 신청합니다'],
-      when: '새 항목을 만들기 전, 이미 표준에 있는지 확인할 때', l: [['dict-grid.html', '몇 건 새로 → 직접 등록'], ['excel-import.html', '많은 건 → 엑셀 가져오기']],
+      when: '새 항목을 만들기 전, 이미 표준에 있는지 확인할 때', l: [['dict-grid.html', '몇 건 새로 → 직접 등록'], ['excel-import.html', '많은 건 → 사전 엑셀 일괄']],
       v: [{ if: () => !can('dict.request'), s: ['이름 · 영문약어 · 동의어 · 금칙어 · 초성으로 찾습니다', '행을 열어 정의 · 사용처 · 변경 이력을 봅니다', '필요하면 엑셀로 내려받습니다'], who: '찾기 · 내려받기만 가능 — 신청은 모델러 · DA', l: [] }] },
-    'excel-import.html': { n: '엑셀 가져오기', d: '종류 하나를 골라 엑셀 파일로 여러 건을 한꺼번에 추가 · 변경 신청합니다.',
+    'excel-import.html': { n: '사전 엑셀 일괄', d: '종류 하나를 골라 엑셀 파일로 여러 건을 한꺼번에 추가 · 변경 신청합니다.',
       s: ['(1~2단계) 방식 · 종류를 고르고 파일을 올립니다', '(3~5단계) 자동 검사 결과에서 오류 행을 고칩니다', '(6단계) 정상 행을 [신청]하거나 [바구니로 보내기]로 묶습니다'],
       when: '수십 ~ 수천 건을 한 번에 올리거나 고칠 때', note: '올린 파일은 30일 보관', l: [['uploads.html', '지난 업로드 → 업로드 이력'], ['dict-grid.html', '몇 건뿐 → 직접 등록']],
       v: [{ if: () => !can('dict.request'), d: '엑셀 파일을 올려 사전 등록 전 자동 검사 결과를 봅니다.', s: ['(1~2단계) 방식 · 종류를 고르고 파일을 올립니다', '(3~5단계) 자동 검사 결과와 오류를 봅니다', '고치기 · 신청은 모델러 · DA에게 요청합니다'], who: '검사 결과 보기까지만 — 고치기 · 신청은 모델러 · DA', ro: 1, l: [['uploads.html', '지난 업로드 → 업로드 이력']] }] },
     'uploads.html': { n: '업로드 이력', d: '내가 올린 엑셀 묶음의 검사 · 신청 · 반영 상태를 보고, 멈춘 작업을 이어 갑니다.',
       s: ['상태(임시 저장 · 신청됨 · 반영됨 …)로 묶음을 거릅니다', '임시 저장 묶음은 [이어서 작업]으로 멈춘 단계부터 합니다', '반영된 묶음은 [반영본 다시 올려 확인]으로 사전과 맞춰 봅니다'],
-      when: '올린 파일이 어디까지 갔는지 확인할 때', note: '파일은 30일 보관 · 원본은 올린 사람과 DA만 열람', l: [['excel-import.html', '새 파일 → 엑셀 가져오기']],
+      when: '올린 파일이 어디까지 갔는지 확인할 때', note: '파일은 30일 보관 · 원본은 올린 사람과 DA만 열람', l: [['excel-import.html', '새 파일 → 사전 엑셀 일괄']],
       v: [{ if: () => can('excel.viewall'), d: '기관에서 올린 엑셀 묶음의 검사 · 신청 · 반영 상태를 보고, 멈춘 작업을 이어 갑니다.', who: 'DA는 모든 사람의 묶음을 봅니다 — 다른 사람 묶음은 열람만' }] },
     'dict-grid.html': { n: '직접 등록', d: '표에 몇 건을 바로 써서 등록을 신청합니다. [기존 항목 고치기]로 변경도 신청합니다.',
       s: ['종류 탭을 1 도메인분류부터 번호 순서로 고릅니다', '한 줄에 한 건씩 씁니다(엑셀 표를 붙여 넣어도 됩니다)', '[정상 행 바구니에 담기] 후 바구니에서 한 번에 신청합니다'],
-      when: '몇 건 ~ 수십 건을 바로 등록하거나 고칠 때', note: '쓰던 내용은 이 브라우저에 자동 저장 · 단축키는 표 위 [⌨ 단축키]', l: [['excel-import.html', '많은 건 → 엑셀 가져오기'], ['dictionary.html', '있는지 먼저 → 통합 검색']],
+      when: '몇 건 ~ 수십 건을 바로 등록하거나 고칠 때', note: '쓰던 내용은 이 브라우저에 자동 저장 · 단축키는 표 위 [⌨ 단축키]', l: [['excel-import.html', '많은 건 → 사전 엑셀 일괄'], ['dictionary.html', '있는지 먼저 → 통합 검색']],
       v: [{ if: () => !can('dict.request'), d: '표에 써서 사전 등록을 신청하는 화면입니다.', s: ['종류 탭을 골라 작성 양식을 봅니다', '어떤 칸을 써야 하는지 확인합니다', '등록이 필요하면 모델러 · DA에게 요청합니다'], who: '보기만 가능 — 신청은 모델러 · DA(사전 신청 권한 필요)', ro: 1, note: '', l: [['dictionary.html', '있는지 먼저 → 통합 검색']] }] },
     'candidates.html': { n: '후보 큐', d: '모델에서 사전에 없는 단어 · 용어를 쓰면 \'후보\'로 올라옵니다. DA가 검토해 사전에 넣을지 정합니다.',
       s: ['대기 후보를 열어 발생 위치(어느 모델의 어느 속성)와 비슷한 표준어 경고를 봅니다', '아래 세 가지 처리 중 하나를 고릅니다', '처리 결과는 요청자에게 앱 알림으로 가고, 상태 칩이 바뀝니다'],
@@ -1784,8 +1861,8 @@
     'rules.html': { n: '검수 기준', d: '사전 항목 · 모델 이름의 길이 · 허용 문자 · 특수문자 · 위반 시 처리와 명명 규칙(단어 구분자 · 엔터티 분류어 등)입니다. 신청 · 엑셀 검사 · 표준 맞추기 · 준수율 · DDL이 이 기준으로 판정합니다.',
       s: ['규칙의 [수정]을 눌러 허용 문자 · 특수문자 · 최대 길이 · 위반 시 처리를 정하고 [값 검사]로 결과를 확인합니다', '[저장]하면 영향(신규 차단 · 재검사 대상)을 확인한 뒤 검수 기준 버전이 올라갑니다', '모델러는 규칙의 [제안]으로 DA에게 변경을 요청합니다'],
       when: '신청이 차단된 이유를 확인하거나 기관 표준을 정할 때', who: 'DA · Admin 수정 · 모두 조회 · 모델러 제안', note: '설정에 있던 검수 기준을 표준 사전으로 옮겼습니다 — 설정은 Admin 화면' },
-    'import-excel.html': { n: '엑셀 정의서 가져오기', d: 'SWS 테이블 설계 양식(.xlsx)을 읽어 업무 영역의 엔터티 · 속성 · 관계를 만듭니다. 사전 엑셀 가져오기(표준 사전 신청)와는 다른 화면입니다.',
-      s: ['[양식 내려받기]로 양식을 받아 채우고 파일을 올립니다', '가져올 위치(새 업무 영역 · 기존 영역 병합 · 덮어쓰기)를 고릅니다', '검사 · 미리보기에서 오류를 고치고 [가져오기] — 직후에는 [가져오기 취소]로 되돌릴 수 있습니다'],
+    'import-excel.html': { n: '모델 엑셀 가져오기(정의서)', d: 'SWS 테이블 설계 양식(.xlsx)을 읽어 업무 영역의 엔터티 · 속성 · 관계를 만듭니다. 사전 엑셀 일괄(표준 사전 신청)과는 다른 화면입니다.',
+      s: ['[양식 내려받기]로 양식을 받아 채우고 파일을 올립니다', '가져올 위치(새 업무 영역 · 기존 영역에는 추가만)를 고릅니다', '검사 · 미리보기에서 오류를 고치고 [가져오기] — 직후에는 [가져오기 취소]로 되돌릴 수 있습니다'],
       when: '기존 테이블 설계서로 ERD를 시작할 때', who: '모델러(담당 시스템)', note: '원본 이름 · 타입은 고치지 않고 가져옵니다 — 표준 판정은 가져온 뒤 표준 맞추기에서', l: [['import.html', 'DDL로 가져오기 → DDL 가져오기']] },
     'datatypes.html': { n: '데이터 타입 · 축약명', d: '도메인 이름에 들어가는 논리 타입과 축약명, 시스템마다 다른 물리 타입 규칙을 한곳에서 관리합니다.',
       s: ['[논리 타입 · 축약명] 탭에서 표준(1자) · 추가(2~3자) · DBMS 전용 타입과 사용처를 봅니다', '필요한 타입이 없으면 [타입 등록]으로 바로 추가합니다 — 결재 없이 사유와 감사 로그가 남습니다', '[시스템별 매핑] 탭에서 시스템을 고르고 길이 범위별 물리 타입을 정해 저장합니다'],
@@ -1888,12 +1965,12 @@
     box.addEventListener('keydown', e => { if (e.key === 'Escape') { set(false, true); btn.focus(); } });
     document.addEventListener('keydown', e => { if (e.key !== '?' || e.ctrlKey || e.metaKey || e.altKey || (e.target.closest && e.target.closest('input,textarea,select,[contenteditable="true"]'))) return; e.preventDefault(); set(box.hidden, true); if (!box.hidden) box.querySelector('.pg-x').focus(); });
   }
-  const DICT_TABS = [['dictionary.html', '통합 검색'], ['excel-import.html', '엑셀 가져오기', ['uploads.html']], 0, ['dict-grid.html', '직접 등록'], 0, ['candidates.html', '후보 큐'], ['dict-history.html', '변경 내역'], 0, ['domain-groups.html', '도메인 그룹 · 분류'], ['datatypes.html', '데이터 타입 · 축약명'], ['std-common.html', '공통표준 · 행정표준코드'], ['rules.html', '검수 기준']];
+  const DICT_TABS = [['dictionary.html', '통합 검색'], ['excel-import.html', '사전 엑셀 일괄', ['uploads.html']], 0, ['dict-grid.html', '직접 등록'], 0, ['candidates.html', '후보 큐'], ['dict-history.html', '변경 내역'], 0, ['domain-groups.html', '도메인 그룹 · 분류'], ['datatypes.html', '데이터 타입 · 축약명'], ['std-common.html', '공통표준 · 행정표준코드'], ['rules.html', '검수 기준']];
   const SCREENS = [
     { file: 'home.html', ids: 'SC-55', name: '홈', menu: '홈', docs: [['02 §1 화면 목록', D.flows], ['06 §3 새 화면 명세', D.plan]], states: [['김모델(모델러 · DA)', 'home.html?as=kim'], ['박설계(모델러)', 'home.html?as=park'], ['이현업(기관 담당자)', 'home.html?as=hyun']] },
     { file: 'dictionary.html', ids: 'SC-10 · PN-11 · PN-12', name: '표준 사전 통합 검색 · 상세 · 등록 신청', menu: '표준 사전', docs: [['02 §3.1~3.2', D.flows], ['30 MD-01~12 사전 규칙', D.meta], ['07 E6 검색', D.excel], ['23 §6-1 검색 숫자', D.perf]], states: [['기본(최근 변경)', 'dictionary.html'], ['도메인 신청', 'dictionary.html?req=domain'], ['편집용 내려받기', 'dictionary.html#download'], ['검색: 산출', 'dictionary.html?q=산출']] },
     { file: 'dict-history.html', ids: 'SC-16', name: '표준 사전 변경 내역 · 공표', menu: '표준 사전', docs: [['07 E5 버전·이력', D.excel], ['30 MD-23', D.meta]], states: [['전체', 'dict-history.html'], ['미공표만', 'dict-history.html?unpub=1']] },
-    { file: 'excel-import.html', ids: 'SC-13', name: '엑셀 가져오기(왕복 편집)', menu: '표준 사전', docs: [['02 §3.3', D.flows], ['07 E1~E4 왕복 편집', D.excel], ['30 MD-08·09', D.meta], ['23 §6-4 행 상한', D.perf]], states: [['1단계부터(실제 작업)', 'excel-import.html'], ['5단계 예시(저장 안 함)', 'excel-import.html?step=5'], ['신청된 묶음 열람', 'excel-import.html?resume=UP-2026-0007'], ['반영본 확인', 'excel-import.html?verify=UP-2026-0007']] },
+    { file: 'excel-import.html', ids: 'SC-13', name: '사전 엑셀 일괄(왕복 편집)', menu: '표준 사전', docs: [['02 §3.3', D.flows], ['07 E1~E4 왕복 편집', D.excel], ['30 MD-08·09', D.meta], ['23 §6-4 행 상한', D.perf]], states: [['1단계부터(실제 작업)', 'excel-import.html'], ['5단계 예시(저장 안 함)', 'excel-import.html?step=5'], ['신청된 묶음 열람', 'excel-import.html?resume=UP-2026-0007'], ['반영본 확인', 'excel-import.html?verify=UP-2026-0007']] },
     { file: 'dict-grid.html', ids: 'SC-11', name: '직접 등록', menu: '표준 사전', docs: [['30 MD-13~19', D.meta]], states: [['단어 탭', 'dict-grid.html'], ['바구니 고치기', 'dict-grid.html?mode=basket']] },
     { file: 'domain-groups.html', ids: 'SC-17', name: '도메인 그룹 · 분류', menu: '표준 사전', docs: [['30 MD-02·03', D.meta]], states: [['DA(이데이터)', 'domain-groups.html?as=lee'], ['모델러(조회)', 'domain-groups.html?as=park']] },
     { file: 'rules.html', ids: 'SC-43', name: '검수 기준', menu: '표준 사전', docs: [['29 RBAC 2차 검토', '../29-rbac-r2.md'], ['15 역할 · 권한', '../15-rbac.md']], states: [['DA(이데이터) — 고침', 'rules.html?as=lee'], ['모델러(박설계) — 읽기', 'rules.html?as=park']] },
@@ -1906,7 +1983,7 @@
     { file: 'model.html', ids: 'SC-31 · PN-32 · PN-33 · PN-31G · PN-39 · PN-35 · PN-38', name: '모델(ERD 캔버스 · 사전 패널 · 엔터티 패널 · 표 보기 · 모델 검토 · 게이트 A · 확정 신청)', menu: '시스템', docs: [['03 ERD 편집기', D.erd], ['02 §5.1~5.4·5.7', D.flows], ['22 §6 SWS 비교 결정', D.sws], ['23 §6-2·5·6 캔버스 숫자', D.perf]], states: [['요구사항·프로젝트(편집)', 'model.html'], ['리스크(검토 중)', 'model.html?area=risk'], ['v4 확정본 사본', 'model.html?area=rq&snap=REQ-2026-0003'], ['예시: 미준수 해결 후(조회 전용)', 'model.html?state=resolved']] },
     { file: 'standardize.html', ids: 'SC-34', name: '표준 맞추기', menu: '시스템', docs: [['02 §5.3', D.flows], ['30 MD-42·50~55', D.meta]], states: [['요구사항·프로젝트', 'standardize.html'], ['예외만', 'standardize.html?f=ex'], ['DDL 가져오기 직후', 'standardize.html?from=import'], ['리스크(대상 없음)', 'standardize.html?area=risk']] },
     { file: 'term-wizard.html', ids: 'SC-35', name: '용어 자동분석(모델 → 용어 → 모델)', menu: '시스템', docs: [['30 MD-56', D.meta]], states: [['요구사항·프로젝트', 'term-wizard.html?area=rq'], ['인사관리', 'term-wizard.html?area=e_hr']] },
-    { file: 'import-excel.html', ids: 'SC-36a', name: '엑셀 정의서 가져오기(테이블 설계 → 모델)', menu: '시스템', docs: [['26 엑셀로 ERD 시작하기', '../26-erd-excel-import.md']], states: [['기본', 'import-excel.html'], ['오류 예시', 'import-excel.html']] },
+    { file: 'import-excel.html', ids: 'SC-36a', name: '모델 엑셀 가져오기(정의서 · 테이블 설계 → 모델)', menu: '시스템', docs: [['26 엑셀로 ERD 시작하기', '../26-erd-excel-import.md']], states: [['기본', 'import-excel.html'], ['오류 예시', 'import-excel.html']] },
     { file: 'import.html', ids: 'SC-36', name: '가져오기(DDL → 모델)', menu: '시스템', docs: [['02 §5.6', D.flows]], states: [['기본', 'import.html']] },
     { file: 'ddl.html', ids: 'SC-37 · PN-37', name: 'DDL 출력 · 게이트 B · DBMS 비교', menu: '시스템', docs: [['02 §5.5', D.flows]], states: [['기본', 'ddl.html']] },
     { file: 'outputs.html', ids: 'SC-38', name: '산출물', menu: '시스템', docs: [['05 §8 DA# 비교', D.da]], states: [['테이블 정의서', 'outputs.html?k=tbl']] },
@@ -1979,7 +2056,7 @@
       document.body.appendChild(ov);
       const q = ov.querySelector('#gs-q'), list = ov.querySelector('#gs-list'); let sel = 0, items = [];
       const close = () => { ov.classList.remove('open'); const b = document.getElementById('gsearch'); if (b) b.focus(); };
-      const esc = s => String(s).replace(/</g, '&lt;');
+      const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);   // 흐름 리뷰4: every value shown in the search list is text (사전 이름 · 영역명 · 물리명)
       const draw = () => {
         const v = q.value.trim(); items = [];
         if (v) {
@@ -1987,11 +2064,11 @@
           const KN = { word: '단어', term: '용어', domain: '도메인', code: '코드' };
           // 16,000+ items with the common standard: exact name first, then names starting with the query, then the rest
           const U = v.toUpperCase(), rank = x => x.name === v || (x.abbr || '').toUpperCase() === U ? 0 : x.name.startsWith(v) || (x.abbr || '').toUpperCase().startsWith(U) ? 1 : 2;
-          getDict().filter(x => (m(x.name) || m(x.abbr)) && x.st !== '삭제 보관').sort((a, b) => rank(a) - rank(b) || a.name.length - b.name.length).slice(0, 6).forEach(x => items.push({ g: '표준 사전', t: `${x.name} <span class="mono caption">${x.abbr || ''}</span>`, s: `${KN[x.k] || x.k} · ${x.id}${x.st === '미사용' ? ' · 미사용' : ''}`, href: `dictionary.html?q=${encodeURIComponent(x.name)}&sel=${x.id}` }));
-          getDocs().filter(d => canSeeDoc(d) && (m(d.id) || m(d.title))).slice(0, 5).forEach(d => items.push({ g: '결재 문서', t: `<span class="mono">${d.id}</span> ${esc(d.title)}`, s: STEP_NAME[d.step] || d.step, href: `approvals.html?doc=${d.id}` }));
-          Object.entries(getModels()).forEach(([id, md]) => { const mo = modelOf(id, md.ver); (mo.E || []).filter(e => !e.ref).forEach(e => { if (m(e.n) || m(e.p)) items.push({ g: '모델', t: esc(e.n) + ` <span class="mono caption">${e.p || ''}</span>`, s: md.name + ' · 엔터티', href: `model.html?area=${id}&focus=${e.id}` }); (e.a || []).forEach(a => { if (m(a.n) || m(a.p)) items.push({ g: '모델', t: `${esc(e.n)}.${esc(a.n)}`, s: md.name + ' · 속성', href: `model.html?area=${id}&focus=${e.id}` }); }); }); });
+          getDict().filter(x => (m(x.name) || m(x.abbr)) && x.st !== '삭제 보관').sort((a, b) => rank(a) - rank(b) || a.name.length - b.name.length).slice(0, 6).forEach(x => items.push({ g: '표준 사전', t: `${esc(x.name)} <span class="mono caption">${esc(x.abbr || '')}</span>`, s: `${esc(KN[x.k] || x.k)} · ${esc(x.id)}${x.st === '미사용' ? ' · 미사용' : ''}`, href: `dictionary.html?q=${encodeURIComponent(x.name)}&sel=${x.id}` }));
+          getDocs().filter(d => canSeeDoc(d) && (m(d.id) || m(d.title))).slice(0, 5).forEach(d => items.push({ g: '결재 문서', t: `<span class="mono">${esc(d.id)}</span> ${esc(d.title)}`, s: esc(STEP_NAME[d.step] || d.step), href: `approvals.html?doc=${d.id}` }));
+          Object.entries(getModels()).forEach(([id, md]) => { const mo = modelOf(id, md.ver); (mo.E || []).filter(e => !e.ref).forEach(e => { if (m(e.n) || m(e.p)) items.push({ g: '모델', t: esc(e.n) + ` <span class="mono caption">${esc(e.p || '')}</span>`, s: esc(md.name) + ' · 엔터티', href: `model.html?area=${id}&focus=${e.id}` }); (e.a || []).forEach(a => { if (m(a.n) || m(a.p)) items.push({ g: '모델', t: `${esc(e.n)}.${esc(a.n)}`, s: esc(md.name) + ' · 속성', href: `model.html?area=${id}&focus=${e.id}` }); }); }); });
           items = items.filter((x, i) => x.g !== '모델' || items.filter(y => y.g === '모델').indexOf(x) < 8);
-          SCREENS.filter(s => m(s.name) || m(s.ids)).slice(0, 4).forEach(s => items.push({ g: '화면', t: esc(s.name), s: s.ids, href: s.file }));
+          SCREENS.filter(s => m(s.name) || m(s.ids)).slice(0, 4).forEach(s => items.push({ g: '화면', t: esc(s.name), s: esc(s.ids), href: s.file }));
         }
         sel = Math.min(sel, Math.max(items.length - 1, 0));
         let g0 = ''; list.innerHTML = !v ? '<div class="caption muted gs-empty">검색어를 입력하세요. 최근 연 화면·문서는 여기에 보입니다(실제 제품).</div>' : items.length ? items.map((x, i) => { const h = x.g !== g0 ? `<div class="gs-g">${x.g}</div>` : ''; g0 = x.g; return h + `<a class="gs-it${i === sel ? ' on' : ''}" role="option" aria-selected="${i === sel}" href="${x.href}" data-i="${i}"><span>${x.t}</span><span class="caption muted">${x.s}</span></a>`; }).join('') : `<div class="caption muted gs-empty">‘${esc(v)}’ 결과가 없습니다. 사전에 없는 단어면 모델에서 <b>후보 등록</b>을 하세요.</div>`;
@@ -2181,8 +2258,8 @@
           <!-- tree head: fixed while only the tree scrolls; folds to one line (system name + find button), remembered per user -->
           <div class="thead" id="tr-head">
           <div class="tsys">
-            <a class="tsys-a${page === 'system' ? ' on' : ''}" href="system.html"${page === 'system' ? ' aria-current="page"' : ''} title="시스템 홈 · ${esc(sys.name)} · ${esc(sys.db)} · ${esc(sys.code)}"><i data-ic=db data-s=14></i><b>${sys.name}</b><span>${sys.db} · ${sys.code}</span></a>
-            <span class="tmw"><button class="tsw" type="button" data-menu-btn aria-expanded="false" aria-controls="mn-sys" aria-label="시스템 바꾸기" title="시스템 바꾸기"><i data-ic=down data-s=14></i></button><div class="menu" data-auto id="mn-sys">${SYSTEMS.map(s => `<a class="mi${s.cur ? ' on' : ''}" href="${s.href}"${s.cur ? ' aria-current="true"' : ''}><span>${s.name}</span><span class="caption muted" style="margin-left:auto">${s.db}</span></a>`).join('')}</div></span>
+            <a class="tsys-a${page === 'system' ? ' on' : ''}" href="system.html"${page === 'system' ? ' aria-current="page"' : ''} title="시스템 홈 · ${esc(sys.name)} · ${esc(sys.db)} · ${esc(sys.code)}"><i data-ic=db data-s=14></i><b>${esc(sys.name)}</b><span>${esc(sys.db)} · ${esc(sys.code)}</span></a>
+            <span class="tmw"><button class="tsw" type="button" data-menu-btn aria-expanded="false" aria-controls="mn-sys" aria-label="시스템 바꾸기" title="시스템 바꾸기"><i data-ic=down data-s=14></i></button><div class="menu" data-auto id="mn-sys">${SYSTEMS.map(s => `<a class="mi${s.cur ? ' on' : ''}" href="${s.href}"${s.cur ? ' aria-current="true"' : ''}><span>${esc(s.name)}</span><span class="caption muted" style="margin-left:auto">${s.db}</span></a>`).join('')}</div></span>
             ${tabs ? '' : COLBTN}
           </div>
           <div class="thbody" id="tr-hbody">
@@ -2206,7 +2283,7 @@
           <div role="tree" id="tr-tree" class="otree"></div>
           <div class="tsep"></div>
           <a class="tl${file === 'model.html' && qp.get('sys') ? ' on" aria-current="page' : ''}" href="model.html?sys=1"><i data-ic=compare></i>시스템 전체 ERD</a>
-          <a class="tl${file === 'import-excel.html' ? ' on" aria-current="page' : ''}" href="import-excel.html${qp.get('area') ? '?area=' + encodeURIComponent(qp.get('area')) : ''}"><i data-ic=upload></i>엑셀 정의서 가져오기</a>
+          <a class="tl${file === 'import-excel.html' ? ' on" aria-current="page' : ''}" href="import-excel.html${qp.get('area') ? '?area=' + encodeURIComponent(qp.get('area')) : ''}"><i data-ic=upload></i>모델 엑셀 가져오기</a>
           <a class="tl${file === 'import.html' ? ' on" aria-current="page' : ''}" href="import.html${qp.get('area') ? '?area=' + encodeURIComponent(qp.get('area')) : ''}"><i data-ic=upload></i>DDL 가져오기</a>
           <div class="tsec"><span>최근 연 엔터티</span></div>
           <div id="tr-rec"></div>
@@ -2215,7 +2292,7 @@
       ${tabs ? '<div class="tpanel" id="tp-dict" role="tabpanel" aria-labelledby="lt-d" hidden></div>' : ''}
       <div class="tmini" aria-label="접힌 모델 트리">
         <button class="tm-i tm-x" id="tr-exp" type="button" aria-expanded="false" aria-controls="tr-full" aria-label="왼쪽 칸 펼치기 (Ctrl+B)" title="왼쪽 칸 펼치기 (Ctrl+B)"><i data-ic=popen data-s=16></i></button>
-        <a class="tm-i${page === 'system' ? ' on" aria-current="page' : ''}" href="system.html" title="시스템 홈 · ${sys.name}" aria-label="시스템 홈"><i data-ic=table></i></a>
+        <a class="tm-i${page === 'system' ? ' on" aria-current="page' : ''}" href="system.html" title="시스템 홈 · ${esc(sys.name)}" aria-label="시스템 홈"><i data-ic=table></i></a>
         ${Object.entries(models0).map(([id, m]) => `<a class="tm-i tm-a${id === famArea ? ' on" aria-current="true' : ''}" href="model.html?area=${id}" title="${esc(m.name)}" aria-label="${esc(m.name)}">${esc(String(m.name).trim()[0])}</a>`).join('')}
         <a class="tm-i${file === 'model.html' && qp.get('sys') ? ' on" aria-current="page' : ''}" href="model.html?sys=1" title="시스템 전체 ERD" aria-label="시스템 전체 ERD"><i data-ic=compare></i></a>
         <a class="tm-i${['import.html', 'import-excel.html'].includes(file) ? ' on" aria-current="page' : ''}" href="import-excel.html${qp.get('area') ? '?area=' + encodeURIComponent(qp.get('area')) : ''}" title="가져오기(엑셀 · DDL)" aria-label="가져오기(엑셀 · DDL)"><i data-ic=upload></i></a>
@@ -2741,7 +2818,7 @@
     const t = document.createElement('div');
     t.className = 'toast'; if (type === 'danger') t.setAttribute('role', 'alert'); else t.setAttribute('role', 'status');
     const acts = action ? [].concat(action).filter(Boolean) : [];   // one action, or a list (e.g. 실행 취소 + 이 컬럼도 지우기)
-    t.innerHTML = `<span style="color:${colors[type || 'success']};display:flex;margin-top:2px">${icon(marks[type || 'success'])}</span><div class="tx">${msg}</div>${acts.map((a, i) => `<button class="act" data-ai="${i}">${a.label}</button>`).join('')}${type === 'danger' || acts.length ? `<button class="tclose" aria-label="닫기">${icon('x')}</button>` : ''}`;
+    t.innerHTML = `<span style="color:${colors[type || 'success']};display:flex;margin-top:2px">${icon(marks[type || 'success'])}</span><div class="tx">${msg}</div>${acts.map((a, i) => `<button class="act" data-ai="${i}">${String(a.label == null ? '' : a.label).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c])}</button>`).join('')}${type === 'danger' || acts.length ? `<button class="tclose" aria-label="닫기">${icon('x')}</button>` : ''}`;
     box.appendChild(t);
     t.querySelectorAll('.act').forEach(b => { b.onclick = () => { t.remove(); acts[+b.dataset.ai].fn(); }; });
     const c = t.querySelector('.tclose'); if (c) c.onclick = () => t.remove();

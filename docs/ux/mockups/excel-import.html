@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>엑셀 가져오기 · NeoDB 목업</title>
+<title>사전 엑셀 일괄 · NeoDB 목업</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&display=swap">
 <link rel="stylesheet" href="assets/app.css">
@@ -98,7 +98,7 @@
 <div id="app">
 <div id="content" class="page">
   <div class="page-header">
-    <h1>엑셀 가져오기</h1>
+    <h1>사전 엑셀 일괄</h1>
     <span class="badge" id="crumb">기관 사전 · 표준용어</span>
   </div>
   <nav class="stepbar" aria-label="가져오기 단계"><div class="steps" id="steps"></div></nav>
@@ -257,6 +257,7 @@
 </div>
 <script>
 window.pageInit = function () {
+  const escT = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);   // R-01: file names · cell values · names from the address or people are text, never HTML
   const $ = id => document.getElementById(id);
   const q = new URLSearchParams(location.search);
   const ST = {
@@ -512,18 +513,20 @@ window.pageInit = function () {
   let err0 = B && B.err0 != null ? B.err0 : null;   // E-07: errors found by validation → progress "처음 n → 남은 m"
   const tokenNow = () => ({ policy: getPolicy().ver, dict: dictRev() });
   let stale = !!(B && B.token && canWrite && (B.token.policy !== getPolicy().ver || B.token.dict !== dictRev()));
-  if (missingB) { $('resume-banner').hidden = false; $('resume-banner').innerHTML = `<div class="banner danger"><i data-ic=warn></i><div class="grow"><b>${lookupId}</b> 업로드를 찾을 수 없거나 열람 권한이 없습니다. 새 업로드는 1단계부터 시작하세요 — 이 화면은 아무것도 저장하지 않습니다.</div><a class="btn sm" href="uploads.html">업로드 이력</a><a class="btn sm" href="excel-import.html">새 업로드</a></div>`; }
+  if (missingB) { $('resume-banner').hidden = false; $('resume-banner').innerHTML = `<div class="banner danger"><i data-ic=warn></i><div class="grow"><b>${escT(lookupId)}</b> 업로드를 찾을 수 없거나 열람 권한이 없습니다. 새 업로드는 1단계부터 시작하세요 — 이 화면은 아무것도 저장하지 않습니다.</div><a class="btn sm" href="uploads.html">업로드 이력</a><a class="btn sm" href="excel-import.html">새 업로드</a></div>`; }
   if ((B || demo) && !missingB) {
     $('resume-banner').hidden = false;
-    const msg = verifyId ? (verifyOk ? `<b>반영본 재업로드 확인</b> — ${verifyId}의 반영본(${vDoc.id} 반영 ${ROWS.length}행)을 현재 사전과 칸 단위로 비교했습니다. ${verifySame ? `<b>${ROWS.length}행 모두 동일 → 왕복 완료.</b>` : `<b>${ROWS.filter(r => r.st !== 'same').length}행이 현재 사전과 다릅니다</b> — 반영 뒤 사전이 다시 바뀌었습니다. 왕복 완료로 기록하지 않습니다. 최신 편집용 엑셀을 다시 내려받으세요.`}${B.sample ? ' (목업 시드는 대표 행만)' : ''}` : vDoc && vDoc.step === 'done' ? `<b>${verifyId}</b> — 연결 신청 ${vDoc.id}에 제출 행 상세가 없어(목업 시드) 행 단위로 비교할 수 없습니다. 왕복 완료로 기록하지 않습니다.` : `<b>${verifyId}</b>는 아직 반영 완료된 묶음이 아닙니다(${vDoc ? STEP_NAME[vDoc.step] : '신청 없음'}) — 반영본 확인은 최종 승인 뒤에 할 수 있습니다.`)
+    const msg = verifyId ? (verifyOk ? `<b>반영본 재업로드 확인</b> — ${escT(verifyId)}의 반영본(${vDoc.id} 반영 ${ROWS.length}행)을 현재 사전과 칸 단위로 비교했습니다. ${verifySame ? `<b>${ROWS.length}행 모두 동일 → 왕복 완료.</b>` : `<b>${ROWS.filter(r => r.st !== 'same').length}행이 현재 사전과 다릅니다</b> — 반영 뒤 사전이 다시 바뀌었습니다. 왕복 완료로 기록하지 않습니다. 최신 편집용 엑셀을 다시 내려받으세요.`}${B.sample ? ' (목업 시드는 대표 행만)' : ''}` : vDoc && vDoc.step === 'done' ? `<b>${escT(verifyId)}</b> — 연결 신청 ${vDoc.id}에 제출 행 상세가 없어(목업 시드) 행 단위로 비교할 수 없습니다. 왕복 완료로 기록하지 않습니다.` : `<b>${escT(verifyId)}</b>는 아직 반영 완료된 묶음이 아닙니다(${vDoc ? STEP_NAME[vDoc.step] : '신청 없음'}) — 반영본 확인은 최종 승인 뒤에 할 수 있습니다.`)
       : demo ? '<b>예시 화면</b> — 주소로 바로 연 결과 화면이라 저장하지 않습니다. 실제 작업은 1단계부터 하세요.'
-      : frozen ? `<b>${B.id} · ${B.file}</b> — ${lastDoc.id} ${STEP_NAME[lastDoc.step]}. <b>신청된 묶음은 조회 전용</b>입니다(결재 문서 내용을 바꾸지 않음). 보완하려면 반려·회수 뒤에 다시 여세요.`
-      : notMine ? `<b>${B.id}</b> — ${USERS[B.by] ? USERS[B.by].name : B.by}이 올린 묶음이라 열람만 할 수 있습니다.`
-      : `<b>${B.id} · ${B.file}</b> 이어서 작업${lastDoc ? ` — ${lastDoc.id} ${STEP_NAME[lastDoc.step]}: 보완해서 다시 신청하면 <b>새 신청번호</b>가 만들어집니다` : ''}`;
-    $('resume-banner').innerHTML = `<div class="banner ${verifyId ? (verifyOk && verifySame ? 'success' : verifyOk ? 'warning' : 'danger') : frozen || notMine || demo ? 'info' : lastDoc ? 'warning' : 'info'}"><i data-ic=info></i><div class="grow">${msg}</div></div>`;
+      : frozen ? `<b>${B.id} · ${escT(B.file)}</b> — ${lastDoc.id} ${STEP_NAME[lastDoc.step]}. <b>신청된 묶음은 조회 전용</b>입니다(결재 문서 내용을 바꾸지 않음). 보완하려면 반려·회수 뒤에 다시 여세요.`
+      : notMine ? `<b>${B.id}</b> — ${escT(USERS[B.by] ? USERS[B.by].name : B.by)}이 올린 묶음이라 열람만 할 수 있습니다.`
+      : `<b>${B.id} · ${escT(B.file)}</b> 이어서 작업${lastDoc ? ` — ${lastDoc.id} ${STEP_NAME[lastDoc.step]}: 보완해서 다시 신청하면 <b>새 신청번호</b>가 만들어집니다` : ''}`;
+    /* A-6: once the dictionary request is in (or approved), point to the next step — the model excel import (hidden without the model edit role) */
+    const toModel = (frozen || (verifyId && vDoc && vDoc.step === 'done')) && can('model.edit', { system: curSys().code }) ? `<div class="u-mt-8">${(lastDoc && lastDoc.step === 'done') || verifyId ? '사전이 준비됐습니다 — 이제 모델을 가져오세요.' : '사전이 준비되면(승인 뒤) 모델을 가져오세요.'} <a class="btn sm" href="import-excel.html">모델 엑셀 가져오기</a></div>` : '';
+    $('resume-banner').innerHTML = `<div class="banner ${verifyId ? (verifyOk && verifySame ? 'success' : verifyOk ? 'warning' : 'danger') : frozen || notMine || demo ? 'info' : lastDoc ? 'warning' : 'info'}"><i data-ic=info></i><div class="grow">${msg}${toModel}</div></div>`;
     if (verifyId && verifyOk && verifySame && B) { const bs = getBatches(); const bb = bs.find(x => x.id === B.id); if (bb && !bb.roundTrip) { bb.roundTrip = { at: nowStr(), by: ME.id, rows: ROWS.length }; saveBatches(bs); } }   // round-trip completion is recorded
   }
-  if (!canWrite && !B && !demo && !missingB && !window.__pgRo) { $('resume-banner').hidden = false; $('resume-banner').innerHTML = `<div class="banner info"><i data-ic=info></i><div class="grow"><b>조회 전용</b> — ${ME.name}님 역할은 ${roReason}. 파일을 올려 오류를 확인하고 가이드를 내려받을 수는 있지만, 고치기와 신청은 할 수 없습니다. 신청은 DA·모델러에게 요청하세요.</div><a class="btn sm" href="uploads.html">업로드 이력</a></div>`; }
+  if (!canWrite && !B && !demo && !missingB && !window.__pgRo) { $('resume-banner').hidden = false; $('resume-banner').innerHTML = `<div class="banner info"><i data-ic=info></i><div class="grow"><b>조회 전용</b> — ${escT(ME.name)}님 역할은 ${roReason}. 파일을 올려 오류를 확인하고 가이드를 내려받을 수는 있지만, 고치기와 신청은 할 수 없습니다. 신청은 DA·모델러에게 요청하세요.</div><a class="btn sm" href="uploads.html">업로드 이력</a></div>`; }
   if (stale) { $('resume-banner').hidden = false; $('resume-banner').insertAdjacentHTML('beforeend', `<div class="banner warning u-mt-8"><i data-ic=warn></i><div class="grow"><b>다시 검증해야 합니다</b> — 이 묶음을 검증한 뒤 ${B.token.policy !== getPolicy().ver ? `검수 기준이 v${B.token.policy} → v${getPolicy().ver}로` : '사전이'} 바뀌었습니다. 화면에서 고친 값은 그대로 두고 현재 기준으로 다시 검증합니다.</div><button class="btn sm primary" id="revalidate">다시 검증</button></div>`);
     setTimeout(() => { const b = $('revalidate'); if (b) b.onclick = () => { ROWS.forEach(r => { if (['new', 'chg', 'pre', 'err'].includes(r.st)) rejudge(r, '다시 검증 통과(현재 기준)'); });   /* 31 · Codex-4: error rows too — a changed policy may let them pass */ /* E-01: the same re-judge */ stale = false; if (B) B.token = tokenNow(); persist(); toast('현재 기준으로 다시 검증했습니다 — 고친 값은 유지', 'success'); $('resume-banner').querySelectorAll('.banner.warning').forEach(x => { if (x.querySelector('#revalidate')) x.remove(); }); render(); }; }, 0); }
   const counts = () => { const c = { new: 0, chg: 0, same: 0, waitSame: 0, waitDiff: 0, conflict: 0, dup: 0, pre: 0, err: 0, missing: 0, pick: 0 }; ROWS.forEach(r => { c[r.st === 'pick' ? 'pick' : r.st]++; }); return c; };
@@ -544,7 +547,7 @@ window.pageInit = function () {
   // ---- step 1
   // same visibility and the same state function as the upload history (CX9-09 · CL10-02)
   const recent = getBatches().filter(canSeeBatch).slice(0, 4);
-  $('recent').innerHTML = recent.map(b => { const s = batchState(b); const ld = (b.docs || []).slice(-1)[0]; return `<tr><td class="mono">${b.id}<div class="caption faint">${b.at}</div></td><td>${b.file}<div class="caption faint">${b.kind} · ${b.rows}행</div></td><td><span class="badge ${s === '반영됨' ? 'b-success' : s === '보완' ? 'b-danger' : s === '취소' ? '' : 'b-info'}">${batchStateLabel(s)}</span>${batchHoldBadge(b)}${ld ? ` <a href="approvals.html?doc=${ld}" class="caption">${ld}</a>` : ''}</td><td>${['임시 저장', '보완'].includes(s) && b.by === ME.id ? `<a class="btn sm" href="excel-import.html?resume=${b.id}">이어서 작업</a>` : `<a class="caption" href="uploads.html?b=${b.id}">보기</a>`}</td></tr>`; }).join('') || '<tr class="er none"><td colspan="4" class="caption muted u-tc u-p-16">최근 업로드가 없습니다</td></tr>';
+  $('recent').innerHTML = recent.map(b => { const s = batchState(b); const ld = (b.docs || []).slice(-1)[0]; return `<tr><td class="mono">${b.id}<div class="caption faint">${b.at}</div></td><td>${escT(b.file)}<div class="caption faint">${escT(b.kind)} · ${b.rows}행</div></td><td><span class="badge ${s === '반영됨' ? 'b-success' : s === '보완' ? 'b-danger' : s === '취소' ? '' : 'b-info'}">${batchStateLabel(s)}</span>${batchHoldBadge(b)}${ld ? ` <a href="approvals.html?doc=${ld}" class="caption">${ld}</a>` : ''}</td><td>${['임시 저장', '보완'].includes(s) && b.by === ME.id ? `<a class="btn sm" href="excel-import.html?resume=${b.id}">이어서 작업</a>` : `<a class="caption" href="uploads.html?b=${b.id}">보기</a>`}</td></tr>`; }).join('') || '<tr class="er none"><td colspan="4" class="caption muted u-tc u-p-16">최근 업로드가 없습니다</td></tr>';
   const setMode = m => { if (B && canWrite && m !== mode) { toast('이미 저장된 묶음은 방식을 바꿀 수 없습니다 — 새 업로드로 시작하세요', 'info'); return; } mode = m; document.querySelectorAll('.modecard').forEach(x => { const on = (x.dataset.mode === 'new' ? 'init' : 'round') === m; x.classList.toggle('on', on); x.querySelector('input').checked = on; }); if (!B) { ROWS = seedRows(); applyScope(); undoStack = []; lastRows = null; recentF = false; pendingCell = null; err0 = null; } drawBL(); drawKind(); };
   document.querySelectorAll('.modecard').forEach(m => m.onclick = () => setMode(m.dataset.mode === 'new' ? 'init' : 'round'));
   if (mode === 'init') setTimeout(() => setMode('init'), 0);   // after the baseline banner function exists
@@ -581,7 +584,7 @@ window.pageInit = function () {
     if (!/\.(xlsx|xls|csv)$/i.test(f.name)) { upFile = null; file = false; $('filecard').hidden = true; $('type-err-t').innerHTML = `<b>올릴 수 없습니다 — ‘${esc5(f.name)}’</b> · XLSX · XLS · CSV 파일만 올릴 수 있습니다. 사전에서 내려받은 편집용 엑셀이나 빈 양식을 쓰세요.`; $('type-err').hidden = false; render(); return; }
     if (f.size > MAXB) { upFile = null; file = false; $('filecard').hidden = true; $('big-err-t').innerHTML = `<b>올릴 수 없습니다 — ${fmtSize(f.size)}</b> · 상한 20MB를 넘었습니다. 시트를 나누거나 필터로 범위를 줄여 다시 내려받은 편집용 파일을 쓰세요.`; $('big-err').hidden = false; render(); return; }
     upFile = { name: f.name, size: f.size }; file = true; $('filecard').hidden = false; drawKind(); render();
-    toast(`‘${f.name}’ 올림 — ${fmtSize(f.size)} · 목업은 내용 대신 예시 행으로 다음 단계를 보여 줍니다`, 'success');
+    toast(`‘${escT(f.name)}’ 올림 — ${fmtSize(f.size)} · 목업은 내용 대신 예시 행으로 다음 단계를 보여 줍니다`, 'success');
   }
   const fin = $('file-in');
   document.addEventListener('click', e => { const b = e.target.closest('[data-pickfile]'); const z = !b && e.target.closest('[data-drop]'); if (!b && !(z && !e.target.closest('button, a'))) return; e.stopPropagation(); fin.value = ''; fin.click(); });
@@ -613,8 +616,8 @@ window.pageInit = function () {
     // E-15: the crossed-out old value is not read aloud as part of the new one
     if (r.fixed && r.fixed[f] !== undefined && String(r.fixed[f]) !== String(v)) return `<td class="cell-fix${mono}" title="파일 값: ${esc5(r.fixed[f])}"><span class="old-v" aria-hidden="true">${esc5(r.fixed[f])}</span><span class="sr-only">파일 값 ${esc5(r.fixed[f])}, 고친 값 </span>${esc5(v)}</td>`;
     if (o !== undefined) return `<td class="cell-chg${mono}"><span class="old-v" aria-hidden="true">${esc5(o)}</span><span class="sr-only">현재 사전 ${esc5(o)}, 파일 값 </span>${esc5(v)}</td>`;
-    if (r.warnF === f && r.warn) return `<td class="${mono.trim()}" title="${r.warn}"><span class="st">${v}<span aria-label="경고: ${r.warn}"><i data-ic=warn data-s=12></i></span></span></td>`;
-    return `<td${mono ? ` class="${mono.trim()}"` : ''}>${v}</td>`;
+    if (r.warnF === f && r.warn) return `<td class="${mono.trim()}" title="${escT(r.warn)}"><span class="st">${escT(v)}<span aria-label="경고: ${escT(r.warn)}"><i data-ic=warn data-s=12></i></span></span></td>`;
+    return `<td${mono ? ` class="${mono.trim()}"` : ''}>${escT(v)}</td>`;
   };
   let filt = '', ruleF = '';
   const esc5 = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
@@ -657,17 +660,17 @@ window.pageInit = function () {
     if (!r) { $('pn-row').innerHTML = '<div class="rp-body"><div class="caption muted u-p-24 u-tc">이 조건에 맞는 행이 없습니다 — 필터를 바꾸세요</div></div>'; return; } sel = r.r;
     const s = ST[r.st];
     const K = KC[kind], inDict = r.id || (kind === '코드' && CG[r.grp] && CG[r.grp].id && ['same', 'chg'].includes(r.st));
-    const idLine = kind === '코드' ? `${CG[r.grp] && CG[r.grp].id ? CG[r.grp].id + ' · ' : '새 코드 · '}${r.grp} · 값 ${r.v} <span class="caption faint">(코드+코드값으로 짝짓기 · 도메인 ${(CG[r.grp] || {}).dom || '—'})</span>` : (r.id || `(없음 — ${kind === '용어' ? '이름+약어로' : kind + '명으로'} 짝짓기)`);
+    const idLine = kind === '코드' ? `${CG[r.grp] && CG[r.grp].id ? escT(CG[r.grp].id) + ' · ' : '새 코드 · '}${escT(r.grp)} · 값 ${escT(r.v)} <span class="caption faint">(코드+코드값으로 짝짓기 · 도메인 ${escT((CG[r.grp] || {}).dom || '—')})</span>` : (r.id ? escT(r.id) : `(없음 — ${kind === '용어' ? '이름+약어로' : kind + '명으로'} 짝짓기)`);
     // E-06: three columns — current dictionary · the file as uploaded · the value corrected on this screen
     const fileV = f => r.fixed && f in r.fixed ? r.fixed[f] : r.shown && f === 'desc' ? r.shown : r[f];
     const fixV = f => r.fixed && f in r.fixed && String(r.fixed[f]) !== String(r[f]) ? r[f] : null;
     let body = `<div class="section-t">값 비교</div><table class="tbl three"><thead><tr><th>항목</th><th>현재 사전</th><th>파일 원본</th><th>보정 값</th></tr></thead><tbody>${K.cmp.map(f => { const fx = fixV(f); return `<tr><td>${K.lbl[f]}</td><td${inDict ? '' : ' class="nov"'}>${inDict ? esc5((r.old && r.old[f] !== undefined) ? r.old[f] : r[f]) : '—'}</td><td>${esc5(fileV(f) == null ? '' : fileV(f))}</td><td${fx != null ? ' class="fixv"' : ' class="nov"'}>${fx != null ? esc5(fx) : '—'}</td></tr>`; }).join('')}<tr><td>${kind === '코드' ? '짝' : '항목 ID'}</td><td class="mono" colspan="3">${idLine}</td></tr></tbody></table>`;
-    if (r.st === 'conflict') body = `<div class="section-t">칸 단위 3방향 비교 · ${r.three.field}</div><table class="tbl three"><tbody><tr><td>내려받은 값 (V3)</td><td>${r.three.base}</td></tr><tr><td>현재 사전 (V4)</td><td>${r.three.cur}</td></tr><tr><td>파일 값</td><td>${r.three.file}</td></tr></tbody></table>
+    if (r.st === 'conflict') body = `<div class="section-t">칸 단위 3방향 비교 · ${escT(r.three.field)}</div><table class="tbl three"><tbody><tr><td>내려받은 값 (V3)</td><td>${escT(r.three.base)}</td></tr><tr><td>현재 사전 (V4)</td><td>${escT(r.three.cur)}</td></tr><tr><td>파일 값</td><td>${escT(r.three.file)}</td></tr></tbody></table>
       <div class="caption muted u-mt-8 u-mb-8">같은 칸을 서로 고쳤습니다. 다른 칸끼리였다면 자동으로 합칩니다.</div>
       <label class="flex"><input type="radio" name="cf" value="keep" ${r.choice !== 'file' ? 'checked' : ''}> 현재 값 유지 <span class="caption faint">(기본 · 이 행 제외)</span></label><label class="flex"><input type="radio" name="cf" value="file" ${r.choice === 'file' ? 'checked' : ''}> 파일 값으로 변경 신청</label>`;
     if (r.st === 'waitSame' || r.st === 'waitDiff') body += `<div class="banner ${r.st === 'waitSame' ? 'info' : 'warning'} u-mt-12"><i data-ic=info></i><div class="grow"><b>${r.doc}</b> 진행 중 — ${r.st === 'waitSame' ? '같은 내용이라 제외합니다.' : '<b>고친 값은 보류로 보존</b>됩니다. 그 신청이 끝나면 [보류 행 다시 검증]으로 이어갑니다.'}</div><a class="btn sm" href="approvals.html?doc=${r.doc}">결재 보기</a></div>`;
-    if (r.st === 'pick') body += `<div class="section-t">분해 후보 선택 (MD-09)</div>${r.cands.map((c, i) => `<label class="cand ${r.choice === i ? 'on' : ''}"><input type="radio" name="pk" value="${i}" ${r.choice === i ? 'checked' : ''}><span class="grow">${c}</span></label>`).join('')}`;
-    if (r.st === 'pre') { const w = r.word || '—', d0 = r.doc || ''; body += `<div class="banner warning u-mt-12"><i data-ic=warn></i><div class="grow">${d0 ? `다른 신청(${d0})의 ` : ''}새 단어 ‘${w}’가 아직 승인 전입니다. 이 행은 <b>보류</b>되고, 단어가 승인되면 업로드 이력에서 다시 검증해 이어서 신청합니다.</div>${d0 ? `<a class="btn sm" href="approvals.html?doc=${d0}">결재 보기</a>` : ''}</div>`; }
+    if (r.st === 'pick') body += `<div class="section-t">분해 후보 선택 (MD-09)</div>${r.cands.map((c, i) => `<label class="cand ${r.choice === i ? 'on' : ''}"><input type="radio" name="pk" value="${i}" ${r.choice === i ? 'checked' : ''}><span class="grow">${escT(c)}</span></label>`).join('')}`;
+    if (r.st === 'pre') { const w = r.word || '—', d0 = r.doc || ''; body += `<div class="banner warning u-mt-12"><i data-ic=warn></i><div class="grow">${d0 ? `다른 신청(${d0})의 ` : ''}새 단어 ‘${escT(w)}’가 아직 승인 전입니다. 이 행은 <b>보류</b>되고, 단어가 승인되면 업로드 이력에서 다시 검증해 이어서 신청합니다.</div>${d0 ? `<a class="btn sm" href="approvals.html?doc=${d0}">결재 보기</a>` : ''}</div>`; }
     if (r.st === 'err') {
       const where = r.rule === 'X-DUPID' ? '한 항목 ID는 한 행에만 있어야 합니다. 복사한 행이면 ID를 지우고 새 항목으로 처리하세요.'
         : `<b>고치는 법</b> · ${GUIDE[r.rule] || '규칙을 확인하세요'}${['P-CHARS', 'P-FORM', 'W-ABBRLEN', 'T-ABBRLEN', 'T-ABBR', 'W-ABBRFMT', 'T-SPACE'].includes(r.rule) ? ` <a class="rule-ref" href="rules.html?k=${({ 단어: 'word', 용어: 'term', 도메인: 'domain', 코드: 'code' })[kind] || 'word'}&f=${r.rule === 'T-ABBR' ? '' : (r.bad === 'name' && /ABBR/.test(r.rule) ? 'abbr' : r.bad || 'name')}${r.rule === 'T-ABBR' ? '&sec=naming' : ''}">기준 보기 · v${getPolicy().ver}</a>` : ''}.<br>${r.bad ? `표에서 붉은 칸(${K.lbl[r.bad] || r.bad})을 바로 고치면 즉시 다시 검증합니다(Enter 확인 · Esc 파일 값).` : '칸 하나를 고쳐서 풀리는 문제가 아닙니다 — 아래 조치나 다른 신청의 결과를 기다리세요.'}`;
@@ -706,7 +709,7 @@ window.pageInit = function () {
     const keep = Object.fromEntries(ROWS.filter(r => r.why2).map(r => [r.r, r.why2]));
     ROWS = JSON.parse(op.snap); ROWS.forEach(r => { if (keep[r.r] !== undefined) r.why2 = keep[r.r]; });
     pendingCell = null; showCellMsg(''); lastRows = new Set(op.rows);
-    persist(); drawGrid(); drawHint(); focusSel(); toast(`되돌렸습니다 — ${op.label}${undoStack.length ? ` · 남은 작업 ${undoStack.length}개` : ''}`, 'info');
+    persist(); drawGrid(); drawHint(); focusSel(); toast(`되돌렸습니다 — ${escT(op.label)}${undoStack.length ? ` · 남은 작업 ${undoStack.length}개` : ''}`, 'info');
   }
   // after a fix the keyboard user stays on the row they were working on (CL10 #10)
   const focusSel = () => { const tr = document.querySelector(`#grid-body tr[data-r="${sel}"]`) || document.querySelector('#grid-body tr[data-r]'); if (tr) tr.focus(); };
@@ -786,14 +789,14 @@ window.pageInit = function () {
       const rows = errs.map(r => ['오류', r.r, ST[r.st][0], ...K.cols.map(c => r.shown && c[0] === 'desc' ? r.shown : r[c[0]]), r.rule, lbl(r.bad), r.why, GUIDE[r.rule] || '', r.fix ? Object.entries(effFix(r)).map(([k, v]) => `${lbl(k)}: ${v}`).join(' / ') : ''])
         .concat(look.map(r => ['확인 필요', r.r, ST[r.st][0], ...K.cols.map(c => r[c[0]]), r.rule || '', r.warnF ? lbl(r.warnF) : '', ['new', 'chg'].includes(r.st) && r.warn ? r.warn : r.why, r.rule && GUIDE[r.rule] ? GUIDE[r.rule] : r.st === 'pick' ? '결과 검토에서 분해 후보를 고르세요' : r.st === 'conflict' ? '현재 값 유지 또는 파일 값으로 변경을 고르세요' : '진행 중인 신청이 끝난 뒤 다시 검증합니다', '']));
       const fn = downloadCsv('오류가이드', ['구분', '원본 행', '상태', ...K.cols.map(c => c[1]), '규칙', '오류 칸', '사유', '수정 방법', '수정 제안'], rows);
-      toast(`${fn} 내려받았습니다 — 화면 필터와 관계없이 전체 오류 ${errs.length}행 + 확인 필요 ${look.length}행 · CSV(목업 — 실제는 XLSX: 가이드 시트 · 셀 메모)`, 'success'); return; }
+      toast(`${escT(fn)} 내려받았습니다 — 화면 필터와 관계없이 전체 오류 ${errs.length}행 + 확인 필요 ${look.length}행 · CSV(목업 — 실제는 XLSX: 가이드 시트 · 셀 메모)`, 'success'); return; }
     if (e.target.closest('#dl-fix')) { const K = KC[kind], dict = getDict(), bl = mode === 'init' ? '—(초기 적재)' : B ? B.baseline : BL.id;
       // E-05: a file that can REPLACE the original — every row of the file (out of scope · missing included, told apart by the status column), the hidden columns, the change column
       const all = ROWS.map(r => [r, ST[r.st][0]]).concat(outRows.map(r => [r, '기준본 범위 밖 — 비교·신청 안 함'])).sort((a, b) => (+a[0].r || 1e9) - (+b[0].r || 1e9));
       const rows = all.map(([r, st]) => { const d = r.id ? dict.find(x => x.id === r.id) : null;
         return [r.r, ...K.cols.map(c => r.shown && c[0] === 'desc' ? r.shown : r[c[0]]), r.id || '', d ? 'V' + d.ver : '', r.id ? bl : '', r.st === 'missing' ? '파일에서 빠짐 — 원본에 없던 행(참고)' : st, r.fixed ? Object.entries(r.fixed).filter(([k, v]) => String(v) !== String(r[k])).map(([k, v]) => `${K.lbl[k] || k}: ${v} → ${r[k]}`).join(' / ') : '']; });
       const fn = downloadCsv('보정본', ['원본 행', ...K.cols.map(c => c[1]), '(숨김) 항목 ID', '(숨김) 버전', '(숨김) 기준본', '상태(참고)', '변경점(파일 값 → 보정 값)'], rows);
-      toast(`${fn} 내려받았습니다 — 파일의 모든 ${all.length}행(범위 밖 ${outRows.length} · 빠짐 ${ROWS.filter(r => r.st === 'missing').length} 포함, 상태 열로 구분) · 숨김 열 · 고친 ${ROWS.filter(r => r.fixed).length}행. CSV · 목업 — 실제는 XLSX(본문 + 변경점 시트, 모든 칸 텍스트 서식)`, 'success'); return; }
+      toast(`${escT(fn)} 내려받았습니다 — 파일의 모든 ${all.length}행(범위 밖 ${outRows.length} · 빠짐 ${ROWS.filter(r => r.st === 'missing').length} 포함, 상태 열로 구분) · 숨김 열 · 고친 ${ROWS.filter(r => r.fixed).length}행. CSV · 목업 — 실제는 XLSX(본문 + 변경점 시트, 모든 칸 텍스트 서식)`, 'success'); return; }
   });
   // DX-08: a real file built in the browser — CSV, UTF-8 with BOM so Excel opens Korean correctly
   function downloadCsv(suffix, head, rows) {
@@ -962,7 +965,7 @@ window.pageInit = function () {
     // warnings are submittable but must be acknowledged; the acknowledgement travels with the row (CL9-16)
     const w = p.sub.filter(r => r.warn);
     $('ack6-w').hidden = !w.length;
-    $('ack6-t').innerHTML = w.length ? `경고 ${w.length}건을 확인했습니다 — ${w.map(r => `${r.r}행 ${r.name}: ${r.warn}`).join(' · ')}` : '';
+    $('ack6-t').innerHTML = w.length ? `경고 ${w.length}건을 확인했습니다 — ${w.map(r => `${r.r}행 ${escT(r.name)}: ${escT(r.warn)}`).join(' · ')}` : '';
   }
   // E-07: the foot line follows every edit, not only a step change
   function drawHint() { const p = plan();
@@ -1018,9 +1021,9 @@ window.pageInit = function () {
           let back = 0; res.forEach((x, i) => { if (!x.problems.length) return; const rows = String(items[i].row || '').split(',');
             rows.forEach(rn => { const r = ROWS.find(o => String(o.r) === rn.trim()); if (!r) return; const rule = ruleOf(x.problems[0]); setErr(r, rule, gridF(RULE_FIELD[rule] || (kind === '코드' ? 'v' : 'name')), x.problems[0] + (x.problems.length > 1 ? ` 외 ${x.problems.length - 1}건` : ''), x.problems); back++; }); });
           if (back) { persist(); cur = 5; filt = 'err'; ruleF = ''; recentF = false; render(); }
-          toast(`결재 재검사에서 막힐 항목이 ${pre.length}건 있습니다 — ${pre.slice(0, 3).map(x => `${x.name}: ${x.problems[0]}`).join(' · ')}.${back ? ` 그 ${back}행을 오류로 돌려 결과 검토를 열었습니다.` : ''} 고친 뒤 신청하세요`, 'danger'); return; } }
+          toast(`결재 재검사에서 막힐 항목이 ${pre.length}건 있습니다 — ${pre.slice(0, 3).map(x => `${escT(x.name)}: ${escT(x.problems[0])}`).join(' · ')}.${back ? ` 그 ${back}행을 오류로 돌려 결과 검토를 열었습니다.` : ''} 고친 뒤 신청하세요`, 'danger'); return; } }
       const r = createDoc({ type: 'dict', kind: 'excel', batch: B.id, baseline: B.baseline, key: 'batch:' + B.id + ':' + (B.docs || []).length, n, title: `엑셀 일괄 — ${kind === '코드' ? '코드값' : kind} ${n}건${items.length !== n ? `(항목 ${items.length})` : ''} (${B.file})`, reason: $('why6').value.trim(), sub, items });
-      if (r.conflict) { toast(`진행 중인 다른 신청과 겹치는 행이 있습니다 — ${r.conflict.join(', ')}. 결과 검토에서 그 행을 다시 확인하세요`, 'danger'); return; }
+      if (r.conflict) { toast(`진행 중인 다른 신청과 겹치는 행이 있습니다 — ${escT(r.conflict.join(', '))}. 결과 검토에서 그 행을 다시 확인하세요`, 'danger'); return; }
       batches = getBatches(); const b = batches.find(x => x.id === B.id); b.status = '신청됨'; b.docs = (b.docs || []).concat(r.dup ? [] : [r.doc.id]); b.counts = counts();
       // what was actually submitted — the approval document reads exactly this (single source)
       b.sub = { new: p.sub.filter(x => x.st === 'new').length, chg: p.sub.filter(x => x.st === 'chg').length, pick: p.sub.filter(x => x.st === 'pick').length, conflict: p.sub.filter(x => x.st === 'conflict').length, unuse: p.unuse.length, hold: p.hold.length, ex: p.ex.length };
@@ -1043,7 +1046,7 @@ window.pageInit = function () {
     timer = setTimeout(tick, 250);
   }
   const BL = latestBaseline();
-  const drawBL = () => { if (B && B.baseline && B.baseline.startsWith('—')) { $('bl-t').innerHTML = '<b>초기 적재</b> — 기준본 없이 새 항목만 등록합니다. 빠짐·충돌 판정은 하지 않습니다.'; return; } if (mode === 'init') { $('bl-t').innerHTML = '<b>초기 적재</b> — 기준본 없이 새 항목만 등록합니다. 빠짐·충돌 판정은 하지 않습니다.'; return; } const id = B ? B.baseline : BL.id; $('bl-t').innerHTML = `<b>기준본 ${id}</b> — ${B ? '이 묶음이 고정한' : `${BL.at} ${USERS[BL.by] ? USERS[BL.by].name : ''}이 내려받은`} 편집용 파일 기준입니다(${B ? B.baselineScope || '' : BL.scope}${B ? '' : ` · ${BL.n}건`}). 이 서버 기록으로 바뀐 것과 빠진 것을 판정합니다.`; };
+  const drawBL = () => { if (B && B.baseline && B.baseline.startsWith('—')) { $('bl-t').innerHTML = '<b>초기 적재</b> — 기준본 없이 새 항목만 등록합니다. 빠짐·충돌 판정은 하지 않습니다.'; return; } if (mode === 'init') { $('bl-t').innerHTML = '<b>초기 적재</b> — 기준본 없이 새 항목만 등록합니다. 빠짐·충돌 판정은 하지 않습니다.'; return; } const id = B ? B.baseline : BL.id; $('bl-t').innerHTML = `<b>기준본 ${id}</b> — ${B ? '이 묶음이 고정한' : `${BL.at} ${escT(USERS[BL.by] ? USERS[BL.by].name : '')}이 내려받은`} 편집용 파일 기준입니다(${B ? B.baselineScope || '' : BL.scope}${B ? '' : ` · ${BL.n}건`}). 이 서버 기록으로 바뀐 것과 빠진 것을 판정합니다.`; };
   drawBL();
   if (cur >= 5 && canWrite && !B) persist();
   if (file) $('filecard').hidden = false;

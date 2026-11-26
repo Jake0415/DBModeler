@@ -81,6 +81,7 @@ button.badge.tw-pb[aria-pressed="true"] { outline:2px solid var(--ds-gray-1000);
     <span class="badge" id="scope"></span>
     <div class="actions"><span class="caption muted" title="모델 → 용어 → 모델">미등록 단어 · 용어를 한 번에 만드는 마법사</span><a class="btn sm" id="to-std" href="standardize.html">표준 맞추기로 돌아가기</a></div>
   </div>
+  <div id="flow-slot"></div>
   <div id="ro-slot"></div>
   <div class="pad u-pb-0" id="resume" hidden>
     <div class="banner info" role="status"><i data-ic=info></i><div class="grow" id="resume-t"></div><button class="btn sm" id="resume-go">이어서</button><button class="btn sm ghost" id="resume-new">새로 분석</button></div>
@@ -218,7 +219,8 @@ window.pageInit = function () {
   const MODELS = getModels();
   const AREA = MODELS[q.get('area')] ? q.get('area') : defArea();
   const LK = modelLock(AREA), VER = LK.model.ver, MNAME = LK.model.name;
-  const model = modelOf(AREA, VER);
+  const VIEW = typeof window.areaView === 'function' ? areaView(AREA) : null, HIDDEN = !!(VIEW && VIEW.hidden);   // F-01
+  const model = HIDDEN ? { E: [], R: [], M: [] } : modelOf(AREA, VER);
   $('crumb-sys').textContent = curSys().name;
   $('crumb-area').textContent = `${MNAME} · v${VER}`;
   // model context (D4): &e=<entity>&a=<attribute> → that row is marked in ② and every way back focuses the entity
@@ -228,15 +230,30 @@ window.pageInit = function () {
   const backUrl = `model.html?area=${AREA}${focusE ? '&focus=' + encodeURIComponent(focusE) : ''}`;
   const isCtx = r => !!CENT && r.e === CE && (CA ? (r.a === CA || r.cur.n === CA || (r.entRow && CA === r.ent)) : r.entRow);
   $('back').href = backUrl;
-  $('to-std').href = `standardize.html?area=${AREA}&f=todo${CENT ? '&e=' + encodeURIComponent(CE) + (CA ? '&a=' + encodeURIComponent(CA) : '') : ''}`;
-  if (q.get('from') !== 'standardize') $('to-std').textContent = '표준 맞추기 열기';   // "돌아가기" only when we came from there (model · tree entries open it fresh)
+  const FROM_V = ['standardize', 'std'].includes(q.get('from')) ? 'standardize' : 'model';   // U-08: two values only
+  $('to-std').href = `model.html?area=${AREA}&then=std${CENT ? '&focus=' + encodeURIComponent(CE) : ''}`;   // U-08: the one way back — via the model (it applies a pending hand-off, then opens 표준 맞추기 f=todo)
+  if (FROM_V !== 'standardize') $('to-std').textContent = '표준 맞추기 열기';   // "돌아가기" only when we came from there (model · tree entries open it fresh)
+  // A-3 (02-flow-plan): 표준 맞추기 hands over the rows the dictionary does not have (&ents= their entities · &rows= their keys 'entity.attribute' joined by |) —
+  // the first analysis includes only those rows (the rest of those entities is analysed but left unchecked)
+  let PRE_ROWS = null; if (q.get('rows') === '@s') { try { const h = JSON.parse(sessionStorage.getItem('dbm-wiz-rows') || 'null'); if (h && h.area === AREA) PRE_ROWS = new Set(h.rows || []); } catch (e) {} }   // F-04: a long list came through sessionStorage
+  else if (q.get('rows')) PRE_ROWS = new Set(q.get('rows').split('|').filter(Boolean));
+  let preUsed = false;
+  if (PRE_ROWS && !CE) { $('ctx').hidden = false; $('ctx-back').hidden = true;   // U-08: the head's [표준 맞추기로 돌아가기] is the one way back
+    $('ctx-t').innerHTML = `<b>표준 맞추기에서 넘겨받은 사전에 없는 단어 · 용어 ${PRE_ROWS.size}건</b>(엔터티 ${(q.get('ents') || '').split(',').filter(Boolean).length}개) — ② 분석 결과에서 이 행들만 포함해 둡니다.`; }
+  const bandFocus = () => { const b = document.querySelector('#steps [aria-current], #steps button:not([disabled])') || document.getElementById('to-std'); if (b) b.focus(); };   // U-05
+  // A-2: the shared '처음 표준화' progress band (app.js flowBand), at the top like the model screen and 표준 맞추기
+  if (typeof window.flowBand === 'function') { const fs0 = document.getElementById('flow-slot'); try { window.flowBand(AREA, 'wiz', fs0, { onClose: bandFocus }); } catch (e) {} }   // it fills the slot itself (and wires its [닫기]) — U-05: focus to a visible step
   if (CENT) { $('ctx').hidden = false; $('ctx-back').href = backUrl; $('ctx-t').innerHTML = `모델의 <b>${esc(CENT.n)}${CA && CA !== CENT.n ? '.' + esc(CA) : ''}</b>에서 왔습니다 — ② 분석 결과에서 이 행을 표시합니다.`; }
 
+  // U-15: the band again (it counts the stored model) + one line on what this wizard has already done
+  const flowNote = (msg, simModel) => { const fs1 = document.getElementById('flow-slot'); if (typeof window.flowBand === 'function') { try { window.flowBand(AREA, 'wiz', fs1, { onClose: bandFocus, model: simModel || undefined }); } catch (e) {} }
+    if (fs1 && !fs1.hidden && fs1.innerHTML) fs1.insertAdjacentHTML('beforeend', `<div class="pad u-pb-0"><div class="banner success" role="status"><i data-ic=check></i><div class="grow">${esc(msg)}</div><a class="btn sm" href="${backUrl}">모델에서 보기</a></div></div>`); };
   // permission & lock: ①–③ are analysis only (anyone); ④·⑤ change the dictionary queue / the model (CX12-28 pattern)
   const canEdit = can('model.edit', { area: AREA });
   const readOnly = !canEdit || LK.state !== 'edit';
-  const roWhy = !canEdit ? (ME.has('modeler') ? `내 담당 시스템에 ${josa(sysOfArea(AREA), '이/가')} 없어 등록·반영은 할 수 없습니다` : '용어 등록·모델 반영은 모델러 역할만 할 수 있습니다') : `${LK.doc ? LK.doc.id + ' ' : ''}${LK.state === 'review' ? '확정 결재 중' : '확정본'}이라 모델을 고칠 수 없습니다`;
-  if (readOnly) $('ro-slot').innerHTML = `<div class="pad u-pb-0"><div class="banner info"><i data-ic=info></i><div class="grow"><b>분석만 가능</b> — ${roWhy}. ①~③(분석·단어 구성)은 볼 수 있고 ④ 용어 등록·⑤ 모델 반영은 막혀 있습니다.${!canEdit && ME.has('modeler') ? ` <a href="mypage.html?req=sys&sys=${encodeURIComponent(sysOfArea(AREA))}">담당 시스템 추가 요청</a>` : ''}</div><a class="btn sm" href="${backUrl}">모델로</a></div></div>`;
+  const roWhy = !canEdit ? (ME.has('modeler') ? `내 담당 시스템에 ${esc(josa(sysOfArea(AREA), '이/가'))} 없어 등록·반영은 할 수 없습니다` : '용어 등록·모델 반영은 모델러 역할만 할 수 있습니다') : `${LK.doc ? LK.doc.id + ' ' : ''}${LK.state === 'review' ? '확정 결재 중' : '확정본'}이라 모델을 고칠 수 없습니다`;
+  if (HIDDEN) $('ro-slot').innerHTML = `<div class="pad u-pb-0"><div class="banner warning"><i data-ic=info></i><div class="grow"><b>${josa('v' + VER, '은/는')} 결재 중</b>이라 신청자와 결재 담당자만 볼 수 있습니다. 용어 자동분석은 작업 중인 버전을 다루므로 보여 줄 내용이 없습니다.</div><a class="btn sm" href="model.html?area=${AREA}">모델로</a></div></div>`;   // F-01
+  else if (readOnly) $('ro-slot').innerHTML = `<div class="pad u-pb-0"><div class="banner info"><i data-ic=info></i><div class="grow"><b>분석만 가능</b> — ${roWhy}. ①~③(분석·단어 구성)은 볼 수 있고 ④ 용어 등록·⑤ 모델 반영은 막혀 있습니다.${!canEdit && ME.has('modeler') ? ` <a href="mypage.html?req=sys&sys=${encodeURIComponent(sysOfArea(AREA))}">담당 시스템 추가 요청</a>` : ''}</div><a class="btn sm" href="${backUrl}">모델로</a></div></div>`;
 
   // ---------- dictionary lookups ----------
   const dict = getDict();
@@ -263,7 +280,7 @@ window.pageInit = function () {
       if (pu && !(adj && pu === 2 && L === 2)) continue; const r = go(i + L, j + 1, L === 2 ? 2 : 1); if (r) return [[c, T[j], true]].concat(r); }
     return null; }; return go(0, 0, false); };
   (() => { const all = getAllModels(), items = [];
-    Object.keys(all).forEach(ar => { const m = modelOf(ar, all[ar].ver); (m.E || []).forEach(e => { if (!e.ref && e.p && e.p !== '—' && !e.st) items.push([e.n, e.p]); (e.a || []).forEach(a => { if (a.s === 'ok' && a.p && a.p !== '—') items.push([a.n, a.p]); }); }); });
+    Object.keys(all).forEach(ar => { let m; try { const v = typeof window.areaView === 'function' ? areaView(ar) : null; m = v ? v.model : modelOf(ar, all[ar].ver); } catch (e) { m = { E: [] }; } /* F-01: only what this user may see (a version under review → its confirmed copy for others) */ (m.E || []).forEach(e => { if (!e.ref && e.p && e.p !== '—' && !e.st) items.push([e.n, e.p]); (e.a || []).forEach(a => { if (a.s === 'ok' && a.p && a.p !== '—') items.push([a.n, a.p]); }); }); });
     for (let pass = 0; pass < 3; pass++) items.forEach(([n, p]) => { const sol = n.length <= 16 ? align(n, p.split('_'), pass === 2) : null; if (sol) sol.forEach(([w, t, u]) => { if (u && w.length > 1 && !MW[w]) MW[w] = t; }); });
   })();
   const part = wi => ({ w: wi.w, abbr: wi.abbr, src: wi.src, doc: wi.doc, id: wi.id, kind: wi.isNew ? 'new' : wi.ok ? 'word' : (wi.doc || wi.src === '신청 중') ? 'pend' : 'bad' });
@@ -275,7 +292,7 @@ window.pageInit = function () {
     const add = p => { if (!p || p.unknown || !p.abbr || p.abbr === '?') return; const l = REV[p.abbr] = REV[p.abbr] || []; if (!l.some(x => x.w === p.w)) l.push(p); };
     dict.filter(x => x.k === 'word').forEach(x => add(wordInfo(x.name)));
     Object.keys(MW).forEach(w => add(known0(w)));
-    const all = getAllModels(); Object.keys(all).forEach(ar => { const m = modelOf(ar, all[ar].ver); (m.E || []).forEach(e => { decompose(e.n).parts.forEach(add); (e.a || []).forEach(a => decompose(a.n).parts.forEach(add)); }); });
+    const all = getAllModels(); Object.keys(all).forEach(ar => { let m; try { const v = typeof window.areaView === 'function' ? areaView(ar) : null; m = v ? v.model : modelOf(ar, all[ar].ver); } catch (e) { m = { E: [] }; } /* F-01: only copies this user may see */ (m.E || []).forEach(e => { decompose(e.n).parts.forEach(add); (e.a || []).forEach(a => decompose(a.n).parts.forEach(add)); }); });
     return REV;
   };
   const lexWords = () => { const m = {}; Object.values(rev()).flat().forEach(p => { m[p.w] = p; }); Object.keys(newWords).forEach(w => { m[w] = wordInfo(w); }); return Object.values(m).sort((a, b) => a.w.localeCompare(b.w, 'ko')); };
@@ -359,6 +376,7 @@ window.pageInit = function () {
       CLASS_FIX.forEach(([f, t]) => { if (nm.endsWith(f) && !nm.endsWith(t) && wordInfo(t)) segs(nm.slice(0, -f.length) + t).forEach(ps => list.push(mkAlt(ps, r, o, `‘${f}’→분류어 ‘${t}’ 보정`))); });
     }
     const seen = new Set();
+    const PRP = (window.STD_PROPOSAL || {})[r.key]; if (PRP && PRP.term && o.basis !== 'p') { const pp = segs(PRP.term)[0]; if (pp) { const a0 = mkAlt(pp, r, o, null); a0.phys = a0.have ? a0.phys : (PRP.phys || a0.phys); if (PRP.dom && !r.entRow && !a0.have) { a0.dom = PRP.dom; a0.t = AREA_T[PRP.dom] || DOMT[PRP.dom] || a0.t; } a0.score = Math.max(a0.score, 101); a0.why = (a0.why ? a0.why + ' · ' : '') + '표준 맞추기와 같은 제안'; list.push(a0); } }   // U-14
     return list.sort((a, b) => b.score - a.score).filter(a => { const k = a.parts.map(p => p.w + ':' + p.kind).join('+'); if (seen.has(k)) return false; seen.add(k); return true; });
   }
   // a hand-edited decomposition is re-judged when words change (새 단어 지정·해제)
@@ -372,7 +390,7 @@ window.pageInit = function () {
     const c = r.choice;
     if (r.cur.s === 'na') { r.st = 'na'; r.auto = false; return; }
     if (r.cur.s === 'ex') { r.st = 'ex'; return; }
-    if (r.rule) { r.st = 'na'; r.auto = true; return; }
+    if (r.rule && !['ok', 'req'].includes(r.cur.s)) { r.st = 'na'; r.auto = true; return; }   // U-14: standard stays 표준 · a term request stays 신청 중 (as stdJudge)
     if (r.cur.s === 'ok') { r.st = 'std'; r.needApply = false; return; }
     if (c && c.have) { r.st = 'std'; r.needApply = true; return; }
     r.st = !c || c.unk.length || c.bad.length ? 'unk' : c.sus.length ? 'sus' : 'comb';
@@ -385,10 +403,12 @@ window.pageInit = function () {
     ['basis', 'range'].forEach(n => { const b = document.querySelector(`input[name=${n}][value="${f[n]}"]`); if (b) b.checked = true; });
     ['max', 'prio', 'conn', 'strip', 'suffix', 'na'].forEach(k => { if (f[k] != null) $('o-' + k).value = f[k]; }); };
   const sigOf = c => c ? c.parts.map(p => p.w + ':' + p.kind).join('+') : '';
+  // F-04 · R-04: the row identity everywhere inside the wizard (draft save · restore · ⑤ selection) — kind + id, so a table-name row and a same-named attribute never merge
+  const RK = r => r.entRow ? `E:${r.e}` : `A:${r.e}.${r.a}`;
   function wizSave() {
     if (!rows.length || restoring || !formAt) return;
-    const inc = {}, pick = {}; rows.forEach(r => { inc[r.key] = !!r.inc; if (r.choice) pick[r.key] = { sig: sigOf(r.choice), parts: r.choice.parts.map(p => ({ w: p.w, kind: p.kind, abbr: p.abbr })) }; });
-    dbmStore.set(WK, JSON.stringify({ ver: VER, at: nowStr(), step, maxStep, form: formAt, newWords, inc, pick, regSel, mSel, filter, listAll, cur, lastDoc }));
+    const inc = {}, pick = {}; rows.forEach(r => { inc[RK(r)] = !!r.inc; if (r.choice) pick[RK(r)] = { sig: sigOf(r.choice), parts: r.choice.parts.map(p => ({ w: p.w, kind: p.kind, abbr: p.abbr })) }; });
+    dbmStore.set(WK, JSON.stringify({ keyVer: 2, ver: VER, at: nowStr(), step, maxStep, form: formAt, newWords, inc, pick, regSel, mSel, filter, listAll, cur, lastDoc }));
   }
   const wizClear = () => dbmStore.del(WK);
   const wizLoad = () => { try { const s = JSON.parse(dbmStore.get(WK, 'null')); return s && s.form ? s : null; } catch (e) { return null; } };
@@ -398,9 +418,15 @@ window.pageInit = function () {
     if (s.ver !== VER) { restoring = false; go(1, false); toast(`작업 버전이 v${s.ver}에서 v${VER}로 바뀌어 입력 옵션과 새 단어만 되살렸습니다 — [분석]을 눌러 다시 분석하세요`, 'info'); return; }
     analyze(); refreshAlts();
     if (!rows.length) { restoring = false; wizClear(); go(1, false); toast('저장한 분석의 항목이 모두 정리돼 이어서 할 것이 없습니다 — 옵션은 되살렸습니다', 'info'); return; }
-    rows.forEach(r => { const p = s.pick && s.pick[r.key];
+    const OLD = new Map(); rows.forEach(r => { const l = OLD.get(r.key) || []; l.push(r); OLD.set(r.key, l); });   // N-04: old key → rows
+    const NEWKEYS = s.keyVer === 2;   // N-04 (5회차): the draft says its key form — keyVer 2 = kind keys; no mark = the old form, always converted (a logical name may itself start with 'A:' / 'E:')
+    const conv = obj => { if (!obj || NEWKEYS) return obj; const o = {}; Object.keys(obj).forEach(k => { const l = OLD.get(k) || []; if (l.length === 1) o[RK(l[0])] = obj[k]; else if (l.length > 1) l.forEach(r => { r.recheck = true; }); }); return o; };
+    s = Object.assign({}, s, { inc: conv(s.inc), pick: conv(s.pick), mSel: conv(s.mSel) });
+    rows.forEach(r => { const p = s.pick && s.pick[RK(r)];
       if (p) { const a = r.alts.find(x => sigOf(x) === p.sig); if (a) r.choice = a; else if (p.parts && p.parts.length) { const c = mkAlt(rejudge(p.parts), r, O, null); c.custom = true; r.alts.unshift(c); r.choice = c; } judge(r); }
-      if (s.inc && r.key in s.inc) r.inc = !!s.inc[r.key] && actionable(r); });
+      if (s.inc && RK(r) in s.inc) r.inc = !!s.inc[RK(r)] && actionable(r); if (r.recheck) r.inc = false; });
+    { const n = rows.filter(r => r.recheck).length, old = document.getElementById('old-keys'); if (old) old.remove();
+      if (n) $('resume').insertAdjacentHTML('afterend', `<div class="pad u-pb-0" id="old-keys"><div class="banner warning" role="status"><i data-ic=warn></i><div class="grow"><b>예전 분석이라 일부 선택을 다시 확인해 주세요</b> — 테이블명 행과 같은 이름의 속성 행 ${n}건은 예전 저장 방식으로는 어느 쪽을 골랐는지 알 수 없어 고르지 않은 채로 두었습니다. ② 표에서 ‘다시 확인’ 표시 행을 보세요.</div></div></div>`); }   // N-04
     regSel = s.regSel || {}; mSel = s.mSel || {}; filter = s.filter || ''; listAll = !!s.listAll; cur = s.cur || 0; lastDoc = s.lastDoc || null;
     maxStep = Math.max(2, s.maxStep || 2); restoring = false;
     go(Math.max(2, Math.min(5, s.step || 2)), false);
@@ -415,6 +441,7 @@ window.pageInit = function () {
     });
     rows = out.filter(r => O.range === 'all' || !['ok', 'ex', 'na'].includes(r.cur.s) || !!ruleOf(r, O));
     rows.forEach(r => { r.rule = r.entRow ? null : ruleOf(r, O); r.alts = altsOf(r, O); r.choice = r.alts[0] || null; judge(r); r.inc = actionable(r) && (r.st !== 'std' || r.needApply); });
+    if (PRE_ROWS && !preUsed) { preUsed = true; rows.forEach(r => { r.inc = r.inc && PRE_ROWS.has(RK(r)); }); }   // R-04: kind + id   // A-3: the handed-over rows only, on the first analysis
     cur = 0; filter = ''; applied = null;
   }
   function refreshAlts() {   // after 새 단어 지정: recompute every row, keep each row's choice (same parts) or its hand edit
@@ -488,7 +515,9 @@ window.pageInit = function () {
   $('o-area').onchange = e => { nav(`term-wizard.html?area=${e.target.value}${q.get('from') ? '&from=' + encodeURIComponent(q.get('from')) : ''}`); };
   const pre = (q.get('ents') || '').split(',').filter(Boolean);
   const own = model.E.filter(e => !e.ref);
-  $('o-ents').innerHTML = own.map(e => { const todo = e.a.filter(a => !['ok', 'ex', 'na'].includes(a.s)).length + (e.p === '—' ? 1 : 0);
+  const SJ = (() => { try { return typeof window.stdJudge === 'function' ? window.stdJudge(model, window.STD_PROPOSAL) : null; } catch (e) { return null; } })();
+  const todoOf = e => SJ ? SJ.filter(r => r.e === e.id && ['okapply', 'comb', 'unreg', 'rule'].includes(r.st)).length : e.a.filter(a => !['ok', 'ex', 'na'].includes(a.s)).length + (e.p === '—' ? 1 : 0);   // F-13
+  $('o-ents').innerHTML = own.map(e => { const todo = todoOf(e);
     return `<label><input type="checkbox" value="${e.id}" ${!pre.length || pre.includes(e.id) ? 'checked' : ''}> ${esc(e.n)} <span class="mono faint">${esc(e.p)}</span><span class="n">속성 ${e.a.length}${todo ? ` · 미준수 ${todo}` : ''}</span></label>`; }).join('') || '<div class="caption muted u-p-16">이 업무 영역에 테이블이 없습니다</div>';
   const entsN = () => { $('ents-n').textContent = `${document.querySelectorAll('#o-ents input:checked').length}/${own.length}`; if (step === 1) footNote(); };
   $('o-ents').addEventListener('change', entsN);
@@ -496,6 +525,8 @@ window.pageInit = function () {
   $('ents-none').onclick = () => { document.querySelectorAll('#o-ents input').forEach(c => { c.checked = false; }); entsN(); };
   if (q.get('basis') === 'p') document.querySelector('input[name=basis][value=p]').checked = true;
   if (q.get('range') === 'all') document.querySelector('input[name=range][value=all]').checked = true;
+  // 흐름 리뷰: the 비대상 rule's default is the shared one (app.js STD_NA_RULES — 표준 맞추기 and the progress band judge with it); editing it here is for this analysis only
+  if (Array.isArray(window.STD_NA_RULES) && window.STD_NA_RULES.length) $('o-na').value = window.STD_NA_RULES.join('\n');
   $('scope').textContent = `테이블 ${own.length}개 · 속성 ${own.reduce((n, e) => n + e.a.length, 0)}개`;
 
   // ---------- ② 분석 결과 ----------
@@ -506,7 +537,7 @@ window.pageInit = function () {
     $('r-rows').innerHTML = rows.map((r, i) => { if (filter && r.st !== filter) return ''; const c = r.choice, s = ST[r.st], can = actionable(r);
       const why = r.st === 'na' ? (r.auto ? `비대상 규칙 ${r.rule} 일치` : `비대상 — ${r.cur.why || ''}`) : r.st === 'ex' ? `예외 — ${r.cur.why || ''}` : r.st === 'std' && !r.needApply ? '모델에서 표준 판정' + (c ? ` · ${c.why}` : '') : c ? c.why : '분해 후보 없음' + (O.basis === 'p' ? ' — 물리명 없음' : '');
       return `<tr tabindex="0" data-i="${i}" class="${r.st === 'na' || r.st === 'ex' ? 'row-mute' : ''}${isCtx(r) ? ' thl' : ''}"><td><input type="checkbox" data-inc="${i}" ${r.inc ? 'checked' : ''} ${can ? '' : 'disabled'} aria-label="${esc(r.ent)}.${esc(r.a)} 포함"></td>`
-        + `<td><span class="badge ${s[0]}">${s[1]}</span>${r.st === 'std' && r.needApply ? '<span class="sub2">사전에 있음 · 모델 반영 필요</span>' : ''}</td>`
+        + `<td><span class="badge ${s[0]}">${s[1]}</span>${r.recheck ? ' <span class="badge b-warning">다시 확인</span>' : ''}${r.st === 'std' && r.needApply ? '<span class="sub2">사전에 있음 · 모델 반영 필요</span>' : ''}</td>`
         + `<td>${esc(r.ent)}${r.entRow ? ' <span class="muted">· 테이블명</span>' : ''}</td><td class="tw-nm" title="${esc(r.cur.n)}">${esc(r.cur.n)}</td><td class="mono tw-ph" title="${esc(r.cur.p)}">${esc(r.cur.p)}</td>`
         + `<td>${c ? esc(c.term) + susBadge(c) : '<span class="faint">후보 없음</span>'}</td><td class="mono tw-ph" title="${c ? esc(c.phys) : ''}">${c ? esc(c.phys) : ''}</td><td class="mono">${c && c.dom ? esc(c.dom) : '<span class="faint">—</span>'}</td><td class="num mono">${c ? c.score : ''}</td>`
         + `<td class="tw-why" title="${esc(why)}"><span class="clamp">${esc(why)}</span></td>`
@@ -584,7 +615,7 @@ window.pageInit = function () {
       if (rp.length) { toast(rp[0].msg, 'danger'); $('d-abbr').focus(); return; }
       const w = c.parts[editPart].w; newWords[w] = ab; refreshAlts();
       const hit = rows.filter(x => x.choice && x.choice.parts.some(p => p.w === w && p.kind === 'new')).length;
-      toast(`‘${esc(w)}’${josa(w, '을/를').slice(w.length)} 새 단어(${ab})로 지정했습니다 — 이 조각이 있는 ${hit}개 항목에 반영 · ④에서 단어 신청 항목으로 나옵니다`, 'success'); editPart = null; drawWords(); return;
+      toast(`‘${esc(w)}’${josa(w, '을/를').slice(w.length)} 새 단어(${esc(ab)})로 지정했습니다 — 이 조각이 있는 ${hit}개 항목에 반영 · ④에서 단어 신청 항목으로 나옵니다`, 'success'); editPart = null; drawWords(); return;
     }
     if (e.target.id === 'd-unnew') { const w = c.parts[editPart].w; delete newWords[w]; refreshAlts(); toast(`‘${esc(w)}’ 새 단어 지정을 취소했습니다`, 'info'); editPart = null; drawWords(); }
   });
@@ -634,7 +665,7 @@ window.pageInit = function () {
     drawReg(); wizSave();
     toast(`바구니에 ${a}건 담았습니다${s ? ` · 이미 있던 ${s}건 제외` : ''} — 분석은 저장돼 있어 돌아오면 이어서 합니다`, 'success', { label: '바구니 보기', fn: () => { nav(`dictionary.html?basket=1&ret=${encodeURIComponent(RET)}`); } }); };
   // D5: the way back from the basket / candidate queue (the receiving screens show it from &ret=)
-  const RET = `term-wizard.html?area=${AREA}&resume=1${CENT ? '&e=' + encodeURIComponent(CE) + (CA ? '&a=' + encodeURIComponent(CA) : '') : ''}`;
+  const RET = `term-wizard.html?area=${AREA}&from=${FROM_V}&resume=1${CENT ? '&e=' + encodeURIComponent(CE) + (CA ? '&a=' + encodeURIComponent(CA) : '') : ''}`;
   document.querySelectorAll('#p4 a[href="dictionary.html"], #p4 a[href="candidates.html"]').forEach(a => { a.href = a.getAttribute('href') + (a.getAttribute('href') === 'dictionary.html' ? '?basket=1&' : '?') + 'ret=' + encodeURIComponent(RET); });
   $('g-cand').onclick = () => { if (!guard()) return; const C = gChecked(); if (!C.length) return; let n = 0;
     C.forEach(it => { it.locs.forEach(r => { addCandidate({ t: it.k === 'word' ? '단어' : '용어', name: it.name, abbr: it.abbr || '' }, { area: AREA, e: r.e, ent: r.ent, attr: r.a }); n++; }); regSel[it.key] = false; });
@@ -649,11 +680,11 @@ window.pageInit = function () {
     // review fix: a dictionary request needs dictionary rights and the same submit check as the dictionary screen (submit = approval re-check)
     if (!can('dict.request')) { toast('사전 신청 권한이 없습니다 — [후보 큐로]를 쓰세요', 'danger'); return; }
     const bad = checkDictDoc({ id: '(작성 중)', items }).filter(r => r.problems.length);
-    if (bad.length) { $('mo-req').classList.remove('open'); toast(`검사에서 ${bad.length}건이 막힙니다 — ${bad.map(r => `${r.name}: ${r.problems[0]}`).join(' · ')}. 바구니에 담아 고친 뒤 올리세요`, 'danger', { label: '바구니에 담기', fn: () => $('g-basket').click() }); return; }
+    if (bad.length) { $('mo-req').classList.remove('open'); toast(`검사에서 ${bad.length}건이 막힙니다 — ${bad.map(r => `${esc(r.name)}: ${esc(r.problems[0])}`).join(' · ')}. 바구니에 담아 고친 뒤 올리세요`, 'danger', { label: '바구니에 담기', fn: () => $('g-basket').click() }); return; }
     const res = createDoc({ type: 'dict', kind: 'std', area: AREA, ver: VER, title: `용어 자동분석 신청 ${items.length}건 (${MNAME})`, n: items.length, reason: $('rq-why').value.trim(), cc: [], items, key: `auto:${AREA}:v${VER}:${items.map(i => i.name).join(',')}` });
     $('mo-req').classList.remove('open');
     if (res.conflict) { toast(`이미 진행 중인 신청과 겹칩니다 — ${res.conflict.join(', ')}. 그 항목은 선택에서 빼고 다시 신청하세요`, 'danger'); return; }
-    lastDoc = { id: res.doc.id, n: items.length }; C.forEach(it => { regSel[it.key] = false; }); $('rq-why').value = '';
+    lastDoc = { id: res.doc.id, n: items.length }; setTimeout(() => flowNote(`용어 신청 ${res.doc.id}(${items.length}건)을 만들었습니다 — ⑤에서 모델에 반영하면 ‘남은 용어’가 끝납니다`), 0);   // U-15 C.forEach(it => { regSel[it.key] = false; }); $('rq-why').value = '';
     refreshAlts();   // words/terms in the new request now read as 신청 중
     toast(`${res.dup ? '같은 신청이 이미 있습니다' : '결재 문서를 만들었습니다'} — ${res.doc.id} (${items.length}건) · ⑤에서 이 용어를 쓰는 항목은 ‘신청 중’으로 반영됩니다`, 'success', { label: '결재함에서 보기', fn: () => { nav(`approvals.html?doc=${res.doc.id}`); } });
     drawReg();
@@ -673,16 +704,16 @@ window.pageInit = function () {
       if (newN === r.cur.n && newP === r.cur.p && newT === r.cur.t && (res.s === r.cur.s || (res.s === 'unreg' && r.cur.s === 'unreg'))) return;
       out.push({ r, kind: 'row', newN, newP, newT, res });
     });
-    out.forEach(x => { if (!(x.r.key in mSel)) mSel[x.r.key] = x.res.proc !== '이름만 맞춤'; });   // review: name-only rows (not yet a standard) start unselected
+    out.forEach(x => { if (!(RK(x.r) in mSel)) mSel[RK(x.r)] = x.res.proc !== '이름만 맞춤'; });   // review: name-only rows (not yet a standard) start unselected
     return out;
   }
   const RES_TAG = { ok: 'ok', req: 'run', unreg: 'warn', comb: 'mine', na: 'end' };
   function drawApply() {
-    const L = applyRows(); const on = L.filter(x => mSel[x.r.key]);
+    const L = applyRows(); const on = L.filter(x => mSel[RK(x.r)]);
     const n = s => on.filter(x => x.res.s === s).length;
     $('m-sum').innerHTML = `<span><b>${on.length}</b>반영할 행</span><span><b>${n('ok')}</b>표준</span><span><b>${n('req')}</b>신청 중</span><span><b>${n('comb') + n('unreg')}</b>이름만 맞춤(미등록·신청 전)</span><span><b>${n('na')}</b>비대상</span><span><b>${L.length - on.length}</b>제외</span>`;
     $('m-rows').innerHTML = L.map(x => { const r = x.r;
-      return `<tr class="${mSel[r.key] ? '' : 'row-mute'}"><td><input type="checkbox" data-m="${esc(r.key)}" ${mSel[r.key] ? 'checked' : ''} ${applied ? 'disabled' : ''} aria-label="${esc(r.ent)}.${esc(r.a)} 반영"></td><td>${esc(r.ent)}${r.entRow ? ' <span class="muted">· 테이블명</span>' : ''}</td>`
+      return `<tr class="${mSel[RK(r)] ? '' : 'row-mute'}"><td><input type="checkbox" data-m="${esc(RK(r))}" ${mSel[RK(r)] ? 'checked' : ''} ${applied ? 'disabled' : ''} aria-label="${esc(r.ent)}.${esc(r.a)} 반영"></td><td>${esc(r.ent)}${r.entRow ? ' <span class="muted">· 테이블명</span>' : ''}</td>`
         + (x.kind === 'na' ? `<td>${esc(r.cur.n)}</td><td class="mono">${esc(r.cur.p)}</td><td class="mono">${esc(r.cur.t || '')}</td><td>${tag('end', '비대상')}<span class="sub2">${esc(x.why)}</span></td>`
           : `<td>${two(r.cur.n, x.newN)}${r.entRow && x.r.choice.term !== r.cur.n ? `<span class="sub2">테이블 이름은 모델에서 바꿉니다(제안 ${esc(x.r.choice.term)})</span>` : ''}</td><td>${two(r.cur.p, x.newP, true)}</td><td>${two(r.cur.t, x.newT, true)}</td><td>${tag(RES_TAG[x.res.s], x.res.label)}</td>`) + '</tr>'; }).join('')
       || '<tr class="er done"><td colspan="6"><span class="et">반영할 변경이 없습니다</span>포함한 항목이 이미 모델과 같습니다. ②에서 포함할 항목을 고르세요.</td></tr>';
@@ -695,12 +726,12 @@ window.pageInit = function () {
     else { setBlock($('m-go'), ''); $('m-go').disabled = !on.length; }
   }
   $('m-rows').addEventListener('change', e => { const c = e.target.closest('[data-m]'); if (!c) return; mSel[c.dataset.m] = c.checked; drawApply(); const f = document.querySelector(`#m-rows [data-m="${CSS.escape(c.dataset.m)}"]`); f && f.focus(); });
-  $('m-all').onchange = e => { applyRows().forEach(x => { mSel[x.r.key] = e.target.checked; }); drawApply(); $('m-all').focus(); };
+  $('m-all').onchange = e => { applyRows().forEach(x => { mSel[RK(x.r)] = e.target.checked; }); drawApply(); $('m-all').focus(); };
   $('m-go').onclick = () => {
     if ($('m-go').disabled || !guard()) return;
     const now = modelLock(AREA);
     if (now.state !== 'edit' || now.model.ver !== VER || !can('model.edit', { area: AREA })) { toast(`지금은 반영할 수 없습니다 — ${now.doc && now.state !== 'edit' ? `${now.doc.id} ${STEP_NAME[now.doc.step]}` : `작업 버전이 v${now.model.ver}로 바뀜`}`, 'danger', { label: '새로고침', fn: () => location.reload() }); return; }
-    const on = applyRows().filter(x => mSel[x.r.key]); if (!on.length) return;
+    const on = applyRows().filter(x => mSel[RK(x.r)]); if (!on.length) return;
     const rowsOut = on.filter(x => x.kind === 'row').map(x => ({ key: x.r.key, e: x.r.e, a: x.r.a, proc: x.res.proc, wait: x.res.wait, term: x.r.entRow ? undefined : x.newN, phys: x.newP !== x.r.cur.p ? x.newP : undefined, dom: x.r.choice.dom, t: x.newT && x.newT !== x.r.cur.t ? x.newT : undefined, entRow: !!x.r.entRow }));
     const na = on.filter(x => x.kind === 'na').map(x => ({ key: x.r.key, e: x.r.e, a: x.r.a, why: x.why }));
     try { sessionStorage.setItem('dbm-apply', JSON.stringify({ area: AREA, ver: VER, rows: rowsOut, ex: [], na, doc: lastDoc ? lastDoc.id : null, req: lastDoc ? lastDoc.n : 0, cand: 0, from: 'term-wizard' })); } catch (e) {}
@@ -710,8 +741,15 @@ window.pageInit = function () {
     $('m-done').innerHTML = `<div class="tw-done" role="status"><div class="flex u-mb-8"><i data-ic=check></i><b>모델 반영을 준비했습니다</b></div>
       <div class="mline"><span><b>${applied.ok}</b>반영(표준 ${applied.std} · 이름만 ${applied.name})</span><span><b>${applied.req}</b>신청 중</span><span><b>${applied.na}</b>비대상 제외</span><span><b>${applied.skip}</b>선택 안 함</span></div>
       <div class="caption muted u-mb-12">모델 화면을 열면 작업 버전 v${VER}에 한 번에 반영되고, 토스트의 [실행 취소]로 되돌릴 수 있습니다.${lastDoc ? ` 용어 신청 ${lastDoc.id}는 되돌려도 남습니다(결재함에서 회수).` : ''}</div>
-      <a class="btn primary" id="m-view" href="${backUrl}">모델에서 보기</a></div>`;
+      <div class="u-flex u-gap-8 u-wrap"><a class="btn primary" id="m-view" href="${backUrl}">모델에서 보기</a><a class="btn" id="m-check" href="model.html?area=${AREA}&check=1">모델 검증 열기</a><a class="btn ghost" id="m-std" href="model.html?area=${AREA}&then=std" title="모델 화면에서 반영 · 저장한 뒤 표준 맞추기(할 일)로 넘어갑니다">표준 맞추기로 돌아가기</a></div></div>`;   /* B-3: the next steps of the flow — model check (?check=1 opens its panel) · back to 표준 맞추기 */
     wizClear();   // the analysis is finished — nothing to resume
+    // U-15: the model as the reserved hand-off will make it (the same edits the model screen applies) — the band shows the result, with '반영 대기 n건'
+    const sim = (() => { const m = JSON.parse(JSON.stringify(model)), fa = x => { const e = m.E.find(y => y.id === x.e); return e ? e.a.find(a => a.n === x.a || a.orig === x.a) : null; };
+      rowsOut.forEach(x => { if (x.entRow) { const e = m.E.find(y => y.id === x.e); if (e && x.phys) e.p = x.phys; if (e && (String(x.proc || '').includes('용어 신청') || x.wait)) { e.st = 1; e.reqDoc = x.wait || (lastDoc && lastDoc.id) || e.reqDoc; } return; }
+        const a = fa(x); if (!a) return; if (x.term && x.term !== a.n) { a.orig = a.orig || a.n; a.n = x.term; } if (x.phys) a.p = x.phys; if (x.t) a.t = x.t;
+        if (x.proc === '용어 적용') a.s = 'ok'; else if (String(x.proc || '').includes('용어 신청') && lastDoc) { a.s = 'req'; a.reqDoc = lastDoc.id; } else if (x.wait) { a.s = 'req'; a.reqDoc = x.wait; } });
+      na.forEach(x => { const a = fa(x); if (a) a.s = 'na'; }); return m; })();
+    flowNote(`모델 반영을 준비했습니다 — 반영 대기 ${rowsOut.length + na.length}건${lastDoc ? ` · 신청 ${lastDoc.id}` : ''}. 띠는 반영 뒤 기준입니다 — 모델 화면을 열면 반영됩니다`, sim);   // U-15
     $('m-view').focus();
   };
 
@@ -722,7 +760,13 @@ window.pageInit = function () {
   $('sc').addEventListener('click', () => setTimeout(wizSave, 0));
   window.addEventListener('pagehide', wizSave);
   const saved = wizLoad();
-  if (saved && q.get('resume') === '1') wizRestore(saved);
+  if (saved && q.get('resume') === '1' && !PRE_ROWS) wizRestore(saved);
+  else if (saved && PRE_ROWS) {   // F-04: rows were just handed over but an earlier analysis is saved — ask which one
+    $('resume-t').innerHTML = `<b>표준 맞추기에서 새로 넘긴 ${PRE_ROWS.size}건이 있습니다.</b> ${esc(saved.at)}에 저장한 분석도 있습니다 — 어느 쪽으로 할까요?`;
+    $('resume-go').textContent = '하던 분석 이어서'; $('resume-new').textContent = `새로 넘긴 ${PRE_ROWS.size}건으로 다시 분석`; $('resume').hidden = false;
+    $('resume-go').onclick = () => { $('resume').hidden = true; preUsed = true; wizRestore(saved); };
+    $('resume-new').onclick = () => { $('resume').hidden = true; wizClear(); next(); };
+  }
   else if (saved) {
     const n = Object.values(saved.inc || {}).filter(Boolean).length;
     $('resume-t').innerHTML = `<b>분석을 이어서 할까요?</b> ${esc(saved.at)}에 저장한 분석이 있습니다 — ${STEPS[(saved.step || 2) - 1]} 단계 · 포함 ${n}건${Object.keys(saved.newWords || {}).length ? ` · 새 단어 ${Object.keys(saved.newWords).length}개` : ''}${saved.ver !== VER ? ` <span class="faint">(v${saved.ver} 기준 — 지금은 v${VER}이라 옵션만 되살립니다)</span>` : ''}`;

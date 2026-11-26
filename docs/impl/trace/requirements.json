@@ -1,6 +1,6 @@
 {
  "note": "자동 생성 — node scripts/trace-extract.mjs. 직접 고치지 말고 출처 문서 · assign.json · behaviors/*.json 을 고친다.",
- "inputsHash": "afe786d455a30c859c97a395224a0b330f8fd6e4829e17d9bcedbd561b1f2bb3",
+ "inputsHash": "f9ddfdad38aa98f1aaa726d6967ff8d569a419f98a035e6ddfac9998b60f7eba",
  "rows": [
   {
    "id": "DG-R01",
@@ -1067,8 +1067,7 @@
    "id": "SC-35",
    "kind": "UI",
    "title": "용어 자동분석(모델 → 용어 → 모델)",
-   "screen": "term-wizard.html",
-   "source": "docs/impl/screen-manifest.json",
+   "source": "docs/ux/02-flows.md",
    "phase": "P3",
    "tasks": [
     "P3:용어 자동분석 · 공통표준 새 판"
@@ -1089,9 +1088,8 @@
   {
    "id": "SC-36a",
    "kind": "UI",
-   "title": "엑셀 정의서 가져오기(테이블 설계 → 모델)",
-   "screen": "import-excel.html",
-   "source": "docs/impl/screen-manifest.json",
+   "title": "A-1 · A-5 · A-6 · B-1 · B-2 · B-4 · Q-F4",
+   "source": "docs/ux/02-flows.md",
    "phase": "P2",
    "tasks": [
     "T-P2-303"
@@ -2522,6 +2520,19 @@
    "phase": "P4",
    "tasks": [
     "P4:위임 · 조회 범위 · 감리"
+   ],
+   "verify": "test"
+  },
+  {
+   "id": "S-18",
+   "kind": "SCN",
+   "title": "처음 표준화 완주(02-flow-plan): 사전 엑셀 일괄 → 결재 → 모델 엑셀 가져오기 → 진행 띠 → 표준 맞추기 적용 → 용어 자동분석 신청 → 승인 → 반영 → 모델 검증 일괄 처리(FK 후보 · 정의) → 확정 신청 → 승인 → 승인본 DDL, 조회만은 각 단계 변경 불가",
+   "accounts": "tmodin · tda · town · tview",
+   "phaseHint": "P2⑦",
+   "source": "docs/impl/01-task-list.md",
+   "phase": "P2",
+   "tasks": [
+    "T-P2-705"
    ],
    "verify": "test"
   },
@@ -6048,7 +6059,8 @@
    "roles": "신청자 겸 DA",
    "refs": [
     "appr.da",
-    "R-02"
+    "R-02",
+    "A-6"
    ],
    "states": [
     "approvals.html?new=1&doc=REQ-2026-0014"
@@ -6068,7 +6080,8 @@
    "screen": "approvals.html",
    "roles": "신청자",
    "refs": [
-    "appr.da"
+    "appr.da",
+    "A-6"
    ],
    "states": [
     "approvals.html?new=1&doc=REQ-2026-0011&as=park"
@@ -9009,6 +9022,72 @@
    ]
   },
   {
+   "id": "BH-approvals-162",
+   "kind": "BH",
+   "title": "새 신청 띠 · 주소 ?new=1&doc=ID 열기 — 그 문서가 사전 엑셀 일괄(kind excel) · 모델에서 온 용어 신청(kind std)이고 model.edit가 있는 사용자 → 신청 완료 띠 아래 다음 단계 — 사전 엑셀 일괄: ‘사전이 준비되면(승인 뒤) 모델을 가져오세요.’ + [모델 엑셀 가져오기](import-excel.html), 용어 신청: ‘승인되면 표준 맞추기에서 모델에 반영합니다.’ + [표준 맞추기에서 반영]. 그 밖의 사전 신청 · model.edit 없음은 숨김",
+   "screen": "approvals.html",
+   "roles": "model.edit",
+   "refs": [
+    "A-6",
+    "model.edit",
+    "U-22"
+   ],
+   "states": [
+    "approvals.html?as=kim&new=1&doc=REQ-2026-0016"
+   ],
+   "verify": "e2e",
+   "source": "docs/impl/trace/behaviors/approvals.json",
+   "phase": "P2",
+   "tasks": [
+    "T-P2-205",
+    "T-P2-603"
+   ]
+  },
+  {
+   "id": "BH-approvals-163",
+   "kind": "BH",
+   "title": "상세 패널 · 본문 위 · 완료된 사전 엑셀 일괄 · 용어 신청 문서를 신청자 본인(model.edit 있음)이 열 때(승인 알림이 여는 화면) → 초록 띠 — 사전 엑셀 일괄: ‘사전이 준비됐습니다 — 이제 모델을 가져오세요.’ + [모델 엑셀 가져오기](import-excel.html), 용어 신청: ‘승인된 용어를 모델에 반영하세요.’ + [표준 맞추기에서 반영](standardize.html?area=&f=todo). 다른 사전 신청 · 남의 문서 · model.edit 없음은 숨김",
+   "screen": "approvals.html",
+   "roles": "신청자 · model.edit",
+   "refs": [
+    "F-09",
+    "U-22",
+    "A-6"
+   ],
+   "states": [
+    "approvals.html?as=kim&box=mine&doc=REQ-2026-0016"
+   ],
+   "verify": "e2e",
+   "source": "docs/impl/trace/behaviors/approvals.json",
+   "phase": "P2",
+   "tasks": [
+    "T-P2-205",
+    "T-P2-603"
+   ]
+  },
+  {
+   "id": "BH-approvals-164",
+   "kind": "BH",
+   "title": "목록 · 상세 · 처리 이력 · 문서 제목(업무 영역명 포함) · 신청 사유 · 승인 의견 · 반려 · 회수 사유 · 의견에 기호(< > & 따옴표)가 있을 때 · 주소의 doc 값(없는 신청번호 등) → 목록 제목 · 상세 제목 · 신청 사유 · 승인 창 요약 · 새 신청 띠 · 처리 이력(처리자 · 처리 · 사유), 찾을 수 없는 문서 안내 · 새 신청 띠의 주소 값에서 모두 글자 그대로 보인다(마크업으로 해석하지 않음)",
+   "screen": "approvals.html",
+   "roles": "전체",
+   "refs": [
+    "R-01"
+   ],
+   "states": [
+    "approvals.html?as=lee&doc=REQ-2026-0016"
+   ],
+   "verify": "unit",
+   "source": "docs/impl/trace/behaviors/approvals.json",
+   "phase": "P4",
+   "tasks": [
+    "T-P2-205",
+    "T-P2-603",
+    "P4:사업 · 두 사람 확인"
+   ],
+   "note": "단계를 R-01(P4)에 맞춤"
+  },
+  {
    "id": "BH-audit-001",
    "kind": "BH",
    "title": "감사 로그 진입 · audit.view 없이 주소 열기 → error.html?code=403&need=DA · 기관 담당자 · Admin · 감리&what=감사 로그 로 바뀜",
@@ -11771,23 +11850,26 @@
   {
    "id": "BH-ddl-002",
    "kind": "BH",
-   "title": "머리 · 화면 열기(?area= · ?snap= · ?src=work) → 경로에 그 영역의 시스템 · 영역 이름, 버전 배지: 확정본이면 ‘vN 확정본 · <결재 문서>’(성공 색, 결재 문서가 없는 시드면 ‘vN 확정본’), 작업본이면 ‘vN 작업본 — 미리보기 · 승인 전(비공식)’(경고 색), 결재 중 제출 사본이면 ‘vN 제출 사본 · <문서> — 검토용’(경고 색), 반려 · 회수 사본이면 ‘vN 제출 사본 · <문서> (반려됨/회수됨)’. 제목 툴팁 ‘<DB> · 스키마 <스키마>’. 영역 칸은 시스템 홈 그 영역으로 ",
+   "title": "머리 · 화면 열기(?area= · ?snap= · ?ver= · ?src=work) → 경로에 그 영역의 시스템 · 영역 이름, 버전 배지: 확정본이면 ‘vN 확정본 · <결재 문서>’(성공 색, 결재 문서가 없는 확정본이면 ‘vN 확정본’ — ?ver=N으로 그 버전을 엶), 작업본이면 ‘vN 작업본 — 미리보기 · 승인 전(비공식)’(경고 색), 결재 중 제출 사본이면 ‘vN 제출 사본 · <문서> — 검토용’(경고 색), 반려 · 회수 사본이면 ‘vN 제출 사본 · <문서> (반려됨/회수됨)’. 제목 툴팁 ‘<DB> · 스키",
    "screen": "ddl.html",
    "roles": "model.view",
    "refs": [
     "model.view",
     "OUT-R01",
-    "M-7"
+    "M-7",
+    "N-05"
    ],
    "states": [
     "ddl.html"
    ],
    "verify": "e2e",
    "source": "docs/impl/trace/behaviors/ddl.json",
-   "phase": "P2",
+   "phase": "P4",
    "tasks": [
-    "T-P2-703"
-   ]
+    "T-P2-703",
+    "P4:사업 · 두 사람 확인"
+   ],
+   "note": "단계를 N-05(P4)에 맞춤"
   },
   {
    "id": "BH-ddl-003",
@@ -11968,7 +12050,7 @@
   {
    "id": "BH-ddl-012",
    "kind": "BH",
-   "title": "SQL 미리보기 · 프리셋 ‘변경분 (ALTER)’ 선택 → 선택 버전 직전 확정본(사본이면 그 사본의 직전 버전, 작업본이면 기준 확정본)과 비교 — id로 짝지은 테이블의 물리명이 바뀌었으면 모든 테이블 문장 앞에 ‘-- 테이블 이름 변경 n건 — 겹치지 않는 순서’와 ALTER TABLE <스키마>.<옛 이름> RENAME TO <새 이름>(Oracle · PostgreSQL 같은 꼴)을 겹치지 않는 순서로(연쇄 A→B · B→C는 B→C 먼저, 맞바꾸기 · 순환은 대상 스키마(직전 확정본 테이블 · 이번 결과 테이블 · 다른",
+   "title": "SQL 미리보기 · 프리셋 ‘변경분 (ALTER)’ 선택 → 선택 버전 직전 확정본(사본이면 그 사본의 직전 버전, 작업본이면 기준 확정본)과 비교 — id로 짝지은 테이블의 물리명이 바뀌었으면 모든 테이블 문장 앞에 ‘-- 테이블 이름 변경 n건 — 겹치지 않는 순서’와 ALTER TABLE <스키마>.<옛 이름> RENAME TO <새 이름>(Oracle · PostgreSQL 같은 꼴)을 겹치지 않는 순서로(연쇄 A→B · B→C는 B→C 먼저, 맞바꾸기 · 순환은 대상 스키마(직전 확정본 테이블 · 이번 결과 테이블 · 같은",
    "screen": "ddl.html",
    "roles": "model.view",
    "refs": [
@@ -12396,11 +12478,12 @@
   {
    "id": "BH-ddl-033",
    "kind": "BH",
-   "title": "도구줄 · 기준 선택 · 선택 상자 ‘기준’ 바꾸기 → 선택지: ‘vN 확정본 (공식)’ · ‘vM 작업본 — 미리보기(승인 전)’(작업 중일 때) · ‘vM 제출 사본 — 검토용(결재 중)’(신청자 · 결재 담당자만) · 링크로 연 다른 사본. 고르면 ddl.html?area=…(&src=work | &snap=<문서>)로 다시 열림",
+   "title": "도구줄 · 기준 선택 · 선택 상자 ‘기준’ 바꾸기 → 선택지: ‘vN 확정본 (공식)’ · 이전 확정본마다 ‘vK 확정본 (공식) · <문서>’ 또는 ‘vK 확정본 (공식) · 결재 문서 기록 없음’ · ‘vM 작업본 — 미리보기(승인 전)’(작업 중일 때) · ‘vM 제출 사본 — 검토용(결재 중)’(신청자 · 결재 담당자만) · 링크로 연 다른 사본. 고르면 ddl.html?area=…(&src=work | &snap=<문서> | &ver=<버전>)로 다시 열림",
    "screen": "ddl.html",
    "roles": "model.view",
    "refs": [
-    "M-7"
+    "M-7",
+    "N-05"
    ],
    "states": [
     "ddl.html?as=lee&area=rq",
@@ -12408,10 +12491,12 @@
    ],
    "verify": "e2e",
    "source": "docs/impl/trace/behaviors/ddl.json",
-   "phase": "P2",
+   "phase": "P4",
    "tasks": [
-    "T-P2-703"
-   ]
+    "T-P2-703",
+    "P4:사업 · 두 사람 확인"
+   ],
+   "note": "단계를 N-05(P4)에 맞춤"
   },
   {
    "id": "BH-ddl-034",
@@ -15029,7 +15114,7 @@
   {
    "id": "BH-dictionary-020",
    "kind": "BH",
-   "title": "머리 · 더 보기 · [⋯ 더 보기] 클릭 → 메뉴에 ‘엑셀 가져오기’(excel-import.html) · ‘변경 내역’(dict-history.html) · ‘업로드 이력’(uploads.html) 링크. 바깥 클릭 · Esc로 닫힘",
+   "title": "머리 · 더 보기 · [⋯ 더 보기] 클릭 → 메뉴에 ‘사전 엑셀 일괄’(excel-import.html) · ‘변경 내역’(dict-history.html) · ‘업로드 이력’(uploads.html) 링크. 바깥 클릭 · Esc로 닫힘",
    "screen": "dictionary.html",
    "roles": "전체",
    "refs": [
@@ -22980,7 +23065,7 @@
   {
    "id": "BH-excel-import-128",
    "kind": "BH",
-   "title": "이어서 작업 배너 · 주소 ?resume={결재 중 · 반영 완료 묶음} → 배너 ‘{ID} · {파일} — {신청} {단계}. 신청된 묶음은 조회 전용입니다(결재 문서 내용을 바꾸지 않음). 보완하려면 반려·회수 뒤에 다시 여세요.’ 고치기 · 신청 불가",
+   "title": "이어서 작업 배너 · 주소 ?resume={결재 중 · 반영 완료 묶음} → 배너 ‘{ID} · {파일} — {신청} {단계}. 신청된 묶음은 조회 전용입니다(결재 문서 내용을 바꾸지 않음). 보완하려면 반려·회수 뒤에 다시 여세요.’ 고치기 · 신청 불가. 모델 편집 권한(model.edit)이 있으면 배너에 다음 단계 안내를 더한다(BH-excel-import-139)",
    "screen": "excel-import.html",
    "roles": "올린 사람 · excel.viewall",
    "refs": [],
@@ -23175,6 +23260,48 @@
    ],
    "verify": "exempt",
    "exemptReason": "목업 시드 데이터 처리(행 상세 없는 시드 묶음)",
+   "source": "docs/impl/trace/behaviors/excel-import.json",
+   "phase": "P3",
+   "tasks": [
+    "P3:사전 엑셀 일괄"
+   ]
+  },
+  {
+   "id": "BH-excel-import-139",
+   "kind": "BH",
+   "title": "이어서 작업 배너 · 다음 단계 · 주소 ?resume={결재 중 · 반영 완료 묶음} 또는 ?verify={반영 완료 묶음} — 이 시스템 model.edit가 있는 사용자 → 배너 안에 결재 중이면 ‘사전이 준비되면(승인 뒤) 모델을 가져오세요.’, 반영 완료면 ‘사전이 준비됐습니다 — 이제 모델을 가져오세요.’ + [모델 엑셀 가져오기](import-excel.html). model.edit가 없으면 이 줄은 숨김",
+   "screen": "excel-import.html",
+   "roles": "model.edit 가진 담당 시스템 모델러",
+   "refs": [
+    "A-6",
+    "model.edit",
+    "SC-36a"
+   ],
+   "states": [
+    "excel-import.html?as=kim&resume=UP-2026-0007",
+    "excel-import.html?as=kim&resume=UP-2026-0006"
+   ],
+   "verify": "e2e",
+   "source": "docs/impl/trace/behaviors/excel-import.json",
+   "phase": "P3",
+   "tasks": [
+    "P3:사전 엑셀 일괄"
+   ]
+  },
+  {
+   "id": "BH-excel-import-140",
+   "kind": "BH",
+   "title": "머리 · 화면 열기 → 화면 제목 · 탭 제목 ‘사전 엑셀 일괄’(모델 엑셀 가져오기(정의서)와 구분 — B-4)",
+   "screen": "excel-import.html",
+   "roles": "전체",
+   "refs": [
+    "B-4",
+    "SC-13"
+   ],
+   "states": [
+    "excel-import.html"
+   ],
+   "verify": "e2e",
    "source": "docs/impl/trace/behaviors/excel-import.json",
    "phase": "P3",
    "tasks": [
@@ -23671,7 +23798,7 @@
   {
    "id": "BH-home-026",
    "kind": "BH",
-   "title": "업무 영역 · 다음 행동 · 영역 상태별 → 검토 중 → 결재 문서 번호 링크 + 기한 넘김이면 빨간 일수, 아니면 ‘{단계} N일’ / 확정 → [다음 버전 시작] / 엔터티 없음 → [모델 시작] / 미준수 있음 → [표준 맞추기] / 연결 신청 진행 중 → ‘{번호} 완료 후 확정’ / 그 밖 → [확정 신청]",
+   "title": "업무 영역 · 다음 행동 · 영역 상태별 → 검토 중 → 결재 문서 번호 링크 + 기한 넘김이면 빨간 일수, 아니면 ‘{단계} N일’ / 확정 → [다음 버전 시작] / 엔터티 없음 → model.edit가 있으면 [모델 엑셀 가져오기](import-excel.html?area={영역}) · [모델 시작](model.html?area={영역}), 없으면 ‘모델 없음’(흐림 글자) / 미준수 있음 → [표준 맞추기] / 연결 신청 진행 중 → ‘{번호} 완료 후 확정’ / 그 밖 → [확정 신청]",
    "screen": "home.html",
    "roles": "전체",
    "refs": [
@@ -24169,6 +24296,27 @@
    ]
   },
   {
+   "id": "BH-home-052",
+   "kind": "BH",
+   "title": "업무 영역 · 다음 행동 · 엔터티가 없는 영역 — 편집 권한(model.edit)이 없는 사용자 → [모델 엑셀 가져오기] · [모델 시작]을 숨기고 ‘모델 없음’만 보인다(A-6, 역할 없으면 숨김)",
+   "screen": "home.html",
+   "roles": "model.edit 없는 사용자(현업 · DA 단독 · Admin 단독)",
+   "refs": [
+    "model.edit",
+    "A-6"
+   ],
+   "states": [
+    "home.html?as=hyun"
+   ],
+   "verify": "e2e",
+   "source": "docs/impl/trace/behaviors/home.json",
+   "phase": "P4",
+   "tasks": [
+    "T-P1-09",
+    "P4:사업 · 두 사람 확인"
+   ]
+  },
+  {
    "id": "BH-import-001",
    "kind": "BH",
    "title": "머리 경로 · 화면 열기 → 경로 첫 칸에 현재 시스템 이름(system.html로 이동)",
@@ -24601,11 +24749,13 @@
   {
    "id": "BH-import-excel-001",
    "kind": "BH",
-   "title": "머리 경로 · 화면 열기 → 경로에 현재 시스템 이름, 누르면 system.html?system=<코드>",
+   "title": "머리 경로 · 화면 열기 → 경로에 현재 시스템 이름, 누르면 system.html?system=<코드>. 화면 제목 · 탭 제목 ‘모델 엑셀 가져오기(정의서)’. 형식 토글은 ‘모델 엑셀(정의서) / DDL’",
    "screen": "import-excel.html",
    "roles": "전체",
    "refs": [
-    "SC-36a"
+    "SC-36a",
+    "B-4",
+    "U-17"
    ],
    "states": [
     "import-excel.html"
@@ -24834,11 +24984,12 @@
   {
    "id": "BH-import-excel-013",
    "kind": "BH",
-   "title": "① 파일 · 파일 없이 시험 · ‘정상 예시’ · ‘오류가 있는 예시’ · ‘다른 영역 참조 예시’ · ‘엔티티 추가 예시’ 클릭 → 내장 예시 시트로 ②로 이동(같은 시스템에 확정본이 있는 다른 영역이 없으면 ‘다른 영역 참조 예시’는 흐리게 + ‘같은 시스템에 확정본이 있는 다른 업무 영역이 없습니다’). ‘엔티티 추가 예시’는 고를 수 있는 영역의 기존 테이블 하나와 그 영역 기존 엔터티를 부모로 참조하는 새 테이블로 만들고 ‘기존 업무 영역’ · 그 영역을 미리 고른다(편집할 수 있는 영역이 없으면 흐리게 + ‘편집할 수 있",
+   "title": "① 파일 · 파일 없이 시험 · ‘정상 예시’ · ‘오류가 있는 예시’ · ‘다른 영역 참조 예시’ · ‘엔터티 추가 예시’ 클릭 → 내장 예시 시트로 ②로 이동(같은 시스템에 확정본이 있는 다른 영역이 없으면 ‘다른 영역 참조 예시’는 흐리게 + ‘같은 시스템에 확정본이 있는 다른 업무 영역이 없습니다’). ‘엔터티 추가 예시’는 고를 수 있는 영역의 기존 테이블 하나와 그 영역 기존 엔터티를 부모로 참조하는 새 테이블로 만들고 ‘기존 업무 영역’ · 그 영역을 미리 고른다(편집할 수 있는 영역이 없으면 흐리게 + ‘편집할 수 있",
    "screen": "import-excel.html",
    "roles": "전체",
    "refs": [
-    "SC-36a"
+    "SC-36a",
+    "Q-F4"
    ],
    "states": [
     "import-excel.html"
@@ -25288,11 +25439,12 @@
   {
    "id": "BH-import-excel-036",
    "kind": "BH",
-   "title": "③ 검사 규칙 · 타입 · 시스템 데이터타입 매핑에 없는 타입 → 경고 ‘‘<타입>’은 이 시스템(<DB>)의 데이터타입 매핑에 없는 타입입니다 — 그대로 가져옵니다’",
+   "title": "③ 검사 규칙 · 타입 · 시스템 데이터타입 매핑에 없는 타입 → 경고 ‘‘<타입>’은(는) 이 시스템(<DB>)의 데이터타입 매핑에 없는 타입입니다 — 그대로 가져옵니다’ — 조사는 앞말에 맞춘다(‘TEXT’는)",
    "screen": "import-excel.html",
    "roles": "전체",
    "refs": [
-    "RV-R02"
+    "RV-R02",
+    "F-012"
    ],
    "states": [
     "import-excel.html"
@@ -25307,11 +25459,12 @@
   {
    "id": "BH-import-excel-037",
    "kind": "BH",
-   "title": "③ 검사 규칙 · 이름 · 컬럼 · 테이블 물리명이 DB 이름 길이를 넘거나 예약어일 때 → 경고 ‘N자를 넘습니다(<DB> 이름 길이)’(Oracle · Tibero 30, PostgreSQL 63, MySQL 64) / ‘‘<이름>’은 예약어입니다’",
+   "title": "③ 검사 규칙 · 이름 · 컬럼 · 테이블 물리명이 DB 이름 길이를 넘거나 예약어일 때 → 경고 ‘N자를 넘습니다(<DB> 이름 길이)’(Oracle · Tibero 30, PostgreSQL 63, MySQL 64) / ‘‘<이름>’은 예약어입니다’ — 조사는 앞말에 맞춘다(은/는)",
    "screen": "import-excel.html",
    "roles": "전체",
    "refs": [
-    "RV-R02"
+    "RV-R02",
+    "F-012"
    ],
    "states": [
     "import-excel.html"
@@ -25487,7 +25640,7 @@
   {
    "id": "BH-import-excel-047",
    "kind": "BH",
-   "title": "③ 검사 규칙 · 엔티티 추가 관계 · 기존 영역(추가만)에서 관계의 자식이 ‘이미 있음’이거나 부모가 대상 영역 기존 엔터티일 때 → 자식이 이미 있으면 관계 탭 처리 ‘자식 테이블이 이미 있음 — 만들지 않음’(관계를 만들지 않음). 부모가 대상 영역 기존 엔터티면 처리 배지 ‘기존 부모 참조(연결)’ — 기존 엔터티에 관계를 잇는다(엑셀에 같은 부모 테이블이 있어 ‘이미 있음’으로 빠져도 같다). 기존 관계는 바꾸지 않는다",
+   "title": "③ 검사 규칙 · 엔터티 추가 관계 · 기존 영역(추가만)에서 관계의 자식이 ‘이미 있음’이거나 부모가 대상 영역 기존 엔터티일 때 → 자식이 이미 있으면 관계 탭 처리 ‘자식 테이블이 이미 있음 — 만들지 않음’(관계를 만들지 않음). 부모가 대상 영역 기존 엔터티면 처리 배지 ‘기존 부모 참조(연결)’ — 기존 엔터티에 관계를 잇는다(엑셀에 같은 부모 테이블이 있어 ‘이미 있음’으로 빠져도 같다). 기존 관계는 바꾸지 않는다",
    "screen": "import-excel.html",
    "roles": "전체",
    "refs": [
@@ -25533,7 +25686,9 @@
     "RV-R03",
     "M-2",
     "M-4",
-    "R2-06"
+    "R2-06",
+    "F-012",
+    "U-16"
    ],
    "states": [
     "import-excel.html"
@@ -25644,7 +25799,8 @@
     "M-2",
     "M-4",
     "R2-01",
-    "R2-06"
+    "R2-06",
+    "F-012"
    ],
    "states": [
     "import-excel.html"
@@ -25868,14 +26024,15 @@
   {
    "id": "BH-import-excel-068",
    "kind": "BH",
-   "title": "③ 아래 고정 줄 · 새 업무 영역으로 ‘가져오기’ 클릭(통과) → 그 이름으로 업무 영역(v1 작업 버전, 설명 ‘엑셀 ‘<파일>’에서 가져옴’)을 만들고 ④ 완료로 이동. 감사 로그 ‘엑셀로 모델 가져오기’(파일 · 방식 · 추가한 테이블 · 관계 · 참조 엔터티 · FK 후보 · 경고 수). 저장에 실패하면 만들다 만 영역을 지우고 토스트 ‘저장하지 못했습니다(브라우저 저장 공간 등) — 업무 영역을 만들지 않았습니다’",
+   "title": "③ 아래 고정 줄 · 새 업무 영역으로 ‘가져오기’ 클릭(통과) → 누르는 순간 미리보기를 다시 돌려(시스템 테이블명 — 작업본 + 유효 확정본 포함) 막는 오류가 생겼으면 저장하지 않고 ③에 머물러 문제 탭을 열고 토스트 ‘그사이 같은 시스템의 다른 영역이 바뀌어 다시 검사했습니다 — 막는 오류를 확인하세요. 가져오지 않았습니다’. 통과하면 그 이름으로 업무 영역(v1 작업 버전, 설명 ‘엑셀 ‘<파일>’에서 가져옴’)을 만들고 ④ 완료로 이동. 감사 로그 ‘엑셀로 모델 가져오기’(파일 · 방식 · 추가한 테이블 · 관계 · 참조",
    "screen": "import-excel.html",
    "roles": "model.edit · area.create 가진 담당 시스템 모델러",
    "refs": [
     "model.edit",
     "area.create",
     "RV-R02",
-    "SC-58"
+    "SC-58",
+    "F-08"
    ],
    "states": [
     "import-excel.html"
@@ -25961,7 +26118,8 @@
     "M-2",
     "M-4",
     "ERD-4",
-    "R2-13"
+    "R2-13",
+    "A-5"
    ],
    "states": [
     "import-excel.html"
@@ -25986,7 +26144,10 @@
     "M-2",
     "M-4",
     "P-3",
-    "R2-06"
+    "R2-06",
+    "A-1",
+    "U-09",
+    "F-12"
    ],
    "states": [
     "import-excel.html"
@@ -26003,13 +26164,14 @@
   {
    "id": "BH-import-excel-074",
    "kind": "BH",
-   "title": "④ 완료 · ‘표준 맞추기’(주 버튼) / ‘모델 열기’ 클릭 → standardize.html?area=<영역>&from=import / model.html?area=<영역> 로 이동. 주 버튼은 [표준 맞추기]",
+   "title": "④ 완료 · ‘표준 맞추기’(주 버튼) / ‘모델 열기’ 클릭 → standardize.html?area=<영역>&from=import&imp=<가져오기 기록 id> / model.html?area=<영역> 로 이동. 주 버튼은 [표준 맞추기]",
    "screen": "import-excel.html",
    "roles": "전체",
    "refs": [
     "RV-R03",
     "SC-34",
-    "P-3"
+    "P-3",
+    "F-12"
    ],
    "states": [
     "import-excel.html"
@@ -26123,7 +26285,7 @@
   {
    "id": "BH-import-excel-080",
    "kind": "BH",
-   "title": "③ 검사 규칙 · 엔티티명 중복 · 저장될 엔티티명(테이블 논리명, 비어 있으면 물리명)이 다른 테이블과 같을 때(대소문자 무시) → 오류(막음) ‘엔티티명 <논리명> — N행 · M행 중복(논리명 일치 · <물리명> / <물리명>)’(빈 논리명이 물리명으로 대체돼 겹치면 끝에 ‘ — 빈 논리명은 물리명으로 저장’)(시트가 다르면 행 앞에 시트 이름). 두 테이블 모두 테이블 탭 점검 ‘중복 — 등록 불가’ + 같은 문구, 요약 ‘등록 불가(중복 n)’에 센다. 기존 영역은 두 테이블만 빼고 나머지를 추가하고, 저장 직전 model",
+   "title": "③ 검사 규칙 · 엔터티명 중복 · 저장될 엔터티명(테이블 논리명, 비어 있으면 물리명)이 다른 테이블과 같을 때(대소문자 무시) → 오류(막음) ‘엔터티명 <논리명> — N행 · M행 중복(논리명 일치 · <물리명> / <물리명>)’(빈 논리명이 물리명으로 대체돼 겹치면 끝에 ‘ — 빈 논리명은 물리명으로 저장’)(시트가 다르면 행 앞에 시트 이름). 두 테이블 모두 테이블 탭 점검 ‘중복 — 등록 불가’ + 같은 문구, 요약 ‘등록 불가(중복 n)’에 센다. 기존 영역은 두 테이블만 빼고 나머지를 추가하고, 저장 직전 model",
    "screen": "import-excel.html",
    "roles": "전체",
    "refs": [
@@ -26189,7 +26351,7 @@
   {
    "id": "BH-import-excel-083",
    "kind": "BH",
-   "title": "③ 검사 규칙 · 이미 있음(엔티티 추가) · 기존 영역(추가만)에서 엑셀 테이블의 저장될 논리명(비어 있으면 물리명) 또는 물리명이 같은 시스템 어느 업무 영역(지금 작업본 이름 — 표준화로 바뀐 이름, 그리고 바뀌기 전 원래 이름도, 참조 엔터티 제외)의 엔터티와 같을 때 → 막지 않고 그 테이블만 뺀다: 문제 탭 구분 ‘추가 안 함’ + ‘<물리명>(<논리명>) — 이미 있음 · 추가 안 함: <영역> › <엔터티> <물리명>(물리명 일치 · 논리명 일치 / 원래 논리명 일치)’ — 그 영역 사본을 열람할 수 없으면(areaV",
+   "title": "③ 검사 규칙 · 이미 있음(엔터티 추가) · 기존 영역(추가만)에서 엑셀 테이블의 저장될 논리명(비어 있으면 물리명) 또는 물리명이 같은 시스템 어느 업무 영역(지금 작업본 이름 — 표준화로 바뀐 이름, 그리고 바뀌기 전 원래 이름도, 참조 엔터티 제외)의 엔터티와 같을 때 → 막지 않고 그 테이블만 뺀다: 문제 탭 구분 ‘추가 안 함’ + ‘<물리명>(<논리명>) — 이미 있음 · 추가 안 함: <영역> › <엔터티> <물리명>(물리명 일치 · 논리명 일치 / 원래 논리명 일치)’ — 그 영역 사본을 열람할 수 없으면(areaV",
    "screen": "import-excel.html",
    "roles": "전체",
    "refs": [
@@ -26276,7 +26438,7 @@
   {
    "id": "BH-import-excel-087",
    "kind": "BH",
-   "title": "③ 검사 규칙 · 엔티티 추가 제외 · 기존 영역(추가만)에서 파일 안 오류(필수 칸 빈 행 등) · 중복(엔티티명 · 테이블 물리명 · 속성명 · 컬럼 물리명 · 대소문자만 다름)이 있는 테이블 → 파일 전체를 막지 않고 그 테이블만 뺀다: 문제 탭 구분 ‘오류 · 제외’, 테이블 탭 ‘중복 — 등록 불가’ / ‘오류 — 등록 불가’, 요약 ‘등록 불가’에 센다. 빠진 테이블을 부모로 참조하는 행은 대상 영역 · 다른 영역 기존 엔터티에서 부모를 찾고 없으면 경고 + fkCand. 테이블에 속하지 않는 행(테이블 물리명 빈 행)은",
+   "title": "③ 검사 규칙 · 엔터티 추가 제외 · 기존 영역(추가만)에서 파일 안 오류(필수 칸 빈 행 등) · 중복(엔터티명 · 테이블 물리명 · 속성명 · 컬럼 물리명 · 대소문자만 다름)이 있는 테이블 → 파일 전체를 막지 않고 그 테이블만 뺀다: 문제 탭 구분 ‘오류 · 제외’, 테이블 탭 ‘중복 — 등록 불가’ / ‘오류 — 등록 불가’, 요약 ‘등록 불가’에 센다. 빠진 테이블을 부모로 참조하는 행은 대상 영역 · 다른 영역 기존 엔터티에서 부모를 찾고 없으면 경고 + fkCand. 테이블에 속하지 않는 행(테이블 물리명 빈 행)은",
    "screen": "import-excel.html",
    "roles": "전체",
    "refs": [
@@ -26303,6 +26465,99 @@
    "refs": [
     "R2-04",
     "model.edit"
+   ],
+   "states": [
+    "import-excel.html"
+   ],
+   "verify": "unit",
+   "source": "docs/impl/trace/behaviors/import-excel.json",
+   "phase": "P2",
+   "tasks": [
+    "T-P2-303"
+   ]
+  },
+  {
+   "id": "BH-import-excel-089",
+   "kind": "BH",
+   "title": "① 파일 · 사전 준비도 · 화면 열기 → 띠 ‘사전(공통표준 + 기관): 단어 n(기관 n) · 용어 n(기관 n) · 결재 중인 단어 · 용어 추가 n’(DA · 최종 승인 단계의 단어 · 용어 추가 신청). 수치만 보이고 경고 · 권유는 하지 않는다(③에서)",
+   "screen": "import-excel.html",
+   "roles": "전체",
+   "refs": [
+    "B-2",
+    "SC-13",
+    "U-11",
+    "U-23"
+   ],
+   "states": [
+    "import-excel.html"
+   ],
+   "verify": "e2e",
+   "source": "docs/impl/trace/behaviors/import-excel.json",
+   "phase": "P3",
+   "tasks": [
+    "T-P2-303",
+    "P3:사전 엑셀 일괄"
+   ],
+   "note": "단계를 SC-13(P3)에 맞춤"
+  },
+  {
+   "id": "BH-import-excel-090",
+   "kind": "BH",
+   "title": "③ 검사 · 표준 예상 · 검사가 끝났을 때(가져올 컬럼이 있으면) → 띠 ‘사전 기준 표준 예상 n%(가져올 컬럼 N개 중 m개가 사전 용어) · 사전에 없는 용어(단어는 있음) n개 · 미등록 단어 n개(앞 5개 …) — 가져온 뒤 표준 맞추기 → 용어 자동분석’. 반영 가능한 테이블(오류 · 중복 · 이미 있음 제외)의 컬럼과 ‘사용’ 상태 용어만으로 계산. 결재 중인 단어 · 용어 추가 신청이 있으면 ‘결재 중인 단어 · 용어 추가 신청 n건 — 승인 뒤 표준이 늘어납니다’. 예상 표준률이 50% 미만이면 경고 띠 + ‘예상",
+   "screen": "import-excel.html",
+   "roles": "전체",
+   "refs": [
+    "B-1",
+    "F-11",
+    "U-10",
+    "U-11",
+    "U-23"
+   ],
+   "states": [
+    "import-excel.html"
+   ],
+   "verify": "e2e",
+   "source": "docs/impl/trace/behaviors/import-excel.json",
+   "phase": "P2",
+   "tasks": [
+    "T-P2-303"
+   ]
+  },
+  {
+   "id": "BH-import-excel-091",
+   "kind": "BH",
+   "title": "③ 검사 규칙 · 시스템 테이블명(처음 업로드) · 새 업무 영역에서 엑셀 테이블 물리명이 같은 시스템 다른 업무 영역 엔터티의 물리명과 같을 때 — 각 영역의 작업본과 유효한 확정본(최신 확정 사본) 모두와 비교(대소문자 무시) → 오류(전체 막음) ‘‘<물리명>’은(는) 같은 시스템 다른 업무 영역(<영역> › <엔터티> / <영역> 확정본 vN › <엔터티>)에 있습니다. 물리명은 시스템 안에서 유일해야 합니다’. 작업본을 열람할 수 없으면(areaView) 이름 없이 ‘… 열람 권한 밖의 업무 영역에 있습니다’(일부만이면 ‘",
+   "screen": "import-excel.html",
+   "roles": "전체",
+   "refs": [
+    "Q-F4",
+    "F-013",
+    "R2-01",
+    "F-08",
+    "U-21"
+   ],
+   "states": [
+    "import-excel.html"
+   ],
+   "verify": "unit",
+   "source": "docs/impl/trace/behaviors/import-excel.json",
+   "phase": "P2",
+   "tasks": [
+    "T-P2-303"
+   ]
+  },
+  {
+   "id": "BH-import-excel-092",
+   "kind": "BH",
+   "title": "③ 검사 규칙 · 시스템 엔터티명(처음 업로드) · 새 업무 영역에서 엑셀 테이블의 저장될 논리명이 같은 시스템 다른 업무 영역 엔터티 이름(지금 이름 · 원래 이름)과 같을 때 → 경고 ‘엔터티명 ‘<이름>’은(는) 같은 시스템 다른 업무 영역(<영역> › <엔터티>)에도 있습니다 — 가져온 뒤 이름을 구분하세요’(열람 불가면 ‘열람 권한 밖의 업무 영역에도 있습니다’). 막지 않음",
+   "screen": "import-excel.html",
+   "roles": "전체",
+   "refs": [
+    "Q-F4",
+    "F-013",
+    "R2-01",
+    "U-21",
+    "F-08"
    ],
    "states": [
     "import-excel.html"
@@ -27914,7 +28169,7 @@
   {
    "id": "BH-model-040",
    "kind": "BH",
-   "title": "머리 · ⋯ 더 보기 · ‘엑셀 정의서 가져오기’ 클릭 → import-excel.html?area=<영역>으로 이동",
+   "title": "머리 · ⋯ 더 보기 · ‘모델 엑셀 가져오기’ 클릭 → import-excel.html?area=<영역>으로 이동",
    "screen": "model.html",
    "roles": "전체",
    "refs": [
@@ -28867,7 +29122,7 @@
   {
    "id": "BH-model-085",
    "kind": "BH",
-   "title": "사전 패널(PN-32) · [엑셀 가져오기] 클릭 → excel-import.html로 이동",
+   "title": "사전 패널(PN-32) · [사전 엑셀 일괄] 클릭 → excel-import.html로 이동",
    "screen": "model.html",
    "roles": "전체",
    "refs": [
@@ -36990,6 +37245,559 @@
    ]
   },
   {
+   "id": "BH-model-472",
+   "kind": "BH",
+   "title": "머리 · 처음 표준화 진행 띠 · 한 번도 확정되지 않은 영역을 열 때 → 머리 아래에 ‘처음 표준화 ✓ 모델 등록 → ② 표준 입히기 → ③ 남은 용어 → ④ 검증 · 신청 [닫기]’ — 끝난 단계는 ✓, 지금 단계만 주 버튼, 숫자 이름은 표준 맞추기 칩과 같음(엔터티 · 속성 / 사전에 있음 / 조합 가능 · 미등록 단어 · 기준 위반 · 신청 중 / 모델 검증 막음). 편집할 때마다 숫자가 따라 바뀌고 표준 맞추기 · 용어 자동분석의 띠와 같은 숫자",
+   "screen": "model.html",
+   "roles": "전체",
+   "refs": [
+    "ST-R08",
+    "DG-R04"
+   ],
+   "states": [
+    "model.html"
+   ],
+   "verify": "e2e",
+   "source": "docs/impl/trace/behaviors/model.json",
+   "phase": "P2",
+   "tasks": [
+    "T-P2-406",
+    "T-P2-504",
+    "T-P2-603"
+   ]
+  },
+  {
+   "id": "BH-model-473",
+   "kind": "BH",
+   "title": "머리 · 처음 표준화 진행 띠 · 확정본이 있는 영역 · 제출 사본(?snap=) → 띠가 보이지 않음(첫 확정 뒤 자동으로 사라짐)",
+   "screen": "model.html",
+   "roles": "전체",
+   "refs": [],
+   "states": [
+    "model.html"
+   ],
+   "verify": "e2e",
+   "source": "docs/impl/trace/behaviors/model.json",
+   "phase": "P2",
+   "tasks": [
+    "T-P2-406",
+    "T-P2-504",
+    "T-P2-603"
+   ]
+  },
+  {
+   "id": "BH-model-474",
+   "kind": "BH",
+   "title": "머리 · 처음 표준화 진행 띠 · 단계 버튼 클릭 → ② [표준 맞추기] → standardize.html?area&f=todo, ③ [용어 자동분석] → term-wizard.html?area&from=model(남은 것이 검수 기준 위반뿐이면 [검수 기준 위반 보기] → standardize.html?area&f=rule), ④ [모델 검증] → 이 화면에서 모델 검증 패널이 열림(다른 화면에서는 model.html?area&check=1로 와서 열림), ③의 ‘승인 <n>건 반영 가능 — 표준 맞추기에서 반영’ 링크",
+   "screen": "model.html",
+   "roles": "전체",
+   "refs": [
+    "SC-34",
+    "SC-35"
+   ],
+   "states": [
+    "model.html"
+   ],
+   "verify": "e2e",
+   "source": "docs/impl/trace/behaviors/model.json",
+   "phase": "P3",
+   "tasks": [
+    "T-P2-406",
+    "T-P2-504",
+    "T-P2-603",
+    "P3:용어 자동분석 · 공통표준 새 판"
+   ],
+   "note": "단계를 SC-35(P3)에 맞춤"
+  },
+  {
+   "id": "BH-model-475",
+   "kind": "BH",
+   "title": "머리 · 처음 표준화 진행 띠 · [닫기] 클릭 → 띠가 사라지고 토스트 ‘‘처음 표준화’ 진행 띠를 닫았습니다 — 이 영역에서는 다시 보이지 않습니다. 마이페이지 › 환경에서 다시 켤 수 있습니다’ — 이 영역 · 이 사용자에게만 기억",
+   "screen": "model.html",
+   "roles": "전체",
+   "refs": [],
+   "states": [
+    "model.html"
+   ],
+   "verify": "e2e",
+   "source": "docs/impl/trace/behaviors/model.json",
+   "phase": "P2",
+   "tasks": [
+    "T-P2-406",
+    "T-P2-504",
+    "T-P2-603"
+   ]
+  },
+  {
+   "id": "BH-model-476",
+   "kind": "BH",
+   "title": "머리 · 처음 표준화 진행 띠 · 주소에 &flow=1 → 확정본이 있는 예시 영역에서도 띠를 보임",
+   "screen": "model.html",
+   "roles": "전체",
+   "refs": [],
+   "states": [
+    "model.html"
+   ],
+   "verify": "exempt",
+   "exemptReason": "목업 전용 — 시드 영역에서 띠를 보기 위한 주소 스위치",
+   "source": "docs/impl/trace/behaviors/model.json",
+   "phase": "P2",
+   "tasks": [
+    "T-P2-406",
+    "T-P2-504",
+    "T-P2-603"
+   ]
+  },
+  {
+   "id": "BH-model-477",
+   "kind": "BH",
+   "title": "주소 · 진입 · 표준 맞추기 · 용어 자동분석 반영 뒤 도착 — 남은 할 일 안내 → 반영 토스트에 이어 ‘남은 할 일 <n>건(사전에 있음 <n> · 미등록 단어 <n> · 검수 기준 위반 <n> · 신청 중 <n>) — …’ — 남은 할 일 = 사전에 있음 · 조합 가능 · 미등록 단어 · 검수 기준 위반(신청 중 제외 — 표준 맞추기 ‘할 일’과 같은 범위). 보낸 화면이 넘긴 건수와 다음 단계(std · wiz · check · rule)를 쓰고, 없으면 모델에서 다시 셈(검수 기준 위반만 남으면 rule). 다음 단계에 ",
+   "screen": "model.html",
+   "roles": "model.edit 가진 담당 시스템 모델러(작업 중 버전)",
+   "refs": [
+    "ST-R08"
+   ],
+   "states": [
+    "model.html"
+   ],
+   "verify": "e2e",
+   "source": "docs/impl/trace/behaviors/model.json",
+   "phase": "P2",
+   "tasks": [
+    "T-P2-406",
+    "T-P2-504",
+    "T-P2-603"
+   ]
+  },
+  {
+   "id": "BH-model-478",
+   "kind": "BH",
+   "title": "주소 · 진입 · 주소 ?check=1 → 열리자마자 모델 검증 패널이 열림",
+   "screen": "model.html",
+   "roles": "전체",
+   "refs": [
+    "DG-R04"
+   ],
+   "states": [
+    "model.html"
+   ],
+   "verify": "e2e",
+   "source": "docs/impl/trace/behaviors/model.json",
+   "phase": "P2",
+   "tasks": [
+    "T-P2-406",
+    "T-P2-504",
+    "T-P2-603"
+   ]
+  },
+  {
+   "id": "BH-model-479",
+   "kind": "BH",
+   "title": "캔버스 · 빈 모델 · 엔터티가 하나도 없는 영역(전체 보기) → 캔버스 가운데 ‘아직 엔터티가 없습니다 — 어떻게 시작할까요?’ + [모델 엑셀로 시작](import-excel.html?area) · [DDL로 시작](import.html?area) · [직접 그리기](엔터티 도구) — 엔터티가 생기면 사라짐",
+   "screen": "model.html",
+   "roles": "model.edit 가진 담당 시스템 모델러(작업 중 버전)",
+   "refs": [
+    "DG-R01"
+   ],
+   "states": [
+    "model.html"
+   ],
+   "verify": "e2e",
+   "source": "docs/impl/trace/behaviors/model.json",
+   "phase": "P2",
+   "tasks": [
+    "T-P2-406",
+    "T-P2-504",
+    "T-P2-603"
+   ]
+  },
+  {
+   "id": "BH-model-480",
+   "kind": "BH",
+   "title": "캔버스 · 빈 모델 · 편집할 수 없는 사용자 · 잠긴 버전 → 시작 버튼 없이 ‘아직 엔터티가 없습니다’만 보임",
+   "screen": "model.html",
+   "roles": "편집 권한 없는 사용자 · 잠긴 버전",
+   "refs": [
+    "model.edit"
+   ],
+   "states": [
+    "model.html"
+   ],
+   "verify": "e2e",
+   "source": "docs/impl/trace/behaviors/model.json",
+   "phase": "P2",
+   "tasks": [
+    "T-P2-406",
+    "T-P2-504",
+    "T-P2-603"
+   ]
+  },
+  {
+   "id": "BH-model-481",
+   "kind": "BH",
+   "title": "모델 검증 패널 · 한 번에 처리 · 묶음 머리 — 처리할 것이 있을 때 → 구조: ‘FK 후보 <n>건 [관계 한 번에 만들기]’ · ‘FK 타입 불일치 <n>건 [부모 키 타입으로 맞추기]’, 이름 · 설명: ‘정의 · 설명 <n>건 [표로 한 번에 입력]’ · ‘엑셀 논리명 · 설명 불일치 <n>건 [값 고르기]’ — 편집 권한이 없으면 보이지 않고, 모델러인데 검토 중 · 확정본이면 흐리게 + 이유(‘검토 중이라 지금은 처리할 수 없습니다’ 등)",
+   "screen": "model.html",
+   "roles": "model.edit 가진 담당 시스템 모델러(작업 중 버전)",
+   "refs": [
+    "DG-R04"
+   ],
+   "states": [
+    "model.html"
+   ],
+   "verify": "e2e",
+   "source": "docs/impl/trace/behaviors/model.json",
+   "phase": "P2",
+   "tasks": [
+    "T-P2-406",
+    "T-P2-504",
+    "T-P2-603"
+   ]
+  },
+  {
+   "id": "BH-model-482",
+   "kind": "BH",
+   "title": "모델 검증 패널 · 한 번에 처리 · [관계 한 번에 만들기] 클릭 → 엑셀이 가리킨 부모 테이블 · 키를 물리명으로 찾아 관계(1:N 비식별)를 만들고 후보 컬럼을 FK로 지정(타입 · 길이 · 도메인은 부모 키에 맞춤) — 같은 부모를 여러 컬럼이 가리키면 후보마다 관계 하나, 자기 테이블을 가리키면 재귀 관계(‘상위’). 복합 식별자 후보는 키가 한 번씩만 나와도 컬럼 물리명이 ‘역할 접두어 + 부모 키 물리명’이고 접두어가 같아야 한 관계(예: A_K1 · A_K2 / B_K1 · B_K2 — A_K1 + B_K2는 미처리)",
+   "screen": "model.html",
+   "roles": "model.edit 가진 담당 시스템 모델러(작업 중 버전)",
+   "refs": [
+    "LG-R04",
+    "PH-R01"
+   ],
+   "states": [
+    "model.html"
+   ],
+   "verify": "e2e",
+   "source": "docs/impl/trace/behaviors/model.json",
+   "phase": "P2",
+   "tasks": [
+    "T-P2-406",
+    "T-P2-504",
+    "T-P2-603"
+   ]
+  },
+  {
+   "id": "BH-model-483",
+   "kind": "BH",
+   "title": "모델 검증 패널 · 한 번에 처리 · [관계 한 번에 만들기] — 처리하지 못한 후보 → 그 후보는 만들지 않고 구조 묶음에 후보마다 이유 한 줄: ‘… 부모 테이블 ‘<테이블>’(물리명)을 이 영역에서 찾지 못했습니다’(논리명만 같은 엔터티는 짝짓지 않음) · ‘… <부모>(<테이블>)의 식별자에 컬럼 ‘<컬럼>’이(가) 없습니다’ · ‘… 식별자 <n>개 중 <컬럼>에 맞는 후보가 없어 만들지 않았습니다(복합 PK …)’ · ‘… <부모>의 복합 식별자 후보들의 역할 접두어가 맞지 않아 짝을 물리명으로 정할 수 없어 만들지 않았",
+   "screen": "model.html",
+   "roles": "model.edit 가진 담당 시스템 모델러(작업 중 버전)",
+   "refs": [
+    "PH-R01"
+   ],
+   "states": [
+    "model.html"
+   ],
+   "verify": "e2e",
+   "source": "docs/impl/trace/behaviors/model.json",
+   "phase": "P2",
+   "tasks": [
+    "T-P2-406",
+    "T-P2-504",
+    "T-P2-603"
+   ]
+  },
+  {
+   "id": "BH-model-484",
+   "kind": "BH",
+   "title": "모델 검증 패널 · 한 번에 처리 · [부모 키 타입으로 맞추기] 클릭 → 부모 키와 타입이 다른 FK 컬럼(관계 패널 · DDL과 같은 짝 — fkOf가 짝지은 컬럼 그대로, 물리명으로 다시 찾지 않음)의 타입 · 길이 · 도메인을 부모 키와 같게 바꾸고 토스트 ‘FK <n>개의 타입 · 길이 · 도메인을 부모 키에 맞췄습니다’ + [실행 취소]",
+   "screen": "model.html",
+   "roles": "model.edit 가진 담당 시스템 모델러(작업 중 버전)",
+   "refs": [
+    "PH-R01"
+   ],
+   "states": [
+    "model.html"
+   ],
+   "verify": "e2e",
+   "source": "docs/impl/trace/behaviors/model.json",
+   "phase": "P2",
+   "tasks": [
+    "T-P2-406",
+    "T-P2-504",
+    "T-P2-603"
+   ]
+  },
+  {
+   "id": "BH-model-485",
+   "kind": "BH",
+   "title": "정의 · 설명 한 번에 입력 창 · [표로 한 번에 입력] 클릭 → 엔터티 · 속성 · 지금 상태 · 정의 칸 표가 뜸 — 칸에 적고 [저장]하면 바뀐 칸만 저장, 토스트 ‘정의 · 설명 <n>건을 저장했습니다 — 모델 검증 막음 <n>건 남음’ + [실행 취소] 한 번. 비워 둔 칸은 바꾸지 않음, Esc · [취소]는 아무것도 안 바꿈",
+   "screen": "model.html",
+   "roles": "model.edit 가진 담당 시스템 모델러(작업 중 버전)",
+   "refs": [
+    "DG-R04"
+   ],
+   "states": [
+    "model.html"
+   ],
+   "verify": "e2e",
+   "source": "docs/impl/trace/behaviors/model.json",
+   "phase": "P2",
+   "tasks": [
+    "T-P2-406",
+    "T-P2-504",
+    "T-P2-603"
+   ]
+  },
+  {
+   "id": "BH-model-486",
+   "kind": "BH",
+   "title": "정의 · 설명 한 번에 입력 창 · 칸에 여러 줄(엑셀의 정의 열)을 붙여 넣기 → 그 칸부터 아래로 한 줄씩 채움(탭으로 나뉜 줄은 마지막 칸) — ‘붙여 넣은 <n>줄 중 <n>칸을 채웠습니다( · <n>줄은 칸이 모자라 버렸습니다)’",
+   "screen": "model.html",
+   "roles": "model.edit 가진 담당 시스템 모델러(작업 중 버전)",
+   "refs": [
+    "DG-R04"
+   ],
+   "states": [
+    "model.html"
+   ],
+   "verify": "e2e",
+   "source": "docs/impl/trace/behaviors/model.json",
+   "phase": "P2",
+   "tasks": [
+    "T-P2-406",
+    "T-P2-504",
+    "T-P2-603"
+   ]
+  },
+  {
+   "id": "BH-model-487",
+   "kind": "BH",
+   "title": "정의 · 설명 한 번에 입력 창 · [정의 채울 엑셀 받기] 클릭 → 이 영역의 모든 엔터티 · 속성을 ‘엔터티명 · 속성명 · 정의’ 양식으로 내려받고 감사 로그에 남김 — 안내 ‘<파일> — <n>행을 받았습니다 … [채운 엑셀 올리기]로 올리세요’",
+   "screen": "model.html",
+   "roles": "model.edit 가진 담당 시스템 모델러(작업 중 버전)",
+   "refs": [
+    "out.export"
+   ],
+   "states": [
+    "model.html"
+   ],
+   "verify": "e2e",
+   "source": "docs/impl/trace/behaviors/model.json",
+   "phase": "P2",
+   "tasks": [
+    "T-P2-406",
+    "T-P2-504",
+    "T-P2-603"
+   ]
+  },
+  {
+   "id": "BH-model-488",
+   "kind": "BH",
+   "title": "정의 · 설명 한 번에 입력 창 · [채운 엑셀 올리기]로 파일 고르기 → 정의 칸만 읽어 이름으로 짝지어 표에 채움(목록 밖 항목은 저장 때 함께 반영) — ‘올린 파일에서 정의 <n>건을 읽었습니다( · 못 찾은 행 <n>건: <이름…>) — [저장]하면 반영됩니다’. 엔터티명 · 속성명 등 다른 칸은 읽지 않음",
+   "screen": "model.html",
+   "roles": "model.edit 가진 담당 시스템 모델러(작업 중 버전)",
+   "refs": [
+    "DG-R04"
+   ],
+   "states": [
+    "model.html"
+   ],
+   "verify": "e2e",
+   "source": "docs/impl/trace/behaviors/model.json",
+   "phase": "P2",
+   "tasks": [
+    "T-P2-406",
+    "T-P2-504",
+    "T-P2-603"
+   ]
+  },
+  {
+   "id": "BH-model-489",
+   "kind": "BH",
+   "title": "엑셀 불일치 값 고르기 창 · [값 고르기] 클릭 후 행마다 고르고 [고른 값으로 정리] → 행마다 논리명 · 설명 후보(지금 값 + 엑셀의 다른 값)를 골라 반영하고 불일치 표시를 지움 — 고른 값을 모두 넣은 결과를 위반 목록 전체(종류 · 대상 · 내용 · 겹치는 상대 집합)로 지금과 비교해, 새 위반이 생기거나(겹치는 상대만 바뀐 경우 포함 — 가·나·가 → 다·가·가도 막음) 이름을 바꾸는 행에 이름 중복(엔터티명 · 논리명)이 남으면 아무것도 바꾸지 않고 창에 ‘이 값으로는 정리할 수 없습니다 — <이유>. 다른 값을 고",
+   "screen": "model.html",
+   "roles": "model.edit 가진 담당 시스템 모델러(작업 중 버전)",
+   "refs": [
+    "DG-R04"
+   ],
+   "states": [
+    "model.html"
+   ],
+   "verify": "e2e",
+   "source": "docs/impl/trace/behaviors/model.json",
+   "phase": "P2",
+   "tasks": [
+    "T-P2-406",
+    "T-P2-504",
+    "T-P2-603"
+   ]
+  },
+  {
+   "id": "BH-model-490",
+   "kind": "BH",
+   "title": "모델 검증 패널 · FK 컬럼의 타입이 부모 키와 다를 때 · 엑셀 행마다 논리명/설명이 달랐던 항목 → 구조 › ‘FK 타입이 부모 키와 다름’(경고) · 이름 · 설명 › ‘엑셀 논리명 · 설명 불일치’(경고) 행이 나옴",
+   "screen": "model.html",
+   "roles": "전체",
+   "refs": [
+    "DG-R04"
+   ],
+   "states": [
+    "model.html"
+   ],
+   "verify": "e2e",
+   "source": "docs/impl/trace/behaviors/model.json",
+   "phase": "P2",
+   "tasks": [
+    "T-P2-406",
+    "T-P2-504",
+    "T-P2-603"
+   ]
+  },
+  {
+   "id": "BH-model-491",
+   "kind": "BH",
+   "title": "주소 · 진입 · 주소에 &then=std — 표준 맞추기 · 용어 자동분석 결과를 가지고(또는 없이) 도착 → 결과를 모델에 반영 · 저장한 뒤 곧바로 표준 맞추기(standardize.html?area&f=todo)로 넘어가고 거기서 ‘… 결과를 모델에 반영했습니다 — 모델 변경 <n>건 · 이어서 표준 맞추기’를 알림 — 찾지 못해 적용 못 한 항목이 있거나 반영이 거부되면 넘어가지 않고 모델 화면에서 이유를 보임",
+   "screen": "model.html",
+   "roles": "model.edit 가진 담당 시스템 모델러(작업 중 버전)",
+   "refs": [
+    "SC-34",
+    "SC-35"
+   ],
+   "states": [
+    "model.html"
+   ],
+   "verify": "e2e",
+   "source": "docs/impl/trace/behaviors/model.json",
+   "phase": "P3",
+   "tasks": [
+    "T-P2-406",
+    "T-P2-504",
+    "T-P2-603",
+    "P3:용어 자동분석 · 공통표준 새 판"
+   ],
+   "note": "단계를 SC-35(P3)에 맞춤"
+  },
+  {
+   "id": "BH-model-492",
+   "kind": "BH",
+   "title": "머리 · 처음 표준화 진행 띠 · 편집 권한이 없는 사용자 · 확정 결재 중인 모델러 → 권한이 없으면 단계 버튼이 보이지 않고 지금 단계에 ‘모델러가 처리할 단계’(④는 [모델 검증 보기] 링크만), 모델러인데 결재 중 · 확정본이면 버튼이 흐리게 보이고 이유 ‘확정 결재 중이라 지금은 바꿀 수 없습니다’ · ‘확정본입니다 — 다음 작업 버전에서 이어갑니다’가 버튼에 연결됨(aria-describedby) — ④에서는 [모델 검증 보기] 링크 옆에 흐린 [확정 신청](확정 신청 권한이 있을 때만). 흐린 버튼을 누르면 이유 토스트",
+   "screen": "model.html",
+   "roles": "전체",
+   "refs": [
+    "model.edit",
+    "R-17"
+   ],
+   "states": [
+    "model.html"
+   ],
+   "verify": "e2e",
+   "source": "docs/impl/trace/behaviors/model.json",
+   "phase": "P2",
+   "tasks": [
+    "T-P2-406",
+    "T-P2-504",
+    "T-P2-603"
+   ]
+  },
+  {
+   "id": "BH-model-493",
+   "kind": "BH",
+   "title": "머리 · 처음 표준화 진행 띠 · 결재 중인 제출 사본을 볼 수 없는 사용자 → 집계도 띠도 보이지 않음(다른 화면과 같은 열람 판정)",
+   "screen": "model.html",
+   "roles": "신청자 · 결재선이 아닌 사용자",
+   "refs": [
+    "model.view"
+   ],
+   "states": [
+    "model.html"
+   ],
+   "verify": "e2e",
+   "source": "docs/impl/trace/behaviors/model.json",
+   "phase": "P2",
+   "tasks": [
+    "T-P2-406",
+    "T-P2-504",
+    "T-P2-603"
+   ]
+  },
+  {
+   "id": "BH-model-494",
+   "kind": "BH",
+   "title": "머리 · [확정 신청] · 엔터티가 하나도 없는 모델 → 버튼이 흐리게 보이고 이유 ‘엔터티가 없어 확정 신청할 수 없습니다 — 먼저 모델을 등록하세요’ — 띠 ①은 ‘캔버스 가운데 [모델 엑셀로 시작]에서 시작합니다’ 안내만(주 버튼은 캔버스의 하나)",
+   "screen": "model.html",
+   "roles": "model.edit 가진 담당 시스템 모델러(작업 중 버전)",
+   "refs": [
+    "model.submit"
+   ],
+   "states": [
+    "model.html"
+   ],
+   "verify": "e2e",
+   "source": "docs/impl/trace/behaviors/model.json",
+   "phase": "P2",
+   "tasks": [
+    "T-P2-406",
+    "T-P2-504",
+    "T-P2-603"
+   ]
+  },
+  {
+   "id": "BH-model-495",
+   "kind": "BH",
+   "title": "모델 검증 패널 · FK 컬럼의 타입이 부모 키와 다를 때 — 짝 판정 → 관계 패널 · DDL과 같은 FK 짝(fkOf)으로만 비교 — FK가 성립하지 않은 관계의 컬럼은 타입 불일치로 세지 않음(‘관계의 FK 누락’으로만)",
+   "screen": "model.html",
+   "roles": "전체",
+   "refs": [
+    "PH-R01"
+   ],
+   "states": [
+    "model.html"
+   ],
+   "verify": "e2e",
+   "source": "docs/impl/trace/behaviors/model.json",
+   "phase": "P2",
+   "tasks": [
+    "T-P2-406",
+    "T-P2-504",
+    "T-P2-603"
+   ]
+  },
+  {
+   "id": "BH-model-496",
+   "kind": "BH",
+   "title": "머리 · 처음 표준화 진행 띠 · 비대상 규칙(*_TMP · FILLER* · REG_DT 등)에 맞는 미준수(조합 가능 · 미등록) 속성이 있을 때 → 그 속성은 ‘남은 용어’ 수에 세지 않고 모델 검증에서도 ‘표준이 아닌 속성’ 막음 · ‘물리 정보’ 경고로 세지 않음(표준 비대상으로 판정) — 진행 띠 ③ · 표준 맞추기 · 모델 검증이 같은 결과, 용어 자동분석과 같은 규칙 목록(stdNaMatch)",
+   "screen": "model.html",
+   "roles": "전체",
+   "refs": [
+    "ST-R08",
+    "R-05"
+   ],
+   "states": [
+    "model.html"
+   ],
+   "verify": "e2e",
+   "source": "docs/impl/trace/behaviors/model.json",
+   "phase": "P2",
+   "tasks": [
+    "T-P2-406",
+    "T-P2-504",
+    "T-P2-603"
+   ]
+  },
+  {
+   "id": "BH-model-497",
+   "kind": "BH",
+   "title": "모델 화면 전체(ERD 노드 · 트리 · 표 보기 · 속성 그리드 · 엔터티/관계 패널 · 확정 신청 패널 · 삭제 확인 · 영역 이동 · 시스템 전체 ERD · 메모 · 토스트 · 모델 검증 목록 · 일괄 처리 창) · 엔터티명 · 속성명 · 물리명 · 정의 · 관계명 · 메모 · 업무 영역명에 HTML 같은 글자(예: <img src=x onerror=…>)가 들어 있을 때 — 엑셀 값 고르기 · 직접 입력 · 가져오기 어느 경로든 → 모든 보기에서 그 글자 그대로 보이고 HTML로 해석되지 않음(스크립트가 실행되지 않음). 토",
+   "screen": "model.html",
+   "roles": "전체",
+   "refs": [
+    "N-01"
+   ],
+   "states": [
+    "model.html"
+   ],
+   "verify": "e2e",
+   "source": "docs/impl/trace/behaviors/model.json",
+   "phase": "P4",
+   "tasks": [
+    "T-P2-406",
+    "T-P2-504",
+    "T-P2-603",
+    "P4:사업 · 두 사람 확인"
+   ],
+   "note": "단계를 N-01(P4)에 맞춤"
+  },
+  {
    "id": "BH-mypage-001",
    "kind": "BH",
    "title": "머리 · 마이페이지 열기 → 아바타(이름 첫 글자) · 이름 · 역할 배지",
@@ -38228,6 +39036,25 @@
    ]
   },
   {
+   "id": "BH-mypage-064",
+   "kind": "BH",
+   "title": "환경 탭 · ‘처음 표준화’ 진행 띠 · [닫은 띠 다시 켜기] 클릭 → 영역마다 닫아 둔 진행 띠가 모두 다시 보이게 되고 토스트 ‘닫았던 진행 띠 <n>개 영역을 다시 켰습니다 — …’, 닫아 둔 것이 없으면 ‘닫아 둔 진행 띠가 없습니다’",
+   "screen": "mypage.html",
+   "roles": "전체",
+   "refs": [],
+   "states": [
+    "mypage.html"
+   ],
+   "verify": "e2e",
+   "source": "docs/impl/trace/behaviors/mypage.json",
+   "phase": "P4",
+   "tasks": [
+    "T-P1-09",
+    "P3:알림",
+    "P4:위임 · 조회 범위 · 감리"
+   ]
+  },
+  {
    "id": "BH-ops-status-001",
    "kind": "BH",
    "title": "접근 · settings 권한 없이 열기 → error.html?code=403&need=Admin&what=시스템 상태로 바로 바뀜(뒤로 가기 기록 없이)",
@@ -38995,23 +39822,26 @@
   {
    "id": "BH-outputs-006",
    "kind": "BH",
-   "title": "표준화 산출물 카드 · DDL 스크립트 카드의 ‘DDL 화면’ 클릭 → ddl.html?area=<영역>에 고른 기준 버전을 붙여 이동 — 확정본 · 제출 사본이면 &snap=<문서>, 작업본이면 &src=work (카드 선택은 바뀌지 않음)",
+   "title": "표준화 산출물 카드 · DDL 스크립트 카드의 ‘DDL 화면’ 클릭 → ddl.html?area=<영역>에 고른 기준 버전을 붙여 이동 — 확정본 · 제출 사본이면 &snap=<문서>, 결재 문서가 없는 확정본이면 &ver=<버전>(DDL 화면이 그 확정 사본을 기준으로 엶), 작업본이면 &src=work (카드 선택은 바뀌지 않음)",
    "screen": "outputs.html",
    "roles": "model.view",
    "refs": [
     "SC-37",
-    "M-7"
+    "M-7",
+    "N-05"
    ],
    "states": [
     "outputs.html?k=tbl"
    ],
    "verify": "e2e",
    "source": "docs/impl/trace/behaviors/outputs.json",
-   "phase": "P3",
+   "phase": "P4",
    "tasks": [
     "T-P2-703",
-    "P3:공식 ERD · 나머지 산출물"
-   ]
+    "P3:공식 ERD · 나머지 산출물",
+    "P4:사업 · 두 사람 확인"
+   ],
+   "note": "단계를 N-05(P4)에 맞춤"
   },
   {
    "id": "BH-outputs-007",
@@ -43754,11 +44584,12 @@
   {
    "id": "BH-standardize-005",
    "kind": "BH",
-   "title": "머리 · 동작 · 링크 ‘용어 일괄 만들기(마법사)’ 클릭 → term-wizard.html?area=<영역>&from=standardize 로 이동(모델 맥락 &e= · &a= 가 있으면 함께 넘김). 옆에 ‘미등록 단어 · 용어가 많을 때 한 번에 만듭니다’ 안내",
+   "title": "머리 · 동작 · 링크 ‘용어 자동분석’ 클릭 → term-wizard.html?area=<영역>&from=standardize 로 이동(모델 맥락 &e= · &a= 가 있으면 함께 넘김). 옆에 ‘미등록 단어 · 용어가 많을 때 한 번에 만듭니다’ 안내",
    "screen": "standardize.html",
    "roles": "전체",
    "refs": [
-    "SC-35"
+    "SC-35",
+    "U-08"
    ],
    "states": [
     "standardize.html"
@@ -43775,12 +44606,14 @@
   {
    "id": "BH-standardize-006",
    "kind": "BH",
-   "title": "가져오기 직후 배너 · 주소 열기(?from=import) → 정보 배너 ‘DDL 가져오기가 끝나 자동으로 열었습니다.’ + 마지막 가져오기가 이 영역이면 ‘가져온 N개 테이블·M개 컬럼을 ‘영역’ 영역 vX에 추가하고/로 만들고 분석했습니다.’, 아니면 ‘가져온 구조를 분석했습니다.’",
+   "title": "가져오기 직후 배너 · 주소 열기(?from=import) → 정보 배너 — 그 가져오기의 기록(dbm-import-last)과 짝지어(엑셀 가져오기 완료 링크의 &imp=<id> = 기록 id, &imp가 없으면 id 없는 DDL 기록만) 출처를 말한다: 엑셀이면 ‘엑셀 정의서 가져오기가 끝나 열었습니다 — 테이블 N · 컬럼 M · 경고 K(모델 검증에서 처리). 사전에 있는 용어는 여기서 한 번에 입히고, 사전에 없는 단어 · 용어는 용어 자동분석으로 넘기세요.’, DDL이면 ‘DDL 가져오기가 끝나 자동으로 열었습니다. 가져",
    "screen": "standardize.html",
    "roles": "전체",
    "refs": [
     "RV-R03",
-    "SC-36"
+    "SC-36",
+    "A-1",
+    "F-12"
    ],
    "states": [
     "standardize.html?from=import"
@@ -43857,11 +44690,12 @@
   {
    "id": "BH-standardize-010",
    "kind": "BH",
-   "title": "목록 · 판정(속성) · 속성이 예외 또는 비대상일 때 → 예외는 ‘예외’ 배지 + ‘X-EX 예외 — 사유 기록’, 비대상은 ‘비대상’ + ‘X-NA 비대상’. 처리 칸에 ‘사유: <사유>’, 체크 불가",
+   "title": "목록 · 판정(속성) · 속성이 예외 또는 비대상일 때 → 예외는 ‘예외’ 배지 + ‘X-EX 예외 — 사유 기록’, 비대상은 ‘비대상’ + ‘X-NA 비대상’. 처리 칸에 ‘사유: <사유>’, 체크 불가. 공용 비대상 규칙(STD_NA_RULES — *_TMP · FILLER* · REG_DT · REG_ID · MDFCN_DT · MDFCN_ID · 등록일시 · 수정일시)에 맞는 미준수 속성도 ‘비대상’ + ‘X-NA-RULE 비대상 규칙 ‘<패턴>’ 일치 — 표준 대상에서 뺌’(공용 판정 · 용어 자동분석과 같음)",
    "screen": "standardize.html",
    "roles": "전체",
    "refs": [
-    "ST-R07"
+    "ST-R07",
+    "U-14"
    ],
    "states": [
     "standardize.html?f=ex"
@@ -43977,12 +44811,14 @@
   {
    "id": "BH-standardize-016",
    "kind": "BH",
-   "title": "목록 · 행 체크 · 화면 열기 → 처리할 수 있는 행(조합 가능 · 사전에 있음 · 미등록 단어 · 검수 기준 위반 · 맞출 수 있는 신청 중)만 체크 가능. 조합 가능 · 사전에 있음 · 신청 중은 기본 체크, 미등록 단어 · 검수 기준 위반은 기본 해제, 나머지는 흐리게",
+   "title": "목록 · 행 체크 · 화면 열기 → 처리할 수 있는 행(사전에 있음 · 조합 가능 · 미등록 단어 · 검수 기준 위반 · 맞출 수 있는 신청 중)만 체크 가능. 기본 체크는 사전에 있음 · 신청 중 용어로 맞춤만(조합 가능은 미리 고르지 않음 — 사전에 없는 것은 용어 자동분석이 주 경로), 나머지는 흐리게",
    "screen": "standardize.html",
    "roles": "model.edit 가진 담당 시스템 모델러(작업 중 버전)",
    "refs": [
     "model.edit",
-    "ST-R07"
+    "ST-R07",
+    "U-07",
+    "Q-F1"
    ],
    "states": [
     "standardize.html"
@@ -44016,11 +44852,13 @@
   {
    "id": "BH-standardize-018",
    "kind": "BH",
-   "title": "상태 칩 줄 · 칩 클릭(전체 · 할 일(미준수) · 표준 · 조합 가능 · 신청 중 · 미등록 단어 · 예외 · 비대상) → 칩마다 건수 표시, 누른 칩만 켜지고 그 상태 행만 보인다. 할 일 = 조합 가능 + 신청 중 + 미등록 단어(검수 기준 위반 포함). 주소의 f= 가 바뀐다(replaceState)",
+   "title": "상태 칩 줄 · 칩 클릭(전체 · 할 일(미준수) · 표준 · 사전에 있음 · 조합 가능 · 신청 중 · 미등록 단어 · 검수 기준 위반 · 예외 · 비대상) → 칩마다 건수 표시(공용 판정 상태별 — 진행 띠 · 마법사와 같은 이름 · 같은 수), 누른 칩만 켜지고 그 상태 행만 보인다. 할 일 = 사전에 있음 + 조합 가능 + 미등록 단어 + 검수 기준 위반(신청 중은 자기 칩만 — 마법사 ① 미준수 · 진행 띠와 같은 범위). 주소의 f= 가 바뀐다(replaceState)",
    "screen": "standardize.html",
    "roles": "전체",
    "refs": [
-    "ST-R07"
+    "ST-R07",
+    "F-13",
+    "U-12"
    ],
    "states": [
     "standardize.html",
@@ -44480,13 +45318,16 @@
   {
    "id": "BH-standardize-042",
    "kind": "BH",
-   "title": "표준 맞추기 적용 창 · 버튼 ‘적용’ 클릭 → 용어 신청 행이 있으면 사전 결재 문서 1건(‘표준 맞추기 용어 신청 N건 (영역)’, 사유 포함)을 만들고, 후보 등록 행은 발생 위치와 함께 후보 큐에 등록한 뒤 model.html?area=<영역>(&focus=)로 이동해 작업 버전에 한 번에 반영(모델 화면 토스트 [실행 취소]로 되돌림)",
+   "title": "표준 맞추기 적용 창 · 버튼 ‘적용’ 클릭 → 용어 신청 행이 있으면 사전 결재 문서 1건(‘표준 맞추기 용어 신청 N건 (영역)’, 사유 포함)을 만들고, 후보 등록 행은 발생 위치와 함께 후보 큐에 등록한 뒤 model.html?area=<영역>(&focus=)로 이동해 작업 버전에 한 번에 반영(모델 화면 토스트 [실행 취소]로 되돌림). 넘기는 결과에 left = 적용 뒤 모델을 공용 판정으로 다시 센 남는 할 일 {todo, noDict(조합 가능 · 미등록 단어), have(사전에 있음), rule(검수 기준 위반), ",
    "screen": "standardize.html",
    "roles": "model.edit 가진 담당 시스템 모델러(작업 중 버전)",
    "refs": [
     "model.edit",
     "ST-R07",
-    "SC-31"
+    "SC-31",
+    "A-4",
+    "F-05",
+    "U-13"
    ],
    "states": [
     "standardize.html"
@@ -44705,6 +45546,233 @@
    ],
    "states": [
     "standardize.html"
+   ],
+   "verify": "e2e",
+   "source": "docs/impl/trace/behaviors/standardize.json",
+   "phase": "P2",
+   "tasks": [
+    "T-P2-504"
+   ]
+  },
+  {
+   "id": "BH-standardize-054",
+   "kind": "BH",
+   "title": "머리 아래 · 진행 띠 · 화면 열기 — 가져오기로 만들었거나 아직 확정한 적 없는 영역(목업은 ?flow=1로 확정 영역도) → 공용 ‘처음 표준화’ 띠(① 모델 등록 → ② 표준 입히기 → ③ 남은 용어 → ④ 검증 · 신청, 끝난 단계 ✓ + 건수, 지금 단계만 주 버튼, 표준 맞추기에서는 ②에 ‘아래 목록에서 … 반영’ 안내). [닫기]면 그 영역에서 다시 안 보임. 숫자는 표준 맞추기 목록과 같은 판정(stdJudge). 승인 용어 띠 [반영]이 이 화면의 주 행동이면 띠의 버튼은 보조(noPrimary). 띠를 닫으면 초",
+   "screen": "standardize.html",
+   "roles": "전체",
+   "refs": [
+    "A-2",
+    "Q-F2",
+    "U-05",
+    "U-07"
+   ],
+   "states": [
+    "standardize.html?as=kim&area=rq&flow=1"
+   ],
+   "verify": "e2e",
+   "source": "docs/impl/trace/behaviors/standardize.json",
+   "phase": "P2",
+   "tasks": [
+    "T-P2-504"
+   ]
+  },
+  {
+   "id": "BH-standardize-055",
+   "kind": "BH",
+   "title": "상태 칩 줄 · 오른쪽 · 사전에 없는 단어 · 용어(조합 가능 · 미등록 단어)가 남아 있을 때 · 편집 가능 → ‘사전에 없는 단어 · 용어 N건 —’ + [용어 자동분석으로 한 번에]. 누르면 고른 행 중 그 상태의 행(고른 것이 없으면 지금 필터에 보이는 그 상태 행)을 건수와 관계없이 term-wizard.html?area=&from=standardize&ents=<엔터티들>&rows=<E:엔터티id | A:엔터티id.속성 …>(행 종류를 함께 — 테이블명 행과 같은 이름 속성을 구분)&auto=1로 넘긴다(주소가 길면 r",
+   "screen": "standardize.html",
+   "roles": "model.edit (담당 시스템 모델러)",
+   "refs": [
+    "A-3",
+    "Q-F1",
+    "MD-56",
+    "F-04",
+    "R-04"
+   ],
+   "states": [
+    "standardize.html?as=kim&area=rq"
+   ],
+   "verify": "e2e",
+   "source": "docs/impl/trace/behaviors/standardize.json",
+   "phase": "P3",
+   "tasks": [
+    "T-P2-504",
+    "P3:용어 자동분석 · 공통표준 새 판"
+   ],
+   "note": "단계를 MD-56(P3)에 맞춤"
+  },
+  {
+   "id": "BH-standardize-056",
+   "kind": "BH",
+   "title": "일괄 처리 줄 · 고른 행 중 ‘용어 신청 묶음’ · ‘후보 등록’이 합쳐 10건 이상일 때 → 요약 줄에 ‘많을 때는 용어 자동분석이 단어 분해 · 새 단어 지정까지 한 번에 합니다 — [그쪽으로]’. [그쪽으로]는 위와 같은 방식으로 마법사에 넘긴다. 신청 · 후보 등록은 그대로 할 수 있다",
+   "screen": "standardize.html",
+   "roles": "model.edit",
+   "refs": [
+    "A-3",
+    "Q-F1"
+   ],
+   "states": [
+    "standardize.html?as=kim&area=rq"
+   ],
+   "verify": "e2e",
+   "source": "docs/impl/trace/behaviors/standardize.json",
+   "phase": "P2",
+   "tasks": [
+    "T-P2-504"
+   ]
+  },
+  {
+   "id": "BH-standardize-057",
+   "kind": "BH",
+   "title": "머리 아래 · 승인 용어 띠 · 신청한 용어가 승인돼 T-DONE 판정 행이 있을 때 · 편집 가능 → 띠 ‘승인된 용어 N건 반영 가능 — 신청한 용어가 결재를 마쳤습니다. 모델에 반영하면 표준이 됩니다.’ + [반영]. 누르면 잠금 · 버전 · 권한을 다시 확인(바뀌었으면 ‘지금은 반영할 수 없습니다 — …’ + [새로고침])한 뒤 그 행들을 ‘용어 적용’으로 모델에 넘기고(left 포함) 모델 화면으로 이동",
+   "screen": "standardize.html",
+   "roles": "model.edit",
+   "refs": [
+    "B-5"
+   ],
+   "states": [
+    "standardize.html?as=kim&area=rq"
+   ],
+   "verify": "e2e",
+   "source": "docs/impl/trace/behaviors/standardize.json",
+   "phase": "P2",
+   "tasks": [
+    "T-P2-504"
+   ]
+  },
+  {
+   "id": "BH-standardize-058",
+   "kind": "BH",
+   "title": "머리 아래 · 미반영 경고 · 용어 자동분석의 모델 반영 결과가 아직 모델에 반영되지 않은 채(같은 영역 · 버전) 이 화면을 열 때 → (마법사의 [표준 맞추기로 돌아가기]는 모델을 거쳐 오므로 정상 경로에서는 안 뜸) 경고 띠 ‘용어 자동분석 결과 N건이 아직 모델에 반영되지 않았습니다 — 모델 화면을 열면 반영되고, 그 뒤 이 화면의 분석에도 들어갑니다.’ + [모델에 반영](모델 화면으로)",
+   "screen": "standardize.html",
+   "roles": "전체",
+   "refs": [
+    "B-3"
+   ],
+   "states": [
+    "standardize.html?as=kim&area=rq"
+   ],
+   "verify": "e2e",
+   "source": "docs/impl/trace/behaviors/standardize.json",
+   "phase": "P2",
+   "tasks": [
+    "T-P2-504"
+   ]
+  },
+  {
+   "id": "BH-standardize-059",
+   "kind": "BH",
+   "title": "목록 · 판정(공용) · 화면 열기 · 다시 분석 → 각 행의 상태(표준 · 사전에 있음 · 조합 가능 · 신청 중 · 미등록 단어 · 검수 기준 위반 · 예외 · 비대상)는 공용 판정 stdJudge(모델, STD_PROPOSAL) 결과를 키로 짝지어 쓴다(진단 문구 · 제안값은 이 화면 계산). 공용 판정에만 있는 행(물리명이 이미 채워진 엔터티 용어 행 등)은 그 판정으로 목록에 더한다. 같은 모델에서 칩 수가 진행 띠 · flowCounts 숫자와 같다. 제안 도메인은 사전에 등록된 용어가 있으면 그 사전 도메인(약어도 사전",
+   "screen": "standardize.html",
+   "roles": "전체",
+   "refs": [
+    "A-2",
+    "Q-F1",
+    "F-06",
+    "F-13",
+    "U-14"
+   ],
+   "states": [
+    "standardize.html?as=kim&area=rq"
+   ],
+   "verify": "unit",
+   "source": "docs/impl/trace/behaviors/standardize.json",
+   "phase": "P2",
+   "tasks": [
+    "T-P2-504"
+   ]
+  },
+  {
+   "id": "BH-standardize-060",
+   "kind": "BH",
+   "title": "일괄 처리 줄 · 진행 띠가 ③ 남은 용어 단계이고 고른 행에 용어 신청 · 후보 등록이 있을 때 → [선택 적용]이 주 버튼 모양을 잃고 보조 버튼이 된다(사전에 없는 것은 용어 자동분석이 주 경로). 사전에 있음 · 예외만 고르면 주 버튼",
+   "screen": "standardize.html",
+   "roles": "model.edit",
+   "refs": [
+    "U-07",
+    "Q-F1"
+   ],
+   "states": [
+    "standardize.html?as=kim&area=rq&flow=1"
+   ],
+   "verify": "e2e",
+   "source": "docs/impl/trace/behaviors/standardize.json",
+   "phase": "P2",
+   "tasks": [
+    "T-P2-504"
+   ]
+  },
+  {
+   "id": "BH-standardize-061",
+   "kind": "BH",
+   "title": "상태 칩 줄 · 오른쪽 · 사전에 없는 단어 · 용어는 없고 검수 기준 위반만 남았을 때 · 편집 가능 → ‘검수 기준 위반 N건 — 이름을 고치거나 예외로’ + [행 보기](‘검수 기준 위반’ 칩을 켜고 첫 행 체크 칸에 초점). 용어 자동분석으로 보내지 않는다. 적용 전 요약 ‘남는 미준수’도 사전에 있음 · 검수 기준 위반을 함께 센다",
+   "screen": "standardize.html",
+   "roles": "model.edit",
+   "refs": [
+    "F-05"
+   ],
+   "states": [
+    "standardize.html?as=kim&area=rq"
+   ],
+   "verify": "e2e",
+   "source": "docs/impl/trace/behaviors/standardize.json",
+   "phase": "P2",
+   "tasks": [
+    "T-P2-504"
+   ]
+  },
+  {
+   "id": "BH-standardize-062",
+   "kind": "BH",
+   "title": "화면 전체 · 열람 제한 · 작업 버전이 결재 중이고 그 제출본을 볼 수 없는 사용자가 열 때(areaView) → 행을 보이지 않고 띠 ‘vN은 결재 중이라 신청자와 결재 담당자만 볼 수 있습니다. 표준 맞추기는 작업 중인 버전을 다루므로 보여 줄 내용이 없습니다.’ + [모델로], 목록 빈 줄 ‘결재 중인 버전이라 열람이 제한됩니다.’. 머리의 ‘영역 화면’ 메뉴의 미준수 건수도 숨긴다",
+   "screen": "standardize.html",
+   "roles": "결재선 · 신청자 밖",
+   "refs": [
+    "F-01",
+    "R-07"
+   ],
+   "states": [
+    "standardize.html?as=choi&area=risk"
+   ],
+   "verify": "e2e",
+   "source": "docs/impl/trace/behaviors/standardize.json",
+   "phase": "P2",
+   "tasks": [
+    "T-P2-504"
+   ]
+  },
+  {
+   "id": "BH-standardize-063",
+   "kind": "BH",
+   "title": "화면 전체 · 표시 · 업무 영역명 · 엔터티명 · 속성명 · 사유 · 의견에 기호(< > & 따옴표)가 있을 때 → 모두 글자 그대로 보인다(마크업으로 해석하지 않음) — 진입 문구 · 목록 · 진단 · 사유 · 보완 띠 · 선택 목록 · 맥락 띠 · 신청 충돌 알림의 용어명",
+   "screen": "standardize.html",
+   "roles": "전체",
+   "refs": [
+    "R-01"
+   ],
+   "states": [
+    "standardize.html?as=kim&area=rq&from=import"
+   ],
+   "verify": "unit",
+   "source": "docs/impl/trace/behaviors/standardize.json",
+   "phase": "P4",
+   "tasks": [
+    "T-P2-504",
+    "P4:사업 · 두 사람 확인"
+   ],
+   "note": "단계를 R-01(P4)에 맞춤"
+  },
+  {
+   "id": "BH-standardize-064",
+   "kind": "BH",
+   "title": "일괄 처리 줄 · 예외 · 비대상 기록 뒤(목록이 다시 그려질 때) → 초점이 일괄 처리 줄의 [선택 적용]으로 간다(보이는 요소)",
+   "screen": "standardize.html",
+   "roles": "model.edit",
+   "refs": [
+    "U-05"
+   ],
+   "states": [
+    "standardize.html?as=kim&area=rq"
    ],
    "verify": "e2e",
    "source": "docs/impl/trace/behaviors/standardize.json",
@@ -47009,11 +48077,12 @@
   {
    "id": "BH-term-wizard-002",
    "kind": "BH",
-   "title": "머리 · 동작 · ‘표준 맞추기로 돌아가기’ 클릭 → standardize.html?area=<영역>&f=todo(모델 맥락이 있으면 &e= · &a=)로 이동. from=standardize로 오지 않았으면 버튼 이름이 ‘표준 맞추기 열기’",
+   "title": "머리 · 동작 · ‘표준 맞추기로 돌아가기’ 클릭 → model.html?area=<영역>&then=std(모델 맥락이 있으면 &focus=)로 이동 — 모델이 남은 반영 결과를 반영 · 저장한 뒤 표준 맞추기(f=todo)로 넘김. from은 standardize(옛 std 포함) · model 두 가지, from=standardize로 오지 않았으면 버튼 이름이 ‘표준 맞추기 열기’. 마법사 안의 돌아가기는 이 버튼 하나(넘겨받은 행 띠에는 따로 두지 않음)",
    "screen": "term-wizard.html",
    "roles": "전체",
    "refs": [
-    "SC-34"
+    "SC-34",
+    "U-08"
    ],
    "states": [
     "term-wizard.html?area=rq"
@@ -47180,11 +48249,12 @@
   {
    "id": "BH-term-wizard-011",
    "kind": "BH",
-   "title": "① 대상 선택 · 테이블 목록 · 화면 열기 → 참조가 아닌 테이블마다 체크 · 이름 · 물리명 · ‘속성 N · 미준수 M’. 기본 모두 체크, ?ents=<id,…>가 있으면 그 테이블만 체크. 테이블이 없으면 ‘이 업무 영역에 테이블이 없습니다’. 위에 선택 수 ‘n/N’",
+   "title": "① 대상 선택 · 테이블 목록 · 화면 열기 → 참조가 아닌 테이블마다 체크 · 이름 · 물리명 · ‘속성 N · 미준수 M’(미준수 = 공용 판정의 사전에 있음 · 조합 가능 · 미등록 단어 · 검수 기준 위반 — 신청 중은 빼고, 기준 위반이 된 표준은 넣음). 기본 모두 체크, ?ents=<id,…>가 있으면 그 테이블만 체크. 테이블이 없으면 ‘이 업무 영역에 테이블이 없습니다’. 위에 선택 수 ‘n/N’",
    "screen": "term-wizard.html",
    "roles": "전체",
    "refs": [
-    "SC-35"
+    "SC-35",
+    "F-13"
    ],
    "states": [
     "term-wizard.html?area=rq"
@@ -47370,11 +48440,12 @@
   {
    "id": "BH-term-wizard-021",
    "kind": "BH",
-   "title": "① 대상 선택 · 옵션 · ‘표준 비대상 규칙’ 입력(한 줄에 패턴, * 와일드카드) → 물리명 또는 논리명이 패턴에 맞는 속성은 자동 ‘비대상’(근거 ‘비대상 규칙 <패턴> 일치’). 기본값은 검수 기준의 표준 제외 규칙, 여기서 고친 규칙은 이번 분석에만 쓴다(‘표준 제외 규칙’ 링크 → rules.html). 대소문자 무시",
+   "title": "① 대상 선택 · 옵션 · ‘표준 비대상 규칙’ 입력(한 줄에 패턴, * 와일드카드) → 물리명 또는 논리명이 패턴에 맞는 속성은 자동 ‘비대상’(근거 ‘비대상 규칙 <패턴> 일치’). 기본값은 공용 비대상 규칙(STD_NA_RULES — 표준 맞추기 · 진행 띠와 같은 규칙), 여기서 고친 규칙은 이번 분석에만 쓴다(‘표준 제외 규칙’ 링크 → rules.html). 대소문자 무시",
    "screen": "term-wizard.html",
    "roles": "전체",
    "refs": [
-    "ST-R07"
+    "ST-R07",
+    "U-14"
    ],
    "states": [
     "term-wizard.html?area=rq"
@@ -47446,12 +48517,13 @@
   {
    "id": "BH-term-wizard-025",
    "kind": "BH",
-   "title": "② 분석 결과 · 판정 · 분석 · 대안 선택이 바뀔 때 → 상태 판정: 원래 비대상 → ‘비대상’, 예외 → ‘예외’, 비대상 규칙 일치 → ‘비대상’(자동), 모델이 표준 → ‘이미 표준’, 고른 대안이 사전 용어 → ‘이미 표준’ + ‘사전에 있음 · 모델 반영 필요’, 미등록 · 사용 불가 단어 포함 또는 대안 없음 → ‘미등록 단어 포함’, 1음절 의심 → ‘1음절 의심’, 그 밖 → ‘조합 가능’",
+   "title": "② 분석 결과 · 판정 · 분석 · 대안 선택이 바뀔 때 → 상태 판정: 원래 비대상 → ‘비대상’, 예외 → ‘예외’, 모델이 표준 → ‘이미 표준’ · 용어 신청 중이면 그 상태(비대상 규칙에 맞아도 — 공용 판정과 같게), 그 밖에 비대상 규칙 일치 → ‘비대상’(자동), 고른 대안이 사전 용어 → ‘이미 표준’ + ‘사전에 있음 · 모델 반영 필요’, 미등록 · 사용 불가 단어 포함 또는 대안 없음 → ‘미등록 단어 포함’, 1음절 의심 → ‘1음절 의심’, 그 밖 → ‘조합 가능’",
    "screen": "term-wizard.html",
    "roles": "전체",
    "refs": [
     "ST-R05",
-    "ST-R07"
+    "ST-R07",
+    "U-14"
    ],
    "states": [
     "term-wizard.html?area=rq"
@@ -47485,11 +48557,12 @@
   {
    "id": "BH-term-wizard-027",
    "kind": "BH",
-   "title": "② 분석 결과 · 도메인 추천 · 대안의 마지막 단어(분류어) → 모델이 이미 표준이면 현재 도메인, 이 영역 표준 속성에 같은 분류어 관례가 있으면 가장 많이 쓴 도메인, 아니면 분류어 표(일자→연월일C8, 명→명V100, 코드→코드C2 …). 끝 조각 ‘일 · 시각 · NO’는 ‘일자 · 일시 · 번호’로 보정한 대안도 만든다(근거 ‘끝 ‘X’→분류어 ‘Y’ 보정’). 사전 용어면 그 약어 · 도메인을 쓴다",
+   "title": "② 분석 결과 · 도메인 추천 · 대안의 마지막 단어(분류어) → 모델이 이미 표준이면 현재 도메인, 이 영역 표준 속성에 같은 분류어 관례가 있으면 가장 많이 쓴 도메인, 아니면 분류어 표(일자→연월일C8, 명→명V100, 코드→코드C2 …). 끝 조각 ‘일 · 시각 · NO’는 ‘일자 · 일시 · 번호’로 보정한 대안도 만든다(근거 ‘끝 ‘X’→분류어 ‘Y’ 보정’). 사전 용어면 그 약어 · 도메인을 쓴다. 표준 맞추기의 알려진 제안(STD_PROPOSAL)이 있는 행은 그 용어를 첫 대안으로(근거 ‘표준 맞추기와 같은 제안’",
    "screen": "term-wizard.html",
    "roles": "전체",
    "refs": [
-    "ST-R05"
+    "ST-R05",
+    "U-14"
    ],
    "states": [
     "term-wizard.html?area=rq"
@@ -48136,11 +49209,12 @@
   {
    "id": "BH-term-wizard-061",
    "kind": "BH",
-   "title": "④ 용어 등록 · 안내 · ‘표준 사전’ / ‘후보 큐’ 링크 클릭 → dictionary.html?basket=1&ret=… / candidates.html?ret=… 로 이동. 받는 화면에 ‘하던 작업이 있습니다. 용어 자동분석으로 돌아가기’ 띠가 생긴다",
+   "title": "④ 용어 등록 · 안내 · ‘표준 사전’ / ‘후보 큐’ 링크 클릭 → dictionary.html?basket=1&ret=… / candidates.html?ret=… 로 이동. 받는 화면에 ‘하던 작업이 있습니다. 용어 자동분석으로 돌아가기’ 띠가 생긴다. 돌아오는 주소는 마법사를 연 곳(from=standardize | model)을 유지한다",
    "screen": "term-wizard.html",
    "roles": "전체",
    "refs": [
-    "SC-35"
+    "SC-35",
+    "U-08"
    ],
    "states": [
     "term-wizard.html?area=rq"
@@ -48269,13 +49343,14 @@
   {
    "id": "BH-term-wizard-068",
    "kind": "BH",
-   "title": "⑤ 모델 반영 · ‘모델에 반영’ 클릭(통과) → 완료 상자 ‘모델 반영을 준비했습니다’ + ‘N반영(표준 a · 이름만 b) · N신청 중 · N비대상 제외 · N선택 안 함’, ‘모델 화면을 열면 작업 버전 vN에 한 번에 반영되고, 토스트의 [실행 취소]로 되돌릴 수 있습니다.’(신청 문서가 있으면 ‘용어 신청 <문서>는 되돌려도 남습니다(결재함에서 회수).’) + [모델에서 보기]에 초점. 체크 · 버튼 비활성, 저장된 분석 삭제. [모델에서 보기]를 누르면 모델 화면에서 반영",
+   "title": "⑤ 모델 반영 · ‘모델에 반영’ 클릭(통과) → 완료 상자 ‘모델 반영을 준비했습니다’ + ‘N반영(표준 a · 이름만 b) · N신청 중 · N비대상 제외 · N선택 안 함’, ‘모델 화면을 열면 작업 버전 vN에 한 번에 반영되고, 토스트의 [실행 취소]로 되돌릴 수 있습니다.’(신청 문서가 있으면 ‘용어 신청 <문서>는 되돌려도 남습니다(결재함에서 회수).’) + [모델에서 보기](초점) · [모델 검증 열기](model.html?area=&check=1) · [표준 맞추기로 돌아가기](model.html?area=&then",
    "screen": "term-wizard.html",
    "roles": "model.edit 가진 담당 시스템 모델러(작업 중 버전)",
    "refs": [
     "model.edit",
     "ST-R07",
-    "SC-31"
+    "SC-31",
+    "B-3"
    ],
    "states": [
     "term-wizard.html?area=rq"
@@ -48440,9 +49515,156 @@
    ]
   },
   {
+   "id": "BH-term-wizard-077",
+   "kind": "BH",
+   "title": "머리 아래 · 진행 띠 · 화면 열기 — 가져오기로 만들었거나 아직 확정한 적 없는 영역(목업은 ?flow=1) → 공용 ‘처음 표준화’ 띠, ③ 남은 용어가 지금 단계면 ‘아래에서 용어를 만들어 신청합니다’. [닫기]면 그 영역에서 다시 안 보임. 띠를 닫으면 초점이 단계 줄의 지금 단계로",
+   "screen": "term-wizard.html",
+   "roles": "전체",
+   "refs": [
+    "A-2",
+    "Q-F2",
+    "U-05"
+   ],
+   "states": [
+    "term-wizard.html?as=kim&area=rq&flow=1"
+   ],
+   "verify": "e2e",
+   "source": "docs/impl/trace/behaviors/term-wizard.json",
+   "phase": "P3",
+   "tasks": [
+    "P3:용어 자동분석 · 공통표준 새 판"
+   ]
+  },
+  {
+   "id": "BH-term-wizard-078",
+   "kind": "BH",
+   "title": "넘겨받은 행 띠 · ② 분석 결과 · 표준 맞추기에서 넘어올 때(?ents=&rows=&auto=1) → 띠 ‘표준 맞추기에서 넘겨받은 사전에 없는 단어 · 용어 N건(엔터티 M개) — ② 분석 결과에서 이 행들만 포함해 둡니다.’(띠에 따로 돌아가기 버튼은 없음 — 머리 버튼 하나). 바로 ②로 분석하고 넘겨받은 행(종류 + id: E:엔터티id / A:엔터티id.속성)만 ‘포함’에 체크(같은 엔터티의 나머지 행은 분석만). rows=@s면 세션 저장의 목록을 쓴다. 다시 분석하면 일반 규칙",
+   "screen": "term-wizard.html",
+   "roles": "전체(④ · ⑤는 model.edit)",
+   "refs": [
+    "A-3",
+    "Q-F1",
+    "MD-56",
+    "F-04",
+    "U-08",
+    "R-04"
+   ],
+   "states": [
+    "term-wizard.html?area=rq&from=standardize&ents=dlv,hist&rows=산출물이력.이력순번&auto=1"
+   ],
+   "verify": "e2e",
+   "source": "docs/impl/trace/behaviors/term-wizard.json",
+   "phase": "P3",
+   "tasks": [
+    "P3:용어 자동분석 · 공통표준 새 판"
+   ]
+  },
+  {
+   "id": "BH-term-wizard-079",
+   "kind": "BH",
+   "title": "이어서 하기 배너 · 표준 맞추기에서 행을 넘겨받았는데 저장한 분석도 있을 때 → 배너 ‘표준 맞추기에서 새로 넘긴 N건이 있습니다. <시각>에 저장한 분석도 있습니다 — 어느 쪽으로 할까요?’ + [하던 분석 이어서] · [새로 넘긴 N건으로 다시 분석]. 다시 분석하면 저장 분석을 지우고 넘겨받은 행만 포함해 ②로. 저장 · 되살리기와 ⑤ 선택은 행 종류 키(E:엔터티id / A:엔터티id.속성)로 — 테이블명 행과 같은 이름 속성이 합쳐지지 않음",
+   "screen": "term-wizard.html",
+   "roles": "전체",
+   "refs": [
+    "F-04",
+    "R-04"
+   ],
+   "states": [
+    "term-wizard.html?area=rq&from=standardize&ents=dlv&rows=산출물기본.산출물수령자명&auto=1"
+   ],
+   "verify": "e2e",
+   "source": "docs/impl/trace/behaviors/term-wizard.json",
+   "phase": "P3",
+   "tasks": [
+    "P3:용어 자동분석 · 공통표준 새 판"
+   ]
+  },
+  {
+   "id": "BH-term-wizard-080",
+   "kind": "BH",
+   "title": "진행 띠 · ④ 바로 신청 뒤 · ⑤ 모델 반영 준비 뒤 → 띠를 다시 그리고 그 아래 한 줄 — 신청 뒤 ‘용어 신청 <문서>(N건)을 만들었습니다 — ⑤에서 모델에 반영하면 ‘남은 용어’가 끝납니다’, ⑤ 뒤에는 띠를 예약한 반영 결과 기준으로 다시 세어 그리고 ‘모델 반영을 준비했습니다 — 반영 대기 N건(· 신청 <문서>). 띠는 반영 뒤 기준입니다 — 모델 화면을 열면 반영됩니다’ + [모델에서 보기]",
+   "screen": "term-wizard.html",
+   "roles": "model.edit",
+   "refs": [
+    "U-15",
+    "A-2"
+   ],
+   "states": [
+    "term-wizard.html?as=kim&area=rq&flow=1"
+   ],
+   "verify": "e2e",
+   "source": "docs/impl/trace/behaviors/term-wizard.json",
+   "phase": "P3",
+   "tasks": [
+    "P3:용어 자동분석 · 공통표준 새 판"
+   ]
+  },
+  {
+   "id": "BH-term-wizard-081",
+   "kind": "BH",
+   "title": "화면 전체 · 열람 제한 · 작업 버전이 결재 중이고 그 제출본을 볼 수 없는 사용자가 열 때(areaView) → 분석 대상 없이 띠 ‘vN은 결재 중이라 신청자와 결재 담당자만 볼 수 있습니다. 용어 자동분석은 작업 중인 버전을 다루므로 보여 줄 내용이 없습니다.’ + [모델로]. 단어 후보를 모을 때와 물리명 역검색(약어 → 단어) 목록을 만들 때도 다른 업무 영역은 볼 수 있는 사본만 읽는다(결재 중 제출본 → 확정본)",
+   "screen": "term-wizard.html",
+   "roles": "결재선 · 신청자 밖",
+   "refs": [
+    "F-01",
+    "R-07"
+   ],
+   "states": [
+    "term-wizard.html?as=choi&area=risk"
+   ],
+   "verify": "e2e",
+   "source": "docs/impl/trace/behaviors/term-wizard.json",
+   "phase": "P3",
+   "tasks": [
+    "P3:용어 자동분석 · 공통표준 새 판"
+   ]
+  },
+  {
+   "id": "BH-term-wizard-082",
+   "kind": "BH",
+   "title": "⑤ 모델 반영 · 목록 · 행 체크 · 모두 선택 · 분석 저장 후 다시 열기 → 선택 · 저장 키는 행 종류 + id(E:엔터티id / A:엔터티id.속성). 테이블명 행과 같은 이름 속성은 따로 체크되고 따로 반영된다",
+   "screen": "term-wizard.html",
+   "roles": "model.edit",
+   "refs": [
+    "R-04",
+    "F-04"
+   ],
+   "states": [
+    "term-wizard.html?as=kim&area=rq&ents=dlv,hist&auto=1"
+   ],
+   "verify": "e2e",
+   "source": "docs/impl/trace/behaviors/term-wizard.json",
+   "phase": "P3",
+   "tasks": [
+    "P3:용어 자동분석 · 공통표준 새 판"
+   ]
+  },
+  {
+   "id": "BH-term-wizard-083",
+   "kind": "BH",
+   "title": "이어서 하기 · 예전 분석 · 형식 표시가 없는(예전 저장 방식 ‘엔터티.속성’ 키) 분석을 [이어서]로 열 때 — 새로 저장하는 분석에는 keyVer 2가 붙는다 → keyVer 2가 없으면 모든 키를 예전 형식으로 보고(논리명이 ‘A:’ · ‘E:’로 시작해도) 포함 · 고른 분해 · ⑤ 반영 선택을 행 종류 키(E: / A:)로 바꿔 되살린다. 키가 테이블명 행과 같은 이름 속성 행 둘 다에 맞으면 어느 쪽도 고르지 않고 띠 ‘예전 분석이라 일부 선택을 다시 확인해 주세요 — 테이블명 행과 같은 이름의 속성 행 N건은 예전 저",
+   "screen": "term-wizard.html",
+   "roles": "전체",
+   "refs": [
+    "N-04",
+    "R-04"
+   ],
+   "states": [
+    "term-wizard.html?as=kim&area=rq&resume=1"
+   ],
+   "verify": "unit",
+   "source": "docs/impl/trace/behaviors/term-wizard.json",
+   "phase": "P4",
+   "tasks": [
+    "P3:용어 자동분석 · 공통표준 새 판",
+    "P4:위임 · 조회 범위 · 감리"
+   ],
+   "note": "단계를 N-04(P4)에 맞춤"
+  },
+  {
    "id": "BH-uploads-001",
    "kind": "BH",
-   "title": "머리 · 버튼 ‘엑셀 가져오기’ 클릭 → excel-import.html 로 이동",
+   "title": "머리 · 버튼 ‘사전 엑셀 일괄’ 클릭 → excel-import.html 로 이동",
    "screen": "uploads.html",
    "roles": "전체",
    "refs": [
@@ -48696,7 +49918,7 @@
   {
    "id": "BH-uploads-015",
    "kind": "BH",
-   "title": "목록 · 볼 수 있는 업로드가 하나도 없을 때 → ‘아직 업로드가 없습니다’ · ‘사전에서 편집용 엑셀을 내려받아 고친 뒤 올리면 여기에 묶음으로 남습니다.’ + [엑셀 가져오기]",
+   "title": "목록 · 볼 수 있는 업로드가 하나도 없을 때 → ‘아직 업로드가 없습니다’ · ‘사전에서 편집용 엑셀을 내려받아 고친 뒤 올리면 여기에 묶음으로 남습니다.’ + [사전 엑셀 일괄]",
    "screen": "uploads.html",
    "roles": "전체",
    "refs": [],

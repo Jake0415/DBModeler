@@ -28,7 +28,11 @@
     <h1>표준 맞추기</h1>
     
     <span class="badge" id="scope"></span>
-    <div class="actions"><button class="btn sm" id="reanalyze" data-busy="800">다시 분석</button><span class="u-flex u-gap-8 u-ai-c"><span class="caption muted">미등록 단어 · 용어가 많을 때 한 번에 만듭니다</span><a class="btn sm ghost" id="to-wiz" href="term-wizard.html" title="이름을 단어로 나눠 대안을 비교하고 용어 등록·모델 반영까지 단계별로 진행(용어 자동분석)">용어 일괄 만들기(마법사)</a></span></div>
+    <div class="actions"><button class="btn sm" id="reanalyze" data-busy="800">다시 분석</button><span class="u-flex u-gap-8 u-ai-c"><span class="caption muted">미등록 단어 · 용어가 많을 때 한 번에 만듭니다</span><a class="btn sm ghost" id="to-wiz" href="term-wizard.html" title="이름을 단어로 나눠 대안을 비교하고 용어 등록·모델 반영까지 단계별로 진행(용어 자동분석)">용어 자동분석</a></span></div>
+  </div>
+  <div id="flow-slot"></div>
+  <div class="pad u-pb-0" id="done-band" hidden>
+    <div class="banner success"><i data-ic=check></i><div class="grow" id="done-band-t"></div><button class="btn sm primary" id="done-apply">반영</button></div>
   </div>
   <div class="pad u-pb-0" id="ctx" hidden>
     <div class="banner info"><i data-ic=info></i><div class="grow" id="ctx-t"></div><a class="btn sm" id="ctx-back" href="model.html">모델에서 보기</a></div>
@@ -84,6 +88,7 @@
 <script>
 window.pageInit = function () {
   const q = new URLSearchParams(location.search), $ = id => document.getElementById(id);
+  const esc = v => String(v == null ? '' : v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);   // R-01: names · reasons are text, never markup
   // the area and version this screen works on travel with it (entry, judgement, hand-off and return)
   const AREA = getModels()[q.get('area')] ? q.get('area') : defArea();
   const LK = modelLock(AREA), VER = LK.model.ver;
@@ -95,19 +100,37 @@ window.pageInit = function () {
   const CE = q.get('e') || '', CA = q.get('a') || '';
   const backUrl = `model.html?area=${AREA}${CE ? '&focus=' + encodeURIComponent(CE) : ''}`;
   $('back').href = backUrl;
-  areaNav(AREA, 'std');   // the head's '영역 화면' menu — 표준 맞추기 always works on the work copy (resolution-tree-menu)
+  areaNav(AREA, 'std');
+  try { if (typeof window.areaView === 'function' && areaView(AREA).hidden && typeof window.areaNavBad === 'function') areaNavBad(0); } catch (e) {}   // F-01: a version under review this user may not see — no count from it in the menu   // the head's '영역 화면' menu — 표준 맞추기 always works on the work copy (resolution-tree-menu)
   $('to-wiz').href = `term-wizard.html?area=${AREA}&from=standardize${CE ? '&e=' + encodeURIComponent(CE) + (CA ? '&a=' + encodeURIComponent(CA) : '') : ''}`;
   const ANALYZED = `분석 ${nowStr()} · 사전 기준 현재(제정 ${getPub().cha}차 + 승인 반영분)`;   // shown at the right of the filter row (the header keeps room for the title and the wizard entry)
-  if (q.get('from') === 'import') { const imp = J2('dbm-import-last'); $('from-import').hidden = false; $('from-import-t').innerHTML = `<b>DDL 가져오기가 끝나 자동으로 열었습니다.</b> ${imp && imp.area === AREA ? `가져온 ${imp.tables}개 테이블·${imp.cols}개 컬럼을 ‘${LK.model.name}’ 영역 v${VER}${imp.dst === 'cur' ? '에 추가하고' : '로 만들고'} 분석했습니다.` : '가져온 구조를 분석했습니다.'}`; }
+  // A-1 · F-12 (02-flow-plan · flow review): the entry line pairs with ITS import record — the excel import's link carries &imp=<id> and the record keeps id · at;
+  // the DDL import (no id) is recognised only when no &imp= is given. A record that does not match is not used — the line then does not name a source
+  if (q.get('from') === 'import') { const imp = J2('dbm-import-last'), want = q.get('imp'), hit = imp && imp.area === AREA && (want ? imp.id === want : !imp.id) ? imp : null; $('from-import').hidden = false;
+    $('from-import-t').innerHTML = hit && hit.src === 'excel'
+      ? `<b>엑셀 정의서 가져오기가 끝나 열었습니다</b> — 테이블 ${hit.tables || 0} · 컬럼 ${hit.cols || 0} · 경고 ${hit.warn || 0}${hit.warn ? '(모델 검증에서 처리)' : ''}. 사전에 있는 용어는 여기서 한 번에 입히고, 사전에 없는 단어 · 용어는 용어 자동분석으로 넘기세요.`
+      : hit ? `<b>DDL 가져오기가 끝나 자동으로 열었습니다.</b> 가져온 ${hit.tables}개 테이블·${hit.cols}개 컬럼을 ‘${esc(LK.model.name)}’ 영역 v${VER}${hit.dst === 'cur' ? '에 추가하고' : '로 만들고'} 분석했습니다.`
+      : `<b>가져오기가 끝나 열었습니다.</b> 가져온 구조를 ‘${esc(LK.model.name)}’ 영역 v${VER} 기준으로 분석했습니다.`; }
+  // B-3 return: the wizard's result is applied when the model screen opens — coming straight back here first, say so (this analysis does not include it yet)
+  { let pa = null; try { pa = JSON.parse(sessionStorage.getItem('dbm-apply') || 'null'); } catch (e) {}
+    if (pa && pa.area === AREA && pa.ver === VER && pa.from === 'term-wizard') document.querySelector('.page-header').insertAdjacentHTML('afterend', `<div class="pad u-pb-0"><div class="banner warning"><i data-ic=warn></i><div class="grow"><b>용어 자동분석 결과 ${(pa.rows || []).length + (pa.na || []).length}건이 아직 모델에 반영되지 않았습니다</b> — 모델 화면을 열면 반영되고, 그 뒤 이 화면의 분석에도 들어갑니다.</div><a class="btn sm primary" href="${backUrl}">모델에 반영</a></div></div>`); }
+  // A-2: the '처음 표준화' progress band (shared, app.js flowBand — the model screen and the wizard draw the same one); it decides itself whether it shows
+  const drawBand = noPrimary => { if (typeof window.flowBand !== 'function') return; try { window.flowBand(AREA, 'std', $('flow-slot'), { noPrimary, onClose: () => { const c = document.querySelector('#chips .chip.on') || document.querySelector('#chips .chip'); if (c) c.focus(); } }); } catch (e) {} };   // U-05 · U-07 — drawn below
   function J2(k) { try { return JSON.parse(dbmStore.get(k, 'null')); } catch (e) { return null; } }
 
   // ---- analysis from the working model + dictionary + open requests (CX13-04 · CL12-38) ----
-  const DOM_BY_LAST = [['일자', '연월일C8'], ['일시', '일시T'], ['명', '명V100'], ['ID', 'ID V10'], ['코드', '코드C2'], ['금액', '금액N15'], ['내용', '내용V1000'], ['순번', '일련번호N10'], ['여부', '여부C1'], ['번호', 'ID V10']];
-  const DOMT = { '연월일C8': 'CHAR(8)', '명V100': 'VARCHAR2(100)', 'ID V10': 'VARCHAR2(10)', '코드C2': 'CHAR(2)', '내용V1000': 'VARCHAR2(1000)', '금액N15': 'NUMBER(15)', '일련번호N10': 'NUMBER(10)', '여부C1': 'CHAR(1)', '일시T': 'DATE' };
-  const domFor = name => (DOM_BY_LAST.find(([w]) => name.endsWith(w)) || [null, '명V100'])[1];
+  // U-14: the domain proposal is the wizard's — the same 분류어 table and the area's own convention (standard attributes with the same last word)
+  const DOM_BY_LAST = [['전화번호', '전화번호V20'], ['일자', '연월일C8'], ['일시', '일시T'], ['년월', '연월C6'], ['명', '명V100'], ['ID', 'ID V10'], ['코드', '코드C2'], ['금액', '금액N15'], ['내용', '내용V1000'], ['순번', '일련번호N10'], ['여부', '여부C1'], ['번호', '번호V20'], ['수량', '수량N15'], ['시간', '시간N7'], ['일수', '일수N5'], ['주소', '주소V200'], ['이메일', '이메일V100'], ['율', '율N5'], ['단가', '금액N18'], ['액', '금액N15']];
+  const DOMT = { '연월일C8': 'CHAR(8)', '명V100': 'VARCHAR2(100)', 'ID V10': 'VARCHAR2(10)', '코드C2': 'CHAR(2)', '코드C1': 'CHAR(1)', '내용V1000': 'VARCHAR2(1000)', '금액N15': 'NUMBER(15)', '일련번호N10': 'NUMBER(10)', '여부C1': 'CHAR(1)', '일시T': 'DATE', '번호V20': 'VARCHAR2(20)', '수량N15': 'NUMBER(15,3)', '시간N7': 'NUMBER(7,2)', '일수N5': 'NUMBER(5,1)', '주소V200': 'VARCHAR2(200)', '이메일V100': 'VARCHAR2(100)', '율N5': 'NUMBER(5,2)', '연월C6': 'CHAR(6)', '전화번호V20': 'VARCHAR2(20)', '금액N18': 'NUMBER(18,2)' };
+  let AREA_DOM = null; const domFor = name => { const hit = DOM_BY_LAST.find(([x]) => name.endsWith(x)); if (!hit) return '';   // U-14: no 분류어 → no proposal (as in the wizard)
+    if (!AREA_DOM) { AREA_DOM = {}; model.E.forEach(e => (e.a || []).forEach(a => { if (a.s !== 'ok' || !a.dom) return; const h = DOM_BY_LAST.find(([x]) => a.n.endsWith(x)); if (h) { const m = AREA_DOM[h[0]] = AREA_DOM[h[0]] || {}; m[a.dom] = (m[a.dom] || 0) + 1; } })); }
+    const conv = AREA_DOM[hit[0]]; return conv ? Object.entries(conv).sort((a, b) => b[1] - a[1])[0][0] : hit[1]; };
   // known proposals for the seed area (proposal = what standardization would rename the attribute to)
-  const PROPOSAL = { '산출물기본.산출물제출일': { term: '산출물제출일자', phys: 'DLVRBL_SBMT_DATE', dom: '연월일C8' }, '산출물이력.산출물이력': { term: '산출물이력', phys: 'DLVRBL_HIST_D', dom: '엔터티' }, '산출물이력.이력순번': { term: '이력순번', phys: 'HIST_SN', dom: '일련번호N10' } };
-  const model = modelOf(AREA, VER);
+  const PROPOSAL = window.STD_PROPOSAL || { '산출물기본.산출물제출일': { term: '산출물제출일자', phys: 'DLVRBL_SBMT_DATE', dom: '연월일C8' }, '산출물이력.산출물이력': { term: '산출물이력', phys: 'DLVRBL_HIST_D', dom: '엔터티' }, '산출물이력.이력순번': { term: '이력순번', phys: 'HIST_SN', dom: '일련번호N10' } };
+  // F-01: areaView — a version under review is visible to its requester and approvers only (the model screen's rule); others see no rows here
+  const VIEW = typeof window.areaView === 'function' ? areaView(AREA) : null, HIDDEN = !!(VIEW && VIEW.hidden);
+  const model = HIDDEN ? { E: [], R: [], M: [] } : modelOf(AREA, VER);
+  if (HIDDEN) document.querySelector('.page-header').insertAdjacentHTML('afterend', `<div class="pad u-pb-0"><div class="banner warning"><i data-ic=info></i><div class="grow"><b>${josa('v' + VER, '은/는')} 결재 중</b>이라 신청자와 결재 담당자만 볼 수 있습니다. 표준 맞추기는 작업 중인 버전을 다루므로 보여 줄 내용이 없습니다.</div><a class="btn sm" href="model.html?area=${AREA}">모델로</a></div></div>`);
   const dict = getDict(), open = openItems(), docsNow = getDocs();
   const termIn = name => dict.find(x => x.k === 'term' && x.name === name && x.ver > 0 && x.st === '사용');
   const openTerm = name => open.find(x => x.it.name === name && (x.it.act || '추가') === '추가');
@@ -129,30 +152,57 @@ window.pageInit = function () {
         if (L.s === 'done') { rows.push(Object.assign(base, { st: 'ok', dx: ['T-DONE', `${d.id} 승인 완료 — 표준`] })); return; }
         const ended = L.s === 'ended';
         rows.push(Object.assign(base, { st: ended ? 'comb' : 'req', wait: d && !ended ? d.id : null, pr: { term: a.n, phys: a.p, dom: '' }, dx: d ? (ended ? ['T-ENDED', `${d.id} ${STEP_NAME[d.step]} — 다시 맞추기`] : ['T-WAIT', `${d.id} ${STEP_NAME[d.step]}`]) : ['T-WAIT', '용어 신청 중(연결 문서 없음)'] })); return; }
+      // 흐름 리뷰: the shared 비대상 rule (app.js STD_NA_RULES · stdNaMatch) — an unresolved attribute that matches it is 비대상 here too (as in stdJudge and the wizard)
+      { const nr = typeof window.stdNaMatch === 'function' ? window.stdNaMatch(a) : null; if (nr) { rows.push(Object.assign(base, { st: 'na', why: `비대상 규칙 ‘${nr}’ 일치`, dx: ['X-NA-RULE', `비대상 규칙 ‘${nr}’ 일치 — 표준 대상에서 뺌`] })); return; } }
       // comb / unreg: decompose the current name against the dictionary as it is NOW (a word approved since → combinable)
       const nm = a.orig || a.n; const dc = decompose(a.n);
-      const pr = PROPOSAL[key] || { term: a.n, phys: dc.abbr, dom: domFor(a.n) };
+      let pr = PROPOSAL[key] || { term: a.n, phys: dc.abbr, dom: domFor(a.n) };
       if (dc.ok || a.s === 'comb') {
         const have = termIn(pr.term), ot = openTerm(pr.term);
+        if (have) { pr = Object.assign({}, pr, { phys: have.abbr || pr.phys, dom: have.dom || pr.dom }); }   // U-14: a term the dictionary has brings ITS abbreviation and domain (the area convention only without one)
         rows.push(Object.assign(base, { st: have ? 'okapply' : ot ? 'req' : 'comb', toWait: !have && !!ot, pr, wait: ot && ot.doc, have, sus: dc.sus, dx: have ? ['T-HAVE', `사전에 있음 ${have.id}`] : ot ? ['T-WAIT', `${ot.doc} 진행 중 — 기다림`] : dc.sus ? ['T-SUS', '1음절 단어 포함 — 분해 확인'] : ['T-COMB', '단어 조합 가능 — 용어 신청'] })); return;
       }
       const w = (dc.unknown[0] || dc.pending[0] || {}).w || nm; const c = getCands().find(x => x.name === w || (dc.pending[0] && x.name === dc.pending[0].w));
       rows.push(Object.assign(base, { st: 'unreg', word: dc.pending[0] ? dc.pending[0].w : w, pr: { term: '', phys: '', dom: '' }, cand: c, dx: dc.pending[0] ? ['W-PEND', `단어 ‘${dc.pending[0].w}’ 승인 대기${dc.pending[0].doc ? ' · ' + dc.pending[0].doc : ''}`] : c ? ['W-CAND', `단어 ‘${c.name}’ 후보 ${candState(c)}${c.doc ? ' · ' + c.doc : ''}`] : ['W-UNREG', `미등록 단어 ‘${w}’`] }));
     });
   });
+  // 02-flow-plan · F-06: ONE status judgement — each row's state comes from app.js stdJudge (the same function as the progress band · flowCounts); this screen keeps
+  // its own detail (진단 문구 · 제안값 · 대기 문서). Rows pair by key (+ table-name row); a row only the shared judgement makes (an entity term row) is added from it, in its order
+  if (typeof window.stdJudge === 'function') { try { const J = window.stdJudge(model, PROPOSAL), K = r => (r.entRow ? 'E|' : 'A|') + r.key, own = new Map(rows.map(r => [K(r), r]));
+    const DXT = { 'T-DONE': '승인 완료 — 모델에 반영하면 표준', 'T-HAVE': '사전에 있음', 'T-ENDED': '신청이 반려 · 회수됨 — 다시 맞추기', 'X-NA-RULE': '비대상 규칙 일치 — 표준 대상에서 뺌', 'T-WAIT': '용어 신청 진행 중', 'E-NAME': '테이블명 미정 — 엔터티 용어 신청', 'T-COMB': '단어 조합 가능 — 용어 신청', 'OK': '표준' };
+    const out = J.map(j => { const r = own.get(K(j)); if (r) { own.delete(K(j)); if (r.st !== j.st) { r.stOwn = r.st; r.st = j.st; if (!r.dx || r.dx[0] !== j.code) r.dx = [j.code, DXT[j.code] || j.code]; }
+        if (j.entRow && j.code === 'T-HAVE') { const hv = dict.find(x => ['term', 'entity'].includes(x.k) && x.name === ((r.pr && r.pr.term) || r.ent) && x.ver > 0 && x.st === '사용'); if (hv) { r.have = hv; r.pr = Object.assign({}, r.pr, { phys: hv.abbr }); r.dx = ['T-HAVE', `사전에 있음 ${hv.id}`]; } }   // an entity term the dictionary has: its abbreviation becomes the table name
+        r.code = j.code; return r; }
+      const e = model.E.find(x => x.id === j.e) || {}, have = j.entRow ? dict.find(x => ['term', 'entity'].includes(x.k) && x.name === e.n && x.ver > 0 && x.st === '사용') : null;
+      return { key: j.key, e: j.e, ent: j.ent, a: j.a, entRow: !!j.entRow, cur: e.p || '—', st: j.st, code: j.code, pr: { term: e.n, phys: have ? have.abbr : (e.p && e.p !== '—' ? e.p : ''), dom: '엔터티' }, have, dx: [j.code, (j.code === 'T-DONE' && e.reqDoc ? e.reqDoc + ' ' : '') + (DXT[j.code] || j.code)] }; });
+    rows.length = 0; rows.push(...out, ...own.values()); } catch (e) {} }
   // local decisions made on this screen (예외·비대상) before [적용] — undoable, then handed to the model
   const local = {}; const handoff = { ex: [], na: [] };
-  const ST = { ok: ['b-success', '표준', 'ok', 'row-success'], okapply: ['b-success', '사전에 있음', 'comb', 'row-success'], comb: ['b-info', '조합 가능', 'comb', 'row-info'], req: ['b-info', '신청 중', 'req', 'row-info'], unreg: ['b-warning', '미등록 단어', 'unreg', 'row-warning'], ex: ['b-ex', '<i data-ic=flag data-s=12></i>예외', 'ex', ''], na: ['', '비대상', 'na', 'row-mute'], rule: ['b-danger', '검수 기준 위반', 'unreg', 'row-warning'] };
-  const TODO = ['comb', 'req', 'unreg'];   // 'rule'(검수 기준 위반) is grouped under unreg's filter (s[2]) so it counts as 할 일   // 할 일 = 조합 가능 · 신청 중 · 미등록 단어 (D1)
+  const ST = { ok: ['b-success', '표준', 'ok', 'row-success'], okapply: ['b-success', '사전에 있음', 'apply', 'row-success'], comb: ['b-info', '조합 가능', 'comb', 'row-info'], req: ['b-info', '신청 중', 'req', 'row-info'], unreg: ['b-warning', '미등록 단어', 'unreg', 'row-warning'], ex: ['b-ex', '<i data-ic=flag data-s=12></i>예외', 'ex', ''], na: ['', '비대상', 'na', 'row-mute'], rule: ['b-danger', '검수 기준 위반', 'rule', 'row-warning'] };
+  const TODO = ['apply', 'comb', 'unreg', 'rule'];   // F-13: 할 일 = 사전에 있음 · 조합 가능 · 미등록 단어 · 검수 기준 위반 (신청 중은 제외 — 마법사 ① 미준수 · 진행 띠와 같은 범위)   // F-13: each shared state has its own chip (사전에 있음 · 검수 기준 위반 no longer folded into 조합 가능 · 미등록 단어)
   const effective = r => local[r.key] ? Object.assign({}, r, local[r.key]) : r;
   const procOpts = r => r.st === 'comb' ? (r.sus ? ['분해 확인 후 용어 신청', '예외로 유지'] : ['용어 신청 묶음', '예외로 유지']) : r.st === 'okapply' ? ['용어 적용'] : r.st === 'unreg' ? (r.dx[0] === 'W-PEND' ? ['선행 승인 대기', '예외로 유지'] : ['후보 등록', '예외로 유지']) : r.st === 'req' ? (r.toWait ? ['신청 중 용어로 맞춤', '예외로 유지'] : []) : r.st === 'rule' ? ['예외로 유지'] : [];
   const selectable = r => ['comb', 'okapply', 'unreg', 'rule'].includes(r.st) || (r.st === 'req' && r.toWait);
+  /* A-3 (Q-F1): SC-34 = put on what the dictionary has. What it does not have (조합 가능 = no such term · 미등록 단어) goes to the wizard as the main path —
+     the rows chosen here (or, with none chosen, the rows the current filter shows) become the wizard's ① target: ents = their entities, rows = their keys (same key form) */
+  const NODICT = ['comb', 'unreg'], isNoDict = r => NODICT.includes(effective(r).st);
+  const noDictN = () => rows.filter(isNoDict).length, ruleN = () => rows.filter(r => effective(r).st === 'rule').length;
+  document.addEventListener('click', ev => { if (!ev.target.closest('#to-rule')) return; const ch = document.querySelector('#chips .chip[data-filter="rule"]'); if (ch) { ch.click(); setTimeout(() => { const t = document.querySelector('#rows tr[data-f^="rule"] input:not([disabled])'); if (t) t.focus(); }, 0); } });
+  const wizKey = r => r.entRow ? `E:${r.e}` : `A:${r.e}.${r.a}`;   // R-04: a table-name row and a same-named attribute are different rows
+  const wizUrl = list => { const ents = [...new Set(list.map(r => r.e))], keys = list.map(wizKey), joined = keys.join('|');
+    let rq = '&rows=' + encodeURIComponent(joined); if (rq.length > 1500) { try { sessionStorage.setItem('dbm-wiz-rows', JSON.stringify({ area: AREA, ver: VER, ents, rows: keys, at: Date.now() })); rq = '&rows=@s'; } catch (e) {} }   // F-04: no limit — long lists go through sessionStorage
+    return `term-wizard.html?area=${AREA}&from=standardize&ents=${encodeURIComponent(ents.join(','))}${rq}&auto=1`; };
+  const wizTargets = () => { const all = [...document.querySelectorAll('#rows tr[data-i]')], vis = all.filter(tr => tr.style.display !== 'none'), R = tr => rows[+tr.dataset.i];
+    const chk = vis.filter(tr => { const c = tr.querySelector('input[type=checkbox]'); return c && c.checked && !c.disabled; }).map(R).filter(isNoDict);
+    if (chk.length) return chk; return vis.map(R).filter(isNoDict); };   // F-04: never widened to every row — an empty target is said, not guessed
+  document.addEventListener('click', ev => { const b = ev.target.closest('#to-wiz2, [data-to-wiz]'); if (!b) return; ev.preventDefault(); const T = wizTargets();
+    if (!T.length) { toast('넘길 행이 없습니다 — 지금 필터에 보이는 행 중 사전에 없는 단어 · 용어(조합 가능 · 미등록 단어)가 없습니다. [할 일] 칩으로 바꾸거나 행을 고르세요', 'info'); return; } go(wizUrl(T)); });
   // one cell, two lines: current (struck through when it changes) over the proposal (bold); unchanged → the value alone
   const none = v => !v || v === '—';
   const two = (cur, nxt, note) => {
-    const top = none(cur) ? '<span class="faint">—</span>' : cur;
+    const top = none(cur) ? '<span class="faint">—</span>' : esc(cur);
     if (none(nxt) || nxt === cur) return note ? `<span class="cv"><span>${top}</span>${note}</span>` : top;
-    return `<span class="cv">${none(cur) ? top : `<s><span class="sr-only">현재 </span>${cur}</s>`}<b><span class="sr-only">제안 </span>${nxt}</b></span>`;
+    return `<span class="cv">${none(cur) ? top : `<s><span class="sr-only">현재 </span>${esc(cur)}</s>`}<b><span class="sr-only">제안 </span>${esc(nxt)}</b></span>`;
   };
   window.addEventListener('dbm-tree-select', ev => {
     const d = ev.detail; if (d.area !== AREA || !d.id) return; ev.preventDefault();
@@ -166,11 +216,11 @@ window.pageInit = function () {
   function draw() {
     const prev = {}; document.querySelectorAll('#rows tr[data-i]').forEach(tr => { const c = tr.querySelector('input[type=checkbox]'), s = tr.querySelector('select'); prev[tr.dataset.i] = { c: c ? c.checked : null, s: s ? s.value : null }; });
     $('rows').innerHTML = rows.map((r0, i) => { const r = effective(r0); const s = ST[r.st]; const can = selectable(r) && !readOnly; const opts = can ? procOpts(r) : [];
-      return `<tr class="${s[3]}" data-f="${s[2]}${TODO.includes(s[2]) ? ' todo' : ''}" data-i="${i}"><td><input type="checkbox" ${can ? (['comb', 'okapply', 'req'].includes(r.st) ? 'checked' : '') : 'disabled'} aria-label="${r.ent}.${r.a} 선택"></td><td><span class="badge ${s[0]}">${s[1]}</span></td><td>${r.ent}${r.entRow ? ' <span class="muted">· 테이블명</span>' : ''}</td><td${r.now && r.now !== r.a ? ` title="원래 이름 ${r.a}"` : ''}>${two(r.now || r.a, r.pr && r.pr.term, r.st === 'unreg' ? `<span class="faint">‘${r.word}’ 미등록</span>` : '')}</td><td class="mono">${two(r.cur, r.pr && r.pr.phys)}</td><td class="mono">${r.pr && r.pr.dom ? r.pr.dom : ''}</td><td>${opts.length > 1 ? `<select class="input sd-proc" aria-label="처리 방법">${opts.map(o => `<option>${o}</option>`).join('')}</select>` : opts.length ? `<span class="caption">${opts[0]}${r.st === 'rule' ? ` · <a href="model.html?area=${AREA}">모델에서 이름 고치기</a> · ${ruleLink(r.rp[0])}` : ''}${r.wait ? ` · <a href="approvals.html?doc=${r.wait}">${r.wait}</a>` : ''}</span>` : r.why ? `<span class="caption">사유: ${r.why}</span>` : '<span class="caption muted">변경 없음</span>'}</td><td class="dx"><b>${r.dx[0]}</b> ${r.dx[1]}</td></tr>`; }).join('') || '<tr class="er first"><td colspan="8" class="caption muted" style="text-align:center;padding:40px">이 업무 영역에 분석할 속성이 없습니다.</td></tr>';
+      return `<tr class="${s[3]}" data-f="${s[2]}${TODO.includes(s[2]) ? ' todo' : ''}" data-i="${i}"><td><input type="checkbox" ${can ? (r.st === 'okapply' || (r.st === 'req' && r.toWait) ? 'checked' : '') : 'disabled'} aria-label="${esc(r.ent)}.${esc(r.a)} 선택"></td><td><span class="badge ${s[0]}">${s[1]}</span></td><td>${esc(r.ent)}${r.entRow ? ' <span class="muted">· 테이블명</span>' : ''}</td><td${r.now && r.now !== r.a ? ` title="원래 이름 ${esc(r.a)}"` : ''}>${two(r.now || r.a, r.pr && r.pr.term, r.st === 'unreg' ? `<span class="faint">‘${esc(r.word)}’ 미등록</span>` : '')}</td><td class="mono">${two(r.cur, r.pr && r.pr.phys)}</td><td class="mono">${r.pr && r.pr.dom ? esc(r.pr.dom) : ''}</td><td>${opts.length > 1 ? `<select class="input sd-proc" aria-label="처리 방법">${opts.map(o => `<option>${o}</option>`).join('')}</select>` : opts.length ? `<span class="caption">${opts[0]}${r.st === 'rule' ? ` · <a href="model.html?area=${AREA}">모델에서 이름 고치기</a> · ${ruleLink(r.rp[0])}` : ''}${r.wait ? ` · <a href="approvals.html?doc=${r.wait}">${r.wait}</a>` : ''}</span>` : r.why ? `<span class="caption">사유: ${esc(r.why)}</span>` : '<span class="caption muted">변경 없음</span>'}</td><td class="dx"><b>${esc(r.dx[0])}</b> ${esc(r.dx[1])}</td></tr>`; }).join('') || `<tr class="er first"><td colspan="8" class="caption muted" style="text-align:center;padding:40px">${HIDDEN ? '결재 중인 버전이라 열람이 제한됩니다.' : '이 업무 영역에 분석할 속성이 없습니다.'}</td></tr>`;
     // chip counts from the same rows (CL12-40)
     const cnt = k => rows.filter(r => ST[effective(r).st][2] === k).length;
     const cur = (document.querySelector('#chips .chip.on') || {}).dataset;
-    $('chips').innerHTML = '<span class="flex u-gap-8" role="group" aria-label="판정 상태">' + [['', '전체', rows.length], ['todo', '할 일(미준수)', TODO.reduce((n, k) => n + cnt(k), 0)], ['ok', '표준', cnt('ok')], ['comb', '조합 가능', cnt('comb')], ['req', '신청 중', cnt('req')], ['unreg', '미등록 단어', cnt('unreg')], ['ex', '예외', cnt('ex')], ['na', '비대상', cnt('na')]].map(([k, l, n]) => `<button class="chip ${(cur ? cur.filter : '') === k ? 'on' : ''}" data-group="s" data-filter="${k}">${l} <span class="n">${n}</span></button>`).join('') + `</span><span class="grow"></span><span class="caption muted" id="analyzed" title="작업본·사전·진행 중 신청으로 계산 · 상태별로 골라 한 번에 처리">${ANALYZED}</span>`;
+    $('chips').innerHTML = '<span class="flex u-gap-8" role="group" aria-label="판정 상태">' + [['', '전체', rows.length], ['todo', '할 일(미준수)', TODO.reduce((n, k) => n + cnt(k), 0)], ['ok', '표준', cnt('ok')], ['apply', '사전에 있음', cnt('apply')], ['comb', '조합 가능', cnt('comb')], ['req', '신청 중', cnt('req')], ['unreg', '미등록 단어', cnt('unreg')], ['rule', '검수 기준 위반', cnt('rule')], ['ex', '예외', cnt('ex')], ['na', '비대상', cnt('na')]].map(([k, l, n]) => `<button class="chip ${(cur ? cur.filter : '') === k ? 'on' : ''}" data-group="s" data-filter="${k}">${l} <span class="n">${n}</span></button>`).join('') + `</span>${!noDictN() && ruleN() && !readOnly ? `<span class="u-flex u-gap-8 u-ai-c u-ml-8" id="ruleleft"><span class="caption">검수 기준 위반 <b>${ruleN()}</b>건 — 이름을 고치거나 예외로</span><button type="button" class="btn sm" id="to-rule">행 보기</button></span>` : ''}${noDictN() && !readOnly ? `<span class="u-flex u-gap-8 u-ai-c u-ml-8" id="nodict"><span class="caption">사전에 없는 단어 · 용어 <b>${noDictN()}</b>건 —</span><button type="button" class="btn sm" id="to-wiz2" title="지금 고른 행(없으면 지금 필터의 행)을 용어 자동분석 ① 대상으로 넘깁니다">용어 자동분석으로 한 번에</button></span>` : ""}<span class="grow"></span><span class="caption muted" id="analyzed" title="작업본·사전·진행 중 신청으로 계산 · 상태별로 골라 한 번에 처리">${ANALYZED}</span>`;
     // what the user had chosen stays chosen (only rows whose state changed are re-decided)
     document.querySelectorAll('#rows tr[data-i]').forEach(tr => { const p = prev[tr.dataset.i]; if (!p) return; const c = tr.querySelector('input[type=checkbox]'), s = tr.querySelector('select'); if (c && !c.disabled && p.c != null) c.checked = p.c; if (s && p.s != null && [...s.options].some(o => o.value === p.s)) s.value = p.s; });
     if (cur && cur.filter) filterRows('s', cur.filter);   // shared: also shows 'er none' + 모두 지우기 when the state has no rows
@@ -178,11 +228,13 @@ window.pageInit = function () {
     sum();
   }
   // permission & lock: same judgement as the model screen
+  // U-07: the band's current step — ③ (남은 용어) makes the wizard the main path here
+  const FLOW3 = (() => { try { if (typeof window.flowBandShown !== 'function' || !flowBandShown(AREA) || typeof window.flowCounts !== 'function') return false; const c = flowCounts(AREA); return !!c && !!c.ents && !c.apply && !!c.left; } catch (e) { return false; } })();
   const canStd = can('model.edit', { area: AREA }); const readOnly = !canStd || LK.state !== 'edit';
-  if (readOnly) document.querySelector('.page-header').insertAdjacentHTML('afterend', `<div class="pad u-pb-0"><div class="banner info"><i data-ic=info></i><div class="grow"><b>조회 전용</b> — ${!canStd ? (ME.has('modeler') ? `내 담당 시스템에 ${josa(sysOfArea(AREA), '이/가')} 없어 조회만 할 수 있습니다. <a href="mypage.html?req=sys&sys=${encodeURIComponent(sysOfArea(AREA))}">담당 시스템 추가 요청</a>` : '표준 맞추기는 모델러 역할만 할 수 있습니다.') : `${LK.doc ? LK.doc.id : ''} ${LK.state === 'review' ? '확정 결재 중' : '확정본'}이라 고칠 수 없습니다.`}</div><a class="btn sm" href="${backUrl}">모델로</a></div></div>`);
+  if (readOnly) document.querySelector('.page-header').insertAdjacentHTML('afterend', `<div class="pad u-pb-0"><div class="banner info"><i data-ic=info></i><div class="grow"><b>조회 전용</b> — ${!canStd ? (ME.has('modeler') ? `내 담당 시스템에 ${esc(josa(sysOfArea(AREA), '이/가'))} 없어 조회만 할 수 있습니다. <a href="mypage.html?req=sys&sys=${encodeURIComponent(sysOfArea(AREA))}">담당 시스템 추가 요청</a>` : '표준 맞추기는 모델러 역할만 할 수 있습니다.') : `${LK.doc ? LK.doc.id : ''} ${LK.state === 'review' ? '확정 결재 중' : '확정본'}이라 고칠 수 없습니다.`}</div><a class="btn sm" href="${backUrl}">모델로</a></div></div>`);
   // redo after a rejected/withdrawn term request keeps its reason and shows the reviewer's comment
   const redoDoc = q.get('redo') ? getDocs().find(x => x.id === q.get('redo') && x.kind === 'std') : null;
-  if (redoDoc && ['rejected', 'withdrawn'].includes(redoDoc.step)) { const last = (redoDoc.hist || []).slice(-1)[0]; document.querySelector('.page-header').insertAdjacentHTML('afterend', `<div class="pad u-pb-0"><div class="banner warning"><i data-ic=warn></i><div class="grow"><b>${redoDoc.id} 보완해서 다시 적용</b> — ${STEP_NAME[redoDoc.step]}${last && last.why ? ` · 의견: ${last.why}` : ''}. 그때 신청한 용어: ${(redoDoc.items || []).map(i => i.name).join(', ')}. 다시 적용하면 <b>새 신청번호</b>가 만들어집니다.</div></div></div>`); $('ap-why').value = redoDoc.reason || ''; }
+  if (redoDoc && ['rejected', 'withdrawn'].includes(redoDoc.step)) { const last = (redoDoc.hist || []).slice(-1)[0]; document.querySelector('.page-header').insertAdjacentHTML('afterend', `<div class="pad u-pb-0"><div class="banner warning"><i data-ic=warn></i><div class="grow"><b>${redoDoc.id} 보완해서 다시 적용</b> — ${STEP_NAME[redoDoc.step]}${last && last.why ? ` · 의견: ${esc(last.why)}` : ''}. 그때 신청한 용어: ${esc((redoDoc.items || []).map(i => i.name).join(', '))}. 다시 적용하면 <b>새 신청번호</b>가 만들어집니다.</div></div></div>`); $('ap-why').value = redoDoc.reason || ''; }
 
   const trs = () => [...document.querySelectorAll('#rows tr[data-i]')];
   const visible = tr => tr.style.display !== 'none';
@@ -195,14 +247,14 @@ window.pageInit = function () {
     const req = P.filter(([, p]) => p.includes('용어 신청')), cand = P.filter(([, p]) => p === '후보 등록'), keepEx = P.filter(([, p]) => p === '예외로 유지'), apply = P.filter(([, p]) => p === '용어 적용'), wait = P.filter(([, p]) => p === '신청 중 용어로 맞춤');
     const phys = P.filter(([r, p]) => !['예외로 유지', '후보 등록', '선행 승인 대기'].includes(p) && r.pr && r.pr.phys && r.pr.phys !== r.cur && r.cur !== '—').length;
     // remaining = unresolved rows not selected + selected rows whose handling leaves them unresolved (후보 등록 / 선행 승인 대기) — CX12-27
-    const pending = rows.map(effective).filter(r => ['comb', 'unreg'].includes(r.st));
+    const pending = rows.map(effective).filter(r => ['okapply', 'comb', 'unreg', 'rule'].includes(r.st));   // F-05: the same range as 할 일
     const resolved = new Set(P.filter(([, p]) => ['용어 신청 묶음', '분해 확인 후 용어 신청', '예외로 유지', '용어 적용', '신청 중 용어로 맞춤'].includes(p)).map(([r]) => r.key));
-    pending.push(...rows.map(effective).filter(r => r.st === 'req' && r.toWait));
     const left = pending.filter(r => !resolved.has(r.key)).length;
+    const leftNoDict = pending.filter(r => !resolved.has(r.key) && NODICT.includes(r.st)).length;   // A-4: of what is left, the part the dictionary does not have (→ wizard)
     // 모델 변경 = rows whose attribute/table changes in the working model (incl. 예외·비대상 records); 결재 신청·후보 등록 are counted apart
     const ho = handoff.ex.length + handoff.na.length;
     const mod = apply.length + req.length + wait.length + keepEx.length + ho;
-    return { C, P, req, cand, keepEx, apply, wait, phys, left, ho, mod };
+    return { C, P, req, cand, keepEx, apply, wait, phys, left, leftNoDict, ho, mod };
   }
   function sum() {
     const s = summary();
@@ -221,22 +273,35 @@ window.pageInit = function () {
     const bar = (s.C.length || s.ho) && !readOnly;
     $('sd-bar').hidden = readOnly;   // always visible while editable — the one completing action never disappears
     $('sd-n').innerHTML = s.C.length ? `${s.C.length}건 선택` : s.ho ? `기록 ${s.ho}건 대기` : '<span class="muted">처리할 행을 고르세요</span>';
-    $('sd-prev').innerHTML = `<span title="${s.phys ? `물리명 변경 ${s.phys}건 포함 · ` : ''}예외·비대상 기록 포함"><b>${s.mod}</b>모델 변경</span><span title="용어 ${s.req.length}개를 결재 문서 1건으로 묶어 신청"><b>${s.req.length ? 1 : 0}</b>결재 신청${s.req.length ? ` (용어 ${s.req.length})` : ''}</span><span><b>${s.cand.length}</b>후보 등록</span><span><b>${s.left}</b>남는 미준수</span>${hc ? `<span class="caption muted" title="필터로 숨긴 행의 선택은 적용하지 않습니다">숨긴 선택 ${hc}건 제외</span>` : ''}`;
+    $('sd-prev').innerHTML = `<span title="${s.phys ? `물리명 변경 ${s.phys}건 포함 · ` : ''}예외·비대상 기록 포함"><b>${s.mod}</b>모델 변경</span><span title="용어 ${s.req.length}개를 결재 문서 1건으로 묶어 신청"><b>${s.req.length ? 1 : 0}</b>결재 신청${s.req.length ? ` (용어 ${s.req.length})` : ''}</span><span><b>${s.cand.length}</b>후보 등록</span><span><b>${s.left}</b>남는 미준수</span>${s.req.length + s.cand.length >= 10 ? `<span class="caption">많을 때는 용어 자동분석이 단어 분해 · 새 단어 지정까지 한 번에 합니다 — <button type="button" class="linkbtn" data-to-wiz>그쪽으로</button></span>` : ''}${hc ? `<span class="caption muted" title="필터로 숨긴 행의 선택은 적용하지 않습니다">숨긴 선택 ${hc}건 제외</span>` : ''}`;
     ['sd-ex', 'sd-na', 'sd-clear'].forEach(id => $(id).disabled = !s.C.length || readOnly);
     $('sd-apply').disabled = (!s.C.length && !s.ho) || readOnly;
     $('sd-apply').textContent = s.C.length ? '선택 적용' : `기록 ${s.ho}건 적용`;
+    $('sd-apply').classList.toggle('primary', !(FLOW3 && (s.req.length || s.cand.length)));   // U-07
   }
   document.querySelector('#rows').addEventListener('change', sum);
   $('chips').addEventListener('click', () => setTimeout(sum, 0));
   $('sd-all').onchange = e => { trs().filter(visible).forEach(tr => { const c = tr.querySelector('input[type=checkbox]'); if (c && !c.disabled) c.checked = e.target.checked; }); sum(); };
   $('sd-clear').onclick = () => { trs().forEach(tr => { const c = tr.querySelector('input[type=checkbox]'); if (c && !c.disabled) c.checked = false; }); sum(); };
   $('reanalyze').onclick = () => location.reload();
-  const listHtml = C => C.map(tr => `<span class="badge">${rowOf(tr).ent}.${rowOf(tr).a}</span>`).join(' ');
+  const listHtml = C => C.map(tr => `<span class="badge">${esc(rowOf(tr).ent)}.${esc(rowOf(tr).a)}</span>`).join(' ');
   $('sd-ex').addEventListener('click', () => { const C = summary().C; $('sx-t').textContent = `예외로 유지 (선택 ${C.length}건)`; $('sx-list').innerHTML = listHtml(C); });
   $('sd-na').addEventListener('click', () => { const C = summary().C; $('na-t').textContent = `비대상으로 지정 (선택 ${C.length}건)`; $('na-list').innerHTML = listHtml(C); });
   const idOf = r => ({ key: r.key, e: r.e, a: r.a });
+  // F-05: the model after this apply, made the way the model screen applies a hand-off, judged by stdJudge → { todo, noDict, have, rule, req, next }
+  // next: 'std' (사전에 있음 남음 → 표준 맞추기) · 'wiz' (사전에 없음 → 용어 자동분석) · 'check' (없음 → 모델 검증)
+  function leftAfter(rowsOut, docId) { const m = JSON.parse(JSON.stringify(model)), fa = x => { const e = m.E.find(y => y.id === x.e); return e ? e.a.find(a => a.n === x.a || a.orig === x.a) : null; };
+    rowsOut.forEach(x => { if (x.entRow) { const e = m.E.find(y => y.id === x.e); if (e && x.phys) e.p = x.phys; if (e && (String(x.proc).includes('용어 신청') || x.wait)) { e.st = 1; e.reqDoc = String(x.proc).includes('용어 신청') && docId ? docId : x.wait || e.reqDoc; } return; }
+      const a = fa(x); if (!a) return; if (x.proc === '예외로 유지') { a.s = 'ex'; return; } if (x.proc === '후보 등록' || x.proc === '선행 승인 대기') { a.cand = 1; return; }
+      if (x.term && x.term !== a.n) { a.orig = a.orig || a.n; a.n = x.term; } if (x.phys) a.p = x.phys; if (x.t) a.t = x.t;
+      if (x.proc === '용어 적용') a.s = 'ok'; else if (String(x.proc).includes('용어 신청') && docId) { a.s = 'req'; a.reqDoc = docId; } else if (x.wait) { a.s = 'req'; a.reqDoc = x.wait; } });
+    handoff.ex.forEach(x => { const a = fa(x); if (a) a.s = 'ex'; }); handoff.na.forEach(x => { const a = fa(x); if (a) a.s = 'na'; });
+    let J = null; try { J = typeof window.stdJudge === 'function' ? window.stdJudge(m, PROPOSAL) : null; } catch (e) { J = null; }
+    if (!J) { const s0 = summary(); return { todo: s0.left, noDict: s0.leftNoDict, have: 0, rule: 0, req: 0, next: s0.leftNoDict ? 'wiz' : s0.left ? 'std' : 'check' }; }
+    const n = st => J.filter(r => r.st === st).length, have = n('okapply'), noDict = n('comb') + n('unreg'), rule = n('rule'), req = n('req');
+    return { todo: have + noDict + rule, noDict, have, rule, req, next: have ? 'std' : noDict ? 'wiz' : rule ? 'rule' : 'check' }; }   // F-05: only 검수 기준 위반 left → 'rule' (fix the names or keep them as exceptions — not the wizard)
   const mark = (kind, why) => { const C = summary().C; const keys = C.map(tr => rowOf(tr)); keys.forEach(r => { local[r.key] = { st: kind, why }; handoff[kind].push(Object.assign(idOf(r), { why })); });
-    draw(); toast(`${keys.length}건을 ${kind === 'ex' ? '예외로 기록' : '비대상으로 지정'}했습니다. 아래 줄의 [적용]을 누르면 사유와 함께 모델에 반영됩니다`, 'violet', { label: '실행 취소', fn: () => { keys.forEach(r => { delete local[r.key]; handoff[kind] = handoff[kind].filter(x => x.key !== r.key); }); draw(); toast(`${keys.length}건을 되돌렸습니다`, 'info'); } }); };
+    draw(); setTimeout(() => { const b = $('sd-apply'); if (b && !b.disabled) b.focus(); }, 0); toast(`${keys.length}건을 ${kind === 'ex' ? '예외로 기록' : '비대상으로 지정'}했습니다. 아래 줄의 [적용]을 누르면 사유와 함께 모델에 반영됩니다`, 'violet', { label: '실행 취소', fn: () => { keys.forEach(r => { delete local[r.key]; handoff[kind] = handoff[kind].filter(x => x.key !== r.key); }); draw(); toast(`${keys.length}건을 되돌렸습니다`, 'info'); } }); };
   $('sx-go').onclick = () => { const w = $('sx-why').value.trim(); $('mo-ex').classList.remove('open'); $('sx-why').value = ''; mark('ex', w); };
   $('na-go').onclick = () => { const w = $('na-why').value.trim(), rule = $('na-rule').checked; $('mo-na').classList.remove('open'); $('na-why').value = ''; $('na-rule').checked = false;
     const kind = $('na-kind').value; mark('na', `${kind} · ${w}`);
@@ -264,17 +329,28 @@ window.pageInit = function () {
     const rowsOut = s.P.map(([r, p]) => Object.assign(idOf(r), { proc: p, why: p === '예외로 유지' ? exWhy : undefined, wait: r.wait, term: r.pr && r.pr.term, phys: r.pr && r.pr.phys, dom: r.pr && r.pr.dom, t: r.pr && DOMT[r.pr.dom], entRow: !!r.entRow, word: r.word }));
     let docId = null;
     if (s.req.length) {
-      const items = s.req.map(([r]) => ({ k: 'term', name: r.pr.term, abbr: r.pr.phys, dom: r.pr.dom, act: '추가', from: `${LK.model.name} v${VER} · ${r.ent}.${r.a}` }));
+      const seenT = new Map(); s.req.forEach(([r]) => { const k = r.pr.term + '|' + r.pr.phys; const at = `${r.ent}.${r.a}`; if (seenT.has(k)) seenT.get(k).from += ` · ${at}`; else seenT.set(k, { k: 'term', name: r.pr.term, abbr: r.pr.phys, dom: r.pr.dom, act: '추가', from: `${LK.model.name} v${VER} · ${at}` }); });
+      const items = [...seenT.values()];   // U-13: the same term (name + abbreviation) once — its places joined
       const res = createDoc({ type: 'dict', kind: 'std', area: AREA, ver: VER, title: `표준 맞추기 용어 신청 ${items.length}건 (${LK.model.name})`, n: items.length, reason: $('ap-why').value.trim(), cc: [], items, key: `std:${AREA}:v${VER}:${items.map(i => i.name).join(',')}` });
-      if (res.conflict) { $('mo-apply').classList.remove('open'); toast(`이미 진행 중인 신청과 겹칩니다 — ${res.conflict.join(', ')}. 그 행은 선택에서 빼고 다시 적용하세요`, 'danger'); return; }
+      if (res.conflict) { $('mo-apply').classList.remove('open'); toast(`이미 진행 중인 신청과 겹칩니다 — ${esc(res.conflict.join(', '))}. 그 행은 선택에서 빼고 다시 적용하세요`, 'danger'); return; }
       docId = res.doc.id;
     }
     // candidates are registered for real, with their location (CX13-03)
     s.cand.forEach(([r]) => addCandidate({ t: '단어', name: r.word, abbr: '' }, { area: AREA, e: r.e, ent: r.ent, attr: r.a }));
-    try { sessionStorage.setItem('dbm-apply', JSON.stringify({ area: AREA, ver: VER, rows: rowsOut, ex: handoff.ex, na: handoff.na, doc: docId, req: s.req.length, cand: s.cand.length })); } catch (e) {}
+    try { sessionStorage.setItem('dbm-apply', JSON.stringify({ area: AREA, ver: VER, rows: rowsOut, ex: handoff.ex, na: handoff.na, doc: docId, req: s.req.length, cand: s.cand.length, left: leftAfter(rowsOut, docId) })); } catch (e) {}   // A-4: what is left after this apply (the model screen's return note uses it)
     go(backUrl);
   };
   draw();
+  // B-5: term requests approved since (T-DONE — the same judgement as the rows) can be put on the model in one go: they go back as '용어 적용' rows and the model
+  // screen marks them standard (it also settles finished requests when it opens)
+  { const D = rows.filter(r => r.dx && r.dx[0] === 'T-DONE');
+    if (D.length && !readOnly) { $('done-band').hidden = false; $('done-band-t').innerHTML = `<b>승인된 용어 ${D.length}건 반영 가능</b> — 신청한 용어가 결재를 마쳤습니다. 모델에 반영하면 표준이 됩니다.`;
+      $('done-apply').onclick = () => { if (liveRoleChanged()) { staleRoleToast(); return; } const now = modelLock(AREA);
+        if (now.state !== 'edit' || now.model.ver !== VER || !can('model.edit', { area: AREA })) { toast(`지금은 반영할 수 없습니다 — ${now.doc && now.state !== 'edit' ? `${now.doc.id} ${STEP_NAME[now.doc.step]}` : `작업 버전이 v${now.model.ver}로 바뀜`}`, 'danger', { label: '새로고침', fn: () => location.reload() }); return; }
+        const todoN = rows.filter(r => TODO.includes(ST[effective(r).st][2])).length;
+        try { sessionStorage.setItem('dbm-apply', JSON.stringify({ area: AREA, ver: VER, rows: D.map(r => Object.assign(idOf(r), { proc: '용어 적용', entRow: !!r.entRow })), ex: [], na: [], doc: null, req: 0, cand: 0, left: leftAfter(D.map(r => Object.assign(idOf(r), { proc: '용어 적용', entRow: !!r.entRow })), null) })); } catch (e) {}
+        go(backUrl); }; } }
+  drawBand(!$('done-band').hidden);   // U-07: when [반영] is this screen's main action the band's buttons are secondary
   // ?f= opens a filter (D1): f=todo with no to-do rows falls back to 전체 and says so
   const F = q.get('f');
   if (F) { const chip = document.querySelector(`#chips .chip[data-filter="${F}"]`); const n = chip ? +((chip.querySelector('.n') || {}).textContent || 0) : 0;
@@ -288,7 +364,7 @@ window.pageInit = function () {
     pick.forEach(tr => tr.classList.add('thl'));
     if (pick.length) setTimeout(() => pick[0].scrollIntoView({ block: 'center' }), 0);
     $('ctx').hidden = false; $('ctx-back').href = backUrl;
-    $('ctx-t').innerHTML = ce ? `${q.get('from') === 'ddl' ? 'DDL 출력 전 점검의' : '모델의'} <b>${ce.n}${CA && CA !== ce.n ? '.' + CA : ''}</b>에서 왔습니다 — ${pick.length ? `해당 행 ${pick.length}개를 표시했습니다.` : '이 항목은 맞출 것이 없습니다(표준 · 예외 · 비대상).'}` : '모델에서 고른 엔터티를 찾지 못했습니다 — 전체 목록을 보여 줍니다.';
+    $('ctx-t').innerHTML = ce ? `${q.get('from') === 'ddl' ? 'DDL 출력 전 점검의' : '모델의'} <b>${esc(ce.n)}${CA && CA !== ce.n ? '.' + esc(CA) : ''}</b>에서 왔습니다 — ${pick.length ? `해당 행 ${pick.length}개를 표시했습니다.` : '이 항목은 맞출 것이 없습니다(표준 · 예외 · 비대상).'}` : '모델에서 고른 엔터티를 찾지 못했습니다 — 전체 목록을 보여 줍니다.';
   }
 };
 </script>

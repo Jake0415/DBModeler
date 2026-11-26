@@ -150,7 +150,8 @@
       "roles": "신청자 겸 DA",
       "refs": [
         "appr.da",
-        "R-02"
+        "R-02",
+        "A-6"
       ],
       "states": [
         "approvals.html?new=1&doc=REQ-2026-0014"
@@ -164,7 +165,8 @@
       "expected": "'ID 신청됨. 제목. 1단계 담당 n명에게 알렸습니다.' 띠가 보이고 '내 신청'이 열림",
       "roles": "신청자",
       "refs": [
-        "appr.da"
+        "appr.da",
+        "A-6"
       ],
       "states": [
         "approvals.html?new=1&doc=REQ-2026-0011&as=park"
@@ -2169,6 +2171,36 @@
       "refs": ["P-7"],
       "states": ["approvals.html?as=lee&doc=REQ-2026-0011"],
       "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-162",
+      "where": "새 신청 띠",
+      "trigger": "주소 ?new=1&doc=ID 열기 — 그 문서가 사전 엑셀 일괄(kind excel) · 모델에서 온 용어 신청(kind std)이고 model.edit가 있는 사용자",
+      "expected": "신청 완료 띠 아래 다음 단계 — 사전 엑셀 일괄: ‘사전이 준비되면(승인 뒤) 모델을 가져오세요.’ + [모델 엑셀 가져오기](import-excel.html), 용어 신청: ‘승인되면 표준 맞추기에서 모델에 반영합니다.’ + [표준 맞추기에서 반영]. 그 밖의 사전 신청 · model.edit 없음은 숨김",
+      "roles": "model.edit",
+      "refs": ["A-6", "model.edit", "U-22"],
+      "states": ["approvals.html?as=kim&new=1&doc=REQ-2026-0016"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-163",
+      "where": "상세 패널 · 본문 위",
+      "trigger": "완료된 사전 엑셀 일괄 · 용어 신청 문서를 신청자 본인(model.edit 있음)이 열 때(승인 알림이 여는 화면)",
+      "expected": "초록 띠 — 사전 엑셀 일괄: ‘사전이 준비됐습니다 — 이제 모델을 가져오세요.’ + [모델 엑셀 가져오기](import-excel.html), 용어 신청: ‘승인된 용어를 모델에 반영하세요.’ + [표준 맞추기에서 반영](standardize.html?area=&f=todo). 다른 사전 신청 · 남의 문서 · model.edit 없음은 숨김",
+      "roles": "신청자 · model.edit",
+      "refs": ["F-09", "U-22", "A-6"],
+      "states": ["approvals.html?as=kim&box=mine&doc=REQ-2026-0016"],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-approvals-164",
+      "where": "목록 · 상세 · 처리 이력",
+      "trigger": "문서 제목(업무 영역명 포함) · 신청 사유 · 승인 의견 · 반려 · 회수 사유 · 의견에 기호(< > & 따옴표)가 있을 때 · 주소의 doc 값(없는 신청번호 등)",
+      "expected": "목록 제목 · 상세 제목 · 신청 사유 · 승인 창 요약 · 새 신청 띠 · 처리 이력(처리자 · 처리 · 사유), 찾을 수 없는 문서 안내 · 새 신청 띠의 주소 값에서 모두 글자 그대로 보인다(마크업으로 해석하지 않음)",
+      "roles": "전체",
+      "refs": ["R-01"],
+      "states": ["approvals.html?as=lee&doc=REQ-2026-0016"],
+      "verify": "unit"
     }
   ]
 }

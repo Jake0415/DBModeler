@@ -337,6 +337,16 @@ body:has(#cv.panning) { user-select:none; -webkit-user-select:none; }
 #pn-check .mc-in input.input { flex:1; height:28px; font-size:13px; }
 #b-review .mc-w { color:var(--fg-3); font-weight:400; }
 #ent-desc { min-height:64px; resize:vertical; font-size:14px; }
+/* 02-flow-plan A-5 · A-6 (2026-11-26) */
+#pn-check .mc-bulk { display:flex; flex-direction:column; gap:6px; margin:4px 0 8px; padding:8px 10px; border:1px solid var(--border); border-radius:var(--r-lg); font-size:13px; }
+#pn-check .mc-bulk .mc-b1 { display:flex; align-items:center; gap:8px; justify-content:space-between; }
+#pn-check .mc-miss { margin:0 0 8px; padding-left:16px; color:var(--ds-amber-900); line-height:18px; }
+.dt-wrap { max-height:48vh; overflow:auto; }
+.dt-wrap .tbl td { height:auto; padding-top:4px; padding-bottom:4px; white-space:normal; }
+.dt-wrap input.input { width:100%; min-width:260px; height:30px; font-size:13px; }
+.xd-f { margin-top:4px; }
+.cv-start { pointer-events:auto; z-index:6; }
+.cv-start .cv-start-b { display:flex; gap:8px; justify-content:center; margin:12px 0 8px; flex-wrap:wrap; }
 #pn-check .rp-foot { flex-wrap:wrap; }
 #ck-go-why { flex-basis:100%; text-align:right; }
 #ck-go.disabled { pointer-events:auto; cursor:not-allowed; }

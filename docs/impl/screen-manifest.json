@@ -86,7 +86,7 @@
   {
    "file": "excel-import.html",
    "ids": "SC-13",
-   "name": "엑셀 가져오기(왕복 편집)",
+   "name": "사전 엑셀 일괄(왕복 편집)",
    "menu": "표준 사전",
    "states": [
     {
@@ -326,7 +326,7 @@
   {
    "file": "import-excel.html",
    "ids": "SC-36a",
-   "name": "엑셀 정의서 가져오기(테이블 설계 → 모델)",
+   "name": "모델 엑셀 가져오기(정의서 · 테이블 설계 → 모델)",
    "menu": "시스템",
    "states": [
     {

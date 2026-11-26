@@ -344,7 +344,7 @@
       "id": "BH-home-026",
       "where": "업무 영역 · 다음 행동",
       "trigger": "영역 상태별",
-      "expected": "검토 중 → 결재 문서 번호 링크 + 기한 넘김이면 빨간 일수, 아니면 ‘{단계} N일’ / 확정 → [다음 버전 시작] / 엔터티 없음 → [모델 시작] / 미준수 있음 → [표준 맞추기] / 연결 신청 진행 중 → ‘{번호} 완료 후 확정’ / 그 밖 → [확정 신청]",
+      "expected": "검토 중 → 결재 문서 번호 링크 + 기한 넘김이면 빨간 일수, 아니면 ‘{단계} N일’ / 확정 → [다음 버전 시작] / 엔터티 없음 → model.edit가 있으면 [모델 엑셀 가져오기](import-excel.html?area={영역}) · [모델 시작](model.html?area={영역}), 없으면 ‘모델 없음’(흐림 글자) / 미준수 있음 → [표준 맞추기] / 연결 신청 진행 중 → ‘{번호} 완료 후 확정’ / 그 밖 → [확정 신청]",
       "roles": "전체",
       "refs": [
         "model.submit"
@@ -681,6 +681,21 @@
         "home.html?as=park",
         "home.html?as=hyun",
         "home.html?as=lee"
+      ],
+      "verify": "e2e"
+    },
+    {
+      "id": "BH-home-052",
+      "where": "업무 영역 · 다음 행동",
+      "trigger": "엔터티가 없는 영역 — 편집 권한(model.edit)이 없는 사용자",
+      "expected": "[모델 엑셀 가져오기] · [모델 시작]을 숨기고 ‘모델 없음’만 보인다(A-6, 역할 없으면 숨김)",
+      "roles": "model.edit 없는 사용자(현업 · DA 단독 · Admin 단독)",
+      "refs": [
+        "model.edit",
+        "A-6"
+      ],
+      "states": [
+        "home.html?as=hyun"
       ],
       "verify": "e2e"
     }
