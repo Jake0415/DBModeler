@@ -302,6 +302,18 @@ body.dict-in-tree .side-tab, body.dict-in-tree #side [data-toggle="side"] { disp
 .tm-i { width:36px; height:36px; border-radius:var(--r-md); display:grid; place-items:center; color:var(--fg-2); text-decoration:none; font:600 13px var(--font-sans); }
 .tm-i:hover { background:var(--ds-gray-100); color:var(--fg); text-decoration:none; }
 .tm-i.on { background:var(--surface); color:var(--fg); box-shadow:var(--ring); }
+.tm-i .ic { width:18px; height:18px; }
+.tm-sep { width:24px; height:1px; background:var(--border); margin:4px 0; flex:none; }
+.tm-grp { display:flex; flex-direction:column; align-items:center; gap:4px; }
+/* 32 D-1: area = icon + first two letters (the bubble still gives the full name) */
+.tm-i.tm-a { height:44px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; }
+.tm-i.tm-a .ic { width:16px; height:16px; }
+.tm-ab { font:600 12px/14px var(--font-sans); letter-spacing:-.4px; white-space:nowrap; }
+/* 32 A-3: icon rail name bubble (one, shared) */
+.rail-tip { position:fixed; z-index:200; max-width:240px; padding:6px 10px; border-radius:var(--r-md); background:var(--ink); color:var(--on-ink); font:400 12px/16px var(--font-sans); box-shadow:var(--shadow-md, 0 4px 12px rgba(0,0,0,.16)); pointer-events:auto; display:flex; flex-direction:column; gap:2px; }
+.rail-tip[hidden] { display:none; }
+.rail-tip b { font-weight:600; font-size:13px; line-height:18px; }
+.rail-tip span { opacity:.8; }
 .tm-a { color:var(--fg); }
 /* object tree rows */
 .otree { display:flex; flex-direction:column; gap:1px; }
