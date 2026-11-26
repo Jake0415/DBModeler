@@ -1153,6 +1153,7 @@ window.pageInit = function () {
   //   One relation per full set of parent keys: a child that points at the same parent twice (역할) gets a relation per candidate; a self reference becomes a recursive relation.
   //   A composite key with a pair missing is not completed by guessing — those candidates stay, with the reason. Whatever needs a look goes through the 중복 속성 해소 창 once.
   function bulkFk() { if (guard()) return; const up = x => String(x == null ? '' : x).trim().toUpperCase(), miss = [], sets = [];
+    const rawN = new Map();   // 흐름 리뷰7 R6-2-1: candidate groups per parent → child BEFORE any is set aside — the ‘관계 하나 · 묶음 하나’ reuse is judged on this count
     const preOf = (a, k) => { const ap = up(a.p), kp = up(k.p); return ap.endsWith(kp) ? ap.slice(0, ap.length - kp.length) : null; };   // 흐름 리뷰4 N-03: the role prefix — reached by the grouping AND by evOf below
     // 흐름 리뷰4 N-03: an existing relation (FK 누락) whose own FK columns already carry the missing keys of a set, with the same role prefix — exactly one, or none
     const coverOld = (p, c, pre, lack) => { const L = R.filter(x => x.f === p.id && x.t === c.id && x.f !== x.t && x.k !== 'mn' && fkOf(x, E).st === 'miss' && lack.every(k => { const y = c.a.find(fkMatch(x, k)); return !!y && preOf(y, k) === pre; })
@@ -1169,16 +1170,19 @@ window.pageInit = function () {
       //   (A_K1 + A_K2 → 한 관계, A_K1 + B_K2 → 미처리), each prefix holding every key once. Otherwise the pairing cannot be told — nothing is joined by candidate order, those candidates stay with the reason
       const sets0 = [];
       byP.forEach(({ p, list }) => { const pk = p.a.filter(z => z.pk && !z.edit);
-        if (pk.length <= 1) { list.forEach(x => sets0.push({ p, c, pre: preOf(x.a, x.k), pairs: new Map([[x.k, x.a]]) })); return; }
-        const byPre = new Map(); let ok = true;
-        list.forEach(x => { const ap = up(x.a.p), kp = up(x.k.p); if (!ap.endsWith(kp)) { ok = false; return; } const pre = ap.slice(0, ap.length - kp.length); if (!byPre.has(pre)) byPre.set(pre, new Map()); const m = byPre.get(pre); if (m.has(x.k)) ok = false; else m.set(x.k, x.a); });
-        // several prefixes and one does not hold every key → the roles are not plain, unless an existing relation of that role already carries the missing keys (부분 FK가 있는 관계 — N-03)
-        if (ok && byPre.size > 1 && [...byPre.entries()].some(([pre, m]) => m.size !== pk.length && !coverOld(p, c, pre, pk.filter(k => !m.has(k))))) ok = false;
-        if (!ok) { list.forEach(x => miss.push(`${c.n}.${x.a.n} — ${p.n}의 복합 식별자 후보들의 역할 접두어가 맞지 않아 짝을 물리명으로 정할 수 없어 만들지 않았습니다(컬럼 = 역할 접두어 + 부모 키 물리명이어야 묶습니다 — 관계를 그려 짝을 직접 정하세요)`)); return; }
-        byPre.forEach((m, pre) => sets0.push({ p, c, pre, pairs: m })); });
+        if (pk.length <= 1) { rawN.set(p.id + '>' + c.id, list.length); list.forEach(x => sets0.push({ p, c, pre: preOf(x.a, x.k), pairs: new Map([[x.k, x.a]]) })); return; }
+        // D-001 R6-2: the judgement is made per role-prefix group — a group that cannot be handled stays with its reason, the other groups of the same parent go on by their own rule
+        //   (모든 키를 덮으면 새 관계, 일부면 같은 역할의 기존 관계에만 — 아래 sets0 판정)
+        const byPre = new Map(), dupPre = new Set();
+        list.forEach(x => { const pre = preOf(x.a, x.k);
+          if (pre == null) { miss.push(`${c.n}.${x.a.n} — ${p.n}의 복합 식별자 후보인데 컬럼 물리명이 ‘역할 접두어 + 부모 키 물리명(${x.k.p})’ 꼴이 아니어서 짝을 정할 수 없어 만들지 않았습니다(관계를 그려 짝을 직접 정하세요)`); return; }
+          if (!byPre.has(pre)) byPre.set(pre, new Map()); const m = byPre.get(pre); if (m.has(x.k)) dupPre.add(pre); else m.set(x.k, x.a); });
+        rawN.set(p.id + '>' + c.id, byPre.size + (list.some(x => preOf(x.a, x.k) == null) ? 1 : 0));
+        byPre.forEach((m, pre) => { if (dupPre.has(pre)) { list.filter(x => preOf(x.a, x.k) === pre).forEach(x => miss.push(`${c.n}.${x.a.n} — ${p.n}의 키 ${x.k.p}를 역할 접두어 ‘${pre || '(없음)'}’로 가리키는 후보가 둘 이상이라 짝을 정할 수 없어 만들지 않았습니다(관계를 그려 짝을 직접 정하세요)`)); return; }
+          sets0.push({ p, c, pre, pairs: m, multi: byPre.size > 1 }); }); });
       sets0.forEach(s => { const pk = s.p.a.filter(z => z.pk && !z.edit), lack = pk.filter(k => !s.pairs.has(k));
         if (lack.length && s.pre != null) { const cv = coverOld(s.p, s.c, s.pre, lack); if (cv) { s.cover = cv; sets.push(s); return; } }   // the rest of the pairs are already on that relation — a partial set goes ONLY there (흐름 리뷰5 N-05), never into a new relation
-        if (lack.length) { s.pairs.forEach(a => miss.push(`${c.n}.${a.n} — ${s.p.n}의 식별자 ${pk.length}개 중 ${lack.map(k => k.p).join(', ')}에 맞는 후보가 없어 만들지 않았습니다(복합 PK — 관계를 그려 짝을 직접 정하세요)`)); return; }
+        if (lack.length) { s.pairs.forEach(a => miss.push(`${c.n}.${a.n} — ${s.multi ? `역할 접두어 ‘${s.pre || '(없음)'}’ 묶음은 ` : ''}${s.p.n}의 식별자 ${pk.length}개 중 ${lack.map(k => k.p).join(', ')}에 맞는 후보가 없고 같은 역할의 기존 관계도 쓸 수 없어 만들지 않았습니다(새 관계는 부모 키를 모두 덮을 때만 — 관계를 그려 짝을 직접 정하세요)`)); return; }
         sets.push(s); }); });
     const rels = [], seeds = [], usedOld = new Set(), skip = []; let gi = 0, reused = 0;
     // 흐름 리뷰2 R-03: only a relation whose FK is MISSING is reused (FK 제외(noFk) · M:N은 재사용하지 않는다).
@@ -1191,7 +1195,7 @@ window.pageInit = function () {
       if (s.cover) { if (usedOld.has(s.cover) || fkOf(s.cover, E).st !== 'miss') { s.pairs.forEach(a => unsure.push(`${s.c.n}.${a.n} — 이 후보는 부모 키 일부만 가리키는데 같은 역할의 기존 관계를 쓸 수 없어 만들지 않았습니다(새 관계는 부모 키를 모두 덮을 때만 만듭니다)`)); return; } old = s.cover; }   // 흐름 리뷰5 N-05: a partial set reuses its own relation or nothing
       else if (!self) { const olds = oldsOf(s); if (olds.length) { const free = olds.filter(x => !usedOld.has(x)), ev = new Map(olds.map(x => [x, evOf(s, x)]));
           const hit = free.filter(x => ev.get(x).n && s.pre != null && ev.get(x).pre.size === 1 && ev.get(x).pre.has(s.pre));
-          const bare = olds.filter(x => !ev.get(x).n), setsHere = sets.filter(z => z.p === s.p && z.c === s.c).length;
+          const bare = olds.filter(x => !ev.get(x).n), setsHere = rawN.get(s.p.id + '>' + s.c.id) || 0;
           if (hit.length === 1) old = hit[0];
           else if (!hit.length && bare.length === 1 && olds.length === 1 && setsHere === 1 && !usedOld.has(bare[0])) old = bare[0];
           else if (!hit.length && !bare.length && s.pre != null) old = null;   // every such relation already shows another role → this set is a new role

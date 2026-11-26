@@ -45,4 +45,7 @@
 
 ## 사람 확인
 - 필요(R6-2 보류 — 목업 동작) · W1 경로 막음: 아니오(손으로 관계를 맺을 수 있음) · 확인 기한: P2 ④(T-P2-406) 시작 전
-- 응답:
+- 응답: **뒤집기 — R6-2 지금 고침** (사용자 2026-11-26). 새 작업으로 회차 0부터.
+
+## 처리 결과 (2026-11-26)
+- R6-2: 미처리 판정을 접두어 묶음마다로 고침(처음) → Codex 검증에서 R6-2-1(FK 없는 관계 재사용 묶음 수) 높음 1 → 수정 1회차(걸러내기 전 묶음 수) → Codex 검증 8개 사례 통과 · 새 결함 0 ([flow-review7](../../ux/review/model-requests/flow-review7-codex.md) · [flow-review8](../../ux/review/model-requests/flow-review8-codex.md)). 모델 Opus 5.5 high. **해결.**

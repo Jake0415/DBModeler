@@ -1,6 +1,6 @@
 {
  "note": "자동 생성 — node scripts/trace-extract.mjs. 직접 고치지 말고 출처 문서 · assign.json · behaviors/*.json 을 고친다.",
- "inputsHash": "f9ddfdad38aa98f1aaa726d6967ff8d569a419f98a035e6ddfac9998b60f7eba",
+ "inputsHash": "3ec710c0fb9229e46ba8345ab64f67c46231e2e372c000f3a6ec40887e20dcb9",
  "rows": [
   {
    "id": "DG-R01",
@@ -2960,7 +2960,7 @@
   {
    "id": "MS-excel-import-1",
    "kind": "MS",
-   "title": "엑셀 가져오기(왕복 편집) — 1단계부터(실제 작업)",
+   "title": "사전 엑셀 일괄(왕복 편집) — 1단계부터(실제 작업)",
    "screen": "excel-import.html",
    "url": "excel-import.html",
    "source": "docs/impl/screen-manifest.json",
@@ -2974,7 +2974,7 @@
   {
    "id": "MS-excel-import-2",
    "kind": "MS",
-   "title": "엑셀 가져오기(왕복 편집) — 5단계 예시(저장 안 함)",
+   "title": "사전 엑셀 일괄(왕복 편집) — 5단계 예시(저장 안 함)",
    "screen": "excel-import.html",
    "url": "excel-import.html?step=5",
    "source": "docs/impl/screen-manifest.json",
@@ -2988,7 +2988,7 @@
   {
    "id": "MS-excel-import-3",
    "kind": "MS",
-   "title": "엑셀 가져오기(왕복 편집) — 신청된 묶음 열람",
+   "title": "사전 엑셀 일괄(왕복 편집) — 신청된 묶음 열람",
    "screen": "excel-import.html",
    "url": "excel-import.html?resume=UP-2026-0007",
    "source": "docs/impl/screen-manifest.json",
@@ -3002,7 +3002,7 @@
   {
    "id": "MS-excel-import-4",
    "kind": "MS",
-   "title": "엑셀 가져오기(왕복 편집) — 반영본 확인",
+   "title": "사전 엑셀 일괄(왕복 편집) — 반영본 확인",
    "screen": "excel-import.html",
    "url": "excel-import.html?verify=UP-2026-0007",
    "source": "docs/impl/screen-manifest.json",
@@ -3075,7 +3075,7 @@
   {
    "id": "MS-import-excel-1",
    "kind": "MS",
-   "title": "엑셀 정의서 가져오기(테이블 설계 → 모델) — 기본",
+   "title": "모델 엑셀 가져오기(정의서 · 테이블 설계 → 모델) — 기본",
    "screen": "import-excel.html",
    "url": "import-excel.html",
    "source": "docs/impl/screen-manifest.json",
@@ -3089,7 +3089,7 @@
   {
    "id": "MS-import-excel-2",
    "kind": "MS",
-   "title": "엑셀 정의서 가져오기(테이블 설계 → 모델) — 오류 예시",
+   "title": "모델 엑셀 가져오기(정의서 · 테이블 설계 → 모델) — 오류 예시",
    "screen": "import-excel.html",
    "url": "import-excel.html",
    "source": "docs/impl/screen-manifest.json",
@@ -37478,7 +37478,7 @@
   {
    "id": "BH-model-483",
    "kind": "BH",
-   "title": "모델 검증 패널 · 한 번에 처리 · [관계 한 번에 만들기] — 처리하지 못한 후보 → 그 후보는 만들지 않고 구조 묶음에 후보마다 이유 한 줄: ‘… 부모 테이블 ‘<테이블>’(물리명)을 이 영역에서 찾지 못했습니다’(논리명만 같은 엔터티는 짝짓지 않음) · ‘… <부모>(<테이블>)의 식별자에 컬럼 ‘<컬럼>’이(가) 없습니다’ · ‘… 식별자 <n>개 중 <컬럼>에 맞는 후보가 없어 만들지 않았습니다(복합 PK …)’ · ‘… <부모>의 복합 식별자 후보들의 역할 접두어가 맞지 않아 짝을 물리명으로 정할 수 없어 만들지 않았",
+   "title": "모델 검증 패널 · 한 번에 처리 · [관계 한 번에 만들기] — 처리하지 못한 후보 → 그 후보는 만들지 않고 구조 묶음에 후보마다 이유 한 줄: ‘… 부모 테이블 ‘<테이블>’(물리명)을 이 영역에서 찾지 못했습니다’(논리명만 같은 엔터티는 짝짓지 않음) · ‘… <부모>(<테이블>)의 식별자에 컬럼 ‘<컬럼>’이(가) 없습니다’ · ‘… 식별자 <n>개 중 <컬럼>에 맞는 후보가 없어 만들지 않았습니다(복합 PK …)’ · ‘… (역할 접두어 ‘<접두어>’ 묶음은) <부모>의 식별자 <n>개 중 <키>에 맞는 후보가 없고 같은",
    "screen": "model.html",
    "roles": "model.edit 가진 담당 시스템 모델러(작업 중 버전)",
    "refs": [
