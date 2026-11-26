@@ -20,7 +20,7 @@
     
     <h1>표준 사전 변경 내역</h1>
     <span class="badge" id="pubtag"></span>
-    <div class="actions"><button class="btn" id="b-purge" hidden>영구 삭제 로그</button><button class="btn" id="b-xls">엑셀 보고서</button><a class="btn primary" id="b-pub" hidden href="dictionary.html#publish">공표</a></div>
+    <div class="actions"><button class="btn" id="b-purge" hidden>영구 삭제 로그</button><button class="btn" id="b-xls">내려받기</button><a class="btn primary" id="b-pub" hidden href="dictionary.html#publish">공표</a></div>
   </div>
   <!-- list standard: search → chips → the main filter (period, default 30 days) -->
   <div class="toolbar">
@@ -28,7 +28,6 @@
     <span class="flex u-gap-8" role="group" aria-label="변경 종류"><button class="chip on" data-a="">전체</button><button class="chip" data-a="추가">추가</button><button class="chip" data-a="변경">변경</button><button class="chip" data-a="미사용">미사용</button><button class="chip" data-a="공표">공표</button></span>
     <span class="grow"></span>
     <select class="input" id="per" aria-label="기간"><option value="7">최근 7일</option><option value="30" selected>최근 30일</option><option value="pub">직전 공표 이후</option><option value="">전체 기간</option></select>
-    <button class="btn sm" disabled title="W2: 두 기준 시각 비교(History로 그 시점 재구성)">기준 시각 비교 (W2)</button>
   </div>
   <div class="listhead" id="lh"></div>
   <div class="scroll u-flex-1">
@@ -39,6 +38,7 @@
 <script>
 window.pageInit = function () {
   const $ = id => document.getElementById(id);
+  const ex = v => String(v == null ? '' : v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);   // FC-07: names · reasons · before/after values are text
   const pub = getPub();
   $('pubtag').textContent = `현재 제정 ${pub.cha}차 · ${pub.at} 공표`;
   const qp = new URLSearchParams(location.search);
@@ -53,7 +53,7 @@ window.pageInit = function () {
   // DA: publish from the unpublished list (CX12-08 · CL12-14) · DA (purge) · audit viewers: permanent-delete log (30 v1.2 ⑦)
   const unpub = getChanges().filter(c => !c.pub && c.act !== '공표').length;
   if (can('dict.publish')) { $('b-pub').hidden = false; $('b-pub').textContent = `공표 (미공표 ${unpub}건)`; if (!unpub) { $('b-pub').classList.add('disabled'); $('b-pub').setAttribute('aria-disabled', 'true'); $('b-pub').onclick = e => { e.preventDefault(); toast('직전 공표 이후 승인된 변경이 없습니다', 'info'); }; } }
-  if (can('dict.purge') || can('audit.view')) { $('b-purge').hidden = false; $('b-purge').onclick = () => { const log = JSON.parse(dbmStore.get('dbm-purge', '[]')); $('lh').innerHTML = `<b class="u-fg">영구 삭제 로그 ${log.length}건</b> · 수행자·사유·근거 결재 — 항목과 개별 이력은 지워지고 이 기록과 결재 기록만 남습니다 <button class="btn ghost sm" id="back-list">변경 내역으로</button>`; $('cb').innerHTML = log.map(x => `<tr><td class="mono">${x.at}</td><td><b>${x.name}</b><div class="caption faint mono">${x.id}</div></td><td>${x.kind}</td><td><span class="badge b-danger">영구 삭제</span></td><td>DA · Admin</td><td class="mono">—</td><td class="caption">사유: ${x.why}</td><td>${x.doc && x.doc !== '—' ? `<a class="mono" href="approvals.html?doc=${x.doc}">${x.doc}</a>` : '—'}</td><td class="caption">${x.who}</td><td></td></tr>`).join('') || '<tr class="er none"><td colspan="10" class="caption muted u-tc u-p-32">영구 삭제 기록이 없습니다</td></tr>'; $('back-list').onclick = draw; }; }
+  if (can('dict.purge') || can('audit.view')) { $('b-purge').hidden = false; $('b-purge').onclick = () => { const log = JSON.parse(dbmStore.get('dbm-purge', '[]')); $('lh').innerHTML = `<b class="u-fg">영구 삭제 로그 ${log.length}건</b> · 수행자·사유·근거 결재 — 항목과 개별 이력은 지워지고 이 기록과 결재 기록만 남습니다 <button class="btn ghost sm" id="back-list">변경 내역으로</button>`; $('cb').innerHTML = log.map(x => `<tr><td class="mono">${ex(x.at)}</td><td><b>${ex(x.name)}</b><div class="caption faint mono">${ex(x.id)}</div></td><td>${ex(x.kind)}</td><td><span class="badge b-danger">영구 삭제</span></td><td>DA · Admin</td><td class="mono">—</td><td class="caption">사유: ${ex(x.why)}</td><td>${x.doc && x.doc !== '—' ? `<a class="mono" href="approvals.html?doc=${encodeURIComponent(x.doc)}">${ex(x.doc)}</a>` : '—'}</td><td class="caption">${ex(x.who)}</td><td></td></tr>`).join('') || '<tr class="er none"><td colspan="10" class="caption muted u-tc u-p-32">영구 삭제 기록이 없습니다</td></tr>'; $('back-list').onclick = draw; }; }
   const originOf = c => c.act === '공표' ? '공표' : /초기 적재|86건/.test(c.item + c.diff) ? '초기 적재' : c.doc && c.doc !== '—' ? '사용자 변경 승인' : '데이터 보완';
   const L = () => {
     const per = $('per').value, qq = $('qq').value.trim(), today = new Date(window.MOCK_TODAY || new Date());   // the mockup's today (app.js) — was a fixed 2026-11-18
@@ -68,17 +68,17 @@ window.pageInit = function () {
     const hit = HL && R.some(c => c.act === '공표' && +(c.pub || (String(c.item).match(/(\d+)차/) || [])[1] || 0) === HL);
     const inEd = HL ? getChanges().filter(c => c.act !== '공표' && +c.pub === HL).length : 0;
     $('lh').innerHTML = `<b class="u-fg">${flt ? `${base}건 중 ${R.length}건` : `${R.length}건`}</b> · ${PN[$('per').value]} · 최근 순${chips.length ? ` <span class="fchips">${chips.map(([k, l]) => `<button class="fchip" data-hclr="${k}" aria-label="${l} 필터 지우기">${l}<i data-ic=x data-s=12></i></button>`).join('')}<button class="btn ghost sm" data-hclr="all">모두 지우기</button></span>` : ''} · <span class="caption muted">이력은 추가만 되고 지워지지 않습니다</span>`
-      + (HL ? ` · <b class="u-fg">제정 ${HL}차</b>${HL === +pub.cha ? ` (${pub.at} · ${pub.by})` : ''} ${hit ? `공표 행을 표시했습니다 · 이 차수에 실린 변경 ${inEd}건` : inEd ? `이 차수에 실린 변경 ${inEd}건을 표시했습니다` : '이 차수의 기록이 지금 목록에 없습니다(필터 또는 이전 기록)'} <a href="dict-history.html">표시 지우기</a>` : '');
+      + (HL ? ` · <b class="u-fg">제정 ${HL}차</b>${HL === +pub.cha ? ` (${ex(pub.at)} · ${ex(pub.by)})` : ''} ${hit ? `공표 행을 표시했습니다 · 이 차수에 실린 변경 ${inEd}건` : inEd ? `이 차수에 실린 변경 ${inEd}건을 표시했습니다` : '이 차수의 기록이 지금 목록에 없습니다(필터 또는 이전 기록)'} <a href="dict-history.html">표시 지우기</a>` : '');
     hitRow = hit;
     // field-level before → after on screen, the same content the report promises (CL8-01 · CX9 Top 10)
-    const fieldHtml = c => c.fields && c.fields.length ? c.fields.map(f => `${f[0]}: <span class="old-v">${f[1] === '' ? '(빈 값)' : f[1]}</span>${f[2]}`).join('<br>') + (c.diff && c.diff.includes('업로드') ? `<br><span class="faint">${c.diff.split(' · ').filter(x => x.startsWith('업로드')).join('')}</span>` : '') : (c.diff || '');
+    const fieldHtml = c => c.fields && c.fields.length ? c.fields.map(f => `${ex(f[0])}: <span class="old-v">${f[1] === '' ? '(빈 값)' : ex(f[1])}</span>${ex(f[2])}`).join('<br>') + (c.diff && c.diff.includes('업로드') ? `<br><span class="faint">${ex(c.diff.split(' · ').filter(x => x.startsWith('업로드')).join(''))}</span>` : '') : ex(c.diff || '');
     const useOf = c => { const d = c.itemId && getDict().find(x => x.id === c.itemId); return d ? d.use : null; };
     const pubN = c => c.act === '공표' ? +(c.pub || (String(c.item).match(/(\d+)차/) || [])[1] || 0) : 0;
     const mark = c => HL && (hitRow ? pubN(c) === HL : c.act !== '공표' && +c.pub === HL);
-    $('cb').innerHTML = R.map(c => `<tr${pubN(c) ? ` id="pub-${pubN(c)}"` : ''}${mark(c) ? ` class="sel" data-hl="1"${hitRow ? ' aria-current="true"' : ''}` : ''}><td class="mono">${c.at}</td><td><b>${c.item}</b>${c.itemId ? `<div class="caption faint mono">${c.itemId}${useOf(c) ? ` · 사용처 ${useOf(c)}` : ''}</div>` : ''}</td><td>${c.kind}</td><td><span class="badge ${c.act === '공표' ? 'b-violet' : c.act.includes('미사용') ? '' : 'b-success'}">${c.act}</span></td><td class="caption">${originOf(c)}</td><td class="mono">${c.ver}</td><td class="caption wrap">${fieldHtml(c)}</td><td>${c.doc && c.doc !== '—' ? `<a class="mono" href="approvals.html?doc=${c.doc}">${c.doc}</a>` : '—'}</td><td class="caption">${c.by}</td><td>${c.pub ? `<span class="num muted">${c.pub}차</span>` : '<span class="caption muted">미공표</span>'}</td></tr>`).join('') || (!getChanges().length ? '<tr class="er first"><td colspan="10" class="caption muted u-tc u-p-32"><span class="et">아직 변경 내역이 없습니다</span>사전 신청이 최종 승인되면 항목별로 쌓입니다.</td></tr>'
+    $('cb').innerHTML = R.map(c => `<tr${pubN(c) ? ` id="pub-${pubN(c)}"` : ''}${mark(c) ? ` class="sel" data-hl="1"${hitRow ? ' aria-current="true"' : ''}` : ''}><td class="mono">${ex(c.at)}</td><td><b>${ex(c.item)}</b>${c.itemId ? `<div class="caption faint mono">${ex(c.itemId)}${useOf(c) ? ` · 사용처 ${useOf(c)}` : ''}</div>` : ''}</td><td>${ex(c.kind)}</td><td><span class="badge ${c.act === '공표' ? 'b-violet' : c.act.includes('미사용') ? '' : 'b-success'}">${ex(c.act)}</span></td><td class="caption">${originOf(c)}</td><td class="mono">${ex(c.ver)}</td><td class="caption wrap">${fieldHtml(c)}</td><td>${c.doc && c.doc !== '—' ? `<a class="mono" href="approvals.html?doc=${encodeURIComponent(c.doc)}">${ex(c.doc)}</a>` : '—'}</td><td class="caption">${ex(c.by)}</td><td>${c.pub ? `<span class="num muted">${c.pub}차</span>` : '<span class="caption muted">미공표</span>'}</td></tr>`).join('') || (!getChanges().length ? '<tr class="er first"><td colspan="10" class="caption muted u-tc u-p-32"><span class="et">아직 변경 내역이 없습니다</span>사전 신청이 최종 승인되면 항목별로 쌓입니다.</td></tr>'
       : flt ? '<tr class="er none"><td colspan="10" class="caption muted u-tc u-p-32"><span class="et">필터에 맞는 변경이 없습니다</span><button class="btn sm ghost" data-hclr="all">모두 지우기</button></td></tr>'
       : `<tr class="er none"><td colspan="10" class="caption muted u-tc u-p-32"><span class="et">${PN[$('per').value]} 변경이 없습니다</span><button class="btn sm ghost" id="per-all">전체 기간 보기</button></td></tr>`);
-    $('b-xls').textContent = `엑셀 보고서 (${R.length}건)`;
+    $('b-xls').textContent = `내려받기 (${R.length}건)`; $('b-xls').disabled = !R.length; $('b-xls').title = R.length ? '지금 필터 결과를 CSV(엑셀에서 열림)로 내려받습니다' : '내려받을 변경이 없습니다';
   }
   const setAct = v => { act = v; document.querySelectorAll('[data-a]').forEach(x => x.classList.toggle('on', x.dataset.a === act)); };
   document.querySelector('.toolbar').addEventListener('click', e => { const c = e.target.closest('[data-a]'); if (!c) return; setAct(c.dataset.a); draw(); });
@@ -89,7 +89,17 @@ window.pageInit = function () {
     const c = e.target.closest('[data-hclr]'); if (!c) return; const k = c.dataset.hclr;
     if (k === 'all' || k === 'q') $('qq').value = ''; if (k === 'all' || k === 'a') setAct(''); if (k === 'all') $('per').value = '30';
     draw(); const nc = document.querySelector('#lh [data-hclr]'); (nc || $('qq')).focus(); });
-  $('b-xls').onclick = () => toast(`표준사전_변경내역_${$('per').selectedOptions[0].text.replace(/[: ]/g, '')}.xlsx — ${L().length}건 · 필터: ${[PN[$('per').value], act && '종류 ' + act, $('qq').value.trim() && `검색 ‘${$('qq').value.trim()}’`].filter(Boolean).join(' · ')}(파일 첫 줄) · 필드별 전후 · 신청번호 · 모델 사용처 수`, 'info');
+  $('b-xls').onclick = () => { const rows = L(); if (!rows.length) { toast('내려받을 변경이 없습니다 — 필터를 바꾸세요', 'info'); return; }
+    const flt = [PN[$('per').value], act && '종류 ' + act, $('qq').value.trim() && `검색 ‘${$('qq').value.trim()}’`].filter(Boolean).join(' · ');
+    const cell = v => { const t = String(v == null ? '' : v); return /[",\n\r]/.test(t) || /^[=+\-@]/.test(t) ? '"' + (/^[=+\-@]/.test(t) ? "'" : '') + t.replace(/"/g, '""') + '"' : t; };   // CSV quoting · formula injection guard
+    const flds = c => c.fields && c.fields.length ? c.fields.map(f => `${f[0]}: ${f[1] === '' ? '(빈 값)' : f[1]} → ${f[2]}`).join(' / ') : (c.diff || '');
+    const lines = [cell('필터: ' + flt), ['반영 시각', '항목', '항목 ID', '종류', '변경', '반영 구분', '버전', '내용(필드별 전후)', '신청', '처리', '공표', '모델 사용처 수'].map(cell).join(',')]
+      .concat(rows.map(c => [c.at, c.item, c.itemId || '', c.kind, c.act, originOf(c), c.ver, flds(c), c.doc && c.doc !== '—' ? c.doc : '', c.by, c.pub ? c.pub + '차' : '미공표', useOf(c) == null ? '' : useOf(c)].map(cell).join(',')));
+    const name = `표준사전_변경내역_${$('per').selectedOptions[0].text.replace(/[: ]/g, '')}_${rows.length}건.csv`;
+    const url = URL.createObjectURL(new Blob(['\ufeff' + lines.join('\r\n') + '\r\n'], { type: 'text/csv;charset=utf-8' }));
+    const a = document.createElement('a'); a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000);
+    pushAudit({ act: '내려받기 — 사전 변경 내역', target: name, why: `${rows.length}건 · ${flt}` });
+    toast(`${ex(name)}을(를) 내려받았습니다 — ${rows.length}건 · 필터: ${ex(flt)}(파일 첫 줄) · 감사 로그에 기록`, 'success'); };   // FC-12
   draw();
   if (HL) { const r = document.getElementById('pub-' + HL) || document.querySelector('#cb tr[data-hl]'); if (r) { r.scrollIntoView({ block: 'center' }); r.tabIndex = -1; r.focus({ preventScroll: true }); } }
 };

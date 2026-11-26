@@ -1310,7 +1310,7 @@
     const N = { composeLvl: '용어 약어 조합 일치', endsWithFormatWordLvl: '형식단어 종결', splitSuspectLvl: '1음절 분해 의심' };
     Object.entries(N).forEach(([key, n]) => { if (pol.naming[key] === 'off') L.push(n); }); if (pol.model.entitySuffixLvl === 'off') L.push('엔터티 분류어 종결');
     return L; };
-  window.offRulesHtml = pol => { const L = offRules(pol); return L.length ? `<a class="caption muted" href="rules.html?f=off" title="${L.join(' · ')}">미적용 규칙 ${L.length}개</a>` : ''; };
+  window.offRulesHtml = pol => { const L = offRules(pol); return L.length ? `<a class="caption muted" href="rules.html?f=off" title="${L.join(' · ').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c])}">미적용 규칙 ${L.length}개</a>` : ''; };
   // model names judged again by the policy (P4) — a stored 'ok' is not trusted on its own
   window.attrRuleProblems = (a, pol, dbms) => { pol = pol || getPolicy(); if (!a || a.s === 'na' || a.edit) return [];
     return [...ruleProblems('attr', 'name', a.n, pol, { f: 'n', dbms }), ...ruleProblems('attr', 'phys', a.p, pol, { f: 'p', dbms })]; };
@@ -1392,9 +1392,11 @@
   window.onLine = (u, d) => !!u && u.status !== 'stopped' && (canUserAct(u, d, d.step) || canUser(u, 'appr.da', { doc: d }) || ((d.line || ['da', 'final']).includes('final') && canUser(u, 'appr.final', { doc: d })) || (d.hist || []).some(h => h.whoId === u.id));
   window.canUserSeeDoc = (u, d) => !!d && !!u && (d.req === u.id || (inReview(d) ? onLine(u, d) : (canUser(u, 'appr.viewall', { doc: d }) || (d.cc || []).includes(u.id) || onLine(u, d))));
   window.canSeeDoc = d => canUserSeeDoc(USERS[ME.id] || ME, d);
+  // 최종 점검 FC-09: a model document's submitted copy (제출 사본) — an approved one follows the model view scope; one in review · rejected · withdrawn follows the document rule (canSeeDoc). Read it only after this says yes (모델 · DDL · 산출물 같은 판정)
+  window.canSeeModelDoc = d => !!d && (d.step === 'done' ? can('model.view', { area: d.area }) : canSeeDoc(d));
   // what a viewer may see of an area: a version under review is shown only to its requester and approvers — others see the last confirmed copy
   window.confirmedCopy = area => { const m = getModel(area); if (!m.base) return null; const d = getDocs().find(x => x.type === 'model' && x.area === area && x.ver === m.base && x.step === 'done'); return (d && d.model) || getModelData(area, m.base) || modelSeed(area); };
-  window.areaView = area => { const L = modelLock(area), m = getModel(area); if (L.state === 'review' && L.doc && !canSeeDoc(L.doc)) { const c = confirmedCopy(area); return { model: c || { E: [], R: [], M: [] }, hidden: true, ver: m.base, label: m.base ? `v${m.base} 확정본 (v${m.ver} 결재 중)` : `v${m.ver} 결재 중 · 열람 제한` }; } if (L.state !== 'edit' && L.doc && L.doc.model) return { model: L.doc.model, hidden: false, ver: m.ver }; return { model: modelOf(area, m.ver), hidden: false, ver: m.ver }; };
+  window.areaView = area => { const L = modelLock(area), m = getModel(area); if (L.state === 'review' && L.doc && !canSeeDoc(L.doc)) { const c = confirmedCopy(area); return { model: c || { E: [], R: [], M: [] }, hidden: true, ver: m.base, label: m.base ? `v${m.base} 확정본 (v${m.ver} 결재 중)` : `v${m.ver} 결재 중 · 열람 제한` }; } if (L.state !== 'edit' && L.doc && L.doc.model && canSeeModelDoc(L.doc)) return { model: L.doc.model, hidden: false, ver: m.ver }; if (L.state !== 'edit' && L.doc && L.doc.model) { const c = confirmedCopy(area); return { model: c || { E: [], R: [], M: [] }, hidden: true, ver: m.base, label: m.base ? `v${m.base} 확정본` : '열람 제한' }; } return { model: modelOf(area, m.ver), hidden: false, ver: m.ver }; };
   window.canSeeBatch = b => !!b && (b.by === ME.id || can('excel.viewall'));
   /* model diff between two stored structures — entities and attributes are paired like the DDL (ddl.html): 안정 id → 물리명 → 논리명.
      A table deleted and added again (새 id · 같은 물리명) is one '재추가' row with its column changes, not 삭제 + 추가 */
@@ -1477,7 +1479,7 @@
      WORK COPY (the 표준 맞추기 target) and hides at 0; snapshots keep &snap= on 모델 · DDL · 산출물 */
   window.areaNav = (area, here, o = {}) => {
     const head = document.querySelector('.page-header'); const m = getModels()[area]; if (!head || !m || head.querySelector('.anav')) return;
-    let bad = 0; try { bad = compOf(modelOf(area, m.ver)).bad; } catch (e) {}
+    let bad = 0; try { bad = compOf(areaView(area).model).bad; } catch (e) {}   // 최종 점검 FC-10: counted from the model this viewer may see (결재 중 제출본을 못 보면 확정본)
     const sn = o.snap ? '&snap=' + encodeURIComponent(o.snap) : '';
     const L = [['model', 'model.html?area=' + area + sn, 'flow', '모델'], ['std', 'standardize.html?area=' + area + (bad ? '&f=todo' : ''), 'check', '표준 맞추기'], ['ddl', 'ddl.html?area=' + area + sn, 'code', 'DDL'], ['out', 'outputs.html?area=' + area + sn, 'ftext', '산출물']];
     const nav = document.createElement('nav'); nav.className = 'anav'; nav.setAttribute('aria-label', `${m.name} 화면`);
@@ -1776,7 +1778,11 @@
   /* status: one badge for every screen (01 v2 §2.3) — ok · run · mine · warn · err · ex · end map onto .badge variants */
   const TAG_IC = { ex: 'flag' };   // Geist: no check / X icons inside status badges — colour + words
   const TAG_CLS = { ok: 'b-success', run: '', mine: 'b-info', warn: 'b-warning', err: 'b-danger', ex: 'b-ex', end: 'b-end' };   // 진행 중 = neutral, 내 차례 = blue — what you act on is the strongest (01 v2 §2.3)
-  window.tag = (kind, label) => `<span class="badge ${TAG_CLS[kind] || ''}">${TAG_IC[kind] ? icon(TAG_IC[kind], 12) : ''}${label}</span>`;
+  // 최종 점검(공용): the label is TEXT by default — a stored value (후보 상태 · 사전 상태 · 이름) can never become markup. tagHtml() takes ready-made HTML for the rare caller that means it
+  const tagEsc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+  window.tagHtml = (kind, html) => `<span class="badge ${TAG_CLS[kind] || ''}">${TAG_IC[kind] ? icon(TAG_IC[kind], 12) : ''}${html == null ? '' : html}</span>`;
+  window.tag = (kind, label) => tagHtml(kind, tagEsc(label));
+  window.escHtml = tagEsc;   // one text → HTML escape for screens that build markup (same rule as tag)
   /* display density (01 v2 §6.4): 촘촘 32 · 기본 36 · 넓게 44 — a personal setting (마이페이지) */
   window.DENSITY = { compact: '촘촘 32px', default: '기본 36px', comfy: '넓게 44px' };
   window.setDensity = v => { store.set('dbm-density', v); document.documentElement.dataset.density = v; };
@@ -2024,7 +2030,7 @@
         <div class="scr-sec">설계 결정 반영 대기 <span class="badge">${s.todo.length}</span> <span class="caption muted">목업 동결 뒤 결정 — 아직 화면에 없음</span></div>
         ${s.todo.length ? `<ul class="scr-todo">${s.todo.map(([t, r]) => `<li>${t} <span class="caption faint">${r}</span></li>`).join('')}</ul>` : '<div class="caption muted">없음</div>'}
         <div class="scr-sec">검토 메모 <span class="caption muted">${notes.filter(x => !x.done).length}건 남음 · 이 브라우저에 저장(↺ 초기화에도 유지)</span></div>
-        <div class="scr-notes">${notes.map((x, k) => `<div class="scr-note ${x.done ? 'done' : ''}"><label><input type="checkbox" data-nd="${k}" ${x.done ? 'checked' : ''} aria-label="처리 표시"></label><div class="grow"><div class="t">${x.text.replace(/</g, '&lt;').replace(/\n/g, '<br>')}</div><div class="caption faint">${x.by} · ${x.at}</div></div><button class="btn ghost sm" data-nx="${k}" aria-label="메모 삭제">삭제</button></div>`).join('') || '<div class="caption muted">아직 메모가 없습니다.</div>'}</div>
+        <div class="scr-notes">${notes.map((x, k) => `<div class="scr-note ${x.done ? 'done' : ''}"><label><input type="checkbox" data-nd="${k}" ${x.done ? 'checked' : ''} aria-label="처리 표시"></label><div class="grow"><div class="t">${escHtml(x.text).replace(/\n/g, '<br>')}</div><div class="caption faint">${escHtml(x.by)} · ${escHtml(x.at)}</div></div><button class="btn ghost sm" data-nx="${k}" aria-label="메모 삭제">삭제</button></div>`).join('') || '<div class="caption muted">아직 메모가 없습니다.</div>'}</div>
         <textarea class="input" id="scr-text" rows="3" placeholder="이 화면에서 고칠 점·확인할 점 (Ctrl+Enter 추가)"></textarea>
         <div class="flex" style="margin-top:6px"><button class="btn sm" id="scr-export">전체 메모 복사(마크다운)</button><span class="grow"></span><button class="btn sm primary" id="scr-add">메모 추가</button></div>
       </div>
@@ -2656,7 +2662,7 @@
       <button class="gsearch" id="gsearch" type="button" aria-haspopup="dialog" aria-label="전체 검색 (Ctrl+K)">${ICON.search}<span>검색</span><kbd>Ctrl K</kbd></button>
       ${can('dict.request') ? (() => { const bn = getBasket().items.length; return `<a class="iconbtn" id="btn-basket" href="dictionary.html?basket=1" aria-label="표준 사전 바구니 ${bn}건 — 열어서 신청하기" title="사전 바구니 ${bn}건">${icon('basket', 16)}${bn ? `<span class="dot">${bn}</span>` : ''}</a>`; })() : ''}
       <button class="iconbtn" id="btn-bell" aria-label="알림 ${nUnread}건" aria-haspopup="true" aria-expanded="false">${ICON.bell}${nUnread ? `<span class="dot">${nUnread}</span>` : ''}</button>
-      <button class="avatar btnlike" id="btn-user" aria-label="사용자 메뉴 · ${ME.name}" aria-haspopup="true" aria-expanded="false">${ME.name[0]}${store.get('dbm-seen-ver', '') !== PRODUCT.version ? '<span class="newdot" title="새 기능"></span>' : ''}</button>
+      <button class="avatar btnlike" id="btn-user" aria-label="사용자 메뉴 · ${escHtml(ME.name)}" aria-haspopup="true" aria-expanded="false">${escHtml(String(ME.name || '')[0] || '')}${store.get('dbm-seen-ver', '') !== PRODUCT.version ? '<span class="newdot" title="새 기능"></span>' : ''}</button>
       <div class="pop-menu npanel" id="pn-notif" role="dialog" aria-label="알림"></div>
       <div class="pop-menu umenu" id="pn-user" role="menu" aria-label="사용자 메뉴"></div>`;
     // v17 (11 §2.2): the left side is the model tree only — shown on home and model-family screens,
@@ -2735,7 +2741,7 @@
     document.addEventListener('keydown', e => { if (e.key === 'Escape' && mpop.classList.contains('open')) { mkOpen(false); fab.focus(); } });
     // frame/theme/role tools — keep other query params (CL2-07)
     const sf = mk.querySelector('#seg-frame'), st = mk.querySelector('#seg-theme');
-    sf.querySelector(`[data-v="${frame}"]`).classList.add('on');
+    { const fb = [...sf.querySelectorAll("[data-v]")].find(x => x.dataset.v === frame); if (fb) fb.classList.add("on"); }   // FC-15: ?w= is compared as a string, never put into a selector
     const tsel = st.querySelector(`[data-v="${themePref === 'dark' ? 'dark' : 'light'}"]`); if (tsel) tsel.classList.add('on');
     sf.addEventListener('click', e => { const v = e.target.dataset.v; if (!v) return; store.set('dbm-frame', v); const p = new URLSearchParams(location.search); p.set('w', v); location.search = p.toString(); });
     st.addEventListener('click', e => { const v = e.target.dataset.v; if (!v) return; store.set('dbm-theme', v); applyTheme(v); st.querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.v === v)); });
@@ -2766,7 +2772,7 @@
       const list = myNotifs().filter(n => nf === 'all' || n.k === nf || (nf === 'appr' && n.k === 'res'));
       pn.innerHTML = `<div class="nh"><b>알림</b><span class="badge">${unread()} 안 읽음</span><span class="grow"></span><button class="btn ghost sm" id="n-allread">모두 읽음</button></div>
         <div class="nf">${[['all', '전체'], ['appr', '결재'], ['cand', '후보'], ['job', '작업'], ['cc', '참조'], ['sys', '공지']].map(([k, l]) => `<button class="chip ${nf === k ? 'on' : ''}" data-nf="${k}" style="height:24px;font-size:12px">${l}</button>`).join('')}</div>
-        <div class="nlist">${list.length ? list.map(n => `<a class="ni ${readSet.has(n.id) ? '' : 'unread'}" href="${n.href}" data-nid="${n.id}"><span class="ud" aria-hidden="true"></span><span><div class="t">${n.t}</div><div class="m">${n.m} · ${n.at}</div></span></a>`).join('') : '<div class="caption muted" style="padding:24px;text-align:center">이 종류의 알림이 없습니다</div>'}</div>
+        <div class="nlist">${list.length ? list.map(n => `<a class="ni ${readSet.has(n.id) ? '' : 'unread'}" href="${String(n.href || "#").replace(/"/g, "&quot;")}" data-nid="${txt(String(n.id))}"><span class="ud" aria-hidden="true"></span><span><div class="t">${toastSafe(n.t)}</div><div class="m">${toastSafe(n.m)} · ${txt(String(n.at || ""))}</div></span></a>`).join('') : '<div class="caption muted" style="padding:24px;text-align:center">이 종류의 알림이 없습니다</div>'}</div>
         <div class="nfoot"><span class="caption muted">30일 보관 · 메일 알림은 결재선 담당자만</span><a href="mypage.html#notify">알림 설정</a></div>`;
     };
     const closePops = () => { [pn, pu].forEach(p => p.classList.remove('open')); top.querySelectorAll('#btn-bell, #btn-user').forEach(b => b.setAttribute('aria-expanded', 'false')); };   // top menus keep their own state
@@ -2780,7 +2786,7 @@
     });
     // user menu (PN-50)
     const drawUser = () => {
-      pu.innerHTML = `<div class="who"><b>${ME.name}</b><div class="caption muted">${ME.org} · ${ME.mail}</div><div class="role-tag" style="margin-top:6px">${roleBadges(ME)}</div></div>
+      pu.innerHTML = `<div class="who"><b>${escHtml(ME.name)}</b><div class="caption muted">${escHtml(ME.org)} · ${escHtml(ME.mail)}</div><div class="role-tag" style="margin-top:6px">${roleBadges(ME)}</div></div>
         <a class="mi" role="menuitem" href="mypage.html">마이페이지</a>
         <a class="mi" role="menuitem" href="mypage.html#mine">내 신청 <span class="caption muted" style="margin-left:auto">${(() => { const m = getDocs().filter(d => d.req === ME.id); const l = m.filter(d => docGroup(d) === 'live').length, x = m.filter(d => docGroup(d) === 'fix').length; return `진행 중 ${l}` + (x ? ` · 보완 필요 ${x}` : ''); })()}</span></a>
         <a class="mi" role="menuitem" href="mypage.html#notify">알림 설정</a>
@@ -2810,8 +2816,13 @@
   window.openAbout = openAbout; window.openKeys = openKeys;
 
   /* ---- toast (aria-live, error stays until closed, optional action) ---- */
+  // 최종 검증 2회차: every toast (flash · data-toast too) is TEXT — escaped here, then only <b> · </b> · <br> · <span class="mono"> · </span> come back as markup.
+  //   An entity a caller already escaped (&lt; · &amp; · &quot; · &#39; · &#n;) is kept as it is, so a caller that escapes first is not escaped twice
+  const toastSafe = m => String(m == null ? '' : m).replace(/&(?!(?:amp|lt|gt|quot|apos|#39|#\d+|#x[0-9a-f]+);)/gi, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+    .replace(/&lt;(\/?)b&gt;/g, '<$1b>').replace(/&lt;br\s*\/?&gt;/g, '<br>').replace(/&lt;span class=&quot;mono&quot;&gt;/g, '<span class="mono">').replace(/&lt;\/span&gt;/g, '</span>');
+  window.toastSafe = toastSafe;
   window.toast = function (msg, type, action) {
-    const box = document.getElementById('toasts'); if (!box) return;
+    const box = document.getElementById('toasts'); if (!box) return; msg = toastSafe(msg);
     // v8: a state-coloured line icon, no filled circle (success icon only in green; info neutral)
     const colors = { success: 'var(--success)', info: 'var(--fg-3)', danger: 'var(--danger)', violet: 'var(--fg-3)' };
     const marks = { success: 'check', info: 'info', danger: 'err', violet: 'info' };
@@ -2844,7 +2855,7 @@
       // one message per BUTTON (not per field set) — when the needed fields change, the old message can't linger (CX9-15)
       const bid = b.id || ids.join('_');
       let m = b.parentElement.querySelector(`.needs-msg[data-btn="${bid}"]`);
-      const msg = block || (empty.length ? (b.dataset.needsMsg || '사유를 입력해야 합니다') : '');
+      const msg = block || (empty.length ? (b.dataset.needsMsg || '신청 사유를 입력하세요') : '');
       if (msg && !m) { m = document.createElement('span'); m.className = 'needs-msg'; m.dataset.btn = bid; m.setAttribute('role', 'status'); b.parentElement.insertBefore(m, b.parentElement.firstChild); }
       if (m) { if (msg) m.textContent = msg; else m.remove(); }
     });
@@ -2992,9 +3003,9 @@
       const rk = 'dbm-ret:' + curFile(), r0 = qs.get('ret');
       if (r0 && /^[a-z-]+\.html(\?[\w=&.%-]*)?$/.test(r0)) sessionStorage.setItem(rk, r0);
       const r = sessionStorage.getItem(rk), content = document.getElementById('content');
-      if (r && content && !r.startsWith(curFile())) {
+      if (r && content && !r.startsWith(curFile()) && /^[a-z-]+\.html(\?[\w=&.%-]*)?$/.test(r)) {   // 최종 검증 2회차: the stored address is checked again when it is drawn, not only when it was saved
         const bn = document.createElement('div'); bn.className = 'banner info'; bn.setAttribute('role', 'status');
-        bn.innerHTML = `<span>하던 작업이 있습니다.</span> <a href="${r}">${r.startsWith('term-wizard.html') ? '용어 자동분석으로 돌아가기' : '이전 작업으로 돌아가기'}</a> <button class="btn sm ghost" type="button">닫기</button>`;
+        bn.innerHTML = `<span>하던 작업이 있습니다.</span> <a href="${escHtml(r)}">${r.startsWith('term-wizard.html') ? '용어 자동분석으로 돌아가기' : '이전 작업으로 돌아가기'}</a> <button class="btn sm ghost" type="button">닫기</button>`;
         bn.querySelector('a').addEventListener('click', () => sessionStorage.removeItem(rk));
         bn.querySelector('button').addEventListener('click', () => { sessionStorage.removeItem(rk); bn.remove(); });
         content.prepend(bn);
@@ -3006,7 +3017,7 @@
       const h = a.getAttribute('href'); if (!/^[a-z-]+\.html/.test(h) || /[?&]as=/.test(h)) return;
       a.setAttribute('href', keepUrl(h));
     }, true);
-    if (location.hash) { const b = document.querySelector(`.tabs button[data-tab="${location.hash.slice(1)}"]`); if (b) b.click(); }
+    if (location.hash) { let h = location.hash.slice(1); try { h = decodeURIComponent(h); } catch (e) {} const b = [...document.querySelectorAll(".tabs button[data-tab]")].find(x => x.dataset.tab === h); if (b) b.click(); }   // 최종 점검 FC-15: the hash is compared as a string with each tab's dataset — never put into a selector; no match = default tab
     if (window.pageInit) window.pageInit();
     document.querySelectorAll('.tabs button[data-tab].on').forEach(b => b.setAttribute('aria-current', 'true'));   /* R-05: the tab open at load is read out too */
     updateNeeds();

@@ -494,7 +494,7 @@ window.pageInit = function () {
   function done(area, res) {
     const m = getModel(area), mode = UNDO.isNew ? '새 업무 영역' : '추가만', W = PRE.iss.filter(x => x.lv === 'warn').length;
     { const ts = [...PRE.T.values()].filter(t => t.ok); IMP = nid('imp'); dbmStore.set('dbm-import-last', JSON.stringify({ id: IMP, at: nowStr(), src: 'excel', area, dst: UNDO.isNew ? 'new' : 'cur', tables: ts.length, cols: ts.reduce((n, t) => n + t.cols.length, 0), warn: PRE.iss.filter(x => x.lv === 'warn').length })); }   // A-1
-    pushAudit({ act: '엑셀로 모델 가져오기', target: `${m.name} (${area})`, why: `${FILE} · ${mode} · 테이블 ${res.added}${res.skip.length ? ` · 추가 안 함 ${res.skip.length}` : ''}${res.out.length ? ` · 오류 · 중복 제외 ${res.out.length}` : ''} · 관계 ${res.made}${res.refs ? ` · 참조 엔터티 ${res.refs}` : ''}${res.cand ? ` · FK 후보 ${res.cand}` : ''}${W ? ` · 경고 ${W}` : ''}` });
+    pushAudit({ act: '모델 엑셀 가져오기', target: `${m.name} (${area})`, why: `${FILE} · ${mode} · 테이블 ${res.added}${res.skip.length ? ` · 추가 안 함 ${res.skip.length}` : ''}${res.out.length ? ` · 오류 · 중복 제외 ${res.out.length}` : ''} · 관계 ${res.made}${res.refs ? ` · 참조 엔터티 ${res.refs}` : ''}${res.cand ? ` · FK 후보 ${res.cand}` : ''}${W ? ` · 경고 ${W}` : ''}` });
     show(4, true);
     $('xi-done').innerHTML = `<div class="xi-card"><h2 class="xi-h u-fs-16 u-mt-0" id="xi-done-t" tabindex="-1">가져왔습니다 — ${esc(m.name)} v${m.ver} 작업 중</h2>
       <ul class="caption u-m-0 u-lh-22 xi-ul"><li>${mode} · 테이블 ${res.added}개 추가${res.skip.length ? ` · 이미 있어 추가 안 함 ${res.skip.length}(${res.skip.map(esc).join(', ')})` : ''}${res.out.length ? ` · 오류 · 중복으로 빠짐 ${res.out.length}(${res.out.map(esc).join(', ')})` : ''} · 만든 관계 ${res.made}${res.link ? `(기존 부모 연결 ${res.link})` : ''}${res.refs ? ` · 다른 영역 참조 엔터티 ${res.refs}` : ''} · ‘가져온 테이블’ 보기</li>${res.cand ? `<li class="u-warning">관계 없는 FK 후보 컬럼 ${res.cand}개 — 모델 검증에서 다시 보고 ERD에서 관계를 맺으세요</li>` : ''}${W ? `<li>경고 ${W}건 — 가져온 뒤 모델 검증에서 다시 봅니다</li>` : ''}<li>관계명은 비어 있습니다 — ERD 관계 패널에서 명사로 입력하세요(소속 · 담당)</li></ul>
@@ -510,7 +510,7 @@ window.pageInit = function () {
       if (UNDO.isNew) { const all = JSON.parse(dbmStore.get('dbm-model', '{}')); delete all[area]; dbmStore.set('dbm-model', JSON.stringify(all)); try { localStorage.removeItem(`dbm-mdata-${area}-v1`); localStorage.removeItem('dbm-area-seed-' + area); } catch (e) {} ok = !getAllModels()[area]; }
       else ok = setModelData(area, UNDO.ver, Object.assign(UNDO.before, { rev: UNDO.rev + 1 })) !== false;
       if (!ok) { toast('되돌리지 못했습니다 — 모델에서 직접 고치세요', 'danger'); return; }
-      pushAudit({ act: '엑셀 가져오기 취소', target: `${m.name} (${area})`, why: FILE }); toast('가져오기를 취소했습니다 — 가져오기 전 상태로 돌렸습니다', 'info'); UNDO = null; RAW = null; PRE = null; show(1); };
+      pushAudit({ act: '모델 엑셀 가져오기 취소', target: `${m.name} (${area})`, why: FILE }); toast('가져오기를 취소했습니다 — 가져오기 전 상태로 돌렸습니다', 'info'); UNDO = null; RAW = null; PRE = null; show(1); };
   }
 
   /* ---- ① load ---- */

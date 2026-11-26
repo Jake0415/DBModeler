@@ -81,40 +81,46 @@ window.pageInit = function () {
   const go = h => { location.href = h + (qs.has('audit') && qs.get('as') ? '&audit=1&as=' + qs.get('as') : ''); };
   const ids = Object.keys(getModels()); let T = 0, Cc = 0;
   { const s = curSys(); $('sys-name').textContent = s.name; $('sys-badge').textContent = `${s.db} · ${s.schema}`; document.title = s.name + ' · 시스템 홈 · NeoDB 목업'; }
+  const esc = x => String(x == null ? '' : x).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);   // FC-03: names · descriptions people type are text, never HTML
   const OWN = { e_tr: '한재무', e_sd: '정영업', e_mm: '한구매', e_wm: '김모델', e_pp: '오생산', e_fi: '최회계', e_hr: '박설계' };
   // counts from each area's working structure (or its submitted copy when locked) — CX12-19 · CL12-31
   const sizeOf = a => { const L = modelLock(a); const m = areaView(a).model; const ents = m.E.filter(x => !x.ref); return [ents.length, ents.reduce((n, x) => n + x.a.length, 0)]; };
   ids.forEach(a => { const [t2, c2] = sizeOf(a); T += t2; Cc += c2; });
   $('k-areas').textContent = ids.length; $('k-tc').textContent = `${T} · ${Cc}`;
   // plain text, not a badge per area (one badge per row)
-  $('k-final').innerHTML = ids.map(a => `${getModels()[a].name} <span class="${getOrg().finalModel[a] !== false ? '' : 'muted'}">${getOrg().finalModel[a] !== false ? '사용' : '안 함'}</span>`).join('<span class="faint">, </span>');
+  $('k-final').innerHTML = ids.map(a => `${esc(getModels()[a].name)} <span class="${getOrg().finalModel[a] !== false ? '' : 'muted'}">${getOrg().finalModel[a] !== false ? '사용' : '안 함'}</span>`).join('<span class="faint">, </span>');
   $('sys-set').hidden = !can('settings');   // settings are Admin-only — no link into a 403 for everyone else
   // creating an area is for modelers / admin; others only browse (CX12-20)
-  if (!can('area.create', { system: curSys().code })) { $('add-area').disabled = true; $('add-area').title = ME.has('modeler') ? `내 담당 시스템에 ${josa(curSys().name, '이/가')} 없어 업무 영역을 만들 수 없습니다` : '업무 영역은 모델러 · Admin만 만들 수 있습니다'; }
+  if (!can('area.create', { system: curSys().code })) { const b = $('add-area');
+    const roleOK = ((PERMS.find(p => p.id === 'area.create') || {}).roles || []).some(r => ME.has(r));   // A-03: the roles PERMS gives area.create (모델러 · DA · Admin)
+    if (!roleOK) b.hidden = true;   // R-17: no role for it → not shown
+    else { const w = `내 담당 시스템에 ${josa(curSys().name, '이/가')} 없어 업무 영역을 만들 수 없습니다`; b.setAttribute('aria-disabled', 'true'); b.title = w; b.insertAdjacentHTML('afterend', `<span class="sr-only" id="add-area-why">${esc(w)}</span>`); b.setAttribute('aria-describedby', 'add-area-why'); } }
   $('ma-xls').onclick = () => { const nm = $('ma-name').value.trim(); $('ma-xls').href = 'import-excel.html' + (nm ? `?name=${encodeURIComponent(nm)}` : ''); };   /* Z-14: the typed name goes along */
-  $('add-area').onclick = () => { if ($('add-area').disabled) return; $('mo-area').classList.add('open'); $('ma-name').focus(); };
+  $('add-area').onclick = () => { if (!can('area.create', { system: curSys().code })) { if (!$('add-area').hidden) toast(esc($('add-area').title), 'info'); return; }   /* NEW-02: judged right before opening — a hidden button · #new never open it */ $('mo-area').classList.add('open'); $('ma-name').focus(); };
   // model tree [+] → system.html#new (also when already here); the hash is cleared so a reload doesn't reopen it
-  const openNew = () => { if (location.hash !== '#new') return; history.replaceState(null, '', location.pathname + location.search); setTimeout(() => $('add-area').click(), 0); };
+  const openNew = () => { if (location.hash !== '#new') return; history.replaceState(null, '', location.pathname + location.search); if (!can('area.create', { system: curSys().code })) return; setTimeout(() => $('add-area').click(), 0); };
   openNew(); window.addEventListener('hashchange', openNew);
-  $('ma-go').onclick = () => { const nm = $('ma-name').value.trim(); if (!nm) return; if (liveRoleChanged()) { staleRoleToast(); return; } if (!can('area.create', { system: curSys().code })) { toast('이 시스템에 업무 영역을 만들 권한이 없습니다', 'danger'); return; } if (!Object.values(USERS).some(u => u.status !== 'stopped' && canUser(u, 'model.edit', { system: curSys().code }))) toast(`${josa(curSys().name, '을/를')} 맡은 모델러가 없어 아무도 이 영역을 편집할 수 없습니다 — 담당 지정이 필요합니다`, 'danger'); const id = addArea(nm, { E: [], R: [], M: [] }); flash(`업무 영역 ‘${nm}’을 만들었습니다 — v1 작업 버전`, 'success'); go(`model.html?area=${id}`); };
+  $('ma-go').onclick = () => { const nm = $('ma-name').value.trim(); if (!nm) return; if (liveRoleChanged()) { staleRoleToast(); return; } if (!can('area.create', { system: curSys().code })) { toast('이 시스템에 업무 영역을 만들 권한이 없습니다', 'danger'); return; } if (!Object.values(USERS).some(u => u.status !== 'stopped' && canUser(u, 'model.edit', { system: curSys().code }))) toast(`${esc(josa(curSys().name, '을/를'))} 맡은 모델러가 없어 아무도 이 영역을 편집할 수 없습니다 — 담당 지정이 필요합니다`, 'danger'); const id = addArea(nm, { E: [], R: [], M: [] }); flash(`업무 영역 ‘${esc(nm)}’을(를) 만들었습니다 — v1 작업 버전`, 'success'); go(`model.html?area=${id}`); };
   document.getElementById('areas').innerHTML = ids.map(a => {
     const L = modelLock(a), c = getComp(a);
     const st = L.state === 'review' ? `<span class="badge b-info">검토 중 · ${L.doc.id}</span>` : L.state === 'confirmed' ? '<span class="badge b-success">확정본</span>' : '<span class="badge">작업 중</span>';
     // E9: the area name is a real link (keyboard · screen reader); the rest of the row still opens it for mouse users
     // the area's description lives here (moved out of the tree — resolution-tree-menu); #area-<id> is where the path's area link lands
     const ds = (getModels()[a] || {}).desc || '';
-    return `<tr data-href="model.html?area=${a}" id="area-${a}"><td class="wrap"><a href="model.html?area=${a}"><b>${L.model.name}</b></a>${ds ? `<div class="caption muted">${ds}</div>` : ''}</td><td>${st}</td><td class="mono">v${L.model.ver} <span class="faint">${L.model.base ? `(v${L.model.base} 확정 기준)` : '(확정본 없음)'}</span></td><td class="num">${sizeOf(a)[0]}</td><td class="mono">${c ? c.rate + '%' : '—'}</td><td class="num">${c ? c.bad : '—'}</td><td class="num">${c ? c.exList.length : '—'}</td><td>${a === 'rq' ? '김모델' : a === 'risk' ? '박설계' : OWN[a] || '—'}</td><td class="mono">${L.doc ? L.doc.date : '—'}</td></tr>`;
+    return `<tr data-href="model.html?area=${a}" id="area-${a}"><td class="wrap"><a href="model.html?area=${a}"><b>${esc(L.model.name)}</b></a>${ds ? `<div class="caption muted">${esc(ds)}</div>` : ''}</td><td>${st}</td><td class="mono">v${L.model.ver} <span class="faint">${L.model.base ? `(v${L.model.base} 확정 기준)` : '(확정본 없음)'}</span></td><td class="num">${sizeOf(a)[0]}</td><td class="mono">${c ? c.rate + '%' : '—'}</td><td class="num">${c ? c.bad : '—'}</td><td class="num">${c ? c.exList.length : '—'}</td><td>${esc(a === 'rq' ? '김모델' : a === 'risk' ? '박설계' : OWN[a] || '—')}</td><td class="mono">${L.doc ? L.doc.date : '—'}</td></tr>`;
   }).join('');
   /* ---- 25 바로잡기 (§3-1 ~ 3-3): the area row menu ⋯ — info, move/copy to another system, archive/delete ---- */
-  const esc = x => String(x == null ? '' : x).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
   const AM = getAllModels();
   const ownerOf = a => (AM[a] && AM[a].owner && USERS[AM[a].owner] ? USERS[AM[a].owner].name : null) || (a === 'rq' ? '김모델' : a === 'risk' ? '박설계' : OWN[a] || '—');
-  const amenu = a => { const nm = esc(AM[a].name); const dis = w => w ? ` aria-disabled="true" title="${esc(w)}"` : '';
+  /* A-03 · FC-14 (R-17): an item the person has no role for is not shown (move · off are Admin's; info is the modeler's or Admin's); a role blocked right now (scope · lock) is dimmed with its reason tied by aria-describedby. No item left → no ⋯ button */
+  const amenu = a => { const nm = esc(AM[a].name); const dis = (w, k) => w ? ` aria-disabled="true" title="${esc(w)}" aria-describedby="why-${k}-${a}"` : '', why = (w, k) => w ? `<span class="sr-only" id="why-${k}-${a}">${esc(w)}</span>` : '';
+    const canInfoRole = ME.has('modeler') || ME.has('admin'), admin = can('settings'), wi = areaActWhy(a, 'info');
+    if (!canInfoRole && !admin) return '';
     return `<span class="u-rel"><button class="iconbtn sm" data-menu-btn aria-haspopup="true" aria-expanded="false" aria-label="${nm} 관리">${icon('more', 16)}</button><div class="menu" data-auto role="menu">
-      <button class="mi" role="menuitem" data-aact="edit" data-area="${a}"${dis(areaActWhy(a, 'info'))}>${icon('edit', 14)}영역 정보 수정</button>
-      <button class="mi" role="menuitem" data-aact="move" data-area="${a}"${dis(can('settings') ? '' : 'Admin만 할 수 있습니다')}>${icon('ext', 14)}다른 시스템으로 옮기기 · 복제</button>
+      ${canInfoRole || admin ? `<button class="mi" role="menuitem" data-aact="edit" data-area="${a}"${dis(wi, 'edit')}>${icon('edit', 14)}영역 정보 수정</button>${why(wi, 'edit')}` : ''}
+      ${admin ? `<button class="mi" role="menuitem" data-aact="move" data-area="${a}">${icon('ext', 14)}다른 시스템으로 옮기기 · 복제</button>
       <div class="sep"></div>
-      <button class="mi" role="menuitem" data-aact="off" data-area="${a}"${dis(can('settings') ? '' : 'Admin만 할 수 있습니다')}>${icon('trash', 14)}사용 중지 · 삭제</button></div></span>`; };
+      <button class="mi" role="menuitem" data-aact="off" data-area="${a}">${icon('trash', 14)}사용 중지 · 삭제</button>` : ''}</div></span>`; };
   document.querySelectorAll('#areas tr[data-href]').forEach(tr => { const a = tr.id.replace('area-', ''); const td = document.createElement('td'); td.className = 'u-tc'; td.innerHTML = amenu(a); tr.appendChild(td); const ow = tr.children[7]; if (ow) ow.textContent = ownerOf(a); });
   let cur = null, opener = null;
   // X-12: a dialog remembers what opened it — Esc / [취소] returns there (app.js data-close uses _opener)
@@ -163,7 +169,7 @@ window.pageInit = function () {
       open('mo-aoff', w || !hist ? 'ao-cancel' : 'ao-why'); } };   // X-05: delete / blocked dialogs start on [취소]
   document.addEventListener('click', e => { const b = e.target.closest('[data-aact]'); if (!b) return; e.preventDefault(); const m = b.closest('.menu'); opener = m ? m.previousElementSibling : null;
     if (m) { m.classList.remove('open'); if (opener) opener.setAttribute('aria-expanded', 'false'); }   // X-12
-    if (b.getAttribute('aria-disabled') === 'true') { toast(b.title, 'info'); if (opener) opener.focus(); return; } actOf[b.dataset.aact](b.dataset.area); });
+    if (b.getAttribute('aria-disabled') === 'true') { toast(esc(b.title), 'info'); if (opener) opener.focus(); return; } actOf[b.dataset.aact](b.dataset.area); });
   $('ae-go').onclick = () => { const w = areaActWhy(cur, 'info'); if (w) { toast(w, 'danger'); return; }
     const nm = $('ae-name').value.trim(); const err = !nm ? '이름을 입력하세요' : areaNameTaken(nm, AM[cur].system || 'RQMS', cur) ? '이 시스템에 같은 이름의 업무 영역이 있습니다(보관함 포함)' : ''; $('ae-name-e').textContent = err; if (err) { $('ae-name').setAttribute('aria-invalid', 'true'); $('ae-name').focus(); return; }
     const n = saveAreaInfo(cur, { name: nm, desc: $('ae-desc').value.trim(), owner: $('ae-owner').value }); $('mo-aedit').classList.remove('open'); if (!n) { toast('바뀐 내용이 없습니다', 'info'); if (opener) opener.focus(); return; } reload(`업무 영역 정보를 바꿨습니다 · ${n}건 · 감사 로그에 기록`); };
@@ -180,7 +186,7 @@ window.pageInit = function () {
     $('mo-amove').classList.remove('open'); reload(`‘${AM[cur].name}’을(를) ${s.name}(으)로 옮겼습니다${r.converted ? ` · 컬럼 타입 ${r.converted}개 변환` : ''} · 감사 로그에 기록`); };
   $('ao-go').onclick = () => { const w = areaActWhy(cur, 'off'); if (w) { blocked('ao-body', w); $('ao-go').disabled = true; return; }
     const u = areaUse(cur), nm = AM[cur].name;
-    if (!areaHasHistory(u)) { if (!deleteArea(cur)) { toast('삭제하지 못했습니다 — 상태가 바뀌었습니다', 'danger'); return; } $('mo-aoff').classList.remove('open'); reload(`‘${nm}’을(를) 삭제했습니다 · 감사 로그에 기록`, 'info'); return; }
+    if (!areaHasHistory(u)) { if (!deleteArea(cur)) { toast('삭제하지 못했습니다 — 상태가 바뀌었습니다', 'danger'); return; } $('mo-aoff').classList.remove('open'); reload(`‘${esc(nm)}’을(를) 삭제했습니다 · 감사 로그에 기록`, 'info'); return; }
     const why = $('ao-why').value.trim(); if (!why) { $('ao-why').setAttribute('aria-invalid', 'true'); $('ao-why').focus(); toast('사유를 입력하세요', 'danger'); return; }
     archiveArea(cur, why); try { sessionStorage.removeItem('dbm-after-copy'); sessionStorage.setItem('dbm-open-arch', '1'); } catch (er) {}
     $('mo-aoff').classList.remove('open'); reload(`‘${nm}’을(를) 사용 중지했습니다 — 아래 보관함에서 다시 쓸 수 있습니다`, 'info'); };
@@ -190,7 +196,7 @@ window.pageInit = function () {
     try { if (sessionStorage.getItem('dbm-open-arch')) { $('arch').open = true; sessionStorage.removeItem('dbm-open-arch'); } } catch (er) {}   // X-15: open right after archiving
     $('arch-body').innerHTML = off.map(([id, m]) => `<tr><td><a href="model.html?area=${id}"><b>${esc(m.name)}</b></a>${m.desc ? `<div class="caption muted">${esc(m.desc)}</div>` : ''}</td><td class="mono">v${m.ver}${m.base ? ` <span class="faint">(v${m.base} 확정)</span>` : ''}</td><td>${esc(m.offWhy || '')}</td><td class="caption">${esc(m.offBy || '')} · ${esc(m.offAt || '')}</td><td>${can('settings') ? `<button class="btn sm" data-restore="${id}">다시 사용</button>` : ''}</td></tr>`).join('');
     $('arch-body').addEventListener('click', e => { const b = e.target.closest('[data-restore]'); if (!b) return; const id = b.dataset.restore;
-      if (!restoreArea(id)) { toast(areaActWhy(id, 'restore') || `같은 이름 ‘${AM[id].name}’의 업무 영역이 있어 다시 쓸 수 없습니다 — 그 영역 이름을 먼저 바꾸세요`, 'danger'); return; }
+      if (!restoreArea(id)) { toast(areaActWhy(id, 'restore') || `같은 이름 ‘${esc(AM[id].name)}’의 업무 영역이 있어 다시 쓸 수 없습니다 — 그 영역 이름을 먼저 바꾸세요`, 'danger'); return; }
       reload(`‘${AM[id].name}’을(를) 다시 씁니다`); }); }
   /* ---- 25 §8: [사용 중인 영역 모두 옮기기 · 복제] — the whole system in one go; referenced areas first, cycles re-linked after the run (Y-02 · 03 · 05 · 09 · 10) ---- */
   { const live = () => Object.keys(getModels());
@@ -236,7 +242,7 @@ window.pageInit = function () {
       $('bk-cancel').textContent = '닫기'; setTimeout(() => $('bk-res-t').focus(), 0); };
   }
   // the model tree's area menu (and the copy flow) land here: ?area=…&act=edit|move|off
-  { const a = qs.get('area'), act = qs.get('act'); if (a && actOf[act] && getModels()[a]) setTimeout(() => { const b = document.querySelector(`[data-aact="${act}"][data-area="${a}"]`); opener = document.querySelector(`#area-${a} [data-menu-btn]`); if (b && b.getAttribute('aria-disabled') === 'true') toast(b.title, 'info'); else actOf[act](a); }, 0); }
+  { const a = qs.get('area'), act = qs.get('act'); if (a && actOf[act] && getModels()[a]) setTimeout(() => { const b = document.querySelector(`[data-aact="${act}"][data-area="${a}"]`); opener = document.querySelector(`#area-${a} [data-menu-btn]`); if (!b) return;   /* R-17: an item not shown for this person cannot be opened from the address either */ if (b.getAttribute('aria-disabled') === 'true') toast(esc(b.title), 'info'); else actOf[act](a); }, 0); }
   $('areas').addEventListener('click', e => { if (e.target.closest('a, button, input, .menu')) return; const tr = e.target.closest('tr[data-href]'); if (tr && !String(window.getSelection())) go(tr.dataset.href); });
 };
 </script>

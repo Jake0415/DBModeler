@@ -77,9 +77,9 @@
     {
       "id": "BH-system-006",
       "where": "머리",
-      "trigger": "[+ 업무 영역] — area.create 없는 모델러(담당 시스템 아님)",
-      "expected": "버튼이 흐리게 비활성, 툴팁 ‘내 담당 시스템에 <시스템>이 없어 업무 영역을 만들 수 없습니다’",
-      "roles": "담당 시스템이 아닌 모델러",
+      "trigger": "[+ 업무 영역] — area.create 역할(모델러 · DA)은 있지만 담당 시스템이 아닐 때",
+      "expected": "버튼이 흐리게(aria-disabled) + 이유 ‘내 담당 시스템에 <시스템>이 없어 업무 영역을 만들 수 없습니다’를 툴팁과 aria-describedby로 연결, 누르면 같은 문구 토스트(창은 열리지 않음) — A-03 · FC-14",
+      "roles": "담당 시스템이 아닌 모델러 · DA",
       "refs": [
         "area.create"
       ],
@@ -91,9 +91,9 @@
     {
       "id": "BH-system-007",
       "where": "머리",
-      "trigger": "[+ 업무 영역] — 모델러 역할이 없을 때",
-      "expected": "버튼이 흐리게 비활성, 툴팁 ‘업무 영역은 모델러 · Admin만 만들 수 있습니다’",
-      "roles": "기관 담당자 · 감리 · 역할 없음",
+      "trigger": "[+ 업무 영역] — area.create 역할(모델러 · DA · Admin)이 하나도 없을 때",
+      "expected": "[+ 업무 영역]이 보이지 않음(R-17 역할 없으면 숨김 — A-03 · FC-14)",
+      "roles": "기관 담당자 · 감리 · 역할 없음(모델러 · DA · Admin 아님)",
       "refs": [
         "area.create"
       ],
@@ -249,7 +249,7 @@
       "id": "BH-system-018",
       "where": "새 업무 영역 창",
       "trigger": "주소 system.html#new 열기(모델 트리 [+]에서 옴)",
-      "expected": "‘새 업무 영역’ 창이 자동으로 열리고 주소의 #new가 지워져 새로고침해도 다시 열리지 않음",
+      "expected": "area.create가 있으면 ‘새 업무 영역’ 창이 자동으로 열리고, 없으면(단추를 숨겼거나 흐리게 한 경우 모두) 창을 열지 않음(NEW-02). 주소의 #new는 지워져 새로고침해도 다시 열리지 않음",
       "roles": "area.create 가진 사용자",
       "refs": [
         "area.create"
@@ -319,7 +319,7 @@
       "id": "BH-system-023",
       "where": "업무 영역 표 ⋯ 메뉴",
       "trigger": "행 끝 ⋯ 클릭",
-      "expected": "‘영역 정보 수정’ · ‘다른 시스템으로 옮기기 · 복제’ · ‘사용 중지 · 삭제’ 메뉴가 열림",
+      "expected": "Admin은 ‘영역 정보 수정’ · ‘다른 시스템으로 옮기기 · 복제’ · ‘사용 중지 · 삭제’, 모델러는 ‘영역 정보 수정’만 있는 메뉴가 열림. 모델러 · Admin 역할이 모두 없으면 ⋯ 단추 자체가 없음(R-17 — A-03 · FC-14)",
       "roles": "전체",
       "refs": [],
       "states": [
@@ -331,7 +331,7 @@
       "id": "BH-system-024",
       "where": "업무 영역 표 ⋯ 메뉴",
       "trigger": "‘영역 정보 수정’ — area.info 없음",
-      "expected": "메뉴 항목이 흐리게(aria-disabled) 이유 툴팁 ‘이 영역을 바꿀 권한이 없습니다(담당 모델러 · Admin)’, 누르면 같은 문구 토스트 후 ⋯로 포커스 복귀",
+      "expected": "모델러인데 그 영역 담당이 아니면 메뉴 항목이 흐리게(aria-disabled) + 이유 ‘이 영역을 바꿀 권한이 없습니다(담당 모델러 · Admin)’를 툴팁과 aria-describedby로 연결, 누르면 같은 문구 토스트 후 ⋯로 포커스 복귀",
       "roles": "area.info 없는 사용자",
       "refs": [
         "area.info"
@@ -345,7 +345,7 @@
       "id": "BH-system-025",
       "where": "업무 영역 표 ⋯ 메뉴",
       "trigger": "‘다른 시스템으로 옮기기 · 복제’ · ‘사용 중지 · 삭제’ — Admin 아님",
-      "expected": "두 항목이 흐리게, 툴팁 ‘Admin만 할 수 있습니다’, 누르면 같은 문구 토스트",
+      "expected": "두 항목이 메뉴에 없음(Admin 전용 — R-17 숨김). 주소 ?area=…&act=move|off로 열어도 실행되지 않음",
       "roles": "Admin 외 전체",
       "refs": [
         "area.manage",

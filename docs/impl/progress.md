@@ -60,6 +60,9 @@
 - 영향: 우선순위 LG-R07 · LG-R05(키 표시) W2 → W1, 작업 T-P2-302 · 402 · 406 · 602 · 603 · 703 범위 보강, 설계 §5.5(공식 DDL = 확정 스냅샷) · §13.1(모델 불변식), 추적표 2,563행(P1 · P2 시작 관문 통과)
 - **P1 시작 전**: 목업이 바뀌었으니 기준 스크린샷을 다시 만든다(`node scripts/mockup-baseline.mjs --shots`)
 
+## 목업 최종 점검 (2026-11-26)
+- 결과 · 과정: [docs/ux/review/final-check/00-summary.md](../ux/review/final-check/00-summary.md) — 30개 화면 완성, 마지막 검증 새 결함 0. 사람 결정 F-022(1366 최소폭) · F-023(품의 문구 · 반려/거절)
+
 ## P0 준비 점검표
 - [x] Orca 에이전트 권한 — 2026-11-25 설정: **Codex = ‘대신 승인’**(`--approve-for-me` = workspace-write 샌드박스 + 승인 자동 검토, 리뷰어는 지시로 읽기 전용 · QA/권한 감사관은 `e2e/`만 씀) + 인수 `-c windows.sandbox=unelevated`(관리자 샌드박스 팝업 방지) · 실행 확인. **Claude = 전체 액세스 유지**(구현 에이전트, worktree 안에서 작업) · 기본 모델 Opus 4.8 → **Opus 5.5**
 - [x] Orca 오케스트레이션 · CLI 켜기, `orca status --json`, 스킬 설치 — 앱 1.4.274 · 런타임 ready · `orca` 사용자 PATH 등록(새 셸부터) · `orchestration worker-list` 응답 · Claude 상태 훅 설치됨 · 스킬 orca-cli · orchestration 사용 가능

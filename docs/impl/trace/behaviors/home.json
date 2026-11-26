@@ -412,7 +412,7 @@
       "id": "BH-home-031",
       "where": "현황",
       "trigger": "항목 링크 클릭",
-      "expected": "표준 준수율 · 확정된 업무 영역 → #areas, 기한 넘긴 결재 → #stale, 진행 중 결재 → DA · 기관 담당자는 approvals.html?box=all, 그 밖은 ?box=mine, 표준 사전 항목 → dictionary.html, 후보 큐 대기 → candidates.html",
+      "expected": "표준 준수율 · 확정된 업무 영역 → #areas, 기한 넘긴 결재 · 기관 전체 → #stale, 진행 중 결재 → DA · 기관 담당자는 approvals.html?box=all, 그 밖은 ?box=mine, 표준 사전 항목 → dictionary.html, 후보 큐 대기 → candidates.html",
       "roles": "전체",
       "refs": [
         "appr.viewall"

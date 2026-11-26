@@ -14,6 +14,8 @@
   .ocard:hover { border-color:var(--border-strong); }
   .ocard.on { border-color:var(--ink); box-shadow:0 0 0 1px var(--ink); }
   .ocard .f { display:flex; gap:4px; margin-top:auto; }
+  button.ocard { font:inherit; color:inherit; text-align:left; width:100%; }   /* FC-13: the cards are buttons */
+  button.ocard .caption, button.ocard b { display:block; }
   .prev { border:1px solid var(--ds-gray-400); border-radius:var(--r-lg); overflow:auto; font-size:14px; }
   .prev .ph { background:var(--surface); padding:10px 16px; font-weight:600; border-bottom:1px solid var(--ds-gray-400); }
   .prev table { width:100%; border-collapse:collapse; }
@@ -34,13 +36,13 @@
     <div class="main"><div class="scroll"><div class="pad">
       <div class="section-t u-mt-0">표준화 산출물</div>
       <div class="ocards" id="cards">
-        <div class="ocard on" data-k="tbl"><b>테이블 정의서</b><div class="caption muted">테이블·컬럼·타입·PK/FK·필수·설명. 기관 양식 시트 구성</div><div class="f"><span class="badge">xlsx</span><span class="badge">pdf</span></div></div>
-        <div class="ocard" data-k="cmp"><b>표준 준수검사 결과</b><div class="caption muted">준수율 요약 + 엔터티별·속성별 상태, 예외 사유 목록</div><div class="f"><span class="badge">xlsx</span></div></div>
-        <div class="ocard" data-k="term"><b>용어 사용 현황</b><div class="caption muted">이 영역이 쓰는 표준 용어·도메인과 사용 위치</div><div class="f"><span class="badge">xlsx</span></div></div>
-        <div class="ocard" data-k="sec"><b>개인정보 컬럼 목록</b><div class="caption muted">개인정보·암호화 지정 컬럼, 도메인 상속/직접 지정 구분</div><div class="f"><span class="badge">xlsx</span><span class="badge">pdf</span></div></div>
-        <div class="ocard" data-k="erd"><b>ERD</b><div class="caption muted">논리·물리 ERD, 확정본 배치 + 표제란</div><div class="f"><span class="badge">pdf</span><span class="badge">png</span><span class="badge">svg</span></div></div>
-        <div class="ocard" data-k="rev"><b>모델 검토 결과</b><div class="caption muted">명칭 중복·미입력·관계·물리 정보 점검 결과</div><div class="f"><span class="badge">xlsx</span></div></div>
-        <div class="ocard" data-k="chg"><b>변경 이력</b><div class="caption muted">버전 간 엔터티·속성·관계 변경 내역 (v4 → v5)</div><div class="f"><span class="badge">xlsx</span><span class="badge">html</span></div></div>
+        <button type="button" class="ocard on" data-k="tbl" aria-pressed="true"><b>테이블 정의서</b><div class="caption muted">테이블·컬럼·타입·PK/FK·필수·설명. 기관 양식 시트 구성</div><div class="f"><span class="badge">xlsx</span><span class="badge">pdf</span></div></button>
+        <button type="button" class="ocard" data-k="cmp" aria-pressed="false"><b>표준 준수검사 결과</b><div class="caption muted">준수율 요약 + 엔터티별·속성별 상태, 예외 사유 목록</div><div class="f"><span class="badge">xlsx</span></div></button>
+        <button type="button" class="ocard" data-k="term" aria-pressed="false"><b>용어 사용 현황</b><div class="caption muted">이 영역이 쓰는 표준 용어·도메인과 사용 위치</div><div class="f"><span class="badge">xlsx</span></div></button>
+        <button type="button" class="ocard" data-k="sec" aria-pressed="false"><b>개인정보 컬럼 목록</b><div class="caption muted">개인정보·암호화 지정 컬럼, 도메인 상속/직접 지정 구분</div><div class="f"><span class="badge">xlsx</span><span class="badge">pdf</span></div></button>
+        <button type="button" class="ocard" data-k="erd" aria-pressed="false"><b>ERD</b><div class="caption muted">논리·물리 ERD, 확정본 배치 + 표제란</div><div class="f"><span class="badge">pdf</span><span class="badge">png</span><span class="badge">svg</span></div></button>
+        <button type="button" class="ocard" data-k="rev" aria-pressed="false"><b>모델 검토 결과</b><div class="caption muted">명칭 중복·미입력·관계·물리 정보 점검 결과</div><div class="f"><span class="badge">xlsx</span></div></button>
+        <button type="button" class="ocard" data-k="chg" aria-pressed="false"><b>변경 이력</b><div class="caption muted">버전 간 엔터티·속성·관계 변경 내역 (v4 → v5)</div><div class="f"><span class="badge">xlsx</span><span class="badge">html</span></div></button>
         <div class="ocard" data-k="ddl"><b>DDL 스크립트</b><div class="caption muted">출력 전 점검을 통과한 스크립트 — DDL 화면에서 .sql 파일로 내려받습니다</div><div class="f"><a class="badge" href="ddl.html">DDL 화면</a></div></div>
       </div>
       <div class="section-t">최근 만든 산출물</div>
@@ -66,7 +68,7 @@
         <div class="prev" id="o-prev"></div>
         <div class="banner u-mt-12" id="o-note"><i data-ic=info></i><div>공식 산출물은 <b>확정본</b>으로만 만듭니다. 작업 중 버전은 모든 시트에 ‘초안’ 표시가 붙습니다.</div></div>
       </div>
-      <div class="rp-foot"><span class="caption muted" id="o-prog">내려받기 시연(목업) — 실제 파일은 만들지 않습니다</span><span class="grow"></span><button class="btn primary" id="o-go" data-busy="900" title="내려받기 시연(목업) — 생성할 파일 이름만 보여 줍니다">만들기(시연)</button></div>
+      <div class="rp-foot"><span class="caption muted" id="o-prog">내려받기 시연(목업) — 실제 파일은 만들지 않습니다</span><span class="grow"></span><button class="btn primary" id="o-go" title="내려받기 시연(목업) — 생성할 파일 이름만 보여 줍니다">만들기(시연)</button></div>
     </aside>
   </div>
 </div>
@@ -83,6 +85,7 @@ window.pageInit = function () {
     chg: ['변경 이력', 'v4 → v5 · 엔터티 +2 · 속성 +6 · 변경 5', ['구분', '대상', '변경'], [['추가', '산출물기본', '엔터티 추가'], ['추가', '산출물이력', '엔터티 추가'], ['변경', '프로젝트기본.수주금액', 'NUMBER(12) → NUMBER(15)']]],
   };
   const $ = id => document.getElementById(id), qp = new URLSearchParams(location.search);
+  const esc = v => String(v == null ? '' : v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);   // FC-04: model · area names are text
   // area + versions from the documents (CX12-32): confirmed copies are official, the working version is a draft
   const AREA = getModels()[qp.get('area')] ? qp.get('area') : defArea(); const L = modelLock(AREA);
   if (!can('model.view', { area: AREA })) { location.replace('error.html?code=403&need=' + encodeURIComponent('이 시스템 조회 범위') + '&what=' + encodeURIComponent(sysOfArea(AREA) + ' 산출물')); return; }   /* R-11 */
@@ -93,7 +96,7 @@ window.pageInit = function () {
   // ‘최근 만든 산출물’ sample rows belong to 요구사항 · 프로젝트 — other areas start empty
   if (AREA !== 'rq') $('recent').innerHTML = '<tr class="er first"><td colspan="5" class="caption muted u-tc">이 업무 영역에서 만든 산출물이 아직 없습니다 — 왼쪽 카드를 고르고 [만들기(시연)]을 누르세요</td></tr>';
   // ‘내려받기 시연’ is a toast only — never jump the page to ‘#’
-  $('recent').addEventListener('click', e => { if (e.target.closest('a[href="#"]')) e.preventDefault(); });
+  $('recent').addEventListener('click', e => { const a = e.target.closest('a[href="#"]'); if (!a) return; e.preventDefault(); if (a.dataset.fname != null) toast(`내려받기 시연(목업) — 받을 파일: ${esc(a.dataset.fname)}`, 'info'); });
   const done = getDocs().filter(x => x.type === 'model' && x.area === AREA && x.step === 'done').sort((a, b) => b.ver - a.ver);
   // R2-11: the latest confirmed version with no approval document (seed) is listed too, read the same way the DDL basis reads it (app.js getModelData → confirmed seed copy)
   // review4: by version NUMBER — every confirmed version up to the latest that has no document but a readable copy (stored, or the seed's confirmed copy) stays listed
@@ -102,13 +105,14 @@ window.pageInit = function () {
   { const cc = document.querySelector('.ocard[data-k="chg"] .caption'); if (cc) cc.textContent = `버전 간 엔터티·속성·관계 변경 내역${done.length ? ` (v${done[0].ver} → v${L.model.ver})` : ' — 이전 확정본이 생기면 만듭니다'}`; }   // was a fixed (v4 → v5)
   const reviewHidden = L.state === 'review' && L.doc && !canSeeDoc(L.doc);   // the version under review: requester + approvers only
   const ents = modelOf(AREA, L.model.ver).E.filter(e => !e.ref).length;
-  $('o-scope').innerHTML = `<option>업무 영역 · ${L.model.name} (${ents})</option><option>선택한 테이블</option>`;
+  const scopeOpts = () => { const sel = $('o-scope').selectedIndex; let n = 0; try { n = mdl().E.filter(e => !e.ref).length; } catch (e) { n = 0; } $('o-scope').innerHTML = `<option>업무 영역 · ${esc(L.model.name)} (${n})</option><option>선택한 테이블</option>`; if (sel > 0) $('o-scope').selectedIndex = sel; };   // FC-10: visible copy · chosen version
+  $('o-scope').innerHTML = `<option>업무 영역 · ${esc(L.model.name)}</option><option>선택한 테이블</option>`;
   /* M-7 (고객 모델 요청 2026-11-25, ddl.html과 같은 규칙): 확정본 = 공식, 결재 중 제출 사본 = 신청자 · 결재선에게만 '검토용 — 승인 전',
      작업본 = '미리보기 — 승인 전(비공식)'이라 만들기(내려받기) 흐리게 + 이유 */
   const revDoc = L.state === 'review' && L.doc && !reviewHidden ? L.doc : null;
   $('o-ver').innerHTML = done.map(d => `<option value="${d.id}">v${d.ver} 확정본 (공식) · ${docTxt(d)}</option>`).join('') + (L.state === 'edit' ? `<option value="work">v${L.model.ver} 작업본 — 미리보기(승인 전)</option>` : revDoc ? `<option value="snap:${revDoc.id}">v${revDoc.ver} 제출 사본 — 검토용(결재 중)</option>` : '');
   const FMT = { tbl: ['xlsx', 'pdf'], cmp: ['xlsx'], term: ['xlsx'], sec: ['xlsx', 'pdf'], erd: ['pdf', 'png', 'svg'], rev: ['xlsx'], chg: ['xlsx', 'html'] };
-  let cur = 'tbl', pickEnt = null;
+  let cur = 'tbl', pickEnt = null, genTok = 0, genBusy = false;   /* FC-14: generation sequence token + in-progress flag */
   // model tree (12 · T1): a table chosen in the tree opens its sheet of the table definition
   window.addEventListener('dbm-tree-select', ev => { const d = ev.detail; if (d.area !== AREA || !d.id) return; ev.preventDefault(); if (!mdl().E.some(e => e.id === d.id && !e.ref)) { toast('이 테이블은 지금 고른 버전에 없습니다', 'info'); return; } pickEnt = d.id; show('tbl'); });
   window.treeData = () => { const d = verDoc(), r = revSel(), m = mdl(); return { area: AREA, E: m.E, R: m.R, mode: 'P', ver: d ? (d.noDoc ? 'v' + d.ver : 'snap:' + d.id) : r ? 'snap:' + r.id : 'v' + L.model.ver, label: d ? `v${d.ver} 확정본` : r ? `v${r.ver} 제출 사본 — 검토용` : `v${L.model.ver} 작업본`, ro: true, snap: d && !d.noDoc ? d.id : r ? r.id : null }; };
@@ -123,7 +127,8 @@ window.pageInit = function () {
     if (!u || u.status === 'stopped' || !canUser(u, 'out.export', { area: AREA })) return reopen('내려받기 권한이 바뀌어 만들지 않았습니다 — 지금 권한으로 다시 열었습니다');
     const r = revSel(); if (r) { const f = getDocs().find(x => x.id === r.id); if (!f || f.step !== r.step) return reopen(`${r.id}의 상태가 바뀌어(${f ? STEP_NAME[f.step] || f.step : '문서 없음'}) 만들지 않았습니다 — 지금 상태로 다시 열었습니다`); if (!canUserSeeDoc(u, f)) return reopen('결재 중인 제출 사본은 신청자와 결재 담당자만 내려받을 수 있습니다 — 지금 권한으로 다시 열었습니다'); }
     return false; };
-  const goWhy = () => selKind() === 'work' ? '승인된 확정본만 내려받을 수 있습니다' : selKind() === 'hidden' ? '결재 중인 제출 사본은 신청자와 결재 담당자만 내려받을 수 있습니다' : !can('out.export', { area: AREA }) ? (ME.has('modeler') ? '담당 시스템의 산출물만 내려받을 수 있습니다' : '조회 전용 — 내려받기는 모델러 · DA · 기관 담당자 · 감리') : '';
+  const secBlocked = () => cur === 'sec' && !ME.roles.some(r => ['da', 'owner', 'auditor'].includes(r));
+  const goWhy = () => secBlocked() && can('out.export', { area: AREA }) ? '개인정보 컬럼 목록은 DA · 기관 담당자 · 감리만 내려받을 수 있습니다' : selKind() === 'work' ? '승인된 확정본만 내려받을 수 있습니다' : selKind() === 'hidden' ? '결재 중인 제출 사본은 신청자와 결재 담당자만 내려받을 수 있습니다' : !can('out.export', { area: AREA }) ? (ME.has('modeler') ? '담당 시스템의 산출물만 내려받을 수 있습니다' : '조회 전용 — 내려받기는 모델러 · DA · 기관 담당자 · 감리') : '';
   // the note under the preview + the button state follow the chosen version (dimmed + reason, never re-enabled by a redraw)
   function syncVer() { const k = selKind(), r = revSel(), w = goWhy();
     $('o-note').className = 'banner u-mt-12' + (k === 'conf' ? '' : k === 'review' ? ' info' : ' warning');
@@ -131,7 +136,7 @@ window.pageInit = function () {
     $('o-note').innerHTML = k === 'conf' ? '<i data-ic=info></i><div>공식 산출물은 <b>확정본</b>으로만 만듭니다.</div>'
       : k === 'review' ? `<i data-ic=info></i><div><b>검토용 — 승인 전.</b> 결재 중인 제출 사본(${r.id})입니다. 신청자와 결재 담당자만 보고 내려받을 수 있고, 모든 시트에 ‘검토용 — 승인 전’ 표시가 붙습니다. 승인되면 이 사본이 확정본(공식)이 됩니다.</div>`
       : `<i data-ic=warn></i><div><b>미리보기 — 승인 전(비공식).</b> ${done.length ? '작업본은 미리보기만 할 수 있습니다 — 공식 산출물은 승인된 확정본에서 만드세요.' : '이 업무 영역에는 아직 <b>확정본</b>이 없어 공식 산출물을 만들 수 없습니다 — 확정 신청이 승인되면 만들 수 있습니다.'}</div>`;
-    $('o-go').disabled = !!w; $('o-go').title = w || '내려받기 시연(목업) — 생성할 파일 이름만 보여 줍니다';
+    $('o-go').disabled = !!w || genBusy; $('o-go').title = w || '내려받기 시연(목업) — 생성할 파일 이름만 보여 줍니다';
     // N-05: a confirmed copy with no approval document goes by its version number (&ver=N) so the DDL screen opens that copy, not the latest
     const dl = document.querySelector('.ocard[data-k="ddl"] a'); if (dl) dl.setAttribute('href', `ddl.html?area=${AREA}${verDoc() ? (verDoc().noDoc ? '&ver=' + verDoc().ver : '&snap=' + verDoc().id) : r ? '&snap=' + r.id : '&src=work'}`); }
   function erdTitle() { const d = verDoc(), r = revSel(); if (r) return [['시스템 › 영역', `${curSys().name} › ${L.model.name}`], ['버전', `v${r.ver} 제출 사본 · ${r.id} — 검토용 · 승인 전(공식 아님)`], ['승인', '—']]; if (!d) return [['시스템 › 영역', `${curSys().name} › ${L.model.name}`], ['버전', `v${L.model.ver} 작업 중 — 초안(공식 아님)`], ['승인', '—']]; const who = (d.hist || []).filter(h => /승인/.test(h.act)).map(h => h.who).join(', '); return [['시스템 › 영역', `${curSys().name} › ${L.model.name}`], ['버전', d.noDoc ? `v${d.ver} 확정본 · ${docTxt(d)}` : `v${d.ver} · 확정 ${d.date} · ${d.id}`], ['승인', who || '—']]; }
@@ -168,8 +173,9 @@ window.pageInit = function () {
     $('o-fmt').innerHTML = FMT[k].map(f => `<option>${f}</option>`).join('');
     const [t, cap, h, rows] = P[k];
     document.getElementById('o-title').textContent = t;
-    document.getElementById('o-prev').innerHTML = `<div class="ph">${cap}</div><table><thead><tr>${h.map(x => `<th>${x}</th>`).join('')}</tr></thead><tbody>${rows.map(r => `<tr>${r.map(c => `<td>${c}</td>`).join('')}</tr>`).join('') || `<tr class="er none"><td colspan="${h.length}" class="caption muted u-tc">이 산출물에 실을 항목이 없습니다</td></tr>`}</tbody></table>`;
-    document.querySelectorAll('.ocard').forEach(c => c.classList.toggle('on', c.dataset.k === k));
+    document.getElementById('o-prev').innerHTML = `<div class="ph">${esc(cap)}</div><table><thead><tr>${h.map(x => `<th>${esc(x)}</th>`).join('')}</tr></thead><tbody>${rows.map(r => `<tr>${r.map(c => `<td>${esc(c)}</td>`).join('')}</tr>`).join('') || `<tr class="er none"><td colspan="${h.length}" class="caption muted u-tc">이 산출물에 실을 항목이 없습니다</td></tr>`}</tbody></table>`;
+    document.querySelectorAll('.ocard').forEach(c => { c.classList.toggle('on', c.dataset.k === k); if (c.tagName === 'BUTTON') c.setAttribute('aria-pressed', String(c.dataset.k === k)); });
+    scopeOpts();   // FC-10: the scope count follows the chosen version
   };
   document.getElementById('cards').addEventListener('click', e => { const c = e.target.closest('.ocard'); if (c && !e.target.closest('a')) show(c.dataset.k); });
   $('o-ver').onchange = () => { show(cur); window.dispatchEvent(new Event('dbm-tree-refresh')); };
@@ -177,19 +183,20 @@ window.pageInit = function () {
   // generation shows progress and the version it was made from; official ERD is rendered on the server (03 ERD-Q2 보강) — the mockup shows the states
   /* UI-13 · M-7: the dimmed state + reason comes from goWhy() in syncVer() */
   $('o-go').onclick = () => {
+    if (genBusy) return;   /* NEW-05: no re-entry while a generation runs (the screen owns the busy state — no shared data-busy timer) */
     const t = $('o-title').textContent, d = verDoc(), rv = revSel(), f = $('o-fmt').value;
     if (!$('o-ver').value) { toast('기준 버전을 고르세요', 'info'); return; }
     if (['work', 'hidden'].includes(selKind())) { toast(`${goWhy()} — 미리보기는 볼 수 있습니다`, 'info'); return; }   /* M-7 (re-checked at run time) */
     if (liveGoBlock()) return;   /* R-02 · R2-02 */
     if (!can('out.export', { area: AREA })) { toast(ME.has('modeler') ? '담당 시스템의 산출물만 내려받을 수 있습니다 — 미리보기는 볼 수 있습니다' : '산출물 내려받기는 모델러 · DA · 기관 담당자 · 감리만 할 수 있습니다 — 조회 전용 계정은 미리보기만', 'info'); return; }
     let secWhy = ''; if (cur === 'sec') { if (!ME.roles.some(r => ['da', 'owner', 'auditor'].includes(r))) { toast('개인정보 컬럼 목록은 DA · 기관 담당자 · 감리만 내려받을 수 있습니다', 'info'); return; } if (!$('o-go').dataset.why) { askReason('개인정보 컬럼 목록 내려받기', '사유', '내려받기 기록과 함께 감사 로그에 남습니다').then(w => { if (w) { $('o-go').dataset.why = w; $('o-go').click(); } }); return; } secWhy = $('o-go').dataset.why; delete $('o-go').dataset.why; }   /* R-14 */
-    $('o-go').disabled = true; $('o-prog').textContent = `${cur === 'erd' && d ? '서버에서 공식 ERD를 그리는 중' : '만드는 중'}… (${d ? `v${d.ver} 확정본` : `v${rv.ver} 제출 사본 — 검토용`})`;
-    setTimeout(() => { $('o-go').disabled = false; $('o-prog').textContent = '내려받기 시연(목업) — 실제 파일은 만들지 않습니다';
+    const k0 = cur, tok = ++genTok; genBusy = true; $('o-go').disabled = true; $('o-go').classList.add('loading'); $('o-go').setAttribute('aria-busy', 'true'); $('o-prog').textContent = `${cur === 'erd' && d ? '서버에서 공식 ERD를 그리는 중' : '만드는 중'}… (${d ? `v${d.ver} 확정본` : `v${rv.ver} 제출 사본 — 검토용`})`;
+    setTimeout(() => { if (tok === genTok) { genBusy = false; $('o-go').classList.remove('loading'); $('o-go').removeAttribute('aria-busy'); syncVer(); $('o-prog').textContent = '내려받기 시연(목업) — 실제 파일은 만들지 않습니다'; }   /* FC-14 · NEW-05: the sequence only decides whether the button/progress line is updated — re-judged by the card chosen now (e.g. 개인정보 for a modeler stays dimmed + reason); every generation still records its own result below */
       const fname = `${L.model.name}_${t}_${d ? 'v' + d.ver : `v${rv.ver}_검토용`}.${f}`; const hv = docHashOf(d || rv), src0 = `${d ? `v${d.ver} 확정본 · ${d.noDoc ? docTxt(d) : '결재 ' + d.id}` : `v${rv.ver} 제출 사본 · 결재 ${rv.id} — 검토용`} · 스냅숏 ${hv}`; pushAudit({ act: '내려받기 — ' + t + (d ? '' : ' (검토용)'), target: fname, why: secWhy ? `${secWhy} · ${src0}` : `${sysOfArea(AREA)} · ${src0}`, doc: d && d.noDoc ? null : (d || rv).id, hash: hv || null });   /* M-7 · R2-15: the approval document and the snapshot hash (same value as the DDL file) travel with the record */
       $('recent').querySelectorAll('tr.er').forEach(r => r.remove());
-      $('recent').insertAdjacentHTML('afterbegin', `<tr><td class="mono">${nowStr()}</td><td>${t}${cur === 'erd' && d ? ' (공식)' : d ? '' : ' (검토용)'}</td><td>${L.model.name} · ${d ? `v${d.ver} 확정본` : `v${rv.ver} 제출 사본 — 검토용`}</td><td>${ME.name}</td><td><a href="#" data-toast="내려받기 시연(목업) — 받을 파일: ${fname}" data-toast-type="info">내려받기 시연</a></td></tr>`);
+      $('recent').insertAdjacentHTML('afterbegin', `<tr><td class="mono">${nowStr()}</td><td>${esc(t)}${k0 === 'erd' && d ? ' (공식)' : d ? '' : ' (검토용)'}</td><td>${esc(L.model.name)} · ${d ? `v${d.ver} 확정본` : `v${rv.ver} 제출 사본 — 검토용`}</td><td>${esc(ME.name)}</td><td><a href="#" data-fname="${esc(fname)}">내려받기 시연</a></td></tr>`);   /* FC-04: the file name is shown by the click handler as text (no data-toast markup) */
       // D9: a demo — say which file the product would create, not that a file was downloaded
-      toast(`내려받기 시연(목업) — 생성할 파일: <b>${fname}</b> · ${d ? `공식(v${d.ver} 확정본 · ${docTxt(d)})` : `검토용 — 승인 전(v${rv.ver} 제출 사본 · ${rv.id}, 모든 시트에 ‘검토용 — 승인 전’ 표시)`} · ${$('o-tpl').value.replace(/ \(.*\)$/, '')}${$('o-cover').checked ? ' · 표지 포함' : ''}`, 'success'); }, 1200);
+      toast(`내려받기 시연(목업) — 생성할 파일: <b>${esc(fname)}</b> · ${d ? `공식(v${d.ver} 확정본 · ${docTxt(d)})` : `검토용 — 승인 전(v${rv.ver} 제출 사본 · ${rv.id}, 모든 시트에 ‘검토용 — 승인 전’ 표시)`} · ${$('o-tpl').value.replace(/ \(.*\)$/, '')}${$('o-cover').checked ? ' · 표지 포함' : ''}`, 'success'); }, 1200);
   };
   show(new URLSearchParams(location.search).get('k') || 'tbl');
 };

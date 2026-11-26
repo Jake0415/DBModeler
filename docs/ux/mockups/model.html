@@ -257,7 +257,7 @@ window.pageInit = function () {
   if (SNAPDOC && SNAPDOC.area !== AREA) { location.replace(`model.html?area=${SNAPDOC.area}&snap=${SNAPDOC.id}`); return; }
   const SNAP_BAD = !!SNAP && !SNAPDOC;
   // review visibility (requester + approval line only): a submitted copy under review is closed to others; the area shows its last confirmed copy
-  const SNAP_HIDDEN = !!SNAPDOC && inReview(SNAPDOC) && !canSeeDoc(SNAPDOC);
+  const SNAP_HIDDEN = !!SNAPDOC && !canSeeModelDoc(SNAPDOC);   // 최종 점검 FC-09: 결재 중뿐 아니라 반려 · 회수된 제출 사본도 읽기 전에 문서 열람 판정(app.js canSeeModelDoc)
   // ?state= presets are read-only samples: never saved, never submitted, never written to the shared judgement (CX9-01)
   const PERF = q.has('perf') && !SNAP;   // ?perf=300&rels=500 — speed measurement model (in memory only, see the PERF loader below and window.__perf)
   const DEMO = (!!STATE || q.has('big')) && !SNAP; if (DEMO) setTimeout(() => setSave('run', '예시 화면 · 저장 안 함'), 0);   // ?big=1 → 300+ entity sample to show the size warning (read-only)
@@ -372,13 +372,14 @@ window.pageInit = function () {
     const mc = mcRun(), blk = mc.block; $('c-rev').textContent = blk; $('c-warn').textContent = ` · 경고 ${mc.warn}`;
     $('b-review').setAttribute('aria-label', `모델 검증 열기 — 막음 ${blk}건 · 경고 ${mc.warn}건`);
     if ($('pn-check').classList.contains('open')) drawCheck();
-    if (!SNAP && flowBandShown(AREA)) flowBand(AREA, 'model', $('flowband'), { model: { E, R }, onClose: () => { relayout(); const t = document.querySelector('.cv-toolbar .tb'); if (t) t.focus(); } });   // U-05: after [닫기] the focus goes on to the toolbar   // A-2: counted from what is on screen now
+    if (!SNAP && flowBandShown(AREA)) flowBand(AREA, 'model', $('flowband'), { model: { E, R }, onClose: () => { relayout(); updateComp(); const t = document.querySelector('.cv-toolbar .tb'); if (t) t.focus(); } });   // U-05: after [닫기] the focus goes on to the toolbar   // A-2: counted from what is on screen now
     if (locked) return;
     if (DEMO) { b.classList.add('disabled', 'has-tip'); b.classList.remove('primary'); b.dataset.tip = '예시 화면에서는 확정 신청할 수 없습니다'; b.setAttribute('aria-disabled', 'true'); b.onclick = () => toast(b.dataset.tip, 'info'); return; }
     // ERD P2-10 → M-6: the goal action is always [확정 신청] in the same place — with 막음 left it carries their count and opens 모델 검증
     const fix = blk > 0 && !viewOnly;
     b.innerHTML = `확정 신청${fix ? ` <span class="cb-n">${blk}</span>` : ''}`;
     b.classList.toggle('disabled', viewOnly); b.classList.toggle('has-tip', viewOnly); b.classList.toggle('primary', !viewOnly);
+    { const fbd = $('flowband'); if (!viewOnly && fbd && !fbd.hidden && fbd.querySelector('.btn.primary')) b.classList.remove('primary'); }   // 최종 점검 A-04: the band carries this step's primary action — the head [확정 신청] steps down (한 화면에 주 버튼 하나)
     b.dataset.tip = viewOnly ? (outOfScope ? '담당 시스템이 아니라 확정 신청할 수 없습니다' : '확정 신청은 모델러 역할만 할 수 있습니다') : '';
     if (viewOnly) { b.setAttribute('aria-disabled', 'true'); b.setAttribute('aria-label', '확정 신청 (불가: ' + b.dataset.tip + ')'); }
     else { b.removeAttribute('aria-disabled'); b.setAttribute('aria-label', fix ? `확정 신청 — 먼저 풀 막음 ${blk}건, 모델 검증 열기` : '확정 신청'); }
@@ -1326,6 +1327,8 @@ window.pageInit = function () {
   // o.gate = opened on the way to the physical view (게이트 A): the same list, with [경고 확인 후 계속] instead of [확정 신청 계속]
   function openCheck(o) { mcGate = !!(o && o.gate); if (o && o.label) $('gate-go').textContent = o.label; mcFlt = 'all'; mcEdit = null; mcRun(); drawCheck(); openPanel('pn-check');
     const g = mcGate && $('ck-body').querySelector('.mc-g[data-g="struct"]'); if (g) g.scrollIntoView({ block: 'start' });
+    // 최종 점검 A-10: opened for the gate (also when the panel was already open) — focus goes to [경고 확인 후 계속] and the gate is announced, so the click visibly does something
+    if (mcGate) { const gb = $('ck-body').querySelector('.banner'), n = gateRows().length; if (gb) gb.scrollIntoView({ block: 'start' }); const go = $('gate-go'); if (go && !go.hidden) go.focus({ preventScroll: true }); let lv = $("ck-live"); if (!lv) { lv = document.createElement("div"); lv.className = "sr-only"; lv.id = "ck-live"; lv.setAttribute("aria-live", "polite"); $("pn-check").appendChild(lv); } lv.textContent = ""; const say = `물리 반영 전 점검(게이트 A) — ${n ? `경고 ${n}건` : '남은 경고 없음'}. [${go ? go.textContent : '경고 확인 후 계속'}]을 누르면 물리 모델이 열립니다`; setTimeout(() => { lv.textContent = say; }, 30); return; }
     const f = $('ck-body').querySelector('.ck-tbl button, .ck-tbl a') || $('ck-body').querySelector('[data-mcf]'); if (f) f.focus({ preventScroll: !!g }); }
   $('b-review').onclick = ev => { ev.preventDefault(); openCheck(); };
   $('flowband').addEventListener('click', ev => { const a = ev.target.closest('[data-flow-act="check"]'); if (a) { ev.preventDefault(); openCheck(); } });   // A-2: step ④ on this screen opens the panel in place
@@ -1447,7 +1450,7 @@ window.pageInit = function () {
     if (ev.target.id === 'g-apply' || ev.target.id === 'g-apply-all') {
       if (guard()) return; const scope = ev.target.id === 'g-apply-all' ? [...gsel] : [...gsel].filter(k => gvis.has(k)); gAllArm = null; const dom = $('g-dom').value, nn = $('g-nn').value, std = $('g-std').value, why = ($('g-why') || {}).value || '';
       if (!dom && !nn && !std) { toast('바꿀 항목을 고르세요', 'info'); return; }
-      if (std === 'na' && !why.trim()) { toast('비대상 사유를 입력해야 합니다 — 확정 결재에서 DA가 검토합니다', 'danger'); $('g-why').focus(); return; }
+      if (std === 'na' && !why.trim()) { toast('비대상 사유를 입력하세요 — 확정 결재에서 DA가 검토합니다', 'danger'); $('g-why').focus(); return; }
       snap(); let n = 0, skip = 0; const names = [];
       scope.forEach(k => { gsel.delete(k); const t = gFind(k); if (!t) return; const [e, a] = t; if (e.ref) { skip++; return; } n++; names.push(e.n + '.' + a.n);
         if (dom) { a.t = DOMS[dom]; a.dom = dom; delete a.d; }
@@ -1561,7 +1564,7 @@ window.pageInit = function () {
   function drawParticipants() {
     const editing = !locked && !viewOnly && !DEMO;
     const others = [['홍설계', 'var(--p-1)', '편집 중']].concat(Object.values(USERS).filter(u => u.id !== ME.id && u.roles.includes('modeler')).slice(0, 1).map(u => [u.name, 'var(--p-2)', '조회']));
-    $('av-list').innerHTML = `<span class="av" style="background:var(--ink);color:var(--on-ink)" title="${ME.name} (나) · ${editing ? '편집' : '조회'}">${ME.name[0]}</span>` + others.map(([n, c, s]) => `<span class="av ${s === '조회' ? 'view' : ''}" style="${s === '조회' ? '' : 'background:' + c}" title="${n} · ${s}">${n[0]}</span>`).join('');
+    $('av-list').innerHTML = `<span class="av" style="background:var(--ink);color:var(--on-ink)" title="${hx(ME.name)} (나) · ${editing ? '편집' : '조회'}">${hx(String(ME.name || '')[0] || '')}</span>` + others.map(([n, c, s]) => `<span class="av ${s === '조회' ? 'view' : ''}" style="${s === '조회' ? '' : 'background:' + c}" title="${hx(n)} · ${hx(s)}">${hx(String(n || '')[0] || '')}</span>`).join('');
     $('avcap').textContent = `${others.length + 1}명 접속 · ${(editing ? 1 : 0) + 1}명 편집`; $('avs').title = `이 업무 영역에 접속한 사람 — ${$('avcap').textContent}`;
     $('cur-park').querySelector('span').textContent = `${others[1] ? others[1][0] : '박설계'} · 조회`;
   }
@@ -2075,7 +2078,7 @@ window.pageInit = function () {
     $('lg-body').innerHTML = on ? '영역 묶음 보기 <span class="dot-i s-cur"></span>지금 영역 <span class="dot-i s-na"></span>다른 영역 · 카드를 두 번 누르면 그 업무 영역을 엽니다' : window.__lgCanvas;
     $('lg-int').hidden = on || mode !== 'A'; $('lg-phys').hidden = on || mode !== 'P';
     if (!on) { applyView(); }
-    if (on) sv.innerHTML = `<div class="banner info sys-ban"><i data-ic=info></i><div class="grow"><b>시스템 전체 ERD · 조회 전용</b> — ${curSys().name}의 모든 업무 영역. 공통 영역의 엔터티는 <b>참조로 가져와</b> 관계를 맺을 수 있습니다.</div></div>
+    if (on) sv.innerHTML = `<div class="banner info sys-ban"><i data-ic=info></i><div class="grow"><b>시스템 전체 ERD · 조회 전용</b> — ${hx(curSys().name)}의 모든 업무 영역. 공통 영역의 엔터티는 <b>참조로 가져와</b> 관계를 맺을 수 있습니다.</div></div>
       <div id="sysworld">${Object.entries(getModels()).map(([id, m], i) => { const mo = id === AREA && VER === m.ver && !snapDoc ? { E } : modelOf(id, m.ver); const es = mo.E.filter(x => !x.ref); const bad = compOf(mo).bad; const lk = modelLock(id); const st = lk.state === 'review' ? '검토 중' : lk.state === 'confirmed' ? '확정' : `v${m.ver} 작업 중`; const col = i % 3, row = Math.floor(i / 3); return `<div class="grp sys-area" style="left:${60 + col * 300}px;top:${130 + row * 200}px" ondblclick="__go('model.html?area=${id}')" title="더블클릭하면 이 업무 영역을 엽니다"><h4>${hx(m.name)}${id === AREA ? ' <span class="badge">지금 영역</span>' : ''}</h4><div class="caption muted">엔터티 ${es.length} · 미준수 ${bad} · ${st}</div><div class="u-flex u-wrap u-gap-4 u-mt-12">${'<span class="sys-chip"></span>'.repeat(Math.min(es.length, 18))}</div><div class="caption faint u-mt-8"><a href="model.html?area=${id}">열기</a> · 더블클릭해도 열립니다</div></div>`; }).join('')}
       <div class="grp sys-common" style="left:${60 + 300 * Math.min(2, Object.keys(getModels()).length % 3)}px;top:${130 + 200 * Math.ceil(Object.keys(getModels()).length / 3)}px"><h4>공통</h4><div class="caption muted u-mb-8">여러 업무 영역이 함께 쓰는 엔터티</div>
         <div class="refrow"><b class="grow">사원기본</b><span class="mono faint">EMP_M</span><span class="badge">사용 중</span></div>
@@ -2205,7 +2208,7 @@ window.pageInit = function () {
       b.style.display = 'none';
       $('ver').textContent = REVIEW_HIDDEN && LOCK.model.base ? `v${LOCK.model.base} 확정본` : '열람 제한';
       $('ban-lock').className = 'banner info';
-      $('ban-lock-t').innerHTML = SNAP_HIDDEN ? `<b>${SNAP}</b>는 결재 중입니다 — 결재 중인 제출본은 신청자와 결재 담당자만 볼 수 있습니다.` : `<b>${josa('v' + VER, '은/는')} 결재 중</b>이라 신청자와 결재 담당자만 볼 수 있습니다. ${LOCK.model.base ? `마지막 확정본 <b>v${LOCK.model.base}</b>을 조회 전용으로 보여 줍니다.` : '아직 확정본이 없어 보여 줄 내용이 없습니다.'}`;
+      $('ban-lock-t').innerHTML = SNAP_HIDDEN ? (inReview(SNAPDOC) ? `<b>${hx(SNAP)}</b>는 결재 중입니다 — 결재 중인 제출본은 신청자와 결재 담당자만 볼 수 있습니다.` : `<b>${hx(SNAP)}</b>는 볼 수 없는 제출본입니다 — 신청자 · 결재선 · 열람 권한이 있는 사람만 볼 수 있습니다.`) : `<b>${josa('v' + VER, '은/는')} 결재 중</b>이라 신청자와 결재 담당자만 볼 수 있습니다. ${LOCK.model.base ? `마지막 확정본 <b>v${LOCK.model.base}</b>을 조회 전용으로 보여 줍니다.` : '아직 확정본이 없어 보여 줄 내용이 없습니다.'}`;
       $('ban-lock-a').style.display = 'none';
     } else if (SNAP_BAD) {
       $('ver').textContent = '열 수 없음'; b.style.display = 'none';
@@ -2250,7 +2253,7 @@ window.pageInit = function () {
     document.querySelectorAll('.cv-toolbar .tb[data-edit]').forEach(b => { b.setAttribute('aria-disabled', 'true'); b.tabIndex = -1; b.title = (b.title ? b.title + ' — ' : '') + (AREA_OFF ? '사용 중지한 업무 영역이라 편집할 수 없습니다' : outOfScope ? '담당 시스템이 아니라 편집할 수 없습니다' : '모델 편집은 모델러 역할만'); });
     if (!document.body.classList.contains('locked')) { setSave('run', '조회 전용'); $('savest').title = `조회 전용 — 모델 편집은 모델러 역할만 할 수 있습니다 · 지금 역할: ${ME.roles.map(r => ROLE_NAME[r]).join(', ') || '조회만'}`; }
     if ($('ban-view-r')) $('ban-view-r').textContent = ME.roles.map(r => ROLE_NAME[r]).join(', ') || '조회만';
-    if (outOfScope) $('ban-view').querySelector('.grow').innerHTML = `<b>조회 전용</b> — 내 담당 시스템(${sysNames(ME.systems) || '없음'})에 <b>${sysOfArea(AREA)}</b>${josa(sysOfArea(AREA), '이/가').slice(-1)} 없습니다. <a href="mypage.html?req=sys&sys=${encodeURIComponent(sysOfArea(AREA))}">담당 시스템 추가 요청</a>`;
+    if (outOfScope) $('ban-view').querySelector('.grow').innerHTML = `<b>조회 전용</b> — 내 담당 시스템(${hx(sysNames(ME.systems) || '없음')})에 <b>${hx(sysOfArea(AREA))}</b>${josa(sysOfArea(AREA), '이/가').slice(-1)} 없습니다. <a href="mypage.html?req=sys&sys=${encodeURIComponent(sysOfArea(AREA))}">담당 시스템 추가 요청</a>`;
   }
   drawParticipants();
   if (q.get('focus') && ent(q.get('focus'))) setTimeout(() => { focusEnt(q.get('focus')); if (q.get('attr')) { treeOrigin = true; treeAttr = +q.get('attr'); render(); hlAttr(treeAttr); } }, 120);

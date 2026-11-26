@@ -79,7 +79,7 @@
     <h1>직접 등록</h1>
     <span class="badge" id="crumb">기관 사전 · 신규 작성</span>
     <div class="actions">
-      <a class="btn" href="dictionary.html?basket=1"><i data-ic=basket></i>바구니<span class="bkn" id="bk-n" hidden></span></a>
+      <a class="btn" href="dictionary.html?basket=1" id="b-basket"><i data-ic=basket></i>사전 바구니<span class="bkn" id="bk-n" hidden></span></a>
     </div>
   </div>
 
@@ -148,6 +148,7 @@
 <div id="dls"></div>
 <script>
 window.pageInit = function () {
+  if (!can('dict.request') && document.getElementById('b-basket')) document.getElementById('b-basket').hidden = true;   // B-02 (R-17): no dictionary request role → no basket; the name matches the top bar
   const $ = id => document.getElementById(id);
   const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
   const t = s => String(s == null ? '' : s).trim();
@@ -732,11 +733,11 @@ window.pageInit = function () {
   });
   function addWord(w) {
     const rows = R().word;
-    if (rows.some(r => t(r.v.name) === w)) { toast(`‘${w}’은(는) 단어 탭에 이미 있습니다`, 'info', { label: '단어 탭으로', fn: () => goWord(w) }); return; }
+    if (rows.some(r => t(r.v.name) === w)) { toast(`‘${esc(w)}’은(는) 단어 탭에 이미 있습니다`, 'info', { label: '단어 탭으로', fn: () => goWord(w) }); return; }
     const empty = rows.find(r => !r.sent && isEmpty('word', r)), row = empty || blank('word');
     row.v.name = w; row.v.abbr = ''; if (!empty) rows.push(row);
     refresh();
-    toast(`단어 탭에 ‘${w}’ 행을 추가했습니다 — 영문약어명을 채우세요`, 'success', { label: '단어 탭으로', fn: () => goWord(w) });
+    toast(`단어 탭에 ‘${esc(w)}’ 행을 추가했습니다 — 영문약어명을 채우세요`, 'success', { label: '단어 탭으로', fn: () => goWord(w) });
   }
   function goWord(w) { S.tab = 'word'; render(); const i = R().word.findIndex(r => t(r.v.name) === w); if (i >= 0) focusCell(i, 1); }
   function unlock(r) {
@@ -979,7 +980,7 @@ window.pageInit = function () {
     S.mode = 'edit';
     const [added, bad] = addEditIds(qs.get('ids').split(',').map(s => s.trim()).filter(Boolean));
     const first = added[0] || S.edit[S.edit.length - 1]; if (first) S.tab = first.k; else if (S.tab === 'class') S.tab = 'word';
-    if (bad.length) setTimeout(() => toast(`고칠 수 없는 항목은 넣지 않았습니다: ${bad.join(', ')}`, 'info'), 50);
+    if (bad.length) setTimeout(() => toast(`고칠 수 없는 항목은 넣지 않았습니다: ${esc(bad.join(', '))}`, 'info'), 50);
   }
   if (qs.get('mode') === 'edit' || qs.get('mode') === 'new') S.mode = qs.get('mode');
   if (qs.get('mode') === 'basket') enterBasket(true);

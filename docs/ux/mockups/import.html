@@ -26,7 +26,7 @@
   </div>
   <div class="page-body">
     <div class="main" style="flex:0 0 46%;border-right:1px solid var(--border)">
-      <div class="toolbar"><b class="u-fs-14">DDL 붙여넣기 또는 파일</b><span class="grow"></span><button class="btn sm" id="ex-file">예시 .sql 파일 불러오기</button><button class="btn sm" id="ex-bad">잘못된 예시</button><button class="btn sm primary" id="parse" data-busy>읽기</button></div>
+      <div class="toolbar"><b class="u-fs-14">DDL 붙여넣기 또는 파일</b><span class="grow"></span><button class="btn sm" id="pick-file">.sql 파일 선택</button><input type="file" id="sql-file" accept=".sql,.ddl,.txt,text/plain" hidden aria-label="DDL 파일 선택"><button class="btn sm ghost" id="ex-file">예시 불러오기</button><button class="btn sm" id="ex-bad">잘못된 예시</button><button class="btn sm primary" id="parse" data-busy>읽기</button></div>
       <div class="pad u-flex-1 u-flex u-col"><textarea class="input mono" id="ddl" style="flex:1;min-height:420px;font-size:12px;line-height:18px" placeholder="CREATE TABLE … 를 붙여넣으세요. 컬럼 뒤 주석(-- 한글명)을 논리명으로 씁니다." aria-label="DDL"></textarea>
         <div class="caption muted u-mt-8">컬럼 뒤 <span class="mono">-- 한글명</span> 주석을 논리명으로 읽습니다(없으면 물리명 그대로). PK·FK 제약을 함께 읽습니다.</div></div>
     </div>
@@ -50,6 +50,7 @@
 window.pageInit = function () {
   const $ = id => document.getElementById(id);
   const q = new URLSearchParams(location.search);
+  const esc = v => String(v == null ? '' : v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);   // FC-02: what the DDL text says is text, never markup
   // script-driven moves keep the review role (&audit=1&as=) like the shell does for plain links
   const go = u => { const as = q.has('audit') && q.get('as'); if (as && !/[?&]as=/.test(u)) u += (u.includes('?') ? '&' : '?') + 'audit=1&as=' + as; location.href = u; };
   // the area we came from (model ⋯ › 가져오기): the way back and the "add to existing" choice follow it
@@ -78,9 +79,9 @@ CREATE TABLE RQMS.TMP_LOG ( -- 임시로그
 ALTER TABLE RQMS.RQRM_D ADD CONSTRAINT RQRM_D_FK1 FOREIGN KEY (PRJ_ID) REFERENCES RQMS.PRJ_M (PRJ_ID);`;
   // permission: only modelers import (CX12-28)
   const canImport = can('model.edit', { system: curSys().code });
-  if (!canImport) document.querySelector('.page-header').insertAdjacentHTML('afterend', `<div class="pad u-pb-0"><div class="banner info"><i data-ic=info></i><div class="grow"><b>조회 전용</b> — ${ME.has('modeler') ? `내 담당 시스템에 ${josa(curSys().name, '이/가')} 없어 가져오기를 할 수 없습니다. <a href="mypage.html?req=sys&sys=${encodeURIComponent(curSys().name)}">담당 시스템 추가 요청</a>` : 'DDL 가져오기는 모델러 역할만 할 수 있습니다.'}</div></div></div>`);
+  if (!canImport) document.querySelector('.page-header').insertAdjacentHTML('afterend', `<div class="pad u-pb-0"><div class="banner info"><i data-ic=info></i><div class="grow"><b>조회 전용</b> — ${ME.has('modeler') ? `내 담당 시스템에 ${esc(josa(curSys().name, '이/가'))} 없어 가져오기를 할 수 없습니다. <a href="mypage.html?req=sys&sys=${encodeURIComponent(curSys().name)}">담당 시스템 추가 요청</a>` : 'DDL 가져오기는 모델러 역할만 할 수 있습니다.'}</div></div></div>`);
   const models = getModels();
-  $('dst-area').innerHTML = Object.entries(models).map(([id, m]) => { const L = modelLock(id); return `<option value="${id}" ${L.state !== 'edit' ? 'disabled' : ''}>${m.name} · v${m.ver}${L.state !== 'edit' ? ' (편집 불가)' : ''}</option>`; }).join('');
+  $('dst-area').innerHTML = Object.entries(models).map(([id, m]) => { const L = modelLock(id); return `<option value="${id}" ${L.state !== 'edit' ? 'disabled' : ''}>${esc(m.name)} · v${m.ver}${L.state !== 'edit' ? ' (편집 불가)' : ''}</option>`; }).join('');
   let parsed = null;
   // a deliberately small parser: CREATE TABLE blocks, column lines with "-- 논리명", PRIMARY KEY, ALTER … FOREIGN KEY
   function parse(src) {
@@ -106,7 +107,7 @@ ALTER TABLE RQMS.RQRM_D ADD CONSTRAINT RQRM_D_FK1 FOREIGN KEY (PRJ_ID) REFERENCE
     $('pstate').innerHTML = errs.length && !tables.length ? '<span class="badge b-danger">읽기 실패</span>' : errs.length ? '<span class="badge b-warning">일부 경고</span>' : '<span class="badge b-success">읽음</span>';
     const cols = tables.reduce((n, x) => n + x.cols.length, 0);
     $('psum').textContent = tables.length ? `테이블 ${tables.length} · 컬럼 ${cols} · PK ${tables.filter(x => x.pk.length).length} · FK ${fks.length}` : '';
-    $('prev').innerHTML = tables.map(tb => `<tr class="${tb.pk.length ? '' : 'row-warning'}"><td class="mono">${tb.phys}</td><td>${tb.name}</td><td class="num">${tb.cols.length}</td><td>${tb.pk.length ? '<i data-ic=check></i><span class="sr-only">있음</span>' : '—'}</td><td class="num">${fks.filter(f => f.child === tb.phys).length}</td><td>${tb.pk.length ? '<span class="badge b-success">정상</span>' : '<span class="badge b-warning">PK 없음</span>'}</td></tr>`).join('') + errs.map(x => `<tr class="row-danger"><td colspan="6" class="caption">${x}</td></tr>`).join('') || '<tr class="er first"><td colspan="6" class="caption muted u-tc u-p-32">결과 없음</td></tr>';
+    $('prev').innerHTML = tables.map(tb => `<tr class="${tb.pk.length ? '' : 'row-warning'}"><td class="mono">${esc(tb.phys)}</td><td>${esc(tb.name)}</td><td class="num">${tb.cols.length}</td><td>${tb.pk.length ? '<i data-ic=check></i><span class="sr-only">있음</span>' : '—'}</td><td class="num">${fks.filter(f => f.child === tb.phys).length}</td><td>${tb.pk.length ? '<span class="badge b-success">정상</span>' : '<span class="badge b-warning">PK 없음</span>'}</td></tr>`).join('') + errs.map(x => `<tr class="row-danger"><td colspan="6" class="caption">${esc(x)}</td></tr>`).join('') || '<tr class="er first"><td colspan="6" class="caption muted u-tc u-p-32">결과 없음</td></tr>';
     $('go').disabled = !tables.length || !canImport; $('go').textContent = tables.length ? `${tables.length}개 테이블 가져오기` : '가져오기';
     // one primary per screen (01 v2 §1-2): the step you are on — parse first, then import
     $('go').classList.toggle('primary', !$('go').disabled); $('parse').classList.toggle('primary', $('go').disabled);
@@ -121,15 +122,24 @@ ALTER TABLE RQMS.RQRM_D ADD CONSTRAINT RQRM_D_FK1 FOREIGN KEY (PRJ_ID) REFERENCE
     parsed.fks.forEach(f => { const c = E.find(x => x.id === idOf[f.child]); if (!c || !idOf[f.parent]) return; R.push({ f: idOf[f.parent], t: idOf[f.child], k: 'nonid', name: '' }); c.a.forEach(a => { if (f.cols.includes(a.p)) a.fk = 1; }); });
     return { E, R, M: [] };
   }
-  $('ex-file').onclick = () => { $('ddl').value = SAMPLE; preview(); };
-  $('ex-bad').onclick = () => { $('ddl').value = 'SELECT * FROM RQMS.RQRM_D;'; preview(); };
-  $('parse').onclick = preview;
+  $('ex-file').onclick = () => { cancelRead(); $('ddl').value = SAMPLE; preview(); };
+  // FC-11: choose a .sql file → its text fills the box and the same preview runs; a file that cannot be read (too big · not text · read error) shows ‘파일 읽기 실패’ and keeps the box as it was
+  $('pick-file').onclick = () => $('sql-file').click();
+  // NEW-03: every read gets a number — only the latest read may fill the box; any other way of filling it (예시 · 읽기) cancels a read still running; [가져오기] waits
+  let readTok = 0, reading = false; const cancelRead = () => { readTok++; reading = false; };
+  $('sql-file').onchange = () => { const f = $('sql-file').files && $('sql-file').files[0]; if (!f) return; $('sql-file').value = '';
+    const tok = ++readTok; reading = true; $('go').disabled = true; $('go').classList.remove('primary'); $('pstate').innerHTML = '<span class="badge">읽는 중</span>';
+    const fail = why => { if (tok !== readTok) return; reading = false; $('pstate').innerHTML = '<span class="badge b-danger">파일 읽기 실패</span>'; $('psum').textContent = ''; $('prev').innerHTML = `<tr class="row-danger"><td colspan="6" class="caption">${esc(f.name)} — ${esc(why)}</td></tr>`; parsed = null; $('go').disabled = true; $('go').classList.remove('primary'); $('parse').classList.add('primary'); toast(`‘${esc(f.name)}’을(를) 읽지 못했습니다 — ${esc(why)}`, 'danger'); };
+    if (f.size > 2 * 1024 * 1024) { fail('2MB를 넘는 파일은 읽지 않습니다'); return; }
+    const rd = new FileReader(); rd.onerror = () => fail('파일을 읽는 중 오류가 났습니다'); rd.onload = () => { if (tok !== readTok) return; reading = false; const t = String(rd.result || ''); if (/\u0000/.test(t)) { fail('텍스트(.sql) 파일이 아닙니다'); return; } $('ddl').value = t; preview(); toast(`‘${esc(f.name)}’을(를) 읽었습니다 — 미리보기를 확인하세요`, 'info'); }; rd.readAsText(f, 'utf-8'); };
+  $('ex-bad').onclick = () => { cancelRead(); $('ddl').value = 'SELECT * FROM RQMS.RQRM_D;'; preview(); };
+  $('parse').onclick = () => { cancelRead(); preview(); };
   // the area list only matters for "기존 업무 영역에 추가" — greyed out otherwise; the area we came from is preselected when it can take edits
   const syncDst = () => { const v = document.querySelector('[name=dst]:checked').value; $('newname-f').style.display = v === 'new' ? '' : 'none'; $('dst-area').disabled = v !== 'cur'; };
   if (FROM && modelLock(FROM).state === 'edit') $('dst-area').value = FROM;
   document.querySelectorAll('[name=dst]').forEach(r => r.onchange = syncDst); syncDst();
   $('go').onclick = () => {
-    if (!parsed || !parsed.tables.length || !canImport) return;
+    if (!parsed || !parsed.tables.length || !canImport || reading) return;   // NEW-03: not while a file is still being read
     if (liveRoleChanged()) { staleRoleToast(); return; }
     const dst = document.querySelector('[name=dst]:checked').value; const st = toModel(); let area;
     if (dst === 'new') { const nm = $('newname').value.trim(); if (!nm) { toast('새 업무 영역 이름을 입력하세요', 'danger'); $('newname').focus(); return; } area = addArea(nm, st); }

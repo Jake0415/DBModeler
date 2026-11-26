@@ -23,6 +23,7 @@
 <body>
 <div class="wrap">
   <div class="flex u-mb-4"><svg class="nmark" width="24" height="24" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="6" fill="currentColor"/><path d="M10 22V10l12 12V10" fill="none" stroke="var(--on-ink)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/><circle cx="10" cy="10" r="3" fill="var(--on-ink)"/><circle cx="22" cy="22" r="3" fill="var(--on-ink)"/></svg><h1 style="font-size:24px;letter-spacing:-.6px">NeoDB 클릭 목업 v7.3</h1></div>
+  <p class="caption u-mt-4"><b>v8 (2026-11-26, 처음 표준화 흐름 · 최종 점검)</b>: 고객 모델 요청(IE 표기 · 중복 속성 해소 창 · 모델 엑셀 최소 검증 · 모델 검증 · 승인본 DDL) · 사전 → 모델 → 표준 → 용어 → 검증 흐름 잇기(진행 띠 · 모델 검증 일괄 처리 · 빈 모델 시작 안내 · 이름 ‘사전 엑셀 일괄’ / ‘모델 엑셀 가져오기’) · 화면 전체 이름 이스케이프 · 제출 사본 열람 판정 하나 — 근거 <a href="../review/model-requests/02-flow-plan.md">02-flow-plan</a> · <a href="../../impl/decisions/D-001-flow-mockup.md">D-001</a></p>
   <p class="caption u-mt-4"><b>v7.3 (2026-11-18, 전체 검토 완주)</b>: Codex·Claude UX 교차 검토(r12~r14) 반영 — 모델·표준 맞추기·후보·사전·엑셀·가져오기·DDL·산출물이 모두 같은 상태 계층에서 계산(정적 행 제거) · 새 업무 영역 추가 · 결재 확인 체크·정책 버전·제출 사본 해시 · 설정 저장(결재선·역할·검수 기준 버전)과 감사 로그 단일 출처 · 내 작업·알림 설정·역할 변경 요청 · 로그인(SC-56)·세션 만료 복귀 · 전체 검색 Ctrl+K — <a href="../06-ux-review-plan.md">06 §4.11</a></p>
   <p class="caption u-mt-4"><b>v7.2 (2026-11-18, 시나리오 검증 단계)</b>: 모든 화면에 <b>목업 › 화면</b> 패널(화면 ID·상태별 바로가기·설계 문서·설계 결정 반영 대기·검토 메모·이전/다음) + <b>지도</b> 링크. 설계 문서(.md) 링크가 목업 서버에서 열림. 끊긴 연결 수정(과거 결재 문서 3건, 표준 맞추기 상태 필터, 없는 문서 안내) — <a href="../06-ux-review-plan.md">06 §4.10</a></p>
   <p class="caption u-mt-4">v7 (2026-11-18, 마지막 목업 차수): 반려·회수 → 진행 중 해제·보완 재신청(제출 항목·의견 채움) · 결재함 [확정본 보기]가 문서 사본을 엶·없는 스냅숏은 ‘열 수 없음’·직전 확정본 비교 · 예시 주소(<code>?state=</code>)는 조회 전용 · 표준 맞추기 행별 처리·사유·영역·버전 인계, 용어 문서에 실제 항목, 승인·반려 뒤 모델 상태 · 결재 상세가 제출 행·선택·사유로 그려지고 검사 탭 = 승인 직전 재검사 · 사전 반영이 칸 값까지 정확(대상 없으면 실패) · 역할 바뀐 탭·다른 탭 저장·다음 버전 중복 시작 차단 · 엑셀 실패 값 복원·보이는 대상만 자동 수정·경고 확인·없는 묶음 종료·반영본 확인 검증·보류 행 새 묶음 · 공표 대상 고정 — <a href="../06-ux-review-plan.md">06 §4.8</a></p>
@@ -35,7 +36,7 @@
   근거: <a href="../02-flows.md">02-flows.md</a> · <a href="../01-design-guide.md">01-design-guide.md</a></p>
 
   <div class="card u-mb-24" id="role-guide"><b>역할별 바로가기 (목업 사용자)</b>
-    <div class="caption muted">아래 이름을 누르면 그 사용자로 바뀌어 홈이 열립니다. 역할은 목업 데이터(USERS)에서 그대로 읽어 표시합니다. 설정 · 사용자 관리는 <b>관리자(Admin)</b>만, 감사 로그는 DA 또는 Admin만 열 수 있습니다. 검토용으로 주소에 <span class="mono">&amp;audit=1</span>을 붙이면 역할이 저장되지 않습니다.</div>
+    <div class="caption muted">아래 이름을 누르면 그 사용자로 바뀌어 홈이 열립니다. 역할은 목업 데이터(USERS)에서 그대로 읽어 표시합니다. 설정 · 사용자 관리는 <b>관리자(Admin)</b>만, 감사 로그는 <span id="audit-roles">DA · Admin · 기관 담당자 · 감리</span>만 열 수 있습니다<span id="audit-note"></span>. 검토용으로 주소에 <span class="mono">&amp;audit=1</span>을 붙이면 역할이 저장되지 않습니다.</div>
     <div class="path" id="role-links"></div></div>
 
   <h2 class="u-fs-16 u-mb-8">교차 시나리오 (끝까지 클릭)</h2>
@@ -66,11 +67,14 @@
   <script src="assets/app.js"></script>
   <script>
   document.addEventListener('DOMContentLoaded', () => {
+    // 최종 점검 B-08: who may open the audit log is read from the permission table (PERMS audit.view) and role names (ROLE_NAME) — never written by hand
+    { const pm = (window.PERMS || []).find(p => p.id === 'audit.view'), el = document.getElementById('audit-roles'); if (pm && el) { el.textContent = pm.roles.map(r => ROLE_NAME[r] || r).join(' · '); const nt = document.getElementById('audit-note'); if (nt && pm.note) nt.textContent = ' (' + pm.note.replace(/\s*\([^)]*\)\s*$/, '') + ')'; } }
     // E2: the role guide is drawn from USERS, so it can never say a user is Admin when the seed says otherwise
     { const ORDER = ['admin', 'owner', 'da', 'modeler'], LBL = { admin: '관리자', owner: '기관 담당자', da: 'DA', modeler: '모델러' };
       const DOES = { admin: '설정 · 사용자 · 감사 로그', owner: '최종 승인', da: '1단계 승인 · 공표', modeler: '모델 편집 · 사전 신청' };
-      const label = u => { const r = ORDER.filter(x => (u.roles || []).includes(x)); if (!r.length) return `조회만 ${u.name}`; return `${LBL[r[0]]}${r.length > 1 ? `(겸 ${r.slice(1).map(x => LBL[x]).join(' · ')})` : ''} ${u.name}`; };
-      document.getElementById('role-links').innerHTML = Object.values(USERS).slice().sort((a, b) => ORDER.findIndex(x => (a.roles || []).includes(x)) - ORDER.findIndex(x => (b.roles || []).includes(x))).map(u => { const r = ORDER.filter(x => (u.roles || []).includes(x)); return `<a href="home.html?as=${u.id}" title="${r.map(x => DOES[x]).join(' · ') || '조회만'} — 담당 시스템: ${sysNames(u.systems)}">${label(u)} <span class="mono faint">${u.id}</span></a>`; }).join(''); }
+      const E = s => (window.escHtml ? escHtml(s) : String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]));   // 최종 검증 2회차: user names · ids are text
+      const label = u => { const r = ORDER.filter(x => (u.roles || []).includes(x)); if (!r.length) return `조회만 ${E(u.name)}`; return `${LBL[r[0]]}${r.length > 1 ? `(겸 ${r.slice(1).map(x => LBL[x]).join(' · ')})` : ''} ${E(u.name)}`; };
+      document.getElementById('role-links').innerHTML = Object.values(USERS).slice().sort((a, b) => ORDER.findIndex(x => (a.roles || []).includes(x)) - ORDER.findIndex(x => (b.roles || []).includes(x))).map(u => { const r = ORDER.filter(x => (u.roles || []).includes(x)); return `<a href="home.html?as=${encodeURIComponent(u.id)}" title="${E(`${r.map(x => DOES[x]).join(' · ') || '조회만'} — 담당 시스템: ${sysNames(u.systems)}`)}">${label(u)} <span class="mono faint">${E(u.id)}</span></a>`; }).join(''); }
     const notes = getNotes();
     document.querySelector('#screen-map tbody').innerHTML = SCREENS.map(s => `<tr><td>${s.menu}</td><td class="mono u-nowrap">${s.ids.replace(/ · /g, '<br>')}</td><td><a href="${s.file}"><b>${s.name}</b></a></td><td class="caption">${s.states.map(([l, u]) => `<a href="${u}">${l}</a>`).join(' · ')}</td><td class="caption">${s.docs.map(([l, u]) => `<a href="${u}" target="_blank" rel="noopener">${l}</a>`).join(' · ')}</td><td class="num" title="${s.todo.map(t => t[0]).join('\n').replace(/"/g, '&quot;')}">${s.todo.length || ''}</td><td class="num">${(notes[s.file] || []).filter(x => !x.done).length || ''}</td></tr>`).join('');
     document.getElementById('map-export').onclick = () => { const md = notesMarkdown(); (navigator.clipboard ? navigator.clipboard.writeText(md) : Promise.reject()).then(() => alert('전체 메모를 마크다운 표로 복사했습니다'), () => window.prompt('복사해서 쓰세요', md)); };

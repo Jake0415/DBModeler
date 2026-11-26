@@ -103,8 +103,8 @@ window.pageInit = function () {
   }
   if (ME.has('admin')) {
     const rq = Object.values(USERS).map(u => { try { const r = JSON.parse(dbmStore.get('dbm-rolereq-' + u.id) || 'null'); return r ? Object.assign({ u }, r) : null; } catch (e) { return null; } }).filter(Boolean);
-    T.push({ w: 92, t: '역할 요청', n: rq.length, old: null, st: '', go: rq.length ? [escH(rq[0].u.name), `settings.html?user=${rq[0].u.id}`] : ['사용자·역할', 'settings.html'] });
-    const soon = Object.values(USERS).filter(u => u.status !== 'stopped' && daysLeft(u) !== null && daysLeft(u) >= 0 && daysLeft(u) <= 7); T.push({ w: 93, t: '7일 안 만료 계정', n: soon.length, old: null, st: soon.length ? tag('warn', soon.map(u => `${escH(u.name)} D-${daysLeft(u)}`).join(' · ')) : '', go: ['사용자 · 역할', 'settings.html?tab=users'] });
+    T.push({ w: 92, t: '역할 요청', n: rq.length, old: null, st: '', go: rq.length ? [rq[0].u.name, `settings.html?user=${rq[0].u.id}`] : ['사용자·역할', 'settings.html'] });
+    const soon = Object.values(USERS).filter(u => u.status !== 'stopped' && daysLeft(u) !== null && daysLeft(u) >= 0 && daysLeft(u) <= 7); T.push({ w: 93, t: '7일 안 만료 계정', n: soon.length, old: null, st: soon.length ? tag('warn', soon.map(u => `${u.name} D-${daysLeft(u)}`).join(' · ')) : '', go: ['사용자 · 역할', 'settings.html?tab=users'] });
     const myAR = getAdminReqs().filter(r => r.status === 'wait' && r.req === ME.id); if (myAR.length) T.push({ w: 91, t: '기관 담당자 확인 대기 · 내 신청', n: myAR.length, old: null, st: '', go: ['확인 요청', 'approvals.html?box=confirm'] });
     const gaps = SYSLIST.filter(s => !s.off).map(s => { const a = Object.keys(getAllModels()).find(k => (getAllModels()[k].system || 'RQMS') === s.code); return a && lineGaps({ type: 'model', area: a, req: '_none' }).length ? escH(s.name) : null; }).filter(Boolean); if (gaps.length) T.push({ w: 96, t: '결재 공백 — 처리할 사람이 없는 시스템', n: gaps.length, old: null, st: tag('err', gaps.join(' · ')), go: ['사용자 · 역할', 'settings.html?tab=users'] });
     const al = live.filter(docLate); T.push({ w: 80 + al.length, t: '기한 넘긴 결재 · 기관 전체', n: al.length, old: oldest(al), st: al.length ? tag('err', `${SLA}일 넘김`) : '', go: ['오래 머무는 결재', '#stale'] });
@@ -121,28 +121,28 @@ window.pageInit = function () {
   T.push({ w: 85, t: '보완 필요 · 내 신청', n: fix.length, old: null, st: fix.length ? tag('err', '반려·회수') : '', go: fix.length ? [fix[0].id, `approvals.html?doc=${fix[0].id}`] : ['내 신청', 'approvals.html?box=mine'] });
   T.sort((a, b) => b.w - a.w);
   const act = T.filter(t => t.n > 0), calm = T.filter(t => !t.n);
-  const calmNames = calm.map(t => t.t.split(' · ')[0]).join(', ');
+  const calmNames = calm.map(t => `${t.t} 0건`).join(', ');   // A-08: the full name with 0건 — ‘보완 필요’ alone read as if something needed fixing
   /* urgent: at most one action above everything (late approvals on me > fix my request > org-wide late) */
   const myLate = (ME.has('da') || ME.has('owner')) ? q.filter(docLate) : [];
   const orgLate = ME.has('admin') ? live.filter(docLate) : [];
   const U = myLate.length ? { t: `기한 넘긴 결재 <b>${myLate.length}건</b>`, ic: 'clock', a: '결재함 열기', h: 'approvals.html?box=queue' }
     : fix.length ? { t: `보완 필요한 내 신청 <b>${fix.length}건</b>`, ic: 'warn', a: fix.length === 1 ? `${fix[0].id} 열기` : '내 신청 열기', h: fix.length === 1 ? `approvals.html?doc=${fix[0].id}` : 'approvals.html?box=mine' }
     : orgLate.length ? { t: `기관 전체 기한 넘긴 결재 <b>${orgLate.length}건</b>`, ic: 'clock', a: '오래 머무는 결재 보기', h: '#stale' } : null;
-  const urgent = U ? `<div class="banner danger urgent" role="status"><i data-ic=${U.ic}></i><span class="grow">${U.t}</span><a class="btn sm" href="${U.h}">${U.a}</a></div>` : '';
-  const todo = !act.length ? `<section class="sec calm"><div class="sec-h"><h2>오늘 할 일</h2><span class="end" title="문제 없음: ${calmNames}">처리할 일이 없습니다</span></div></section>`
+  const urgent = U ? `<div class="banner danger urgent" role="status"><i data-ic=${U.ic}></i><span class="grow">${U.t}</span><a class="btn sm" href="${escH(U.h)}">${escH(U.a)}</a></div>` : '';
+  const todo = !act.length ? `<section class="sec calm"><div class="sec-h"><h2>오늘 할 일</h2><span class="end" title="문제 없음: ${escH(calmNames)}">처리할 일이 없습니다</span></div></section>`
     : `<section class="sec"><div class="sec-h"><h2>오늘 할 일</h2></div>
-    ${act.length ? `<table class="tbl box"><thead><tr><th>할 일</th><th class="r">건수</th><th class="r">가장 오래</th><th>상태</th><th class="r">바로 가기</th></tr></thead><tbody>${act.map(t => `<tr><td>${t.t}</td><td class="r num">${t.n}</td><td class="r num">${t.old == null ? '—' : t.old + '일'}</td><td>${t.st || '<span class="faint">—</span>'}</td><td class="r"><a href="${t.go[1]}">${t.go[0]}</a></td></tr>`).join('')}</tbody></table>` : '<div class="ok-line" style="padding:12px 0">처리할 일이 없습니다.</div>'}
-    ${calm.length ? `<div class="ok-line">문제 없음: ${calm.map(t => t.t.split(' · ')[0]).join(', ')}</div>` : ''}</section>`;
+    ${act.length ? `<table class="tbl box"><thead><tr><th>할 일</th><th class="r">건수</th><th class="r">가장 오래</th><th>상태</th><th class="r">바로 가기</th></tr></thead><tbody>${act.map(t => `<tr><td>${escH(t.t)}</td><td class="r num">${t.n}</td><td class="r num">${t.old == null ? '—' : t.old + '일'}</td><td>${t.st || '<span class="faint">—</span>'}</td><td class="r"><a href="${escH(t.go[1])}">${escH(t.go[0])}</a></td></tr>`).join('')}</tbody></table>` : '<div class="ok-line" style="padding:12px 0">처리할 일이 없습니다.</div>'}
+    ${calm.length ? `<div class="ok-line">문제 없음: ${escH(calmNames)}</div>` : ''}</section>`;
 
   /* ---- business areas: a table, not steppers ---- */
   const areas = `<section class="sec" id="areas"><div class="sec-h"><h2>업무 영역</h2><a class="end" href="system.html">시스템 홈</a></div>
     <table class="tbl box"><thead><tr><th>영역</th><th>시스템</th><th>단계</th><th class="r">준수율</th><th class="r">미준수</th><th>다음 행동</th></tr></thead><tbody>${areaList.map(a => {
       const below = a.C.tot > 0 && a.C.rate < GOAL;   // F-016: an empty area has no rate (미산정, guide principle 7)
-      const next = a.L.state === 'review' ? `<a href="approvals.html?doc=${a.L.doc.id}">${a.L.doc.id}</a> ${docLate(a.L.doc) ? tag('err', docAge(a.L.doc) + '일') : `<span class="muted">${STEP_NAME[a.L.doc.step]} ${docAge(a.L.doc)}일</span>`}`
-        : a.L.state === 'confirmed' ? `<a href="model.html?area=${a.id}">다음 버전 시작</a>`
-        : !a.ents ? (can('model.edit', { area: a.id }) ? `<a href="import-excel.html?area=${a.id}">모델 엑셀 가져오기</a> · <a href="model.html?area=${a.id}">모델 시작</a>` : '<span class="muted">모델 없음</span>')   /* A-6: an empty area starts from the model excel or by drawing — hidden without the edit role */
-        : a.C.bad ? `<a href="standardize.html?area=${a.id}&f=todo">표준 맞추기</a>`
-        : a.open.length ? `<span class="muted">${a.open.join(', ')} 완료 후 확정</span>` : `<a href="model.html?area=${a.id}">확정 신청</a>`;
+      const next = a.L.state === 'review' ? `<a href="approvals.html?doc=${encodeURIComponent(a.L.doc.id)}">${escH(a.L.doc.id)}</a> ${docLate(a.L.doc) ? tag('err', docAge(a.L.doc) + '일') : `<span class="muted">${escH(STEP_NAME[a.L.doc.step])} ${docAge(a.L.doc)}일</span>`}`
+        : a.L.state === 'confirmed' ? `<a href="model.html?area=${encodeURIComponent(a.id)}">다음 버전 시작</a>`
+        : !a.ents ? (can('model.edit', { area: a.id }) ? `<a href="import-excel.html?area=${encodeURIComponent(a.id)}">모델 엑셀 가져오기</a> · <a href="model.html?area=${encodeURIComponent(a.id)}">모델 시작</a>` : '<span class="muted">모델 없음</span>')   /* A-6: an empty area starts from the model excel or by drawing — hidden without the edit role */
+        : a.C.bad ? `<a href="standardize.html?area=${encodeURIComponent(a.id)}&f=todo">표준 맞추기</a>`
+        : a.open.length ? `<span class="muted">${escH(a.open.join(', '))} 완료 후 확정</span>` : `<a href="model.html?area=${encodeURIComponent(a.id)}">확정 신청</a>`;
       return `<tr><td><a href="model.html?area=${encodeURIComponent(a.id)}">${escH(a.m.name)}</a></td><td class="muted">${escH(a.sys)} <span class="faint">${escH(a.dbms)}</span></td><td>${a.L.state === 'review' ? tag('run', '검토') : a.L.state === 'confirmed' ? tag('ok', '확정') : `<span class="muted">${a.stage}</span>`}</td><td class="r">${!a.C.tot ? '<span class="badge b-warning" title="엔터티 · 속성이 없어 준수율을 계산하지 않았습니다">미산정</span>' : `<span class="num">${a.C.rate}%</span><span class="mbar${below ? ' bad' : ''}"><i style="width:${a.C.rate}%"></i><b style="left:${GOAL}%"></b></span>`}</td><td class="r num">${a.C.bad || '—'}</td><td>${next}</td></tr>`; }).join('') || '<tr class="er first"><td colspan="6" class="muted">담당 업무 영역이 없습니다.</td></tr>'}</tbody></table>
     <div class="ok-line">막대의 세로 눈금은 목표 준수율 ${GOAL}%입니다. 준수율은 검수 기준 v${getPolicy().ver}로 계산합니다${offRulesHtml() ? " · " + offRulesHtml() : ""}.</div></section>`;
 
@@ -158,7 +158,7 @@ window.pageInit = function () {
   const ledger = `<section class="sec"><div class="sec-h"><h2>현황</h2></div>
     <table class="tbl box ledger"><thead><tr><th>항목</th><th class="r">값</th><th class="bc">기준</th><th class="r">판정</th></tr></thead><tbody>
       <tr><td><a href="#areas">표준 준수율</a></td><td class="v">${tot ? RATE + '%' : '미산정'}<span class="lb">목표 ${GOAL}%</span></td><td class="muted bc">목표 ${GOAL}%</td>${tot ? judge(RATE < GOAL, RATE < GOAL ? (GOAL - RATE) + '%p 부족' : '충족') : '<td class="gap">—</td>'}</tr>
-      <tr><td><a href="#stale">기한 넘긴 결재</a></td><td class="v">${lt.length}<span class="lb">기준 0건</span></td><td class="muted bc">0건</td>${judge(lt.length > 0, lt.length ? lt.length + '건 넘김' : '충족')}</tr>
+      <tr><td><a href="#stale">기한 넘긴 결재 · 기관 전체</a></td><td class="v">${lt.length}<span class="lb">기준 0건</span></td><td class="muted bc">0건</td>${judge(lt.length > 0, lt.length ? lt.length + '건 넘김' : '충족')}</tr>
       <tr><td>평균 처리 기간</td><td class="v">${leadT.toFixed(1)}일<span class="lb">${SLA}일 이내</span></td><td class="muted bc">${SLA}일 이내</td>${judge(leadT > SLA, leadT > SLA ? (leadT - SLA).toFixed(1) + '일 초과' : '충족')}</tr>
       <tr><td><a href="approvals.html${ME.has('da') || ME.has('owner') ? '?box=all' : '?box=mine'}">진행 중 결재</a></td><td class="v">${live.length}</td><td class="muted bc">—</td><td class="gap ok">—</td></tr>
       <tr><td><a href="#areas">확정된 업무 영역</a></td><td class="v">${st.conf}/${AREAS.length}</td><td class="muted bc">—</td><td class="gap ok">검토 중 ${st.rev}</td></tr>
@@ -171,8 +171,8 @@ window.pageInit = function () {
   const mineOpen = mineAll.filter(d => docGroup(d) !== 'done').sort((a, b) => (docGroup(a) === 'fix' ? -1 : 0) - (docGroup(b) === 'fix' ? -1 : 0));
   const mineDone = mineAll.filter(d => docGroup(d) === 'done');
   const mine = `<section class="sec" id="mine"><div class="sec-h"><h2>내 신청</h2><a class="end" href="approvals.html?box=mine">전체</a></div>
-    ${mineOpen.length ? `<table class="tbl box"><thead><tr><th>신청번호</th><th>단계</th><th class="r">머문 일</th></tr></thead><tbody>${mineOpen.map(d => `<tr><td><a class="mono" href="approvals.html?doc=${d.id}" title="${escH(d.title)}">${d.id}</a></td><td>${docTag(d)}</td><td class="r num">${docGroup(d) === 'live' ? docAge(d) + '일' : '—'}</td></tr>`).join('')}</tbody></table>` : '<div class="ok-line" style="padding:12px 0">진행 중인 신청이 없습니다.</div>'}
-    ${mineDone.length ? `<div class="ok-line">완료 ${mineDone.length}건: ${mineDone.slice(0, 3).map(d => `<a class="mono" href="approvals.html?doc=${d.id}">${d.id.slice(-4)}</a>`).join(', ')}</div>` : ''}</section>`;
+    ${mineOpen.length ? `<table class="tbl box"><thead><tr><th>신청번호</th><th>단계</th><th class="r">머문 일</th></tr></thead><tbody>${mineOpen.map(d => `<tr><td><a class="mono" href="approvals.html?doc=${encodeURIComponent(d.id)}" title="${escH(d.title)}">${escH(d.id)}</a></td><td>${docTag(d)}</td><td class="r num">${docGroup(d) === 'live' ? docAge(d) + '일' : '—'}</td></tr>`).join('')}</tbody></table>` : '<div class="ok-line" style="padding:12px 0">진행 중인 신청이 없습니다.</div>'}
+    ${mineDone.length ? `<div class="ok-line">완료 ${mineDone.length}건: ${mineDone.slice(0, 3).map(d => `<a class="mono" href="approvals.html?doc=${encodeURIComponent(d.id)}">${escH(d.id.slice(-4))}</a>`).join(', ')}</div>` : ''}</section>`;
 
   /* ---- my candidates (modeler) ---- */
   const myC = getCands().filter(c => c.loc.some(l => l.by === ME.id));
@@ -189,7 +189,7 @@ window.pageInit = function () {
     docs.forEach(d => (d.hist || []).forEach(h => { if (/반려|재검사 실패/.test(h.act || '') && h.why) add(h.why, d.id); }));
     live.filter(d => d.type === 'dict').forEach(d => { try { checkDictDoc(d).forEach(r => r.problems.forEach(p => add(p, d.id))); } catch (e) {} });
     const top = [...R.entries()].map(([k, g]) => [k, new Set([...g.values()].map(x => x.id)).size, [...g.values()]]).sort((a, b) => b[1] - a[1]).slice(0, 5);
-    const docA = id => `<a class="mono" href="approvals.html?doc=${id}" title="${id} 결재 문서 열기">${id}</a>`;
+    const docA = id => `<a class="mono" href="approvals.html?doc=${encodeURIComponent(id)}" title="${escH(id)} 결재 문서 열기">${escH(id)}</a>`;
     const reasonLi = ([k, n, inst]) => { const texts = [...new Set(inst.map(x => x.t))];
       if (texts.length === 1) return `<li>${esc(texts[0])} <span class="num muted">${n}건</span> ${[...new Set(inst.map(x => x.id))].slice(0, 3).map(docA).join(' ')}</li>`;
       return `<li>${esc(k)} <span class="num muted">${n}건</span><ul class="rx">${inst.slice(0, 3).map(x => `<li>${esc(x.t)} ${docA(x.id)}</li>`).join('')}${inst.length > 3 ? `<li><a href="approvals.html?box=all">외 ${inst.length - 3}건 — 결재함에서 보기</a></li>` : ''}</ul></li>`; };
@@ -199,7 +199,7 @@ window.pageInit = function () {
       ${top.length ? `<ol class="reasons">${top.map(reasonLi).join('')}</ol>` : '<div class="ok-line">막힌 신청이 없습니다.</div>'}</section>`;
     const stale = live.slice().sort((a, b) => docAge(b) - docAge(a)).slice(0, 5);
     staleS = `<section class="sec" id="stale"><div class="sec-h"><h2>오래 머무는 결재</h2><a class="end" href="approvals.html">결재함</a></div>
-      <table class="tbl box"><tbody>${stale.map(d => `<tr><td><a class="mono" href="approvals.html?doc=${d.id}" title="${escH(d.title)}">${d.id}</a></td><td class="muted">${STEP_NAME[d.step]}</td><td class="r">${docLate(d) ? tag('err', docAge(d) + '일') : `<span class="num muted">${docAge(d)}일</span>`}</td></tr>`).join('') || '<tr class="er done"><td colspan="3" class="caption muted u-tc">진행 중인 결재가 없습니다</td></tr>'}</tbody></table></section>`;   // list standard L-6: the shared empty row
+      <table class="tbl box"><tbody>${stale.map(d => `<tr><td><a class="mono" href="approvals.html?doc=${encodeURIComponent(d.id)}" title="${escH(d.title)}">${escH(d.id)}</a></td><td class="muted">${STEP_NAME[d.step]}</td><td class="r">${docLate(d) ? tag('err', docAge(d) + '일') : `<span class="num muted">${docAge(d)}일</span>`}</td></tr>`).join('') || '<tr class="er done"><td colspan="3" class="caption muted u-tc">진행 중인 결재가 없습니다</td></tr>'}</tbody></table></section>`;   // list standard L-6: the shared empty row
     const weeks = []; for (let i = 5; i >= 0; i--) { const end = new Date(T0 - i * 7 * 864e5), start = new Date(end - 6 * 864e5); weeks.push({ start, end, n: 0 }); }
     getDict().forEach(x => { const d = toDay(x.dt); if (!d) return; const w = weeks.find(w => d >= w.start && d <= w.end); if (w) w.n++; });
     const pubD = toDay(getPub().at); const wmax = Math.max(...weeks.map(w => w.n), 1);
@@ -213,7 +213,7 @@ window.pageInit = function () {
     const byLate = L => L.slice().sort((a, b) => (docLate(b) ? 1 : 0) - (docLate(a) ? 1 : 0) || docAge(b) - docAge(a));
     const qq = byLate(q), oo = ME.has('admin') ? byLate(live.filter(docLate).filter(d => !q.includes(d))) : [];
     const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
-    const row = (d, who) => `<tr><td><a class="mono" href="approvals.html?doc=${d.id}">${d.id}</a></td><td class="rt" title="${esc(d.title || '')}">${esc(d.title || '')}</td><td class="muted u-nowrap">${who}</td><td class="r">${docLate(d) ? tag('err', `기한 넘김 ${docAge(d)}일`) : `<span class="num muted">${docAge(d)}일</span>`}</td></tr>`;
+    const row = (d, who) => `<tr><td><a class="mono" href="approvals.html?doc=${encodeURIComponent(d.id)}">${escH(d.id)}</a></td><td class="rt" title="${esc(d.title || '')}">${esc(d.title || '')}</td><td class="muted u-nowrap">${who}</td><td class="r">${docLate(d) ? tag('err', `기한 넘김 ${docAge(d)}일`) : `<span class="num muted">${docAge(d)}일</span>`}</td></tr>`;
     const rows = qq.slice(0, 5).map(d => row(d, '내 차례')).concat(oo.slice(0, Math.max(0, 5 - Math.min(5, qq.length))).map(d => row(d, `${STEP_NAME[d.step]} · 기관 전체`)));
     const nLate = qq.filter(docLate).length + oo.length;
     apprS = `<section class="sec" id="my-appr"><div class="sec-h"><h2>내 결재 · 기한 넘김</h2><span class="end">${nLate ? tag('err', `기한 넘김 ${nLate}`) : ''} <a href="approvals.html?box=queue">결재함</a></span></div>

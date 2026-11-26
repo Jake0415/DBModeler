@@ -31,19 +31,27 @@ window.pageInit = function () {
   const backName = back500 ? `이전 화면(${back500.split(/[?#]/)[0]})` : '';
   const P = {
     // 403: asking for the role is the way forward, so it comes first (#15)
-    '403': ['403 · 권한 없음', '이 화면을 볼 권한이 없습니다', `${josa(what || '이 화면', '은/는')} <b>${need || 'Admin'}</b> 역할이 필요합니다. 지금 역할: ${ME.roles.map(r => ROLE_NAME[r]).join(', ') || '조회만'}.`, `<a class="btn primary" href="mypage.html?req=${encodeURIComponent(need || 'Admin')}&what=${encodeURIComponent(what || '')}#profile" title="Admin에게 ${need || 'Admin'} 역할을 요청합니다">역할 변경 요청</a><a class="btn" href="home.html">홈으로</a>`],
+    // 최종 점검 FC-01: need · what come from the address — they go in as TEXT (data-t slots filled below with textContent), the request link is built with the URL API
+    '403': ['403 · 권한 없음', '이 화면을 볼 권한이 없습니다', `<span data-t="what403"></span> <b data-t="need"></b> 역할이 필요합니다. 지금 역할: <span data-t="roles"></span>.`, `<a class="btn primary" id="req-role">역할 변경 요청</a><a class="btn" href="home.html">홈으로</a>`],
     // 404: a way back (home · search · previous screen) instead of a dead end (#15)
-    '404': ['404 · 찾을 수 없음', '찾는 화면이나 문서가 없습니다', `${what ? `<b>${what}</b>${josa(what, '은/는').slice(what.length)} ` : ''}삭제됐거나 다른 곳으로 옮겨졌을 수 있습니다. 검색으로 찾거나 홈에서 다시 시작하세요.`, `<a class="btn primary" href="home.html">홈으로</a><button class="btn" id="go-search">${icon('search', 14)} 검색으로 찾기</button><button class="btn ghost" onclick="history.back()">이전 화면</button>`],
+    '404': ['404 · 찾을 수 없음', '찾는 화면이나 문서가 없습니다', `${what ? '<b data-t="what"></b><span data-t="whatJ"></span> ' : ''}삭제됐거나 다른 곳으로 옮겨졌을 수 있습니다. 검색으로 찾거나 홈에서 다시 시작하세요.`, `<a class="btn primary" href="home.html">홈으로</a><button class="btn" id="go-search">${icon('search', 14)} 검색으로 찾기</button><button class="btn ghost" onclick="history.back()">이전 화면</button>`],
     // 500 (E9): [다시 시도] goes back to the screen the request came from (same-origin referrer or ?from=), not a reload of this page;
     // nothing claims the work was kept — only that unsaved input on that screen may need to be entered again
-    '500': ['500 · 일시적인 오류', '요청을 처리하지 못했습니다', `잠시 후 다시 시도하세요. ${back500 ? `[다시 시도]를 누르면 <b>${backName}</b>으로 돌아갑니다.` : '[다시 시도]는 홈으로 돌아갑니다.'} 저장하지 않은 입력은 남아 있지 않을 수 있으니 돌아가서 확인하세요.<br><span class="mono caption">오류 ID: E-20261118-7F3A</span>`, `<a class="btn primary" id="retry" href="${back500 || 'home.html'}">다시 시도</a>${back500 ? '<a class="btn" href="home.html">홈으로</a>' : ''}<button class="btn" id="cp-id">오류 ID 복사</button>`],
-    'maint': ['점검 중', '정기 점검 중입니다', '11/20(금) 18:00 ~ 19:00. 점검이 끝나면 자동으로 다시 연결합니다. 편집 내용은 자동 보관됐습니다.', `<button class="btn" onclick="location.reload()">상태 확인</button>`],
+    '500': ['500 · 일시적인 오류', '요청을 처리하지 못했습니다', `잠시 후 다시 시도하세요. ${back500 ? '[다시 시도]를 누르면 <b data-t="back"></b>으로 돌아갑니다.' : '[다시 시도]는 홈으로 돌아갑니다.'} 저장하지 않은 입력은 남아 있지 않을 수 있으니 돌아가서 확인하세요.<br><span class="mono caption">오류 ID: E-20261118-7F3A</span>`, `<a class="btn primary" id="retry">다시 시도</a>${back500 ? '<a class="btn" href="home.html">홈으로</a>' : ''}<button class="btn" id="cp-id">오류 ID 복사</button>`],
+    // 최종 점검 A-11: the same words and the same promise as the static maintenance page (maintenance.html) — 합니다체, nothing promised that the page cannot keep
+    'maint': ['점검 중', '서비스 점검 중입니다', '지금은 NeoDB에 연결할 수 없습니다. 점검이 끝나면 다시 쓸 수 있습니다. 작성 중이던 ERD는 마지막으로 저장된 상태까지 보관되어 있습니다. 예정 종료 시각은 공지를 확인하세요.', `<button class="btn" onclick="location.reload()">다시 시도</button>`],
     'logout': ['로그아웃', '로그아웃되었습니다', '공동 편집 중이던 업무 영역의 접속자 목록에서도 빠졌습니다.', `<a class="btn primary" href="login.html">다시 로그인</a>`],
     'expired': ['세션 만료', '30분 동안 입력이 없어 세션이 만료됐습니다', '편집 중이던 내용은 이 브라우저에 보관했습니다. 다시 로그인하면 원래 화면으로 돌아가 이어서 작업합니다.', `<a class="btn primary" href="login.html?expired=1&from=${encodeURIComponent(from || 'home.html')}">다시 로그인하고 이어서 작업</a>`]
   };
   const p = P[code] || P['404'];
   document.title = p[0] + ' · NeoDB 목업';
-  document.getElementById('err').innerHTML = `<div class="code">${p[0]}</div><h1>${p[1]}</h1><p>${p[2]}</p><div class="acts">${p[3]}</div><div class="foot">${PRODUCT.name} ${PRODUCT.version} · build ${PRODUCT.build} · ${PRODUCT.env}</div>`;
+  const box = document.getElementById('err');
+  box.innerHTML = `<div class="code">${p[0]}</div><h1>${p[1]}</h1><p>${p[2]}</p><div class="acts">${p[3]}</div><div class="foot">${PRODUCT.name} ${PRODUCT.version} · build ${PRODUCT.build} · ${PRODUCT.env}</div>`;
+  // FC-01: the address values are set as text only
+  const needT = need || 'Admin', T = { what403: josa(what || '이 화면', '은/는'), need: needT, roles: ME.roles.map(r => ROLE_NAME[r]).join(', ') || '조회만', what: what || '', whatJ: what ? josa(what, '은/는').slice(what.length) : '', back: backName };
+  box.querySelectorAll('[data-t]').forEach(el => { el.textContent = T[el.dataset.t] == null ? '' : T[el.dataset.t]; });
+  const rq = document.getElementById('req-role'); if (rq) { const u = new URL('mypage.html', location.href); u.searchParams.set('req', needT); u.searchParams.set('what', what || ''); u.hash = 'profile'; rq.href = u.pathname.split('/').pop() + u.search + u.hash; rq.title = `Admin에게 ${needT} 역할을 요청합니다`; }
+  const rt = document.getElementById('retry'); if (rt) rt.href = back500 || 'home.html';   // back500 is a same-origin path (safe()) — set as a property, never written into markup
   // 404 → the shell's global search, prefilled with what was missing
   const gs = document.getElementById('go-search'); if (gs) gs.onclick = () => { if (!window.gsearchOpen) { location.href = 'home.html'; return; } window.gsearchOpen(); const i = document.getElementById('gs-q'); if (i && what) { i.value = what; i.dispatchEvent(new Event('input')); } };
   // real clipboard copy with a fallback (CX13-16)

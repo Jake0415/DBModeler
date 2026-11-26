@@ -281,7 +281,7 @@
     if (t.dataset.tog) { const id = t.dataset.tog; open.has(id) ? open.delete(id) : open.add(id); drawTables(); const b = document.querySelector(`[data-tog="${id}"]`); if (open.has(id)) { const f = document.querySelector(`#ex-${id} input:not([disabled])`); if (f) f.focus(); } else if (b) b.focus(); return; }
     if (t.dataset.prop) { const [k, f] = t.dataset.prop.split('-'); propose(k, f); return; }
     if (t.dataset.fix) { const [k, f] = t.dataset.fix.split('-'); openRow(k, f); return; }
-    if (t.dataset.popen) { const p = (getPolicy().props || []).find(x => x.id === t.dataset.popen); if (p) { openRow(p.k, p.f); toast(`${p.id} — 요청 내용: ${p.want}`, 'info'); } return; }
+    if (t.dataset.popen) { const p = (getPolicy().props || []).find(x => x.id === t.dataset.popen); if (p) { openRow(p.k, p.f); toast(`${esc(p.id)} — 요청 내용: ${esc(p.want)}`, 'info'); } return; }
     if (t.dataset.pdone) { setProp(t.dataset.pdone, '반영'); return; } if (t.dataset.prej) { setProp(t.dataset.prej, '거절'); return; }
     if (t.dataset.sdel != null && edit) { D.model.entitySuffix.splice(+t.dataset.sdel, 1); drawSfx(); changed(); return; }
     if (t.dataset.nlvl && edit) { (t.dataset.nobj === 'model' ? D.model : D.naming)[t.dataset.nlvl] = t.dataset.v; $('naming').innerHTML = namingHtml(); changed(); const b = document.querySelector(`[data-nlvl="${t.dataset.nlvl}"][data-v="${t.dataset.v}"]`); if (b) b.focus(); return; }
@@ -298,7 +298,7 @@
     const add = [], skip = []; chars.forEach(c => { if (/\s/.test(c)) return; if (/^[\p{P}\p{S}]$/u.test(c)) { if (!r.special.includes(c) && !add.includes(c)) add.push(c); } else skip.push(c); });
     if (skip.length) note.push(`문자 · 숫자(${skip.slice(0, 4).join(' ')})는 제외했습니다 — 허용 문자에서 선택하세요`);
     if (!add.length) { toast(note.join(' · ') || '추가할 특수문자가 없습니다', 'info'); inp.focus(); return; }
-    r.special = r.special.concat(add); refreshRow(k, f, '[data-syin]'); toast(`특수문자 ${add.join(' ')}를 추가했습니다${note.length ? ' · ' + note.join(' · ') : ''}`, 'success'); }
+    r.special = r.special.concat(add); refreshRow(k, f, '[data-syin]'); toast(`특수문자 ${esc(add.join(' '))}를 추가했습니다${note.length ? ' · ' + esc(note.join(' · ')) : ''}`, 'success'); }
   content.addEventListener('keydown', e => { if (e.key === 'Escape') { const ex = e.target.closest('tr.exp'); if (ex) { const id = ex.id.slice(3); open.delete(id); drawTables(); const b = document.querySelector(`[data-tog="${id}"]`); if (b) b.focus(); return; } }
     if (e.key === 'Enter' && e.target.matches('[data-syin]')) { e.preventDefault(); const ed = e.target.closest('[data-ed]'), [k, f] = ed.dataset.ed.split('-'); addSyms(k, f, e.target); } });
   content.addEventListener('input', e => { const t = e.target;

@@ -373,6 +373,16 @@
       "states": ["candidates.html?as=lee", "candidates.html?as=park"],
       "verify": "exempt",
       "exemptReason": "목업 전용 데모 기능(?as= 역할 바꾸기)"
+    },
+    {
+      "id": "BH-candidates-038",
+      "where": "목록 · 상세 · 반려 창",
+      "trigger": "이름 · 사유 · 주소 값에 기호(< > & 따옴표)가 있을 때",
+      "expected": "후보 이름 · 약어 · 발생 위치(영역 · 엔터티 · 속성) · 처리 상태 · 반려 사유 · 기존 표준어 안내가 목록 · 상세 · 창에서 글자 그대로 보인다. 위치 링크는 주소와 표시 이름을 따로 만든다",
+      "roles": "전체",
+      "refs": ["FC-06"],
+      "states": ["candidates.html"],
+      "verify": "unit"
     }
   ]
 }

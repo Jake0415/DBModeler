@@ -50,6 +50,7 @@
           <tbody id="rows"></tbody>
         </table>
       </div>
+      <div class="sbulk" id="sd-empty" role="status" hidden><span class="caption muted">처리할 미준수가 없습니다 — 표준 · 예외 · 비대상만 남았습니다</span></div>
       <div class="sbulk" id="sd-bar" role="region" aria-label="선택한 행 일괄 처리">
         <b id="sd-n"></b>
         <div class="mline" id="sd-prev"></div>
@@ -281,11 +282,13 @@ window.pageInit = function () {
     liveCount(`${fl ? nVis : rows.length}건`);
     urlSync(['f'], { f: curF.filter || '' });
     const bar = (s.C.length || s.ho) && !readOnly;
-    $('sd-bar').hidden = readOnly;   // always visible while editable — the one completing action never disappears
+    const nothing = !trs().some(tr => { const c = tr.querySelector('input[type=checkbox]'); return c && !c.disabled; }) && !s.ho;   // NEW-04: the bar stays while any row can be selected (incl. 신청 중 rows that can still [신청 중 용어로 맞춤]) or a record waits; only when neither → the empty state
+    $('sd-bar').hidden = readOnly || nothing; $('sd-empty').hidden = readOnly || !nothing;   // visible while there is something to complete; otherwise the empty state
     $('sd-n').innerHTML = s.C.length ? `${s.C.length}건 선택` : s.ho ? `기록 ${s.ho}건 대기` : '<span class="muted">처리할 행을 고르세요</span>';
     $('sd-prev').innerHTML = `<span title="${s.phys ? `물리명 변경 ${s.phys}건 포함 · ` : ''}예외·비대상 기록 포함"><b>${s.mod}</b>모델 변경</span><span title="용어 ${s.req.length}개를 결재 문서 1건으로 묶어 신청"><b>${s.req.length ? 1 : 0}</b>결재 신청${s.req.length ? ` (용어 ${s.req.length})` : ''}</span><span><b>${s.cand.length}</b>후보 등록</span><span><b>${s.left}</b>남는 미준수</span>${s.req.length + s.cand.length >= 10 ? `<span class="caption">많을 때는 용어 자동분석이 단어 분해 · 새 단어 지정까지 한 번에 합니다 — <button type="button" class="linkbtn" data-to-wiz>그쪽으로</button></span>` : ''}${hc ? `<span class="caption muted" title="필터로 숨긴 행의 선택은 적용하지 않습니다">숨긴 선택 ${hc}건 제외</span>` : ''}`;
     ['sd-ex', 'sd-na', 'sd-clear'].forEach(id => $(id).disabled = !s.C.length || readOnly);
     $('sd-apply').disabled = (!s.C.length && !s.ho) || readOnly;
+    ['sd-apply', 'sd-ex', 'sd-na', 'sd-clear'].forEach(id => { const b = $(id); if (b.disabled) b.setAttribute('aria-describedby', 'sd-n'); else b.removeAttribute('aria-describedby'); });   // A-05: a dimmed button says why (‘처리할 행을 고르세요’)
     $('sd-apply').textContent = s.C.length ? '선택 적용' : `기록 ${s.ho}건 적용`;
     $('sd-apply').classList.toggle('primary', !(FLOW3 && (s.req.length || s.cand.length)));   // U-07
     syncBand();   // U-F6: while this screen shows its own primary button, the band's buttons are secondary — redrawn when that changes
@@ -364,7 +367,7 @@ window.pageInit = function () {
   syncBand(true);   // U-07 · U-F6: [반영] or an enabled primary [선택 적용] on screen → the band's buttons are secondary
   // ?f= opens a filter (D1): f=todo with no to-do rows falls back to 전체 and says so
   const F = q.get('f');
-  if (F) { const chip = document.querySelector(`#chips .chip[data-filter="${F}"]`); const n = chip ? +((chip.querySelector('.n') || {}).textContent || 0) : 0;
+  if (F) { const chip = [...document.querySelectorAll('#chips .chip[data-filter]')].find(c => c.dataset.filter === F) || null; /* FC-15: string compare — an odd f= opens the default view */ const n = chip ? +((chip.querySelector('.n') || {}).textContent || 0) : 0;
     if (chip && (n > 0 || F !== 'todo')) chip.click(); else if (F === 'todo') setTimeout(() => toast('남은 미준수가 없어 전체 목록을 보여 줍니다', 'info'), 200); }
   // model context (D4): highlight and scroll to the row; a filter that hides it gives way to 전체
   if (CE) {

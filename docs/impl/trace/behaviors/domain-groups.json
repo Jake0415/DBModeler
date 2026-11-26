@@ -20,7 +20,7 @@
     {
       "id": "BH-domain-groups-002",
       "where": "머리",
-      "trigger": "[바구니] 클릭",
+      "trigger": "[사전 바구니] 클릭(dict.request가 없으면 단추가 없음 — B-02)",
       "expected": "dictionary.html?basket=1로 이동. 버튼에 바구니 건수 배지(비면 숨김)",
       "roles": "전체",
       "refs": [

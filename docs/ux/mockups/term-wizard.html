@@ -251,6 +251,7 @@ window.pageInit = function () {
   // permission & lock: ①–③ are analysis only (anyone); ④·⑤ change the dictionary queue / the model (CX12-28 pattern)
   const canEdit = can('model.edit', { area: AREA });
   const readOnly = !canEdit || LK.state !== 'edit';
+  const NO_ROLE = !canEdit && !ME.has('modeler');   // FC-14 · R-17: no role that could register terms or change the model → hide those buttons; a role that is out of range / a locked version → dimmed + reason
   const roWhy = !canEdit ? (ME.has('modeler') ? `내 담당 시스템에 ${esc(josa(sysOfArea(AREA), '이/가'))} 없어 등록·반영은 할 수 없습니다` : '용어 등록·모델 반영은 모델러 역할만 할 수 있습니다') : `${LK.doc ? LK.doc.id + ' ' : ''}${LK.state === 'review' ? '확정 결재 중' : '확정본'}이라 모델을 고칠 수 없습니다`;
   if (HIDDEN) $('ro-slot').innerHTML = `<div class="pad u-pb-0"><div class="banner warning"><i data-ic=info></i><div class="grow"><b>${josa('v' + VER, '은/는')} 결재 중</b>이라 신청자와 결재 담당자만 볼 수 있습니다. 용어 자동분석은 작업 중인 버전을 다루므로 보여 줄 내용이 없습니다.</div><a class="btn sm" href="model.html?area=${AREA}">모델로</a></div></div>`;   // F-01
   else if (readOnly) $('ro-slot').innerHTML = `<div class="pad u-pb-0"><div class="banner info"><i data-ic=info></i><div class="grow"><b>분석만 가능</b> — ${roWhy}. ①~③(분석·단어 구성)은 볼 수 있고 ④ 용어 등록·⑤ 모델 반영은 막혀 있습니다.${!canEdit && ME.has('modeler') ? ` <a href="mypage.html?req=sys&sys=${encodeURIComponent(sysOfArea(AREA))}">담당 시스템 추가 요청</a>` : ''}</div><a class="btn sm" href="${backUrl}">모델로</a></div></div>`;
@@ -652,7 +653,8 @@ window.pageInit = function () {
     $('g-all').disabled = !boxes.length; $('g-all').checked = !!boxes.length && on === boxes.length; $('g-all').indeterminate = on > 0 && on < boxes.length;
     $('g-n').innerHTML = C.length ? `${C.length}건 선택` : '<span class="muted u-fw-400">처리할 항목을 고르세요</span>';
     const reqable = C.filter(it => !it.unk);
-    if (readOnly) { ['g-basket', 'g-cand'].forEach(id => { $(id).disabled = true; $(id).title = roWhy; }); setBlock($('g-req'), roWhy); }
+    if (NO_ROLE) { ['g-basket', 'g-cand', 'g-req'].forEach(id => { $(id).hidden = true; }); }   // FC-14 · R-17: no role for it → the buttons are not shown (the banner says why)
+    else if (readOnly) { ['g-basket', 'g-cand'].forEach(id => { $(id).disabled = true; $(id).title = roWhy; }); setBlock($('g-req'), roWhy); }
     else { setBlock($('g-basket'), !reqable.length ? (C.length ? '미등록 단어는 바구니·신청 대신 후보 큐로 보냅니다' : '') : ''); $('g-basket').disabled = !reqable.length; $('g-cand').disabled = !C.length; setBlock($('g-req'), ''); $('g-req').disabled = !reqable.length; }
   }
   $('g-rows').addEventListener('change', e => { const c = e.target.closest('[data-g]'); if (!c) return; regSel[c.dataset.g] = c.checked; gSync(); });
@@ -722,6 +724,7 @@ window.pageInit = function () {
     $('m-note').textContent = on.some(x => x.res.s !== 'na' && x.newP !== x.r.cur.p && x.r.cur.p !== '—') ? '물리명이 바뀌는 행은 다음 DDL 출력에서 변경분(ALTER)으로 나갑니다' : '';
     $('m-go').classList.toggle('primary', !applied);
     if (applied) { $('m-go').disabled = true; }
+    else if (NO_ROLE) $('m-go').hidden = true;   // FC-14 · R-17
     else if (readOnly) setBlock($('m-go'), roWhy);
     else { setBlock($('m-go'), ''); $('m-go').disabled = !on.length; }
   }

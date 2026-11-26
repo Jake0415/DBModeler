@@ -246,7 +246,7 @@ window.pageInit = function () {
         ${sv ? `<div class="banner info u-mb-12"><i data-ic=info></i><div class="grow">보완 코드값 ${sv.length}개를 새 판 반영에 담았습니다 — 신청을 올리면 결재 뒤 반영됩니다.</div><button class="btn sm" id="go-new">새 판 반영 보기</button></div>` : ''}
         <div class="section-t">코드값 <span class="badge">${(c.vals || []).length}</span></div>
         <table class="tbl vals-tbl"><thead><tr><th>값</th><th>이름</th><th class="num">순서</th><th>상태</th></tr></thead><tbody>
-          ${(c.vals || []).map(v => `<tr><td class="mono">${esc(v.v)}</td><td>${esc(v.nm)}</td><td class="num">${esc(v.ord)}</td><td>${v.st === '사용' ? tag('ok', '사용') : tag('end', esc(v.st))}</td></tr>`).join('')}</tbody></table>
+          ${(c.vals || []).map(v => `<tr><td class="mono">${esc(v.v)}</td><td>${esc(v.nm)}</td><td class="num">${esc(v.ord)}</td><td>${v.st === '사용' ? tag('ok', '사용') : tag('end', v.st)}</td></tr>`).join('')}</tbody></table>
         <div class="section-t">원문 허용값 <span class="caption muted">용어 시트 ‘허용값’ 열 그대로</span></div>
         <div class="raw">${esc(c.allowRaw || '—')}</div>
         <div class="section-t">연결 용어 <span class="badge">${(c.terms || []).length}</span></div>
@@ -387,7 +387,7 @@ window.pageInit = function () {
       <div class="scroll u-p-0"><table class="tbl diff-tbl">
         <thead><tr><th class="ck"><input type="checkbox" id="ck-all" aria-label="보이는 항목 모두 고르기"${allOn ? ' checked' : ''}${ro ? ' disabled' : ''}></th><th>구분</th><th>종류</th><th>이름</th><th>지금</th><th>새 판</th><th>영향</th></tr></thead>
         <tbody>${vis.map(r => `<tr class="${r.conflict ? 'cf' : ''}">
-          <td class="ck"><input type="checkbox" data-ck="${esc(r.key)}" aria-label="${esc(r.name)} 고르기"${picked.has(r.key) ? ' checked' : ''}${ro || r.conflict ? ' disabled' : ''}${r.conflict ? ' title="기관 항목과 충돌 — DA가 먼저 정리해야 합니다"' : ''}></td>
+          <td class="ck"><input type="checkbox" data-ck="${esc(r.key)}" aria-label="${esc(r.name)} 고르기"${picked.has(r.key) ? ' checked' : ''}${ro || r.conflict ? ' disabled' : ''}${r.conflict ? ' title="기관 항목과 충돌 — DA가 먼저 정리한 뒤 고를 수 있습니다"' : ''}></td>
           <td>${GTAG[r.g]}</td><td>${KN[r.k]}</td>
           <td><b>${esc(r.name)}</b>${r.d ? ` <span class="caption muted mono">${esc(r.d.id)}</span>` : ''}${r.supp ? ' <span class="badge b-info">원본 보완</span>' : ''}</td>
           <td class="chgc muted">${r.cur}</td><td class="chgc">${r.next}</td>

@@ -95,7 +95,9 @@ window.pageInit = function () {
   const qVer = !qSnap && +q.get('ver') >= 1 && +q.get('ver') <= confVer ? +q.get('ver') : 0, qVerDoc = qVer ? doneDocs.filter(x => x.ver === qVer).sort((a, b) => b.id.localeCompare(a.id))[0] || null : null;
   const qVerOk = qVer && (qVerDoc || getModelData(AREA, qVer)) ? qVer : 0, selConf = qVerOk || confVer;
   let mode, snapDoc = null;   // mode: conf (official) · review (submitted copy, review only) · old (rejected / withdrawn copy) · work (preview) · hidden
-  if (qSnap) { snapDoc = qSnap; mode = qSnap.step === 'done' ? 'conf' : inReview(qSnap) ? (canSeeDoc(qSnap) ? 'review' : 'hidden') : 'old'; }
+  // FC-09: a rejected / withdrawn submitted copy is read only by someone who may see that approval document (app.js canSeeModelDoc — the confirmed copy keeps the model view range)
+  const seeSnap = d => typeof window.canSeeModelDoc === 'function' ? canSeeModelDoc(d) : (d.step === 'done' || canSeeDoc(d));
+  if (qSnap) { snapDoc = qSnap; mode = qSnap.step === 'done' ? 'conf' : inReview(qSnap) ? (canSeeDoc(qSnap) ? 'review' : 'hidden') : (seeSnap(qSnap) ? 'old' : 'hidden'); }
   else if (qVerOk) { snapDoc = qVerDoc; mode = 'conf'; }
   else if (q.get('src') === 'work' && L.state === 'edit') mode = 'work';
   else if (q.get('src') === 'work' && reviewDoc && canSeeDoc(reviewDoc)) { snapDoc = reviewDoc; mode = 'review'; }
@@ -110,7 +112,9 @@ window.pageInit = function () {
   // from the copy this DDL is made from — the same value the approval document and the outputs audit show
   const fmtHash = h => !h ? '' : /^sha256:/.test(h) ? h : 'sha256:' + h;
   const docHashV = (snapDoc || mode === 'conf') && !snapHidden ? fmtHash((snapDoc && snapDoc.hash) || (typeof window.snapHash === 'function' ? window.snapHash(src) : '')) || '해시 없음' : '';
-  const label = snapHidden ? (snapDoc ? `${snapDoc.id} 결재 중 · 열람 제한` : `v${M.ver} 결재 중 · 열람 제한`) : mode === 'conf' ? `v${selVer} 확정본${snapDoc ? ' · ' + snapDoc.id : ''}` : mode === 'review' ? `v${selVer} 제출 사본 · ${snapDoc.id} — 검토용` : mode === 'old' ? `v${selVer} 제출 사본 · ${snapDoc.id} (${STEP_NAME[snapDoc.step] || snapDoc.step})` : `v${M.ver} 작업본 — 미리보기 · 승인 전(비공식)`;
+  const endedHidden = snapHidden && !!snapDoc && !inReview(snapDoc);   // FC-09: a rejected / withdrawn copy this user may not see
+  const hidWhy = endedHidden ? `${STEP_NAME[snapDoc.step] || snapDoc.step} 제출 사본은 그 결재 문서를 볼 수 있는 사람만 볼 수 있습니다` : '결재 중인 제출본은 신청자와 결재 담당자만 볼 수 있습니다';
+  const label = snapHidden ? (snapDoc ? `${snapDoc.id} ${endedHidden ? (STEP_NAME[snapDoc.step] || snapDoc.step) : '결재 중'} · 열람 제한` : `v${M.ver} 결재 중 · 열람 제한`) : mode === 'conf' ? `v${selVer} 확정본${snapDoc ? ' · ' + snapDoc.id : ''}` : mode === 'review' ? `v${selVer} 제출 사본 · ${snapDoc.id} — 검토용` : mode === 'old' ? `v${selVer} 제출 사본 · ${snapDoc.id} (${STEP_NAME[snapDoc.step] || snapDoc.step})` : `v${M.ver} 작업본 — 미리보기 · 승인 전(비공식)`;
   $('crumb-area').textContent = L.model.name; $('vbadge').textContent = label; $('vbadge').className = 'badge ' + (official ? 'b-success' : 'b-warning');
   $('back').href = `model.html?area=${AREA}${snapDoc ? '&snap=' + snapDoc.id : ''}`;
   // 기준 선택: confirmed (official) · work preview · the submitted copy (requester / approvers only) · an older snapshot opened by link
@@ -127,25 +131,26 @@ window.pageInit = function () {
     const msg = mode === 'work' ? `<b>미리보기 — 승인 전(비공식).</b> 결재를 거치지 않은 작업본의 DDL입니다. ${confVer ? '운영 반영용 DDL은 승인된 확정본에서 내려받으세요.' : '아직 확정본이 없어 작업본 미리보기를 보여 줍니다 — 확정 신청이 승인되면 내려받을 수 있습니다.'}`
       : mode === 'review' ? `<b>검토용 — 결재 중인 제출 사본(${snapDoc.id}).</b> 신청자와 결재 담당자만 보고 내려받을 수 있습니다. 승인되면 이 사본이 확정본(공식)이 됩니다.`
       : mode === 'old' ? `<b>${STEP_NAME[snapDoc.step] || snapDoc.step} 제출 사본(${snapDoc.id}) — 공식 DDL이 아닙니다.</b> 미리보기만 할 수 있습니다.`
-      : snapHidden ? `<b>${snapDoc ? snapDoc.id + ' ' : ''}결재 중 · 열람 제한.</b> 결재 중인 제출본은 신청자와 결재 담당자만 볼 수 있습니다.` : '';
+      : snapHidden ? `<b>${snapDoc ? snapDoc.id + ' ' : ''}${endedHidden ? (STEP_NAME[snapDoc.step] || snapDoc.step) : '결재 중'} · 열람 제한.</b> ${hidWhy}.` : '';
     if (msg) { b.hidden = false; b.className = 'banner ' + (mode === 'review' ? 'info' : 'warning'); b.querySelector('.grow').innerHTML = msg; b.querySelector('.bx').innerHTML = mode === 'conf' ? '' : conf; } }
   // why the download is not allowed (dimmed + reason): source first, then the export role (R-14 · UI-13)
-  const dlWhy = () => mode === 'work' ? '승인된 확정본만 내려받을 수 있습니다' : snapHidden ? '결재 중인 제출 사본은 신청자와 결재 담당자만 내려받을 수 있습니다' : mode === 'old' ? '반려 · 회수된 제출 사본은 내려받을 수 없습니다 — 미리보기만'
+  const dlWhy = () => mode === 'work' ? '승인된 확정본만 내려받을 수 있습니다' : snapHidden ? (endedHidden ? '그 결재 문서를 볼 수 있는 사람만 내려받을 수 있습니다' : '결재 중인 제출 사본은 신청자와 결재 담당자만 내려받을 수 있습니다') : mode === 'old' ? '반려 · 회수된 제출 사본은 내려받을 수 없습니다 — 미리보기만'
     : !can('out.export', { area: AREA }) ? (ME.has('modeler') ? '담당 시스템의 DDL만 내려받을 수 있습니다' : '조회 전용 — 내려받기는 모델러 · DA · 기관 담당자 · 감리') : '';
   areaNav(AREA, 'ddl', { snap: snapDoc ? snapDoc.id : '' });   // the head's '영역 화면' menu (resolution-tree-menu)
   { const c = document.querySelector('.crumbs a'); if (c) c.textContent = sysOfArea(AREA) || curSys().name; }   // the area's own system (markup had a fixed ‘요구사항관리’)
   { const sy = SYSLIST.find(s => s.name === sysOfArea(AREA)) || curSys(); document.querySelector('.page-header h1').title = `${sy.db} · 스키마 ${sy.schema}`;
     // DBMS 비교 (sample, later phase): the selects name this system/version; the sample rows are 요구사항관리's — other areas say there is no comparison yet
     const cmp = $('pn-cmp'), sels = cmp.querySelectorAll('select');
-    sels[0].innerHTML = `<option>운영 · ${sy.schema}@prod (${sy.db})</option><option>개발 · ${sy.schema}@dev</option>`;
+    const eh = v => String(v == null ? '' : v).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c]);   // system names are text
+    sels[0].innerHTML = `<option>운영 · ${eh(sy.schema)}@prod (${eh(sy.db)})</option><option>개발 · ${eh(sy.schema)}@dev</option>`;
     sels[1].innerHTML = `<option>v${L.model.ver} ${L.state === 'edit' ? '작업본' : L.state === 'review' ? '검토 중 사본' : '확정본'}</option>${L.model.base ? `<option>v${L.model.base} 확정본</option>` : ''}`;
     if (AREA !== 'rq') { cmp.querySelector('.mline').innerHTML = '<span><b>—</b>모델에만</span><span><b>—</b>DB에만</span><span><b>—</b>다름</span>';
-      cmp.querySelector('tbody').innerHTML = `<tr class="er"><td colspan="4" class="caption muted">${sy.schema} 운영 DB 접속이 아직 등록되지 않아 비교 결과가 없습니다 — Admin이 [시스템 설정]에서 접속 정보를 등록하면 비교합니다.</td></tr>`;
+      cmp.querySelector('tbody').innerHTML = `<tr class="er"><td colspan="4" class="caption muted">${eh(sy.schema)} 운영 DB 접속이 아직 등록되지 않아 비교 결과가 없습니다 — Admin이 [시스템 설정]에서 접속 정보를 등록하면 비교합니다.</td></tr>`;
       cmp.querySelectorAll('.rp-foot .btn').forEach(b => { b.disabled = true; b.removeAttribute('data-toast'); }); }
     else { const ab = cmp.querySelector('.rp-foot .btn.primary'); ab.removeAttribute('data-toast');
       ab.onclick = () => { $('preset').value = 'alter'; draw(); $('pn-cmp').classList.remove('open'); $('pn-gateb').classList.add('open'); toast('변경분(ALTER) 프리셋으로 바꿨습니다 — 미리보기에서 확인하고 내려받으세요', 'info'); }; } }
   const ents = src.E.filter(e => !e.ref);
-  if (snapHidden) setTimeout(() => toast('결재 중인 제출본은 신청자와 결재 담당자만 볼 수 있습니다', 'info'), 300);
+  if (snapHidden) setTimeout(() => toast(hidWhy, 'info'), 300);
   window.treeData = () => ({ area: AREA, E: src.E, R: src.R, mode: 'P', ver: snapDoc ? 'snap:' + snapDoc.id : 'v' + selVer, label, ro: true, snap: snapDoc ? snapDoc.id : null });
   setTimeout(() => window.dispatchEvent(new Event('dbm-tree-refresh')), 0); let scope = 'all', picked = new Set();
   const sysCount = Object.keys(getModels()).reduce((n, a) => n + modelOf(a, getModel(a).ver).E.filter(e => !e.ref).length, 0);
@@ -154,7 +159,7 @@ window.pageInit = function () {
   const prevDoc0 = getDocs().find(x => x.type === 'model' && x.area === AREA && x.ver === baseVer && x.step === 'done');
   // R2-07: a confirmed version with no approval document (seed) is read the same way the default basis reads it (app.js getModelData → the confirmed seed copy)
   const prevModel = prevDoc0 ? (prevDoc0.model || getModelData(AREA, baseVer)) : baseVer > 0 ? getModelData(AREA, baseVer) : null; const prevDoc = prevModel ? { model: prevModel } : null;
-  function chips() { $('scope-chips').innerHTML = [['all', `업무 영역 전체 (${ents.length})`], ['pick', `선택한 테이블 (${picked.size})`], ['sys', `시스템 전체 (${sysCount}) · 조회`]].map(([k, l]) => `<span class="chip ${scope === k ? 'on' : ''}" data-sc="${k}">${l}</span>`).join('') + (scope === 'pick' ? ` <select class="input u-w-200" id="pick-t" multiple size="1" aria-label="테이블 선택">${ents.map(e => `<option value="${e.id}" ${picked.has(e.id) ? 'selected' : ''}>${e.p !== '—' ? e.p : e.n}</option>`).join('')}</select>` : ''); const pt = $('pick-t'); if (pt) pt.onchange = () => { picked = new Set([...pt.selectedOptions].map(o => o.value)); draw(); }; }
+  function chips() { $('scope-chips').innerHTML = [['all', `업무 영역 전체 (${ents.length})`], ['pick', `선택한 테이블 (${picked.size})`], ['sys', `시스템 전체 (${sysCount}) · 조회`]].map(([k, l]) => `<span class="chip ${scope === k ? 'on' : ''}" data-sc="${k}">${l}</span>`).join('') + (scope === 'pick' ? ` <select class="input u-w-200" id="pick-t" multiple size="1" aria-label="테이블 선택">${ents.map(e => `<option value="${esc(e.id)}" ${picked.has(e.id) ? 'selected' : ''}>${esc(e.p !== '—' ? e.p : e.n)}</option>`).join('')}</select>` : ''); const pt = $('pick-t'); if (pt) pt.onchange = () => { picked = new Set([...pt.selectedOptions].map(o => o.value)); draw(); }; }
   const esc = s => String(s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c]);
   // column comment: name — definition, one SQL literal (quotes doubled for the whole text), then made safe for the page
   const colComment = (e, a) => `<span class="kw">COMMENT ON COLUMN</span> ${SCH}.${esc(e.p)}.${esc(a.p)} <span class="kw">IS</span> <span class="str">'${esc((a.n + (a.desc ? ' — ' + a.desc : '')).replace(/'/g, "''"))}'</span>;`;
@@ -185,7 +190,7 @@ window.pageInit = function () {
     if (scope === 'sys') block.push(F('시스템 전체는 조회용입니다 — 업무 영역별로 출력하세요'));
     if (!target.length && scope !== 'sys') block.push(F('출력할 테이블이 없습니다 — 범위를 고르세요'));
     const lines = [];
-    lines.push(`<span class="cm">-- NeoDB · ${curSys().name} / ${L.model.name} · ${label} · ${alter ? `변경분(ALTER) — v${baseVer} 확정본 대비` : '신규 생성(CREATE)'}</span>`);
+    lines.push(`<span class="cm">-- NeoDB · ${esc(curSys().name)} / ${esc(L.model.name)} · ${esc(label)} · ${alter ? `변경분(ALTER) — v${baseVer} 확정본 대비` : '신규 생성(CREATE)'}</span>`);
     // M-7: the file says which copy it came from — official (approval document · snapshot hash) or not
     lines.push(`<span class="cm">-- ${official ? `공식 DDL · 기준 v${selVer} 확정본 · ${snapDoc ? `결재 ${snapDoc.id} · 스냅숏 ${docHashV}` : `결재 문서 기록 없음(목업 시드) · 스냅숏 ${docHashV}`}` : mode === 'review' ? `검토용 · 결재 중 제출 사본 ${snapDoc.id} · 스냅숏 ${docHashV} — 승인 전이라 운영에 반영하지 마세요` : mode === 'old' ? `${STEP_NAME[snapDoc.step] || snapDoc.step} 제출 사본 ${snapDoc.id} · 스냅숏 ${docHashV} — 공식 DDL 아님` : snapHidden ? '열람 제한 — 내용 없음' : '미리보기 — 승인 전(비공식) · 결재 문서 없음 — 운영에 반영하지 마세요'}</span>`);
     if (alter && !prevDoc) lines.push(`<span class="cm">-- 비교할 v${baseVer} 확정본 사본이 없어 전체를 CREATE로 냅니다</span>`);

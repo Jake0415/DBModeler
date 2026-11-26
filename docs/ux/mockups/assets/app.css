@@ -181,6 +181,7 @@ kbd, .gsearch kbd { margin-left:auto; height:22px; display:inline-flex; align-it
 .menu[data-auto].open { display:block; }
 .menu[data-auto] .mi { display:flex; align-items:center; gap:8px; min-height:36px; padding:0 8px; border-radius:var(--r-md); color:var(--fg); text-decoration:none; font-size:14px; }
 .menu[data-auto] .mi:hover, .menu[data-auto] .mi:focus-visible { background:var(--ds-gray-100); outline:none; }
+.menu[data-auto] .mi:focus-visible { box-shadow:0 0 0 2px var(--focus); }   /* 최종 점검 A-09: 메뉴 항목 초점 = 2px 링 */
 .menu[data-auto] .mi.on { font-weight:500; background:var(--ds-gray-100); }
 .menu[data-auto] .mcount { margin-left:auto; font:500 12px var(--font-mono); color:var(--fg-2); }
 .menu[data-auto] .sep { height:1px; background:var(--ds-gray-400); margin:4px -6px; }
@@ -364,6 +365,7 @@ body.dict-in-tree .side-tab, body.dict-in-tree #side [data-toggle="side"] { disp
 .tctx-i { display:flex; align-items:center; gap:8px; width:100%; min-height:32px; padding:0 8px; border:0; border-radius:var(--r-md); background:none; color:var(--fg); font:400 14px var(--font-sans); text-align:left; cursor:pointer; }
 .tctx-i > span:first-child { flex:1; white-space:nowrap; }
 .tctx-i:hover, .tctx-i:focus-visible, .tctx-i:focus { background:var(--ds-gray-100); outline:none; }
+.tctx-i:focus-visible, .tctx-i:focus { box-shadow:0 0 0 2px var(--focus); }   /* A-09 */
 .tctx-i.danger { color:var(--danger-deep); }
 .tctx-i[aria-disabled="true"] { color:var(--fg-3); cursor:not-allowed; }
 .tctx-i[aria-disabled="true"] .ic { color:var(--fg-3); }

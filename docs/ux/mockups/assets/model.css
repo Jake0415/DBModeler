@@ -130,6 +130,7 @@
 #moremenu { top:40px; right:0; width:240px; }
 #moremenu .mi { min-height:36px; display:flex; align-items:center; gap:8px; padding:0 8px; border-radius:6px; color:var(--fg); text-decoration:none; font-size:14px; cursor:pointer; background:none; border:0; width:100%; text-align:left; }
 #moremenu .mi:hover, #moremenu .mi:focus-visible { background:var(--ds-gray-100); outline:none; }
+#moremenu .mi:focus-visible { box-shadow:0 0 0 2px var(--focus); }   /* 최종 점검 A-09 */
 #moremenu .msep { height:1px; background:var(--ds-gray-400); margin:4px 0; }
 #b-export { display:none; }
 /* ERD P2-11: canvas switches as toolbar segments (28px, same height as the tools) */

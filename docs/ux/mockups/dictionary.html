@@ -222,6 +222,7 @@
 <script>
 window.pageInit = function () {
   const $ = id => document.getElementById(id);
+  const ex = v => String(v == null ? '' : v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);   // FC-05 · B-01: the address · names · reasons are text, never markup
   const jo = (w, p) => josa(String(w), p).slice(String(w).length);   // the particle only (‘견학일자’를, not ‘견학일자’을)
   const q0 = new URLSearchParams(location.search);
   // dictionary items (mock): versions, history, synonyms, forbidden words, past names
@@ -229,9 +230,9 @@ window.pageInit = function () {
   const EMPTY = q0.get('empty') === '1';
   const I = EMPTY ? getDict().filter(x => x.src === '공통') : getDict();
   if (EMPTY) document.querySelector('.page-header').insertAdjacentHTML('afterend', `<div class="pad u-pb-0"><div class="banner info"><i data-ic=info></i><div class="grow"><b>기관 사전이 비어 있습니다</b> — 설치 직후 상태(예시 · 저장 안 함). 공통표준 ${getCommonVer().ver} 전체 ${I.length.toLocaleString()}건(단어 · 용어 · 도메인 · 행정표준코드)은 바로 검색해 쓸 수 있습니다. 기관 단어·용어는 엑셀 초기 적재나 등록 신청으로 시작하세요.</div><a class="btn sm primary" href="excel-import.html?mode=init">엑셀로 초기 적재</a><a class="btn sm" href="dictionary.html">실제 사전으로</a></div></div>`);   // v6: items come from the shared state layer (approvals update versions/pending) — the literal below is only the old seed
-  $('dg').insertAdjacentHTML('beforeend', getGroups().groups.map(g => `<option>${g.name}</option>`).join(''));   // groups come from the group store (domain-groups.html)
+  $('dg').insertAdjacentHTML('beforeend', getGroups().groups.map(g => `<option>${ex(g.name)}</option>`).join(''));   // groups come from the group store (domain-groups.html)
   // decision Q3: '기관 공통' items + the items of one system
-  $('fscope').insertAdjacentHTML('beforeend', SYSLIST.map(s => `<option value="${s.code}">${s.name} 전용 + 기관 공통</option>`).join('') + '<option value="only-sys">시스템 전용만</option>');
+  $('fscope').insertAdjacentHTML('beforeend', SYSLIST.map(s => `<option value="${ex(s.code)}">${ex(s.name)} 전용 + 기관 공통</option>`).join('') + '<option value="only-sys">시스템 전용만</option>');
   $('rq-scope').innerHTML = SCOPES().map(([v, t]) => `<option value="${v}">${t}</option>`).join('');
   const scopeOk = it => { const f = $('fscope').value; if (!f) return true; const s = it.k === 'code' ? (it.scope === '시스템' ? it.sys : '공통') : (it.scope || '공통'); return f === 'only-sys' ? s !== '공통' : (s === '공통' || s === f); };
   const pub = getPub();
@@ -261,7 +262,7 @@ window.pageInit = function () {
     const whole = match1(it, ws.join('')); if (whole) return whole;   // "고객 번호" → 고객번호
     let first = null; for (const w of ws) { const m = match1(it, w); if (!m) return null; first = first || m; } return first;
   }
-  const hl = (s, qs) => { if (!qs || isCho(qs)) return s; const ws = qs.split(/\s+/).filter(Boolean).map(w => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')); return ws.length ? String(s).replace(new RegExp(ws.join('|'), 'gi'), m => `<mark>${m}</mark>`) : s; };
+  const hl = (s, qs) => { const t = String(s == null ? '' : s); if (!qs || isCho(qs)) return ex(t); const ws = qs.split(/\s+/).filter(Boolean).map(w => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')); if (!ws.length) return ex(t); return t.split(new RegExp(`(${ws.join('|')})`, 'gi')).map((p, i) => i % 2 ? `<mark>${ex(p)}</mark>` : ex(p)).join(''); };   // B-01: escaped pieces, marked hits
   // short queries (2 characters or fewer, not initial consonants) use prefix match; long substring results count up to 1,000 (23 §6-1)
   const isShort = qs => qs && qs.length <= 2 && !isCho(qs) && !/\s/.test(qs);
   // DX-22: items in an open request I made (a pending marker on the item, or a new name in my open document)
@@ -303,15 +304,15 @@ window.pageInit = function () {
     ['dg', 'since', 'flen', 'fdom', 'fscope'].forEach(id => { const el = $(id); if (el.value) act.push([id, LBL[id] + ': ' + el.options[el.selectedIndex].text]); });
     if ($('fdisc').checked) act.push(['fdisc', '원본 폐기 포함']);
     const fnN = act.filter(a => a[0] !== 'q').length; $('f-n').hidden = !fnN; $('f-n').textContent = fnN;
-    const chipsHtml = act.length ? `<span class="fchips">${act.map(([k, l]) => `<button class="fchip" data-clear="${k}" aria-label="${l} 필터 지우기">${l}<i data-ic=x data-s=12></i></button>`).join('')}<button class="btn ghost sm" data-clear="all">모두 지우기</button></span>` : '';
+    const chipsHtml = act.length ? `<span class="fchips">${act.map(([k, l]) => `<button class="fchip" data-clear="${k}" aria-label="${ex(l)} 필터 지우기">${ex(l)}<i data-ic=x data-s=12></i></button>`).join('')}<button class="btn ghost sm" data-clear="all">모두 지우기</button></span>` : '';
     const recent = isRecent();
-    $('lh').innerHTML = `<b class="u-fg">${L.length}건</b> · ${recent ? (EMPTY ? '기관 사전이 비어 있어 공통표준만 보입니다' : '검색어가 없어 <b>기관 사전 최근 변경</b>을 보여 줍니다 <button class="btn ghost sm" id="show-all">전체 보기</button>') : qs ? `‘${qs}’ 검색${isCho(qs) ? ' (초성)' : isShort(qs) ? ' — <b>2글자 이하는 앞부분 일치</b>로 찾습니다' : ''}${L.length >= 1000 ? ' · <b>1,000건 이상 — 검색어를 더 입력하세요</b>' : ''}` : showAll && !kind && !act.length ? '전체 사전(원본 폐기 · V0 삭제 보관 제외)' : '필터 결과'}${L.length > CAP ? ` · <b>앞 ${CAP}건만 표시 — 검색어나 종류 · 필터로 좁히세요</b>` : ''} ${chipsHtml} <span class="grow"></span> <kbd>↑</kbd><kbd>↓</kbd> 이동 <kbd>Enter</kbd> 열기`;
+    $('lh').innerHTML = `<b class="u-fg">${L.length}건</b> · ${recent ? (EMPTY ? '기관 사전이 비어 있어 공통표준만 보입니다' : '검색어가 없어 <b>기관 사전 최근 변경</b>을 보여 줍니다 <button class="btn ghost sm" id="show-all">전체 보기</button>') : qs ? `‘${ex(qs)}’ 검색${isCho(qs) ? ' (초성)' : isShort(qs) ? ' — <b>2글자 이하는 앞부분 일치</b>로 찾습니다' : ''}${L.length >= 1000 ? ' · <b>1,000건 이상 — 검색어를 더 입력하세요</b>' : ''}` : showAll && !kind && !act.length ? '전체 사전(원본 폐기 · V0 삭제 보관 제외)' : '필터 결과'}${L.length > CAP ? ` · <b>앞 ${CAP}건만 표시 — 검색어나 종류 · 필터로 좁히세요</b>` : ''} ${chipsHtml} <span class="grow"></span> <kbd>↑</kbd><kbd>↓</kbd> 이동 <kbd>Enter</kbd> 열기`;
     liveCount(`${L.length}건${L.length > CAP ? `, 앞 ${CAP}건 표시` : ''}`);   // L-5: announce only the count, in the shared hidden status region
     const orgN = L.filter(x => x.it.src === '기관').length;   // only organisation items go into the editable file (CX12-05)
     $('dl-n').textContent = orgN ? `기관 ${orgN}건(공통 ${L.length - orgN}건은 참고 시트) · 숨김 열(항목 ID·버전·기준본)` : '이 검색 결과에는 편집할 기관 항목이 없습니다 — 공통표준은 기관에서 편집할 수 없습니다';
     $('dl-menu').querySelector('[data-dl="filter"]').disabled = !orgN;
-    $('rows').innerHTML = L.length ? L.slice(0, CAP).map(({ it, m }) => `<tr class="click ${sel === it.id ? 'sel' : ''}" data-id="${it.id}" tabindex="0"><td class="ck"><input type="checkbox" data-ck="${it.id}" aria-label="${it.name} 선택"${picked.has(it.id) ? ' checked' : ''}${pickable(it) ? '' : ` disabled title="${it.src === '공통' ? '공통 표준은 신청할 수 없습니다' : it.pending ? it.pending + ' 진행 중' : '고를 수 없는 상태'}"`}></td><td>${myPend(it) ? '<span class="badge b-info">내 신청</span> ' : ''}<span class="badge ${{ 사용: 'b-success', '신청 중': 'b-info', '보완 필요': 'b-warning', '삭제 보관': 'b-danger' }[it.st] || ''}">${{ 사용: '사용', '신청 중': '신청 중', '보완 필요': '보완 필요', '삭제 보관': 'V0 삭제 보관' }[it.st] || '미사용'}</span>${it.pending && it.st !== '신청 중' ? ' <span class="caption muted">신청 중</span>' : ''}</td><td>${it.kn}${it.ctype === '행정표준' ? ' <span class="badge b-common">행정표준</span>' : ''}${(it.k === 'code' ? (it.scope === '시스템' && it.sys) : (it.scope && it.scope !== '공통')) ? ` <span class="badge">${scopeName(it.k === 'code' ? it.sys : it.scope)} 전용</span>` : ''}</td><td><span class="muted">${it.src}</span></td><td><b>${hl(it.name, qs)}</b>${m.t && m.t !== '현재명' ? `<span class="mt">${m.t}${m.v ? ': ' + m.v : ''}</span>` : ''}${m.t === '금칙어' ? ` <span class="caption u-danger">‘${m.v}’ 대신 이 표준을 쓰세요</span>` : ''}</td><td class="mono">${hl(it.abbr, qs)}</td><td class="mono">${it.dom}</td><td>${it.eng || ''}</td><td class="mono">${it.ver ? 'V' + it.ver : '—'}</td><td class="mono">${it.dt}</td><td class="num">${it.use}</td></tr>`).join('')
-      : `<tr class="er none"><td colspan="11" style="text-align:center;padding:40px"><span class="et">‘${qs}’에 맞는 표준이 없습니다</span><div class="caption muted u-mb-8">필터를 지우고 다시 찾거나, 없으면 등록 신청하세요.</div><button class="btn sm primary" id="req-q">‘${qs}’ 등록 신청</button> <button class="btn sm ghost" id="clr">모두 지우기</button></td></tr>`;
+    $('rows').innerHTML = L.length ? L.slice(0, CAP).map(({ it, m }) => `<tr class="click ${sel === it.id ? 'sel' : ''}" data-id="${it.id}" tabindex="0"><td class="ck"><input type="checkbox" data-ck="${it.id}" aria-label="${ex(it.name)} 선택"${picked.has(it.id) ? ' checked' : ''}${pickable(it) ? '' : ` disabled title="${it.src === '공통' ? '공통 표준은 신청할 수 없습니다' : it.pending ? it.pending + ' 진행 중' : '고를 수 없는 상태'}"`}></td><td>${myPend(it) ? '<span class="badge b-info">내 신청</span> ' : ''}<span class="badge ${{ 사용: 'b-success', '신청 중': 'b-info', '보완 필요': 'b-warning', '삭제 보관': 'b-danger' }[it.st] || ''}">${{ 사용: '사용', '신청 중': '신청 중', '보완 필요': '보완 필요', '삭제 보관': 'V0 삭제 보관' }[it.st] || '미사용'}</span>${it.pending && it.st !== '신청 중' ? ' <span class="caption muted">신청 중</span>' : ''}</td><td>${ex(it.kn)}${it.ctype === '행정표준' ? ' <span class="badge b-common">행정표준</span>' : ''}${(it.k === 'code' ? (it.scope === '시스템' && it.sys) : (it.scope && it.scope !== '공통')) ? ` <span class="badge">${scopeName(it.k === 'code' ? it.sys : it.scope)} 전용</span>` : ''}</td><td><span class="muted">${ex(it.src)}</span></td><td><b>${hl(it.name, qs)}</b>${m.t && m.t !== '현재명' ? `<span class="mt">${ex(m.t)}${m.v ? ': ' + ex(m.v) : ''}</span>` : ''}${m.t === '금칙어' ? ` <span class="caption u-danger">‘${ex(m.v)}’ 대신 이 표준을 쓰세요</span>` : ''}</td><td class="mono">${hl(it.abbr, qs)}</td><td class="mono">${ex(it.dom)}</td><td>${ex(it.eng || '')}</td><td class="mono">${it.ver ? 'V' + it.ver : '—'}</td><td class="mono">${it.dt}</td><td class="num">${it.use}</td></tr>`).join('')
+      : `<tr class="er none"><td colspan="11" style="text-align:center;padding:40px"><span class="et">‘${ex(qs)}’에 맞는 표준이 없습니다</span><div class="caption muted u-mb-8">필터를 지우고 다시 찾거나, 없으면 등록 신청하세요.</div><button class="btn sm primary" id="req-q">‘${ex(qs)}’ 등록 신청</button> <button class="btn sm ghost" id="clr">모두 지우기</button></td></tr>`;
     const sa = $('show-all'); if (sa) sa.onclick = () => { showAll = true; draw(); };
     const rq = $('req-q'); if (rq) rq.onclick = () => { $('pn-detail').classList.remove('open'); $('pn-request').classList.add('open'); document.querySelector('#pn-request [data-rq="term"] input').value = qs; };
     const cl = $('clr'); if (cl) cl.onclick = () => { clearAll(); $('q').value = ''; kind = ''; showAll = true; draw(); };
@@ -341,7 +342,7 @@ window.pageInit = function () {
   // usage = attributes of saved working models that carry this item's name/abbr (mock index); otherwise the count is shown as a sample
   function usageHtml(it) {
     const hits = []; Object.keys(getModels()).forEach(a => { const m = getModels()[a]; const md = modelOf(a, m.ver); md.E.forEach(e => e.a.forEach(x => { if (x.n === it.name || (it.abbr && x.p && x.p.split('_').includes(it.abbr)) || x.p === it.abbr) hits.push([a, m.name, e, x]); })); });
-    if (hits.length) return `<table class="tbl"><thead><tr><th>위치</th><th>컬럼</th></tr></thead><tbody>${hits.slice(0, 8).map(([a, n, e, x]) => `<tr><td class="wrap"><a href="model.html?area=${a}&focus=${e.id}">${n}</a> › ${e.n}</td><td class="mono">${x.p}</td></tr>`).join('')}</tbody></table>${hits.length > 8 ? `<div class="caption muted">… ${hits.length - 8}곳 더</div>` : ''}`;
+    if (hits.length) return `<table class="tbl"><thead><tr><th>위치</th><th>컬럼</th></tr></thead><tbody>${hits.slice(0, 8).map(([a, n, e, x]) => `<tr><td class="wrap"><a href="model.html?area=${encodeURIComponent(a)}&focus=${encodeURIComponent(e.id)}">${ex(n)}</a> › ${ex(e.n)}</td><td class="mono">${ex(x.p)}</td></tr>`).join('')}</tbody></table>${hits.length > 8 ? `<div class="caption muted">… ${hits.length - 8}곳 더</div>` : ''}`;
     return it.use ? `<div class="caption muted">사용처 ${it.use}곳(목업: 시드 숫자 — 작업 중인 모델에서는 찾지 못했습니다)</div>` : '<div class="caption muted">모델에서 쓰지 않습니다.</div>';
   }
   // DX-13: related items with a re-review reason (word → terms using it · domain → terms · term → its words and domain · code → terms with its domain)
@@ -363,20 +364,20 @@ window.pageInit = function () {
     const noDom = it.k === 'term' && L.some(r => r.rel === '도메인' && r.why);
     const cand = noDom ? getDict().filter(x => x.k === 'domain' && x.name.startsWith(String(it.dom).replace(/[A-Z]\d.*$/, ''))).slice(0, 3) : [];
     return `<div class="flex u-mb-8"><span class="caption muted">재검토 ${L.filter(r => r.why).length}건</span><span class="grow"></span><button class="btn ghost sm" id="rel-diag"><i data-ic=refresh data-s=12></i>재진단</button></div>
-      <table class="tbl"><thead><tr><th>관계</th><th>항목</th><th>재검토 사유</th></tr></thead><tbody>${L.map(r => `<tr><td class="caption">${r.rel}</td><td>${r.x.id ? `<a href="#" data-goto="${r.x.id}">${r.x.name}</a>` : r.x.name} <span class="caption muted">${r.x.kn}</span></td><td>${r.why ? `<span class="badge b-warning">재검토</span> <span class="caption">${r.why}</span>` : '<span class="caption muted">정상</span>'}</td></tr>`).join('')}</tbody></table>
-      ${noDom ? `<div class="caption u-mt-8">같은 이름의 도메인 후보: ${cand.length ? cand.map(c => `<a href="#" data-goto="${c.id}">${c.name}</a>`).join(', ') : '없음 — 도메인부터 신청하세요'}</div>` : ''}`;
+      <table class="tbl"><thead><tr><th>관계</th><th>항목</th><th>재검토 사유</th></tr></thead><tbody>${L.map(r => `<tr><td class="caption">${ex(r.rel)}</td><td>${r.x.id ? `<a href="#" data-goto="${ex(r.x.id)}">${ex(r.x.name)}</a>` : ex(r.x.name)} <span class="caption muted">${ex(r.x.kn)}</span></td><td>${r.why ? `<span class="badge b-warning">재검토</span> <span class="caption">${ex(r.why)}</span>` : '<span class="caption muted">정상</span>'}</td></tr>`).join('')}</tbody></table>
+      ${noDom ? `<div class="caption u-mt-8">같은 이름의 도메인 후보: ${cand.length ? cand.map(c => `<a href="#" data-goto="${ex(c.id)}">${ex(c.name)}</a>`).join(', ') : '없음 — 도메인부터 신청하세요'}</div>` : ''}`;
   }
   function detail() {
     const it = I.find(x => x.id === sel); const p = $('pn-detail'); if (!it) { p.innerHTML = ''; p.classList.remove('open'); return; }
     const common = it.src === '공통', REL = related(it);   // computed once per draw (count + table)
-    const hist = it.hist.length ? `<div class="tl">${it.hist.map(h => `<div class="ev"><div class="flex"><b>${h.v}</b><span class="badge">${h.act}</span><span class="grow"></span><span class="caption mono">${h.at}</span></div><div class="caption muted">${h.by}${h.doc !== '—' ? ` · <a href="approvals.html?doc=${h.doc}">${h.doc}</a>` : ''}${h.why ? ' · 사유: ' + h.why : ''}</div>${h.diff.length ? `<table class="tbl u-mt-4"><thead><tr><th>칸</th><th>이전</th><th>이후</th></tr></thead><tbody>${h.diff.map(d => `<tr><td>${d[0]}</td><td><span class="old-v">${d[1] === '' ? '(빈 문자열)' : d[1] == null ? '(NULL)' : d[1]}</span></td><td>${d[2]}</td></tr>`).join('')}</tbody></table>` : ''}<button class="btn ghost sm" data-toast="${it.name}_${h.v}.xlsx — 그 버전의 값" data-toast-type="info">이 버전 엑셀</button></div>`).join('')}</div>` : '<div class="caption muted">이력이 없습니다.</div>';
+    const hist = it.hist.length ? `<div class="tl">${it.hist.map(h => `<div class="ev"><div class="flex"><b>${ex(h.v)}</b><span class="badge">${ex(h.act)}</span><span class="grow"></span><span class="caption mono">${ex(h.at)}</span></div><div class="caption muted">${ex(h.by)}${h.doc !== '—' ? ` · <a href="approvals.html?doc=${encodeURIComponent(h.doc)}">${ex(h.doc)}</a>` : ''}${h.why ? ' · 사유: ' + ex(h.why) : ''}</div>${h.diff.length ? `<table class="tbl u-mt-4"><thead><tr><th>칸</th><th>이전</th><th>이후</th></tr></thead><tbody>${h.diff.map(d => `<tr><td>${ex(d[0])}</td><td><span class="old-v">${d[1] === '' ? '(빈 문자열)' : d[1] == null ? '(NULL)' : ex(d[1])}</span></td><td>${ex(d[2])}</td></tr>`).join('')}</tbody></table>` : ''}<button class="btn ghost sm" data-toast="${ex(it.name)}_${ex(h.v)}.xlsx — 그 버전의 값" data-toast-type="info">이 버전 엑셀</button></div>`).join('')}</div>` : '<div class="caption muted">이력이 없습니다.</div>';
     p.innerHTML = `<div class="rp-head"><div class="t"><span class="badge ${common ? 'b-common' : 'b-org'}">${it.src}</span>${policyExempt(it) && itemRuleProblems(Object.assign({}, it, { k: it.kn === '엔터티 용어' ? 'term' : it.k })).some(p => p.lvl === 'block') ? `<span class="badge" title="${String(itemRuleProblems(Object.assign({}, it, { k: it.kn === '엔터티 용어' ? 'term' : it.k })).filter(p => p.lvl === 'block').map(p => p.msg).join(' / ')).replace(/["<>&]/g, '')}">기관 기준 예외</span>` : ''}<span class="badge">${it.kn}</span><span class="badge ${it.st === '사용' ? 'b-success' : it.st === '신청 중' ? 'b-info' : ''}">${it.st}</span><button class="iconbtn close u-w-28 u-h-28" data-close="pn-detail" aria-label="상세 닫기 — 항목은 그대로" title="상세 닫기 — 항목은 그대로"><i data-ic=x></i></button></div>
-        <h2 class="u-mt-8">${it.name}</h2><div class="rp-sub">${[it.abbr, it.eng].filter(x => x && x !== '—').join(' · ')} · <span class="mono">${it.id}</span></div></div>
+        <h2 class="u-mt-8">${ex(it.name)}</h2><div class="rp-sub">${ex([it.abbr, it.eng].filter(x => x && x !== '—').join(' · '))} · <span class="mono">${it.id}</span></div></div>
       <div class="rp-body">
         ${common ? '<div class="banner u-mb-12"><i data-ic=info></i><div><b>공통 표준</b> — 조회 전용입니다. 기관에서 바꿀 수 없습니다.</div></div>' : ''}
-        <dl class="kv"><dt>영문약어명</dt><dd class="mono">${it.abbr}</dd><dt>도메인 / 형식</dt><dd class="mono">${it.dom}</dd>${it.allow ? `<dt>허용 값</dt><dd class="mono">${it.allow}</dd>` : ''}<dt>이음동의어</dt><dd>${it.syn.join(', ') || '—'}</dd><dt>금칙어</dt><dd>${it.forbid.join(', ') || '—'}</dd>${it.old.length ? `<dt>과거 이름</dt><dd>${it.old.join(', ')}</dd>` : ''}<dt>설명</dt><dd>${it.desc || it.eng || '—'}</dd>
+        <dl class="kv"><dt>영문약어명</dt><dd class="mono">${ex(it.abbr)}</dd><dt>도메인 / 형식</dt><dd class="mono">${ex(it.dom)}</dd>${it.allow ? `<dt>허용 값</dt><dd class="mono">${ex(it.allow)}</dd>` : ''}<dt>이음동의어</dt><dd>${ex(it.syn.join(', ')) || '—'}</dd><dt>금칙어</dt><dd>${ex(it.forbid.join(', ')) || '—'}</dd>${it.old.length ? `<dt>과거 이름</dt><dd>${ex(it.old.join(', '))}</dd>` : ''}<dt>설명</dt><dd>${ex(it.desc || it.eng || '—')}</dd>
           <dt>항목 버전</dt><dd class="mono">${it.ver ? 'V' + it.ver : '— (미승인)'}</dd><dt>제정차수</dt><dd class="mono">${it.cha ? String(it.cha) + (/차/.test(String(it.cha)) ? '' : '차') + (common ? ' (공통 원문)' : '') : '—'}</dd><dt>변경일</dt><dd class="mono">${it.dt}</dd></dl>
-        ${it.k === 'code' && it.ctype === '행정표준' ? `<div class="banner${it.partial ? ' warning' : ''} u-mb-8"><i data-ic=${it.partial ? 'warn' : 'info'}></i><div class="grow"><b>행정표준코드</b> · 소관기관 ${it.org || '—'} · 제정 ${it.cha || '—'}${it.partial ? '<div class="caption">원문 일부 — 공통표준 원문(허용값)이 코드값을 일부만 싣습니다. 소관기관 원본으로 보완하려면 공통표준 · 행정표준코드 화면에서 새 판 신청으로 올립니다.</div>' : ''}<div class="caption muted">연결 용어 ${(it.terms || []).map(t => `<a href="dictionary.html?q=${encodeURIComponent(t.name)}">${t.name}</a>`).join(', ') || '—'}</div></div><a class="btn sm" href="std-common.html?code=${it.id}">원문 보기</a></div>` : ''}${it.k === 'code' ? `<div class="section-t">코드값 <span class="badge">${(it.vals || []).length}</span>${it.partial ? ' <span class="badge b-warning">원문 일부</span>' : ''} <span class="caption muted">${it.scope || '공통'}${it.sys ? ' · ' + it.sys : ''} · ${it.ctype || '자체'} 코드</span></div><table class="tbl box u-mb-12"><thead><tr><th>값</th><th>이름</th><th class="num">순서</th><th>상태</th></tr></thead><tbody>${(it.vals || []).map(v => `<tr><td class="mono">${v.v}</td><td>${v.nm}</td><td class="num">${v.ord || ''}</td><td>${v.st === '미사용' ? '<span class="badge">미사용</span>' : '<span class="badge b-success">사용</span>'}</td></tr>`).join('') || '<tr class="er"><td colspan="4" class="caption muted">코드값이 없습니다</td></tr>'}</tbody></table>` : ''}
+        ${it.k === 'code' && it.ctype === '행정표준' ? `<div class="banner${it.partial ? ' warning' : ''} u-mb-8"><i data-ic=${it.partial ? 'warn' : 'info'}></i><div class="grow"><b>행정표준코드</b> · 소관기관 ${ex(it.org || '—')} · 제정 ${it.cha || '—'}${it.partial ? '<div class="caption">원문 일부 — 공통표준 원문(허용값)이 코드값을 일부만 싣습니다. 소관기관 원본으로 보완하려면 공통표준 · 행정표준코드 화면에서 새 판 신청으로 올립니다.</div>' : ''}<div class="caption muted">연결 용어 ${(it.terms || []).map(t => `<a href="dictionary.html?q=${encodeURIComponent(t.name)}">${t.name}</a>`).join(', ') || '—'}</div></div><a class="btn sm" href="std-common.html?code=${it.id}">원문 보기</a></div>` : ''}${it.k === 'code' ? `<div class="section-t">코드값 <span class="badge">${(it.vals || []).length}</span>${it.partial ? ' <span class="badge b-warning">원문 일부</span>' : ''} <span class="caption muted">${it.scope || '공통'}${it.sys ? ' · ' + it.sys : ''} · ${it.ctype || '자체'} 코드</span></div><table class="tbl box u-mb-12"><thead><tr><th>값</th><th>이름</th><th class="num">순서</th><th>상태</th></tr></thead><tbody>${(it.vals || []).map(v => `<tr><td class="mono">${v.v}</td><td>${v.nm}</td><td class="num">${v.ord || ''}</td><td>${v.st === '미사용' ? '<span class="badge">미사용</span>' : '<span class="badge b-success">사용</span>'}</td></tr>`).join('') || '<tr class="er"><td colspan="4" class="caption muted">코드값이 없습니다</td></tr>'}</tbody></table>` : ''}
         <div class="tabs"><button class="on" data-tab="hist">이력 <span class="n">${it.hist.length}</span></button><button data-tab="rel">연관 <span class="n">${REL.length}</span></button><button data-tab="use">사용처 <span class="n">${it.use}</span></button><button data-tab="req">진행 중 신청 <span class="n">${it.pending ? 1 : 0}</span></button></div>
         <div class="pane on" data-pane="hist">${hist}</div>
         <div class="pane" data-pane="rel">${relHtml(it, REL)}</div>
@@ -455,7 +456,7 @@ window.pageInit = function () {
     pubTarget = ch.map(c => c.at + '|' + c.item + '|' + c.doc).join('\n');   // the set the DA confirmed — publishing checks it is unchanged
     $('pub-t').textContent = `제정 ${pub.cha + 1}차 공표`;
     $('pub-sum').innerHTML = `<div class="mline"><span><b>${by.추가}</b>추가</span><span><b>${by.변경}</b>변경</span><span><b>${by.미사용}</b>미사용</span></div>
-      <div class="caption muted u-mt-8">직전 공표: 제정 ${pub.cha}차 · ${pub.at} · ${pub.by} — 그 뒤 승인된 <b>항목 ${Object.keys(last).length}개</b>(변경 기록 ${ch.length}건${noId ? ` · 그중 항목 ID 없는 집계 기록 ${noId}건은 차수만 기록` : ''})가 대상입니다. 진행 중 신청은 포함하지 않습니다. <a href="dict-history.html?unpub=1">대상 목록 보기</a></div>`;
+      <div class="caption muted u-mt-8">직전 공표: 제정 ${pub.cha}차 · ${ex(pub.at)} · ${ex(pub.by)} — 그 뒤 승인된 <b>항목 ${Object.keys(last).length}개</b>(변경 기록 ${ch.length}건${noId ? ` · 그중 항목 ID 없는 집계 기록 ${noId}건은 차수만 기록` : ''})가 대상입니다. 진행 중 신청은 포함하지 않습니다. <a href="dict-history.html?unpub=1">대상 목록 보기</a></div>`;
     $('pub-why').value = ''; $('mo-pub').classList.add('open'); setTimeout(() => $('pub-why').focus(), 0);
     setBlock($('pub-go'), Object.keys(last).length ? '' : '직전 공표 이후 승인된 변경이 없어 공표할 수 없습니다');
   };
@@ -528,7 +529,7 @@ window.pageInit = function () {
     const ex = row || queue.find(x => x.id === d.id && opOf(x) === '변경');
     const val = l => ex && ex.chg && ex.chg[l] ? (l === '코드값' ? fmtLines(ex.chg[l][1]) : Array.isArray(ex.chg[l][1]) ? ex.chg[l][1].join(', ') : ex.chg[l][1]) : cur(l);
     const doms = [...knownDomains()].filter(x => !/엔터티/.test(x));
-    $('chg-body').innerHTML = `<div class="banner info u-mb-12"><i data-ic=info></i><div class="grow"><b>${d.name}</b> <span class="caption muted">${d.kn} · ${d.id} · V${d.ver}</span><div class="caption">바꾸고 싶은 칸만 고치세요 — 바뀐 칸만 신청에 담깁니다.</div></div></div>
+    $('chg-body').innerHTML = `<div class="banner info u-mb-12"><i data-ic=info></i><div class="grow"><b>${ex(d.name)}</b> <span class="caption muted">${ex(d.kn)} · ${ex(d.id)} · V${d.ver}</span><div class="caption">바꾸고 싶은 칸만 고치세요 — 바뀐 칸만 신청에 담깁니다.</div></div></div>
       ${F.map((l, i) => `<div class="chgrow" data-l="${l}"><label for="cf-${i}" class="caption">${l}</label>${l === '설명' || l === '코드값' ? `<textarea class="input${l === '코드값' ? ' mono' : ''}" id="cf-${i}" rows="${l === '코드값' ? 5 : 2}">${val(l)}</textarea>` : l === '도메인' ? `<select class="input mono" id="cf-${i}">${(doms.includes(val(l)) ? doms : [val(l)].concat(doms)).map(o => `<option${o === val(l) ? ' selected' : ''}>${o}</option>`).join('')}</select>` : l === '적용 범위' ? `<select class="input" id="cf-${i}">${(d.k === 'code' ? [['공통', '공통'], ['시스템', '시스템']] : SCOPES()).map(([v, t]) => `<option value="${v}"${v === (val(l) || '공통') ? ' selected' : ''}>${t}</option>`).join('')}</select>`
         : l === '대상 시스템' ? `<select class="input" id="cf-${i}"><option value="">(없음 — 공통 코드)</option>${SYSLIST.map(s => `<option value="${s.code}"${s.code === val(l) ? ' selected' : ''}>${s.name}</option>`).join('')}</select>`
         : l === '형식단어' ? `<select class="input" id="cf-${i}">${[['N', '아니오'], ['Y', '예']].map(([v, t]) => `<option value="${v}"${v === (val(l) || 'N') ? ' selected' : ''}>${t}</option>`).join('')}</select>`
@@ -553,9 +554,9 @@ window.pageInit = function () {
       if (!Object.keys(chg).length) { toast('바뀐 칸이 없습니다', 'info'); return; }
       if (chg['코드값']) { const p = chg['코드값'][1], dup = p.map(x => x.v).filter((x, i, a) => a.indexOf(x) !== i); if (dup.length) { toast(`코드값 중복: ${[...new Set(dup)].join(', ')}`, 'danger'); return; } }
       const rowNow = queue.find(x => x.id === d.id && opOf(x) === '변경');
-      if (rowNow) rowNow.chg = chg; else { const other = queue.find(x => x.id === d.id); if (other) { toast(`‘${d.name}’${jo(d.name, '은/는')} 이미 바구니에 ${opOf(other)}(으)로 있습니다 — 먼저 빼세요`, 'info'); return; } queue.push({ key: 'b' + Date.now().toString(36), k: kk, id: d.id, name: d.name, act: '변경', chg }); }
+      if (rowNow) rowNow.chg = chg; else { const other = queue.find(x => x.id === d.id); if (other) { toast(`‘${ex(d.name)}’${jo(d.name, '은/는')} 이미 바구니에 ${opOf(other)}(으)로 있습니다 — 먼저 빼세요`, 'info'); return; } queue.push({ key: 'b' + Date.now().toString(36), k: kk, id: d.id, name: d.name, act: '변경', chg }); }
       const nCasc = d.k === 'word' ? wordCascade(d, chg).length : 0;
-      formDirty = false; drawQueue(); show(lastKind); toast(`‘${d.name}’ 변경 — 칸 ${Object.keys(chg).length}개를 바구니에 반영했습니다${nCasc ? ` · 이 단어를 쓰는 용어 ${nCasc}건도 함께 담김` : ''}`);
+      formDirty = false; drawQueue(); show(lastKind); toast(`‘${ex(d.name)}’ 변경 — 칸 ${Object.keys(chg).length}개를 바구니에 반영했습니다${nCasc ? ` · 이 단어를 쓰는 용어 ${nCasc}건도 함께 담김` : ''}`);
     };
     openPanel(); show('chg'); const f0 = $('cf-0'); if (f0) f0.focus();
   }
@@ -567,7 +568,7 @@ window.pageInit = function () {
     else if (kk === 'entity') { $('en-name').value = d.name; $('en-desc').value = d.desc || ''; anEntity(); }
     else if (kk === 'code') { $('cd-name').value = d.name; $('cd-abbr').value = d.abbr; $('cd-dom').value = d.dom; $('cd-scope').value = d.scope || '공통'; $('cd-vals').value = fmtLines(d.vals); chkCode(); }
     else if (kk === 'domain') { const m = parseDomName(d.name); if (m) { $('dm-type').value = m.ab; $('dm-len').value = m.len || ''; $('dm-sc').value = m.sc || ''; } upd(); }
-    toast(`‘${d.name}’ 값으로 새 신청을 시작합니다 — 이름을 바꾸고 [바구니에 담기]를 누르세요`, 'info');
+    toast(`‘${ex(d.name)}’ 값으로 새 신청을 시작합니다 — 이름을 바꾸고 [바구니에 담기]를 누르세요`, 'info');
     const f = document.querySelector('#pn-request .rq-form:not([hidden]) input'); if (f) { f.focus(); f.select(); }
   }
   const add = it => {
@@ -579,14 +580,14 @@ window.pageInit = function () {
     if (it.k === 'term' && (!it.abbr || it.abbr === '—')) return fail('분해 후보를 골라 약어를 정하세요', 'tm-name');
     if (it.k === 'entity' && (!it.abbr || it.abbr.includes('?'))) return fail('엔터티명을 단어로 분해할 수 없습니다 — 모르는 단어를 먼저 담으세요', 'en-name');
     if (it.k === 'code') { if (!it.abbr) return fail('영문 코드명을 입력하세요', 'cd-abbr'); const bad = codeProblems(it); if (bad.length) return fail(bad[0], 'cd-vals'); }
-    if (queue.some(q => q.name === it.name && q.k === it.k)) { toast(`‘${it.name}’${jo(it.name, '은/는')} 이미 바구니에 있습니다`, 'info'); return; }
+    if (queue.some(q => q.name === it.name && q.k === it.k)) { toast(`‘${ex(it.name)}’${jo(it.name, '은/는')} 이미 바구니에 있습니다`, 'info'); return; }
     const ex = getDict().find(x => x.name === it.name && (x.k === it.k || (it.k === 'entity' && x.k === 'term')) && x.ver > 0);
     if (ex) return fail(`‘${it.name}’${jo(it.name, '은/는')} 이미 ${ex.src} 사전에 있습니다(${ex.id}) — ${ex.src === '기관' ? '[변경 담기]를 쓰세요' : '공통 표준을 쓰세요'}`);
     const op = openItems().find(x => x.it.name === it.name && opOf(x.it) === '추가');
     if (op) return fail(`‘${it.name}’${jo(it.name, '은/는')} ${op.doc}에서 신청 중입니다 — 그 신청 내용을 열어 보세요(조회 전용)`);
     ['tm-name', 'wd-name', 'wd-abbr', 'dm-len', 'en-name', 'cd-name', 'cd-vals'].forEach(id => $(id) && $(id).setAttribute('aria-invalid', 'false'));
     if (['word', 'term', 'entity', 'domain'].includes(it.k) && !it.scope) it.scope = $('rq-scope').value || '공통';   // decision Q3
-    queue.push(Object.assign({ key: 'b' + Date.now().toString(36) + Math.random().toString(36).slice(2, 4), act: '추가' }, it)); formDirty = false; resetForm(it.k); drawQueue(); toast(`‘${it.name}’${jo(it.name, '을/를')} 바구니에 담았습니다${it.scope && it.scope !== '공통' ? ` · 적용 범위 ${scopeName(it.scope)}` : ''}`);
+    queue.push(Object.assign({ key: 'b' + Date.now().toString(36) + Math.random().toString(36).slice(2, 4), act: '추가' }, it)); formDirty = false; resetForm(it.k); drawQueue(); toast(`‘${ex(it.name)}’${jo(it.name, '을/를')} 바구니에 담았습니다${it.scope && it.scope !== '공통' ? ` · 적용 범위 ${scopeName(it.scope)}` : ''}`);
   };
   // after [바구니에 담기] the form empties for the next item (the values used to stay, and a second press said 'already in the basket')
   function resetForm(k) {
@@ -610,7 +611,7 @@ window.pageInit = function () {
     const last = Object.keys(ENT_SFX).find(s => n.endsWith(s) && n.length > s.length);
     const head = last ? n.slice(0, -last.length) : n, dc = withBasket(decompose(head));
     const abbr = dc.parts.map(p => p.abbr || '?').join(sep) + (last ? sep + ENT_SFX[last] : '');
-    $('en-res').innerHTML = `${dc.parts.map(p => p.unknown ? `<b class="u-danger">${p.w}?</b>` : p.basket ? `<span class="u-accent">${p.w}(바구니)</span>` : p.ok ? p.w : `<span class="u-warning">${p.w}(승인 전)</span>`).join(' + ')}${last ? ` + <b>${last}</b> <span class="caption muted">엔터티 분류어 → _${ENT_SFX[last]}</span>` : ' <span class="badge b-warning">엔터티 분류어로 끝나지 않음</span>'}<div class="u-mt-4">물리명 <b class="mono">${abbr}</b> · 도메인 없음(엔터티 용어)</div>${dc.unknown.length ? `<div class="caption u-danger u-mt-4">‘${dc.unknown.map(p => p.w).join(', ')}’${jo(dc.unknown.map(p => p.w).join(', '), '은/는')} 사전에 없는 단어 — 단어를 같은 바구니에 먼저 담으면 함께 판정합니다</div>` : ''}`;
+    $('en-res').innerHTML = `${dc.parts.map(p => p.unknown ? `<b class="u-danger">${ex(p.w)}?</b>` : p.basket ? `<span class="u-accent">${ex(p.w)}(바구니)</span>` : p.ok ? ex(p.w) : `<span class="u-warning">${ex(p.w)}(승인 전)</span>`).join(' + ')}${last ? ` + <b>${ex(last)}</b> <span class="caption muted">엔터티 분류어 → _${ENT_SFX[last]}</span>` : ' <span class="badge b-warning">엔터티 분류어로 끝나지 않음</span>'}<div class="u-mt-4">물리명 <b class="mono">${abbr}</b> · 도메인 없음(엔터티 용어)</div>${dc.unknown.length ? `<div class="caption u-danger u-mt-4">‘${dc.unknown.map(p => p.w).join(', ')}’${jo(dc.unknown.map(p => p.w).join(', '), '은/는')} 사전에 없는 단어 — 단어를 같은 바구니에 먼저 담으면 함께 판정합니다</div>` : ''}`;
     return { abbr, ok: !dc.unknown.length };
   }
   let etimer = null; $('en-name').addEventListener('input', () => { clearTimeout(etimer); etimer = setTimeout(anEntity, 400); });
@@ -623,7 +624,7 @@ window.pageInit = function () {
     if (vals.some(v => !v.nm)) out.push('이름이 없는 코드값이 있습니다');
     return out; };
   const codeItem = () => ({ k: 'code', name: $('cd-name').value.trim(), abbr: abbrCase($('cd-abbr').value.trim(), 'code'), dom: $('cd-dom').value, scope: $('cd-scope').value, sys: $('cd-scope').value === '시스템' ? $('cd-sys').value : undefined, ctype: $('cd-type').value, vals: parseVals($('cd-vals').value) });
-  function chkCode() { const p = codeProblems(codeItem()); $('cd-chk').innerHTML = $('cd-vals').value.trim() ? (p.length ? `<span class="u-danger">${p.join(' · ')}</span>` : `<span class="u-success">코드값 ${codeItem().vals.length}개 · 길이 · 중복 정상</span>`) : '값을 입력하면 길이 · 중복을 바로 확인합니다 · 앞자리 0은 그대로 보존'; $('cd-sys').disabled = $('cd-scope').value !== '시스템'; }
+  function chkCode() { const p = codeProblems(codeItem()); $('cd-chk').innerHTML = $('cd-vals').value.trim() ? (p.length ? `<span class="u-danger">${ex(p.join(' · '))}</span>` : `<span class="u-success">코드값 ${codeItem().vals.length}개 · 길이 · 중복 정상</span>`) : '값을 입력하면 길이 · 중복을 바로 확인합니다 · 앞자리 0은 그대로 보존'; $('cd-sys').disabled = $('cd-scope').value !== '시스템'; }
   ['cd-vals', 'cd-dom', 'cd-scope'].forEach(id => { $(id).addEventListener('input', chkCode); $(id).addEventListener('change', chkCode); });
   $('add-code').onclick = () => add(codeItem());
   // DX-15: typing in a form without adding it is protected when leaving the page
@@ -635,7 +636,7 @@ window.pageInit = function () {
     const n = $('tm-name').value.trim(); analysed = n;
     if (!n) { $('tm-cands').innerHTML = ''; $('tm-n').textContent = '—'; $('tm-abbr').value = ''; return; }
     const dc = withBasket(decompose(n));
-    const parts = dc.parts.map(p => p.unknown ? `<b class="u-danger">${p.w}?</b>` : p.basket ? `<span class="u-accent">${p.w}(바구니)</span>` : p.ok ? p.w : `<span class="u-warning">${p.w}(승인 전${p.doc ? ' · ' + p.doc : ''})</span>`).join(' + ');
+    const parts = dc.parts.map(p => p.unknown ? `<b class="u-danger">${ex(p.w)}?</b>` : p.basket ? `<span class="u-accent">${ex(p.w)}(바구니)</span>` : p.ok ? ex(p.w) : `<span class="u-warning">${ex(p.w)}(승인 전${p.doc ? ' · ' + ex(p.doc) : ''})</span>`).join(' + ');
     $('tm-n').textContent = dc.ok ? '후보 1' : '확인 필요';
     $('tm-cands').innerHTML = `<div class="cand on"><input type="radio" checked aria-label="분해 결과"><div class="grow">${parts}</div><span class="mono">${dc.ok ? dc.abbr : '—'}</span>${dc.ok ? (dc.sus ? '<span class="badge b-warning">? 의심 · 1음절</span>' : '<i data-ic=check></i>') : dc.unknown.length ? '<span class="badge b-danger">미등록 단어</span>' : '<span class="badge b-warning">구성 단어 승인 전</span>'}</div>${!dc.ok ? `<div class="caption u-mt-4">${dc.unknown.length ? `‘${dc.unknown.map(p => p.w).join(', ')}’${jo(dc.unknown.map(p => p.w).join(', '), '은/는')} 사전에 없는 단어입니다 — 단어부터 신청하세요.` : `‘${dc.pending.map(p => p.w).join(', ')}’ 단어가 아직 승인 전입니다 — 승인 뒤 다시 분석됩니다.`}</div>` : ''}`;
     $('tm-abbr').value = dc.ok ? dc.abbr : ''; $('tm-abbr-h').textContent = dc.ok ? `구성 단어 약어를 _로 결합 · ${dc.abbr.length}/30자` : '분석이 끝나야 정해집니다';
@@ -665,7 +666,7 @@ window.pageInit = function () {
     else if (it.k === 'code') { $('cd-name').value = it.name; $('cd-abbr').value = it.abbr; $('cd-dom').value = it.dom; $('cd-scope').value = it.scope || '공통'; if (it.sys) $('cd-sys').value = it.sys; $('cd-type').value = it.ctype || '자체'; $('cd-vals').value = fmtLines(it.vals); chkCode(); }
     else if (it.k === 'domain') { const g = getGroups().groups.find(x => x.name === it.dg); if (g) { $('dm-grp').value = g.id; fillCls(); } const m = parseDomName(it.name); if (m) { $('dm-fw').value = m.cls; $('dm-type').value = m.ab; $('dm-len').value = m.len || ''; $('dm-sc').value = m.sc || ''; } $('dm-allow').value = it.allow || ''; $('dm-sec').value = it.sec || '없음'; $('dm-desc').value = it.desc || ''; upd(); }
     else if (it.k === 'class') { queue.push(it); drawQueue(); location.href = 'domain-groups.html'; return; }
-    formDirty = true; toast(`‘${it.name}’${jo(it.name, '을/를')} 폼으로 불러왔습니다 — 고친 뒤 [바구니에 담기]`, 'info');
+    formDirty = true; toast(`‘${ex(it.name)}’${jo(it.name, '을/를')} 폼으로 불러왔습니다 — 고친 뒤 [바구니에 담기]`, 'info');
   });
   $('q-body').addEventListener('input', e => { if (e.target.id === 'dup-why') { dupWhy = e.target.value; updateNeeds(); persist(); }
     const w = e.target.dataset.why; if (w !== undefined) { queue[+w].why = e.target.value; setBlock($('rq-go'), queueBlock()); persist(); } });
@@ -690,7 +691,7 @@ window.pageInit = function () {
     const kinds = [...new Set(items.map(q => ({ word: '단어', term: '용어', domain: '도메인', code: '코드', entity: '엔터티 용어', class: '분류' })[q.k] || '항목'))].join('·');
     const title = `${kinds} ${items[0].name}${items.length > 1 ? ` 외 ${items.length - 1}건` : ''} ${items.every(q => opOf(q) === '변경') ? '변경' : items.every(q => opOf(q) === '추가') ? '등록' : '등록 · 변경'}`;   // usability B6: kinds first (단어·분류 연월 외 1건 등록)
     const r = createDoc({ type: 'dict', title, n: items.length, reason: $('rq-why').value.trim(), cc: [], items, warnAtSubmit: warns.length ? warns.map(([name, m]) => ({ name, problems: m })) : undefined });
-    if (r.conflict) { toast(`다른 신청이 먼저 들어왔습니다 — ${r.conflict.join(', ')}. 그 항목을 바구니에서 빼고 다시 신청하세요`, 'danger'); return; }
+    if (r.conflict) { toast(`다른 신청이 먼저 들어왔습니다 — ${ex(r.conflict.join(', '))}. 그 항목을 바구니에서 빼고 다시 신청하세요`, 'danger'); return; }
     if (candId) { const all = getCands(); const c = all.find(x => x.id === candId); if (c) { c.doc = r.doc.id; delete c.closed; saveCands(all); } }   // the candidate follows the document it was converted into
     queue.length = 0; dupWhy = ''; $('rq-why').value = ''; formDirty = false; saveBasket({ items: [], reason: '' });
     location.href = `approvals.html?new=1&doc=${r.doc.id}${r.dup ? '&dup=1' : ''}`;
@@ -702,7 +703,7 @@ window.pageInit = function () {
   // DX-03: named drafts — park the basket, start another, come back later (server-side in the product)
   const drMenu = (open) => { $('dr-menu').classList.toggle('open', open); $('dr-open').setAttribute('aria-expanded', open); };
   function drawDrafts() { const L = getDrafts();
-    $('dr-menu').innerHTML = (L.length ? L.map(d => `<div class="mi u-col u-ai-c" role="menuitem"><div class="u-w-full"><b>${d.name}</b><div class="caption muted">${d.items.length}건 · ${d.at}</div></div><div class="flex u-w-full u-gap-4 u-mb-8"><button class="btn sm" data-dr-load="${d.id}">불러오기</button><button class="btn sm" data-dr-merge="${d.id}">바구니에 합치기</button><span class="grow"></span><button class="btn ghost sm" data-dr-del="${d.id}" aria-label="${d.name} 초안 지우기">지우기</button></div></div>`).join('') : '<div class="caption muted u-p-16">보관한 초안이 없습니다</div>')
+    $('dr-menu').innerHTML = (L.length ? L.map(d => `<div class="mi u-col u-ai-c" role="menuitem"><div class="u-w-full"><b>${ex(d.name)}</b><div class="caption muted">${d.items.length}건 · ${ex(d.at)}</div></div><div class="flex u-w-full u-gap-4 u-mb-8"><button class="btn sm" data-dr-load="${d.id}">불러오기</button><button class="btn sm" data-dr-merge="${d.id}">바구니에 합치기</button><span class="grow"></span><button class="btn ghost sm" data-dr-del="${d.id}" aria-label="${ex(d.name)} 초안 지우기">지우기</button></div></div>`).join('') : '<div class="caption muted u-p-16">보관한 초안이 없습니다</div>')
       + '<div class="caption muted u-p-8">목업: 이 브라우저에 저장 · 제품: 계정별 서버 저장(다른 PC에서 이어 쓰기)</div>';
     $('dr-n').textContent = L.length || ''; }
   $('dr-open').onclick = e => { e.stopPropagation(); drawDrafts(); drMenu(!$('dr-menu').classList.contains('open')); };
@@ -712,13 +713,13 @@ window.pageInit = function () {
     if (dl) { saveDrafts(L.filter(x => x.id !== dl.dataset.drDel)); drawDrafts(); toast('초안을 지웠습니다', 'info'); return; }
     const d = L.find(x => x.id === (ld || mg || {}).dataset?.[ld ? 'drLoad' : 'drMerge']); if (!d) return;
     if (ld) { const had = queue.length; if (had) { const name = `자동 보관 · ${nowStr()}`; L.unshift({ id: 'dr' + Date.now(), name, at: nowStr(), reason: $('rq-why').value, items: JSON.parse(JSON.stringify(queue)) }); }
-      queue.splice(0, queue.length, ...JSON.parse(JSON.stringify(d.items))); $('rq-why').value = d.reason || ''; saveDrafts(L.filter(x => x.id !== d.id)); toast(`초안 ‘${d.name}’${jo(d.name, '을/를')} 불러왔습니다${had ? ' — 지금 바구니는 초안으로 보관했습니다' : ''}`, 'info'); }
-    else { const [a, s] = addToBasket(d.items.map(x => { const o = Object.assign({}, x); delete o.key; return o; })); queue.splice(0, queue.length, ...getBasket().items); toast(`초안 ‘${d.name}’에서 ${a}건을 합쳤습니다${s ? ` · 중복 ${s}건 제외` : ''}`, 'info'); }
+      queue.splice(0, queue.length, ...JSON.parse(JSON.stringify(d.items))); $('rq-why').value = d.reason || ''; saveDrafts(L.filter(x => x.id !== d.id)); toast(`초안 ‘${ex(d.name)}’${jo(d.name, '을/를')} 불러왔습니다${had ? ' — 지금 바구니는 초안으로 보관했습니다' : ''}`, 'info'); }
+    else { const [a, s] = addToBasket(d.items.map(x => { const o = Object.assign({}, x); delete o.key; return o; })); queue.splice(0, queue.length, ...getBasket().items); toast(`초안 ‘${ex(d.name)}’에서 ${a}건을 합쳤습니다${s ? ` · 중복 ${s}건 제외` : ''}`, 'info'); }
     drMenu(false); drawQueue(); });
   $('dr-save').onclick = () => {
     if (!queue.length) { toast('바구니가 비어 있어 보관할 것이 없습니다', 'info'); return; }
     const box = document.createElement('div'); box.className = 'banner info u-mb-12'; box.id = 'dr-box';
-    box.innerHTML = `<i data-ic=info></i><div class="grow"><label for="dr-name" class="caption">초안 이름</label><input class="input u-mt-4" id="dr-name" value="${queue[0].name} 외 ${queue.length - 1}건 · ${nowStr()}"><div class="flex u-mt-8"><span class="caption muted">보관하면 바구니는 비워집니다</span><span class="grow"></span><button class="btn ghost sm" id="dr-x">취소</button><button class="btn sm primary" id="dr-ok">보관</button></div></div>`;
+    box.innerHTML = `<i data-ic=info></i><div class="grow"><label for="dr-name" class="caption">초안 이름</label><input class="input u-mt-4" id="dr-name" value="${ex(queue[0].name)} 외 ${queue.length - 1}건 · ${nowStr()}"><div class="flex u-mt-8"><span class="caption muted">보관하면 바구니는 비워집니다</span><span class="grow"></span><button class="btn ghost sm" id="dr-x">취소</button><button class="btn sm primary" id="dr-ok">보관</button></div></div>`;
     const old = $('dr-box'); if (old) old.remove(); panel.querySelector('.rp-body').prepend(box); $('dr-name').select();
     $('dr-x').onclick = () => box.remove();
     $('dr-ok').onclick = () => { const L = getDrafts(); L.unshift({ id: 'dr' + Date.now(), name: $('dr-name').value.trim() || '이름 없는 초안', at: nowStr(), reason: $('rq-why').value, items: JSON.parse(JSON.stringify(queue)) }); saveDrafts(L); queue.length = 0; $('rq-why').value = ''; box.remove(); drawQueue(); toast('초안으로 보관했습니다 — [초안]에서 다시 불러옵니다', 'success'); };
@@ -753,13 +754,13 @@ window.pageInit = function () {
   const ssKey = 'dbm-saved-search-' + ME.id, getSS = () => { try { return JSON.parse(dbmStore.get(ssKey, '[]')); } catch (e) { return []; } }, setSS = v => dbmStore.set(ssKey, JSON.stringify(v));
   const ssMenu = open => { $('ss-menu').classList.toggle('open', open); $('ss-btn').setAttribute('aria-expanded', open); };
   function drawSS() { const L = getSS(), cur = condState();
-    $('ss-menu').innerHTML = L.map((s, i) => `<div class="mi"><button class="btn ghost sm grow u-tl" data-ss="${i}">${s.name}<span class="caption muted"> · ${Object.keys(s.c).length}개 조건</span></button><button class="btn ghost sm" data-ss-link="${i}" aria-label="${s.name} 링크 복사">링크</button><button class="btn ghost sm" data-ss-del="${i}" aria-label="${s.name} 지우기">지우기</button></div>`).join('')
+    $('ss-menu').innerHTML = L.map((s, i) => `<div class="mi"><button class="btn ghost sm grow u-tl" data-ss="${i}">${ex(s.name)}<span class="caption muted"> · ${Object.keys(s.c).length}개 조건</span></button><button class="btn ghost sm" data-ss-link="${i}" aria-label="${ex(s.name)} 링크 복사">링크</button><button class="btn ghost sm" data-ss-del="${i}" aria-label="${ex(s.name)} 지우기">지우기</button></div>`).join('')
       + `<div class="ffoot u-p-8"><input class="input" id="ss-name" placeholder="지금 조건 이름" aria-label="저장할 검색 이름"${Object.keys(cur).length ? '' : ' disabled'}><button class="btn sm primary" id="ss-add"${Object.keys(cur).length ? '' : ' disabled title="저장할 조건이 없습니다"'}>저장</button></div>`; }
   $('ss-btn').onclick = e => { e.stopPropagation(); drawSS(); ssMenu(!$('ss-menu').classList.contains('open')); };
   document.addEventListener('click', e => { if (!e.target.closest('#ss-menu, #ss-btn')) ssMenu(false); });
   $('ss-menu').addEventListener('click', e => { e.stopPropagation(); const L = getSS();
     const a = e.target.closest('[data-ss]'), lk = e.target.closest('[data-ss-link]'), dl = e.target.closest('[data-ss-del]');
-    if (e.target.id === 'ss-add') { const nm = $('ss-name').value.trim() || ($('q').value.trim() || '검색') + ' · ' + nowStr(); L.unshift({ name: nm, c: condState() }); setSS(L.slice(0, 20)); drawSS(); toast(`검색 ‘${nm}’${jo(nm, '을/를')} 저장했습니다`, 'success'); return; }
+    if (e.target.id === 'ss-add') { const nm = $('ss-name').value.trim() || ($('q').value.trim() || '검색') + ' · ' + nowStr(); L.unshift({ name: nm, c: condState() }); setSS(L.slice(0, 20)); drawSS(); toast(`검색 ‘${ex(nm)}’${jo(nm, '을/를')} 저장했습니다`, 'success'); return; }
     if (dl) { L.splice(+dl.dataset.ssDel, 1); setSS(L); drawSS(); return; }
     if (lk) { const u = location.origin + location.pathname + '?' + new URLSearchParams(L[+lk.dataset.ssLink].c); try { navigator.clipboard.writeText(u); } catch (er) {} toast('검색 링크를 복사했습니다 — 같은 조건으로 열립니다', 'success'); return; }
     if (a) { applyCond(L[+a.dataset.ss].c); sel = null; ssMenu(false); draw(); } });
@@ -772,14 +773,14 @@ window.pageInit = function () {
     ['b-req', 'bk-grid', 'bk-chg', 'bk-same', 'bk-unuse', 'bk-del'].forEach(id => { $(id).hidden = true; }); }
   /* 27: logical types come from 표준 사전 › 데이터 타입 · 축약명 — common types plus the current system's own (그 시스템 전용 도메인이 됨) */
   const DSYS = curSys().code, DTYPES = typesFor(DSYS);
-  $('dm-type').innerHTML = DTYPES.map(t => `<option value="${t.ab}">${t.n} · ${t.ab}${t.kind !== 'std' ? ` (${TYPE_KIND[t.kind]}${t.scope !== '공통' ? ' · ' + sysNameOf(t.scope) + ' 전용' : ''})` : ''}</option>`).join('');
+  $('dm-type').innerHTML = DTYPES.map(t => `<option value="${ex(t.ab)}">${ex(t.n)} · ${ex(t.ab)}${t.kind !== 'std' ? ` (${ex(TYPE_KIND[t.kind])}${t.scope !== '공통' ? ' · ' + ex(sysNameOf(t.scope)) + ' 전용' : ''})` : ''}</option>`).join('');
   $('dm-sysn').textContent = `${curSys().name}(${dbmsOfSys(DSYS)})`;
   // G1: group → class from the dictionary's domain classes (the class name is the front of the domain name)
   const GR = getGroups();
-  $('dm-grp').innerHTML = GR.groups.filter(g => g.st === '사용').map(g => `<option value="${g.id}"${g.name === '코드' ? ' selected' : ''}>${g.name}</option>`).join('');
+  $('dm-grp').innerHTML = GR.groups.filter(g => g.st === '사용').map(g => `<option value="${ex(g.id)}"${g.name === '코드' ? ' selected' : ''}>${ex(g.name)}</option>`).join('');
   // usability B4: classes waiting in the basket can be used right away (they are judged together in the same request)
   const fillCls = () => { const g = $('dm-grp').value, bk = queue.filter(q => q.k === 'class' && opOf(q) === '추가' && q.group === g);
-    $('dm-fw').innerHTML = (GR.classes.filter(c => c.group === g && c.st === '사용').map(c => `<option value="${c.name}">${c.name} · 형식단어 ${c.fw}</option>`).join('') + bk.map(c => `<option value="${c.name}">${c.name} · 형식단어 ${c.fw} (바구니)</option>`).join('')) || '<option value="">(이 그룹에 분류 없음)</option>'; };
+    $('dm-fw').innerHTML = (GR.classes.filter(c => c.group === g && c.st === '사용').map(c => `<option value="${ex(c.name)}">${ex(c.name)} · 형식단어 ${ex(c.fw)}</option>`).join('') + bk.map(c => `<option value="${ex(c.name)}">${ex(c.name)} · 형식단어 ${ex(c.fw)} (바구니)</option>`).join('')) || '<option value="">(이 그룹에 분류 없음)</option>'; };
   const domItem = () => { const cls = $('dm-fw').value, ty = $('dm-type').value, len = $('dm-len').value.trim(), sc = $('dm-sc').value.trim();
     const tt = typeOf(ty) || { arg: '' }, sc2 = tt.arg === 'p,s' ? sc : '', len2 = tt.arg === '' ? '' : len;
     const name = domName(cls, ty, len2, sc2), ph = physOf(DSYS, ty, len2, sc2), pg = physOfDbms('PostgreSQL', ty, len2, sc2);
@@ -802,7 +803,7 @@ window.pageInit = function () {
   ['dm-fw', 'dm-type', 'dm-len', 'dm-sc'].forEach(id => { const el = $(id); el.addEventListener('input', upd); el.addEventListener('change', upd); });
   fillCls(); upd();
   // G2: word — format word links to a class; synonyms and forbidden words are separate
-  $('wd-cls').innerHTML = '<option value="">(나중에 분류를 만들 때 연결)</option>' + GR.classes.filter(c => c.st === '사용').map(c => `<option value="${c.id}">${c.name} · ${(GR.groups.find(g => g.id === c.group) || {}).name} (지금 형식단어 ${c.fw})</option>`).join('');
+  $('wd-cls').innerHTML = '<option value="">(나중에 분류를 만들 때 연결)</option>' + GR.classes.filter(c => c.st === '사용').map(c => `<option value="${ex(c.id)}">${ex(c.name)} · ${ex((GR.groups.find(g => g.id === c.group) || {}).name)} (지금 형식단어 ${ex(c.fw)})</option>`).join('');
   $('wd-fmt').onchange = () => { $('wd-cls-f').hidden = $('wd-fmt').value !== 'Y'; };
   const wordItem = () => ({ k: 'word', name: $('wd-name').value.trim(), abbr: abbrCase($('wd-abbr').value.trim(), 'word'), eng: $('wd-eng').value.trim(), fmt: $('wd-fmt').value, syn: $('wd-syn').value.split(',').map(s => s.trim()).filter(Boolean), forbid: $('wd-forbid').value.split(',').map(s => s.trim()).filter(Boolean), desc: $('wd-desc').value.trim() });
   ['wd-name', 'wd-abbr', 'wd-syn', 'wd-forbid'].forEach(id => $(id).addEventListener('input', () => { const p = checkItem(wordItem(), { batch: queue }).filter(x => x.lvl === 'block' && $('wd-name').value.trim()); $('wd-err').textContent = p.map(x => x.msg).join(' · '); }));
@@ -820,7 +821,7 @@ window.pageInit = function () {
       $('rq-why').value = d.reason || ''; drawQueue();
       const last = (d.hist || []).slice(-1)[0];
       $('pn-detail').classList.remove('open'); panel.classList.add('open');
-      panel.querySelector('.rp-body').insertAdjacentHTML('afterbegin', `<div class="banner warning u-mb-12"><i data-ic=warn></i><div><b>${d.id} 보완해서 다시 신청</b> — ${STEP_NAME[d.step]}${last && last.why ? ` · 의견: ${last.why}` : ''}. 아래 바구니는 그 문서의 항목입니다. 고친 뒤 신청하면 <b>새 신청번호</b>가 만들어집니다.</div></div>`);
+      panel.querySelector('.rp-body').insertAdjacentHTML('afterbegin', `<div class="banner warning u-mb-12"><i data-ic=warn></i><div><b>${d.id} 보완해서 다시 신청</b> — ${STEP_NAME[d.step]}${last && last.why ? ` · 의견: ${ex(last.why)}` : ''}. 아래 바구니는 그 문서의 항목입니다. 고친 뒤 신청하면 <b>새 신청번호</b>가 만들어집니다.</div></div>`);
     } else if (d) toast(`${d.id}는 내가 보완할 수 있는 상태가 아닙니다(${STEP_NAME[d.step]})`, 'info');
   }
   if ($('wd-lim')) $('wd-lim').textContent = `${getPolicy().fields.word.abbr.max ? getPolicy().fields.word.abbr.max + '자 이내' : '길이 제한 없음'} · ${ruleCharsText(getPolicy().fields.word.abbr)}`;
@@ -832,17 +833,17 @@ window.pageInit = function () {
   if (q0.get('basket') === '1') { openPanel(); basketFirst(queue.length > 0); }
   $('b-req').addEventListener('click', () => setTimeout(() => basketFirst(queue.length > 0 && !document.querySelector('#pn-request .rq-form[data-rq="chg"]:not([hidden])')), 0));
   // global search (Ctrl+K) opens the item's detail directly
-  if (q0.get('sel')) setTimeout(() => { sel = q0.get('sel'); draw(); const r = $('rows').querySelector(`tr[data-id="${sel}"]`); if (r) r.focus(); }, 60);   // the detail opens even when the item is outside the current list
+  if (q0.get('sel')) setTimeout(() => { const s0 = q0.get('sel'); if (!I.some(x => x.id === s0)) return; sel = s0; draw(); const r = [...$('rows').querySelectorAll('tr[data-id]')].find(tr => tr.dataset.id === sel); if (r) r.focus(); }, 60);   // the detail opens even when the item is outside the current list · FC: an unknown sel= opens with nothing selected; the row is found by string compare (no selector built from the address)
   $('rq-final').style.display = lineFor('dict').includes('final') ? '' : 'none';
   let candId = null;
   if (q0.get('cand')) { const c = getCands().find(x => x.id === q0.get('cand')); if (c) { candId = c.id; $('pn-detail').classList.remove('open'); panel.classList.add('open'); if (c.t === '단어') { panel.querySelector('[data-rq="word"].chip').click(); $('wd-name').value = c.name; $('wd-abbr').value = c.abbr || ''; } else { $('tm-name').value = c.name; analyse(); }
-    panel.querySelector('.rp-body').insertAdjacentHTML('afterbegin', `<div class="banner info u-mb-12"><i data-ic=flag></i><div><b>후보 ‘${c.name}’${jo(c.name, '을/를')} ${c.t} 신청으로 전환</b> — 발생 위치 ${c.loc.length}곳. 값을 확인하고 [바구니에 담기] 후 신청하면 후보가 이 신청에 연결됩니다.</div></div>`); $('rq-why').value = `후보 큐 ${c.loc.length}곳 발생 — ${c.name}`; } }
+    panel.querySelector('.rp-body').insertAdjacentHTML('afterbegin', `<div class="banner info u-mb-12"><i data-ic=flag></i><div><b>후보 ‘${ex(c.name)}’${jo(c.name, '을/를')} ${ex(c.t)} 신청으로 전환</b> — 발생 위치 ${c.loc.length}곳. 값을 확인하고 [바구니에 담기] 후 신청하면 후보가 이 신청에 연결됩니다.</div></div>`); $('rq-why').value = `후보 큐 ${c.loc.length}곳 발생 — ${c.name}`; } }
   // V0 permanent delete (30 v1.2 ⑦): DA only (15-rbac dict.purge), references block it, the exact name and a reason confirm it, a separate log records it
   function purge(it) {
     if (liveRoleChanged()) { staleRoleToast(); return; }
-    if (it.use > 0) { toast(`‘${it.name}’${jo(it.name, '은/는')} 아직 ${it.use}곳에서 참조 중이라 영구 삭제할 수 없습니다 — 참조를 먼저 정리하세요`, 'danger'); return; }
+    if (it.use > 0) { toast(`‘${ex(it.name)}’${jo(it.name, '은/는')} 아직 ${it.use}곳에서 참조 중이라 영구 삭제할 수 없습니다 — 참조를 먼저 정리하세요`, 'danger'); return; }
     const box = document.createElement('div'); box.className = 'banner danger'; box.style.margin = '8px 0';
-    box.innerHTML = `<i data-ic=warn></i><div class="grow"><b>영구 삭제 — 되돌릴 수 없습니다.</b> 항목과 개별 이력이 지워지고, 결재 기록과 삭제 로그만 남습니다.<div class="field u-mt-8"><label for="pg-name">확인하려면 이름 ‘${it.name}’${jo(it.name, '을/를')} 그대로 입력하세요</label><input class="input" id="pg-name"></div><div class="field"><label for="pg-why">사유 *</label><input class="input" id="pg-why"></div><div class="flex"><span class="grow"></span><button class="btn sm danger" id="pg-go" disabled>영구 삭제</button></div></div>`;
+    box.innerHTML = `<i data-ic=warn></i><div class="grow"><b>영구 삭제 — 되돌릴 수 없습니다.</b> 항목과 개별 이력이 지워지고, 결재 기록과 삭제 로그만 남습니다.<div class="field u-mt-8"><label for="pg-name">확인하려면 이름 ‘${ex(it.name)}’${jo(it.name, '을/를')} 그대로 입력하세요</label><input class="input" id="pg-name"></div><div class="field"><label for="pg-why">사유 *</label><input class="input" id="pg-why"></div><div class="flex"><span class="grow"></span><button class="btn sm danger" id="pg-go" disabled>영구 삭제</button></div></div>`;
     $('pn-detail').querySelector('.rp-body').prepend(box);
     const chk = () => { $('pg-go').disabled = !($('pg-name').value === it.name && $('pg-why').value.trim()); };
     $('pg-name').oninput = chk; $('pg-why').oninput = chk;

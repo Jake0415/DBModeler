@@ -72,7 +72,7 @@
           <div class="field"><label for="s-n1">새 비밀번호</label><input class="input mono" id="s-n1" type="password" autocomplete="new-password"></div>
           <div class="field"><label for="s-n2">새 비밀번호 확인</label><input class="input mono" id="s-n2" type="password" autocomplete="new-password"></div>
           <div class="caption muted" id="s-rule"></div><div class="caption" id="s-err" role="alert" style="color:var(--danger-deep);min-height:16px;margin-top:4px"></div>
-          <div class="flex u-gap-8 u-mt-8"><button class="btn primary" type="submit">비밀번호 변경</button><span class="now-tag">바로 적용</span></div></form>
+          <div class="flex u-gap-8 u-mt-8"><button class="btn primary" type="submit" data-now>비밀번호 변경</button><span class="now-tag">바로 적용</span></div></form>
         <div class="aside"><span class="lastchg" id="sec-pwat"></span><span>바꾸면 다른 기기의 세션은 다시 로그인해야 합니다.</span></div></div>
       <h3 class="set-sec">접속 기록</h3>
       <div class="set-row wide"><div class="l"><b>접속 중인 세션</b><span class="now-tag">로그아웃 바로 적용</span></div>
@@ -111,6 +111,7 @@
 <script>
 window.pageInit = function () {
   const $ = id => document.getElementById(id);
+  const hx = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);   // 최종 점검 A-02: 신청 제목 · 파일명 · 엔터티/속성 · 감사 대상은 사용자 입력 — 글자로만
   $('av').textContent = ME.name[0]; $('nm').textContent = ME.name; $('rb').innerHTML = roleBadges(ME);
   const U = USERS[ME.id] || ME;
   $('p-company').value = U.company || ''; $('p-org').value = U.org || ''; $('p-name').value = U.name; $('p-id').value = U.id; $('p-phone').value = U.phone || ''; $('p-mail').value = U.mail || ''; $('p-disp').value = ME.name;
@@ -137,16 +138,16 @@ window.pageInit = function () {
     $('mine-sum').innerHTML = `<b class="u-fg">내 신청 ${docs.length}건</b> · 진행 중 <b>${n('ing')}</b> · <span class="${n('fix') ? 'u-danger' : ''}">보완 필요 <b>${n('fix')}</b></span> · 완료 <b>${n('end')}</b> · 최근 신청 순`;
     $('mine-more').textContent = docs.length > 5 ? `최근 5건만 보여 줍니다 — 나머지 ${docs.length - 5}건은 결재함에서` : ''; }
   const recent5 = docs.slice().sort((a, b) => String(b.id).localeCompare(String(a.id))).slice(0, 5);
-  $('mine-body').innerHTML = recent5.length ? recent5.map(d => `<tr data-f="${f(d)}"><td class="mono">${d.id}</td><td><span class="muted">${d.type === 'model' ? '모델 확정' : '사전 신청'}</span></td><td>${d.title}</td><td class="u-nowrap">${docSteps(d)}</td><td class="mono">${d.date}</td><td><a href="approvals.html?box=mine&doc=${d.id}">열기</a></td></tr>`).join('') : '<tr class="er first"><td colspan="6" class="caption muted u-tc u-p-24">신청한 문서가 없습니다</td></tr>';
+  $('mine-body').innerHTML = recent5.length ? recent5.map(d => `<tr data-f="${f(d)}"><td class="mono">${hx(d.id)}</td><td><span class="muted">${d.type === 'model' ? '모델 확정' : '사전 신청'}</span></td><td>${hx(d.title)}</td><td class="u-nowrap">${docSteps(d)}</td><td class="mono">${hx(d.date)}</td><td><a href="approvals.html?box=mine&doc=${encodeURIComponent(d.id)}">열기</a></td></tr>`).join('') : '<tr class="er first"><td colspan="6" class="caption muted u-tc u-p-24">신청한 문서가 없습니다</td></tr>';
   // 내 작업 (CX13-15): computed from documents, batches, candidates and audit entries made by me
   const w = [];
-  getDocs().filter(d => d.req === ME.id).forEach(d => w.push({ at: d.date, g: d.type === 'model' ? '모델 확정' : '사전 신청', t: `${d.title} <span class="mono caption">${d.id}</span>`, st: STEP_NAME[d.step] || d.step, href: `approvals.html?box=mine&doc=${d.id}` }));
-  getBatches().filter(b => b.by === ME.id).forEach(b => w.push({ at: b.at, g: '엑셀 묶음', t: `${b.file} · ${b.kind} ${b.rows}행 <span class="mono caption">${b.id}</span>`, st: batchStateLabel(batchState(b)) + (batchHoldLeft(b) ? ` · 보류 ${batchHoldLeft(b)} 남음` : ''), href: `uploads.html?b=${b.id}` }));
-  getCands().forEach(c => (c.loc || []).filter(l => l.by === ME.id).forEach(l => w.push({ at: '', g: '후보 등록', t: `${c.t} '${c.name}' · ${l.ent}.${l.attr}`, st: candState(c), href: `candidates.html?c=${c.id}` })));
+  getDocs().filter(d => d.req === ME.id).forEach(d => w.push({ at: d.date, g: d.type === 'model' ? '모델 확정' : '사전 신청', t: d.title, id: d.id, st: STEP_NAME[d.step] || d.step, href: `approvals.html?box=mine&doc=${encodeURIComponent(d.id)}` }));   // A-02: t · id are text — escaped where the row is drawn
+  getBatches().filter(b => b.by === ME.id).forEach(b => w.push({ at: b.at, g: '엑셀 묶음', t: `${b.file} · ${b.kind} ${b.rows}행`, id: b.id, st: batchStateLabel(batchState(b)) + (batchHoldLeft(b) ? ` · 보류 ${batchHoldLeft(b)} 남음` : ''), href: `uploads.html?b=${encodeURIComponent(b.id)}` }));
+  getCands().forEach(c => (c.loc || []).filter(l => l.by === ME.id).forEach(l => w.push({ at: '', g: '후보 등록', t: `${c.t} '${c.name}' · ${l.ent}.${l.attr}`, st: candState(c), href: `candidates.html?c=${encodeURIComponent(c.id)}` })));
   getAudit().filter(a => a.whoId === ME.id).forEach(a => w.push({ at: a.at, g: '설정·관리', t: `${a.act} · ${a.target || ''}`, st: '기록됨', href: 'audit.html' }));
   const wk = at => /^\d\d\//.test(at) ? '2026-' + at.replace('/', '-') : at || '0';
   w.sort((a, b) => wk(b.at).localeCompare(wk(a.at)));
-  $('work-body').innerHTML = w.length ? w.map(x => `<tr><td class="mono">${x.at || '—'}</td><td><span class="badge">${x.g}</span></td><td>${x.t}</td><td class="caption">${x.st}</td><td><a href="${x.href}">열기</a></td></tr>`).join('') : '<tr class="er first"><td colspan="5" class="caption muted u-tc u-p-24">아직 작업이 없습니다</td></tr>';
+  $('work-body').innerHTML = w.length ? w.map(x => `<tr><td class="mono">${hx(x.at || '—')}</td><td><span class="badge">${hx(x.g)}</span></td><td>${hx(x.t)}${x.id ? ` <span class="mono caption">${hx(x.id)}</span>` : ''}</td><td class="caption">${hx(x.st)}</td><td><a href="${hx(x.href)}">열기</a></td></tr>`).join('') : '<tr class="er first"><td colspan="5" class="caption muted u-tc u-p-24">아직 작업이 없습니다</td></tr>';
   // 알림 설정: saved per user and honoured by pushNotif (app channel); mail follows the organisation policy
   const pref = getNotifyPref(ME.id);
   $('nt-body').innerHTML = NOTIFY_KINDS.map(([k, n, mail]) => { const p = pref[k] || {}; return `<tr><td>${n}</td><td><input type="checkbox" data-nk="${k}" data-ch="app" ${p.app !== false ? 'checked' : ''} ${mail === 'must' ? 'disabled' : ''} aria-label="${n} 앱 알림">${mail === 'must' ? ' <span class="caption faint">필수</span>' : ''}</td><td>${mail === 'must' ? `<input type="checkbox" checked disabled aria-label="${n} 메일(정책상 필수)"> <span class="caption faint">필수</span>` : mail === 'opt' ? `<input type="checkbox" data-nk="${k}" data-ch="mail" ${p.mail !== false ? 'checked' : ''} aria-label="${n} 메일">` : '<span class="caption faint">—</span>'}</td></tr>`; }).join('');
@@ -173,7 +174,7 @@ window.pageInit = function () {
   const RQ = [['owner', '기관 담당자 추가'], ['da', 'DA 추가'], ['modeler', '모델러 추가'], ['admin', 'Admin 추가']].filter(([r]) => !ME.roles.includes(r)).concat(activeSystems().filter(s => !inScope(ME, s.code)).map(s => ['sys:' + s.code, '담당 시스템 추가 — ' + s.name])).concat([['off', '역할 해제']]);
   $('rr-role').innerHTML = RQ.map(([r, n]) => `<option value="${r}">${n}</option>`).join('');
   const q = new URLSearchParams(location.search);
-  const drawRR = () => { const r = JSON.parse(dbmStore.get('dbm-rolereq-' + ME.id, 'null')); $('rr-state').innerHTML = r ? `<span class="badge b-info">요청 중</span> ${r.role} · ${r.at} · 관리자 확인 대기 <a href="#" id="rr-cancel">요청 취소</a>` : ''; const c = $('rr-cancel'); if (c) c.onclick = e => { e.preventDefault(); dbmStore.set('dbm-rolereq-' + ME.id, 'null'); drawRR(); toast('역할 변경 요청을 취소했습니다', 'info'); }; };
+  const drawRR = () => { const r = JSON.parse(dbmStore.get('dbm-rolereq-' + ME.id, 'null')); $('rr-state').innerHTML = r ? `<span class="badge b-info">요청 중</span> ${hx(r.role)} · ${hx(r.at)} · 관리자 확인 대기 <a href="#" id="rr-cancel">요청 취소</a>` : ''; const c = $('rr-cancel'); if (c) c.onclick = e => { e.preventDefault(); dbmStore.set('dbm-rolereq-' + ME.id, 'null'); drawRR(); toast('역할 변경 요청을 취소했습니다', 'info'); }; };
   drawRR();
   if (q.get('req') === 'sys' && q.get('sys')) { const k = 'sys:' + sysCodeOf(q.get('sys')); if (RQ.some(([r]) => r === k)) { $('rr-role').value = k; $('rr-why').value = sysNameOf(q.get('sys')) + ' 모델 편집 필요'; $('rr-why').dispatchEvent(new Event('input', { bubbles: true })); setTimeout(() => document.querySelector('[data-open="mo-rolereq"]').click(), 0); } }
   else if (q.get('req')) { const need = q.get('req'); const m = RQ.find(([r]) => need.toLowerCase().includes(r) || (need.includes('DA') && r === 'da') || (need.includes('Admin') && r === 'admin') || (need.includes('기관') && r === 'owner')); if (m) $('rr-role').value = m[0]; $('rr-why').value = q.get('what') ? `${q.get('what')} 화면 사용 필요` : ''; $('rr-why').dispatchEvent(new Event('input', { bubbles: true })); setTimeout(() => document.querySelector('[data-open="mo-rolereq"]').click(), 0); }
@@ -207,6 +208,7 @@ window.pageInit = function () {
   const focusTab = () => { const a = document.activeElement; if (!a || a === document.body || a.closest('#setbar')) { const t = document.querySelector('.tabs button.on'); if (t) t.focus(); } };
   function refreshBar() {
     const d = diff(), n = Object.values(d).reduce((a, b) => a + b, 0), bar = $('setbar');
+    document.querySelectorAll('[data-now]').forEach(b => b.classList.toggle('primary', !n));   // 최종 점검 A-06 · FC-17: while the save bar waits, the tab's apply-now buttons ([비밀번호 변경] · [위임 저장]) are secondary — one primary on screen
     $('sb-diff').hidden = !n;
     document.querySelectorAll('.tabs button[data-tab]').forEach(b => { const on = !!d[b.dataset.tab]; b.classList.toggle('dirty', on); const nm = b.dataset.nm || (b.dataset.nm = b.textContent.trim()); if (on) { b.title = `저장하지 않은 변경 ${d[b.dataset.tab]}건`; b.setAttribute('aria-label', `${nm} — 저장하지 않은 변경 ${d[b.dataset.tab]}건`); } else { b.removeAttribute('title'); b.removeAttribute('aria-label'); } });
     if ($('sb-pop').classList.contains('open')) { if (n) drawDiff(); else setPop(false); }
@@ -272,7 +274,7 @@ window.pageInit = function () {
     dbox.innerHTML = `${d.to ? `<div class="u-mb-8">${active ? '<span class="badge">위임 중</span>' : '<span class="badge">예약</span>'} ${esc((USERS[d.to] || {}).name || d.to)} · <span class="mono">${d.from} ~ ${d.until}</span> <button class="btn sm ghost" id="dg-end">위임 종료</button></div>` : ''}
       ${cand.length ? '' : '<div class="caption u-warning u-mb-8">같은 결재 역할을 가진 다른 사용자가 없습니다 — Admin에게 역할 부여를 요청하세요.</div>'}<div class="field-row"><div class="field"><label for="dg-to">대리인</label><select class="input" id="dg-to">${cand.map(u => `<option value="${u.id}" ${d.to === u.id ? 'selected' : ''}>${esc(u.name)} · ${(u.roles || []).map(r => ROLE_NAME[r]).join('·') || '조회만'}</option>`).join('')}</select></div>
       <div class="field"><label for="dg-from">시작일</label><input class="input mono" type="date" id="dg-from" value="${d.from || isoToday()}"></div><div class="field"><label for="dg-until">종료일</label><input class="input mono" type="date" id="dg-until" value="${d.until || ''}"></div></div>
-      <div class="flex u-mt-8"><button class="btn sm primary" id="dg-save">위임 저장</button> <span class="now-tag">바로 적용</span><span class="caption muted u-ml-8">저장하면 시작일부터 위임됩니다 — 아래 저장 막대와 상관없습니다</span></div>`;
+      <div class="flex u-mt-8"><button class="btn sm${document.getElementById('setbar') && document.getElementById('setbar').classList.contains('show') ? '' : ' primary'}" id="dg-save" data-now>위임 저장</button> <span class="now-tag">바로 적용</span><span class="caption muted u-ml-8">저장하면 시작일부터 위임됩니다 — 아래 저장 막대와 상관없습니다</span></div>`;
     $('dg-save').onclick = () => { const to = $('dg-to').value, f = $('dg-from').value, u = $('dg-until').value; if (!to || !f || !u || u < f) { toast('대리인 · 시작일 · 종료일(시작일 뒤)을 고르세요', 'danger'); return; } reloadUsers(); if (!delegCandidates(me).some(x => x.id === to)) { toast('그 사람은 지금 대리인이 될 수 없습니다(역할 · 상태가 바뀜)', 'danger'); draw(); return; }
       if (USERS[to].deleg && delegActive(USERS[to]) && USERS[to].deleg.to === me.id) { toast('그 사람이 이미 나에게 위임 중입니다 — 서로 위임할 수 없습니다', 'danger'); return; }
       me.deleg = { to, from: f, until: u }; saveUsers(); pushAudit({ act: '결재 위임', target: `${me.name} → ${USERS[to].name}`, why: `${f} ~ ${u}` }); pushNotif({ to: [to], k: 'sys', t: `결재 위임 — ${me.name}`, m: `${f} ~ ${u} · 이 기간에 ${me.name}님 차례의 결재를 대신 처리합니다(본인 신청은 제외)`, href: 'approvals.html?box=queue' }); draw(); toast(`${USERS[to].name}님에게 ${f} ~ ${u} 결재를 위임했습니다 · 이력에 ‘대리’로 남습니다`, 'success'); };
