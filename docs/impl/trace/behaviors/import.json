@@ -189,9 +189,9 @@
       "id": "BH-import-019",
       "where": "아래 고정 줄",
       "trigger": "새 업무 영역으로 ‘N개 테이블 가져오기’ 클릭",
-      "expected": "그 이름으로 업무 영역(v1 작업 버전)을 만들고 standardize.html?area=<새 영역>&from=import 로 이동(검토 모드 유지). 표준 맞추기에 ‘DDL 가져오기가 끝나 자동으로 열었습니다. 가져온 N개 테이블·M개 컬럼을 … v1로 만들고 분석했습니다.’",
+      "expected": "그 이름으로 업무 영역(v1 작업 버전)을 만들고 standardize.html?area=<새 영역>&from=import&imp=<가져오기 id> 로 이동(검토 모드 유지). 표준 맞추기에 ‘DDL 가져오기가 끝나 자동으로 열었습니다. 가져온 N개 테이블·M개 컬럼을 … v1로 만들고 분석했습니다.’. 가져오기 기록(dbm-import-last)에 id · 시각(ISO) · 출처 ddl을 남기고, 표준 맞추기가 그 id로 짝지어 한 번만 쓴다",
       "roles": "model.edit 가진 담당 시스템 모델러",
-      "refs": ["model.edit", "area.create", "RV-R01", "RV-R03", "SC-34"],
+      "refs": ["model.edit", "area.create", "RV-R01", "RV-R03", "SC-34", "F-017", "F-12"],
       "states": ["import.html"],
       "verify": "e2e"
     },
@@ -199,9 +199,9 @@
       "id": "BH-import-020",
       "where": "아래 고정 줄",
       "trigger": "기존 업무 영역으로 ‘N개 테이블 가져오기’ 클릭",
-      "expected": "고른 영역 작업 버전에 가져온 테이블 · 관계를 덧붙여 저장(기존 배치 오른쪽, 수정 번호 +1) 후 standardize.html?area=<영역>&from=import 로 이동, 배너 ‘… vN에 추가하고 분석했습니다.’",
+      "expected": "고른 영역 작업 버전에 가져온 테이블 · 관계를 덧붙여 저장(기존 배치 오른쪽, 수정 번호 +1) 후 standardize.html?area=<영역>&from=import&imp=<가져오기 id> 로 이동, 배너 ‘… vN에 추가하고 분석했습니다.’. 가져오기 기록(dbm-import-last)에 id · 시각(ISO) · 출처 ddl을 남기고, 표준 맞추기가 그 id로 짝지어 한 번만 쓴다",
       "roles": "model.edit 가진 담당 시스템 모델러(작업 중 버전)",
-      "refs": ["model.edit", "RV-R01", "RV-R03"],
+      "refs": ["model.edit", "RV-R01", "RV-R03", "F-017", "F-12"],
       "states": ["import.html"],
       "verify": "e2e"
     },

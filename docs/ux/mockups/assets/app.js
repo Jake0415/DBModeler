@@ -99,6 +99,8 @@
   window.PERMS = PERMS;
   window.sysOfArea = area => { const m = getAllModels()[area]; if (!m) return null; const s = SYSLIST.find(x => x.code === (m.system || 'RQMS')); return s ? s.name : (m.sys || null); };
   // Korean particle after a word (받침 → 은/이, 없으면 는/가)
+  // F-016: the particle by the word's last sound — a word that does not end in Hangul (물리명 · 숫자 · 영문) keeps the paired form ‘이(가)’, since its reading is not known
+  window.josaAlt = (w, pair) => { const s = String(w == null ? '' : w), [a, b] = pair.split('/'); return /[가-힣]$/.test(s) ? josa(s, pair) : `${s}${a}(${b})`; };
   window.josa = (w, pair) => { const c = String(w).charCodeAt(String(w).length - 1); const has = c >= 0xAC00 && c <= 0xD7A3 && (c - 0xAC00) % 28 > 0; const [a, b] = pair.split('/'); return w + (has ? a : b); };
   /* R-09 · R-11: 소속(내부 · 외주 · 감리) · 사용 기한 · 조회 범위 — 범위는 소속에서 정하고 예외만 사유와 함께 */
   window.ACCT_KIND = { in: '내부', out: '외주', aud: '감리' };
@@ -230,7 +232,7 @@
   /* new business area (system home [+ 업무 영역], DDL import): id, name, v1 working version, optional imported structure */
   window.addArea = (name, structure, meta) => {
     const all = getAllModels(); let n = 1; while (all['a' + n]) n++; const id = 'a' + n;
-    all[id] = Object.assign({ ver: 1, base: 0, name, system: curSys().code }, meta || {}); S('dbm-model', all);
+    all[id] = Object.assign({ ver: 1, base: 0, name, system: curSys().code, createdAt: new Date().toISOString() }, meta || {}); S('dbm-model', all);   // createdAt: 표준 맞추기가 이 영역 id로 남은 옛 가져오기 기록을 생성 시각과 비교해 무시한다(F-017 · id 재사용)
     if (structure) { S('dbm-area-seed-' + id, structure); setModelData(id, 1, Object.assign({}, structure, { rev: 0 })); }
     return id;
   };
@@ -1557,9 +1559,7 @@
   window.flowNextFocus = flowNextFocus;
   window.flowBand = (area, here, target, opts) => { const done = () => { if (target) { target.innerHTML = ''; target.hidden = true; } return ''; };
     if (!flowBandShown(area) || (qs.get('snap') && here === 'model')) return done(); const c = (opts && opts.counts) || flowCounts(area, opts && opts.model); if (!c || c.hidden) return done();
-    if (!document.getElementById('flowband-css')) { const st = document.createElement('style'); st.id = 'flowband-css';
-      st.textContent = '.flowband{display:flex;align-items:center;gap:12px;padding:6px 16px;border-bottom:1px solid var(--border);background:var(--surface);font-size:13px;flex-wrap:wrap}.flowband>b{white-space:nowrap}.flowband ol{display:flex;align-items:center;gap:6px;margin:0;padding:0;list-style:none;flex:1;flex-wrap:wrap}.flowband li{display:flex;align-items:center;gap:6px;padding:2px 10px 2px 4px;border-radius:9999px;color:var(--fg-2);white-space:nowrap}.flowband li+li::before{content:"→";color:var(--fg-3);margin-right:6px}.flowband .fb-n{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;box-shadow:inset 0 0 0 1px var(--border-strong);font:600 12px var(--font-mono);color:var(--fg-2)}.flowband li.done .fb-n{background:var(--ds-green-200,var(--surface-2));color:var(--ds-green-900,var(--fg));box-shadow:none}.flowband li.cur{color:var(--fg);font-weight:500;background:var(--ds-gray-100)}.flowband li.cur .fb-n{background:var(--ink);color:var(--on-ink);box-shadow:none}.flowband .fb-c{font-size:12px;color:var(--fg-3);font-weight:400}.flowband .btn.sm{height:24px}.flowband .btn.disabled{pointer-events:auto;cursor:not-allowed}';
-      document.head.appendChild(st); }
+    // F-015: the band's look lives in assets/app.css (.flowband — 디자인 가이드 §6.8 진행 띠)
     const A = encodeURIComponent(area), kq = h => (window.keepUrl ? keepUrl(h) : h), std = kq(`standardize.html?area=${A}&f=todo`), wiz = kq(`term-wizard.html?area=${A}&from=${here === 'std' ? 'standardize' : 'model'}`), chk = kq(`model.html?area=${A}&check=1`), imp = kq(`import-excel.html?area=${A}`), rul = kq(`standardize.html?area=${A}&f=rule`);
     // 흐름 리뷰 F-10 (29 R-17): no editing role → the actions that change something are not there; a modeler who only can't right now sees them dimmed with the reason
     const noRole = !can('model.edit', { area }), locked = c.state !== 'edit', why = locked ? (c.state === 'review' ? '확정 결재 중이라 지금은 바꿀 수 없습니다' : '확정본입니다 — 다음 작업 버전에서 이어갑니다') : '', cur = !c.ents ? 1 : c.apply ? 2 : c.left ? 3 : 4;
@@ -1641,7 +1641,7 @@
     R.forEach((r, i) => { if (r.k === 'mn') return; const p = E.find(x => x.id === r.f), c = E.find(x => x.id === r.t); if (!p || !c || c.ref) return; const f = fkOf(r, E);
       if (f.st === 'miss' && p.p !== '—' && c.p !== '—' && p.a.some(a => a.pk && !a.edit)) add('struct', 'fkMiss', 'block', c, null, `${p.n} → ${c.n}${r.name ? ` (${r.name})` : ''} — ${f.why}`, { rel: i }); });
     R.forEach((r, i) => { if (r.k === 'mn') return; const p = E.find(x => x.id === r.f), c = E.find(x => x.id === r.t); if (!p || !c || c.ref) return; const f = fkOf(r, E); if (f.st !== 'ok') return;   // A-5 ② · 흐름 리뷰 F-03: the very pairs fkOf makes (the relation panel · DDL), nothing guessed by name
-      f.ca.forEach((x, j) => { const k = f.pa[j], tk = k && typeStr(k); if (x && tk && tk !== '—' && typeStr(x) !== tk) add('struct', 'fkType', 'warn', c, x, `${typeStr(x) || '타입 없음'} — 부모 키 ${p.n}.${k.n}은(는) ${tk}`, { rel: i, pk: k.p, pki: p.a.indexOf(k) }); }); });   // 흐름 리뷰2 F-03: the column objects fkOf paired (ca · pa), not a second look-up by physical name
+      f.ca.forEach((x, j) => { const k = f.pa[j], tk = k && typeStr(k); if (x && tk && tk !== '—' && typeStr(x) !== tk) add('struct', 'fkType', 'warn', c, x, `${typeStr(x) || '타입 없음'} — 부모 키 ${josaAlt(`${p.n}.${k.n}`, '은/는')} ${tk}`, { rel: i, pk: k.p, pki: p.a.indexOf(k) }); }); });   // 흐름 리뷰2 F-03: the column objects fkOf paired (ca · pa), not a second look-up by physical name
     R.forEach((r, i) => { if (r.k !== 'mn') return; const p = E.find(x => x.id === r.f), c = E.find(x => x.id === r.t); if (p && c) add('struct', 'mn', 'warn', p, null, `${p.n} ↔ ${c.n} — 교차 엔터티 필요`, { rel: i }); });
     modelInvariants({ E }).forEach(v => items.push({ grp: 'struct', code: v.code, lvl: 'block', e: v.e, en: v.en, a: v.a, ai: v.ai, msg: v.msg }));   // 설계 §13.1 불변식 — 게이트 B(DDL)도 같은 함수
     const block = items.filter(x => x.lvl === 'block').length;

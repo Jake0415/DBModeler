@@ -106,15 +106,25 @@ window.pageInit = function () {
   const ANALYZED = `분석 ${nowStr()} · 사전 기준 현재(제정 ${getPub().cha}차 + 승인 반영분)`;   // shown at the right of the filter row (the header keeps room for the title and the wizard entry)
   // A-1 · F-12 (02-flow-plan · flow review): the entry line pairs with ITS import record — the excel import's link carries &imp=<id> and the record keeps id · at;
   // the DDL import (no id) is recognised only when no &imp= is given. A record that does not match is not used — the line then does not name a source
-  if (q.get('from') === 'import') { const imp = J2('dbm-import-last'), want = q.get('imp'), hit = imp && imp.area === AREA && (want ? imp.id === want : !imp.id) ? imp : null; $('from-import').hidden = false;
+  // F-017: the record is used ONCE — read, matched, then removed (a deleted area whose id is made again never shows an old summary).
+  // An old record without an id is ignored when its time is older than the area's creation (when both times are known)
+  const cnt0 = v => { const n = Number(v); return Number.isInteger(n) && n >= 0 ? n : 0; };   // R-05: stored counts are shown only as non-negative integers (anything else → 0)
+  const tOf = v => typeof v === 'number' ? v : v && !isNaN(Date.parse(v)) ? Date.parse(v) : NaN;
+  const staleNoId = (imp, m) => { if (!imp || imp.id) return false; const ti = tOf(imp.ts != null ? imp.ts : imp.at), tc = tOf(m && (m.createdAt != null ? m.createdAt : m.created)); return !isNaN(ti) && !isNaN(tc) && ti < tc; };
+  if (q.get('from') === 'import') { const imp = J2('dbm-import-last'), want = q.get('imp'), hit = imp && imp.area === AREA && (want ? imp.id === want : !imp.id) && !staleNoId(imp, getModel(AREA)) ? imp : null; $('from-import').hidden = false;
+    if (hit) try { dbmStore.del('dbm-import-last'); } catch (e) {}   // F-017: one use — a reload shows the neutral line
     $('from-import-t').innerHTML = hit && hit.src === 'excel'
-      ? `<b>엑셀 정의서 가져오기가 끝나 열었습니다</b> — 테이블 ${hit.tables || 0} · 컬럼 ${hit.cols || 0} · 경고 ${hit.warn || 0}${hit.warn ? '(모델 검증에서 처리)' : ''}. 사전에 있는 용어는 여기서 한 번에 입히고, 사전에 없는 단어 · 용어는 용어 자동분석으로 넘기세요.`
-      : hit ? `<b>DDL 가져오기가 끝나 자동으로 열었습니다.</b> 가져온 ${hit.tables}개 테이블·${hit.cols}개 컬럼을 ‘${esc(LK.model.name)}’ 영역 v${VER}${hit.dst === 'cur' ? '에 추가하고' : '로 만들고'} 분석했습니다.`
+      ? `<b>엑셀 정의서 가져오기가 끝나 열었습니다</b> — 테이블 ${cnt0(hit.tables)} · 컬럼 ${cnt0(hit.cols)} · 경고 ${cnt0(hit.warn)}${cnt0(hit.warn) ? '(모델 검증에서 처리)' : ''}. 사전에 있는 용어는 여기서 한 번에 입히고, 사전에 없는 단어 · 용어는 용어 자동분석으로 넘기세요.`
+      : hit ? `<b>DDL 가져오기가 끝나 자동으로 열었습니다.</b> 가져온 ${cnt0(hit.tables)}개 테이블·${cnt0(hit.cols)}개 컬럼을 ‘${esc(LK.model.name)}’ 영역 v${VER}${hit.dst === 'cur' ? '에 추가하고' : '로 만들고'} 분석했습니다.`
       : `<b>가져오기가 끝나 열었습니다.</b> 가져온 구조를 ‘${esc(LK.model.name)}’ 영역 v${VER} 기준으로 분석했습니다.`; }
   // B-3 return: the wizard's result is applied when the model screen opens — coming straight back here first, say so (this analysis does not include it yet)
   { let pa = null; try { pa = JSON.parse(sessionStorage.getItem('dbm-apply') || 'null'); } catch (e) {}
     if (pa && pa.area === AREA && pa.ver === VER && pa.from === 'term-wizard') document.querySelector('.page-header').insertAdjacentHTML('afterend', `<div class="pad u-pb-0"><div class="banner warning"><i data-ic=warn></i><div class="grow"><b>용어 자동분석 결과 ${(pa.rows || []).length + (pa.na || []).length}건이 아직 모델에 반영되지 않았습니다</b> — 모델 화면을 열면 반영되고, 그 뒤 이 화면의 분석에도 들어갑니다.</div><a class="btn sm primary" href="${backUrl}">모델에 반영</a></div></div>`); }
   // A-2: the '처음 표준화' progress band (shared, app.js flowBand — the model screen and the wizard draw the same one); it decides itself whether it shows
+  let bandNP = null; const bandNoPrimary = () => { const db = $('done-band'), ap = $('sd-apply'), bar = $('sd-bar'); return !!(db && !db.hidden) || !!(ap && bar && !bar.hidden && ap.classList.contains('primary') && !ap.disabled); };
+  // U-F6: one primary button on screen — an enabled primary [선택 적용] makes [반영] secondary (clearing the selection gives it back); the band stays secondary while either shows
+  const applyMain = () => { const ap = $('sd-apply'), bar = $('sd-bar'); return !!(ap && bar && !bar.hidden && ap.classList.contains('primary') && !ap.disabled); };
+  const syncBand = force => { const da = $('done-apply'); if (da) da.classList.toggle('primary', !applyMain()); const np = bandNoPrimary(); if (force || np !== bandNP) { bandNP = np; drawBand(np); } };
   const drawBand = noPrimary => { if (typeof window.flowBand !== 'function') return; try { window.flowBand(AREA, 'std', $('flow-slot'), { noPrimary, onClose: () => { const c = document.querySelector('#chips .chip.on') || document.querySelector('#chips .chip'); if (c) c.focus(); } }); } catch (e) {} };   // U-05 · U-07 — drawn below
   function J2(k) { try { return JSON.parse(dbmStore.get(k, 'null')); } catch (e) { return null; } }
 
@@ -278,6 +288,7 @@ window.pageInit = function () {
     $('sd-apply').disabled = (!s.C.length && !s.ho) || readOnly;
     $('sd-apply').textContent = s.C.length ? '선택 적용' : `기록 ${s.ho}건 적용`;
     $('sd-apply').classList.toggle('primary', !(FLOW3 && (s.req.length || s.cand.length)));   // U-07
+    syncBand();   // U-F6: while this screen shows its own primary button, the band's buttons are secondary — redrawn when that changes
   }
   document.querySelector('#rows').addEventListener('change', sum);
   $('chips').addEventListener('click', () => setTimeout(sum, 0));
@@ -350,7 +361,7 @@ window.pageInit = function () {
         const todoN = rows.filter(r => TODO.includes(ST[effective(r).st][2])).length;
         try { sessionStorage.setItem('dbm-apply', JSON.stringify({ area: AREA, ver: VER, rows: D.map(r => Object.assign(idOf(r), { proc: '용어 적용', entRow: !!r.entRow })), ex: [], na: [], doc: null, req: 0, cand: 0, left: leftAfter(D.map(r => Object.assign(idOf(r), { proc: '용어 적용', entRow: !!r.entRow })), null) })); } catch (e) {}
         go(backUrl); }; } }
-  drawBand(!$('done-band').hidden);   // U-07: when [반영] is this screen's main action the band's buttons are secondary
+  syncBand(true);   // U-07 · U-F6: [반영] or an enabled primary [선택 적용] on screen → the band's buttons are secondary
   // ?f= opens a filter (D1): f=todo with no to-do rows falls back to 전체 and says so
   const F = q.get('f');
   if (F) { const chip = document.querySelector(`#chips .chip[data-filter="${F}"]`); const n = chip ? +((chip.querySelector('.n') || {}).textContent || 0) : 0;

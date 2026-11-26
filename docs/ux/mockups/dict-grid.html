@@ -85,7 +85,7 @@
 
   <div class="page-body"><div class="main">
     <div class="gtop">
-      <div class="banner warning" id="ro-banner" hidden><i data-ic=lock></i><div class="grow"><b>조회 전용</b> — 사전 신청 권한(사전 신청 · 엑셀 가져오기 · 후보 등록)이 없어 내용을 보기만 할 수 있습니다. 모델러 · DA 역할이 필요합니다. 관리자에게 권한을 요청하세요.</div></div>
+      <div class="banner warning" id="ro-banner" hidden><i data-ic=lock></i><div class="grow"><b>조회 전용</b> — 사전 신청 권한(<span id="ro-perm">사전 신청 · 엑셀 가져오기 · 후보 등록</span>)이 없어 내용을 보기만 할 수 있습니다. 모델러 · DA 역할이 필요합니다. 관리자에게 권한을 요청하세요.</div></div>
       <div class="banner info" id="restore-banner" hidden><i data-ic=history></i><div class="grow" id="restore-t"></div><button class="btn sm" id="b-restore-clear">비우기</button></div>
       <div class="banner info" id="bk-banner" hidden><i data-ic=basket></i><div class="grow" id="bk-t"></div>
         <div class="seg bkseg" role="group" aria-label="바구니 항목 보기" id="bview"><button type="button" data-v="new">추가 항목</button><button type="button" data-v="edit">변경 항목</button></div>
@@ -971,7 +971,8 @@ window.pageInit = function () {
   migrate(S); migrate(S.bk);
   // rows already sent to the basket are not 'unfinished work'; opening the basket table (?mode=basket) is not about those rows either
   restored = qs.get('mode') === 'basket' ? 0 : KINDS.reduce((n, k) => n + S.rows[k].filter(r => !isEmpty(k, r) && !r.sent).length, 0) + S.edit.filter(r => !r.sent).length;
-  $('ro-banner').hidden = !RO || !!window.__pgRo;   // the 사전 화면 안내 already says it (one box, not two — claude-dict-guide DG-05)
+  $('ro-banner').hidden = !RO || !!window.__pgRo;
+  { const pm = (window.PERMS || []).find(p => p.id === 'dict.request'); if (pm && pm.n && $('ro-perm')) $('ro-perm').textContent = pm.n; }   // 후속 리뷰 U-F1: 권한 이름은 권한표(PERMS) 그대로 — 권한 화면과 늘 같다   // the 사전 화면 안내 already says it (one box, not two — claude-dict-guide DG-05)
   ['b-add1', 'b-add5'].forEach(id => { $(id).disabled = RO; });
   if (restored) { $('restore-t').textContent = `이전에 쓰던 ${restored}행을 불러왔습니다 — 자동 저장(이 브라우저 · ${ME.name})`; $('restore-banner').hidden = false; }
   if (qs.get('ids')) {   // ?ids=W-0102,T-0410 — preload rows to fix (the dictionary's multi-select can link here)

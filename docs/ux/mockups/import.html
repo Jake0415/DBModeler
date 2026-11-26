@@ -134,8 +134,10 @@ ALTER TABLE RQMS.RQRM_D ADD CONSTRAINT RQRM_D_FK1 FOREIGN KEY (PRJ_ID) REFERENCE
     const dst = document.querySelector('[name=dst]:checked').value; const st = toModel(); let area;
     if (dst === 'new') { const nm = $('newname').value.trim(); if (!nm) { toast('새 업무 영역 이름을 입력하세요', 'danger'); $('newname').focus(); return; } area = addArea(nm, st); }
     else { area = $('dst-area').value; const L = modelLock(area); if (L.state !== 'edit') { toast('그 업무 영역은 지금 편집할 수 없습니다', 'danger'); return; } const cur = modelOf(area, L.model.ver); const base = cur.E.length; st.E.forEach((x, i) => { x.id = 'imp' + Date.now() % 10000 + i; x.x += 900; x.px += 900; }); const map = {}; parsed.tables.forEach((tb, i) => { map['i' + i] = st.E[i].id; }); st.R.forEach(r => { r.f = map[r.f]; r.t = map[r.t]; }); const old = getModelData(area, L.model.ver); setModelData(area, L.model.ver, Object.assign({}, cur, { E: cur.E.concat(st.E), R: cur.R.concat(st.R), rev: ((old && old.rev) || 0) + 1 })); }
-    dbmStore.set('dbm-import-last', JSON.stringify({ area, dst, tables: parsed.tables.length, cols: parsed.tables.reduce((n, x) => n + x.cols.length, 0) }));
-    go(`standardize.html?area=${area}&from=import`);
+    // F-017: the record names itself (id · ISO time · source) and the link to 표준 맞추기 carries its id — that screen uses it once, matched by id
+    const IMP = typeof window.newId === 'function' ? newId('imp') : 'imp_' + Date.now().toString(36);
+    dbmStore.set('dbm-import-last', JSON.stringify({ id: IMP, at: new Date().toISOString(), src: 'ddl', area, dst, tables: parsed.tables.length, cols: parsed.tables.reduce((n, x) => n + x.cols.length, 0) }));
+    go(`standardize.html?area=${area}&from=import&imp=${encodeURIComponent(IMP)}`);
   };
   $('ddl').value = SAMPLE; preview();
 };

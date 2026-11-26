@@ -181,6 +181,7 @@ window.pageInit = function () {
   const q = new URLSearchParams(location.search);
   const $ = id => document.getElementById(id);
   const hx = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);   // 흐름 리뷰3 N-01: defined first — everything below that draws model data (사전 목록 · 노드 · 패널 …) uses it
+  const candAreaCount = () => getCands().filter(c => candState(c) === '대기' && (c.loc || []).some(l => l.area === AREA)).length;   // F-016: 후보 대기 = 이 업무 영역에서 나온 대기 후보만 (AREA는 함수가 불릴 때 읽음)
   // 흐름 리뷰3 N-01: every toast on this screen carries model names (엔터티 · 속성 · 관계 · 메모 …) — the message is text; only <b> · </b> stay markup
   const toast = (m, type, action) => window.toast(String(m == null ? '' : m).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]).replace(/&lt;(\/?)b&gt;/g, '<$1b>'), type, action);
   // script-driven moves keep the review role (&audit=1&as=) the same way the shared shell keeps it on plain links
@@ -205,7 +206,7 @@ window.pageInit = function () {
     if (viewOnly || DEMO) { guard(); return; }
     const e = sel && ent(sel); const c = addCandidate({ t: '단어', name: v, abbr: '' }, { area: AREA, e: e ? e.id : null, ent: e ? e.n : LOCK.model.name, attr: e ? (e.a.find(a => a.s === 'unreg' || a.s === 'comb') || {}).n || v : v });
     toast(`‘${v}’을 단어 후보로 등록했습니다 — 발생 위치 ${c.loc.length}곳 · DA가 후보 큐에서 처리합니다`, 'violet', { label: '후보 큐 열기', fn: () => go(`candidates.html?c=${c.id}`) });
-    $('c-cand').textContent = candOpenCount();
+    $('c-cand').textContent = candAreaCount();
   };
   // DX-17: a modeler with request rights puts the term straight into the request basket (no candidate queue round trip)
   $('dict-wiz').onclick = ev => { ev.preventDefault(); const se = typeof sel === 'string' && ent(sel); let sa = null; try { sa = se ? curAttr()[1] : null; } catch (x) { sa = null; } go(se ? wizUrl(se, sa) : `term-wizard.html?area=${AREA}&from=model`); };   // built on click: AREA is defined further down
@@ -357,10 +358,10 @@ window.pageInit = function () {
       e.a.forEach(a => { if (a.edit) return; if (a.s === 'na') { nac++; return; } tot++;
         if ((a.s === 'ok' || a.s === 'req') && RB(attrRuleProblems(a, pol))) bad++; else if (a.s === 'ok') okc++; else if (a.s === 'ex') { okc++; exc++; } else if (a.s === 'req') { okc++; reqc++; } else bad++; }); });
     const rate = tot ? Math.floor(okc / tot * 100) : 0;
-    $('rate').textContent = rate + '%'; { let o = $('rate-off'); if (!o) { $('rate').insertAdjacentHTML('afterend', '<span id="rate-off"></span>'); o = $('rate-off'); } o.innerHTML = offRulesHtml(pol) ? ' · ' + offRulesHtml(pol) : ''; } $('c-bad').textContent = bad; $('c-ex').textContent = exc; $('c-na').textContent = nac;
+    if (tot) $('rate').textContent = rate + '%'; else $('rate').innerHTML = '<span class="badge b-warning" title="엔터티 · 속성이 없어 준수율을 계산하지 않았습니다">미산정</span>';   /* F-016: 빈 영역은 0%가 아니라 미산정(홈과 같은 말) */ { let o = $('rate-off'); if (!o) { $('rate').insertAdjacentHTML('afterend', '<span id="rate-off"></span>'); o = $('rate-off'); } o.innerHTML = offRulesHtml(pol) ? ' · ' + offRulesHtml(pol) : ''; } $('c-bad').textContent = bad; $('c-ex').textContent = exc; $('c-na').textContent = nac;
     const exList = []; E.forEach(e => e.a.forEach(a => { if (a.s === 'ex') exList.push([e.p !== '—' ? e.p : e.n, a.p !== '—' ? a.p : a.n, a.exReason || '—']); }));
     lastComp = { rate, bad, req: reqc, na: nac, exList };
-    $('c-cand').textContent = candOpenCount();
+    $('c-cand').textContent = candAreaCount();
     // area size guidance (23 §6-2): recommended up to 300 entities, warn only
     $('ban-big').style.display = E.length > 300 ? 'flex' : 'none';
     if (E.length > 300) $('ban-big-t').innerHTML = `<b>엔터티 ${E.length}개</b> — 업무 영역 권장 상한 300개를 넘었습니다. 계속 편집할 수 있지만 화면이 느려질 수 있습니다. 영역을 나누는 것을 검토하세요.`;
@@ -643,6 +644,7 @@ window.pageInit = function () {
   let gFocus = null, gPend = null;   // where focus goes back after a re-render · an action waiting for confirmation
   const ST_NAME = { ok: '표준', comb: '조합 가능', unreg: '미등록 단어', ex: '예외', na: '비대상', req: '용어 신청 중' };
   const jr = (w, p) => josa(w, p).slice(String(w).length);
+  const jx = (w, p) => josaAlt(w, p).slice(String(w == null ? '' : w).length);   // F-016: 한글로 끝나면 맞는 조사, 아니면(물리명 · 영문) 대체형 그대로
   const domOf = a => a.dom || a.d || '';
   const domType = d => d ? (domPhys(d, MSYS).t || null) : null;   /* 27: by the system's length-range rules */
   const typeHref = (k, e, a) => `datatypes.html?${k}=1&sys=${encodeURIComponent(MSYS)}&where=${encodeURIComponent(`${(getModel(AREA) || {}).name || ''} · ${e.n}.${a.n}`)}&back=${encodeURIComponent((location.pathname.split('/').pop() || 'model.html') + location.search)}`;
@@ -1162,7 +1164,7 @@ window.pageInit = function () {
       c.a.forEach(a => { if (!a.fkCand || a.fk || a.edit) return; const fc = a.fkCand, who = `${c.n}.${a.n}`, p = fc.table ? E.find(e => e.p !== '—' && up(e.p) === up(fc.table)) : null;
         if (!p) { miss.push(`${who} — 부모 테이블 ‘${fc.table || '?'}’(물리명)을 이 영역에서 찾지 못했습니다`); return; }
         const k = p.a.find(z => z.pk && !z.edit && z.p !== '—' && up(z.p) === up(fc.col));
-        if (!k) { miss.push(`${who} — ${p.n}(${p.p})의 식별자에 컬럼 ‘${fc.col || '?'}’이(가) 없습니다`); return; }
+        if (!k) { miss.push(`${who} — ${p.n}(${p.p})의 식별자에 컬럼 ‘${fc.col || '?'}’${jx(fc.col || '?', '이/가')} 없습니다`); return; }
         if (k === a) { miss.push(`${who} — 자기 자신을 가리킵니다(자기 식별자는 FK가 될 수 없습니다)`); return; }
         if (!byP.has(p.id)) byP.set(p.id, { p, list: [] }); byP.get(p.id).list.push({ k, a }); });
       // 흐름 리뷰2 R-02 · 리뷰3 F-02: which candidates make ONE relation. A single key → one relation per candidate (역할마다).
@@ -1202,7 +1204,7 @@ window.pageInit = function () {
           else { s.pairs.forEach(a => unsure.push(`${s.c.n}.${a.n} — ${s.p.n} → ${s.c.n}에 FK가 누락된 관계가 ${olds.length}개 있는데 이 후보 묶음이 어느 관계의 짝인지 확인할 수 없어 만들지 않았습니다(관계 패널에서 FK 짝을 직접 정하세요)`)); return; } } }
       const r = old || { f: s.p.id, t: s.c.id, k: 'nonid', name: self ? '상위' : '', g: 'g' + Date.now().toString(36) + (gi++), card: '0n', opt: self ? 'may' : [...s.pairs.values()].every(a => a.nn) ? 'must' : 'may', del: 'none' };
       if (old) { usedOld.add(old); reused++; } else rels.push(r);
-      s.pairs.forEach((a, k) => { const had = old && s.c.a.find(fkMatch(old, k)); if (had) { skip.push(`${s.c.n}.${a.n} — 기존 관계 ${s.p.n} → ${s.c.n}${old.name ? `(${old.name})` : ''}에는 ${k.p}의 FK ‘${had.n}’(${had.p})이(가) 이미 있어 이 후보는 연결하지 않았습니다(FK 후보 표시는 남김)`); return; } seeds.push({ r, k, x: a }); }); });   // 흐름 리뷰2 U-01: a skipped candidate is listed with its reason
+      s.pairs.forEach((a, k) => { const had = old && s.c.a.find(fkMatch(old, k)); if (had) { skip.push(`${s.c.n}.${a.n} — 기존 관계 ${s.p.n} → ${s.c.n}${old.name ? `(${old.name})` : ''}에는 ${k.p}의 FK ‘${had.n}’(${had.p})${jx(had.n, '이/가')} 이미 있어 이 후보는 연결하지 않았습니다(FK 후보 표시는 남김)`); return; } seeds.push({ r, k, x: a }); }); });   // 흐름 리뷰2 U-01: a skipped candidate is listed with its reason
     miss.push(...unsure, ...skip);
     mcBulk = miss;
     if (!seeds.length) { drawCheck(); ckFocus(); toast(miss.length ? `관계를 만들 수 있는 FK 후보가 없습니다 — ${miss.length}건을 처리하지 못했습니다${skip.length ? `(이미 짝이 있어 건너뜀 ${skip.length}건 포함)` : ''} — 구조 묶음의 이유 목록` : 'FK 후보가 없습니다', 'info'); return; }
@@ -1214,9 +1216,17 @@ window.pageInit = function () {
     L.forEach(x => { const c = ent(x.e), a = c && c.a[x.ai], r = R[x.rel], p = r && ent(r.f), k = p && (x.pki != null ? p.a[x.pki] : p.a.find(z => z.pk && z.p === x.pk)); if (!a || !k || !k.pk) return; a.t = k.t; a.dom = domOf(k); delete a.d; delete a.xt; delete a.xlen; typeSync(a); n++; });
     render(); ckFocus(); toast(`FK ${n}개의 타입 · 길이 · 도메인을 부모 키에 맞췄습니다`, 'success', undoAction()); }
   const csvCell = v => /[",\n]/.test(v) ? '"' + String(v).replace(/"/g, '""') + '"' : v;
-  const csvRows = text => { const out = []; let row = [], cur = '', q = false; const t = String(text).replace(/^﻿/, '').replace(/\r\n?/g, '\n'), sep = t.split('\n')[0].includes('\t') ? '\t' : ',';
-    for (let i = 0; i < t.length; i++) { const ch = t[i]; if (q) { if (ch === '"' && t[i + 1] === '"') { cur += '"'; i++; } else if (ch === '"') q = false; else cur += ch; } else if (ch === '"') q = true; else if (ch === sep) { row.push(cur); cur = ''; } else if (ch === '\n') { row.push(cur); out.push(row); row = []; cur = ''; } else cur += ch; }
-    if (cur || row.length) { row.push(cur); out.push(row); } return out.filter(r => r.some(x => String(x).trim())); };
+  // one parser for an uploaded CSV and a paste from Excel (sep '\t' — 후속 리뷰 R-01): a quoted cell keeps its own tabs · line breaks · "" quotes
+  //   후속 리뷰2 N-01: only a quote at the START of a cell opens a quoted cell — a quote in the middle (12" 모니터) is a plain character. keepEmpty: blank lines stay as rows (붙여넣기 칸 위치 유지)
+  const csvRows = (text, sepIn, keepEmpty) => { const out = []; let row = [], cur = '', q = false, start = true; const t = String(text).replace(/^﻿/, '').replace(/\r\n?/g, '\n'), sep = sepIn || (t.split('\n')[0].includes('\t') ? '\t' : ',');
+    for (let i = 0; i < t.length; i++) { const ch = t[i];
+      if (q) { if (ch === '"') { if (t[i + 1] === '"') { cur += '"'; i++; } else q = false; } else cur += ch; continue; }
+      if (ch === '"' && start) { q = true; start = false; continue; }
+      if (ch === sep) { row.push(cur); cur = ''; start = true; continue; }
+      if (ch === '\n') { row.push(cur); out.push(row); row = []; cur = ''; start = true; continue; }
+      cur += ch; start = false; }
+    if (cur || row.length || q) { row.push(cur); out.push(row); } return keepEmpty ? out : out.filter(r => r.some(x => String(x).trim())); };
+  const oneLine = v => String(v == null ? '' : v).replace(/\r\n|\r|\n/g, ' ');   // 후속 리뷰3 N-02: only the line-break characters — the tabs · spaces beside them stay   // 후속 리뷰2 R-01: the definition box is one line — a line break inside a cell becomes one space (토스트로 알림)
   // ③ 정의 · 설명 누락 → one table (typing · pasting a column from Excel) or a sheet to fill in and bring back — only the definition column is taken, rows are found by name
   function defTable() { if (guard()) return; const L = mcRun().items.filter(x => MC_DEF.includes(x.code)); if (!L.length) { toast('채울 정의 · 설명이 없습니다', 'info'); return; }
     const objOf = x => { const e = ent(x.e); return e && (x.ai != null ? e.a[x.ai] : e); }, extra = new Map(), opener = document.activeElement;
@@ -1228,16 +1238,31 @@ window.pageInit = function () {
       <div class="m-foot"><button type="button" class="btn" id="dt-no">취소 (Esc)</button><button type="button" class="btn primary" id="dt-ok">저장</button></div></div>`;
     document.body.appendChild(ov); const inputs = [...ov.querySelectorAll('[data-dt]')], close = () => { ov.remove(); if (opener && opener.isConnected) opener.focus(); };
     ov.addEventListener('paste', ev => { const t = ev.target; if (!t.matches || !t.matches('[data-dt]')) return; const txt = (ev.clipboardData || window.clipboardData).getData('text'); if (!/[\n\t]/.test(txt)) return;
-      ev.preventDefault(); const lines = txt.replace(/\r\n?/g, '\n').replace(/\n$/, '').split('\n').map(l => l.split('\t').pop().trim()); let i = +t.dataset.dt, n = 0; lines.forEach(v => { if (inputs[i]) { inputs[i].value = v; n++; } i++; });
-      $('dt-msg').textContent = `붙여 넣은 ${lines.length}줄 중 ${n}칸을 채웠습니다${lines.length > n ? ` · ${lines.length - n}줄은 칸이 모자라 버렸습니다` : ''}`; });
+      ev.preventDefault(); const rows = csvRows(txt, '\t', true);   // 후속 리뷰 R-01: Excel's quoted cells (셀 안 탭 · 줄바꿈) stay whole — the column count is the parsed one
+      if (rows.some(r => r.length >= 3)) { takeRows(rows.filter(r => r.some(x => String(x).trim())), '붙여 넣은 표에서'); return; }   // F-017: 엔터티 · 속성 · 정의 3열은 이름으로 짝짓는다(행 순서로 채우지 않음)
+      // one column: line k goes to box k from the one pasted into — a blank line keeps its box as it is (후속 리뷰2 N-01: 칸 위치 유지)
+      const lines = rows.map(r => String(r[r.length - 1] || '')); let i = +t.dataset.dt, n = 0, blank = 0, nl = 0, over = 0;
+      lines.forEach(v0 => { const v = oneLine(v0).trim(); if (/\n/.test(v0.trim())) nl++; if (!inputs[i]) { if (v) over++; } else if (!v) blank++; else { inputs[i].value = v; n++; } i++; });
+      $('dt-msg').textContent = `붙여 넣은 ${lines.length}줄 중 ${n}칸을 채웠습니다${blank ? ` · 빈 줄 ${blank}개는 그 칸을 그대로 두었습니다` : ''}${over ? ` · ${over}줄은 칸이 모자라 버렸습니다` : ''}${nl ? ` · 줄바꿈 ${nl}건은 공백으로 바꿨습니다` : ''}`;
+      if (nl) toast(`정의 칸은 한 줄입니다 — 줄바꿈 ${nl}건은 공백으로 바꿨습니다`, 'info'); });
     const fname = `${curSys().name}_${String(LOCK.model.name || AREA).replace(/\s*·\s*|\s+/g, '_')}_정의입력_v${VER}.csv`;
     $('dt-down').onclick = () => { const all = []; E.forEach(e => { if (e.ref) return; all.push([e.n, '', e.desc || '']); e.a.forEach(a => { if (!a.edit) all.push([e.n, a.n, a.desc || '']); }); });
       const csv = '﻿' + [['엔터티명', '속성명', '정의']].concat(all).map(r => r.map(csvCell).join(',')).join('\r\n'), a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' })); a.download = fname; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
       pushAudit({ act: '내려받기 — 정의 입력 양식', target: fname, why: `${sysOfArea(AREA)} · ${all.length}행` }); $('dt-msg').textContent = `${fname} — ${all.length}행을 받았습니다(엑셀에서 열립니다). 정의 칸을 채워 [채운 엑셀 올리기]로 올리세요`; };
-    const takeRows = rows => { let hit = 0, miss = []; rows.forEach((r, ri) => { const en = String(r[0] || '').trim(), an = String(r[1] || '').trim(), d = String(r[2] || '').trim(); if (ri === 0 && en === '엔터티명') return; if (!d) return;
-        const e = E.find(x => !x.ref && x.n === en), o = e && (an ? e.a.find(x => !x.edit && x.n === an) : e); if (!o) { miss.push(an ? `${en}.${an}` : en || `(${ri + 1}행)`); return; }
+    // F-017: rows are found by NAME — an entity name (or an attribute name in that entity) that is not there, or is there more than once, is a row not found — never guessed
+    //   후속 리뷰 R-03: the same entity · attribute pair given twice is not applied at all — both are rows not found (입력 중복). The header row is skipped only when all three cells are the header names
+    const takeRows = (rows, from) => { let hit = 0, miss = []; const cell = (r, j) => String(r[j] || '').trim(), isHead = r => cell(r, 0) === '엔터티명' && cell(r, 1) === '속성명' && cell(r, 2) === '정의';
+      // 후속 리뷰2 R-03: a pair is a duplicate when it appears twice at all — a row with an empty definition counts too; each such row is one row not found
+      const body = rows.filter((r, ri) => !(ri === 0 && isHead(r))), pk = r => cell(r, 0) + '\u0001' + cell(r, 1), cnt = new Map(); let nl = 0;
+      body.forEach(r => { if (cell(r, 0) || cell(r, 1)) cnt.set(pk(r), (cnt.get(pk(r)) || 0) + 1); });
+      body.forEach((r, ri) => { const en = cell(r, 0), an = cell(r, 1), d0 = cell(r, 2), d = oneLine(d0);
+        if ((en || an) && cnt.get(pk(r)) > 1) { miss.push(`${an ? `${en}.${an}` : en}(입력 중복)`); return; }
+        if (!d) return; if (/\n/.test(d0)) nl++;
+        const es = E.filter(x => !x.ref && x.n === en), e = es.length === 1 ? es[0] : null, as = e && an ? e.a.filter(x => !x.edit && x.n === an) : [], o = e && (an ? (as.length === 1 ? as[0] : null) : e);
+        if (!o) { const who = an ? `${en}.${an}` : en || `(${ri + 1}행)`; miss.push(es.length > 1 || as.length > 1 ? `${who}(이름 겹침)` : who); return; }
         const i = L.findIndex(x => objOf(x) === o); if (i >= 0) inputs[i].value = d; else if (d !== (o.desc || '')) extra.set(o, d); hit++; });
-      $('dt-msg').textContent = `올린 파일에서 정의 ${hit}건을 읽었습니다${extra.size ? `(목록 밖 ${extra.size}건 포함)` : ''}${miss.length ? ` · 못 찾은 행 ${miss.length}건: ${miss.slice(0, 5).join(', ')}${miss.length > 5 ? ' …' : ''}` : ''} — [저장]하면 반영됩니다`; };
+      $('dt-msg').textContent = `${from || '올린 파일에서'} 정의 ${hit}건을 읽었습니다${extra.size ? `(목록 밖 ${extra.size}건 포함)` : ''}${miss.length ? ` · 못 찾은 행 ${miss.length}건: ${miss.slice(0, 5).join(', ')}${miss.length > 5 ? ' …' : ''}` : ''}${nl ? ` · 줄바꿈 ${nl}건은 공백으로 바꿨습니다` : ''} — [저장]하면 반영됩니다`;
+      if (nl) toast(`정의 칸은 한 줄입니다 — 줄바꿈 ${nl}건은 공백으로 바꿨습니다`, 'info'); };
     ov.__take = text => takeRows(csvRows(text));   // (목업 확인용: 파일 없이 내용으로)
     $('dt-up').onclick = () => $('dt-file').click();
     $('dt-file').onchange = ev => { const f = ev.target.files[0]; if (!f) return; if (/\.xlsx?$/i.test(f.name)) { $('dt-msg').textContent = '목업은 받은 양식(.csv)만 읽습니다 — 엑셀에서 CSV로 저장해 올리세요'; return; } const fr = new FileReader(); fr.onload = () => takeRows(csvRows(fr.result)); fr.readAsText(f); ev.target.value = ''; };
@@ -1260,7 +1285,7 @@ window.pageInit = function () {
         let nn = String(val('n', o.n, d.n) || '').trim(); if (!nn) nn = o.p && o.p !== '—' ? o.p : o.n;   // 흐름 리뷰 U-04: an empty logical name falls back to the physical name (the import's own rule)
         plan.push({ x, o, nn, nd: val('d', o.desc || '', d.d) }); });
       // 흐름 리뷰 F-07: the model is judged as it WOULD be with every chosen value in place — when a name breaks an invariant nothing is applied
-      const sim = JSON.parse(JSON.stringify({ E })), key = (v, m) => JSON.stringify([v.code, v.e, v.a, v.ai, v.msg, grp(v, m)]), dupN = m => { const out = []; m.E.forEach(e => { if (e.ref) return; const seen = new Set(); e.a.forEach((a, ai) => { if (a.edit) return; if (seen.has(a.n)) out.push({ code: 'dupName', e: e.id, a: a.n, ai, msg: `${e.n}에 논리명 ‘${a.n}’이(가) 둘이 됩니다` }); seen.add(a.n); }); }); return out; };
+      const sim = JSON.parse(JSON.stringify({ E })), key = (v, m) => JSON.stringify([v.code, v.e, v.a, v.ai, v.msg, grp(v, m)]), dupN = m => { const out = []; m.E.forEach(e => { if (e.ref) return; const seen = new Set(); e.a.forEach((a, ai) => { if (a.edit) return; if (seen.has(a.n)) out.push({ code: 'dupName', e: e.id, a: a.n, ai, msg: `${e.n}에 논리명 ‘${a.n}’${jx(a.n, '이/가')} 둘이 됩니다` }); seen.add(a.n); }); }); return out; };
       plan.forEach(pl => { const e = sim.E.find(z => z.id === pl.x.e), t = e && (pl.x.ai != null ? e.a[pl.x.ai] : e); if (t) t.n = pl.nn; });
       // 흐름 리뷰2 F-07: the WHOLE violation list is compared (code · 대상 · 메시지, counted as a multiset) — a violation that changes partner (A·B·A → A·B·B) is new,
       //   and a name-based violation (엔터티명 · 논리명 중복) on a row whose name this run changes blocks even when one like it was there before
@@ -1749,7 +1774,7 @@ window.pageInit = function () {
     commitAttr(inp, null); if (!e.a.includes(a) || a.s !== 'unreg') return;
     a.cand = 1; a.candWord = word; dirty = true;
     const c = addCandidate({ t: '단어', name: word, abbr: '' }, { area: AREA, e: e.id, ent: e.n, attr: a.n });
-    $('c-cand').textContent = candOpenCount(); render();
+    $('c-cand').textContent = candAreaCount(); render();
     toast(`‘${word}’을 단어 후보로 등록했습니다 — ‘${e.n}.${a.n}’은 승인될 때까지 대기(미준수로 집계)`, 'violet', { label: '후보 큐 열기', fn: () => go(`candidates.html?c=${c.id}`) });
   }
   document.addEventListener('keydown', ev => {
