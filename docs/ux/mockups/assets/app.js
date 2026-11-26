@@ -2291,11 +2291,13 @@
       </div>
       ${tabs ? '<div class="tpanel" id="tp-dict" role="tabpanel" aria-labelledby="lt-d" hidden></div>' : ''}
       <div class="tmini" aria-label="접힌 모델 트리">
-        <button class="tm-i tm-x" id="tr-exp" type="button" aria-expanded="false" aria-controls="tr-full" aria-label="왼쪽 칸 펼치기 (Ctrl+B)" title="왼쪽 칸 펼치기 (Ctrl+B)"><i data-ic=popen data-s=16></i></button>
-        <a class="tm-i${page === 'system' ? ' on" aria-current="page' : ''}" href="system.html" title="시스템 홈 · ${esc(sys.name)}" aria-label="시스템 홈"><i data-ic=table></i></a>
-        ${Object.entries(models0).map(([id, m]) => `<a class="tm-i tm-a${id === famArea ? ' on" aria-current="true' : ''}" href="model.html?area=${id}" title="${esc(m.name)}" aria-label="${esc(m.name)}">${esc(String(m.name).trim()[0])}</a>`).join('')}
-        <a class="tm-i${file === 'model.html' && qp.get('sys') ? ' on" aria-current="page' : ''}" href="model.html?sys=1" title="시스템 전체 ERD" aria-label="시스템 전체 ERD"><i data-ic=compare></i></a>
-        <a class="tm-i${['import.html', 'import-excel.html'].includes(file) ? ' on" aria-current="page' : ''}" href="import-excel.html${qp.get('area') ? '?area=' + encodeURIComponent(qp.get('area')) : ''}" title="가져오기(엑셀 · DDL)" aria-label="가져오기(엑셀 · DDL)"><i data-ic=upload></i></a>
+        <button class="tm-i tm-x" id="tr-exp" type="button" aria-expanded="false" aria-controls="tr-full" aria-label="왼쪽 칸 펼치기 (Ctrl+B)" data-rt="왼쪽 칸 펼치기" data-rt2="Ctrl+B"><i data-ic=popen data-s=16></i></button>
+        <a class="tm-i${page === 'system' ? ' on" aria-current="page' : ''}" href="system.html" aria-label="시스템 홈" data-rt="시스템 홈" data-rt2="${esc(sys.name)}"><i data-ic=table></i></a>
+        <span class="tm-sep" aria-hidden="true"></span>
+        <div class="tm-grp" role="group" aria-label="업무 영역">${Object.entries(models0).map(([id, m]) => { const nE = ((modelOf(id, m.ver) || {}).E || []).length; return `<a class="tm-i tm-a${id === famArea ? ' on" aria-current="true' : ''}" href="model.html?area=${id}" aria-label="업무 영역 ${esc(m.name)}" data-rt="${esc(m.name)}" data-rt2="업무 영역 · 엔터티 ${nE}개${id === famArea ? ' · 지금 보는 중' : ''}"><i data-ic=area></i></a>`; }).join('')}</div>
+        <span class="tm-sep" aria-hidden="true"></span>
+        <a class="tm-i${file === 'model.html' && qp.get('sys') ? ' on" aria-current="page' : ''}" href="model.html?sys=1" aria-label="시스템 전체 ERD" data-rt="시스템 전체 ERD" data-rt2="모든 업무 영역을 한 화면에 · 조회 전용"><i data-ic=compare></i></a>
+        <a class="tm-i${['import.html', 'import-excel.html'].includes(file) ? ' on" aria-current="page' : ''}" href="import-excel.html${qp.get('area') ? '?area=' + encodeURIComponent(qp.get('area')) : ''}" aria-label="가져오기(엑셀 · DDL)" data-rt="가져오기" data-rt2="엑셀 · DDL"><i data-ic=upload></i></a>
       </div>
       <button class="tcollapse" id="tr-min" type="button"></button>
       <div class="tresize" id="tr-rs" role="separator"${['model.html', 'standardize.html', 'ddl.html', 'outputs.html', 'import.html', 'import-excel.html'].includes(file) ? '' : ' hidden'} aria-orientation="vertical" aria-label="모델 트리 폭" tabindex="0" title="끌어서 폭 조절 · 두 번 누르면 내용에 맞춤"></div>`;
@@ -2810,6 +2812,26 @@
   window.openAbout = openAbout; window.openKeys = openKeys;
 
   /* ---- toast (aria-live, error stays until closed, optional action) ---- */
+  /* A-3 (32): icon rail name bubble — mouse (300ms, instant while moving inside the rail) and keyboard focus; Esc · click · scroll close it (WCAG 1.4.13) */
+  (() => {
+    let tip = null, cur = null, timer = 0, warm = 0;
+    const hide = () => { clearTimeout(timer); timer = 0; if (tip) tip.hidden = true; if (cur) cur.removeAttribute('aria-describedby'); cur = null; };
+    const show = el => {
+      if (!tip) { tip = document.createElement('div'); tip.className = 'rail-tip'; tip.id = 'rail-tip'; tip.setAttribute('role', 'tooltip'); tip.hidden = true; document.body.appendChild(tip); tip.addEventListener('mouseleave', e => { if (!e.relatedTarget || !e.relatedTarget.closest('[data-rt]')) hide(); }); }
+      cur = el; tip.innerHTML = '<b></b>' + (el.dataset.rt2 ? '<span></span>' : ''); tip.firstChild.textContent = el.dataset.rt; if (el.dataset.rt2) tip.lastChild.textContent = el.dataset.rt2;
+      tip.hidden = false; el.setAttribute('aria-describedby', 'rail-tip');
+      const r = el.getBoundingClientRect(), h = tip.offsetHeight;
+      tip.style.left = (r.right + 8) + 'px'; tip.style.top = Math.max(8, Math.min(innerHeight - h - 8, r.top + r.height / 2 - h / 2)) + 'px';
+      warm = Date.now();
+    };
+    const arm = (el, now) => { clearTimeout(timer); if (now) show(el); else timer = setTimeout(() => show(el), 300); };
+    document.addEventListener('mouseover', e => { const el = e.target.closest && e.target.closest('.tmini [data-rt]'); if (!el) { if (cur && !(e.target.closest && e.target.closest('.rail-tip'))) hide(); else if (!cur) clearTimeout(timer); return; } if (el !== cur) arm(el, tip && !tip.hidden || Date.now() - warm < 400); });
+    document.addEventListener('focusin', e => { const el = e.target.closest && e.target.closest('.tmini [data-rt]'); if (el) arm(el, true); else if (cur) hide(); });
+    document.addEventListener('focusout', e => { if (cur && e.target === cur) hide(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && cur) hide(); }, true);
+    document.addEventListener('pointerdown', () => { if (cur) hide(); }, true);
+    document.addEventListener('scroll', () => { if (!cur) return; if (Date.now() - warm < 300) { const w0 = warm; show(cur); warm = w0; } else hide(); }, true);   // focus can scroll the rail into view — follow it right after showing
+  })();
   window.toast = function (msg, type, action) {
     const box = document.getElementById('toasts'); if (!box) return;
     // v8: a state-coloured line icon, no filled circle (success icon only in green; info neutral)
