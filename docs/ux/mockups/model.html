@@ -607,18 +607,20 @@ window.pageInit = function () {
   let miniK = null, dragRaf = 0;
   const dragDraw = () => { if (dragRaf) return; dragRaf = requestAnimationFrame(() => { dragRaf = 0; if (!(drag && drag.e && edgesFor(drag.e.id))) drawEdges(); }); };   // the map is redrawn once, when the drag ends (render on mouseup)
   function miniView() { const r = $('mini-vp'); if (!r || !miniK) { mini(); return; } const { k, ox, oy } = miniK;
-    r.setAttribute('x', (-panX / zoom - ox) * k); r.setAttribute('y', (-panY / zoom - oy) * k); r.setAttribute('width', cv.clientWidth / zoom * k); r.setAttribute('height', cv.clientHeight / zoom * k); }
+    const w = cv.clientWidth / zoom * k, h = cv.clientHeight / zoom * k, x = (-panX / zoom - ox) * k, y = (-panY / zoom - oy) * k, W8 = Math.max(8, w), H8 = Math.max(8, h);
+    r.setAttribute('x', x - (W8 - w) / 2); r.setAttribute('y', y - (H8 - h) / 2); r.setAttribute('width', W8); r.setAttribute('height', H8); }
   function mini() {
     const m = $('mini'); if (!nodes.children.length) { m.innerHTML = ''; miniK = null; return; }   // an empty view clears the map (it kept the previous view's boxes)
     let minx = 1e9, miny = 1e9, maxx = -1e9, maxy = -1e9;
     VE().forEach(e => { const b = box(e.id); minx = Math.min(minx, b.x); miny = Math.min(miny, b.y); maxx = Math.max(maxx, b.x + b.w); maxy = Math.max(maxy, b.y + b.h); });
     const W = maxx - minx + 200, H = maxy - miny + 200, k = Math.min(180 / W, 120 / H), ox = minx - 100, oy = miny - 100;
     let s = VE().map(e => { const b = box(e.id); const col = remoteSel === e.id && !offline ? 'var(--p-1)' : bad(e) ? 'var(--warning)' : 'var(--border-strong)'; return `<rect x="${(b.x - ox) * k}" y="${(b.y - oy) * k}" width="${b.w * k}" height="${b.h * k}" fill="${col}" opacity=".6" rx="1"/>`; }).join('');
-    s += `<rect id="mini-vp" x="${(-panX / zoom - ox) * k}" y="${(-panY / zoom - oy) * k}" width="${cv.clientWidth / zoom * k}" height="${cv.clientHeight / zoom * k}" fill="none" stroke="var(--ink)" stroke-width="1"/>`;
-    m.innerHTML = s; miniK = { k, ox, oy };
+    s += `<rect id="mini-vp" x="0" y="0" width="0" height="0" fill="var(--ink)" fill-opacity=".06" stroke="var(--ink)" stroke-width="1"/>`;
+    m.innerHTML = s; miniK = { k, ox, oy, W, H };
     // ERD P3-21: what the colours say, in words too (screen readers · tooltip)
     const nb = VE().filter(e => bad(e)).length, lbl = `미니맵 — 엔터티 ${VE().length}개 중 미준수 있음 ${nb}개(호박색)${remoteSel && !offline && ent(remoteSel) ? ` · ${ent(remoteSel).n} 함께 편집 중` : ''} · 테두리 = 지금 보이는 범위`;
-    m.setAttribute('aria-label', lbl); m.parentElement.title = lbl;
+    m.setAttribute('aria-label', lbl + ' · 테두리를 끌거나 눌러 이동, 화살표로 이동'); m.parentElement.title = lbl;
+    miniView();
   }
   const PANELS = ['rp', 'pn-confirm', 'pn-check'];
   function syncTab() { $('rp-tab').style.display = PANELS.some(p => $(p).classList.contains('open')) ? 'none' : 'flex'; }
@@ -1874,12 +1876,44 @@ window.pageInit = function () {
   let sysZ = 1, sysX = 0, sysY = 0;
   function sysApply() { const w = $('sysworld'); if (!w) return; w.style.transform = `translate(${sysX}px,${sysY}px) scale(${sysZ})`; $('zl').textContent = Math.round(sysZ * 100) + '%'; miniSys(); }
   function sysBounds() { const w = $('sysworld'); const cs = w ? [...w.querySelectorAll('.grp')] : []; let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9; cs.forEach(c => { x0 = Math.min(x0, c.offsetLeft); y0 = Math.min(y0, c.offsetTop); x1 = Math.max(x1, c.offsetLeft + c.offsetWidth); y1 = Math.max(y1, c.offsetTop + c.offsetHeight); }); return { cs, x0, y0, x1, y1 }; }
+  let miniSysK = null;
   function miniSys() {
     const m = $('mini'), b = sysBounds(); if (!b.cs.length) { m.innerHTML = ''; return; }
-    const W = b.x1 - b.x0 + 120, H = b.y1 - b.y0 + 120, k = Math.min(180 / W, 120 / H), ox = b.x0 - 60, oy = b.y0 - 60;
+    const W = b.x1 - b.x0 + 120, H = b.y1 - b.y0 + 120, k = Math.min(180 / W, 120 / H), ox = b.x0 - 60, oy = b.y0 - 60; miniSysK = { k, ox, oy, W, H };
     m.innerHTML = b.cs.map(c => `<rect x="${(c.offsetLeft - ox) * k}" y="${(c.offsetTop - oy) * k}" width="${c.offsetWidth * k}" height="${c.offsetHeight * k}" fill="${c.querySelector('.badge') && /지금 영역/.test(c.textContent) ? 'var(--ink)' : 'var(--border-strong)'}" opacity=".6" rx="1"/>`).join('')
-      + `<rect x="${(-sysX / sysZ - ox) * k}" y="${(-sysY / sysZ - oy) * k}" width="${cv.clientWidth / sysZ * k}" height="${cv.clientHeight / sysZ * k}" fill="none" stroke="var(--ink)" stroke-width="1"/>`;
+      + `<rect x="${(-sysX / sysZ - ox) * k}" y="${(-sysY / sysZ - oy) * k}" width="${Math.max(8, cv.clientWidth / sysZ * k)}" height="${Math.max(8, cv.clientHeight / sysZ * k)}" fill="var(--ink)" fill-opacity=".06" stroke="var(--ink)" stroke-width="1"/>`;
   }
+  /* 32 B: minimap → view. Drag the frame (the view follows live) · click elsewhere (that point comes to the centre) · arrows (10%, Shift 50%) · Home (fit). */
+  (() => {
+    const m = $('mini'); m.setAttribute('tabindex', '0'); m.setAttribute('role', 'application'); m.setAttribute('aria-roledescription', '미니맵');
+    const V = () => isSys() ? { K: miniSysK, z: sysZ, x: sysX, y: sysY, set: (x, y) => { sysX = x; sysY = y; sysApply(); } }
+      : { K: miniK, z: zoom, x: panX, y: panY, set: (x, y) => { panX = x; panY = y; applyView(); } };
+    // the world point at the centre of the view, and how to put a world point there (clamped to the map's frame — B-4)
+    const centre = v => [(-v.x + cv.clientWidth / 2) / v.z, (-v.y + cv.clientHeight / 2) / v.z];
+    const goTo = (v, wx, wy) => { const K = v.K; wx = Math.max(K.ox, Math.min(K.ox + K.W, wx)); wy = Math.max(K.oy, Math.min(K.oy + K.H, wy)); v.set(cv.clientWidth / 2 - wx * v.z, cv.clientHeight / 2 - wy * v.z); };
+    const toWorld = (v, ev) => { const r = m.getBoundingClientRect(); return [(ev.clientX - r.left) / v.K.k + v.K.ox, (ev.clientY - r.top) / v.K.k + v.K.oy]; };
+    const inFrame = (v, ev) => { const r = m.getBoundingClientRect(), mx = ev.clientX - r.left, my = ev.clientY - r.top, K = v.K;
+      const x = (-v.x / v.z - K.ox) * K.k, y = (-v.y / v.z - K.oy) * K.k, w = Math.max(8, cv.clientWidth / v.z * K.k), h = Math.max(8, cv.clientHeight / v.z * K.k);
+      return mx >= x - 2 && mx <= x + w + 2 && my >= y - 2 && my <= y + h + 2; };
+    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let drag = null, raf = 0, anim = 0, next = null;
+    const flush = () => { raf = 0; if (next) { const v = V(); goTo(v, next[0], next[1]); next = null; } };
+    const glide = (v, wx, wy) => { cancelAnimationFrame(anim); const [sx, sy] = centre(v); if (reduce) { goTo(v, wx, wy); return; }
+      const t0 = performance.now(), step = t => { const p = Math.min(1, (t - t0) / 200), e = 1 - Math.pow(1 - p, 3); goTo(V(), sx + (wx - sx) * e, sy + (wy - sy) * e); if (p < 1 && !drag) anim = requestAnimationFrame(step); }; anim = requestAnimationFrame(step); };
+    m.addEventListener('pointerdown', ev => { const v = V(); if (!v.K || ev.button !== 0) return; ev.preventDefault(); ev.stopPropagation(); viewTouched = true; m.focus({ preventScroll: true });
+      const [wx, wy] = toWorld(v, ev), [cx, cy] = centre(v);
+      if (inFrame(v, ev)) drag = { dx: wx - cx, dy: wy - cy }; else { drag = { dx: 0, dy: 0, glided: true }; glide(v, wx, wy); }
+      try { m.setPointerCapture(ev.pointerId); } catch (e) {} m.classList.add('grabbing'); });
+    m.addEventListener('pointermove', ev => { const v = V(); if (!v.K) return;
+      if (!drag) { m.classList.toggle('on-frame', inFrame(v, ev)); return; }
+      cancelAnimationFrame(anim); const [wx, wy] = toWorld(v, ev); next = [wx - drag.dx, wy - drag.dy]; if (!raf) raf = requestAnimationFrame(flush); });
+    const end = ev => { if (!drag) return; drag = null; m.classList.remove('grabbing'); try { m.releasePointerCapture(ev.pointerId); } catch (e) {} if (raf) { cancelAnimationFrame(raf); flush(); } if (!isSys()) mini(); };
+    m.addEventListener('pointerup', end); m.addEventListener('pointercancel', end); m.addEventListener('lostpointercapture', end);
+    m.addEventListener('keydown', ev => { const v = V(); if (!v.K) return; const keys = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] };
+      if (ev.key === 'Home') { ev.preventDefault(); viewTouched = true; fitAny(); return; }
+      const d = keys[ev.key]; if (!d) return; ev.preventDefault(); ev.stopPropagation(); viewTouched = true;
+      const f = ev.shiftKey ? 0.5 : 0.1, [cx, cy] = centre(v); goTo(v, cx + d[0] * f * cv.clientWidth / v.z, cy + d[1] * f * cv.clientHeight / v.z); });
+  })();
   // fit = every card visible, starting below the read-only strip (the strip stays fixed, the cards scale under it) and above the bottom controls
   function sysFit() { const b = sysBounds(); if (!b.cs.length) return; const ban = $('sysview').querySelector('.sys-ban'), top0 = ban ? ban.offsetTop + ban.offsetHeight + 12 : 20;
     sysZ = Math.max(0.3, Math.min(1.2, (cv.clientWidth - 80) / b.x1, (cv.clientHeight - top0 - 110) / (b.y1 - b.y0))); sysX = 20; sysY = top0 - b.y0 * sysZ; sysApply(); }

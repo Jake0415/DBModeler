@@ -353,3 +353,7 @@ body:has(#cv.panning) { user-select:none; -webkit-user-select:none; }
 #ck-go.disabled { pointer-events:auto; cursor:not-allowed; }
 #pn-check .ck-tbl .linkbtn { text-align:left; }
 #pn-check .ck-tbl td:first-child { width:44%; }
+/* 32 B: the minimap moves the view — frame grab · elsewhere pointer · focus ring */
+#mini { cursor:pointer; touch-action:none; display:block; }
+#mini.on-frame { cursor:grab; } #mini.grabbing { cursor:grabbing; }
+#mini:focus-visible { outline:2px solid var(--focus); outline-offset:2px; border-radius:var(--r-sm, 4px); }
