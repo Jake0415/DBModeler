@@ -39,7 +39,7 @@ export const PERMS: readonly Perm[] = [
   { id: 'model.submit', g: '모델', n: '모델 확정 신청', roles: ['modeler'], scope: 'sys' },
   { id: 'out.export', g: '모델', n: 'DDL · ERD · 산출물 내려받기', roles: ['modeler', 'da', 'owner', 'auditor'], scope: 'view', note: '모델러만이면 담당 시스템 · 개인정보 컬럼 목록은 사유' },
   { id: 'dict.view', g: '표준 사전', n: '표준 사전 · 변경 내역 보기', roles: ['*'], scope: 'org' },
-  { id: 'dict.request', g: '표준 사전', n: '사전 신청 · 엑셀 가져오기 · 후보 등록', roles: ['modeler', 'da'], scope: 'org' },
+  { id: 'dict.request', g: '표준 사전', n: '사전 신청 · 사전 엑셀 일괄 · 후보 등록', roles: ['modeler', 'da'], scope: 'org' },
   { id: 'cand.decide', g: '표준 사전', n: '후보 큐 판단', roles: ['da'], scope: 'org' },
   { id: 'dict.publish', g: '표준 사전', n: '사전 공표', roles: ['da'], scope: 'org' },
   { id: 'dict.purge', g: '표준 사전', n: '삭제 보관 항목 영구 삭제', roles: ['da'], scope: 'org' },

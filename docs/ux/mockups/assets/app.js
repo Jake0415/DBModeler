@@ -76,7 +76,7 @@
     { id: 'model.submit', g: '모델', n: '모델 확정 신청', roles: ['modeler'], scope: 'sys', note: '회수는 신청한 사람만 — 사업 종료 인계 때는 인수자 · DA' },
     { id: 'out.export', g: '모델', n: 'DDL · ERD · 산출물 내려받기', roles: ['modeler', 'da', 'owner', 'auditor'], scope: 'view', note: '모델러는 담당 시스템 · 내려받을 때마다 감사 로그 · 개인정보 컬럼 목록은 DA · 기관 담당자 · 감리만, 사유 (R-14)' },
     { id: 'dict.view', g: '표준 사전', n: '표준 사전 · 변경 내역 보기', roles: ['*'], scope: 'org' },
-    { id: 'dict.request', g: '표준 사전', n: '사전 신청 · 엑셀 가져오기 · 후보 등록', roles: ['modeler', 'da'], scope: 'org' },
+    { id: 'dict.request', g: '표준 사전', n: '사전 신청 · 사전 엑셀 일괄 · 후보 등록', roles: ['modeler', 'da'], scope: 'org' },
     { id: 'cand.decide', g: '표준 사전', n: '후보 큐 판단', roles: ['da'], scope: 'org' },
     { id: 'dict.publish', g: '표준 사전', n: '사전 공표', roles: ['da'], scope: 'org' },
     { id: 'dict.purge', g: '표준 사전', n: '삭제 보관 항목 영구 삭제', roles: ['da'], scope: 'org', note: 'Admin은 표준 내용을 바꾸지 않는다 (R-04)' },
